@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/protocol"
+	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/anon"

@@ -37,7 +37,7 @@ testReconnect(){
         runSrv $s
         sleep 1
         testOK runCl 1 sign foo.txt
-        pkill -9 -f ./cosi
+        pkill -9 -f ./ftcosi
     done
 }
 
@@ -65,12 +65,12 @@ testSignFile(){
 
 testServerCfg(){
     runSrvCfg 1
-    pkill -9 cosi
+    pkill -9 ftcosi
     testFile srv1/private.toml
 }
 
 testBuild(){
-    testOK ./cosi help
+    testOK ./ftcosi help
 }
 
 setupServers(){
@@ -94,15 +94,15 @@ runCl(){
     local D=cl$1/servers.toml
     shift
     echo "Running Client with $D $@"
-    dbgRun ./cosi -d $DBG_APP $@ -g $D
+    dbgRun ./ftcosi -d $DBG_APP $@ -g $D
 }
 
 runSrvCfg(){
-    echo -e "localhost:200$(( 2 * $1 ))\nCosi $1\n$(pwd)/srv$1\n" | ./cosi server setup > $OUT
+    echo -e "localhost:200$(( 2 * $1 ))\nCosi $1\n$(pwd)/srv$1\n" | ./ftcosi server setup > $OUT
 }
 
 runSrv(){
-    ( ./cosi -d $DBG_SRV server -c srv$1/private.toml & )
+    ( ./ftcosi -d $DBG_SRV server -c srv$1/private.toml & )
 }
 
 main

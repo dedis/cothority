@@ -61,7 +61,7 @@ type StructAnnouncement struct {
 	Announcement
 }
 
-// Commitment is the cosi commitment message
+// Commitment is the ftcosi commitment message
 type Commitment struct {
 	CoSiCommitment kyber.Point
 	Mask           []byte
@@ -74,7 +74,7 @@ type StructCommitment struct {
 	Commitment
 }
 
-// Challenge is the cosi challenge message
+// Challenge is the ftcosi challenge message
 type Challenge struct {
 	CoSiChallenge kyber.Scalar
 }
@@ -86,7 +86,7 @@ type StructChallenge struct {
 	Challenge
 }
 
-// Response is the cosi response message
+// Response is the ftcosi response message
 type Response struct {
 	CoSiReponse kyber.Scalar
 }

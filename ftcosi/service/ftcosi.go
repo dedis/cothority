@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/protocol"
+	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -92,8 +92,8 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 		return nil, errors.New("protocol timed out")
 	}
 
-	// The hash is the message cosi actually signs, we recompute it the
-	// same way as cosi and then return it.
+	// The hash is the message ftcosi actually signs, we recompute it the
+	// same way as ftcosi and then return it.
 	h := s.suite.Hash()
 	h.Write(req.Message)
 	return &SignatureResponse{h.Sum(nil), sig}, nil

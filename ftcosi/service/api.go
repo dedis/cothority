@@ -14,7 +14,7 @@ type Client struct {
 	*onet.Client
 }
 
-// NewClient instantiates a new cosi.Client
+// NewClient instantiates a new ftcosi.Client
 func NewClient() *Client {
 	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
 }

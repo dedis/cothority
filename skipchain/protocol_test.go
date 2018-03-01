@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/bftcosi"
+	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
@@ -43,7 +43,7 @@ func TestGB(t *testing.T) {
 	sb1.BackLinkIDs = []skipchain.SkipBlockID{sb0.Hash}
 	sb1.Hash = sb1.CalculateHash()
 	sig0 := skipchain.NewForwardLink(sb0, sb1)
-	sig0.Signature = bftcosi.FinalSignature{Msg: sig0.Hash(), Sig: []byte{}}
+	sig0.Signature = byzcoinx.FinalSignature{Msg: sig0.Hash(), Sig: []byte{}}
 	sb0.ForwardLink = []*skipchain.ForwardLink{sig0}
 
 	sb2 := skipchain.NewSkipBlock()
@@ -54,15 +54,15 @@ func TestGB(t *testing.T) {
 	sb3.BackLinkIDs = []skipchain.SkipBlockID{sb2.Hash}
 	sb3.Hash = sb3.CalculateHash()
 	sig2 := skipchain.NewForwardLink(sb2, sb3)
-	sig2.Signature = bftcosi.FinalSignature{Msg: sig2.Hash(), Sig: []byte{}}
+	sig2.Signature = byzcoinx.FinalSignature{Msg: sig2.Hash(), Sig: []byte{}}
 	sb2.ForwardLink = []*skipchain.ForwardLink{sig2}
 
 	// and make sb1 forward[1] point to sb3 as well.
 	sig12 := skipchain.NewForwardLink(sb1, sb2)
-	sig12.Signature = bftcosi.FinalSignature{Msg: sig12.Hash(), Sig: []byte{}}
+	sig12.Signature = byzcoinx.FinalSignature{Msg: sig12.Hash(), Sig: []byte{}}
 
 	sig13 := skipchain.NewForwardLink(sb1, sb3)
-	sig13.Signature = bftcosi.FinalSignature{Msg: sig13.Hash(), Sig: []byte{}}
+	sig13.Signature = byzcoinx.FinalSignature{Msg: sig13.Hash(), Sig: []byte{}}
 	sb1.ForwardLink = []*skipchain.ForwardLink{sig12, sig13}
 
 	db, bucket := ts0.GetAdditionalBucket([]byte("skipblocks"))

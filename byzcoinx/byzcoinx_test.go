@@ -1,4 +1,4 @@
-package bftcosi
+package byzcoinx
 
 import (
 	"bytes"
@@ -209,7 +209,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	defer counter.Unlock()
 
 	// We use <= because the verification function may be called more than
-	// once on the same node if a sub-leader in cosi fails and the tree is
+	// once on the same node if a sub-leader in ftcosi fails and the tree is
 	// re-generated.
 	require.True(t, nbrHosts-nbrFault <= counter.veriCount)
 }

@@ -25,7 +25,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/protocol"
+	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -111,7 +111,7 @@ func (s *SimulationProtocol) Node(config *onet.SimulationConfig) error {
 
 				switch msg.(type) {
 				case *protocol.Announcement, *protocol.Commitment, *protocol.Challenge, *protocol.Response:
-					log.Lvl3("ignoring cosi message")
+					log.Lvl3("ignoring ftcosi message")
 				default:
 					config.Overlay.Process(e)
 				}

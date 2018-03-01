@@ -25,7 +25,7 @@ func TestServiceCosi(t *testing.T) {
 
 	// Send a request to the service to all hosts
 	client := NewClient()
-	msg := []byte("hello cosi service")
+	msg := []byte("hello ftcosi service")
 	serviceReq := &SignatureRequest{
 		Roster:  roster,
 		Message: msg,
@@ -50,7 +50,7 @@ func TestCreateAggregate(t *testing.T) {
 
 	// Send a request to the service
 	client := NewClient()
-	msg := []byte("hello cosi service")
+	msg := []byte("hello ftcosi service")
 	log.Lvl1("Sending request to service...")
 
 	el1 := &onet.Roster{}

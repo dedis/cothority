@@ -36,8 +36,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/bftcosi"
-	"github.com/dedis/cothority/cosi/protocol"
+	"github.com/dedis/cothority/byzcoinx"
+	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -758,7 +758,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	}
 
 	// Register the function generating the protocol instance
-	root, ok := node.(*bftcosi.ProtocolBFTCoSi)
+	root, ok := node.(*byzcoinx.ProtocolBFTCoSi)
 	if !ok {
 		return errors.New(
 			"protocol instance is invalid")
@@ -1008,11 +1008,11 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(checkConfigReplyID, s.CheckConfigReply)
 	s.RegisterProcessorFunc(mergeConfigID, s.MergeConfig)
 	s.RegisterProcessorFunc(mergeConfigReplyID, s.MergeConfigReply)
-	if err := bftcosi.InitBFTCoSiProtocol(protocol.EdDSACompatibleCosiSuite, s.Context,
+	if err := byzcoinx.InitBFTCoSiProtocol(protocol.EdDSACompatibleCosiSuite, s.Context,
 		s.bftVerifyFinal, s.bftVerifyFinalAck, bftSignFinal); err != nil {
 		return nil, err
 	}
-	if err := bftcosi.InitBFTCoSiProtocol(protocol.EdDSACompatibleCosiSuite, s.Context,
+	if err := byzcoinx.InitBFTCoSiProtocol(protocol.EdDSACompatibleCosiSuite, s.Context,
 		s.bftVerifyMerge, s.bftVerifyMergeAck, bftSignMerge); err != nil {
 		return nil, err
 	}

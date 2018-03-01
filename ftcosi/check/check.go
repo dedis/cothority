@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dedis/cothority/cosi/service"
+	"github.com/dedis/cothority/ftcosi/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"

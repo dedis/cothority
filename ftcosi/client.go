@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/check"
-	s "github.com/dedis/cothority/cosi/service"
+	"github.com/dedis/cothority/ftcosi/check"
+	s "github.com/dedis/cothority/ftcosi/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -100,7 +100,7 @@ func sign(r io.Reader, tomlFileName string) (*s.SignatureResponse, error) {
 		return nil, err
 	}
 	if len(g.Roster.List) <= 0 {
-		return nil, errors.New("Empty or invalid cosi group file:" +
+		return nil, errors.New("Empty or invalid ftcosi group file:" +
 			tomlFileName)
 	}
 	log.Lvl2("Sending signature to", g.Roster)

@@ -17,7 +17,7 @@ import (
 
 const (
 	// BinaryName represents the Name of the binary
-	BinaryName = "cosi"
+	BinaryName = "ftcosi"
 
 	// Version of the binary
 	Version = "1.00"
@@ -35,7 +35,7 @@ const (
 
 func main() {
 	cliApp := cli.NewApp()
-	cliApp.Name = "cosi"
+	cliApp.Name = "ftcosi"
 	cliApp.Usage = "collectively sign or verify a file; run a server for collective signing"
 	cliApp.Version = Version
 	binaryFlags := []cli.Flag{
@@ -105,7 +105,7 @@ func main() {
 		// BEGIN SERVER --------
 		{
 			Name:  "server",
-			Usage: "Start cosi server",
+			Usage: "Start ftcosi server",
 			Action: func(c *cli.Context) error {
 				runServer(c)
 				return nil

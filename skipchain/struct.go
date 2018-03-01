@@ -12,7 +12,7 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/bftcosi"
+	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -459,7 +459,7 @@ type ForwardLink struct {
 	// sha256(From.Hash()|To.Hash()|NewRoster)
 	// In the case that NewRoster is nil, the signature is
 	// calculated on the sha256(From.Hash()|To.Hash())
-	Signature bftcosi.FinalSignature
+	Signature byzcoinx.FinalSignature
 }
 
 // NewForwardLink creates a new forwardlink structure with
@@ -498,7 +498,7 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 		newRoster.ID = onet.RosterID([uuid.Size]byte(fl.NewRoster.ID))
 	}
 	return &ForwardLink{
-		Signature: bftcosi.FinalSignature{
+		Signature: byzcoinx.FinalSignature{
 			Sig: append([]byte{}, fl.Signature.Sig...),
 			Msg: append([]byte{}, fl.Signature.Msg...),
 		},
@@ -515,8 +515,8 @@ func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
 	if bytes.Compare(fl.Signature.Msg, fl.Hash()) != 0 {
 		return errors.New("wrong hash of forward link")
 	}
-	// this calculation must match the one in omnicon/bftcosi
-	t := bftcosi.FaultThreshold(len(pubs))
+	// this calculation must match the one in omnicon/byzcoinx
+	t := byzcoinx.FaultThreshold(len(pubs))
 	return cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig,
 		cosi.NewThresholdPolicy(len(pubs)-t))
 }

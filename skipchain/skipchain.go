@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/bftcosi"
+	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -1014,7 +1014,7 @@ func (s *Service) bftVerifyFollowBlockAck(msg, data []byte) bool {
 }
 
 // startBFT starts a BFT-protocol with the given parameters.
-func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) (*bftcosi.FinalSignature, error) {
+func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) (*byzcoinx.FinalSignature, error) {
 
 	if len(roster.List) == 0 {
 		return nil, errors.New("found empty Roster")
@@ -1037,13 +1037,13 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create new node: %s", err.Error())
 	}
-	root := node.(*bftcosi.ProtocolBFTCoSi)
+	root := node.(*byzcoinx.ProtocolBFTCoSi)
 
 	// Register the function generating the protocol instance
 	root.Msg = msg
 	root.Data = data
 	root.CreateProtocol = s.CreateProtocol
-	root.FinalSignatureChan = make(chan bftcosi.FinalSignature, 1)
+	root.FinalSignatureChan = make(chan byzcoinx.FinalSignature, 1)
 	root.Timeout = s.propTimeout / 2
 	if s.bftTimeout != 0 {
 		root.Timeout = s.bftTimeout
@@ -1301,12 +1301,12 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = bftcosi.InitBFTCoSiProtocol(cothority.Suite, s.Context,
+	err = byzcoinx.InitBFTCoSiProtocol(cothority.Suite, s.Context,
 		s.bftVerifyNewBlock, s.bftVerifyNewBlockAck, bftNewBlock)
 	if err != nil {
 		return nil, err
 	}
-	err = bftcosi.InitBFTCoSiProtocol(cothority.Suite, s.Context,
+	err = byzcoinx.InitBFTCoSiProtocol(cothority.Suite, s.Context,
 		s.bftVerifyFollowBlock, s.bftVerifyFollowBlockAck, bftFollowBlock)
 	if err != nil {
 		return nil, err

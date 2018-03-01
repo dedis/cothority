@@ -1,11 +1,11 @@
-package bftcosi
+package byzcoinx
 
 import (
 	"fmt"
 	"math"
 	"time"
 
-	"github.com/dedis/cothority/cosi/protocol"
+	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
@@ -24,25 +24,25 @@ type ProtocolBFTCoSi struct {
 	Data []byte
 	// FinalSignature is output of the protocol, for the caller to read
 	FinalSignatureChan chan FinalSignature
-	// CreateProtocol stores a function pointer used to create the cosi
+	// CreateProtocol stores a function pointer used to create the ftcosi
 	// protocol
 	CreateProtocol protocol.CreateProtocolFunction
-	// Timeout is passed down to the cosi protocol and used for waiting
+	// Timeout is passed down to the ftcosi protocol and used for waiting
 	// for some of its messages.
 	Timeout time.Duration
-	// prepCosiProtoName is the cosi protocol name for the prepare phase
+	// prepCosiProtoName is the ftcosi protocol name for the prepare phase
 	prepCosiProtoName string
-	// commitCosiProtoName is the cosi protocol name for the commit phase
+	// commitCosiProtoName is the ftcosi protocol name for the commit phase
 	commitCosiProtoName string
 	// prepSigChan is the channel for reading the prepare phase signature
 	prepSigChan chan []byte
 	// publics is the list of public keys
 	publics []kyber.Point
-	// suite is the cosi.Suite, which may be different from the suite used
+	// suite is the ftcosi.Suite, which may be different from the suite used
 	// in the protocol because we need sha512 for the hash function so that
 	// the signature can be verified using eddsa.Verify.
 	suite cosi.Suite
-	// nSubtrees is the number of subtrees used for the cosi protocols.
+	// nSubtrees is the number of subtrees used for the ftcosi protocols.
 	nSubtrees int
 }
 
@@ -59,7 +59,7 @@ const (
 	phaseCommit
 )
 
-// Start begins the BFTCoSi protocol by starting the prepare cosi.
+// Start begins the BFTCoSi protocol by starting the prepare ftcosi.
 func (bft *ProtocolBFTCoSi) Start() error {
 	if bft.CreateProtocol == nil {
 		return fmt.Errorf("no CreateProtocol")
@@ -250,7 +250,7 @@ func InitBFTCoSiProtocol(suite cosi.Suite, c *onet.Context, vf, ack protocol.Ver
 	return nil
 }
 
-// FaultThreshold computes the number of faults that bftcosi tolerates.
+// FaultThreshold computes the number of faults that byzcoinx tolerates.
 func FaultThreshold(n int) int {
 	return (n - 1) / 3
 }
