@@ -427,7 +427,7 @@ type testData struct {
 
 func TestClient_ParallelWrite(t *testing.T) {
 	numClients := 20
-	numWrites := 100
+	numWrites := 50
 	if testing.Short() {
 		numClients = 2
 	}
@@ -437,7 +437,7 @@ func TestClient_ParallelWrite(t *testing.T) {
 	defer l.CloseAll()
 
 	cl := newTestClient(l)
-	msg := []byte(fmt.Sprintf("genesis"))
+	msg := []byte("genesis")
 	gen, err := cl.CreateGenesis(ro, 1, 1, VerificationRoot, msg, nil)
 	if err != nil {
 		t.Fatal(err)
