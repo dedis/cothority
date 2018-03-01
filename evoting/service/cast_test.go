@@ -2,6 +2,7 @@ package service
 
 import (
 	"testing"
+	"time"
 
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
@@ -77,6 +78,28 @@ func TestCast_ElectionAlreadyClosed(t *testing.T) {
 	assert.Equal(t, errAlreadyClosed, err)
 }
 
+func TestCast_ElectionEnded(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
+	s := local.GetServices(nodes, serviceID)[0].(*Service)
+	token := s.state.register(0, false)
+
+	election := &lib.Election{
+		Roster:  roster,
+		Creator: 0,
+		Users:   []uint32{0},
+		Stage:   lib.Running,
+		End:     0,
+	}
+	_ = election.GenChain(3)
+
+	_, err := s.Cast(&evoting.Cast{Token: token, ID: election.ID})
+	assert.Equal(t, errAlreadyEnded, err)
+
+}
+
 func TestCast_Full(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
@@ -90,6 +113,7 @@ func TestCast_Full(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{1000},
 		Stage:   lib.Running,
+		End:     time.Now().Unix() + 3600,
 	}
 	_ = election.GenChain(3)
 

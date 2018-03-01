@@ -37,7 +37,7 @@ type Election struct {
 	Candidates  []uint32 // Candidates is the list of candidate scipers.
 	MaxChoices  uint32   // MaxChoices is the max votes in allowed in a ballot.
 	Description string   // Description in string format.
-	End         string   // End (termination) date.
+	End         int64    // End (termination) datetime as unix timestamp.
 }
 
 func init() {

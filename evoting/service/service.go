@@ -40,6 +40,7 @@ var (
 	errAlreadyShuffled  = errors.New("Election has already been shuffled")
 	errAlreadyDecrypted = errors.New("Election has already been decrypted")
 	errAlreadyClosed    = errors.New("Election has already been closed")
+	errAlreadyEnded     = errors.New("Election has ended")
 	errCorrupt          = errors.New("Election skipchain is corrupt")
 
 	errProtocolUnknown = errors.New("Protocol unknown")
@@ -241,6 +242,10 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 
 	if election.Stage >= lib.Shuffled {
 		return nil, errAlreadyClosed
+	}
+
+	if election.End < time.Now().Unix() {
+		return nil, errAlreadyEnded
 	}
 
 	if err = election.Store(req.Ballot); err != nil {
