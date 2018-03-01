@@ -4,11 +4,16 @@ import (
 	"testing"
 
 	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet/log"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/dedis/cothority"
 )
+
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
 
 func TestParseKey(t *testing.T) {
 	_, err := parseKey("r")

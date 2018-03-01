@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,6 +13,10 @@ import (
 	"github.com/dedis/cothority/evoting"
 	_ "github.com/dedis/cothority/evoting/service"
 )
+
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
 
 func TestPing(t *testing.T) {
 	local := onet.NewTCPTest(cothority.Suite)
