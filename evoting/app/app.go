@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/hex"
 	"flag"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
@@ -11,6 +10,7 @@ import (
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting"
@@ -53,7 +53,7 @@ func main() {
 		panic(err)
 	}
 
-	fmt.Println("Master ID:", reply.ID)
+	log.Info("Master ID:", reply.ID)
 }
 
 // parseRoster reads a Dedis group toml file a converts it to a cothority roster.

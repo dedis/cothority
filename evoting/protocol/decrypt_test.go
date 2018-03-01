@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 
 	"github.com/stretchr/testify/assert"
 
@@ -72,11 +73,10 @@ func runDecrypt(t *testing.T, n int) {
 
 	select {
 	case <-decrypt.Finished:
-		// partials, _ := election.Partials()
-		// for _, partial := range partials {
-		// 	fmt.Println(partial)
-		// 	assert.False(t, partial.Flag)
-		// }
+		partials, _ := election.Partials()
+		for _, partial := range partials {
+			log.Lvl1(partial)
+		}
 	case <-time.After(5 * time.Second):
 		assert.True(t, false)
 	}
