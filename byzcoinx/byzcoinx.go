@@ -12,10 +12,10 @@ import (
 	"github.com/dedis/onet/log"
 )
 
-// ProtocolBFTCoSi contains the state used in the execution of the BFTCoSi
+// ProtocolByzCoinX contains the state used in the execution of the BFTCoSi
 // protocol. It is also known as OmniCon, which is described in the OmniLedger
 // paper - https://eprint.iacr.org/2017/406
-type ProtocolBFTCoSi struct {
+type ProtocolByzCoinX struct {
 	// the node we are represented-in
 	*onet.TreeNodeInstance
 	// Msg is the message that will be signed by cosigners
@@ -60,7 +60,7 @@ const (
 )
 
 // Start begins the BFTCoSi protocol by starting the prepare ftcosi.
-func (bft *ProtocolBFTCoSi) Start() error {
+func (bft *ProtocolByzCoinX) Start() error {
 	if bft.CreateProtocol == nil {
 		return fmt.Errorf("no CreateProtocol")
 	}
@@ -93,7 +93,7 @@ func (bft *ProtocolBFTCoSi) Start() error {
 	return nil
 }
 
-func (bft *ProtocolBFTCoSi) initCosiProtocol(phase phase) (*protocol.CoSiRootNode, error) {
+func (bft *ProtocolByzCoinX) initCosiProtocol(phase phase) (*protocol.ProtocolFtCosi, error) {
 	var name string
 	if phase == phasePrep {
 		name = bft.prepCosiProtoName
@@ -107,7 +107,7 @@ func (bft *ProtocolBFTCoSi) initCosiProtocol(phase phase) (*protocol.CoSiRootNod
 	if err != nil {
 		return nil, err
 	}
-	cosiProto := pi.(*protocol.CoSiRootNode)
+	cosiProto := pi.(*protocol.ProtocolFtCosi)
 	cosiProto.CreateProtocol = bft.CreateProtocol
 	cosiProto.NSubtrees = bft.nSubtrees
 	cosiProto.Msg = bft.Msg
@@ -125,7 +125,7 @@ func (bft *ProtocolBFTCoSi) initCosiProtocol(phase phase) (*protocol.CoSiRootNod
 //    otherwise send an empty signature
 // 4, wait for the commit phase to finish
 // 5, send the final signature
-func (bft *ProtocolBFTCoSi) Dispatch() error {
+func (bft *ProtocolByzCoinX) Dispatch() error {
 
 	if !bft.IsRoot() {
 		return fmt.Errorf("non-root should not start this protocol")
@@ -166,14 +166,14 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 	return nil
 }
 
-// NewBFTCoSiProtocol creates and initialises a BFTCoSi protocol.
-func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoName string,
-	suite cosi.Suite) (*ProtocolBFTCoSi, error) {
+// NewProtocolByzCoinX creates and initialises a BFTCoSi protocol.
+func NewProtocolByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoName string,
+	suite cosi.Suite) (*ProtocolByzCoinX, error) {
 	publics := make([]kyber.Point, n.Tree().Size())
 	for i, node := range n.Tree().List() {
 		publics[i] = node.ServerIdentity.Public
 	}
-	return &ProtocolBFTCoSi{
+	return &ProtocolByzCoinX{
 		TreeNodeInstance: n,
 		// we do not have Msg to make the protocol fail if it's not set
 		FinalSignatureChan:  make(chan FinalSignature, 1),
@@ -199,7 +199,7 @@ func makeProtocols(vf, ack protocol.VerificationFn, protoName string, suite cosi
 	commitCosiSubProtoName := protoName + "_subcosi_commit"
 
 	bftProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, prepCosiProtoName, commitCosiProtoName, suite)
+		return NewProtocolByzCoinX(n, prepCosiProtoName, commitCosiProtoName, suite)
 	}
 	protocolMap[protoName] = bftProto
 

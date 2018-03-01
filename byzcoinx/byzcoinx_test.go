@@ -170,7 +170,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	pi, err := local.CreateProtocol(protoName, tree)
 	require.Nil(t, err)
 
-	bftCosiProto := pi.(*ProtocolBFTCoSi)
+	bftCosiProto := pi.(*ProtocolByzCoinX)
 	bftCosiProto.CreateProtocol = local.CreateProtocol
 	bftCosiProto.FinalSignatureChan = make(chan FinalSignature, 1)
 

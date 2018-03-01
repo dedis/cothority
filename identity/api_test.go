@@ -93,7 +93,7 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	node, err := srvc.CreateProtocol(protoName, tree)
 	require.Nil(t, err)
 
-	c := node.(*protocol.CoSiRootNode)
+	c := node.(*protocol.ProtocolFtCosi)
 	c.Msg = hash
 	c.CreateProtocol = local.CreateProtocol
 	c.Timeout = time.Second * 5

@@ -1037,7 +1037,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	if err != nil {
 		return nil, fmt.Errorf("couldn't create new node: %s", err.Error())
 	}
-	root := node.(*byzcoinx.ProtocolBFTCoSi)
+	root := node.(*byzcoinx.ProtocolByzCoinX)
 
 	// Register the function generating the protocol instance
 	root.Msg = msg
