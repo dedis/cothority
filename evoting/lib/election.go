@@ -37,6 +37,7 @@ type Election struct {
 	Candidates  []uint32 // Candidates is the list of candidate scipers.
 	MaxChoices  uint32   // MaxChoices is the max votes in allowed in a ballot.
 	Description string   // Description in string format.
+	Start       int64    // Start denotes the election start unix timestamp
 	End         int64    // End (termination) datetime as unix timestamp.
 }
 
