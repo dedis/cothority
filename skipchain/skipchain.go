@@ -169,7 +169,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 	var prev *SkipBlock
 	var changed []*SkipBlock
 
-	if psbd.LatestID.IsNull() && psbd.NewBlock.GenesisID.IsNull() {
+	if psbd.LatestID.IsNull() && psbd.NewBlock.SkipChainID().IsNull() {
 		// A new chain is created
 		log.Lvl3("Creating new skipchain with roster", psbd.NewBlock.Roster.List)
 		prop.Height = prop.MaximumHeight

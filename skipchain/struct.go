@@ -259,7 +259,9 @@ type SkipBlockFix struct {
 	// SkipBlockParent points to the SkipBlock of the responsible Roster -
 	// is nil if this is the Root-roster
 	ParentBlockID SkipBlockID
-	// GenesisID is the ID of the genesis-block.
+	// GenesisID is the ID of the genesis-block. For the genesis-block, this
+	// is null. The SkipBlockID() methods returns the correct ID both for
+	// the genesis block and for later blocks.
 	GenesisID SkipBlockID
 	// Data is any data to be stored in that SkipBlock
 	Data []byte
