@@ -781,6 +781,7 @@ func TestService_Unlink(t *testing.T) {
 	msg, _ = kp.Public.MarshalBinary()
 	msg = append([]byte("unlink:"), msg...)
 	sig, err = schnorr.Sign(cothority.Suite, kp.Private, msg)
+	require.Nil(t, err)
 	_, err = service.Unlink(&Unlink{
 		Public:    kp.Public,
 		Signature: sig,
