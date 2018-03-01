@@ -63,7 +63,7 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	}
 
 	// configure the protocol
-	p := pi.(*protocol.ProtocolFtCosi)
+	p := pi.(*protocol.FtCosi)
 	p.CreateProtocol = s.CreateProtocol
 	p.Msg = req.Message
 	// We set NSubtrees to the cube root of n to evenly distribute the load,

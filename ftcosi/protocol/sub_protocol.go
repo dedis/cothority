@@ -17,8 +17,8 @@ func init() {
 	GlobalRegisterDefaultProtocols()
 }
 
-// SubProtocolFtCosi holds the different channels used to receive the different protocol messages.
-type SubProtocolFtCosi struct {
+// SubFtCosi holds the different channels used to receive the different protocol messages.
+type SubFtCosi struct {
 	*onet.TreeNodeInstance
 	Publics        []kyber.Point
 	Msg            []byte
@@ -45,14 +45,14 @@ type SubProtocolFtCosi struct {
 // with an always-true verification.
 func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewSubProtocol(n, vf, cothority.Suite)
+	return NewSubFtCosi(n, vf, cothority.Suite)
 }
 
-// NewSubProtocol is used to define the subprotocol and to register
+// NewSubFtCosi is used to define the subprotocol and to register
 // the channels where the messages will be received.
-func NewSubProtocol(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite) (onet.ProtocolInstance, error) {
+func NewSubFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite) (onet.ProtocolInstance, error) {
 
-	c := &SubProtocolFtCosi{
+	c := &SubFtCosi{
 		TreeNodeInstance: n,
 		verificationFn:   vf,
 		suite:            suite,
@@ -83,7 +83,7 @@ func NewSubProtocol(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suit
 }
 
 // Shutdown stops the protocol
-func (p *SubProtocolFtCosi) Shutdown() error {
+func (p *SubFtCosi) Shutdown() error {
 	p.stoppedOnce.Do(func() {
 		close(p.ChannelAnnouncement)
 		close(p.ChannelCommitment)
@@ -94,7 +94,7 @@ func (p *SubProtocolFtCosi) Shutdown() error {
 }
 
 // Dispatch is the main method of the subprotocol, running on each node and handling the messages in order
-func (p *SubProtocolFtCosi) Dispatch() error {
+func (p *SubFtCosi) Dispatch() error {
 
 	// ----- Announcement -----
 	announcement, channelOpen := <-p.ChannelAnnouncement
@@ -247,7 +247,7 @@ func (p *SubProtocolFtCosi) Dispatch() error {
 // HandleStop is called when a Stop message is send to this node.
 // It broadcasts the message to all the nodes in tree and each node will stop
 // the protocol by calling p.Done.
-func (p *SubProtocolFtCosi) HandleStop(stop StructStop) error {
+func (p *SubFtCosi) HandleStop(stop StructStop) error {
 	defer p.Done()
 	if p.IsRoot() {
 		p.Broadcast(&stop.Stop)
@@ -256,7 +256,7 @@ func (p *SubProtocolFtCosi) HandleStop(stop StructStop) error {
 }
 
 // Start is done only by root and starts the subprotocol
-func (p *SubProtocolFtCosi) Start() error {
+func (p *SubFtCosi) Start() error {
 	log.Lvl3(p.ServerIdentity().Address, "Starting subCoSi")
 	if p.Msg == nil {
 		return errors.New("subprotocol does not have a proposal msg")

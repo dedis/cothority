@@ -23,10 +23,10 @@ func init() {
 	network.RegisterMessages(Announcement{}, Commitment{}, Challenge{}, Response{}, Stop{})
 }
 
-// ProtocolFtCosi holds the parameters of the protocol.
+// FtCosi holds the parameters of the protocol.
 // It also defines a channel that will receive the final signature.
 // This protocol should only exist on the root node.
-type ProtocolFtCosi struct {
+type FtCosi struct {
 	*onet.TreeNodeInstance
 
 	NSubtrees      int
@@ -47,14 +47,14 @@ type ProtocolFtCosi struct {
 }
 
 // CreateProtocolFunction is a function type which creates a new protocol
-// used in ProtocolFtCosi protocol for creating sub leader protocols.
+// used in FtCosi protocol for creating sub leader protocols.
 type CreateProtocolFunction func(name string, t *onet.Tree) (onet.ProtocolInstance, error)
 
 // NewDefaultProtocol is the default protocol function used for registration
 // with an always-true verification.
 func NewDefaultProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	vf := func(a, b []byte) bool { return true }
-	return NewProtocol(n, vf, DefaultSubProtocolName, cothority.Suite)
+	return NewFtCosi(n, vf, DefaultSubProtocolName, cothority.Suite)
 }
 
 // GlobalRegisterDefaultProtocols is used to register the protocols before use,
@@ -64,15 +64,15 @@ func GlobalRegisterDefaultProtocols() {
 	onet.GlobalProtocolRegister(DefaultSubProtocolName, NewDefaultSubProtocol)
 }
 
-// NewProtocol method is used to define the protocol.
-func NewProtocol(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite cosi.Suite) (onet.ProtocolInstance, error) {
+// NewFtCosi method is used to define the ftcosi protocol.
+func NewFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite cosi.Suite) (onet.ProtocolInstance, error) {
 
 	var list []kyber.Point
 	for _, t := range n.Tree().List() {
 		list = append(list, t.ServerIdentity.Public)
 	}
 
-	c := &ProtocolFtCosi{
+	c := &FtCosi{
 		TreeNodeInstance: n,
 		FinalSignature:   make(chan []byte, 1),
 		Data:             make([]byte, 0),
@@ -87,7 +87,7 @@ func NewProtocol(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName st
 }
 
 // Shutdown stops the protocol
-func (p *ProtocolFtCosi) Shutdown() error {
+func (p *FtCosi) Shutdown() error {
 	p.stoppedOnce.Do(func() {
 		close(p.FinalSignature)
 	})
@@ -96,7 +96,7 @@ func (p *ProtocolFtCosi) Shutdown() error {
 
 // Dispatch is the main method of the protocol, defining the root node behaviour
 // and sequential handling of subprotocols.
-func (p *ProtocolFtCosi) Dispatch() error {
+func (p *FtCosi) Dispatch() error {
 	if !p.IsRoot() {
 		return nil
 	}
@@ -133,7 +133,7 @@ func (p *ProtocolFtCosi) Dispatch() error {
 	}
 
 	// start all subprotocols
-	cosiSubProtocols := make([]*SubProtocolFtCosi, len(trees))
+	cosiSubProtocols := make([]*SubFtCosi, len(trees))
 	for i, tree := range trees {
 		cosiSubProtocols[i], err = p.startSubProtocol(tree)
 		if err != nil {
@@ -173,7 +173,7 @@ func (p *ProtocolFtCosi) Dispatch() error {
 	var responsesWg sync.WaitGroup
 	for i, cosiSubProtocol := range runningSubProtocols {
 		responsesWg.Add(1)
-		go func(i int, subProto *SubProtocolFtCosi) {
+		go func(i int, subProto *SubFtCosi) {
 			defer responsesWg.Done()
 			select {
 			case response := <-subProto.subResponse:
@@ -220,18 +220,18 @@ func (p *ProtocolFtCosi) Dispatch() error {
 	return nil
 }
 
-func (p *ProtocolFtCosi) collectCommitments(trees []*onet.Tree,
-	cosiSubProtocols []*SubProtocolFtCosi) ([]StructCommitment, []*SubProtocolFtCosi, error) {
+func (p *FtCosi) collectCommitments(trees []*onet.Tree,
+	cosiSubProtocols []*SubFtCosi) ([]StructCommitment, []*SubFtCosi, error) {
 	// get all commitments, restart subprotocols where subleaders do not respond
 	var mut sync.Mutex
 	var wg sync.WaitGroup
 	errChan := make(chan error, len(cosiSubProtocols))
 	commitments := make([]StructCommitment, 0)
-	runningSubProtocols := make([]*SubProtocolFtCosi, 0)
+	runningSubProtocols := make([]*SubFtCosi, 0)
 
 	for i, subProtocol := range cosiSubProtocols {
 		wg.Add(1)
-		go func(i int, subProtocol *SubProtocolFtCosi) {
+		go func(i int, subProtocol *SubFtCosi) {
 			defer wg.Done()
 			for {
 				select {
@@ -295,7 +295,7 @@ func (p *ProtocolFtCosi) collectCommitments(trees []*onet.Tree,
 
 // Start is done only by root and starts the protocol.
 // It also verifies that the protocol has been correctly parameterized.
-func (p *ProtocolFtCosi) Start() error {
+func (p *FtCosi) Start() error {
 	if p.Msg == nil {
 		close(p.startChan)
 		return fmt.Errorf("no proposal msg specified")
@@ -328,14 +328,14 @@ func (p *ProtocolFtCosi) Start() error {
 
 // startSubProtocol creates, parametrize and starts a subprotocol on a given tree
 // and returns the started protocol.
-func (p *ProtocolFtCosi) startSubProtocol(tree *onet.Tree) (*SubProtocolFtCosi, error) {
+func (p *FtCosi) startSubProtocol(tree *onet.Tree) (*SubFtCosi, error) {
 
 	pi, err := p.CreateProtocol(p.subProtocolName, tree)
 	if err != nil {
 		return nil, err
 	}
 
-	cosiSubProtocol := pi.(*SubProtocolFtCosi)
+	cosiSubProtocol := pi.(*SubFtCosi)
 	cosiSubProtocol.Publics = p.publics
 	cosiSubProtocol.Msg = p.Msg
 	cosiSubProtocol.Data = p.Data

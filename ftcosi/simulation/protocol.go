@@ -138,7 +138,7 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 		if err != nil {
 			return err
 		}
-		proto := p.(*protocol.ProtocolFtCosi)
+		proto := p.(*protocol.FtCosi)
 		proto.NSubtrees = s.NSubtrees
 		proto.Msg = proposal
 		// timeouts may need to be modified depending on platform

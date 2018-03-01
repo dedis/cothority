@@ -12,10 +12,10 @@ import (
 	"github.com/dedis/onet/log"
 )
 
-// ProtocolByzCoinX contains the state used in the execution of the BFTCoSi
+// ByzCoinX contains the state used in the execution of the BFTCoSi
 // protocol. It is also known as OmniCon, which is described in the OmniLedger
 // paper - https://eprint.iacr.org/2017/406
-type ProtocolByzCoinX struct {
+type ByzCoinX struct {
 	// the node we are represented-in
 	*onet.TreeNodeInstance
 	// Msg is the message that will be signed by cosigners
@@ -60,7 +60,7 @@ const (
 )
 
 // Start begins the BFTCoSi protocol by starting the prepare ftcosi.
-func (bft *ProtocolByzCoinX) Start() error {
+func (bft *ByzCoinX) Start() error {
 	if bft.CreateProtocol == nil {
 		return fmt.Errorf("no CreateProtocol")
 	}
@@ -93,7 +93,7 @@ func (bft *ProtocolByzCoinX) Start() error {
 	return nil
 }
 
-func (bft *ProtocolByzCoinX) initCosiProtocol(phase phase) (*protocol.ProtocolFtCosi, error) {
+func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.FtCosi, error) {
 	var name string
 	if phase == phasePrep {
 		name = bft.prepCosiProtoName
@@ -107,7 +107,7 @@ func (bft *ProtocolByzCoinX) initCosiProtocol(phase phase) (*protocol.ProtocolFt
 	if err != nil {
 		return nil, err
 	}
-	cosiProto := pi.(*protocol.ProtocolFtCosi)
+	cosiProto := pi.(*protocol.FtCosi)
 	cosiProto.CreateProtocol = bft.CreateProtocol
 	cosiProto.NSubtrees = bft.nSubtrees
 	cosiProto.Msg = bft.Msg
@@ -125,7 +125,7 @@ func (bft *ProtocolByzCoinX) initCosiProtocol(phase phase) (*protocol.ProtocolFt
 //    otherwise send an empty signature
 // 4, wait for the commit phase to finish
 // 5, send the final signature
-func (bft *ProtocolByzCoinX) Dispatch() error {
+func (bft *ByzCoinX) Dispatch() error {
 
 	if !bft.IsRoot() {
 		return fmt.Errorf("non-root should not start this protocol")
@@ -166,14 +166,14 @@ func (bft *ProtocolByzCoinX) Dispatch() error {
 	return nil
 }
 
-// NewProtocolByzCoinX creates and initialises a BFTCoSi protocol.
-func NewProtocolByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoName string,
-	suite cosi.Suite) (*ProtocolByzCoinX, error) {
+// NewByzCoinX creates and initialises a ByzCoinX protocol.
+func NewByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoName string,
+	suite cosi.Suite) (*ByzCoinX, error) {
 	publics := make([]kyber.Point, n.Tree().Size())
 	for i, node := range n.Tree().List() {
 		publics[i] = node.ServerIdentity.Public
 	}
-	return &ProtocolByzCoinX{
+	return &ByzCoinX{
 		TreeNodeInstance: n,
 		// we do not have Msg to make the protocol fail if it's not set
 		FinalSignatureChan:  make(chan FinalSignature, 1),
@@ -199,27 +199,27 @@ func makeProtocols(vf, ack protocol.VerificationFn, protoName string, suite cosi
 	commitCosiSubProtoName := protoName + "_subcosi_commit"
 
 	bftProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewProtocolByzCoinX(n, prepCosiProtoName, commitCosiProtoName, suite)
+		return NewByzCoinX(n, prepCosiProtoName, commitCosiProtoName, suite)
 	}
 	protocolMap[protoName] = bftProto
 
 	prepCosiProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewProtocol(n, vf, prepCosiSubProtoName, suite)
+		return protocol.NewFtCosi(n, vf, prepCosiSubProtoName, suite)
 	}
 	protocolMap[prepCosiProtoName] = prepCosiProto
 
 	prepCosiSubProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewSubProtocol(n, vf, suite)
+		return protocol.NewSubFtCosi(n, vf, suite)
 	}
 	protocolMap[prepCosiSubProtoName] = prepCosiSubProto
 
 	commitCosiProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewProtocol(n, ack, commitCosiSubProtoName, suite)
+		return protocol.NewFtCosi(n, ack, commitCosiSubProtoName, suite)
 	}
 	protocolMap[commitCosiProtoName] = commitCosiProto
 
 	commitCosiSubProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return protocol.NewSubProtocol(n, ack, suite)
+		return protocol.NewSubFtCosi(n, ack, suite)
 	}
 	protocolMap[commitCosiSubProtoName] = commitCosiSubProto
 

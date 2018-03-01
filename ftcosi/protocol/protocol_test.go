@@ -44,7 +44,7 @@ func TestProtocol(t *testing.T) {
 				local.CloseAll()
 				t.Fatal("Error in creation of protocol:", err)
 			}
-			cosiProtocol := pi.(*ProtocolFtCosi)
+			cosiProtocol := pi.(*FtCosi)
 			cosiProtocol.CreateProtocol = local.CreateProtocol
 			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
@@ -94,7 +94,7 @@ func TestUnresponsiveLeafs(t *testing.T) {
 				local.CloseAll()
 				t.Fatal("Error in creation of protocol:", err)
 			}
-			cosiProtocol := pi.(*ProtocolFtCosi)
+			cosiProtocol := pi.(*FtCosi)
 			cosiProtocol.CreateProtocol = local.CreateProtocol
 			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
@@ -167,7 +167,7 @@ func TestUnresponsiveSubleader(t *testing.T) {
 				local.CloseAll()
 				t.Fatal("Error in creation of protocol:", err)
 			}
-			cosiProtocol := pi.(*ProtocolFtCosi)
+			cosiProtocol := pi.(*FtCosi)
 			cosiProtocol.CreateProtocol = local.CreateProtocol
 			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
@@ -231,7 +231,7 @@ func TestProtocolErrors(t *testing.T) {
 				local.CloseAll()
 				t.Fatal("Error in creation of protocol:", err)
 			}
-			cosiProtocol := pi.(*ProtocolFtCosi)
+			cosiProtocol := pi.(*FtCosi)
 			//cosiProtocol.CreateProtocol = local.CreateProtocol
 			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
@@ -249,7 +249,7 @@ func TestProtocolErrors(t *testing.T) {
 				local.CloseAll()
 				t.Fatal("Error in creation of protocol:", err)
 			}
-			cosiProtocol = pi.(*ProtocolFtCosi)
+			cosiProtocol = pi.(*FtCosi)
 			cosiProtocol.CreateProtocol = local.CreateProtocol
 			//cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
@@ -266,7 +266,7 @@ func TestProtocolErrors(t *testing.T) {
 	}
 }
 
-func getAndVerifySignature(cosiProtocol *ProtocolFtCosi, publics []kyber.Point,
+func getAndVerifySignature(cosiProtocol *FtCosi, publics []kyber.Point,
 	proposal []byte, policy cosi.Policy) error {
 
 	// get response

@@ -758,7 +758,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	}
 
 	// Register the function generating the protocol instance
-	root, ok := node.(*byzcoinx.ProtocolByzCoinX)
+	root, ok := node.(*byzcoinx.ByzCoinX)
 	if !ok {
 		return errors.New(
 			"protocol instance is invalid")
