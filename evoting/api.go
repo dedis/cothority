@@ -12,6 +12,8 @@ const ServiceName = "evoting"
 // Client is a structure to communicate with the evoting service.
 type Client struct {
 	*onet.Client
+	// If LookupURL is set, use it for SCIPER lookups (for tests).
+	LookupURL string
 }
 
 // NewClient instantiates a new evoting.Client.
@@ -32,6 +34,6 @@ func (c *Client) Ping(roster *onet.Roster, nonce uint32) (*Ping, error) {
 // LookupSciper returns information about a sciper number.
 func (c *Client) LookupSciper(roster *onet.Roster, sciper string) (reply *LookupSciperReply, err error) {
 	reply = &LookupSciperReply{}
-	err = c.SendProtobuf(roster.RandomServerIdentity(), &LookupSciper{Sciper: sciper}, reply)
+	err = c.SendProtobuf(roster.RandomServerIdentity(), &LookupSciper{Sciper: sciper, LookupURL: c.LookupURL}, reply)
 	return
 }
