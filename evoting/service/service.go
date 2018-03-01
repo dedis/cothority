@@ -199,11 +199,17 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 		return nil, errors.New("couldn't convert sciper to integer")
 	}
 
-	url := fmt.Sprintf("https://people.epfl.ch/cgi-bin/people/vCard?id=%06d", sciper)
+	url := "https://people.epfl.ch/cgi-bin/people/vCard?id=%06d"
+	if req.LookupURL != "" {
+		url = req.LookupURL
+	}
+	url = fmt.Sprintf(url, sciper)
+
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	if resp.Header.Get("Content-type") != "text/x-vcard; charset=utf-8" {
 		return nil, errors.New("invalid or unknown sciper")
