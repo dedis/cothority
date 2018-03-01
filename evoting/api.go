@@ -12,7 +12,7 @@ const ServiceName = "evoting"
 // Client is a structure to communicate with the evoting service.
 type Client struct {
 	*onet.Client
-	// If LookupURL is set, use iut for SCIPER lookups (for tests).
+	// If LookupURL is set, use it for SCIPER lookups (for tests).
 	LookupURL string
 }
 
