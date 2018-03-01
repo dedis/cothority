@@ -970,7 +970,7 @@ func certStore(c *cli.Context) error {
 //check a certificate
 func certVerify(c *cli.Context) error {
 	if c.NArg() < 1 {
-		log.Fatal("Please give a key to verify")
+		log.Fatal("Please give the corresponding domain to verify the certificate")
 	}
 	cfg := loadConfigOrFail(c)
 	id, err := cfg.findSC(c.Args().Get(1))
@@ -985,8 +985,9 @@ func certVerify(c *cli.Context) error {
 	k := c.Args().Get(0)
 
 	cert := id.Data.Storage[k]
+
 	if !isCert(cert) {
-		log.Fatal("The values is not a certificate")
+		log.Fatal("The values are not a certificate")
 	}
 	log.Print("Verify the validity of the cert:")
 	check(cert)
@@ -1011,6 +1012,7 @@ func certRenew(c *cli.Context) error {
 	if _, ok := id.Data.Storage[domain]; !ok {
 		log.Fatal("Didn't find key", domain, "in the config")
 	}
+
 	cert := id.Data.Storage[domain]
 	if !isCert(cert) {
 		log.Fatal("The values is not a certificate")
@@ -1032,7 +1034,7 @@ func certRenew(c *cli.Context) error {
 func certRevoke(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	if c.NArg() < 1 {
-		log.Fatal("Please give a cert to delete")
+		log.Fatal("Please give the domain to delete the certificate")
 	}
 
 	id, err := cfg.findSC(c.Args().Get(1))
@@ -1062,7 +1064,7 @@ func certRevoke(c *cli.Context) error {
 
 func certRetrieve(c *cli.Context) error {
 	if c.NArg() < 1 {
-		log.Fatal("Please give a key to retrieve")
+		log.Fatal("Please give the domain to retrieve the cert")
 	}
 	k := c.Args().Get(0)
 	cfg := loadConfigOrFail(c)
