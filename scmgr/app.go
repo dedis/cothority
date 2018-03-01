@@ -359,7 +359,7 @@ func scAdd(c *cli.Context) error {
 	}
 	cfg.Db.Store(ssbr.Latest)
 	log.ErrFatal(cfg.save(c))
-	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.GenesisID)
+	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.SkipChainID())
 	return nil
 }
 
@@ -423,7 +423,7 @@ func dnsFetch(c *cli.Context) error {
 		return err
 	}
 	latest := gcr.Update[len(gcr.Update)-1]
-	genesis := latest.GenesisID
+	genesis := latest.SkipChainID()
 	if genesis == nil {
 		genesis = latest.Hash
 	}
@@ -454,7 +454,7 @@ func dnsList(c *cli.Context) error {
 			return err
 		}
 		for _, sb := range sbs {
-			if sb.GenesisID.Equal(g.Hash) {
+			if sb.SkipChainID().Equal(g.Hash) {
 				sub = append(sub, sb)
 			}
 		}
@@ -490,7 +490,7 @@ func dnsIndex(c *cli.Context) error {
 	log.Info("Going through all skipchain-ids and writing the genesis-block")
 	for i, g := range genesis {
 		block := &blocks.Blocks[i]
-		block.GenesisID = hex.EncodeToString(g.Hash)
+		block.SkipchainID = hex.EncodeToString(g.Hash)
 		block.Servers = make([]string, len(g.Roster.List))
 		block.Data = g.Data
 
@@ -500,8 +500,8 @@ func dnsIndex(c *cli.Context) error {
 
 		// Write the genesis block file
 		content, _ := json.Marshal(block)
-		log.Infof("Writing %s.js", block.GenesisID)
-		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID+".js"), content, 0644)
+		log.Infof("Writing %s.js", block.SkipchainID)
+		err := ioutil.WriteFile(filepath.Join(output, block.SkipchainID+".js"), content, 0644)
 
 		if err != nil {
 			log.Info("Cannot write block-specific file")
@@ -601,9 +601,9 @@ func cleanJSFiles(dir string) error {
 
 // JSON skipblock element to be written in the index.js file
 type jsonBlock struct {
-	GenesisID string
-	Servers   []string
-	Data      []byte
+	SkipchainID string
+	Servers     []string
+	Data        []byte
 }
 
 // JSON list of skipblocks element to be written in the index.js file
