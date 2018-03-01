@@ -1,6 +1,9 @@
 package evoting_test
 
 import (
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/dedis/onet"
@@ -30,21 +33,52 @@ func TestPing(t *testing.T) {
 }
 
 func TestLookupSciper(t *testing.T) {
+	const testCard = `
+BEGIN:VCARD
+VERSION:2.1
+FN;CHARSET=UTF-8:Martin Vetterli
+N;CHARSET=UTF-8:Vetterli;Martin;;;
+ADR;TYPE=WORK;CHARSET=UTF-8:EPFL PRES ; CE 3 316 (Centre Est) ; Station 1 ; CH-1015 Lausanne;Switzerland
+EMAIL;TYPE=INTERNET:martin.vetterli@epfl.ch
+URL:https://people.epfl.ch/martin.vetterli
+TITLE;CHARSET=UTF-8:
+TEL;TYPE=WORK:+41216930505 
+ORG:EPFL
+END:VCARD
+Location: https://people.epfl.ch/cgi-bin/people/priv?id=107537&lang=
+`
+
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.RawQuery == "0" {
+			// Simulate a server error.
+			http.Error(w, "go away", 404)
+		} else {
+			// Simulate a proper response.
+			h := w.Header()
+			h["Content-Type"] = []string{"text/x-vcard; charset=utf-8"}
+			fmt.Fprintln(w, testCard)
+		}
+	}))
+
 	local := onet.NewTCPTest(cothority.Suite)
 	defer local.CloseAll()
 
 	_, roster, _ := local.GenTree(3, true)
 
-	_, err := evoting.NewClient().LookupSciper(roster, "")
+	c := evoting.NewClient()
+	c.LookupURL = s.URL + "?%d"
+
+	_, err := c.LookupSciper(roster, "")
 	require.NotNil(t, err)
-	_, err = evoting.NewClient().LookupSciper(roster, "12345")
+	_, err = c.LookupSciper(roster, "12345")
 	require.NotNil(t, err)
-	_, err = evoting.NewClient().LookupSciper(roster, "1234567")
+	_, err = c.LookupSciper(roster, "1234567")
 	require.NotNil(t, err)
-	_, err = evoting.NewClient().LookupSciper(roster, "000000")
+	_, err = c.LookupSciper(roster, "000000")
 	require.NotNil(t, err)
-	vcard, err := evoting.NewClient().LookupSciper(roster, "107537")
+	vcard, err := c.LookupSciper(roster, "107537")
 	require.Nil(t, err)
 	require.Equal(t, "Martin Vetterli", vcard.FullName)
 	require.Equal(t, "TYPE=INTERNET:martin.vetterli@epfl.ch", vcard.Email)
+	s.Close()
 }

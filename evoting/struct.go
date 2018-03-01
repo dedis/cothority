@@ -68,6 +68,8 @@ type LoginReply struct {
 // LookupSciper takes a sciper number and returns elements of the user.
 type LookupSciper struct {
 	Sciper string
+	// If LookupURL is set, use it instead of the default (for testing).
+	LookupURL string
 }
 
 // LookupSciperReply returns the elements of the vcard from
