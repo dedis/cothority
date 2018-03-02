@@ -198,13 +198,13 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		changed = append(changed, prop)
 
 	} else {
-		log.Lvlf2("Adding block with roster %+v to %x", psbd.NewBlock.Roster.List, psbd.LatestID)
 		// We're appending a block to an existing chain
 		log.Lvlf3("Adding block with roster %+v to %x", psbd.NewBlock.Roster.List, psbd.LatestID)
 
 		// If they chose to send not LatestID, it means they want us to find it
 		// for them, based on the given NewBlock.GenesisID.
 		if psbd.LatestID.IsNull() {
+			log.Lvl3("Searching last block to append to")
 			gen := s.db.GetByID(psbd.NewBlock.SkipChainID())
 			if gen != nil {
 				// Ignore error here because even if prev ends up
@@ -217,7 +217,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 
 		if prev == nil {
 			// Did not find the block they claim is the latest.
-
+			log.Lvl3("Didn't find latest block - catching up")
 			// If we don't know this chain, we give up (so that
 			// they cannot make us run useless chainSyncs and attack
 			// other conodes).
@@ -229,18 +229,16 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			}
 			// If we know of this chain, try to sync it.
 			latest := s.findLatest(gen)
-			log.Lvlf2("Catching up chain %x from index %v", gen.Hash, latest.Index)
+			log.Lvlf3("Catching up chain %x from index %v", gen.Hash, latest.Index)
 			err := s.syncChain(latest.Roster, latest.Hash)
 			if err != nil {
 				return nil, errors.New(
 					"failed to catch up")
-
 			}
 			prev = s.db.GetByID(psbd.LatestID)
 			if prev == nil {
 				return nil, errors.New(
 					"Didn't find latest block, even after catchup")
-
 			}
 		}
 		if i, _ := prev.Roster.Search(s.ServerIdentity().ID); i < 0 {
@@ -250,6 +248,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		// Now that we are sure we are responsible for this chain,
 		// make sure that concurrent requests to us to append to
 		// it can not happen.
+		log.Lvl3("Going to lock this chain to append block")
 		chainID := prev.SkipChainID()
 		s.chains.lock(chainID)
 		defer s.chains.unlock(chainID)
@@ -263,7 +262,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		if len(prev.ForwardLink) > 0 {
 			return nil, errors.New(
 				"the latest block already has a follower")
-
 		}
 
 		prop.MaximumHeight = prev.MaximumHeight
@@ -314,8 +312,8 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 
 		}
 		changed = append(changed, prev, prop)
-		log.Lvl3("Asking forward-links from all linked blocks")
 		for i, bl := range prop.BackLinkIDs[1:] {
+			log.Lvl3("Create additional forward-link at level", i)
 			back := s.db.GetByID(bl)
 			if back == nil {
 				return nil, errors.New(
@@ -343,7 +341,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		Previous: prev,
 		Latest:   prop,
 	}
-	log.Lvlf2("Block added, replying. New latest is: %x", prop.Hash)
+	log.Lvlf3("Block added, replying. New latest is: %x", prop.Hash)
 	return reply, nil
 }
 
@@ -1083,7 +1081,7 @@ func (s *Service) addForwardLink(src, dst *SkipBlock) error {
 	}
 
 	fwl := s.db.GetByID(src.Hash).ForwardLink
-	log.Lvlf3("%s adds forward-link to %s: %d->%d - fwlinks:%v", s.ServerIdentity(),
+	log.Lvlf3("%s got signature for forward-link to %s: %d->%d - fwlinks:%v", s.ServerIdentity(),
 		roster.List, src.Index, dst.Index, fwl)
 	if len(fwl) > 0 {
 		return errors.New("forward-link got signed during our signing")
@@ -1176,7 +1174,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 
 // notify other services about new/updated skipblock
 func (s *Service) startPropagation(blocks []*SkipBlock) error {
-	log.Lvl2("Starting to propagate for service", s.ServerIdentity())
+	log.Lvl3("Starting to propagate for service", s.ServerIdentity())
 	siMap := map[string]*network.ServerIdentity{}
 	// Add all rosters of all blocks - everybody needs to be contacted
 	for _, block := range blocks {
