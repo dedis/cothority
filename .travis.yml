@@ -9,7 +9,9 @@ matrix:
         - go get github.com/dedis/Coding || true
 
       script:
-        - make test
+        - make test_fmt
+        - make test_lint
+        - make test_goveralls
 
       notifications:
         email: false
