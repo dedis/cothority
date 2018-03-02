@@ -12,13 +12,11 @@ collective signatures and be assured that the blockchain is valid.
 package identity
 
 import (
-	"reflect"
-	"sync"
-
 	"errors"
-
 	"fmt"
 	"math/big"
+	"reflect"
+	"sync"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/messaging"
@@ -54,6 +52,8 @@ var VerificationIdentity = []skipchain.VerifierID{skipchain.VerifyBase, VerifyId
 
 // VerifyIdentity makes sure that each new block is signed by a threshold of devices.
 var VerifyIdentity = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Identity"))
+
+var storageKey = []byte("storage")
 
 func init() {
 	identityService, _ = onet.RegisterNewService(ServiceName, newIdentityService)
@@ -155,10 +155,10 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, error) {
 				"Invalid request")
 
 		}
-		if req.Final.Verify() != nil {
-			log.Error(s.ServerIdentity(), "Invalid FinalStatement")
+		if err := req.Final.Verify(); err != nil {
+			log.Error(s.ServerIdentity(), "Invalid FinalStatement: ", err)
 			return nil, errors.New(
-				"Signature of final statement is invalid")
+				"Signature of final statement is invalid: " + err.Error())
 
 		}
 		msg, err = req.Final.Hash()
@@ -716,7 +716,7 @@ func (s *Service) verifySkipchainAuth() kyber.Scalar {
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl3("Saving service")
-	err := s.Save("storage", s.Storage)
+	err := s.Save(storageKey, s.Storage)
 	if err != nil {
 		log.Error("Couldn't save file:", err)
 	}
@@ -729,7 +729,7 @@ func (s *Service) clearIdentities() {
 // Tries to load the configuration and updates if a configuration
 // is found, else it returns an error.
 func (s *Service) tryLoad() error {
-	msg, err := s.Load("storage")
+	msg, err := s.Load(storageKey)
 	if err != nil {
 		return err
 	}

@@ -1,10 +1,10 @@
-[![Build Status](https://travis-ci.org/dedis/cothority.svg?branch=master)](https://travis-ci.org/dedis/cothority)
-[![Coverage Status](https://coveralls.io/repos/github/dedis/cothority/badge.svg?branch=master)](https://coveralls.io/github/dedis/costhority?branch=master)
-
-
 # CoSi
 
 This package provides functionality to request and verify collective signatures as well as run a standalone server for handling collective signing requests.
+
+WARNING: this package is kept here for historical and research purposes. It
+should not be used in other services as it has been deprecated by the ftcosi 
+package.
 
 ## Getting Started
 

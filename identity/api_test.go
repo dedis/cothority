@@ -5,9 +5,10 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/protocol"
+	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/anon"
@@ -61,7 +62,7 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	servers := local.GenServers(1)
-	el := local.GenRosterFromHost(servers...)
+	roster := local.GenRosterFromHost(servers...)
 	srvc := local.GetServices(servers, identityService)[0].(*Service)
 	keypairAdmin := key.NewKeyPair(tSuite)
 	keypairUser := key.NewKeyPair(tSuite)
@@ -70,7 +71,7 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	popDesc.Name = "test"
 	popDesc.DateTime = "test"
 	popDesc.Location = "test"
-	popDesc.Roster = el
+	popDesc.Roster = roster
 	popDesc.Parties = make([]*service.ShortDesc, 0)
 
 	final := &service.FinalStatement{}
@@ -80,25 +81,35 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	hash, err := final.Hash()
 	log.ErrFatal(err)
 
-	//Sign Final
-	tree := el.GenerateNaryTreeWithRoot(2, srvc.ServerIdentity())
-	node, err := srvc.CreateProtocol(cosi.Name, tree)
-	log.ErrFatal(err)
-	signature := make(chan []byte)
-	c := node.(*cosi.CoSi)
-	c.RegisterSignatureHook(func(sig []byte) {
-		log.Lvl3("sig", len(sig))
-		signature <- sig[0 : len(sig)-1]
-	})
-	c.Message = hash
-	go node.Start()
+	// Sign Final
+	protoName := "TestIdentity_StoreKeys"
+	err = registerCosiProtocols(srvc.Context, protoName)
+	require.Nil(t, err)
 
-	final.Signature = <-signature
+	rooted := roster.NewRosterWithRoot(srvc.ServerIdentity())
+	require.NotNil(t, rooted)
+	tree := rooted.GenerateNaryTree(len(roster.List))
+	require.NotNil(t, tree)
+	node, err := srvc.CreateProtocol(protoName, tree)
+	require.Nil(t, err)
 
+	c := node.(*protocol.FtCosi)
+	c.Msg = hash
+	c.CreateProtocol = local.CreateProtocol
+	c.Timeout = time.Second * 5
+
+	err = node.Start()
+	require.Nil(t, err)
+
+	final.Signature = <-c.FinalSignature
+	require.NotNil(t, final.Signature)
+	// here we assume the mask is 1 byte long, hence the line below turns
+	// a cosi signature into an eddsa signature
+	final.Signature = final.Signature[0 : len(final.Signature)-1]
 	srvc.Storage.Auth.adminKeys = append(srvc.Storage.Auth.adminKeys, keypairAdmin.Public)
 
 	sig, err := schnorr.Sign(tSuite, keypairAdmin.Private, hash)
-	log.ErrFatal(err)
+	require.Nil(t, err)
 	_, err = srvc.StoreKeys(&StoreKeys{PoPAuth, final, nil, sig})
 	require.Nil(t, err)
 	require.Equal(t, 1, len(srvc.Storage.Auth.sets))
@@ -134,11 +145,11 @@ func TestIdentity_StoreKeys2(t *testing.T) {
 
 func TestIdentity_DataNewCheck(t *testing.T) {
 	l := onet.NewTCPTest(tSuite)
-	hosts, el, _ := l.GenTree(5, true)
+	hosts, roster, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
-	c1 := createIdentity(l, services, el, "one")
+	c1 := createIdentity(l, services, roster, "one")
 
 	data2 := c1.Data.Copy()
 	kp2 := key.NewKeyPair(tSuite)
@@ -160,16 +171,16 @@ func TestIdentity_DataNewCheck(t *testing.T) {
 
 func TestIdentity_AttachToIdentity(t *testing.T) {
 	l := onet.NewTCPTest(tSuite)
-	hosts, el, _ := l.GenTree(5, true)
+	hosts, roster, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	for _, s := range services {
 		s.(*Service).clearIdentities()
 	}
 	defer l.CloseAll()
 
-	c1 := createIdentity(l, services, el, "one")
+	c1 := createIdentity(l, services, roster, "one")
 
-	c2 := NewTestIdentity(el, 50, "two", l, nil)
+	c2 := NewTestIdentity(roster, 50, "two", l, nil)
 	log.ErrFatal(c2.AttachToIdentity(c1.ID))
 	for _, s := range services {
 		is := s.(*Service)
@@ -183,13 +194,13 @@ func TestIdentity_AttachToIdentity(t *testing.T) {
 
 func TestIdentity_DataUpdate(t *testing.T) {
 	l := onet.NewTCPTest(tSuite)
-	hosts, el, _ := l.GenTree(5, true)
+	hosts, roster, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
-	c1 := createIdentity(l, services, el, "one")
+	c1 := createIdentity(l, services, roster, "one")
 
-	c2 := NewTestIdentity(el, 50, "two", l, nil)
+	c2 := NewTestIdentity(roster, 50, "two", l, nil)
 	c2.ID = c1.ID
 	log.ErrFatal(c2.DataUpdate())
 
@@ -213,21 +224,21 @@ func TestIdentity_Authenticate(t *testing.T) {
 
 func TestIdentity_CreateIdentity(t *testing.T) {
 	l := onet.NewTCPTest(tSuite)
-	hosts, el, _ := l.GenTree(3, true)
+	hosts, roster, _ := l.GenTree(3, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
-	c := createIdentity(l, services, el, "one")
+	c := createIdentity(l, services, roster, "one")
 	// Check we're in the data
 	assert.NotNil(t, c.Data)
 }
 
 func TestIdentity_DataNewPropose(t *testing.T) {
 	l := onet.NewTCPTest(tSuite)
-	hosts, el, _ := l.GenTree(2, true)
+	hosts, roster, _ := l.GenTree(2, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 
-	c1 := createIdentity(l, services, el, "onet")
+	c1 := createIdentity(l, services, roster, "onet")
 
 	data2 := c1.Data.Copy()
 	kp2 := key.NewKeyPair(tSuite)
@@ -251,14 +262,14 @@ func TestIdentity_DataNewPropose(t *testing.T) {
 
 func TestIdentity_ProposeVote(t *testing.T) {
 	l := onet.NewTCPTest(tSuite)
-	hosts, el, _ := l.GenTree(5, true)
+	hosts, roster, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 	for _, s := range services {
 		log.Lvl3(s.(*Service).Storage.Identities)
 	}
 
-	c1 := createIdentity(l, services, el, "one1")
+	c1 := createIdentity(l, services, roster, "one1")
 	data2 := c1.Data.Copy()
 	kp2 := key.NewKeyPair(tSuite)
 	data2.Device["two2"] = &Device{kp2.Public}
@@ -274,9 +285,9 @@ func TestIdentity_ProposeVote(t *testing.T) {
 
 func TestIdentity_SaveToStream(t *testing.T) {
 	l := onet.NewTCPTest(tSuite)
-	_, el, _ := l.GenTree(5, true)
+	_, roster, _ := l.GenTree(5, true)
 	defer l.CloseAll()
-	id := NewIdentity(el, 50, "one1", nil)
+	id := NewIdentity(roster, 50, "one1", nil)
 	tmpfile, err := ioutil.TempFile("", "example")
 	log.ErrFatal(err)
 	defer os.Remove(tmpfile.Name())
@@ -303,7 +314,7 @@ func TestIdentity_SaveToStream(t *testing.T) {
 
 func TestCrashAfterRevocation(t *testing.T) {
 	l := onet.NewTCPTest(tSuite)
-	hosts, el, _ := l.GenTree(5, true)
+	hosts, roster, _ := l.GenTree(5, true)
 	services := l.GetServices(hosts, identityService)
 	defer l.CloseAll()
 	kp1 := key.NewKeyPair(tSuite)
@@ -315,9 +326,9 @@ func TestCrashAfterRevocation(t *testing.T) {
 		s.Storage.Auth.sets = append(s.Storage.Auth.sets, set)
 	}
 
-	c1 := NewIdentity(el, 2, "one", kp1)
-	c2 := NewIdentity(el, 2, "two", nil)
-	c3 := NewIdentity(el, 2, "three", nil)
+	c1 := NewIdentity(roster, 2, "one", kp1)
+	c2 := NewIdentity(roster, 2, "two", nil)
+	c3 := NewIdentity(roster, 2, "three", nil)
 	defer c1.Client.Close()
 	defer c2.Client.Close()
 	defer c3.Client.Close()
@@ -350,7 +361,7 @@ func TestCrashAfterRevocation(t *testing.T) {
 
 func TestVerificationFunction(t *testing.T) {
 	l := onet.NewTCPTest(tSuite)
-	hosts, el, _ := l.GenTree(2, true)
+	hosts, roster, _ := l.GenTree(2, true)
 	services := l.GetServices(hosts, identityService)
 	s0 := services[0].(*Service)
 	defer l.CloseAll()
@@ -358,7 +369,7 @@ func TestVerificationFunction(t *testing.T) {
 		log.Lvl3(s.(*Service).Storage.Identities)
 	}
 
-	c1 := createIdentity(l, services, el, "one1")
+	c1 := createIdentity(l, services, roster, "one1")
 
 	// Hack: create own data-structure with twice our signature
 	// and send it directly to the skipblock. Without a proper
@@ -411,7 +422,7 @@ func proposeUpVote(i *Identity) error {
 	return nil
 }
 
-func createIdentity(l *onet.LocalTest, services []onet.Service, el *onet.Roster, name string) *Identity {
+func createIdentity(l *onet.LocalTest, services []onet.Service, roster *onet.Roster, name string) *Identity {
 	kp1 := key.NewKeyPair(tSuite)
 	kp2 := key.NewKeyPair(tSuite)
 	set := anon.Set([]kyber.Point{kp1.Public, kp2.Public})
@@ -420,9 +431,30 @@ func createIdentity(l *onet.LocalTest, services []onet.Service, el *onet.Roster,
 		s.Storage.Auth.sets = append(s.Storage.Auth.sets, set)
 	}
 
-	c := NewTestIdentity(el, 50, name, l, kp1)
+	c := NewTestIdentity(roster, 50, name, l, kp1)
 	log.Error("popauth", PoPAuth)
 	log.Error("set", set)
 	log.ErrFatal(c.CreateIdentity(PoPAuth, set, kp1.Private))
 	return c
+}
+
+func registerCosiProtocols(c *onet.Context, protoName string) error {
+	vf := func(a, b []byte) bool { return true }
+	suite := protocol.EdDSACompatibleCosiSuite
+	cosiSubProtoName := protoName + "_sub"
+
+	cosiProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		return protocol.NewFtCosi(n, vf, cosiSubProtoName, suite)
+	}
+	cosiSubProto := func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		return protocol.NewSubFtCosi(n, vf, suite)
+	}
+
+	if _, err := c.ProtocolRegister(protoName, cosiProto); err != nil {
+		return err
+	}
+	if _, err := c.ProtocolRegister(cosiSubProtoName, cosiSubProto); err != nil {
+		return err
+	}
+	return nil
 }

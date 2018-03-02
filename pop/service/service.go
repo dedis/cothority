@@ -32,10 +32,12 @@ import (
 	"math/big"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/bftcosi"
+	"github.com/dedis/cothority/byzcoinx"
+	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -65,9 +67,7 @@ const Name = "PoPServer"
 const cfgName = "pop.bin"
 const bftSignFinal = "BFTFinal"
 const bftSignMerge = "PopBFTSignMerge"
-
 const propagFinal = "PoPPropagateFinal"
-
 const timeout = 60 * time.Second
 
 // SIGSIZE size of signature
@@ -84,6 +84,8 @@ var mergeConfigReplyID network.MessageTypeID
 var mergeCheckID network.MessageTypeID
 var mergeCheckReplyID network.MessageTypeID
 
+var storageKey = []byte("storage")
+
 // Service represents data needed for one pop-party.
 type Service struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
@@ -98,7 +100,15 @@ type Service struct {
 	// Sync tools
 	// key of map is ID of party
 	// synchronizing inside one party
-	syncs map[string]*sync
+	syncs map[string]*syncChans
+	// verifyFinalBuffer is a temporary buffer for bftVerifyFinal results
+	// it is set by the bftVerifyFinal if the verification is successful,
+	// and unset by bftVerifyFinalAck. Every key/value pair stored in it
+	// should be cleared at the end of the bft protocol.
+	verifyFinalBuffer sync.Map
+	// verifyMergeBuffer is a temporary buffer for bftVerifyMerge results.
+	// The logic is the same for verifyFinalBuffer above.
+	verifyMergeBuffer sync.Map
 }
 
 type saveData struct {
@@ -121,7 +131,7 @@ type merge struct {
 	distrib bool
 }
 
-type sync struct {
+type syncChans struct {
 	// channel to return the configreply
 	ccChannel chan *checkConfigReply
 	// channel to return the mergereply
@@ -162,7 +172,7 @@ func (s *Service) StoreConfig(req *storeConfig) (network.Message, error) {
 		return nil, errors.New("Invalid signature" + err.Error())
 	}
 	s.data.Finals[string(hash)] = &FinalStatement{Desc: req.Desc, Signature: []byte{}}
-	s.syncs[string(hash)] = &sync{
+	s.syncs[string(hash)] = &syncChans{
 		ccChannel: make(chan *checkConfigReply, 1),
 		mcChannel: make(chan *mergeConfigReply, 1),
 	}
@@ -400,7 +410,7 @@ func (s *Service) MergeConfig(req *network.Envelope) {
 }
 
 // MergeConfigReply processes the response after MergeConfig message
-func (s Service) MergeConfigReply(req *network.Envelope) {
+func (s *Service) MergeConfigReply(req *network.Envelope) {
 	log.Lvlf2("MergeConfigReply: %s from %s got %v",
 		s.ServerIdentity(), req.ServerIdentity.String(), req.Msg)
 	mcrVal, ok := req.Msg.(*mergeConfigReply)
@@ -541,7 +551,7 @@ func (final *FinalStatement) VerifyMergeStatement(mergeFinal *FinalStatement) in
 }
 
 // Verification function for signing during Finalization
-func (s *Service) bftVerifyFinal(Msg []byte, Data []byte) bool {
+func (s *Service) bftVerifyFinal(Msg, Data []byte) bool {
 	final, err := NewFinalStatementFromToml(Data)
 	if err != nil {
 		log.Error(err.Error())
@@ -570,7 +580,19 @@ func (s *Service) bftVerifyFinal(Msg []byte, Data []byte) bool {
 		log.Error("hash of lccocal Final stmt and msg are not equal")
 		return false
 	}
+	s.verifyFinalBuffer.Store(sliceToArr(Msg), true)
 	return true
+}
+
+func (s *Service) bftVerifyFinalAck(msg, data []byte) bool {
+	arr := sliceToArr(msg)
+	_, ok := s.verifyFinalBuffer.Load(arr)
+	if ok {
+		s.verifyFinalBuffer.Delete(arr)
+	} else {
+		log.Error(s.ServerIdentity().Address, "ack failed for msg", msg)
+	}
+	return ok
 }
 
 // Verification function for sighning during Merging
@@ -631,7 +653,7 @@ func (s *Service) bftVerifyMerge(Msg []byte, Data []byte) bool {
 	}
 
 	m := &merge{stmtsMap, true}
-	var syncData *sync
+	var syncData *syncChans
 	if syncData, ok = s.syncs[string(final.Desc.Hash())]; !ok {
 		log.Lvl2("VerifyMerge: No sync data with given hash")
 		return false
@@ -686,7 +708,19 @@ func (s *Service) bftVerifyMerge(Msg []byte, Data []byte) bool {
 	}
 
 	s.save()
+	s.verifyMergeBuffer.Store(sliceToArr(Msg), true)
 	return true
+}
+
+func (s *Service) bftVerifyMergeAck(msg, data []byte) bool {
+	arr := sliceToArr(msg)
+	_, ok := s.verifyMergeBuffer.Load(arr)
+	if ok {
+		s.verifyMergeBuffer.Delete(arr)
+	} else {
+		log.Error(s.ServerIdentity().Address, "ack failed for msg", msg)
+	}
+	return ok
 }
 
 // PropagateFinal saves the new final statement
@@ -708,41 +742,46 @@ func (s *Service) PropagateFinal(msg network.Message) {
 //signs FinalStatement with BFTCosi and Propagates signature to other nodes
 func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	data []byte) error {
-	tree := final.Desc.Roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+	rooted := final.Desc.Roster.NewRosterWithRoot(s.ServerIdentity())
+	if rooted == nil {
+		return errors.New("we're not in the roster")
+	}
+	tree := rooted.GenerateNaryTree(len(final.Desc.Roster.List))
 	if tree == nil {
 		return errors.New(
 			"Root does not exist")
-
 	}
+
 	node, err := s.CreateProtocol(protoName, tree)
 	if err != nil {
 		return err
 	}
 
 	// Register the function generating the protocol instance
-	root, ok := node.(*bftcosi.ProtocolBFTCoSi)
+	root, ok := node.(*byzcoinx.ByzCoinX)
 	if !ok {
 		return errors.New(
 			"protocol instance is invalid")
 
 	}
-
 	root.Msg, err = final.Hash()
 	if err != nil {
 		return err
 	}
 
 	root.Data = data
-	done := make(chan bool)
-	root.RegisterOnDone(func() {
-		done <- true
-	})
+	root.Timeout = 5 * time.Second
+	root.CreateProtocol = s.CreateProtocol
+
 	final.Signature = []byte{}
-	go node.Start()
+
+	err = node.Start()
+	if err != nil {
+		return err
+	}
 
 	select {
-	case <-done:
-		sig := root.Signature()
+	case sig := <-root.FinalSignatureChan:
 		if len(sig.Sig) >= SIGSIZE {
 			final.Signature = sig.Sig[:SIGSIZE]
 		} else {
@@ -761,7 +800,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 
 	}
 
-	replies, err := s.PropagateFinalize(final.Desc.Roster, final, 10000*time.Millisecond)
+	replies, err := s.PropagateFinalize(final.Desc.Roster, final, 10*time.Second)
 	if err != nil {
 		return err
 	}
@@ -864,7 +903,7 @@ func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl2("Saving service", s.ServerIdentity())
-	err := s.Save("storage", s.data)
+	err := s.Save(storageKey, s.data)
 	if err != nil {
 		log.Error("Couldn't save data:", err)
 	}
@@ -873,7 +912,7 @@ func (s *Service) save() {
 // Tries to load the configuration and updates if a configuration
 // is found, else it returns an error.
 func (s *Service) tryLoad() error {
-	msg, err := s.Load("storage")
+	msg, err := s.Load(storageKey)
 	if err != nil {
 		return err
 	}
@@ -958,7 +997,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if s.data.merges == nil {
 		s.data.merges = make(map[string]*merge)
 	}
-	s.syncs = make(map[string]*sync)
+	s.syncs = make(map[string]*syncChans)
 	var err error
 	s.PropagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal, 0)
 	if err != nil {
@@ -969,12 +1008,14 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(checkConfigReplyID, s.CheckConfigReply)
 	s.RegisterProcessorFunc(mergeConfigID, s.MergeConfig)
 	s.RegisterProcessorFunc(mergeConfigReplyID, s.MergeConfigReply)
-	s.ProtocolRegister(bftSignFinal, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyFinal)
-	})
-	s.ProtocolRegister(bftSignMerge, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyMerge)
-	})
+	if err := byzcoinx.InitBFTCoSiProtocol(protocol.EdDSACompatibleCosiSuite, s.Context,
+		s.bftVerifyFinal, s.bftVerifyFinalAck, bftSignFinal); err != nil {
+		return nil, err
+	}
+	if err := byzcoinx.InitBFTCoSiProtocol(protocol.EdDSACompatibleCosiSuite, s.Context,
+		s.bftVerifyMerge, s.bftVerifyMergeAck, bftSignMerge); err != nil {
+		return nil, err
+	}
 	return s, nil
 }
 
@@ -1005,4 +1046,12 @@ func sortAll(locs []string, roster []*network.ServerIdentity, atts []kyber.Point
 	sort.Strings(locs)
 	sort.Sort(byIdentity(roster))
 	sort.Sort(byPoint(atts))
+}
+
+// sliceToArr does what the name suggests, we need it to turn a slice into
+// something hashable.
+func sliceToArr(msg []byte) [32]byte {
+	var arr [32]byte
+	copy(arr[:], msg)
+	return arr
 }

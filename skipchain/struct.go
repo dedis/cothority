@@ -12,8 +12,9 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/bftcosi"
+	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -258,7 +259,9 @@ type SkipBlockFix struct {
 	// SkipBlockParent points to the SkipBlock of the responsible Roster -
 	// is nil if this is the Root-roster
 	ParentBlockID SkipBlockID
-	// GenesisID is the ID of the genesis-block.
+	// GenesisID is the ID of the genesis-block. For the genesis-block, this
+	// is null. The SkipBlockID() method returns the correct ID both for
+	// the genesis block and for later blocks.
 	GenesisID SkipBlockID
 	// Data is any data to be stored in that SkipBlock
 	Data []byte
@@ -458,7 +461,7 @@ type ForwardLink struct {
 	// sha256(From.Hash()|To.Hash()|NewRoster)
 	// In the case that NewRoster is nil, the signature is
 	// calculated on the sha256(From.Hash()|To.Hash())
-	Signature bftcosi.BFTSignature
+	Signature byzcoinx.FinalSignature
 }
 
 // NewForwardLink creates a new forwardlink structure with
@@ -497,10 +500,9 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 		newRoster.ID = onet.RosterID([uuid.Size]byte(fl.NewRoster.ID))
 	}
 	return &ForwardLink{
-		Signature: bftcosi.BFTSignature{
-			Sig:        append([]byte{}, fl.Signature.Sig...),
-			Msg:        append([]byte{}, fl.Signature.Msg...),
-			Exceptions: append([]bftcosi.Exception{}, fl.Signature.Exceptions...),
+		Signature: byzcoinx.FinalSignature{
+			Sig: append([]byte{}, fl.Signature.Sig...),
+			Msg: append([]byte{}, fl.Signature.Msg...),
 		},
 		From:      append([]byte{}, fl.From...),
 		To:        append([]byte{}, fl.To...),
@@ -511,11 +513,14 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 // Verify checks the signature against a list of public keys. This list must
 // be in the same order as the Roster that signed the message.
 // It returns nil if the signature is correct, or an error if not.
-func (fl *ForwardLink) Verify(suite network.Suite, pubs []kyber.Point) error {
+func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
 	if bytes.Compare(fl.Signature.Msg, fl.Hash()) != 0 {
 		return errors.New("wrong hash of forward link")
 	}
-	return fl.Signature.Verify(suite, pubs)
+	// this calculation must match the one in omnicon/byzcoinx
+	t := byzcoinx.FaultThreshold(len(pubs))
+	return cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig,
+		cosi.NewThresholdPolicy(len(pubs)-t))
 }
 
 // SkipBlockDB holds the database to the skipblocks.
@@ -523,11 +528,11 @@ func (fl *ForwardLink) Verify(suite network.Suite, pubs []kyber.Point) error {
 // It is a wrapper to embed bolt.DB.
 type SkipBlockDB struct {
 	*bolt.DB
-	bucketName string
+	bucketName []byte
 }
 
 // NewSkipBlockDB returns an initialized SkipBlockDB structure.
-func NewSkipBlockDB(db *bolt.DB, bn string) *SkipBlockDB {
+func NewSkipBlockDB(db *bolt.DB, bn []byte) *SkipBlockDB {
 	return &SkipBlockDB{
 		DB:         db,
 		bucketName: bn,

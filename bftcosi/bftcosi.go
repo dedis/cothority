@@ -6,6 +6,10 @@ verification-function. It uses two rounds of signing - the first round
 indicates the willingness of the rounds to sign the message, and the second
 round is only started if at least a 'threshold' number of nodes signed off in
 the first round.
+
+WARNING: this package is kept here for historical and research purposes. It
+should not be used in other services as it has been deprecated by the byzcoinx
+package.
 */
 
 import (
@@ -414,7 +418,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 	// check if we have no more than threshold failed nodes
 	if len(ch.Signature.Exceptions) > int(bft.allowedExceptions) {
 		log.Errorf("%s: More than threshold (%d/%d) refused to sign - aborting.",
-			bft.Roster().ID, len(ch.Signature.Exceptions), len(bft.Roster().List))
+			bft.Roster(), len(ch.Signature.Exceptions), len(bft.Roster().List))
 		bft.signRefusal = true
 	}
 
@@ -452,7 +456,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 	bzrReturn, ok := bft.waitResponseVerification()
 	// append response
 	if !ok {
-		log.Lvl2(bft.Roster().ID, "refused to sign")
+		log.Lvl2(bft.Roster(), "Refused to sign")
 	}
 
 	// Return if we're not root
