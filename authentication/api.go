@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/onchain-secrets/darc"
+	"github.com/dedis/cothority/authentication/darc"
 	"github.com/dedis/onet"
 )
 

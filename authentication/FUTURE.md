@@ -1,3 +1,5 @@
+** This is future stuff - first document to read should be service.go **
+
 It is based on the policy library from Sandra Siby which is based on the
 darc-library from Linus.
 
