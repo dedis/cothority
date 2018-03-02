@@ -56,7 +56,7 @@ func runDecrypt(t *testing.T, n int) {
 
 	nodes, roster, tree := local.GenBigTree(n, n, 1, true)
 
-	election := &lib.Election{Roster: roster, Stage: lib.Shuffled, Data: []byte{}}
+	election := &lib.Election{Roster: roster, Stage: lib.Shuffled}
 	dkgs := election.GenChain(n)
 
 	services := local.GetServices(nodes, decryptServiceID)

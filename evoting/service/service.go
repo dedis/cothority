@@ -35,11 +35,13 @@ var (
 	errNotCreator       = errors.New("User is not election creator")
 	errNotPart          = errors.New("User is not part of election")
 
+	errNotStarted       = errors.New("Election has not started yet")
 	errNotShuffled      = errors.New("Election has not been shuffled yet")
 	errNotDecrypted     = errors.New("Election has not been decrypted yet")
 	errAlreadyShuffled  = errors.New("Election has already been shuffled")
 	errAlreadyDecrypted = errors.New("Election has already been decrypted")
 	errAlreadyClosed    = errors.New("Election has already been closed")
+	errAlreadyEnded     = errors.New("Election has ended")
 	errCorrupt          = errors.New("Election skipchain is corrupt")
 
 	errProtocolUnknown = errors.New("Protocol unknown")
@@ -178,7 +180,8 @@ func (s *Service) Login(req *evoting.Login) (*evoting.LoginReply, error) {
 			return nil, err
 		}
 
-		if election.IsUser(req.User) || election.IsCreator(req.User) {
+		if (election.IsUser(req.User) && time.Now().Unix() >= election.Start) ||
+			election.IsCreator(req.User) {
 			elections = append(elections, election)
 		}
 	}
@@ -259,6 +262,10 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 
 	if election.Stage >= lib.Shuffled {
 		return nil, errAlreadyClosed
+	}
+
+	if election.End < time.Now().Unix() {
+		return nil, errAlreadyEnded
 	}
 
 	if err = election.Store(req.Ballot); err != nil {
@@ -503,11 +510,16 @@ func (s *Service) vet(token string, id skipchain.SkipBlockID, admin bool) (
 			return nil, errCorrupt
 		}
 
+		if time.Now().Unix() < election.Start {
+			return nil, errNotStarted
+		}
+
 		if admin && !election.IsCreator(stamp.user) {
 			return nil, errNotCreator
 		} else if !admin && !election.IsUser(stamp.user) {
 			return nil, errNotPart
 		}
+
 		return election, nil
 	}
 	return nil, nil

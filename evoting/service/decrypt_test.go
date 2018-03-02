@@ -37,7 +37,6 @@ func TestDecrypt_UserNotAdmin(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Running,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -58,7 +57,6 @@ func TestDecrypt_UserNotCreator(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0, 1},
 		Stage:   lib.Running,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -79,7 +77,6 @@ func TestDecrypt_ElectionNotShuffled(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Running,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -100,7 +97,6 @@ func TestDecrypt_ElectionClosed(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Decrypted,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -123,7 +119,6 @@ func TestDecrypt_Full(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Shuffled,
-		Data:    []byte{},
 	}
 	dkgs := election.GenChain(3)
 	s0.secrets[election.ID.Short()], _ = lib.NewSharedSecret(dkgs[0])

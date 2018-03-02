@@ -34,9 +34,11 @@ type Election struct {
 	Key    kyber.Point           // Key is the DKG public key.
 	Stage  uint32                // Stage indicates the phase of the election.
 
-	Data        []byte // Data can hold auxiliary information.
-	Description string // Description in string format.
-	End         string // End (termination) date.
+	Candidates  []uint32 // Candidates is the list of candidate scipers.
+	MaxChoices  int      // MaxChoices is the max votes in allowed in a ballot.
+	Description string   // Description in string format.
+	Start       int64    // Start denotes the election start unix timestamp
+	End         int64    // End (termination) datetime as unix timestamp.
 }
 
 func init() {

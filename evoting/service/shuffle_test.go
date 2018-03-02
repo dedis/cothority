@@ -37,7 +37,6 @@ func TestShuffle_UserNotAdmin(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Running,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -58,7 +57,6 @@ func TestShuffle_UserNotCreator(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0, 1},
 		Stage:   lib.Running,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -79,7 +77,6 @@ func TestShuffle_ElectionClosed(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Shuffled,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -91,7 +88,6 @@ func TestShuffle_ElectionClosed(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Decrypted,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
@@ -112,7 +108,6 @@ func TestShuffle_Full(t *testing.T) {
 		Creator: 0,
 		Users:   []uint32{0},
 		Stage:   lib.Running,
-		Data:    []byte{},
 	}
 	_ = election.GenChain(3)
 
