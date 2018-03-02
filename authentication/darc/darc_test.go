@@ -71,7 +71,7 @@ func TestDarc_IncrementVersion(t *testing.T) {
 
 func TestDarc_SetEvolution(t *testing.T) {
 	d := createDarc("testdarc").darc
-	log.ErrFatal(d.Verify())
+	log.ErrFatal(d.VerifyEvolutionOffline())
 	owner := NewSignerEd25519(nil)
 	owner2 := NewSignerEd25519(nil)
 	ownerI := owner.Identity()
@@ -79,31 +79,31 @@ func TestDarc_SetEvolution(t *testing.T) {
 	d.AddOwner(ownerI)
 	dNew := d.Copy()
 	dNew.IncrementVersion()
-	assert.NotNil(t, dNew.Verify())
+	assert.NotNil(t, dNew.VerifyEvolutionOffline())
 
 	darcs := []*Darc{d}
 
-	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, *ownerI2, User), owner2))
-	assert.NotNil(t, dNew.Verify())
-	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, *ownerI, User), owner2))
-	assert.NotNil(t, dNew.Verify())
-	require.Nil(t, dNew.SetEvolution(d, NewSignaturePath(darcs, *ownerI, User), owner))
-	require.Nil(t, dNew.Verify())
+	require.Nil(t, dNew.SetEvolutionOffline(d, NewSignaturePath(darcs, *ownerI2, User), owner2))
+	assert.NotNil(t, dNew.VerifyEvolutionOffline())
+	require.Nil(t, dNew.SetEvolutionOffline(d, NewSignaturePath(darcs, *ownerI, User), owner2))
+	assert.NotNil(t, dNew.VerifyEvolutionOffline())
+	require.Nil(t, dNew.SetEvolutionOffline(d, NewSignaturePath(darcs, *ownerI, User), owner))
+	require.Nil(t, dNew.VerifyEvolutionOffline())
 }
 
 func TestSignatureChange(t *testing.T) {
 	td1 := createDarc("testdarc")
 	td2 := createDarc("testdarc")
-	td2.darc.SetEvolution(td1.darc, nil, td1.owners[0])
-	require.Nil(t, td2.darc.Verify())
+	td2.darc.SetEvolutionOffline(td1.darc, nil, td1.owners[0])
+	require.Nil(t, td2.darc.VerifyEvolutionOffline())
 	td2.darc.AddUser(td2.usersI[1])
-	require.NotNil(t, td2.darc.Verify())
+	require.NotNil(t, td2.darc.VerifyEvolutionOffline())
 
-	td2.darc.SetEvolution(td1.darc, nil, td1.owners[0])
-	require.Nil(t, td2.darc.Verify())
+	td2.darc.SetEvolutionOffline(td1.darc, nil, td1.owners[0])
+	require.Nil(t, td2.darc.VerifyEvolutionOffline())
 
 	td2.darc.AddOwner(td2.ownersI[1])
-	require.NotNil(t, td2.darc.Verify())
+	require.NotNil(t, td2.darc.VerifyEvolutionOffline())
 }
 
 func TestSignaturePath(t *testing.T) {
@@ -112,17 +112,17 @@ func TestSignaturePath(t *testing.T) {
 	td3 := createDarc("testdarc3")
 	td4 := createDarc("testdarc4")
 	path := NewSignaturePath([]*Darc{td1.darc, td2.darc, td3.darc, td4.darc}, *td4.usersI[0], User)
-	require.NotNil(t, path.Verify(User))
-	td2.darc.SetEvolution(td1.darc, nil, td1.owners[0])
-	td4.darc.SetEvolution(td3.darc, nil, td3.owners[0])
-	require.NotNil(t, path.Verify(User))
+	require.NotNil(t, path.VerifyFullPath(User))
+	td2.darc.SetEvolutionOffline(td1.darc, nil, td1.owners[0])
+	td4.darc.SetEvolutionOffline(td3.darc, nil, td3.owners[0])
+	require.NotNil(t, path.VerifyFullPath(User))
 
 	td2.darc.AddUser(&Identity{Darc: &IdentityDarc{td3.darc.GetID()}})
-	require.NotNil(t, path.Verify(User))
-	td2.darc.SetEvolution(td1.darc, nil, td1.owners[0])
-	require.Nil(t, path.Verify(User))
-	td4.darc.SetEvolution(td3.darc, nil, td3.owners[0])
-	require.Nil(t, path.Verify(User))
+	require.NotNil(t, path.VerifyFullPath(User))
+	td2.darc.SetEvolutionOffline(td1.darc, nil, td1.owners[0])
+	require.Nil(t, path.VerifyFullPath(User))
+	td4.darc.SetEvolutionOffline(td3.darc, nil, td3.owners[0])
+	require.Nil(t, path.VerifyFullPath(User))
 }
 
 func TestDarcSignature_Verify(t *testing.T) {

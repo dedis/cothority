@@ -54,7 +54,7 @@ func TestService_UpdatePolicy(t *testing.T) {
 	darc2.AddUser(darc.NewIdentityEd25519(user.Public))
 
 	// Sign by wrong key
-	require.Nil(t, darc2.SetEvolutionOnline(reply1.Latest, userSigner))
+	require.Nil(t, darc2.SetEvolution(reply1.Latest, userSigner))
 	_, err = s.UpdatePolicy(&UpdatePolicy{
 		Policy:  "",
 		NewDarc: darc2,
@@ -62,7 +62,7 @@ func TestService_UpdatePolicy(t *testing.T) {
 	require.NotNil(t, err)
 
 	// Use correct key but wrong policy
-	require.Nil(t, darc2.SetEvolutionOnline(reply1.Latest, root))
+	require.Nil(t, darc2.SetEvolution(reply1.Latest, root))
 	_, err = s.UpdatePolicy(&UpdatePolicy{
 		Policy:  "test",
 		NewDarc: darc2,
@@ -70,7 +70,7 @@ func TestService_UpdatePolicy(t *testing.T) {
 	require.NotNil(t, err)
 
 	// Use correct key and correct policy
-	require.Nil(t, darc2.SetEvolutionOnline(reply1.Latest, root))
+	require.Nil(t, darc2.SetEvolution(reply1.Latest, root))
 	_, err = s.UpdatePolicy(&UpdatePolicy{
 		Policy:  "",
 		NewDarc: darc2,

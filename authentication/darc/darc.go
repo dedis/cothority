@@ -168,12 +168,12 @@ func (d *Darc) RemoveUser(user *Identity) ([]*Identity, error) {
 	return *d.Users, nil
 }
 
-// SetEvolution evolves a darc, the latest valid darc needs to sign the new darc.
+// SetEvolutionOffline evolves a darc, the latest valid darc needs to sign the new darc.
 // Only if one of the previous owners signs off on the new darc will it be
 // valid and accepted to sign on behalf of the old darc. The path can be nil
 // unless if the previousOwner is an SignerEd25519 and found directly in the
 // previous darc.
-func (d *Darc) SetEvolution(prevd *Darc, pth *SignaturePath, prevOwner *Signer) error {
+func (d *Darc) SetEvolutionOffline(prevd *Darc, pth *SignaturePath, prevOwner *Signer) error {
 	d.Signature = nil
 	d.Version = prevd.Version + 1
 	if pth == nil {
@@ -195,12 +195,12 @@ func (d *Darc) SetEvolution(prevd *Darc, pth *SignaturePath, prevOwner *Signer) 
 	return nil
 }
 
-// SetEvolutionOnline works like SetEvolution, but doesn't inlcude all the
+// SetEvolution works like SetEvolutionOffline, but doesn't inlcude all the
 // necessary data to verify the update in an offline setting. This is enough
 // for the use case where the ocs stores all darcs in its internal database.
 // The service verifying the signature will have to verify if there is a valid
 // path from the previous darc to the signer.
-func (d *Darc) SetEvolutionOnline(prevd *Darc, prevOwner *Signer) error {
+func (d *Darc) SetEvolution(prevd *Darc, prevOwner *Signer) error {
 	d.Signature = nil
 	d.Version = prevd.Version + 1
 	if prevd.BaseID == nil {
@@ -242,9 +242,18 @@ func (d *Darc) HasRole(identity *Identity, role Role) (found bool) {
 	return false
 }
 
-// Verify returns nil if the verification is OK, or an error
-// if something is wrong.
-func (d Darc) Verify() error {
+// Sign is used to create an online signature using a signer from this darc.
+// This signature might not be valid in an offline setting, where the path
+// to the original darc is missing.
+func (d Darc) Sign(msg []byte, signer *Signer, role Role) (*Signature, error) {
+	sigpath := &SignaturePath{Signer: *signer.Identity(), Role: role}
+	return NewDarcSignature(msg, sigpath, signer)
+}
+
+// VerifyEvolutionOffline returns nil if the verification is OK, or an error
+// if something is wrong. It checks if it is a valid darc for usage in
+// offline verifications.
+func (d Darc) VerifyEvolutionOffline() error {
 	if d.Version == 0 {
 		return nil
 	}
@@ -255,7 +264,7 @@ func (d Darc) Verify() error {
 	if err != nil {
 		return err
 	}
-	if err := d.Signature.SignaturePath.Verify(Owner); err != nil {
+	if err := d.Signature.SignaturePath.VerifyFullPath(Owner); err != nil {
 		return err
 	}
 	return d.Signature.Verify(d.GetID(), latest)
@@ -377,10 +386,10 @@ func (sigpath *SignaturePath) GetPathMsg() []byte {
 	return path
 }
 
-// Verify makes sure that the path is a correctly evolving one (each next
+// VerifyFullPath makes sure that the path is a correctly evolving one (each next
 // darc should be referenced by the previous one) and that the signer
 // is present in the last darc.
-func (sigpath *SignaturePath) Verify(role Role) error {
+func (sigpath *SignaturePath) VerifyFullPath(role Role) error {
 	if len(*sigpath.Darcs) == 0 {
 		return errors.New("no path stored")
 	}
@@ -397,7 +406,7 @@ func (sigpath *SignaturePath) Verify(role Role) error {
 			}
 			if latest != nil {
 				log.Lvlf2("Verifying evolution from %x", d.GetID())
-				if err := d.Verify(); err != nil {
+				if err := d.VerifyEvolutionOffline(); err != nil {
 					return errors.New("not correct evolution of darcs in path: " + err.Error())
 				}
 			}
