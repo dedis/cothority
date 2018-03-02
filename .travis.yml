@@ -5,7 +5,7 @@ matrix:
       install:
         - go get -t ./...
         - go get github.com/dedis/Coding || true
-	- git -C ../onet checkout byzgen_poc
+        - git -C ../onet checkout byzgen_poc
 
       script:
         - make test
