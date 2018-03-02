@@ -34,17 +34,10 @@ describe("cisc client", () => {
       const request = { id: misc.hexToUint8Array(id) };
       cisc_data2 = yield socket.send(requestStr, responseStr, request);
 
-      //console.log(cisc_data);
-      //console.log("-----------------------------------------------------")
-      //console.log(cisc_data2);
-
       expect(cisc_data).to.be.deep.equal(cisc_data2.data);
 
       kvStore = cisc_data.storage;
       kvStore2 = yield client.getStorage();
-
-      //console.log(kvStore)
-      //console.log(kvStore2)
 
       expect(kvStore).to.be.deep.equal(kvStore2);
 

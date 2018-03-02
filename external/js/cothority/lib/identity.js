@@ -113,6 +113,9 @@ class Roster {
     this._id = id;
   }
 
+  curve() {
+    return this.group;
+  }
   /*
      * Random selects a random identity and returns it
      * @return a random identity

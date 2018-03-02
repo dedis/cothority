@@ -28,6 +28,7 @@ const nodeConfig = {
 
 const browserConfig = {
   entry: "./index.js",
+  target: "web",
   output: {
     filename: "bundle.min.js",
     path: path.resolve(__dirname, "dist"),
