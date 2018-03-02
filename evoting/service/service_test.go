@@ -2,6 +2,7 @@ package service
 
 import (
 	"testing"
+	"time"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting"
@@ -68,9 +69,9 @@ func TestService(t *testing.T) {
 			Name:        "bla",
 			Creator:     idAdmin,
 			Users:       []uint32{idUser1, idUser2, idUser3, idAdmin},
-			Data:        append(bufCand1, bufCand2...),
 			Description: "test",
-			End:         "1/1/1970",
+			// The test hopefully ends before the next day...
+			End: time.Now().Unix() + 86400,
 		},
 	})
 	require.Nil(t, err)

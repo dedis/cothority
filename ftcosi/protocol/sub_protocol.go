@@ -143,7 +143,7 @@ func (p *SubFtCosi) Dispatch() error {
 		t := time.After(p.Timeout / 2)
 	loop:
 		// note that this section will not execute if it's on the leaf
-		for _ = range p.Children() {
+		for range p.Children() {
 			select {
 			case commitment, channelOpen := <-p.ChannelCommitment:
 				if !channelOpen {
@@ -211,7 +211,7 @@ func (p *SubFtCosi) Dispatch() error {
 	}
 	responses := make([]StructResponse, 0)
 
-	for _ = range committedChildren {
+	for range committedChildren {
 		response, channelOpen := <-p.ChannelResponse
 		if !channelOpen {
 			return nil
