@@ -70,7 +70,8 @@ func TestService(t *testing.T) {
 			Creator:     idAdmin,
 			Users:       []uint32{idUser1, idUser2, idUser3, idAdmin},
 			Description: "test",
-			End:         time.Now().Unix(),
+			// The test hopefully ends before the next day...
+			End: time.Now().Unix() + 86400,
 		},
 	})
 	require.Nil(t, err)
