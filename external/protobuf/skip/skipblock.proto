@@ -38,13 +38,12 @@ message ForwardLink {
     required bytes from = 1;
     required bytes to = 2;
     optional Roster newRoster = 3;
-    required BFTSignature signature = 4;
+    required ByzcoinXSignature signature = 4;
 }
 
-message BFTSignature {
-    required bytes signature = 1;
-    required bytes message = 2;
-    repeated Exception exceptions = 3;
+message ByzcoinXSignature {
+    required bytes message = 1;
+    required bytes signature = 2;
 }
 
 message Exception {

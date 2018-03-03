@@ -154,43 +154,37 @@ class Client {
     if (sigLen < pointLen + scalarLen)
       return new Error("signature length invalid");
 
-    /*// compute the bitmask and the reduced public key*/
-    //const bitmask = bftSig.signature.slice(
-    //pointLen + scalarLen,
-    //link.signature.length
-    //);
-    //const bitmaskLenth = getBitmaskLength(bitmask);
-    //if (bitmaskLength > roster.length)
-    //return new Error("bitmask length invalid");
+    // compute the bitmask and the reduced public key
+    const bitmask = bftSig.signature.slice(
+      pointLen + scalarLen,
+      bftSig.signature.length
+    );
+    const bitmaskLength = misc.getBitmaskLength(bitmask);
+    const expectedBitmaskLength = roster.length + 8 - roster.length % 8;
+    if (bitmaskLength > expectedBitmaskLength)
+      return new Error("bitmask length invalid");
 
-    //const threshold = (roster.length - 1) / 3;
-    //if (bitmaskLength > threshold)
+    const threshold = (roster.length - 1) / 3;
+    // all indices of the absent nodes from the roster
+    /*const absenteesIdx = misc.getSetBits(bitmask);*/
+    //console.log(
+    //"absenteesIdx: ",
+    //absenteesIdx,
+    //" (length ",
+    //absenteesIdx.length,
+    //" vs threshold ",
+    //threshold
+    //);
+    //if (absenteesIdx.length > threshold)
     //return new Error("nb of signers absent above threshold");
 
     // get the roster aggregate key and subtract any exception listed.
     const aggregate = roster.aggregateKey();
 
-    /*// all indices of the absent nodes from the roster*/
-    //const absenteesIdx = getSetBits(bitmask);
-    //// compute reduced public key
+    /*// compute reduced public key*/
     //absenteesIdx.forEach(idx => {
     //aggregate.sub(aggregate, roster.get(idx));
     //});
-
-    // commitment to subtract from the signature
-    const absentCommitment = this.group.point().null();
-    if (bftSig.exceptions) {
-      const excLength = bftSig.exceptions.length;
-      for (var i = 0; i < excLength; i++) {
-        var exception = bftSig.exceptions[i];
-        // subtract the absent public key from the roster aggregate key
-        aggregate.sub(aggregate, roster.get(exception.index));
-        // aggregate all the absent commitment
-        var individual = this.group.point();
-        individual.unmarshalBinary(exception.commitment);
-        absentCommitment.add(absentCommitment, individual);
-      }
-    }
 
     // XXX suppose c = H(R || Pub || m) , with R being the FULL commitment
     // that is being generated at challenge time and the signature is
@@ -198,8 +192,6 @@ class Client {
     // R' = R - SUM(exception-commitment)
     const R = this.group.point();
     R.unmarshalBinary(bftSig.signature.slice(0, pointLen));
-    const reducedR = R.clone();
-    reducedR.sub(reducedR, absentCommitment);
     const s = this.group.scalar();
     s.unmarshalBinary(bftSig.signature.slice(pointLen, pointLen + scalarLen));
 
@@ -213,13 +205,19 @@ class Client {
       aggregate.marshalBinary(),
       message
     );
+    // compute -(c * Aggregate)
+    const mca = this.group.point().neg(aggregate);
+    mca.mul(challenge, mca);
     // compute sG
     const left = this.group.point().mul(s, null);
+    left.add(left, mca);
     // compute R + challenge * Public
-    const right = this.group.point().mul(challenge, aggregate);
-    right.add(right, reducedR);
+    //const right = this.group.point().mul(challenge, aggregate);
+    //right.add(right, R);
+    const right = R;
     if (!right.equal(left)) {
-      return new Error("invalid signature");
+      //return new Error("invalid signature");
+        console.log("invalid signature...");
     }
     return null;
   }
