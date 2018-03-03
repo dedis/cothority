@@ -4,9 +4,9 @@ const net = require("../net");
 const protobuf = require("../protobuf");
 const misc = require("../misc");
 const identity = require("../identity.js");
+const crypto = require("crypto");
 
 const kyber = require("@dedis/kyber-js");
-const schnorr = kyber.sign.schnorr;
 
 const co = require("co");
 
@@ -138,6 +138,7 @@ class Client {
    */
   verifyForwardLink(roster, flink) {
     const message = flink.signature.message;
+    const mbuff = new Uint8Array(message);
     // verify the signature length and get the bitmask
     var bftSig = flink.signature;
     const sigLen = bftSig.signature.length;
@@ -180,11 +181,10 @@ class Client {
 
     // get the roster aggregate key and subtract any exception listed.
     const aggregate = roster.aggregateKey();
-
-    /*// compute reduced public key*/
-    //absenteesIdx.forEach(idx => {
+    //compute reduced public key
+    /*absenteesIdx.forEach(idx => {*/
     //aggregate.sub(aggregate, roster.get(idx));
-    //});
+    /*});*/
 
     // XXX suppose c = H(R || Pub || m) , with R being the FULL commitment
     // that is being generated at challenge time and the signature is
@@ -194,12 +194,10 @@ class Client {
     R.unmarshalBinary(bftSig.signature.slice(0, pointLen));
     const s = this.group.scalar();
     s.unmarshalBinary(bftSig.signature.slice(pointLen, pointLen + scalarLen));
-
     // recompute challenge = H(R || P || M)
     // with P being the roster aggregate public key minus the public keys
     // indicated by the bitmask
-    const buffPub = aggregate.marshalBinary();
-    const challenge = schnorr.hashSchnorr(
+    const challenge = hashSchnorr(
       this.group,
       R.marshalBinary(),
       aggregate.marshalBinary(),
@@ -217,10 +215,28 @@ class Client {
     const right = R;
     if (!right.equal(left)) {
       //return new Error("invalid signature");
-        console.log("invalid signature...");
+      console.log("invalid signature...");
+      return false;
     }
     return null;
   }
+}
+
+/**
+ *
+ * hashSchnorr returns a scalar out of hashing the given inputs.
+ * @param {...Uint8Array} inputs
+ * @return {Scalar}
+ *
+ **/
+function hashSchnorr(suite, ...inputs) {
+  const h = crypto.createHash("sha256");
+  for (let i of inputs) {
+    h.update(i);
+  }
+  const scalar = suite.scalar();
+  scalar.setBytes(Uint8Array.from(h.digest()));
+  return scalar;
 }
 
 module.exports.Client = Client;

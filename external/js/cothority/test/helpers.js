@@ -100,6 +100,7 @@ function runGolang(buildPath, condition, scriptArgs) {
     });
     spawned_conodes.stdout.setEncoding("utf8");
     spawned_conodes.stdout.on("data", data => {
+      console.log("data: " + data);
       if (condition) {
         if (condition(data)) {
           resolve(spawned_conodes);
