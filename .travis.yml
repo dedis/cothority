@@ -15,7 +15,8 @@ install:
   # Because we are using "language: node_js" the "git clone" is not in the
   # GOPATH. So make a copy of it over where it is supposed to be.
   - git clone . `go env GOPATH`/src/github.com/dedis/cothority
-  - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
+  #- (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
+  - (cd home/go/src/github.com/dedis/cothority && go get -t ./... )
 
 script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
 
@@ -32,7 +33,7 @@ matrix:
       install:
         - go get -t ./...
         - go get github.com/dedis/Coding || true
-
+       
       before_install:
         - cd $TRAVIS_BUILD_DIR
 
