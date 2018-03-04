@@ -32,6 +32,8 @@ matrix:
     - language: go
 
       install:
+          export PATH=$PATH:/usr/local/go/bin
+          export PATH=$PATH:$(go env GOPATH)/bin
         - go get -t ./...
         - go get github.com/dedis/Coding || true
        
