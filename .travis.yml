@@ -12,12 +12,12 @@ install:
   - gimme 1.9
   - . $HOME/.gimme/envs/go1.9.env
   - go get github.com/dedis/Coding || true
+  export PATH=$PATH:/usr/local/go/bin
+  export PATH=$PATH:$(go env GOPATH)/bin
   # Because we are using "language: node_js" the "git clone" is not in the
   # GOPATH. So make a copy of it over where it is supposed to be.
   - git clone . `go env GOPATH`/src/github.com/dedis/cothority
-  #- (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
-  - (cd home/go/src/github.com/dedis/cothority )
-  #&& go get -t ./... )
+  - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
 
 script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
 
