@@ -1022,7 +1022,7 @@ func certRenew(c *cli.Context) error {
 	//check the certificate
 	log.Print("Verify the validity of the cert:")
 	if !check(newcert) {
-		log.Fatal("Certificate not valid, can't add it to proposal storage ")
+		log.Fatal("Certificate is not valid, can't add it to proposal storage ")
 	}
 	prop := id.GetProposed()
 	log.Print("Valid Certificate, added to proposal storage")
