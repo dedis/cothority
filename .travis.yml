@@ -16,7 +16,8 @@ install:
   # GOPATH. So make a copy of it over where it is supposed to be.
   - git clone . `go env GOPATH`/src/github.com/dedis/cothority
   #- (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
-  - (cd home/go/src/github.com/dedis/cothority && go get -t ./... )
+  - (cd home/go/src/github.com/dedis/cothority )
+  #&& go get -t ./... )
 
 script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
 
