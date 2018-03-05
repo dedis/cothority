@@ -1,52 +1,70 @@
 package identity
 
 import (
+	"bytes"
 	"encoding/binary"
-	"sort"
-
 	"fmt"
+	"sort"
 	"strings"
+	"time"
 
-	"gopkg.in/dedis/cothority.v1/pop/service"
-	"gopkg.in/dedis/cothority.v1/skipchain"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/cothority.v2/pop/service"
+	"gopkg.in/dedis/cothority.v2/skipchain"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 )
 
 // How many msec to wait before a timeout is generated in the propagation
-const propagateTimeout = 10000
+const propagateTimeout = 10000 * time.Millisecond
 
 // ID represents one skipblock and corresponds to its Hash.
 type ID skipchain.SkipBlockID
 
+// Equal returns true if it's the same ID.
+func (i ID) Equal(j ID) bool {
+	return i.Equal(j)
+}
+
+// FuzzyEqual returns true if the first part of the ID
+// and the given substring match.
+func (i ID) FuzzyEqual(j []byte) bool {
+	return bytes.Compare(i[0:len(j)], j) == 0
+}
+
 // Data holds the information about all devices and the data stored in this
 // identity-blockchain. All Devices have voting-rights to the Data-structure.
 type Data struct {
+	// Threshold of how many devices need to sign to accept the new block
 	Threshold int
-	Device    map[string]*Device
-	Storage   map[string]string
+	// Device is a list of all devices allowed to sign
+	Device map[string]*Device
+	// Storage is the key/value storage
+	Storage map[string]string
+	// Roster is the new proposed roster - nil if the old is to be used
+	Roster *onet.Roster
 	// Votes for that block, mapped by name of the devices.
 	// This has to be verified with the previous data-block, because only
 	// the previous data-block has the authority to sign for a new block.
-	Votes map[string]*crypto.SchnorrSig
+	Votes map[string][]byte
 }
 
 // Device is represented by a public key.
 type Device struct {
 	// Point is the public key of that device
-	Point abstract.Point
+	Point kyber.Point
 }
 
 // NewData returns a new List with the first owner initialised.
-func NewData(threshold int, pub abstract.Point, owner string) *Data {
+func NewData(roster *onet.Roster, threshold int, pub kyber.Point, owner string) *Data {
 	return &Data{
+		Roster:    roster,
 		Threshold: threshold,
 		Device:    map[string]*Device{owner: {pub}},
 		Storage:   make(map[string]string),
-		Votes:     map[string]*crypto.SchnorrSig{},
+		Votes:     map[string][]byte{},
 	}
 }
 
@@ -57,7 +75,7 @@ func (d *Data) Copy() *Data {
 		log.Error("Couldn't marshal Data:", err)
 		return nil
 	}
-	_, msg, err := network.Unmarshal(b)
+	_, msg, err := network.Unmarshal(b, cothority.Suite)
 	if err != nil {
 		log.Error("Couldn't unmarshal Data:", err)
 	}
@@ -65,15 +83,15 @@ func (d *Data) Copy() *Data {
 	if len(dNew.Storage) == 0 {
 		dNew.Storage = make(map[string]string)
 	}
-	dNew.Votes = map[string]*crypto.SchnorrSig{}
+	dNew.Votes = map[string][]byte{}
 
 	return dNew
 }
 
 // Hash makes a cryptographic hash of the data-file - this
 // can be used as an ID. The vote of the devices is not included in the hash!
-func (d *Data) Hash() ([]byte, error) {
-	hash := network.Suite.Hash()
+func (d *Data) Hash(suite kyber.HashFactory) ([]byte, error) {
+	hash := suite.Hash()
 	err := binary.Write(hash, binary.LittleEndian, int32(d.Threshold))
 	if err != nil {
 		return nil, err
@@ -110,6 +128,11 @@ func (d *Data) Hash() ([]byte, error) {
 			return nil, err
 		}
 	}
+
+	if d.Roster != nil {
+		d.Roster.Aggregate.MarshalTo(hash)
+	}
+
 	return hash.Sum(nil), nil
 }
 
@@ -202,27 +225,27 @@ func sortUniq(slice []string) []string {
 // PinRequest used for admin autentification
 type PinRequest struct {
 	PIN    string
-	Public abstract.Point
+	Public kyber.Point
 }
 
 // StoreKeys used for setting autentification
 type StoreKeys struct {
 	Type    AuthType
 	Final   *service.FinalStatement
-	Publics []abstract.Point
-	Sig     crypto.SchnorrSig
+	Publics []kyber.Point
+	Sig     []byte
 }
 
 // CreateIdentity starts a new identity-skipchain with the initial
 // Data and asking all nodes in Roster to participate.
 type CreateIdentity struct {
+	// Data is the first data that will be stored in the genesis-block. It should
+	// contain the roster and at least one public key
 	Data *Data
-	// list of conodes on which skipchain is created
-	Roster *onet.Roster
-	Type   AuthType
-	// authentication via Public key
-	Public  abstract.Point
-	SchnSig crypto.SchnorrSig
+	// What type of authentication we're doing
+	Type AuthType
+	// SchnSig is optional; one of Public or SchnSig must be set.
+	SchnSig *[]byte
 	// authentication via Linkable Ring Signature
 	Sig []byte
 	// Nonce plays in this case message of authentication
@@ -232,8 +255,7 @@ type CreateIdentity struct {
 // CreateIdentityReply is the reply when a new Identity has been added. It
 // returns the Root and Data-skipchain.
 type CreateIdentityReply struct {
-	Root *skipchain.SkipBlock
-	Data *skipchain.SkipBlock
+	Genesis *skipchain.SkipBlock
 }
 
 // DataUpdate verifies if a new update is available.
@@ -268,7 +290,7 @@ type ProposeUpdateReply struct {
 type ProposeVote struct {
 	ID        ID
 	Signer    string
-	Signature *crypto.SchnorrSig
+	Signature []byte
 }
 
 // ProposeVoteReply returns the signed new skipblock if the threshold of
@@ -281,9 +303,9 @@ type ProposeVoteReply struct {
 
 // PropagateIdentity sends a new identity to other identityServices
 type PropagateIdentity struct {
-	*Storage
+	*IDBlock
 	Tag    string
-	Public abstract.Point
+	PubStr string
 }
 
 // UpdateSkipBlock asks the service to fetch the latest SkipBlock

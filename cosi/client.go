@@ -10,15 +10,14 @@ import (
 	"errors"
 	"time"
 
-	"gopkg.in/dedis/cothority.v1/cosi/check"
-	s "gopkg.in/dedis/cothority.v1/cosi/service"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/cosi"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/cothority.v2/cosi/check"
+	"gopkg.in/dedis/cothority.v2/cosi/crypto"
+	s "gopkg.in/dedis/cothority.v2/cosi/service"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/app"
+	"gopkg.in/dedis/onet.v2/log"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -97,16 +96,16 @@ func sign(r io.Reader, tomlFileName string) (*s.SignatureResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	el, err := app.ReadGroupToml(f)
+	g, err := app.ReadGroupDescToml(f)
 	if err != nil {
 		return nil, err
 	}
-	if len(el.List) <= 0 {
+	if len(g.Roster.List) <= 0 {
 		return nil, errors.New("Empty or invalid cosi group file:" +
 			tomlFileName)
 	}
-	log.Lvl2("Sending signature to", el)
-	res, err := signStatement(r, el)
+	log.Lvl2("Sending signature to", g.Roster)
+	res, err := signStatement(r, g.Roster)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +118,10 @@ func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
 	error) {
 	publics := entityListToPublics(el)
 	client := s.NewClient()
-	msg, _ := crypto.HashStream(network.Suite.Hash(), read)
+
+	h := client.Suite().(kyber.HashFactory).Hash()
+	io.Copy(h, read)
+	msg := h.Sum(nil)
 
 	pchan := make(chan *s.SignatureResponse)
 	var err error
@@ -141,7 +143,7 @@ func signStatement(read io.Reader, el *onet.Roster) (*s.SignatureResponse,
 			return nil, errors.New("received an invalid repsonse")
 		}
 
-		err = cosi.VerifySignature(network.Suite, publics, msg, response.Signature)
+		err = crypto.VerifySignature(client.Suite(), publics, msg, response.Signature)
 		if err != nil {
 			return nil, err
 		}
@@ -183,33 +185,39 @@ func verify(fileName, sigFileName, groupToml string) error {
 		return err
 	}
 	log.Lvl4("Reading group definition")
-	el, err := app.ReadGroupToml(fGroup)
+	g, err := app.ReadGroupDescToml(fGroup)
 	if err != nil {
 		return err
 	}
 	log.Lvl4("Verfifying signature")
-	err = verifySignatureHash(b, sig, el)
+	err = verifySignatureHash(b, sig, g.Roster)
 	return err
 }
 
 func verifySignatureHash(b []byte, sig *s.SignatureResponse, el *onet.Roster) error {
+	localSuite := cothority.Suite.(kyber.HashFactory)
+
 	// We have to hash twice, as the hash in the signature is the hash of the
 	// message sent to be signed
 	publics := entityListToPublics(el)
-	fHash, _ := crypto.HashBytes(network.Suite.Hash(), b)
-	hashHash, _ := crypto.HashBytes(network.Suite.Hash(), fHash)
+	h := localSuite.Hash()
+	h.Write(b)
+	fHash := h.Sum(nil)
+	h.Reset()
+	h.Write(fHash)
+	hashHash := h.Sum(nil)
 	if !bytes.Equal(hashHash, sig.Hash) {
 		return errors.New("You are trying to verify a signature " +
 			"belonging to another file. (The hash provided by the signature " +
 			"doesn't match with the hash of the file.)")
 	}
-	if err := cosi.VerifySignature(network.Suite, publics, fHash, sig.Signature); err != nil {
+	if err := crypto.VerifySignature(cothority.Suite, publics, fHash, sig.Signature); err != nil {
 		return errors.New("Invalid sig:" + err.Error())
 	}
 	return nil
 }
-func entityListToPublics(r *onet.Roster) []abstract.Point {
-	publics := make([]abstract.Point, len(r.List))
+func entityListToPublics(r *onet.Roster) []kyber.Point {
+	publics := make([]kyber.Point, len(r.List))
 	for i, e := range r.List {
 		publics[i] = e.Public
 	}

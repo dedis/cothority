@@ -1,6 +1,6 @@
 // Conode is the main binary for running a Cothority server.
 // A conode can participate in various distributed protocols using the
-// *onet* library as a network and overlay library and the *dedis/crypto*
+// *onet* library as a network and overlay library and the *kyber*
 // library for all cryptographic primitives.
 // Basically, you first need to setup a config file for the server by using:
 //
@@ -13,17 +13,24 @@
 package main
 
 import (
+	"bufio"
+	"encoding/base64"
+	"encoding/hex"
+	"fmt"
 	"os"
+	"path"
+	"strings"
 
-	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/cothority.v2/ftcosi/check"
+	_ "gopkg.in/dedis/cothority.v2/ftcosi/service"
+	_ "gopkg.in/dedis/cothority.v2/identity"
+	_ "gopkg.in/dedis/cothority.v2/skipchain"
+	_ "gopkg.in/dedis/cothority.v2/status/service"
+	"gopkg.in/dedis/onet.v2/app"
+	"gopkg.in/dedis/onet.v2/cfgpath"
+	"gopkg.in/dedis/onet.v2/log"
 	"gopkg.in/urfave/cli.v1"
-
-	"gopkg.in/dedis/cothority.v1/cosi/check"
-	_ "gopkg.in/dedis/cothority.v1/cosi/service"
-	_ "gopkg.in/dedis/cothority.v1/identity"
-	_ "gopkg.in/dedis/cothority.v1/skipchain"
-	_ "gopkg.in/dedis/cothority.v1/status/service"
-	"gopkg.in/dedis/onet.v1/app"
 )
 
 const (
@@ -41,42 +48,18 @@ func main() {
 	cliApp.Name = "conode"
 	cliApp.Usage = "run a cothority server"
 	cliApp.Version = Version
-	serverFlags := []cli.Flag{
-		cli.StringFlag{
-			Name:  "config, c",
-			Value: app.GetDefaultConfigFile(DefaultName),
-			Usage: "configuration file of the server",
-		},
-		cli.IntFlag{
-			Name:  "debug, d",
-			Value: 0,
-			Usage: "debug-level: 1 for terse, 5 for maximal",
-		},
-	}
 
 	cliApp.Commands = []cli.Command{
 		{
 			Name:    "setup",
 			Aliases: []string{"s"},
 			Usage:   "Setup server configuration (interactive)",
-			Action: func(c *cli.Context) error {
-				if c.String("config") != "" {
-					log.Fatal("[-] Configuration file option cannot be used for the 'setup' command")
-				}
-				if c.String("debug") != "" {
-					log.Fatal("[-] Debug option cannot be used for the 'setup' command")
-				}
-				app.InteractiveConfig("conode")
-				return nil
-			},
+			Action:  setup,
 		},
 		{
-			Name:  "server",
-			Usage: "Start cothority server",
-			Action: func(c *cli.Context) {
-				runServer(c)
-			},
-			Flags: serverFlags,
+			Name:   "server",
+			Usage:  "Start cothority server",
+			Action: runServer,
 		},
 		{
 			Name:      "check",
@@ -95,15 +78,26 @@ func main() {
 				},
 			},
 		},
+		{
+			Name:   "convert64",
+			Usage:  "convert a base64 toml file to a hex toml file",
+			Action: convert64,
+		},
 	}
-	cliApp.Flags = serverFlags
+	cliApp.Flags = []cli.Flag{
+		cli.IntFlag{
+			Name:  "debug, d",
+			Value: 0,
+			Usage: "debug-level: 1 for terse, 5 for maximal",
+		},
+		cli.StringFlag{
+			Name:  "config, c",
+			Value: path.Join(cfgpath.GetConfigPath("conode"), app.DefaultServerConfig),
+			Usage: "Configuration file of the server",
+		},
+	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
-		return nil
-	}
-	// default action
-	cliApp.Action = func(c *cli.Context) error {
-		runServer(c)
 		return nil
 	}
 
@@ -111,11 +105,11 @@ func main() {
 	log.ErrFatal(err)
 }
 
-func runServer(ctx *cli.Context) {
+func runServer(ctx *cli.Context) error {
 	// first check the options
-	config := ctx.String("config")
-
+	config := ctx.GlobalString("config")
 	app.RunServer(config)
+	return nil
 }
 
 // checkConfig contacts all servers and verifies if it receives a valid
@@ -126,4 +120,41 @@ func checkConfig(c *cli.Context) error {
 		tomlFileName = c.Args().First()
 	}
 	return check.Config(tomlFileName, c.Bool("detail"))
+}
+
+func setup(c *cli.Context) error {
+	if c.String("config") != "" {
+		log.Fatal("[-] Configuration file option cannot be used for the 'setup' command")
+	}
+	if c.String("debug") != "" {
+		log.Fatal("[-] Debug option cannot be used for the 'setup' command")
+	}
+	app.InteractiveConfig(cothority.Suite, "conode")
+	return nil
+}
+
+// Convert toml files from base64-encoded kyes to hex-encoded keys
+func convert64(c *cli.Context) error {
+	scanner := bufio.NewScanner(os.Stdin)
+	lineNo := 0
+	for scanner.Scan() {
+		lineNo++
+		line := scanner.Text()
+		if strings.HasPrefix(line, "  Public = \"") {
+			pub := line[12:]
+			if pub[len(pub)-1] != '"' {
+				// does not end in quote? error.
+				log.Fatal("Expected line to end in quote, but it does not: ", line)
+			}
+			pub = pub[:len(pub)-1]
+			data, err := base64.StdEncoding.DecodeString(pub)
+			if err != nil {
+				log.Fatal("line", lineNo, "error:", err)
+			}
+			fmt.Printf("  Public = \"%v\"\n", hex.EncodeToString(data))
+		} else {
+			fmt.Println(line)
+		}
+	}
+	return nil
 }

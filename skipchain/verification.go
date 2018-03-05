@@ -1,6 +1,6 @@
 package skipchain
 
-import "gopkg.in/dedis/onet.v1/log"
+import "gopkg.in/dedis/onet.v2/log"
 
 /*
 This file holds all verification-functions for the skipchain.
@@ -9,9 +9,11 @@ This file holds all verification-functions for the skipchain.
 // VerifyBase checks basic parameters between two skipblocks.
 func (s *Service) verifyFuncBase(newID []byte, newSB *SkipBlock) bool {
 	if !newSB.Hash.Equal(newID) {
+		log.Lvl2("Hashes are not equal")
 		return false
 	}
 	if s.verifyBlock(newSB) != nil {
+		log.Lvl2("verifyBlock failed")
 		return false
 	}
 	log.Lvl4("No verification - accepted")
@@ -43,7 +45,7 @@ func (s *Service) verifyFuncData(newID []byte, newSB *SkipBlock) bool {
 		log.Lvl3("No parent skipblock to verify against")
 		return false
 	}
-	sbParent := s.Sbm.GetByID(newSB.ParentBlockID)
+	sbParent := s.db.GetByID(newSB.ParentBlockID)
 	if sbParent == nil {
 		log.Lvl3("Parent skipblock doesn't exist")
 		return false

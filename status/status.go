@@ -7,10 +7,10 @@ import (
 
 	"errors"
 
-	"gopkg.in/dedis/cothority.v1/status/service"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/log"
+	status "gopkg.in/dedis/cothority.v2/status/service"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/app"
+	"gopkg.in/dedis/onet.v2/log"
 
 	"sort"
 	"strings"
@@ -53,7 +53,11 @@ func network(c *cli.Context) error {
 	cl := status.NewClient()
 	for i := 0; i < len(el.List); i++ {
 		log.Lvl3(el.List[i])
-		sr, _ := cl.Request(el.List[i])
+		sr, err := cl.Request(el.List[i])
+		if err != nil {
+			log.Print("error on server", el.List[i], err)
+			continue
+		}
 		printConn(sr)
 		log.Lvl3(cl)
 	}
@@ -62,30 +66,35 @@ func network(c *cli.Context) error {
 
 // readGroup takes a toml file name and reads the file, returning the entities within
 func readGroup(tomlFileName string) (*onet.Roster, error) {
-	log.Print("Reading From File")
 	f, err := os.Open(tomlFileName)
 	if err != nil {
 		return nil, err
 	}
-	el, err := app.ReadGroupToml(f)
+	g, err := app.ReadGroupDescToml(f)
 	if err != nil {
 		return nil, err
 	}
-	if len(el.List) <= 0 {
+	if len(g.Roster.List) <= 0 {
 		return nil, errors.New("Empty or invalid group file:" +
 			tomlFileName)
 	}
-	log.Lvl3(el)
-	return el, err
+	log.Lvl3(g.Roster)
+	return g.Roster, err
 }
 
 // printConn prints the status response that is returned from the server
 func printConn(e *status.Response) {
 	var a []string
-	for key, value := range e.Msg["Status"].Field {
-		a = append(a, (key + ": " + value + "\n"))
+	if e.Status == nil {
+		log.Print("no status from ", e.ServerIdentity)
+		return
+	}
+
+	for sec, st := range e.Status {
+		for key, value := range st.Field {
+			a = append(a, (sec + "." + key + ": " + value))
+		}
 	}
 	sort.Strings(a)
-	strings.Join(a, "\n")
-	log.Print(a)
+	log.Print(strings.Join(a, "\n"))
 }

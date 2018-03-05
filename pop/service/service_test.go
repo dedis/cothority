@@ -1,18 +1,18 @@
 package service
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
-
-	"fmt"
-	"time"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/kyber.v2/sign/schnorr"
+	"gopkg.in/dedis/kyber.v2/suites"
+	"gopkg.in/dedis/kyber.v2/util/key"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 )
 
 var serviceID onet.ServiceID
@@ -25,50 +25,67 @@ func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
+func svc(t *testing.T, local *onet.LocalTest, n int) *Service {
+	suiteSkip(t)
+	servers := local.GenServers(n)
+	services := local.GetServices(servers, serviceID)
+	return services[0].(*Service)
+}
+
 func TestServiceSave(t *testing.T) {
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
-	servers := local.GenServers(1)
-	service := local.GetServices(servers, serviceID)[0].(*Service)
+	service := svc(t, local, 1)
+	if service == nil {
+		return
+	}
+
 	service.data.Pin = "1234"
 	service.save()
 	service.data.Pin = ""
 	log.ErrFatal(service.tryLoad())
 	require.Equal(t, "1234", service.data.Pin)
 }
+
 func TestService_PinRequest(t *testing.T) {
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
-	servers := local.GenServers(1)
-	service := local.GetServices(servers, serviceID)[0].(*Service)
+	service := svc(t, local, 1)
+	if service == nil {
+		return
+	}
 	require.Equal(t, "", service.data.Pin)
-	pub, _ := network.Suite.Point().Pick(nil, network.Suite.Cipher([]byte("test")))
-	_, cerr := service.PinRequest(&PinRequest{"", pub})
-	require.NotNil(t, cerr)
+	pub := tSuite.Point().Pick(tSuite.XOF([]byte("test")))
+	_, err := service.PinRequest(&PinRequest{"", pub})
+	require.NotNil(t, err)
 	require.NotEqual(t, "", service.data.Pin)
-	_, cerr = service.PinRequest(&PinRequest{service.data.Pin, pub})
-	log.Error(cerr)
+	_, err = service.PinRequest(&PinRequest{service.data.Pin, pub})
+	log.Error(err)
 	require.Equal(t, service.data.Public, pub)
 }
 
 func TestService_StoreConfig(t *testing.T) {
-	local := onet.NewTCPTest()
+	suiteSkip(t)
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
+
 	nodes, r, _ := local.GenTree(2, true)
-	service := local.GetServices(nodes, serviceID)[0].(*Service)
+	services := local.GetServices(nodes, serviceID)
+	service := services[0].(*Service)
+
 	desc := &PopDesc{
 		Name:     "test",
 		DateTime: "tomorrow",
 		Roster:   onet.NewRoster(r.List),
 	}
-	kp := config.NewKeyPair(network.Suite)
+	kp := key.NewKeyPair(tSuite)
 
 	service.data.Public = kp.Public
 	hash := desc.Hash()
-	sg, err := crypto.SignSchnorr(network.Suite, kp.Secret, hash)
+	sg, err := schnorr.Sign(tSuite, kp.Private, hash)
 	log.ErrFatal(err)
-	msg, cerr := service.StoreConfig(&storeConfig{desc, sg})
-	log.ErrFatal(cerr)
+	msg, err := service.StoreConfig(&storeConfig{desc, sg})
+	log.ErrFatal(err)
 	_, ok := msg.(*storeConfigReply)
 	require.True(t, ok)
 	_, ok = service.data.Finals[string(desc.Hash())]
@@ -76,14 +93,16 @@ func TestService_StoreConfig(t *testing.T) {
 }
 
 func TestService_CheckConfigMessage(t *testing.T) {
-	local := onet.NewTCPTest()
+	suiteSkip(t)
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	nodes, r, _ := local.GenTree(2, true)
-	descs, atts, srvcs, _ := storeDesc(local.GetServices(nodes, serviceID), r, 2, 2)
+	svcs := local.GetServices(nodes, serviceID)
+	descs, atts, srvcs, _ := storeDesc(svcs, r, 2, 2)
 	for _, s := range srvcs {
 		for _, desc := range descs {
 			hash := string(desc.Hash())
-			s.data.Finals[hash].Attendees = make([]abstract.Point, len(atts))
+			s.data.Finals[hash].Attendees = make([]kyber.Point, len(atts))
 			copy(s.data.Finals[hash].Attendees, atts)
 		}
 	}
@@ -110,14 +129,15 @@ func TestService_CheckConfigMessage(t *testing.T) {
 }
 
 func TestService_CheckConfigReply(t *testing.T) {
-	local := onet.NewTCPTest()
+	suiteSkip(t)
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	nodes, r, _ := local.GenTree(2, true)
 	descs, atts, srvcs, _ := storeDesc(local.GetServices(nodes, serviceID), r, 2, 2)
 	for _, desc := range descs {
 		hash := string(desc.Hash())
 		s0 := srvcs[0]
-		s0.data.Finals[hash].Attendees = make([]abstract.Point, len(atts))
+		s0.data.Finals[hash].Attendees = make([]kyber.Point, len(atts))
 		copy(s0.data.Finals[hash].Attendees, atts)
 
 		ccr := &checkConfigReply{0, desc.Hash(), atts}
@@ -145,7 +165,8 @@ func TestService_CheckConfigReply(t *testing.T) {
 }
 
 func TestService_FinalizeRequest(t *testing.T) {
-	local := onet.NewTCPTest()
+	suiteSkip(t)
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	nbrNodes := 3
 	nbrAtt := 4
@@ -166,14 +187,14 @@ func TestService_FinalizeRequest(t *testing.T) {
 		log.ErrFatal(err)
 		// Send a request to all services
 		for i, s := range services {
-			sg, err := crypto.SignSchnorr(network.Suite, privs[i], hash)
+			sg, err := schnorr.Sign(tSuite, privs[i], hash)
 			log.ErrFatal(err)
 			fr.Signature = sg
 			_, err = s.FinalizeRequest(fr)
 			require.NotNil(t, err)
 		}
 
-		sg, err := crypto.SignSchnorr(network.Suite, privs[0], desc.Hash())
+		sg, err := schnorr.Sign(tSuite, privs[0], desc.Hash())
 		log.ErrFatal(err)
 		// Create a new config for the first one
 		services[0].StoreConfig(&storeConfig{desc, sg})
@@ -184,14 +205,14 @@ func TestService_FinalizeRequest(t *testing.T) {
 				continue
 			}
 			log.Lvl2("Asking", s, "to finalize")
-			sg, err := crypto.SignSchnorr(network.Suite, privs[i], hash)
+			sg, err := schnorr.Sign(tSuite, privs[i], hash)
 			log.ErrFatal(err)
 			fr.Signature = sg
 			_, err = s.FinalizeRequest(fr)
 			require.NotNil(t, err)
 		}
 
-		sg, err = crypto.SignSchnorr(network.Suite, privs[0], hash)
+		sg, err = schnorr.Sign(tSuite, privs[0], hash)
 		log.ErrFatal(err)
 		fr.Signature = sg
 
@@ -205,7 +226,8 @@ func TestService_FinalizeRequest(t *testing.T) {
 }
 
 func TestService_FetchFinal(t *testing.T) {
-	local := onet.NewTCPTest()
+	suiteSkip(t)
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	nbrNodes := 2
 	nbrAtt := 1
@@ -214,20 +236,21 @@ func TestService_FetchFinal(t *testing.T) {
 
 	// Get all service-instances
 	descs, atts, services, priv := storeDesc(local.GetServices(nodes, serviceID), r, nbrAtt, ndescs)
+
 	for _, desc := range descs {
 		descHash := desc.Hash()
 		fr := &finalizeRequest{}
 		fr.DescID = descHash
 		fr.Attendees = atts
 		hash, err := fr.hash()
-		sg, err := crypto.SignSchnorr(network.Suite, priv[0], hash)
+		sg, err := schnorr.Sign(tSuite, priv[0], hash)
 		log.ErrFatal(err)
 		fr.Signature = sg
 
 		_, err = services[0].FinalizeRequest(fr)
 		require.NotNil(t, err)
 
-		sg, err = crypto.SignSchnorr(network.Suite, priv[1], hash)
+		sg, err = schnorr.Sign(tSuite, priv[1], hash)
 		log.ErrFatal(err)
 		fr.Signature = sg
 
@@ -255,7 +278,8 @@ func TestService_FetchFinal(t *testing.T) {
 }
 
 func TestService_MergeConfig(t *testing.T) {
-	local := onet.NewTCPTest()
+	suiteSkip(t)
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	nbrNodes := 4
 	nbrAtt := 4
@@ -288,13 +312,13 @@ func TestService_MergeConfig(t *testing.T) {
 		fr.DescID = descHash
 		fr.Attendees = atts[2*i : 2*i+2]
 		hash, err := fr.hash()
-		sg, err := crypto.SignSchnorr(network.Suite, priv[2*i], hash)
+		sg, err := schnorr.Sign(tSuite, priv[2*i], hash)
 		log.ErrFatal(err)
 		fr.Signature = sg
 		_, err = srvcs[2*i].FinalizeRequest(fr)
 		require.NotNil(t, err)
 
-		sg, err = crypto.SignSchnorr(network.Suite, priv[2*i+1], hash)
+		sg, err = schnorr.Sign(tSuite, priv[2*i+1], hash)
 		log.ErrFatal(err)
 		fr.Signature = sg
 		msg, err := srvcs[2*i+1].FinalizeRequest(fr)
@@ -317,8 +341,18 @@ func TestService_MergeConfig(t *testing.T) {
 		"Server 2 statementsMap")
 }
 
+func suiteSkip(t *testing.T) {
+	// Some of these tests require Ed25519, so skip if we are currently
+	// running with another suite.
+	if tSuite != suites.MustFind("Ed25519") {
+		t.Skip("current suite is not compatible with this test, skipping it")
+		return
+	}
+}
+
 func TestService_MergeRequest(t *testing.T) {
-	local := onet.NewTCPTest()
+	suiteSkip(t)
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
 	nbrNodes := 4
 	nbrAtt := 4
@@ -331,7 +365,7 @@ func TestService_MergeRequest(t *testing.T) {
 	// Wrong party check
 	mr := &mergeRequest{}
 	mr.ID = []byte(hash[1])
-	sg, err := crypto.SignSchnorr(network.Suite, priv[0], mr.ID)
+	sg, err := schnorr.Sign(tSuite, priv[0], mr.ID)
 	mr.Signature = sg
 	log.ErrFatal(err)
 	_, err = srvcs[0].MergeRequest(mr)
@@ -339,25 +373,25 @@ func TestService_MergeRequest(t *testing.T) {
 
 	// Not finished
 	mr.ID = []byte(hash[0])
-	mr.Signature, err = crypto.SignSchnorr(network.Suite, priv[0], mr.ID)
+	mr.Signature, err = schnorr.Sign(tSuite, priv[0], mr.ID)
 	log.ErrFatal(err)
 	_, err = srvcs[0].MergeRequest(mr)
 	require.NotNil(t, err)
 
 	// finish parties
-	for i, _ := range descs {
+	for i := range descs {
 
 		fr := &finalizeRequest{}
 		fr.DescID = []byte(hash[i])
 		fr.Attendees = atts[2*i : 2*i+2]
 		hash_fr, err := fr.hash()
-		sg, err := crypto.SignSchnorr(network.Suite, priv[2*i], hash_fr)
+		sg, err := schnorr.Sign(tSuite, priv[2*i], hash_fr)
 		log.ErrFatal(err)
 		fr.Signature = sg
 		_, err = srvcs[2*i].FinalizeRequest(fr)
 		require.NotNil(t, err)
 
-		sg, err = crypto.SignSchnorr(network.Suite, priv[2*i+1], hash_fr)
+		sg, err = schnorr.Sign(tSuite, priv[2*i+1], hash_fr)
 		log.ErrFatal(err)
 		fr.Signature = sg
 		msg, err := srvcs[2*i+1].FinalizeRequest(fr)
@@ -368,7 +402,7 @@ func TestService_MergeRequest(t *testing.T) {
 	}
 	// wrong Signature
 	mr.ID = []byte(hash[0])
-	sg, err = crypto.SignSchnorr(network.Suite, priv[1], mr.ID)
+	sg, err = schnorr.Sign(tSuite, priv[1], mr.ID)
 	log.ErrFatal(err)
 	mr.Signature = sg
 	_, err = srvcs[0].MergeRequest(mr)
@@ -379,7 +413,7 @@ func TestService_MergeRequest(t *testing.T) {
 	log.Lvlf2("Group 2, Server: %s", srvcs[2].ServerIdentity())
 	log.Lvlf2("Group 2, Server: %s", srvcs[3].ServerIdentity())
 	mr.ID = []byte(hash[0])
-	sg, err = crypto.SignSchnorr(network.Suite, priv[0], mr.ID)
+	sg, err = schnorr.Sign(tSuite, priv[0], mr.ID)
 	log.ErrFatal(err)
 	mr.Signature = sg
 	msg, err := srvcs[0].MergeRequest(mr)
@@ -406,7 +440,7 @@ func TestService_MergeRequest(t *testing.T) {
 }
 
 func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int,
-	nprts int) ([]*PopDesc, []abstract.Point, []*Service, []abstract.Scalar) {
+	nprts int) ([]*PopDesc, []kyber.Point, []*Service, []kyber.Scalar) {
 	descs := make([]*PopDesc, nprts)
 	for i := range descs {
 		descs[i] = &PopDesc{
@@ -416,26 +450,29 @@ func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int,
 			Roster:   onet.NewRoster(el.List),
 		}
 	}
-	atts := make([]abstract.Point, nbr)
+	atts := make([]kyber.Point, nbr)
 	for i := range atts {
-		kp := config.NewKeyPair(network.Suite)
+		kp := key.NewKeyPair(tSuite)
 		atts[i] = kp.Public
 	}
 
-	pubs := make([]abstract.Point, len(srvcs))
-	privs := make([]abstract.Scalar, len(srvcs))
-	for i, _ := range srvcs {
-		kp := config.NewKeyPair(network.Suite)
-		pubs[i], privs[i] = kp.Public, kp.Secret
+	pubs := make([]kyber.Point, len(srvcs))
+	privs := make([]kyber.Scalar, len(srvcs))
+	for i := range srvcs {
+		kp := key.NewKeyPair(tSuite)
+		pubs[i], privs[i] = kp.Public, kp.Private
 	}
 
 	sret := []*Service{}
 	for i, s := range srvcs {
+		if s == nil {
+			continue
+		}
 		sret = append(sret, s.(*Service))
 		s.(*Service).data.Public = pubs[i]
 		for _, desc := range descs {
 			hash := desc.Hash()
-			sig, err := crypto.SignSchnorr(network.Suite, privs[i], hash)
+			sig, err := schnorr.Sign(tSuite, privs[i], hash)
 			log.ErrFatal(err)
 			s.(*Service).StoreConfig(&storeConfig{desc, sig})
 		}
@@ -446,7 +483,7 @@ func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int,
 // Number of parties is assumed number of nodes / 2.
 // Number of nodes is assumed to be even
 func storeDescMerge(srvcs []onet.Service, el *onet.Roster, nbr int) ([]*PopDesc,
-	[]abstract.Point, []*Service, []abstract.Scalar) {
+	[]kyber.Point, []*Service, []kyber.Scalar) {
 	rosters := make([]*onet.Roster, len(el.List)/2)
 	for i := 0; i < len(el.List); i += 2 {
 		rosters[i/2] = onet.NewRoster(el.List[i : i+2])
@@ -468,26 +505,29 @@ func storeDescMerge(srvcs []onet.Service, el *onet.Roster, nbr int) ([]*PopDesc,
 	for _, desc := range descs {
 		desc.Parties = copy_descs
 	}
-	atts := make([]abstract.Point, nbr)
+	atts := make([]kyber.Point, nbr)
 
 	for i := range atts {
-		kp := config.NewKeyPair(network.Suite)
+		kp := key.NewKeyPair(tSuite)
 		atts[i] = kp.Public
 	}
 
-	pubs := make([]abstract.Point, len(srvcs))
-	privs := make([]abstract.Scalar, len(srvcs))
-	for i, _ := range srvcs {
-		kp := config.NewKeyPair(network.Suite)
-		pubs[i], privs[i] = kp.Public, kp.Secret
+	pubs := make([]kyber.Point, len(srvcs))
+	privs := make([]kyber.Scalar, len(srvcs))
+	for i := range srvcs {
+		kp := key.NewKeyPair(tSuite)
+		pubs[i], privs[i] = kp.Public, kp.Private
 	}
 	sret := []*Service{}
 	for i, s := range srvcs {
+		if s == nil {
+			continue
+		}
 		sret = append(sret, s.(*Service))
 		s.(*Service).data.Public = pubs[i]
 		desc := descs[i/2]
 		hash := desc.Hash()
-		sig, err := crypto.SignSchnorr(network.Suite, privs[i], hash)
+		sig, err := schnorr.Sign(tSuite, privs[i], hash)
 		log.ErrFatal(err)
 		s.(*Service).StoreConfig(&storeConfig{desc, sig})
 	}

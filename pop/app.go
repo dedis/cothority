@@ -1,36 +1,32 @@
 package main
 
 import (
-	"encoding/base64"
-	"errors"
-	"os"
-	"path"
-
-	"gopkg.in/dedis/cothority.v1/cosi/check"
-	_ "gopkg.in/dedis/cothority.v1/cosi/protocol"
-	_ "gopkg.in/dedis/cothority.v1/cosi/service"
-
-	"fmt"
-	"io/ioutil"
-
-	"net"
-
-	"strings"
-
 	"bufio"
 	"bytes"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
+	"strings"
+
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/cothority.v2/ftcosi/check"
+	_ "gopkg.in/dedis/cothority.v2/ftcosi/protocol"
+	_ "gopkg.in/dedis/cothority.v2/ftcosi/service"
 
 	"github.com/BurntSushi/toml"
-	"gopkg.in/dedis/cothority.v1/pop/service"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/anon"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/app"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/cothority.v2/pop/service"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/kyber.v2/sign/anon"
+	"gopkg.in/dedis/kyber.v2/util/encoding"
+	"gopkg.in/dedis/kyber.v2/util/key"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/app"
+	"gopkg.in/dedis/onet.v2/cfgpath"
+	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -42,9 +38,9 @@ func init() {
 type Config struct {
 	// Public key of org. Used for linking and
 	// org authentication
-	OrgPublic abstract.Point
+	OrgPublic kyber.Point
 	// Private key of org. Used for authentication
-	OrgPrivate abstract.Scalar
+	OrgPrivate kyber.Scalar
 	// Address of the linked conode.
 	Address network.Address
 	// Map of Final statements of the parties.
@@ -58,10 +54,10 @@ type Config struct {
 type PartyConfig struct {
 	// Private key of attendee or organizer, depending on value
 	// of Index.
-	Private abstract.Scalar
+	Private kyber.Scalar
 	// Public key of attendee or organizer, depending on value of
 	// index.
-	Public abstract.Point
+	Public kyber.Point
 	// Index of the attendee in the final statement. If the index
 	// is -1, then this pop holds an organizer.
 	Index int
@@ -96,8 +92,10 @@ func main() {
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
 		cli.StringFlag{
-			Name:  "config,c",
-			Value: "~/.config/cothority/pop",
+			Name: "config,c",
+			// we use GetDataPath because only non-human-readable
+			// data files are stored here
+			Value: cfgpath.GetDataPath("pop"),
 			Usage: "The configuration-directory of pop",
 		},
 	}
@@ -105,7 +103,7 @@ func main() {
 		log.SetDebugVisible(c.Int("debug"))
 		return nil
 	}
-	appCli.Run(os.Args)
+	log.ErrFatal(appCli.Run(os.Args))
 }
 
 // links this pop to a cothority
@@ -116,25 +114,18 @@ func orgLink(c *cli.Context) error {
 	}
 	cfg, client := getConfigClient(c)
 
-	host, port, err := net.SplitHostPort(c.Args().First())
-	if err != nil {
-		return err
-	}
-	addrs, err := net.LookupHost(host)
-	if err != nil {
-		return err
-	}
-	addr := network.NewTCPAddress(fmt.Sprintf("%s:%s", addrs[0], port))
+	addr := network.NewAddress(network.PlainTCP, c.Args().First())
 	pin := c.Args().Get(1)
 	if err := client.PinRequest(addr, pin, cfg.OrgPublic); err != nil {
-		if err.ErrorCode() == service.ErrorWrongPIN && pin == "" {
+		// Compare by string because this comes over the network.
+		if strings.Contains(err.Error(), service.ErrorReadPIN.Error()) {
 			log.Info("Please read PIN in server-log")
 			return nil
 		}
 		return err
 	}
 	cfg.Address = addr
-	log.Lvl3("Successfully linked with", addr)
+	log.Info("Successfully linked with", addr)
 	cfg.write()
 	return nil
 }
@@ -143,26 +134,32 @@ func orgLink(c *cli.Context) error {
 func orgConfig(c *cli.Context) error {
 	log.Lvl3("Org: Config")
 	if c.NArg() < 1 {
-		log.Fatal(`Please give pop_desc.toml and (optionaly)
-		merge_party.toml`)
+		log.Fatal("Please give pop_desc.toml and (optionally) merge_party.toml")
 	}
 	cfg, client := getConfigClient(c)
 	if cfg.Address.String() == "" {
-		log.Fatal("No address")
 		return errors.New("No address found - please link first")
 	}
 	desc := &service.PopDesc{}
 	pdFile := c.Args().First()
 	buf, err := ioutil.ReadFile(pdFile)
-	log.ErrFatal(err, "While reading", pdFile)
+	if err != nil {
+		return fmt.Errorf("error: %s - while reading pop-description: %s", err, pdFile)
+	}
 	err = decodePopDesc(string(buf), desc)
-	log.ErrFatal(err, "While decoding", pdFile)
+	if err != nil {
+		return fmt.Errorf("error: %s - while decoding pop-description: %s", err, pdFile)
+	}
 	if c.NArg() == 2 {
 		mergeFile := c.Args().Get(1)
 		buf, err = ioutil.ReadFile(mergeFile)
-		log.ErrFatal(err, "While reading", mergeFile)
+		if err != nil {
+			return fmt.Errorf("error: %s - while reading merge_party: %s", err, mergeFile)
+		}
 		desc.Parties, err = decodeGroups(string(buf))
-		log.ErrFatal(err, "While decoding ", mergeFile)
+		if err != nil {
+			return fmt.Errorf("error: %s - while decoding merge_party: %s", err, mergeFile)
+		}
 
 		// Check that current party is included in merge config
 		found := false
@@ -176,24 +173,28 @@ func orgConfig(c *cli.Context) error {
 			log.Fatal("party is not included in merge config")
 		}
 	}
-	hash := base64.StdEncoding.EncodeToString(desc.Hash())
+	hash := hex.EncodeToString(desc.Hash())
 	log.Lvlf2("Hash of config: %s", hash)
-	log.ErrFatal(client.StoreConfig(cfg.Address, desc, cfg.OrgPrivate))
+	err = client.StoreConfig(cfg.Address, desc, cfg.OrgPrivate)
+	if err != nil {
+		return err
+	}
 	if val, ok := cfg.Parties[hash]; !ok {
-		kp := config.NewKeyPair(network.Suite)
+		kp := key.NewKeyPair(cothority.Suite)
 		cfg.Parties[hash] = &PartyConfig{
 			Index: -1,
 			Final: &service.FinalStatement{
 				Desc:      desc,
-				Attendees: []abstract.Point{},
+				Attendees: []kyber.Point{},
 				Signature: []byte{},
 			},
 			Public:  kp.Public,
-			Private: kp.Secret,
+			Private: kp.Private,
 		}
 	} else {
 		val.Final.Desc = desc
 	}
+	log.Infof("Stored new config with hash %x", desc.Hash())
 	cfg.write()
 	return nil
 }
@@ -217,9 +218,11 @@ func orgPublic(c *cli.Context) error {
 	keys := strings.Split(str, ",")
 	cfg, _ := getConfigClient(c)
 	party, err := cfg.getPartybyHash(c.Args().Get(1))
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	for _, k := range keys {
-		pub, err := crypto.String64ToPoint(network.Suite, k)
+		pub, err := encoding.StringHexToPoint(cothority.Suite, k)
 		if err != nil {
 			log.Fatal("Couldn't parse public key:", k, err)
 		}
@@ -249,20 +252,29 @@ func orgFinal(c *cli.Context) error {
 		log.Fatal("Not linked")
 	}
 	party, err := cfg.getPartybyHash(c.Args().First())
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	if len(party.Final.Signature) > 0 {
-		finst, err := party.Final.ToToml()
-		log.ErrFatal(err)
+		var finst []byte
+		finst, err = party.Final.ToToml()
+		if err != nil {
+			return err
+		}
 		log.Lvl2("Final statement already here:\n", "\n"+string(finst))
 		return nil
 	}
-	fs, cerr := client.Finalize(cfg.Address, party.Final.Desc,
+	fs, err := client.Finalize(cfg.Address, party.Final.Desc,
 		party.Final.Attendees, cfg.OrgPrivate)
-	log.ErrFatal(cerr)
+	if err != nil {
+		return err
+	}
 	party.Final = fs
 	cfg.write()
 	finst, err := fs.ToToml()
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	log.Lvl2("Created final statement:\n", "\n"+string(finst))
 	return nil
 }
@@ -278,12 +290,16 @@ func orgMerge(c *cli.Context) error {
 		log.Fatal("Not linked")
 	}
 	party, err := cfg.getPartybyHash(c.Args().First())
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	if len(party.Final.Signature) <= 0 || party.Final.Verify() != nil {
 		log.Lvl2("The local config is not finished yet")
 		log.Lvl2("Fetching final statement")
 		fs, err := client.FetchFinal(cfg.Address, party.Final.Desc.Hash())
-		log.ErrFatal(err)
+		if err != nil {
+			return err
+		}
 		if len(fs.Signature) <= 0 || fs.Verify() != nil {
 			log.Fatal("Fetched final statement is invalid")
 		}
@@ -291,8 +307,11 @@ func orgMerge(c *cli.Context) error {
 		cfg.write()
 	}
 	if party.Final.Merged {
-		finst, err := party.Final.ToToml()
-		log.ErrFatal(err)
+		var finst []byte
+		finst, err = party.Final.ToToml()
+		if err != nil {
+			return err
+		}
 		log.Lvl1("Merged final statement:\n", "\n"+string(finst))
 		return nil
 	}
@@ -307,24 +326,25 @@ func orgMerge(c *cli.Context) error {
 	party.Final = fs
 	cfg.write()
 	finst, err := fs.ToToml()
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	log.Lvl1("Created merged final statement:\n", "\n"+string(finst))
 	return nil
 }
 
 // creates a new private/public pair
 func attCreate(c *cli.Context) error {
-	priv := network.Suite.NewKey(random.Stream)
-	pub := network.Suite.Point().Mul(nil, priv)
-	privStr, err := crypto.ScalarToString64(nil, priv)
+	kp := key.NewKeyPair(cothority.Suite)
+	secStr, err := encoding.ScalarToStringHex(nil, kp.Private)
 	if err != nil {
 		return err
 	}
-	pubStr, err := crypto.PointToString64(nil, pub)
+	pubStr, err := encoding.PointToStringHex(nil, kp.Public)
 	if err != nil {
 		return err
 	}
-	log.Printf("Private: %s\nPublic: %s", privStr, pubStr)
+	log.Infof("Private: %s\nPublic: %s", secStr, pubStr)
 	return nil
 }
 
@@ -334,18 +354,21 @@ func attJoin(c *cli.Context) error {
 	if c.NArg() < 2 {
 		log.Fatal("Please give private key and final.toml")
 	}
-	privStr := c.Args().First()
-	privBuf, err := base64.StdEncoding.DecodeString(privStr)
-	log.ErrFatal(err)
-	priv := network.Suite.Scalar()
-	log.ErrFatal(priv.UnmarshalBinary(privBuf))
+	priv, err := encoding.StringHexToScalar(cothority.Suite, c.Args().First())
+	if err != nil {
+		return err
+	}
 	cfg, client := getConfigClient(c)
 
 	finalName := c.Args().Get(1)
 	buf, err := ioutil.ReadFile(finalName)
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	final, err := service.NewFinalStatementFromToml(buf)
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	if len(final.Signature) <= 0 || final.Verify() != nil {
 		log.Lvl2("The local config is not finished yet")
 		if cfg.Address != "" {
@@ -354,7 +377,9 @@ func attJoin(c *cli.Context) error {
 			// Cause attendee doesn't know,
 			// whether it has finished successfully or not
 			fs, err := client.FetchFinal(cfg.Address, final.Desc.Hash())
-			log.ErrFatal(err)
+			if err != nil {
+				return err
+			}
 			if len(fs.Signature) <= 0 || fs.Verify() != nil {
 				log.Fatal("Fetched final statement is invalid")
 			}
@@ -369,7 +394,9 @@ func attJoin(c *cli.Context) error {
 		if cfg.Address != "" {
 			log.Lvl2("Fetching final statement")
 			fs, err := client.FetchFinal(cfg.Address, final.Desc.Hash())
-			log.ErrFatal(err)
+			if err != nil {
+				return err
+			}
 			if !fs.Merged {
 				log.Fatal("Global party is not merged")
 			}
@@ -385,7 +412,7 @@ func attJoin(c *cli.Context) error {
 	party := &PartyConfig{}
 	party.Final = final
 	party.Private = priv
-	party.Public = network.Suite.Point().Mul(nil, priv)
+	party.Public = cothority.Suite.Point().Mul(priv, nil)
 	index := -1
 	for i, p := range party.Final.Attendees {
 		if p.Equal(party.Public) {
@@ -397,7 +424,7 @@ func attJoin(c *cli.Context) error {
 		log.Fatal("Didn't find our public key in the final statement!")
 	}
 	party.Index = index
-	hash := base64.StdEncoding.EncodeToString(final.Desc.Hash())
+	hash := hex.EncodeToString(final.Desc.Hash())
 	log.Lvlf2("Final statement hash: %s", hash)
 	if !c.Bool("yes") {
 		fmt.Printf("Is it correct hash(y/n)")
@@ -429,26 +456,27 @@ func attSign(c *cli.Context) error {
 	}
 	log.Lvl3("hash:", c.Args().Get(2))
 	party, err := cfg.getPartybyHash(c.Args().Get(2))
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 
 	if party.Index == -1 || party.Private == nil || party.Public == nil ||
-		!network.Suite.Point().Mul(nil, party.Private).Equal(party.Public) {
+		!cothority.Suite.Point().Mul(party.Private, nil).Equal(party.Public) {
 		log.Fatal("No public key stored. Please join a party")
 	}
 
 	if len(party.Final.Signature) < 0 || party.Final.Verify() != nil {
-		log.Fatal("Party is not finilized or signature is not valid")
+		log.Fatal("Party is not finalized or signature is not valid")
 	}
 
 	msg := []byte(c.Args().First())
 	ctx := []byte(c.Args().Get(1))
 	Set := anon.Set(party.Final.Attendees)
-	sigtag := anon.Sign(network.Suite, random.Stream, msg,
+	sigtag := anon.Sign(cothority.Suite.(anon.Suite), msg,
 		Set, ctx, party.Index, party.Private)
 	sig := sigtag[:len(sigtag)-service.SIGSIZE/2]
 	tag := sigtag[len(sigtag)-service.SIGSIZE/2:]
-	log.Lvlf2("\nSignature: %s\nTag: %s", base64.StdEncoding.EncodeToString(sig),
-		base64.StdEncoding.EncodeToString(tag))
+	log.Lvlf2("\nSignature: %x\nTag: %x", sig, tag)
 	return nil
 }
 
@@ -460,22 +488,30 @@ func attVerify(c *cli.Context) error {
 		log.Fatal("Please give a msg, context, signature, a tag and party hash")
 	}
 	party, err := cfg.getPartybyHash(c.Args().Get(4))
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 
 	if len(party.Final.Signature) < 0 || party.Final.Verify() != nil {
-		log.Fatal("Party is not finilized or signature is not valid")
+		return errors.New("Party is not finalized or signature is not valid")
 	}
 
 	msg := []byte(c.Args().First())
 	ctx := []byte(c.Args().Get(1))
-	sig, err := base64.StdEncoding.DecodeString(c.Args().Get(2))
-	log.ErrFatal(err)
-	tag, err := base64.StdEncoding.DecodeString(c.Args().Get(3))
-	log.ErrFatal(err)
+	sig, err := hex.DecodeString(c.Args().Get(2))
+	if err != nil {
+		return err
+	}
+	tag, err := hex.DecodeString(c.Args().Get(3))
+	if err != nil {
+		return err
+	}
 	sigtag := append(sig, tag...)
-	ctag, err := anon.Verify(network.Suite, msg,
+	ctag, err := anon.Verify(cothority.Suite.(anon.Suite), msg,
 		anon.Set(party.Final.Attendees), ctx, sigtag)
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	if !bytes.Equal(tag, ctag) {
 		log.Fatalf("Tag and calculated tag are not equal:\n%x - %x", tag, ctag)
 	}
@@ -492,9 +528,13 @@ func authStore(c *cli.Context) error {
 
 	finalName := c.Args().First()
 	buf, err := ioutil.ReadFile(finalName)
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 	final, err := service.NewFinalStatementFromToml(buf)
-	log.ErrFatal(err)
+	if err != nil {
+		return err
+	}
 
 	if len(final.Signature) <= 0 || final.Verify() != nil {
 		log.Fatal("The local config is not finished yet")
@@ -505,7 +545,7 @@ func authStore(c *cli.Context) error {
 	}
 	party := &PartyConfig{}
 	party.Final = final
-	hash := base64.StdEncoding.EncodeToString(final.Desc.Hash())
+	hash := hex.EncodeToString(final.Desc.Hash())
 	cfg.Parties[hash] = party
 	cfg.write()
 	log.Lvlf1("Stored final statement, hash: %s", hash)
@@ -524,10 +564,10 @@ func getConfigClient(c *cli.Context) (*Config, *service.Client) {
 func newConfig(fileConfig string) (*Config, error) {
 	name := app.TildeToHome(fileConfig)
 	if _, err := os.Stat(name); err != nil {
-		kp := config.NewKeyPair(network.Suite)
+		kp := key.NewKeyPair(cothority.Suite)
 		return &Config{
 			OrgPublic:  kp.Public,
-			OrgPrivate: kp.Secret,
+			OrgPrivate: kp.Private,
 			Parties:    make(map[string]*PartyConfig),
 			name:       name,
 		}, nil
@@ -537,7 +577,7 @@ func newConfig(fileConfig string) (*Config, error) {
 		return nil, fmt.Errorf("couldn't read %s: %s - please remove it",
 			name, err)
 	}
-	_, msg, err := network.Unmarshal(buf)
+	_, msg, err := network.Unmarshal(buf, cothority.Suite)
 	if err != nil {
 		return nil, fmt.Errorf("error while reading file %s: %s",
 			name, err)
@@ -564,20 +604,19 @@ func (cfg *Config) getPartybyHash(hash string) (*PartyConfig, error) {
 	if val, ok := cfg.Parties[hash]; ok {
 		return val, nil
 	}
-	return nil, onet.NewClientErrorCode(service.ErrorInternal, "No such party")
+	return nil, errors.New("No such party")
 }
 
 // readGroup fetches group definition file.
 func readGroup(name string) *onet.Roster {
 	f, err := os.Open(name)
 	log.ErrFatal(err, "Couldn't open group definition file")
-	roster, err := app.ReadGroupToml(f)
+	g, err := app.ReadGroupDescToml(f)
 	log.ErrFatal(err, "Error while reading group definition file", err)
-	if len(roster.List) == 0 {
-		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s",
-			name)
+	if len(g.Roster.List) == 0 {
+		log.ErrFatalf(err, "Empty entity or invalid group defintion in: %s", name)
 	}
-	return roster
+	return g.Roster
 }
 
 // PopDescGroupToml represents serializable party description
@@ -599,7 +638,7 @@ func decodePopDesc(buf string, desc *service.PopDesc) error {
 	desc.Location = descGroup.Location
 	entities := make([]*network.ServerIdentity, len(descGroup.Servers))
 	for i, s := range descGroup.Servers {
-		en, err := toServerIdentity(s, network.Suite)
+		en, err := toServerIdentity(s, cothority.Suite)
 		if err != nil {
 			return err
 		}
@@ -628,7 +667,7 @@ func decodeGroups(buf string) ([]*service.ShortDesc, error) {
 		desc.Location = descGroup.Location
 		entities := make([]*network.ServerIdentity, len(descGroup.Servers))
 		for j, s := range descGroup.Servers {
-			en, err := toServerIdentity(s, network.Suite)
+			en, err := toServerIdentity(s, cothority.Suite)
 			if err != nil {
 				return []*service.ShortDesc{}, err
 			}
@@ -642,8 +681,8 @@ func decodeGroups(buf string) ([]*service.ShortDesc, error) {
 
 // TODO: Needs to be public in app package!!!
 // toServerIdentity converts this ServerToml struct to a ServerIdentity.
-func toServerIdentity(s *app.ServerToml, suite abstract.Suite) (*network.ServerIdentity, error) {
-	public, err := crypto.String64ToPub(suite, s.Public)
+func toServerIdentity(s *app.ServerToml, suite kyber.Group) (*network.ServerIdentity, error) {
+	public, err := encoding.StringHexToPoint(suite, s.Public)
 	if err != nil {
 		return nil, err
 	}

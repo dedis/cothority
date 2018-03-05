@@ -4,11 +4,13 @@ import (
 	"testing"
 	"time"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
 )
+
+var tSuite = cothority.Suite
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -17,9 +19,9 @@ func TestMain(m *testing.M) {
 func TestCosi(t *testing.T) {
 	for _, nbrHosts := range []int{1, 3, 13} {
 		log.Lvl2("Running cosi with", nbrHosts, "hosts")
-		local := onet.NewLocalTest()
+		local := onet.NewLocalTest(tSuite)
 		hosts, el, tree := local.GenBigTree(nbrHosts, nbrHosts, 3, true)
-		aggPublic := network.Suite.Point().Null()
+		aggPublic := tSuite.Point().Null()
 		for _, e := range el.List {
 			aggPublic = aggPublic.Add(aggPublic, e.Public)
 		}
@@ -50,7 +52,7 @@ func TestCosi(t *testing.T) {
 		}
 		root = p.(*CoSi)
 		root.Message = msg
-		responseFunc := func(in []abstract.Scalar) {
+		responseFunc := func(in []kyber.Scalar) {
 			log.Lvl1("Got response")
 			if len(root.Children()) != len(in) {
 				t.Fatal("Didn't get same number of responses")

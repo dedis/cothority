@@ -4,14 +4,13 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/anon"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/kyber.v2/sign/anon"
+	"gopkg.in/dedis/kyber.v2/sign/schnorr"
+	"gopkg.in/dedis/kyber.v2/util/key"
+	"gopkg.in/dedis/kyber.v2/util/random"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
 )
 
 func TestMain(m *testing.M) {
@@ -19,63 +18,61 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_CreateIdentity2(t *testing.T) {
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
-	_, el, s := local.MakeHELS(5, identityService)
+	_, ro, s := local.MakeSRS(tSuite, 5, identityService)
 	service := s.(*Service)
 
-	kp := config.NewKeyPair(network.Suite)
-	kp2 := config.NewKeyPair(network.Suite)
-	set := anon.Set([]abstract.Point{kp.Public, kp2.Public})
-	service.auth.sets = append(service.auth.sets, set)
+	kp := key.NewKeyPair(tSuite)
+	kp2 := key.NewKeyPair(tSuite)
+	set := anon.Set([]kyber.Point{kp.Public, kp2.Public})
+	service.Storage.Auth.sets = append(service.Storage.Auth.sets, set)
 
-	il := NewData(50, kp.Public, "one")
+	da := NewData(ro, 50, kp.Public, "one")
 	ci := &CreateIdentity{}
 	ci.Type = PoPAuth
-	ci.Data = il
-	ci.Roster = el
-	ci.Nonce = random.Bytes(nonceSize, random.Stream)
-	service.auth.nonces[string(ci.Nonce)] = struct{}{}
+	ci.Data = da
+	ci.Nonce = make([]byte, nonceSize)
+	random.Bytes(ci.Nonce, random.New())
+	service.Storage.Auth.nonces[string(ci.Nonce)] = struct{}{}
 	ctx := []byte(ServiceName + service.ServerIdentity().String())
 
-	ci.Sig = anon.Sign(network.Suite, random.Stream, ci.Nonce,
-		set, ctx, 0, kp.Secret)
-	msg, cerr := service.CreateIdentity(ci)
-	log.ErrFatal(cerr)
-	air := msg.(*CreateIdentityReply)
+	ci.Sig = anon.Sign(tSuite, ci.Nonce,
+		set, ctx, 0, kp.Private)
+	air, err := service.CreateIdentity(ci)
+	log.ErrFatal(err)
 
-	data := air.Data
-	id, ok := service.Identities[string(data.Hash)]
+	data := air.Genesis
+	id, ok := service.Storage.Identities[string(data.Hash)]
 	assert.True(t, ok)
 	assert.NotNil(t, id)
 }
 
 func TestService_CreateIdentity3(t *testing.T) {
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	defer local.CloseAll()
-	_, el, s := local.MakeHELS(5, identityService)
+	_, ro, s := local.MakeSRS(tSuite, 5, identityService)
 	service := s.(*Service)
 
-	kp := config.NewKeyPair(network.Suite)
-	service.auth.keys = append(service.auth.keys, kp.Public)
+	kp := key.NewKeyPair(tSuite)
+	service.Storage.Auth.keys = append(service.Storage.Auth.keys, kp.Public)
 
-	il := NewData(50, kp.Public, "one")
+	da := NewData(ro, 50, kp.Public, "one")
 	ci := &CreateIdentity{}
 	ci.Type = PublicAuth
-	ci.Data = il
-	ci.Roster = el
-	ci.Public = kp.Public
-	ci.Nonce = random.Bytes(nonceSize, random.Stream)
-	service.auth.nonces[string(ci.Nonce)] = struct{}{}
+	ci.Data = da
+	ci.Nonce = make([]byte, nonceSize)
+	random.Bytes(ci.Nonce, tSuite.RandomStream())
+	service.Storage.Auth.nonces[string(ci.Nonce)] = struct{}{}
 	var err error
-	ci.SchnSig, err = crypto.SignSchnorr(network.Suite, kp.Secret, ci.Nonce)
+	ssig, err := schnorr.Sign(tSuite, kp.Private, ci.Nonce)
+	ci.SchnSig = &ssig
 	log.ErrFatal(err)
-	msg, cerr := service.CreateIdentity(ci)
-	log.ErrFatal(cerr)
-	air := msg.(*CreateIdentityReply)
+	air, err := service.CreateIdentity(ci)
+	log.ErrFatal(err)
 
-	data := air.Data
-	id, ok := service.Identities[string(data.Hash)]
+	data := air.Genesis
+	id, ok := service.Storage.Identities[string(data.Hash)]
 	assert.True(t, ok)
 	assert.NotNil(t, id)
 }

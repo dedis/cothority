@@ -1,18 +1,40 @@
-language: go
+language: node_js
 
-go:
-  - 1.7
+node_js:
+  - "lts/*"
+  - "8"
+
+env:
+  - TEST_DIR=cothority
+  - TEST_DIR=kyber
 
 install:
-  - go get -t ./...
+  - gimme 1.9
+  - . $HOME/.gimme/envs/go1.9.env
   - go get github.com/dedis/Coding || true
-  - go get golang.org/x/tools/cmd/cover
-  - go get github.com/dedis/goveralls
+  # Because we are using "language: node_js" the "git clone" is not in the
+  # GOPATH. So make a copy of it over where it is supposed to be.
+  - git clone . `go env GOPATH`/src/github.com/dedis/cothority
+  - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
 
-go_import_path: gopkg.in/dedis/cothority.v1
+script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
 
-script:
-  - make test
+after_success:
+  - npm run coveralls
 
 notifications:
   email: false
+
+matrix:
+  include:
+    - language: go
+
+      install:
+        - go get -t ./...
+        - go get github.com/dedis/Coding || true
+
+      before_install:
+        - cd $TRAVIS_BUILD_DIR
+
+      script:
+        - make test

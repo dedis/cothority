@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 
 DBG_TEST=1
-DBG_APP=3
+DBG_APP=2
+# DBG_SRV=2
+
 NBR_CLIENTS=4
 NBR_SERVERS=3
 NBR_SERVERS_GROUP=$NBR_SERVERS
-. $GOPATH/src/gopkg.in/dedis/onet.v1/app/libtest.sh
+. $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
 
 MERGE_FILE=""
 main(){
@@ -18,9 +20,9 @@ main(){
 		mkdir -p $cl
 	done
 	addr=()
-	addr[1]=127.0.0.1:2002
-	addr[2]=127.0.0.1:2004
-	addr[3]=127.0.0.1:2006
+	addr[1]=localhost:2002
+	addr[2]=localhost:2004
+	addr[3]=localhost:2006
 
 	test Build
 	test Check
@@ -97,9 +99,7 @@ testMerge(){
 			testOK runCl $i attendee verify msg1 ctx1 ${sig[$j]} ${tag[$j]} $merged_hash
 		done
 	done
-
 }
-
 
 testAtMultipleKey(){
 	mkConfig 2 2 2 3
@@ -226,7 +226,6 @@ testAtJoin(){
 	runDbgCl 2 3 org final  ${pop_hash[2]} | tail > final2.toml
 	runCl 3 org final  ${pop_hash[3]}
 	runDbgCl 2 1 org final  ${pop_hash[3]} | tail > final3.toml
-	cat final1.toml
 
 	testFail runCl 1 attendee join -y
 	testFail runCl 1 attendee join -y ${priv[1]}
@@ -359,8 +358,7 @@ testAtCreate(){
 	testOK runCl 1 attendee create
 	runDbgCl 2 1 attendee create > keypair.1
 	runDbgCl 2 1 attendee create > keypair.2
-	cmp keypair.1 keypair.2
-	testOK [ $? -eq 1 ]
+	testFail cmp keypair.1 keypair.2
 }
 
 priv=()
@@ -388,7 +386,7 @@ mkPopConfig(){
 	local n
 	for (( n=1; n<=$1; n++ ))
 	do
-		rm pop_desc$n.toml
+		rm -f pop_desc$n.toml
 		cat << EOF > pop_desc$n.toml
 Name = "Proof-of-Personhood Party"
 DateTime = "2017-08-08 15:00 UTC"
@@ -397,14 +395,14 @@ EOF
 	done
 	for (( n=1; n<=$2; n++ ))
 	do
-		sed -n "$((4*$n-3)),$((4*$n))p" public.toml >> pop_desc$n.toml
+			cat co$n/public.toml >> pop_desc$n.toml
 		if [[ $2 -gt 1 ]]
 		then
 			local m=$(($n%$2 + 1))
-			sed -n "$((4*$m-3)),$((4*$m))p" public.toml >> pop_desc$n.toml
+			cat co$m/public.toml >> pop_desc$n.toml
 		fi
 	done
-	rm pop_merge.toml
+	rm -f pop_merge.toml
 	for (( n=1; n<=$2; n++ ))
 	do
 		cat << EOF >> pop_merge.toml
@@ -412,10 +410,10 @@ EOF
 Location = "Earth, City$n"
 EOF
 		echo "[[parties.servers]]" >> pop_merge.toml
-		sed -n "$((4*$n-2)),$((4*$n))p" public.toml >> pop_merge.toml
+		tail -n +2 co$n/public.toml >> pop_merge.toml
 		local m=$(($n%$2 + 1))
 		echo "[[parties.servers]]" >> pop_merge.toml
-		sed -n "$((4*$m-2)),$((4*$m))p" public.toml >> pop_merge.toml
+		tail -n +2 co$m/public.toml >> pop_merge.toml
 	done
 }
 
@@ -424,9 +422,11 @@ testSave(){
 	mkPopConfig 1 2
 
 	testFail runCl 1 org config pop_desc1.toml
-	pkill -9 -f conode
+	pkill conode
+	sleep .1
 	mkLink 2
-	pkill -9 -f conode
+	pkill conode
+	sleep .1
 	runCoBG 1 2
 	testOK runCl 1 org config pop_desc1.toml
 }
@@ -475,7 +475,7 @@ runDbgCl(){
 	local DBG=$1
 	local CFG=cl$2
 	shift 2
-	./$APP -d $DBG -c $CFG $@
+	DEBUG_COLOR="" ./$APP -d $DBG -c $CFG $@
 }
 
 main

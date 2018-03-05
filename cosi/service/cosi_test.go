@@ -4,17 +4,21 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/crypto.v0/cosi"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/cothority.v2/cosi/crypto"
+	cosi "gopkg.in/dedis/cothority.v2/cosi/protocol"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
 )
+
+var tSuite = cothority.Suite
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
 func TestServiceCosi(t *testing.T) {
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
 	hosts, el, _ := local.GenTree(5, false)
@@ -30,17 +34,17 @@ func TestServiceCosi(t *testing.T) {
 	for _, dst := range el.List {
 		reply := &SignatureResponse{}
 		log.Lvl1("Sending request to service...")
-		cerr := client.SendProtobuf(dst, serviceReq, reply)
-		require.Nil(t, cerr, "Couldn't send")
+		err := client.SendProtobuf(dst, serviceReq, reply)
+		require.Nil(t, err, "Couldn't send")
 
 		// verify the response still
-		require.Nil(t, cosi.VerifySignature(hosts[0].Suite(), el.Publics(),
+		require.Nil(t, crypto.VerifySignature(hosts[0].Suite(), el.Publics(),
 			msg, reply.Signature))
 	}
 }
 
 func TestCreateAggregate(t *testing.T) {
-	local := onet.NewTCPTest()
+	local := onet.NewTCPTest(tSuite)
 	// generate 5 hosts, they don't connect, they process messages, and they
 	// don't register the tree or entitylist
 	hosts, el, _ := local.GenTree(5, false)

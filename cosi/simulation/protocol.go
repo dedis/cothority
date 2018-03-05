@@ -1,10 +1,10 @@
 package main
 
 import (
-	p "gopkg.in/dedis/cothority.v1/cosi/protocol"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
+	p "gopkg.in/dedis/cothority.v2/cosi/protocol"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
 )
 
 /*
@@ -20,7 +20,7 @@ func init() {
 }
 
 // VRType defines what verifications are done
-// see https://gopkg.in/dedis/cothority.v1/issues/260
+// see https://gopkg.in/dedis/cothority.v2/issues/260
 type VRType int
 
 const (
@@ -54,15 +54,15 @@ func NewCoSimul(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 
 // Publics returns an array of public points for the signature- and
 // verification method
-func (c *CoSimul) Publics() []abstract.Point {
-	var publics []abstract.Point
+func (c *CoSimul) Publics() []kyber.Point {
+	var publics []kyber.Point
 	for _, e := range c.Tree().Roster.List {
 		publics = append(publics, e.Public)
 	}
 	return publics
 }
 
-func (c *CoSimul) getResponse(in []abstract.Scalar) {
+func (c *CoSimul) getResponse(in []kyber.Scalar) {
 	if c.IsLeaf() {
 		// This is the leaf-node and we can't verify it
 		return
@@ -79,7 +79,7 @@ func (c *CoSimul) getResponse(in []abstract.Scalar) {
 	}
 
 	if verify {
-		err := c.VerifyResponses(c.TreeNode().AggregatePublic())
+		err := c.VerifyResponses(c.TreeNode().AggregatePublic(c.Suite()))
 		if err != nil {
 			log.Error("Couldn't verify responses at our level", c.Name(), err.Error())
 		} else {

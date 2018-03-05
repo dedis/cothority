@@ -1,39 +1,20 @@
 [[servers]]
-  Address = "tcp://78.46.227.60:7770"
-  Public = "5eI+WFOaCdMhHY+g+zR11IZV4MBtg+k8jm59FqqHwQY="
-  Description = "Ineiti's Cothority-server"
-
-[[servers]]
-  Address = "tcp://192.33.210.8:7770"
-  Public = "A2vzFuHqbn6Z4LtxNBnRbAtnlL+dxELMTPNsP5Nek88="
+  Address = "tls://conode.dedis.ch:7770"
+  Public = "036bf316e1ea6e7e99e0bb713419d16c0b6794bf9dc442cc4cf36c3f935e93cf"
   Description = "EPFL Cothority-server"
 
 [[servers]]
-  Address = "tcp://5.135.161.91:2000"
-  Public = "UsanfHVs5fO+80FABsRVVq63CEwPPkRn3ScQeSeRLFE="
-  Description = "Nikkolasg's server serving the cothority"
+  Address = "tls://dedis.nella.org:6879"
+  Public = "4e3008c1a2b6e022fb60b76b834f174911653e9c9b4156cc8845bfb334075655"
+  Description = "Jeff's server - dedis.nella.org"
 
 [[servers]]
-  Address = "tcp://159.100.249.178:6879"
-  Public = "9nzWwjezfPVlu5U9q07h2HWTsBJmXXsRBJO+6AHonkw="
-  Description = "Daeinar's Conode"
+  Address = "tls://conode.gasser.blue:7770"
+  Public = "e5e23e58539a09d3211d8fa0fb3475d48655e0c06d83e93c8e6e7d16aa87c106"
+  Description = "Ineiti's Cothority-server"
 
 [[servers]]
-  Address = "tcp://46.101.254.191:6879"
-  Public = "YZ0ZigYRtA1XxbwiCis2Vcv+8JLwbtaKeAjAU+HPmNs="
-  Description = "Kirill's server"
-
-[[servers]]
-  Address = "tcp://139.59.10.242:3000"
-  Public = "4OwnNWMX6+XIenC/8orGHYzwhuxSwSLGhUCyAsDTvt8="
-  Description = "Brahma-BL1"
-
-[[servers]]
-  Address = "tcp://167.160.36.37:3000"
-  Public = "Nw0ZhZgLzZ3Vjkgx/lWkCd2LIN+E+IM3AI2jBv4j9dk="
-  Description = "sina's conode"
-
-[[servers]]
-  Address = "tcp://46.101.101.102:9100"
-  Public = "TX6jUNkOPB7daK7Paq87x5eCBIcMcc9ELrxZkcwtpJs="
-  Description = "jwhite's server"
+  Address = "tls://employees.org:6879"
+  Suite = "Ed25519"
+  Public = "1e7f67a33f945f13db2f51ae1547e5678d88e40cd599611a4f7deede29d8abea"
+  Description = "jra@employees.org"

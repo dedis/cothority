@@ -4,17 +4,20 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/eddsa"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/kyber.v2/sign/eddsa"
+	"gopkg.in/dedis/kyber.v2/util/key"
+	"gopkg.in/dedis/kyber.v2/util/random"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 )
 
+var tSuite = cothority.Suite
+
 func TestFinalStatement_ToToml(t *testing.T) {
-	pk := config.NewKeyPair(network.Suite)
+	pk := key.NewKeyPair(tSuite)
 	si := network.NewServerIdentity(pk.Public, network.NewAddress(network.PlainTCP, "0:2000"))
 	roster := onet.NewRoster([]*network.ServerIdentity{si})
 	fs := &FinalStatement{
@@ -23,7 +26,7 @@ func TestFinalStatement_ToToml(t *testing.T) {
 			DateTime: "yesterday",
 			Roster:   roster,
 		},
-		Attendees: []abstract.Point{pk.Public},
+		Attendees: []kyber.Point{pk.Public},
 	}
 	fs.Signature = fs.Desc.Hash()
 	fsStr, err := fs.ToToml()
@@ -37,7 +40,7 @@ func TestFinalStatement_ToToml(t *testing.T) {
 }
 
 func TestFinalStatement_Verify(t *testing.T) {
-	eddsa := eddsa.NewEdDSA(random.Stream)
+	eddsa := eddsa.NewEdDSA(random.New())
 	si := network.NewServerIdentity(eddsa.Public, network.NewAddress(network.PlainTCP, "0:2000"))
 	roster := onet.NewRoster([]*network.ServerIdentity{si})
 	fs := &FinalStatement{
@@ -46,7 +49,7 @@ func TestFinalStatement_Verify(t *testing.T) {
 			DateTime: "yesterday",
 			Roster:   roster,
 		},
-		Attendees: []abstract.Point{eddsa.Public},
+		Attendees: []kyber.Point{eddsa.Public},
 	}
 	require.NotNil(t, fs.Verify())
 	h, err := fs.Hash()

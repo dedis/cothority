@@ -1,61 +1,76 @@
 package messaging
 
 import (
+	"bytes"
+	"reflect"
 	"sync"
 	"testing"
+	"time"
 
-	"bytes"
-
-	"reflect"
-
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 )
 
-type PropagateMsg struct {
+type propagateMsg struct {
 	Data []byte
 }
 
 func init() {
-	network.RegisterMessage(PropagateMsg{})
+	network.RegisterMessage(propagateMsg{})
+}
+
+func TestPropagation(t *testing.T) {
+	propagate(t,
+		[]int{3, 10, 14, 4, 8, 8},
+		[]int{0, 0, 0, 1, 3, 6})
 }
 
 // Tests an n-node system
-func TestPropagate(t *testing.T) {
-	for _, nbrNodes := range []int{3, 10, 14} {
-		local := onet.NewLocalTest()
-		servers, el, _ := local.GenTree(nbrNodes, true)
-		var i int
+func propagate(t *testing.T, nbrNodes []int, nbrFailures []int) {
+	for i, n := range nbrNodes {
+		local := onet.NewLocalTest(tSuite)
+		servers, el, _ := local.GenTree(n, true)
+		var recvCount int
 		var iMut sync.Mutex
-		msg := &PropagateMsg{[]byte("propagate")}
-		propFuncs := make([]PropagationFunc, nbrNodes)
+		msg := &propagateMsg{[]byte("propagate")}
+		propFuncs := make([]PropagationFunc, n)
+
+		// setup the servers
 		var err error
 		for n, server := range servers {
 			pc := &PC{server, local.Overlays[server.ServerIdentity.ID]}
 			propFuncs[n], err = NewPropagationFunc(pc,
 				"Propagate",
 				func(m network.Message) {
-					if bytes.Equal(msg.Data, m.(*PropagateMsg).Data) {
+					if bytes.Equal(msg.Data, m.(*propagateMsg).Data) {
 						iMut.Lock()
-						i++
+						recvCount++
 						iMut.Unlock()
 					} else {
 						t.Error("Didn't receive correct data")
 					}
-				})
+				}, nbrFailures[i])
 			log.ErrFatal(err)
 		}
-		log.Lvl2("Starting to propagate", reflect.TypeOf(msg))
-		children, err := propFuncs[0](el, msg, 1000)
-		log.ErrFatal(err)
 
-		if i != nbrNodes {
+		// shut down some servers to simulate failure
+		for k := 0; k < nbrFailures[i]; k++ {
+			err = servers[len(servers)-1-k].Close()
+			log.ErrFatal(err)
+		}
+
+		// start the propagation
+		log.Lvl2("Starting to propagate", reflect.TypeOf(msg))
+		children, err := propFuncs[0](el, msg, 1*time.Second)
+		log.ErrFatal(err)
+		if recvCount+nbrFailures[i] != n {
 			t.Fatal("Didn't get data-request")
 		}
-		if children != nbrNodes {
+		if children+nbrFailures[i] != n {
 			t.Fatal("Not all nodes replied")
 		}
+
 		local.CloseAll()
 		log.AfterTest(t)
 	}

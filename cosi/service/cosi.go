@@ -1,14 +1,15 @@
 package service
 
 import (
+	"errors"
 	"fmt"
 	"time"
 
-	"gopkg.in/dedis/cothority.v1/cosi/protocol"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/cothority.v2/cosi/protocol"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 	"gopkg.in/satori/go.uuid.v1"
 )
 
@@ -44,28 +45,31 @@ type SignatureResponse struct {
 }
 
 // SignatureRequest treats external request to this service.
-func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, onet.ClientError) {
+func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, error) {
+	suite, ok := cs.Suite().(kyber.HashFactory)
+	if !ok {
+		return nil, errors.New("suite is unusable")
+	}
+
 	if req.Roster.ID.IsNil() {
 		req.Roster.ID = onet.RosterID(uuid.NewV4())
 	}
 
 	_, root := req.Roster.Search(cs.ServerIdentity().ID)
 	if root == nil {
-		return nil, onet.NewClientErrorCode(4102, "Couldn't find a serverIdetity in Roster")
+		return nil, errors.New("Couldn't find a serverIdetity in Roster")
 	}
 	tree := req.Roster.GenerateNaryTreeWithRoot(2, root)
 	tni := cs.NewTreeNodeInstance(tree, tree.Root, cosi.Name)
 	pi, err := cosi.NewProtocol(tni)
 	if err != nil {
-		return nil, onet.NewClientErrorCode(4100, "Couldn't make new protocol: "+err.Error())
+		return nil, errors.New("Couldn't make new protocol: " + err.Error())
 	}
 	cs.RegisterProtocolInstance(pi)
 	pcosi := pi.(*cosi.CoSi)
 	pcosi.SigningMessage(req.Message)
-	h, err := crypto.HashBytes(network.Suite.Hash(), req.Message)
-	if err != nil {
-		return nil, onet.NewClientErrorCode(4101, "Couldn't hash message: "+err.Error())
-	}
+	h := suite.Hash()
+	h.Write(req.Message)
 	response := make(chan []byte)
 	pcosi.RegisterSignatureHook(func(sig []byte) {
 		response <- sig
@@ -78,7 +82,7 @@ func (cs *CoSi) SignatureRequest(req *SignatureRequest) (network.Message, onet.C
 		fmt.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 	}
 	return &SignatureResponse{
-		Hash:      h,
+		Hash:      h.Sum(nil),
 		Signature: sig,
 	}, nil
 }
@@ -92,13 +96,14 @@ func (cs *CoSi) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig)
 	return pi, err
 }
 
-func newCoSiService(c *onet.Context) onet.Service {
+func newCoSiService(c *onet.Context) (onet.Service, error) {
 	s := &CoSi{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
 	err := s.RegisterHandler(s.SignatureRequest)
 	if err != nil {
-		log.ErrFatal(err, "Couldn't register message:")
+		log.Error(err, "Couldn't register message:")
+		return nil, err
 	}
-	return s
+	return s, nil
 }

@@ -1,26 +1,25 @@
-package messaging_test
+package messaging
 
 import (
 	"testing"
 	"time"
 
-	"gopkg.in/dedis/cothority.v1/messaging"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 )
 
 // Tests a 2-node system
 func TestBroadcast(t *testing.T) {
 	for _, nbrNodes := range []int{3, 10, 14} {
-		local := onet.NewLocalTest()
+		local := onet.NewLocalTest(tSuite)
 		_, _, tree := local.GenTree(nbrNodes, false)
 
 		pi, err := local.CreateProtocol("Broadcast", tree)
 		if err != nil {
 			t.Fatal("Couldn't start protocol:", err)
 		}
-		protocol := pi.(*messaging.Broadcast)
+		protocol := pi.(*Broadcast)
 		done := make(chan bool)
 		protocol.RegisterOnDone(func() {
 			done <- true

@@ -1,9 +1,9 @@
 package status
 
 import (
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 )
 
 // This file contains all the code to run a Stat service. The Stat receives takes a
@@ -25,33 +25,25 @@ type Stat struct {
 	*onet.ServiceProcessor
 }
 
-// Request is what the Status service is expected to receive from clients.
-type Request struct{}
-
-// Response is what the Status service will reply to clients.
-type Response struct {
-	Msg            map[string]*onet.Status
-	ServerIdentity *network.ServerIdentity
-}
-
 // Request treats external request to this service.
-func (st *Stat) Request(req *Request) (network.Message, onet.ClientError) {
-	log.Lvl3("Returning", st.Context.ReportStatus())
+func (st *Stat) Request(req *Request) (network.Message, error) {
+	statuses := st.Context.ReportStatus()
+	log.Lvl4("Returning", statuses)
 	return &Response{
-		Msg:            st.Context.ReportStatus(),
+		Status:         statuses,
 		ServerIdentity: st.ServerIdentity(),
 	}, nil
 }
 
 // newStatService creates a new service that is built for Status
-func newStatService(c *onet.Context) onet.Service {
+func newStatService(c *onet.Context) (onet.Service, error) {
 	s := &Stat{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
 	err := s.RegisterHandler(s.Request)
 	if err != nil {
-		log.ErrFatal(err, "Couldn't register message:")
+		return nil, err
 	}
 
-	return s
+	return s, nil
 }

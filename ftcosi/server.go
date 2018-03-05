@@ -1,0 +1,19 @@
+package main
+
+import (
+	"gopkg.in/urfave/cli.v1"
+
+	// Empty imports to have the init-functions called which should
+	// register the protocol
+
+	_ "gopkg.in/dedis/cothority.v2/ftcosi/protocol"
+	_ "gopkg.in/dedis/cothority.v2/ftcosi/service"
+	"gopkg.in/dedis/onet.v2/app"
+)
+
+func runServer(ctx *cli.Context) {
+	// first check the options
+	config := ctx.String("config")
+
+	app.RunServer(config)
+}

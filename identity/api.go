@@ -1,18 +1,18 @@
 package identity
 
 import (
+	"errors"
 	"io"
-
 	"io/ioutil"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/anon"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/kyber.v2/sign/anon"
+	"gopkg.in/dedis/kyber.v2/sign/schnorr"
+	"gopkg.in/dedis/kyber.v2/util/key"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 )
 
 /*
@@ -27,7 +27,7 @@ func init() {
 		&Device{},
 		&Identity{},
 		&Data{},
-		&Storage{},
+		&IDBlock{},
 		&Service{},
 		// API messages
 		&CreateIdentity{},
@@ -47,22 +47,6 @@ func init() {
 	}
 }
 
-// The errors are above the skipchain-errors so that they don't mix and the
-// skipchain-errors can be passed through unchanged.
-const (
-	ErrorDataMissing = 4200 + iota
-	ErrorBlockMissing
-	ErrorAccountDouble
-	ErrorAccountMissing
-	ErrorVoteDouble
-	ErrorVoteSignature
-	ErrorListMissing
-	ErrorOnet
-	ErrorWrongPIN
-	ErrorAuthentication
-	ErrorInvalidSignature
-)
-
 // AuthType is type of authentication to create skipchains
 type AuthType int
 
@@ -79,9 +63,9 @@ type Identity struct {
 	// Client represents the connection to the service.
 	Client *onet.Client
 	// Private key for that device.
-	Private abstract.Scalar
+	Private kyber.Scalar
 	// Public key for that device - will be stored in the identity-skipchain.
-	Public abstract.Point
+	Public kyber.Point
 	// ID of the skipchain this device is tied to.
 	ID ID
 	// Data is the actual, valid data of the identity-skipchain.
@@ -91,34 +75,30 @@ type Identity struct {
 	Proposed *Data
 	// DeviceName must be unique in the identity-skipchain.
 	DeviceName string
-	// Cothority is the roster responsible for the identity-skipchain. It
-	// might change in the case of a roster-update.
-	Cothority *onet.Roster
 }
 
 // NewIdentity starts a new identity that can contain multiple managers with
 // different accounts
-func NewIdentity(cothority *onet.Roster, threshold int, owner string, kp *config.KeyPair) *Identity {
-	client := onet.NewClient(ServiceName)
+func NewIdentity(r *onet.Roster, threshold int, owner string, kp *key.Pair) *Identity {
+	client := onet.NewClient(cothority.Suite, ServiceName)
 	if kp == nil {
-		kp = config.NewKeyPair(network.Suite)
+		kp = key.NewKeyPair(cothority.Suite)
 	}
 	return &Identity{
 		Client:     client,
-		Private:    kp.Secret,
+		Private:    kp.Private,
 		Public:     kp.Public,
-		Data:       NewData(threshold, kp.Public, owner),
+		Data:       NewData(r, threshold, kp.Public, owner),
 		DeviceName: owner,
-		Cothority:  cothority,
 	}
 }
 
-// NewIdentityFromCothority searches for a given cothority
-func NewIdentityFromCothority(el *onet.Roster, id ID) (*Identity, error) {
+// NewIdentityFromRoster searches for a given cothority
+func NewIdentityFromRoster(r *onet.Roster, id ID) (*Identity, error) {
 	iden := &Identity{
-		Client:    onet.NewClient(ServiceName),
-		Cothority: el,
-		ID:        id,
+		Client: onet.NewClient(cothority.Suite, ServiceName),
+		Data:   &Data{Roster: r},
+		ID:     id,
 	}
 	err := iden.DataUpdate()
 	if err != nil {
@@ -134,13 +114,18 @@ func NewIdentityFromStream(in io.Reader) (*Identity, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, idInt, err := network.Unmarshal(idBuf)
+	_, idInt, err := network.Unmarshal(idBuf, cothority.Suite)
 	if err != nil {
 		return nil, err
 	}
 	id := idInt.(*Identity)
-	id.Client = onet.NewClient(ServiceName)
+	id.Client = onet.NewClient(cothority.Suite, ServiceName)
 	return id, nil
+}
+
+// Roster gets the roster from the latest data
+func (i *Identity) Roster() *onet.Roster {
+	return i.Data.Roster
 }
 
 // SaveToStream stores the data of the client to a stream
@@ -168,25 +153,32 @@ func (i *Identity) GetProposed() *Data {
 }
 
 // AttachToIdentity proposes to attach it to an existing Identity
-func (i *Identity) AttachToIdentity(ID ID) onet.ClientError {
+func (i *Identity) AttachToIdentity(ID ID) error {
 	i.ID = ID
-	cerr := i.DataUpdate()
-	if cerr != nil {
-		return cerr
+	err := i.DataUpdate()
+	if err != nil {
+		return err
 	}
 	if _, exists := i.Data.Device[i.DeviceName]; exists {
-		return onet.NewClientErrorCode(ErrorAccountDouble, "Adding with an existing account-name")
+		return errors.New("Adding with an existing account-name")
 	}
 	confPropose := i.Data.Copy()
 	confPropose.Device[i.DeviceName] = &Device{i.Public}
-	cerr = i.ProposeSend(confPropose)
-	if cerr != nil {
-		return cerr
+	err = i.ProposeSend(confPropose)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func (i *Identity) popAuth(au *Authenticate, atts []abstract.Point) (*CreateIdentity, error) {
+func (i *Identity) popAuth(au *Authenticate, atts []kyber.Point, priv kyber.Scalar) (*CreateIdentity, error) {
+	var as anon.Suite
+	var ok bool
+
+	if as, ok = i.Client.Suite().(anon.Suite); !ok {
+		return nil, errors.New("suite does not implement anon.Suite")
+	}
+
 	// we need to find index of public key
 	index := 0
 	for j, key := range atts {
@@ -195,37 +187,35 @@ func (i *Identity) popAuth(au *Authenticate, atts []abstract.Point) (*CreateIden
 			break
 		}
 	}
-	sigtag := anon.Sign(network.Suite, random.Stream, au.Nonce,
-		anon.Set(atts), au.Ctx, index, i.Private)
-	cr := &CreateIdentity{}
-	cr.Data = i.Data
-	cr.Roster = i.Cothority
-	cr.Sig = sigtag
-	cr.Nonce = au.Nonce
+	sigtag := anon.Sign(as, au.Nonce, anon.Set(atts), au.Ctx, index, priv)
+	cr := &CreateIdentity{
+		Data:  i.Data,
+		Sig:   sigtag,
+		Nonce: au.Nonce,
+	}
 	return cr, nil
 }
 
-func (i *Identity) publicAuth(msg []byte) (*CreateIdentity, error) {
-	sig, err := crypto.SignSchnorr(network.Suite, i.Private, msg)
+func (i *Identity) publicAuth(nonce []byte, priv kyber.Scalar) (*CreateIdentity, error) {
+	sig, err := schnorr.Sign(i.Client.Suite(), priv, nonce)
 	if err != nil {
 		return nil, err
 	}
-	cr := &CreateIdentity{}
-	cr.Data = i.Data
-	cr.Sig = []byte{}
-	cr.Roster = i.Cothority
-	cr.Public = i.Public
-	cr.SchnSig = sig
-	cr.Nonce = msg
+	cr := &CreateIdentity{
+		Data:    i.Data,
+		Sig:     []byte{},
+		SchnSig: &sig,
+		Nonce:   nonce,
+	}
 	return cr, nil
 }
 
 // CreateIdentity asks the identityService to create a new Identity
-func (i *Identity) CreateIdentity(t AuthType, atts []abstract.Point) onet.ClientError {
+func (i *Identity) CreateIdentity(t AuthType, atts []kyber.Point, priv kyber.Scalar) error {
 	log.Lvl3("Creating identity", i)
 
 	// request for authentication
-	si := i.Cothority.RandomServerIdentity()
+	si := i.Data.Roster.List[0]
 	au := &Authenticate{[]byte{}, []byte{}}
 	cerr := i.Client.SendProtobuf(si, au, au)
 	if cerr != nil {
@@ -234,32 +224,33 @@ func (i *Identity) CreateIdentity(t AuthType, atts []abstract.Point) onet.Client
 
 	var cr *CreateIdentity
 	var err error
+
 	switch t {
 	case PoPAuth:
-		cr, err = i.popAuth(au, atts)
+		cr, err = i.popAuth(au, atts, priv)
 	case PublicAuth:
-		cr, err = i.publicAuth(au.Nonce)
+		cr, err = i.publicAuth(au.Nonce, priv)
 	default:
-		return onet.NewClientErrorCode(ErrorAuthentication, "wrong type of authentication")
+		return errors.New("wrong type of authentication")
 	}
 	if err != nil {
-		return onet.NewClientError(err)
+		return err
 	}
 	cr.Type = t
 	air := &CreateIdentityReply{}
-	cerr = i.Client.SendProtobuf(si, cr, air)
-	if cerr != nil {
-		return cerr
+	err = i.Client.SendProtobuf(si, cr, air)
+	if err != nil {
+		return err
 	}
-	i.ID = ID(air.Data.Hash)
+	i.ID = ID(air.Genesis.Hash)
 	return nil
 }
 
 // ProposeSend sends the new proposition of this identity
 // ProposeVote
-func (i *Identity) ProposeSend(d *Data) onet.ClientError {
+func (i *Identity) ProposeSend(d *Data) error {
 	log.Lvl3("Sending proposal", d)
-	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(),
+	err := i.Client.SendProtobuf(i.Data.Roster.List[0],
 		&ProposeSend{i.ID, d}, nil)
 	i.Proposed = d
 	return err
@@ -267,10 +258,10 @@ func (i *Identity) ProposeSend(d *Data) onet.ClientError {
 
 // ProposeUpdate verifies if there is a new data waiting that
 // needs approval from clients
-func (i *Identity) ProposeUpdate() onet.ClientError {
+func (i *Identity) ProposeUpdate() error {
 	log.Lvl3("Updating proposal")
 	cnc := &ProposeUpdateReply{}
-	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeUpdate{
+	err := i.Client.SendProtobuf(i.Data.Roster.List[0], &ProposeUpdate{
 		ID: i.ID,
 	}, cnc)
 	if err != nil {
@@ -281,34 +272,35 @@ func (i *Identity) ProposeUpdate() onet.ClientError {
 }
 
 // ProposeVote calls the 'accept'-vote on the current propose-data
-func (i *Identity) ProposeVote(accept bool) onet.ClientError {
+func (i *Identity) ProposeVote(accept bool) error {
 	log.Lvl3("Voting proposal")
 	if i.Proposed == nil {
-		return onet.NewClientErrorCode(ErrorDataMissing, "No proposed data")
+		return errors.New("No proposed data")
 	}
 	log.Lvlf3("Voting %t on %s", accept, i.Proposed.Device)
 	if !accept {
 		return nil
 	}
-	hash, err := i.Proposed.Hash()
+	hash, err := i.Proposed.Hash(i.Client.Suite().(kyber.HashFactory))
 	if err != nil {
-		return onet.NewClientErrorCode(ErrorOnet, err.Error())
+		return err
 	}
 	if i.Private == nil {
-		return onet.NewClientErrorCode(ErrorVoteSignature, "no private key is provided")
+		return errors.New("no private key is provided")
 	}
-	sig, err := crypto.SignSchnorr(network.Suite, i.Private, hash)
+	sig, err := schnorr.Sign(i.Client.Suite(), i.Private, hash)
 	if err != nil {
-		return onet.NewClientErrorCode(ErrorOnet, err.Error())
+		return err
 	}
+	log.Lvl3("Signed with public-key:", cothority.Suite.Point().Mul(i.Private, nil).String())
 	pvr := &ProposeVoteReply{}
-	cerr := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(), &ProposeVote{
+	err = i.Client.SendProtobuf(i.Data.Roster.List[0], &ProposeVote{
 		ID:        i.ID,
 		Signer:    i.DeviceName,
-		Signature: &sig,
+		Signature: sig,
 	}, pvr)
-	if cerr != nil {
-		return cerr
+	if err != nil {
+		return err
 	}
 	if pvr.Data != nil {
 		log.Lvl2("Threshold reached and signed")
@@ -322,13 +314,13 @@ func (i *Identity) ProposeVote(accept bool) onet.ClientError {
 
 // DataUpdate asks if there is any new data available that has already
 // been approved by others and updates the local data
-func (i *Identity) DataUpdate() onet.ClientError {
+func (i *Identity) DataUpdate() error {
 	log.Lvl3(i)
-	if i.Cothority == nil || len(i.Cothority.List) == 0 {
-		return onet.NewClientErrorCode(ErrorListMissing, "Didn't find any list in the cothority")
+	if i.Data.Roster == nil || len(i.Data.Roster.List) == 0 {
+		return errors.New("Didn't find any list in the cothority")
 	}
 	cur := &DataUpdateReply{}
-	err := i.Client.SendProtobuf(i.Cothority.RandomServerIdentity(),
+	err := i.Client.SendProtobuf(i.Data.Roster.List[0],
 		&DataUpdate{ID: i.ID}, cur)
 	if err != nil {
 		return err

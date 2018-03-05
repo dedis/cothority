@@ -3,8 +3,9 @@ package service
 import (
 	"errors"
 
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
 )
 
 // Client is a structure to communicate with the CoSi
@@ -15,7 +16,7 @@ type Client struct {
 
 // NewClient instantiates a new cosi.Client
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient(ServiceName)}
+	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
 }
 
 // SignatureRequest sends a CoSi sign request to the Cothority defined by the given
@@ -31,9 +32,9 @@ func (c *Client) SignatureRequest(r *onet.Roster, msg []byte) (*SignatureRespons
 	dst := r.List[0]
 	log.Lvl4("Sending message to", dst)
 	reply := &SignatureResponse{}
-	cerr := c.SendProtobuf(dst, serviceReq, reply)
-	if cerr != nil {
-		return nil, cerr
+	err := c.SendProtobuf(dst, serviceReq, reply)
+	if err != nil {
+		return nil, err
 	}
 	return reply, nil
 }

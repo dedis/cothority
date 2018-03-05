@@ -1,12 +1,14 @@
+// +build experimental
+
 package randhound_test
 
 import (
 	"testing"
 	"time"
 
-	"gopkg.in/dedis/cothority.v1/randhound"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/log"
+	"gopkg.in/dedis/cothority.v2/randhound"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
 )
 
 func TestRandHound(t *testing.T) {

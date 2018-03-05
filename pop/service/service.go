@@ -32,25 +32,33 @@ import (
 	"math/big"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
-	"gopkg.in/dedis/cothority.v1/bftcosi"
-	"gopkg.in/dedis/cothority.v1/messaging"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/cothority.v2/byzcoinx"
+	"gopkg.in/dedis/cothority.v2/ftcosi/protocol"
+	"gopkg.in/dedis/cothority.v2/messaging"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/kyber.v2/sign/schnorr"
+	"gopkg.in/dedis/kyber.v2/suites"
+	"gopkg.in/dedis/kyber.v2/util/random"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 )
 
 func init() {
-	onet.RegisterNewService(Name, newService)
-	network.RegisterMessage(&saveData{})
-	checkConfigID = network.RegisterMessage(checkConfig{})
-	checkConfigReplyID = network.RegisterMessage(checkConfigReply{})
-	mergeConfigID = network.RegisterMessage(mergeConfig{})
-	mergeConfigReplyID = network.RegisterMessage(mergeConfigReply{})
+	// This service depends on EDDSA signatures, so it must not
+	// be instantiated with other suites.
+	if cothority.Suite == suites.MustFind("Ed25519") {
+		onet.RegisterNewService(Name, newService)
+		network.RegisterMessage(&saveData{})
+		checkConfigID = network.RegisterMessage(checkConfig{})
+		checkConfigReplyID = network.RegisterMessage(checkConfigReply{})
+		mergeConfigID = network.RegisterMessage(mergeConfig{})
+		mergeConfigReplyID = network.RegisterMessage(mergeConfigReply{})
+	}
 }
 
 // Name is the name to refer to the Template service from another
@@ -59,9 +67,7 @@ const Name = "PoPServer"
 const cfgName = "pop.bin"
 const bftSignFinal = "BFTFinal"
 const bftSignMerge = "PopBFTSignMerge"
-
 const propagFinal = "PoPPropagateFinal"
-
 const timeout = 60 * time.Second
 
 // SIGSIZE size of signature
@@ -78,6 +84,8 @@ var mergeConfigReplyID network.MessageTypeID
 var mergeCheckID network.MessageTypeID
 var mergeCheckReplyID network.MessageTypeID
 
+var storageKey = []byte("storage")
+
 // Service represents data needed for one pop-party.
 type Service struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
@@ -92,14 +100,22 @@ type Service struct {
 	// Sync tools
 	// key of map is ID of party
 	// synchronizing inside one party
-	syncs map[string]*sync
+	syncs map[string]*syncChans
+	// verifyFinalBuffer is a temporary buffer for bftVerifyFinal results
+	// it is set by the bftVerifyFinal if the verification is successful,
+	// and unset by bftVerifyFinalAck. Every key/value pair stored in it
+	// should be cleared at the end of the bft protocol.
+	verifyFinalBuffer sync.Map
+	// verifyMergeBuffer is a temporary buffer for bftVerifyMerge results.
+	// The logic is the same for verifyFinalBuffer above.
+	verifyMergeBuffer sync.Map
 }
 
 type saveData struct {
 	// Pin holds the randomly chosen pin
 	Pin string
 	// Public key of linked pop
-	Public abstract.Point
+	Public kyber.Point
 	// The final statements
 	// key of map is ID of party
 	Finals map[string]*FinalStatement
@@ -115,23 +131,26 @@ type merge struct {
 	distrib bool
 }
 
-type sync struct {
+type syncChans struct {
 	// channel to return the configreply
 	ccChannel chan *checkConfigReply
 	// channel to return the mergereply
 	mcChannel chan *mergeConfigReply
 }
 
+// ErrorReadPIN means that there is a PIN to read in the server-logs
+var ErrorReadPIN = errors.New("Read PIN in server-log")
+
 // PinRequest prints out a pin if none is given, else it verifies it has the
 // correct pin, and if so, it stores the public key as reference.
-func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError) {
+func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 	if req.Pin == "" {
-		s.data.Pin = fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), random.Stream))
+		s.data.Pin = fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
 		log.Info("PIN:", s.data.Pin)
-		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Read PIN in server-log")
+		return nil, ErrorReadPIN
 	}
 	if req.Pin != s.data.Pin {
-		return nil, onet.NewClientErrorCode(ErrorWrongPIN, "Wrong PIN")
+		return nil, errors.New("Wrong PIN")
 	}
 	s.data.Public = req.Public
 	s.save()
@@ -140,20 +159,20 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, onet.ClientError
 }
 
 // StoreConfig saves the pop-config locally
-func (s *Service) StoreConfig(req *storeConfig) (network.Message, onet.ClientError) {
+func (s *Service) StoreConfig(req *storeConfig) (network.Message, error) {
 	log.Lvlf2("StoreConfig: %s %v %x", s.Context.ServerIdentity(), req.Desc, req.Desc.Hash())
 	if req.Desc.Roster == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "no roster set")
+		return nil, errors.New("no roster set")
 	}
 	if s.data.Public == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
+		return nil, errors.New("Not linked yet")
 	}
 	hash := req.Desc.Hash()
-	if err := crypto.VerifySchnorr(network.Suite, s.data.Public, hash, req.Signature); err != nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Invalid signature"+err.Error())
+	if err := schnorr.Verify(s.Suite(), s.data.Public, hash, req.Signature); err != nil {
+		return nil, errors.New("Invalid signature" + err.Error())
 	}
 	s.data.Finals[string(hash)] = &FinalStatement{Desc: req.Desc, Signature: []byte{}}
-	s.syncs[string(hash)] = &sync{
+	s.syncs[string(hash)] = &syncChans{
 		ccChannel: make(chan *checkConfigReply, 1),
 		mcChannel: make(chan *mergeConfigReply, 1),
 	}
@@ -170,23 +189,23 @@ func (s *Service) StoreConfig(req *storeConfig) (network.Message, onet.ClientErr
 // FinalizeRequest returns the FinalStatement if all conodes already received
 // a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
 // pruned attendees-public-key-list and the collective signature.
-func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, onet.ClientError) {
+func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, error) {
 	log.Lvlf2("Finalize: %s %+v", s.Context.ServerIdentity(), req)
 	if s.data.Public == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
+		return nil, errors.New("Not linked yet")
 	}
 	hash, err := req.hash()
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
-	if err := crypto.VerifySchnorr(network.Suite, s.data.Public, hash, req.Signature); err != nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Invalid signature:"+err.Error())
+	if err := schnorr.Verify(s.Suite(), s.data.Public, hash, req.Signature); err != nil {
+		return nil, errors.New("Invalid signature:" + err.Error())
 	}
 
 	var final *FinalStatement
 	var ok bool
 	if final, ok = s.data.Finals[string(req.DescID)]; !ok || final == nil || final.Desc == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "No config found")
+		return nil, errors.New("No config found")
 	}
 	if final.Verify() == nil {
 		log.Lvl2("Sending known final statement")
@@ -194,7 +213,7 @@ func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, onet.C
 	}
 
 	// Contact all other nodes and ask them if they already have a config.
-	final.Attendees = make([]abstract.Point, len(req.Attendees))
+	final.Attendees = make([]kyber.Point, len(req.Attendees))
 	copy(final.Attendees, req.Attendees)
 	cc := &checkConfig{final.Desc.Hash(), req.Attendees}
 	for _, c := range final.Desc.Roster.List {
@@ -202,25 +221,26 @@ func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, onet.C
 			log.Lvl2("Contacting", c, cc.Attendees)
 			err := s.SendRaw(c, cc)
 			if err != nil {
-				return nil, onet.NewClientErrorCode(ErrorInternal, err.Error())
+				return nil, err
 			}
 			if syncData, ok := s.syncs[string(req.DescID)]; ok {
 				rep := <-syncData.ccChannel
 				if rep == nil {
-					return nil, onet.NewClientErrorCode(ErrorOtherFinals,
+					return nil, errors.New(
 						"Not all other conodes finalized yet")
+
 				}
 			}
 		}
 	}
 	data, err := final.ToToml()
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
 	// Create signature and propagate it
-	cerr := s.signAndPropagate(final, bftSignFinal, data)
-	if cerr != nil {
-		return nil, cerr
+	err = s.signAndPropagate(final, bftSignFinal, data)
+	if err != nil {
+		return nil, err
 	}
 	return &finalizeResponse{final}, nil
 }
@@ -228,17 +248,19 @@ func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, onet.C
 // FetchFinal returns FinalStatement by hash
 // used after Finalization
 func (s *Service) FetchFinal(req *fetchRequest) (network.Message,
-	onet.ClientError) {
+	error) {
 	log.Lvlf2("FetchFinal: %s %v", s.Context.ServerIdentity(), req.ID)
 	var fs *FinalStatement
 	var ok bool
 	if fs, ok = s.data.Finals[string(req.ID)]; !ok {
-		return nil, onet.NewClientErrorCode(ErrorInternal,
+		return nil, errors.New(
 			"No config found")
+
 	}
 	if len(fs.Signature) <= 0 {
-		return nil, onet.NewClientErrorCode(ErrorOtherFinals,
+		return nil, errors.New(
 			"Not all other conodes finalized yet")
+
 	}
 	return &finalizeResponse{fs}, nil
 }
@@ -246,42 +268,47 @@ func (s *Service) FetchFinal(req *fetchRequest) (network.Message,
 // MergeRequest starts Merge process and returns FinalStatement after
 // used after finalization
 func (s *Service) MergeRequest(req *mergeRequest) (network.Message,
-	onet.ClientError) {
+	error) {
 	log.Lvlf2("MergeRequest: %s %v", s.Context.ServerIdentity(), req.ID)
 	if s.data.Public == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Not linked yet")
+		return nil, errors.New("Not linked yet")
 	}
 
-	if err := crypto.VerifySchnorr(network.Suite, s.data.Public, req.ID, req.Signature); err != nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "Invalid signature: err")
+	if err := schnorr.Verify(s.Suite(), s.data.Public, req.ID, req.Signature); err != nil {
+		return nil, errors.New("Invalid signature: err")
 	}
 
 	final, ok := s.data.Finals[string(req.ID)]
 	if !ok {
-		return nil, onet.NewClientErrorCode(ErrorInternal,
+		return nil, errors.New(
 			"No config found")
+
 	}
 	if final.Merged {
 		return &finalizeResponse{final}, nil
 	}
 	m, ok := s.data.merges[string(req.ID)]
 	if !ok {
-		return nil, onet.NewClientErrorCode(ErrorInternal,
+		return nil, errors.New(
 			"No meta found")
+
 	}
 	syncData, ok := s.syncs[string(req.ID)]
 	if !ok {
-		return nil, onet.NewClientErrorCode(ErrorInternal,
+		return nil, errors.New(
 			"No meta found")
+
 	}
 
 	if len(final.Signature) <= 0 || final.Verify() != nil {
-		return nil, onet.NewClientErrorCode(ErrorOtherFinals,
+		return nil, errors.New(
 			"Not all other conodes finalized yet")
+
 	}
 	if len(final.Desc.Parties) <= 1 {
-		return nil, onet.NewClientErrorCode(ErrorInternal,
+		return nil, errors.New(
 			"Party is unmergeable")
+
 	}
 
 	// Check if the party is the merge list
@@ -293,27 +320,25 @@ func (s *Service) MergeRequest(req *mergeRequest) (network.Message,
 		}
 	}
 	if !found {
-		return nil, onet.NewClientErrorCode(ErrorInternal,
+		return nil, errors.New(
 			"Party is not included in merge list")
+
 	}
-	newFinal, cerr := s.merge(final, m)
-	if cerr != nil {
-		if cerr.ErrorCode() == ErrorMergeInProgress {
-			return final, nil
-		}
-		return nil, cerr
+	newFinal, err := s.merge(final, m)
+	if err != nil {
+		return nil, err
 	}
 
 	// Decode mapStatements to send it on signing
 	data, err := encodeMapFinal(m.statementsMap)
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
 
-	cerr = s.signAndPropagate(newFinal, bftSignMerge, data)
-	if cerr != nil {
+	err = s.signAndPropagate(newFinal, bftSignMerge, data)
+	if err != nil {
 		m.distrib = false
-		return nil, cerr
+		return nil, err
 	}
 	// refresh data
 	hash := string(newFinal.Desc.Hash())
@@ -385,7 +410,7 @@ func (s *Service) MergeConfig(req *network.Envelope) {
 }
 
 // MergeConfigReply processes the response after MergeConfig message
-func (s Service) MergeConfigReply(req *network.Envelope) {
+func (s *Service) MergeConfigReply(req *network.Envelope) {
 	log.Lvlf2("MergeConfigReply: %s from %s got %v",
 		s.ServerIdentity(), req.ServerIdentity.String(), req.Msg)
 	mcrVal, ok := req.Msg.(*mergeConfigReply)
@@ -402,7 +427,7 @@ func (s Service) MergeConfigReply(req *network.Envelope) {
 				return nil
 			}
 			if mcrVal.PopStatus < PopStatusOK {
-				log.Error("Wrong pop-status:", mcrVal.PopStatus)
+				log.Lvl2("Wrong pop-status:", mcrVal.PopStatus)
 				return mcrVal
 			}
 			if mcrVal.Final == nil {
@@ -526,7 +551,7 @@ func (final *FinalStatement) VerifyMergeStatement(mergeFinal *FinalStatement) in
 }
 
 // Verification function for signing during Finalization
-func (s *Service) bftVerifyFinal(Msg []byte, Data []byte) bool {
+func (s *Service) bftVerifyFinal(Msg, Data []byte) bool {
 	final, err := NewFinalStatementFromToml(Data)
 	if err != nil {
 		log.Error(err.Error())
@@ -545,7 +570,7 @@ func (s *Service) bftVerifyFinal(Msg []byte, Data []byte) bool {
 	var ok bool
 
 	if fs, ok = s.data.Finals[string(final.Desc.Hash())]; !ok {
-		log.Error("final Statement not found")
+		log.Error(s.ServerIdentity(), "final Statement not found")
 		return false
 	}
 
@@ -555,7 +580,19 @@ func (s *Service) bftVerifyFinal(Msg []byte, Data []byte) bool {
 		log.Error("hash of lccocal Final stmt and msg are not equal")
 		return false
 	}
+	s.verifyFinalBuffer.Store(sliceToArr(Msg), true)
 	return true
+}
+
+func (s *Service) bftVerifyFinalAck(msg, data []byte) bool {
+	arr := sliceToArr(msg)
+	_, ok := s.verifyFinalBuffer.Load(arr)
+	if ok {
+		s.verifyFinalBuffer.Delete(arr)
+	} else {
+		log.Error(s.ServerIdentity().Address, "ack failed for msg", msg)
+	}
+	return ok
 }
 
 // Verification function for sighning during Merging
@@ -616,7 +653,7 @@ func (s *Service) bftVerifyMerge(Msg []byte, Data []byte) bool {
 	}
 
 	m := &merge{stmtsMap, true}
-	var syncData *sync
+	var syncData *syncChans
 	if syncData, ok = s.syncs[string(final.Desc.Hash())]; !ok {
 		log.Lvl2("VerifyMerge: No sync data with given hash")
 		return false
@@ -625,7 +662,7 @@ func (s *Service) bftVerifyMerge(Msg []byte, Data []byte) bool {
 	// Merge fields
 	locs := make([]string, 0)
 	Roster := &onet.Roster{}
-	na := make([]abstract.Point, 0)
+	na := make([]kyber.Point, 0)
 	for _, f := range m.statementsMap {
 		// although there must not be any intersection
 		// in attendies list it's better to check it
@@ -671,7 +708,19 @@ func (s *Service) bftVerifyMerge(Msg []byte, Data []byte) bool {
 	}
 
 	s.save()
+	s.verifyMergeBuffer.Store(sliceToArr(Msg), true)
 	return true
+}
+
+func (s *Service) bftVerifyMergeAck(msg, data []byte) bool {
+	arr := sliceToArr(msg)
+	_, ok := s.verifyMergeBuffer.Load(arr)
+	if ok {
+		s.verifyMergeBuffer.Delete(arr)
+	} else {
+		log.Error(s.ServerIdentity().Address, "ack failed for msg", msg)
+	}
+	return ok
 }
 
 // PropagateFinal saves the new final statement
@@ -692,40 +741,47 @@ func (s *Service) PropagateFinal(msg network.Message) {
 
 //signs FinalStatement with BFTCosi and Propagates signature to other nodes
 func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
-	data []byte) onet.ClientError {
-	tree := final.Desc.Roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+	data []byte) error {
+	rooted := final.Desc.Roster.NewRosterWithRoot(s.ServerIdentity())
+	if rooted == nil {
+		return errors.New("we're not in the roster")
+	}
+	tree := rooted.GenerateNaryTree(len(final.Desc.Roster.List))
 	if tree == nil {
-		return onet.NewClientErrorCode(ErrorInternal,
+		return errors.New(
 			"Root does not exist")
 	}
+
 	node, err := s.CreateProtocol(protoName, tree)
 	if err != nil {
-		return onet.NewClientError(err)
+		return err
 	}
 
 	// Register the function generating the protocol instance
-	root, ok := node.(*bftcosi.ProtocolBFTCoSi)
+	root, ok := node.(*byzcoinx.ByzCoinX)
 	if !ok {
-		return onet.NewClientErrorCode(ErrorInternal,
+		return errors.New(
 			"protocol instance is invalid")
-	}
 
+	}
 	root.Msg, err = final.Hash()
 	if err != nil {
-		return onet.NewClientError(err)
+		return err
 	}
 
 	root.Data = data
-	done := make(chan bool)
-	root.RegisterOnDone(func() {
-		done <- true
-	})
+	root.Timeout = 5 * time.Second
+	root.CreateProtocol = s.CreateProtocol
+
 	final.Signature = []byte{}
-	go node.Start()
+
+	err = node.Start()
+	if err != nil {
+		return err
+	}
 
 	select {
-	case <-done:
-		sig := root.Signature()
+	case sig := <-root.FinalSignatureChan:
 		if len(sig.Sig) >= SIGSIZE {
 			final.Signature = sig.Sig[:SIGSIZE]
 		} else {
@@ -733,18 +789,20 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 		}
 	case <-time.After(timeout):
 		log.Error("signing failed on timeout")
-		return onet.NewClientErrorCode(ErrorTimeout,
+		return errors.New(
 			"signing timeout")
+
 	}
 	if len(final.Signature) <= 0 {
 		log.Error("Signing failed")
-		return onet.NewClientErrorCode(ErrorTimeout,
+		return errors.New(
 			"Signing failed")
+
 	}
 
-	replies, err := s.PropagateFinalize(final.Desc.Roster, final, 10000)
+	replies, err := s.PropagateFinalize(final.Desc.Roster, final, 10*time.Second)
 	if err != nil {
-		return onet.NewClientError(err)
+		return err
 	}
 	if replies != len(final.Desc.Roster.List) {
 		log.Warn("Did only get", replies)
@@ -758,18 +816,18 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 // When all merge party's info is saved, merge it and starts global sighning process
 // After all, sends StoreConfig request to other conodes of own party
 func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
-	onet.ClientError) {
+	error) {
 	if m.distrib {
 		// Used not to start merge process 2 times, when one is on run.
 		log.Lvl2(s.ServerIdentity(), "Not enter merge")
-		return nil, onet.NewClientErrorCode(ErrorMergeInProgress, "Merge Process in in progress")
+		return nil, errors.New("Merge Process in in progress")
 	}
 	log.Lvl2("Merge ", s.ServerIdentity())
 	m.distrib = true
 	// Flag indicating that there were connection with other nodes
 	syncData, ok := s.syncs[string(final.Desc.Hash())]
 	if !ok {
-		return nil, onet.NewClientErrorCode(ErrorMerge, "Wrong Hash")
+		return nil, errors.New("Wrong Hash")
 	}
 	for _, party := range final.Desc.Parties {
 		popDesc := PopDesc{
@@ -789,19 +847,21 @@ func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
 			log.Lvlf2("Sending from %s to %s", s.ServerIdentity(), si)
 			err := s.SendRaw(si, mc)
 			if err != nil {
-				return nil, onet.NewClientErrorCode(ErrorInternal, err.Error())
+				return nil, err
 			}
 			var mcr *mergeConfigReply
 			select {
 			case mcr = <-syncData.mcChannel:
 				break
 			case <-time.After(timeout):
-				return nil, onet.NewClientErrorCode(ErrorTimeout,
+				return nil, errors.New(
 					"timeout on waiting response MergeConfig")
+
 			}
 			if mcr == nil {
-				return nil, onet.NewClientErrorCode(ErrorMerge,
+				return nil, errors.New(
 					"Error during merging")
+
 			}
 			if mcr.PopStatus == PopStatusOK {
 				m.statementsMap[string(hash)] = mcr.Final
@@ -809,8 +869,9 @@ func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
 			}
 		}
 		if _, ok = m.statementsMap[string(hash)]; !ok {
-			return nil, onet.NewClientErrorCode(ErrorMerge,
+			return nil, errors.New(
 				"merge with party failed")
+
 		}
 	}
 
@@ -822,7 +883,7 @@ func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
 	// Unite the lists
 	locs := make([]string, 0)
 	Roster := &onet.Roster{}
-	na := make([]abstract.Point, 0)
+	na := make([]kyber.Point, 0)
 	for _, f := range m.statementsMap {
 		// although there must not be any intersection
 		// in attendies list it's better to check it
@@ -842,7 +903,7 @@ func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
 // saves the actual identity
 func (s *Service) save() {
 	log.Lvl2("Saving service", s.ServerIdentity())
-	err := s.Save("storage", s.data)
+	err := s.Save(storageKey, s.data)
 	if err != nil {
 		log.Error("Couldn't save data:", err)
 	}
@@ -851,12 +912,12 @@ func (s *Service) save() {
 // Tries to load the configuration and updates if a configuration
 // is found, else it returns an error.
 func (s *Service) tryLoad() error {
-	if !s.DataAvailable("storage") {
-		return nil
-	}
-	msg, err := s.Load("storage")
+	msg, err := s.Load(storageKey)
 	if err != nil {
 		return err
+	}
+	if msg == nil {
+		return nil
 	}
 	var ok bool
 	s.data, ok = msg.(*saveData)
@@ -867,7 +928,7 @@ func (s *Service) tryLoad() error {
 }
 
 // Get intersection of attendees
-func intersectAttendees(atts1, atts2 []abstract.Point) []abstract.Point {
+func intersectAttendees(atts1, atts2 []kyber.Point) []kyber.Point {
 	myMap := make(map[string]bool)
 
 	for _, p := range atts1 {
@@ -877,7 +938,7 @@ func intersectAttendees(atts1, atts2 []abstract.Point) []abstract.Point {
 	if min < len(atts1) {
 		min = len(atts1)
 	}
-	na := make([]abstract.Point, 0, min)
+	na := make([]kyber.Point, 0, min)
 	for _, p := range atts2 {
 		if _, ok := myMap[p.String()]; ok {
 			na = append(na, p)
@@ -886,9 +947,9 @@ func intersectAttendees(atts1, atts2 []abstract.Point) []abstract.Point {
 	return na
 }
 
-func unionAttendies(atts1, atts2 []abstract.Point) []abstract.Point {
+func unionAttendies(atts1, atts2 []kyber.Point) []kyber.Point {
 	myMap := make(map[string]bool)
-	na := make([]abstract.Point, 0, len(atts1)+len(atts2))
+	na := make([]kyber.Point, 0, len(atts1)+len(atts2))
 
 	na = append(na, atts1...)
 	for _, p := range atts1 {
@@ -920,7 +981,7 @@ func unionRoster(r1, r2 *onet.Roster) *onet.Roster {
 }
 
 // newService registers the request-methods.
-func newService(c *onet.Context) onet.Service {
+func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		data:             &saveData{},
@@ -928,7 +989,7 @@ func newService(c *onet.Context) onet.Service {
 	log.ErrFatal(s.RegisterHandlers(s.PinRequest, s.StoreConfig, s.FinalizeRequest,
 		s.FetchFinal, s.MergeRequest), "Couldn't register messages")
 	if err := s.tryLoad(); err != nil {
-		log.Error(err)
+		return nil, err
 	}
 	if s.data.Finals == nil {
 		s.data.Finals = make(map[string]*FinalStatement)
@@ -936,21 +997,26 @@ func newService(c *onet.Context) onet.Service {
 	if s.data.merges == nil {
 		s.data.merges = make(map[string]*merge)
 	}
-	s.syncs = make(map[string]*sync)
+	s.syncs = make(map[string]*syncChans)
 	var err error
-	s.PropagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal)
-	log.ErrFatal(err)
+	s.PropagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal, 0)
+	if err != nil {
+		return nil, err
+	}
+
 	s.RegisterProcessorFunc(checkConfigID, s.CheckConfig)
 	s.RegisterProcessorFunc(checkConfigReplyID, s.CheckConfigReply)
 	s.RegisterProcessorFunc(mergeConfigID, s.MergeConfig)
 	s.RegisterProcessorFunc(mergeConfigReplyID, s.MergeConfigReply)
-	s.ProtocolRegister(bftSignFinal, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyFinal)
-	})
-	s.ProtocolRegister(bftSignMerge, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyMerge)
-	})
-	return s
+	if err := byzcoinx.InitBFTCoSiProtocol(protocol.EdDSACompatibleCosiSuite, s.Context,
+		s.bftVerifyFinal, s.bftVerifyFinalAck, bftSignFinal); err != nil {
+		return nil, err
+	}
+	if err := byzcoinx.InitBFTCoSiProtocol(protocol.EdDSACompatibleCosiSuite, s.Context,
+		s.bftVerifyMerge, s.bftVerifyMergeAck, bftSignMerge); err != nil {
+		return nil, err
+	}
+	return s, nil
 }
 
 func newMerge() *merge {
@@ -968,7 +1034,7 @@ func (p byIdentity) Less(i, j int) bool {
 	return p[i].String() < p[j].String()
 }
 
-type byPoint []abstract.Point
+type byPoint []kyber.Point
 
 func (p byPoint) Len() int      { return len(p) }
 func (p byPoint) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
@@ -976,8 +1042,16 @@ func (p byPoint) Less(i, j int) bool {
 	return p[i].String() < p[j].String()
 }
 
-func sortAll(locs []string, roster []*network.ServerIdentity, atts []abstract.Point) {
+func sortAll(locs []string, roster []*network.ServerIdentity, atts []kyber.Point) {
 	sort.Strings(locs)
 	sort.Sort(byIdentity(roster))
 	sort.Sort(byPoint(atts))
+}
+
+// sliceToArr does what the name suggests, we need it to turn a slice into
+// something hashable.
+func sliceToArr(msg []byte) [32]byte {
+	var arr [32]byte
+	copy(arr[:], msg)
+	return arr
 }

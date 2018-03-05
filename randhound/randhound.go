@@ -2,6 +2,9 @@
 // strings in an unbiasable and verifiable way given that a threshold of
 // participants is honest. The protocol is driven by the client which scavenges
 // the public randomness from the servers over the course of two round-trips.
+
+// +build experimental
+
 package randhound
 
 import (
@@ -12,12 +15,13 @@ import (
 	"reflect"
 	"time"
 
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/kyber.v2/sign/schnorr"
+	"gopkg.in/dedis/kyber.v2/util/hash"
+	"gopkg.in/dedis/kyber.v2/util/random"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 )
 
 // TODO:
@@ -59,7 +63,7 @@ func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) er
 	rh.server = make([][]*onet.TreeNode, groups)
 	rh.group = make([][]int, groups)
 	rh.threshold = make([]int, groups)
-	rh.key = make([][]abstract.Point, groups)
+	rh.key = make([][]kyber.Point, groups)
 	rh.ServerIdxToGroupNum = make([]int, nodes)
 	rh.ServerIdxToGroupIdx = make([]int, nodes)
 
@@ -67,7 +71,7 @@ func (rh *RandHound) Setup(nodes int, faulty int, groups int, purpose string) er
 	rh.i2s = make(map[int]*I2)
 	rh.r1s = make(map[int]*R1)
 	rh.r2s = make(map[int]*R2)
-	rh.polyCommit = make(map[int][]abstract.Point)
+	rh.polyCommit = make(map[int][]kyber.Point)
 	rh.secret = make(map[int][]int)
 	rh.chosenSecret = make(map[int][]int)
 
@@ -100,7 +104,7 @@ func (rh *RandHound) Start() error {
 	// Set some group parameters
 	for i, group := range rh.server {
 		rh.threshold[i] = 2 * len(group) / 3
-		rh.polyCommit[i] = make([]abstract.Point, len(group))
+		rh.polyCommit[i] = make([]kyber.Point, len(group))
 		g := make([]int, len(group))
 		for j, server0 := range group {
 			s0 := server0.RosterIndex
@@ -153,7 +157,7 @@ func (rh *RandHound) Start() error {
 
 // Shard produces a pseudorandom sharding of the network entity list
 // based on a seed and a number of requested shards.
-func (rh *RandHound) Shard(seed []byte, shards int) ([][]*onet.TreeNode, [][]abstract.Point, error) {
+func (rh *RandHound) Shard(seed []byte, shards int) ([][]*onet.TreeNode, [][]kyber.Point, error) {
 
 	if shards == 0 || rh.nodes < shards {
 		return nil, nil, fmt.Errorf("Number of requested shards not supported")
@@ -171,7 +175,7 @@ func (rh *RandHound) Shard(seed []byte, shards int) ([][]*onet.TreeNode, [][]abs
 	// Create sharding of the current roster according to the above permutation
 	el := rh.List()
 	sharding := make([][]*onet.TreeNode, shards)
-	keys := make([][]abstract.Point, shards)
+	keys := make([][]kyber.Point, shards)
 	for i, j := range m {
 		sharding[i%shards] = append(sharding[i%shards], el[j])
 		keys[i%shards] = append(keys[i%shards], el[j].ServerIdentity.Public)
@@ -197,7 +201,7 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 	// Gather all valid shares for a given server
 	for source, target := range rh.secret {
 
-		var share []abstract.Point
+		var share []kyber.Point
 		var pos []int
 		for _, t := range target {
 			r2 := rh.r2s[t]
@@ -246,7 +250,7 @@ func (rh *RandHound) Random() ([]byte, *Transcript, error) {
 }
 
 // Verify checks a given collective random string against a protocol transcript.
-func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) error {
+func (rh *RandHound) Verify(suite kyber.Suite, random []byte, t *Transcript) error {
 
 	rh.mutex.Lock()
 	defer rh.mutex.Unlock()
@@ -270,7 +274,7 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 
 	// Verify R1 signatures
 	for src, r1 := range t.R1s {
-		var key abstract.Point
+		var key kyber.Point
 		for i := range t.Group {
 			for j := range t.Group[i] {
 				if src == t.Group[i][j] {
@@ -292,7 +296,7 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 
 	// Verify R2 signatures
 	for src, r2 := range t.R2s {
-		var key abstract.Point
+		var key kyber.Point
 		for i := range t.Group {
 			for j := range t.Group[i] {
 				if src == t.Group[i][j] {
@@ -351,12 +355,12 @@ func (rh *RandHound) Verify(suite abstract.Suite, random []byte, t *Transcript) 
 
 			var poly [][]byte
 			var encPos []int
-			var encShare []abstract.Point
+			var encShare []kyber.Point
 			var encProof []ProofCore
-			var X []abstract.Point
+			var X []kyber.Point
 
 			var decPos []int
-			var decShare []abstract.Point
+			var decShare []kyber.Point
 			var decProof []ProofCore
 
 			// All R1 messages of the chosen secrets should be there
@@ -480,13 +484,13 @@ func (rh *RandHound) handleI1(i1 WI1) error {
 	msg := &i1.I1
 
 	// Compute hash of the client's message
-	msg.Sig = crypto.SchnorrSig{} // XXX: hack
+	msg.Sig = []byte{} // XXX: hack
 	i1b, err := network.Marshal(msg)
 	if err != nil {
 		return err
 	}
 
-	hi1, err := crypto.HashBytes(rh.Suite().Hash(), i1b)
+	hi1, err := hash.Bytes(rh.Suite().Hash(), i1b)
 	if err != nil {
 		return err
 	}
@@ -561,7 +565,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 	n := len(msg.EncShare)
 	poly := make([][]byte, n)
 	index := make([]int, n)
-	encShare := make([]abstract.Point, n)
+	encShare := make([]kyber.Point, n)
 	encProof := make([]ProofCore, n)
 	for i := 0; i < n; i++ {
 		poly[i] = msg.CommitPoly
@@ -658,7 +662,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				// shares, proofs, and polynomial commits intended for the
 				// target server
 				var encShare []Share
-				var polyCommit []abstract.Point
+				var polyCommit []kyber.Point
 				for _, k := range rh.chosenSecret[i] {
 					r1 := rh.r1s[k]
 					pc := rh.polyCommit[k]
@@ -667,7 +671,7 @@ func (rh *RandHound) handleR1(r1 WR1) error {
 				}
 
 				i2 := &I2{
-					Sig:          crypto.SchnorrSig{},
+					Sig:          []byte{},
 					SID:          rh.sid,
 					ChosenSecret: chosenSecret,
 					EncShare:     encShare,
@@ -695,21 +699,21 @@ func (rh *RandHound) handleI2(i2 WI2) error {
 	msg := &i2.I2
 
 	// Compute hash of the client's message
-	msg.Sig = crypto.SchnorrSig{} // XXX: hack
+	msg.Sig = []byte{} // XXX: hack
 	i2b, err := network.Marshal(msg)
 	if err != nil {
 		return err
 	}
 
-	hi2, err := crypto.HashBytes(rh.Suite().Hash(), i2b)
+	hi2, err := hash.Bytes(rh.Suite().Hash(), i2b)
 	if err != nil {
 		return err
 	}
 
 	// Prepare data
 	n := len(msg.EncShare)
-	X := make([]abstract.Point, n)
-	encShare := make([]abstract.Point, n)
+	X := make([]kyber.Point, n)
+	encShare := make([]kyber.Point, n)
 	encProof := make([]ProofCore, n)
 	for i := 0; i < n; i++ {
 		X[i] = rh.Public()
@@ -796,9 +800,9 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	// Get all valid encrypted shares corresponding to the received decrypted
 	// shares and intended for the target server (=idx)
 	n := len(msg.DecShare)
-	X := make([]abstract.Point, n)
-	encShare := make([]abstract.Point, n)
-	decShare := make([]abstract.Point, n)
+	X := make([]kyber.Point, n)
+	encShare := make([]kyber.Point, n)
+	decShare := make([]kyber.Point, n)
 	decProof := make([]ProofCore, n)
 	for i := 0; i < n; i++ {
 		src := msg.DecShare[i].Source
@@ -851,7 +855,7 @@ func (rh *RandHound) handleR2(r2 WR2) error {
 	return nil
 }
 
-func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.Time, rand []byte, threshold []int, clientKey abstract.Point, serverKey [][]abstract.Point) ([]byte, error) {
+func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.Time, rand []byte, threshold []int, clientKey kyber.Point, serverKey [][]kyber.Point) ([]byte, error) {
 
 	buf := new(bytes.Buffer)
 
@@ -910,13 +914,13 @@ func (rh *RandHound) sessionID(nodes int, faulty int, purpose string, time time.
 		}
 	}
 
-	return crypto.HashBytes(rh.Suite().Hash(), buf.Bytes())
+	return hash.Bytes(rh.Suite().Hash(), buf.Bytes())
 }
 
-func signSchnorr(suite abstract.Suite, key abstract.Scalar, m interface{}) error {
+func signSchnorr(suite kyber.Suite, key kyber.Scalar, m interface{}) error {
 
 	// Reset signature field
-	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
+	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf([]byte{})) // XXX: hack
 
 	// Marshal message
 	mb, err := network.Marshal(m) // TODO: change m to interface with hash to make it compatible to other languages (network.Marshal() adds struct-identifiers)
@@ -925,7 +929,7 @@ func signSchnorr(suite abstract.Suite, key abstract.Scalar, m interface{}) error
 	}
 
 	// Sign message
-	sig, err := crypto.SignSchnorr(suite, key, mb)
+	sig, err := schnorr.Sign(suite, key, mb)
 	if err != nil {
 		return err
 	}
@@ -936,7 +940,7 @@ func signSchnorr(suite abstract.Suite, key abstract.Scalar, m interface{}) error
 	return nil
 }
 
-func verifySchnorr(suite abstract.Suite, key abstract.Point, m interface{}) error {
+func verifySchnorr(suite kyber.Suite, key kyber.Point, m interface{}) error {
 
 	// Make a copy of the signature
 	x := reflect.ValueOf(m).Elem().FieldByName("Sig")
@@ -944,7 +948,7 @@ func verifySchnorr(suite abstract.Suite, key abstract.Point, m interface{}) erro
 	sig.Set(x)
 
 	// Reset signature field
-	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
+	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf([]byte{})) // XXX: hack
 
 	// Marshal message
 	mb, err := network.Marshal(m) // TODO: change m to interface with hash to make it compatible to other languages (network.Marshal() adds struct-identifiers)
@@ -955,10 +959,10 @@ func verifySchnorr(suite abstract.Suite, key abstract.Point, m interface{}) erro
 	// Copy back original signature
 	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(sig) // XXX: hack
 
-	return crypto.VerifySchnorr(suite, key, mb, sig.Interface().(crypto.SchnorrSig))
+	return schnorr.Verify(suite, key, mb, sig.Interface().([]byte))
 }
 
-func verifyMessage(suite abstract.Suite, m interface{}, hash1 []byte) error {
+func verifyMessage(suite kyber.Suite, m interface{}, hash1 []byte) error {
 
 	// Make a copy of the signature
 	x := reflect.ValueOf(m).Elem().FieldByName("Sig")
@@ -966,7 +970,7 @@ func verifyMessage(suite abstract.Suite, m interface{}, hash1 []byte) error {
 	sig.Set(x)
 
 	// Reset signature field
-	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf(crypto.SchnorrSig{})) // XXX: hack
+	reflect.ValueOf(m).Elem().FieldByName("Sig").Set(reflect.ValueOf([]byte{})) // XXX: hack
 
 	// Marshal ...
 	mb, err := network.Marshal(m) // TODO: change m to interface with hash to make it compatible to other languages (network.Marshal() adds struct-identifiers)
@@ -975,7 +979,7 @@ func verifyMessage(suite abstract.Suite, m interface{}, hash1 []byte) error {
 	}
 
 	// ... and hash message
-	hash2, err := crypto.HashBytes(suite.Hash(), mb)
+	hash2, err := hash.Bytes(suite.Hash(), mb)
 	if err != nil {
 		return err
 	}

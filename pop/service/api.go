@@ -2,37 +2,19 @@ package service
 
 import (
 	"bytes"
+	"encoding/hex"
 	"errors"
 
 	"github.com/BurntSushi/toml"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/base64"
-	"gopkg.in/dedis/crypto.v0/eddsa"
-	"gopkg.in/dedis/onet.v1"
-	"gopkg.in/dedis/onet.v1/crypto"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/kyber.v2/sign/eddsa"
+	"gopkg.in/dedis/kyber.v2/sign/schnorr"
+	"gopkg.in/dedis/kyber.v2/util/encoding"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 	"gopkg.in/satori/go.uuid.v1"
-)
-
-const (
-	// ErrorWrongPIN indicates a wrong PIN
-	ErrorWrongPIN = iota + 4100
-	// ErrorInternal indicates something internally went wrong - see the
-	// error message
-	ErrorInternal
-	// ErrorOtherFinals indicates that one or more of the other conodes
-	// are still missing the finalization-step
-	ErrorOtherFinals
-	// ErrorMerge indicates that other parties have not recieved
-	// the merge request yet
-	ErrorMerge
-	// ErrorTimeout indicates that waiting on network was too long
-	// Either node is down or network is partitioned
-	ErrorTimeout
-	// ErrorMergeInProgress indicates that there was an attempt
-	// to launch proccess twice on the same node
-	ErrorMergeInProgress
 )
 
 func init() {
@@ -48,26 +30,26 @@ type Client struct {
 
 // NewClient instantiates a new Client
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient(Name)}
+	return &Client{Client: onet.NewClient(cothority.Suite, Name)}
 }
 
 // PinRequest takes a destination-address, a PIN and a public key as an argument.
 // If no PIN is given, the cothority will print out a "PIN: ...."-line on the stdout.
 // If the PIN is given and is correct, the public key will be stored in the
 // service.
-func (c *Client) PinRequest(dst network.Address, pin string, pub abstract.Point) onet.ClientError {
+func (c *Client) PinRequest(dst network.Address, pin string, pub kyber.Point) error {
 	si := &network.ServerIdentity{Address: dst}
 	return c.SendProtobuf(si, &PinRequest{pin, pub}, nil)
 }
 
 // StoreConfig sends the configuration to the conode for later usage.
-func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv abstract.Scalar) onet.ClientError {
+func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar) error {
 	si := &network.ServerIdentity{Address: dst}
-	sg, e := crypto.SignSchnorr(network.Suite, priv, p.Hash())
-	if e != nil {
-		return onet.NewClientError(e)
+	sg, err := schnorr.Sign(cothority.Suite, priv, p.Hash())
+	if err != nil {
+		return err
 	}
-	err := c.SendProtobuf(si, &storeConfig{p, sg}, nil)
+	err = c.SendProtobuf(si, &storeConfig{p, sg}, nil)
 	if err != nil {
 		return err
 	}
@@ -76,7 +58,7 @@ func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv abstract.Scal
 
 // FetchFinal sends Request to update local final statement
 func (c *Client) FetchFinal(dst network.Address, hash []byte) (
-	*FinalStatement, onet.ClientError) {
+	*FinalStatement, error) {
 	si := &network.ServerIdentity{Address: dst}
 	res := &finalizeResponse{}
 	err := c.SendProtobuf(si, &fetchRequest{hash}, res)
@@ -92,20 +74,20 @@ func (c *Client) FetchFinal(dst network.Address, hash []byte) (
 // not in all the conodes will be stripped, and that new pop-description
 // collectively signed. The new pop-description and the final statement
 // will be returned.
-func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []abstract.Point,
-	priv abstract.Scalar) (*FinalStatement, onet.ClientError) {
+func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []kyber.Point,
+	priv kyber.Scalar) (*FinalStatement, error) {
 	si := &network.ServerIdentity{Address: dst}
 	req := &finalizeRequest{}
 	req.DescID = p.Hash()
 	req.Attendees = attendees
 	hash, err := req.hash()
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
 	res := &finalizeResponse{}
-	sg, err := crypto.SignSchnorr(network.Suite, priv, hash)
+	sg, err := schnorr.Sign(cothority.Suite, priv, hash)
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
 	req.Signature = sg
 	e := c.SendProtobuf(si, req, res)
@@ -118,14 +100,14 @@ func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []abstract.
 // Merge takes the address of the conode-server, pop-description and the
 // private key of organizer. It triggers merge process on nodes mentioned in
 // config
-func (c *Client) Merge(dst network.Address, p *PopDesc, priv abstract.Scalar) (
-	*FinalStatement, onet.ClientError) {
+func (c *Client) Merge(dst network.Address, p *PopDesc, priv kyber.Scalar) (
+	*FinalStatement, error) {
 	si := &network.ServerIdentity{Address: dst}
 	res := &finalizeResponse{}
 	hash := p.Hash()
-	sg, err := crypto.SignSchnorr(network.Suite, priv, hash)
+	sg, err := schnorr.Sign(cothority.Suite, priv, hash)
 	if err != nil {
-		return nil, onet.NewClientError(err)
+		return nil, err
 	}
 
 	e := c.SendProtobuf(si, &mergeRequest{hash, sg}, res)
@@ -141,7 +123,7 @@ type FinalStatement struct {
 	// Desc is the description of the pop-party.
 	Desc *PopDesc
 	// Attendees holds a slice of all public keys of the attendees.
-	Attendees []abstract.Point
+	Attendees []kyber.Point
 	// Signature is created by all conodes responsible for that pop-party
 	Signature []byte
 	// Flag indicates, that party was merged
@@ -161,15 +143,15 @@ func newFinalStatementFromTomlStruct(fsToml *finalStatementToml) (*FinalStatemen
 	if err != nil {
 		return nil, err
 	}
-	atts := []abstract.Point{}
+	atts := []kyber.Point{}
 	for _, p := range fsToml.Attendees {
-		pub, err := crypto.String64ToPoint(network.Suite, p)
+		pub, err := encoding.StringHexToPoint(cothority.Suite, p)
 		if err != nil {
 			return nil, err
 		}
 		atts = append(atts, pub)
 	}
-	sig, err := base64.StdEncoding.DecodeString(fsToml.Signature)
+	sig, err := hex.DecodeString(fsToml.Signature)
 	// TODO: sign and verify signature
 	if err != nil {
 		return nil, err
@@ -218,7 +200,7 @@ func encodeMapFinal(stmts map[string]*FinalStatement) ([]byte, error) {
 	mapToml := make(map[string]*finalStatementToml)
 	var err error
 	for key, fs := range stmts {
-		mapToml[string(base64.StdEncoding.EncodeToString([]byte(key)))], err = fs.toTomlStruct()
+		mapToml[hex.EncodeToString([]byte(key))], err = fs.toTomlStruct()
 		if err != nil {
 			return nil, err
 		}
@@ -258,14 +240,14 @@ func (desc *PopDesc) toTomlStruct() (*popDescToml, error) {
 func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 	sis := []*network.ServerIdentity{}
 	if descToml == nil {
-		return nil, onet.NewClientErrorCode(ErrorInternal, "failed toml struct")
+		return nil, errors.New("no toml struct given")
 	}
 	for _, s := range descToml.Roster {
 		uid, err := uuid.FromString(s[2])
 		if err != nil {
 			return nil, err
 		}
-		pub, err := crypto.String64ToPoint(network.Suite, s[3])
+		pub, err := encoding.StringHexToPoint(cothority.Suite, s[3])
 		if err != nil {
 			return nil, err
 		}
@@ -288,7 +270,7 @@ func newPopDescFromTomlStruct(descToml *popDescToml) (*PopDesc, error) {
 			if err != nil {
 				return nil, err
 			}
-			pub, err := crypto.String64ToPoint(network.Suite, s[3])
+			pub, err := encoding.StringHexToPoint(cothority.Suite, s[3])
 			if err != nil {
 				return nil, err
 			}
@@ -332,7 +314,7 @@ func (fs *FinalStatement) toTomlStruct() (*finalStatementToml, error) {
 	}
 	atts := make([]string, len(fs.Attendees))
 	for i, p := range fs.Attendees {
-		str, err := crypto.PointToString64(nil, p)
+		str, err := encoding.PointToStringHex(nil, p)
 		if err != nil {
 			return nil, err
 		}
@@ -341,7 +323,7 @@ func (fs *FinalStatement) toTomlStruct() (*finalStatementToml, error) {
 	fsToml := &finalStatementToml{
 		Desc:      descToml,
 		Attendees: atts,
-		Signature: base64.StdEncoding.EncodeToString(fs.Signature),
+		Signature: hex.EncodeToString(fs.Signature),
 		Merged:    fs.Merged,
 	}
 	return fsToml, nil
@@ -364,7 +346,7 @@ func (fs *FinalStatement) ToToml() ([]byte, error) {
 // Hash returns the hash of the popdesc and the attendees. In case of an error
 // in the hashing it will return a nil-slice and the error.
 func (fs *FinalStatement) Hash() ([]byte, error) {
-	h := network.Suite.Hash()
+	h := cothority.Suite.Hash()
 	_, err := h.Write(fs.Desc.Hash())
 	if err != nil {
 		return nil, err
@@ -430,7 +412,7 @@ type shortDescToml struct {
 
 // Hash of this structure - calculated by hand instead of using network.Marshal.
 func (desc *PopDesc) Hash() []byte {
-	hash := network.Suite.Hash()
+	hash := cothority.Suite.Hash()
 	hash.Write([]byte(desc.Name))
 	hash.Write([]byte(desc.DateTime))
 	hash.Write([]byte(desc.Location))
@@ -476,7 +458,7 @@ func Equal(r1, r2 *onet.Roster) bool {
 func toToml(r *onet.Roster) ([][]string, error) {
 	rostr := make([][]string, len(r.List))
 	for i, si := range r.List {
-		str, err := crypto.PointToString64(nil, si.Public)
+		str, err := encoding.PointToStringHex(nil, si.Public)
 		if err != nil {
 			return nil, err
 		}
@@ -490,8 +472,8 @@ func toToml(r *onet.Roster) ([][]string, error) {
 // PopToken represents pop-token
 type PopToken struct {
 	Final   *FinalStatement
-	Private abstract.Scalar
-	Public  abstract.Point
+	Private kyber.Scalar
+	Public  kyber.Point
 }
 
 type popTokenToml struct {
@@ -507,11 +489,11 @@ func newPopTokenFromTomlStruct(t *popTokenToml) (*PopToken, error) {
 	if err != nil {
 		return nil, err
 	}
-	token.Private, err = crypto.String64ToScalar(network.Suite, t.Private)
+	token.Private, err = encoding.StringHexToScalar(cothority.Suite, t.Private)
 	if err != nil {
 		return nil, err
 	}
-	token.Public, err = crypto.String64ToPoint(network.Suite, t.Public)
+	token.Public, err = encoding.StringHexToPoint(cothority.Suite, t.Public)
 	if err != nil {
 		return nil, err
 	}
