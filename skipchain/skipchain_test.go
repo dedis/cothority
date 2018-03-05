@@ -571,7 +571,7 @@ func TestService_ParallelStoreBlock(t *testing.T) {
 	for i := 0; i < nbrRoutines; i++ {
 		go func(sb *SkipBlock) {
 			for j := 0; j < numBlocks; j++ {
-				_, err := s1.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: sb})
+				_, err := s1.StoreSkipBlock(&StoreSkipBlock{LatestID: []byte{}, NewBlock: sb})
 				if err != nil {
 					errs <- err
 					break
@@ -637,7 +637,7 @@ func TestService_AddFollow(t *testing.T) {
 	sb.BaseHeight = 2
 	sb.Data = []byte{}
 	sb.VerifierIDs = []VerifierID{VerifyBase}
-	ssb := &StoreSkipBlock{LatestID: nil, NewBlock: sb, Signature: nil}
+	ssb := &StoreSkipBlock{LatestID: []byte{}, NewBlock: sb, Signature: nil}
 
 	_, err := service.StoreSkipBlock(ssb)
 	require.NotNil(t, err)
