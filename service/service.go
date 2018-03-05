@@ -355,7 +355,6 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 			if dataOCS == nil {
 				return nil, errors.New(
 					"unknown block in ocs-skipchain")
-
 			}
 			if dataOCS.Read != nil {
 				if req.Count > 0 || dataOCS.Read.DataID.Equal(doc) {
@@ -370,7 +369,10 @@ func (s *Service) GetReadRequests(req *ocs.GetReadRequests) (reply *ocs.GetReadR
 			}
 		}
 		if len(current.ForwardLink) > 0 {
-			current = s.db().GetByID(current.ForwardLink[0].Hash())
+			current = s.db().GetByID(current.ForwardLink[0].To)
+			if current == nil {
+				return nil, errors.New("didn't find block for this forward-link")
+			}
 		} else {
 			log.Lvl3("No forward-links, stopping")
 			break
@@ -486,6 +488,7 @@ func (s *Service) storeSkipBlock(latest *skipchain.SkipBlock, d []byte) (sb *ski
 	if block.Index == 0 {
 		block.GenesisID = block.SkipChainID()
 	}
+	block.Index++
 	// Using an unset LatestID with block.GenesisID set is to ensure concurrent
 	// append.
 	reply, err := s.skipchain.StoreSkipBlock(&skipchain.StoreSkipBlock{
@@ -836,11 +839,12 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 	defer s.save()
 	if sb.Index == 0 {
 		s.saveMutex.Lock()
+		defer s.saveMutex.Unlock()
 		if dataOCS.Darc == nil {
-			log.Fatal("Should not be nil!")
+			log.Lvl1(s.ServerIdentity(), "Genesis-block of an onchain-secret needs to have a Darc for access-control")
+			return
 		}
 		s.Storage.Admins[string(sb.Hash)] = dataOCS.Darc
-		s.saveMutex.Unlock()
 		return
 	}
 }
