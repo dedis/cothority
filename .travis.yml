@@ -37,4 +37,7 @@ matrix:
         - cd $TRAVIS_BUILD_DIR
 
       script:
-        - make test
+        #- make test
+        - cd evoting/lib; go test 
+        - cd evoting/service; go test 
+        - cd skipchain; go test
