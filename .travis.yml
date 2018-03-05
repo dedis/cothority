@@ -38,6 +38,6 @@ matrix:
 
       script:
         #- make test
-        - cd evoting/lib; go test 
-        - cd evoting/service; go test 
-        - cd skipchain; go test
+        - ( cd evoting/lib; go test -race -short )
+        - ( cd evoting/service; go test -race -short )
+        - ( cd skipchain; go test -race -short )
