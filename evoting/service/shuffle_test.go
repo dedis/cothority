@@ -13,6 +13,8 @@ import (
 )
 
 func TestShuffle_UserNotLoggedIn(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -25,6 +27,8 @@ func TestShuffle_UserNotLoggedIn(t *testing.T) {
 }
 
 func TestShuffle_UserNotAdmin(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -45,6 +49,8 @@ func TestShuffle_UserNotAdmin(t *testing.T) {
 }
 
 func TestShuffle_UserNotCreator(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -65,6 +71,8 @@ func TestShuffle_UserNotCreator(t *testing.T) {
 }
 
 func TestShuffle_ElectionClosed(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -96,6 +104,8 @@ func TestShuffle_ElectionClosed(t *testing.T) {
 }
 
 func TestShuffle_Full(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 

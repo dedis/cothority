@@ -18,6 +18,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestService(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 

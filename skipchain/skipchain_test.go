@@ -33,6 +33,8 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_StoreSkipBlock_Failure(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	if testing.Short() {
 		t.Skip("node failure tests do not run on travis, see #1000")
 	}
@@ -40,6 +42,8 @@ func TestService_StoreSkipBlock_Failure(t *testing.T) {
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	storeSkipBlock(t, 4, false)
 }
 
@@ -132,6 +136,8 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 }
 
 func TestService_SetChildrenSkipBlock(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	// How many nodes in Root
 	nodesRoot := 3
 
@@ -192,6 +198,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 }
 
 func TestService_MultiLevel(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
@@ -243,6 +251,8 @@ func TestService_MultiLevel(t *testing.T) {
 }
 
 func TestService_Verification(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
@@ -275,6 +285,8 @@ func TestService_Verification(t *testing.T) {
 }
 
 func TestService_SignBlock(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	// Testing whether we sign correctly the SkipBlocks
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
@@ -297,6 +309,8 @@ func TestService_SignBlock(t *testing.T) {
 }
 
 func TestService_ProtocolVerification(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	// Testing whether we sign correctly the SkipBlocks
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
@@ -329,6 +343,8 @@ func TestService_ProtocolVerification(t *testing.T) {
 }
 
 func TestService_RegisterVerification(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	// Testing whether we sign correctly the SkipBlocks
 	onet.RegisterNewService("ServiceVerify", newServiceVerify)
 	local := onet.NewLocalTest(cothority.Suite)
@@ -357,6 +373,8 @@ func TestService_RegisterVerification(t *testing.T) {
 }
 
 func TestService_StoreSkipBlock2(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	nbrHosts := 3
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
@@ -408,6 +426,8 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 }
 
 func TestService_StoreSkipBlockSpeed(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	t.Skip("This is a hidden benchmark")
 	nbrHosts := 3
 	local := onet.NewLocalTest(cothority.Suite)
@@ -439,6 +459,8 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 }
 
 func TestService_ParallelGUC(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	if testing.Short() {
 		t.Skip("parallel GUC does not run on travis, see #1000")
 	}
@@ -486,6 +508,8 @@ func TestService_ParallelGUC(t *testing.T) {
 }
 
 func TestService_ParallelGenesis(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	if testing.Short() {
 		t.Skip("parallel tests too big for travis")
 	}
@@ -536,6 +560,8 @@ func TestService_ParallelGenesis(t *testing.T) {
 }
 
 func TestService_ParallelStoreBlock(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	if testing.Short() {
 		t.Skip("parallel tests too big for travis")
 	}
@@ -593,6 +619,8 @@ func TestService_ParallelStoreBlock(t *testing.T) {
 }
 
 func TestService_Propagation(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	if testing.Short() {
 		t.Skip("propagation does not run on travis, see #1000")
 	}
@@ -617,6 +645,8 @@ func TestService_Propagation(t *testing.T) {
 }
 
 func TestService_AddFollow(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
@@ -707,6 +737,8 @@ func TestService_AddFollow(t *testing.T) {
 }
 
 func TestService_CreateLinkPrivate(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
@@ -732,6 +764,8 @@ func TestService_CreateLinkPrivate(t *testing.T) {
 }
 
 func TestService_Unlink(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
@@ -791,6 +825,8 @@ func TestService_Unlink(t *testing.T) {
 }
 
 func TestService_DelFollow(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
@@ -826,6 +862,8 @@ func TestService_DelFollow(t *testing.T) {
 }
 
 func TestService_ListFollow(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()

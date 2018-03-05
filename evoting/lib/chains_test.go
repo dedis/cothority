@@ -11,6 +11,8 @@ import (
 )
 
 func TestChain(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 

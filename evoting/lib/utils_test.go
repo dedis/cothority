@@ -9,6 +9,8 @@ import (
 )
 
 func TestRandomKeyPair(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	x1, X1 := RandomKeyPair()
 	x2, X2 := RandomKeyPair()
 	assert.NotEqual(t, x1, x2)
@@ -16,6 +18,8 @@ func TestRandomKeyPair(t *testing.T) {
 }
 
 func TestDKGSimulate(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	dkgs, _ := DKGSimulate(5, 4)
 	assert.Equal(t, 5, len(dkgs))
 

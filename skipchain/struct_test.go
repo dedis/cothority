@@ -15,6 +15,8 @@ import (
 )
 
 func TestSkipBlock_GetResponsible(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
@@ -58,6 +60,8 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 }
 
 func TestSkipBlock_VerifySignatures(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster3, _ := l.GenTree(3, true)
 	defer l.CloseAll()
@@ -84,6 +88,8 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	sbd1 := NewSkipBlock()
 	sbd1.Data = []byte("1")
 	sbd1.Height = 4
@@ -98,6 +104,8 @@ func TestSkipBlock_Hash1(t *testing.T) {
 }
 
 func TestSkipBlock_Hash2(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	hosts, el, _ := local.GenTree(2, false)
 	defer local.CloseAll()
@@ -115,6 +123,8 @@ func TestSkipBlock_Hash2(t *testing.T) {
 }
 
 func TestBlockLink_Copy(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	// Test if copy is deep or only shallow
 	b1 := &ForwardLink{}
 	b1.Signature.Sig = []byte{1}
@@ -140,6 +150,8 @@ func TestBlockLink_Copy(t *testing.T) {
 }
 
 func TestSkipBlock_GetFuzzy(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	db, fname := setupSkipBlockDB(t)
 	defer db.Close()
 	defer os.Remove(fname)

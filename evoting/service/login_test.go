@@ -14,6 +14,8 @@ import (
 )
 
 func TestLogin_InvalidMasterID(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -25,6 +27,8 @@ func TestLogin_InvalidMasterID(t *testing.T) {
 }
 
 func TestLogin_InvalidLink(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -39,6 +43,8 @@ func TestLogin_InvalidLink(t *testing.T) {
 }
 
 func TestLogin_InvalidSignature(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -58,6 +64,8 @@ func TestLogin_InvalidSignature(t *testing.T) {
 }
 
 func TestLogin_StartTime(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -93,6 +101,8 @@ func TestLogin_StartTime(t *testing.T) {
 }
 
 func TestLogin_Full(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 

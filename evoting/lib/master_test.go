@@ -12,6 +12,8 @@ import (
 )
 
 func TestFetchMaster(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -28,6 +30,8 @@ func TestFetchMaster(t *testing.T) {
 }
 
 func TestLinks(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -43,6 +47,8 @@ func TestLinks(t *testing.T) {
 }
 
 func TestIsAdmin(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	m := &Master{Admins: []uint32{0}}
 	assert.True(t, m.IsAdmin(0))
 	assert.False(t, m.IsAdmin(1))

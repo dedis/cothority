@@ -13,6 +13,8 @@ import (
 )
 
 func TestDecrypt_UserNotLoggedIn(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -25,6 +27,8 @@ func TestDecrypt_UserNotLoggedIn(t *testing.T) {
 }
 
 func TestDecrypt_UserNotAdmin(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -45,6 +49,8 @@ func TestDecrypt_UserNotAdmin(t *testing.T) {
 }
 
 func TestDecrypt_UserNotCreator(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -65,6 +71,8 @@ func TestDecrypt_UserNotCreator(t *testing.T) {
 }
 
 func TestDecrypt_ElectionNotShuffled(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -85,6 +93,8 @@ func TestDecrypt_ElectionNotShuffled(t *testing.T) {
 }
 
 func TestDecrypt_ElectionClosed(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -105,6 +115,8 @@ func TestDecrypt_ElectionClosed(t *testing.T) {
 }
 
 func TestDecrypt_Full(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 

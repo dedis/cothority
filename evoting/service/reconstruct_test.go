@@ -14,6 +14,8 @@ import (
 )
 
 func TestReconstruct_UserNotLoggedIn(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -26,6 +28,8 @@ func TestReconstruct_UserNotLoggedIn(t *testing.T) {
 }
 
 func TestReconstruct_ElectionNotDecrypted(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -46,6 +50,8 @@ func TestReconstruct_ElectionNotDecrypted(t *testing.T) {
 }
 
 func TestReconstruct_Full(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
