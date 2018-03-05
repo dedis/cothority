@@ -83,7 +83,7 @@ func (o *SetupDKG) Dispatch() error {
 	if err != nil {
 		return err
 	}
-	for _ = range o.publics[1:] {
+	for range o.publics[1:] {
 		err := o.allDeal(<-o.structDeal)
 		if err != nil {
 			return err

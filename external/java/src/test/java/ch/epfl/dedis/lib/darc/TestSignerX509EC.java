@@ -40,8 +40,12 @@ public class TestSignerX509EC extends SignerX509EC {
     }
 
     public TestSignerX509EC(KeyPair keyPair) {
-        this.publicKey = keyPair.getPublic();
-        this.privateKey = keyPair.getPrivate();
+        this(keyPair.getPublic(), keyPair.getPrivate());
+    }
+
+    public TestSignerX509EC(PublicKey publicKey, PrivateKey privateKey) {
+        this.publicKey = publicKey;
+        this.privateKey = privateKey;
     }
 
     /**
@@ -95,10 +99,6 @@ public class TestSignerX509EC extends SignerX509EC {
         }
     }
 
-    public byte[] publicBytes() {
-        return publicKey.getEncoded();
-    }
-
     public PublicKey getPublicKey() {
         return publicKey;
     }
@@ -131,7 +131,5 @@ public class TestSignerX509EC extends SignerX509EC {
             throw new IllegalStateException("Something is not good with your JDK and it is not able to create a key in your format", e);
         }
     }
-
-
 }
 
