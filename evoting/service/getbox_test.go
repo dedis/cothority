@@ -13,6 +13,8 @@ import (
 )
 
 func TestGetBox_NotLoggedIn(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -25,6 +27,8 @@ func TestGetBox_NotLoggedIn(t *testing.T) {
 }
 
 func TestGetBox_NotPart(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -45,6 +49,8 @@ func TestGetBox_NotPart(t *testing.T) {
 }
 
 func TestGetBox_Full(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 

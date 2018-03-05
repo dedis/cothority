@@ -25,6 +25,8 @@ func init() {
 
 // TestGB tests the GetBlocks protocol
 func TestGB(t *testing.T) {
+	sp := skipchain.NewSpeed()
+	defer sp.Done()
 	t.Skip("See https://github.com/dedis/cothority/issues/1027")
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
@@ -132,6 +134,8 @@ func TestGB(t *testing.T) {
 
 // TestER tests the ProtoExtendRoster message
 func TestER(t *testing.T) {
+	sp := skipchain.NewSpeed()
+	defer sp.Done()
 	nodes := []int{2, 5, 13}
 	for _, nbrNodes := range nodes {
 		testER(t, tsID, nbrNodes)
@@ -139,6 +143,8 @@ func TestER(t *testing.T) {
 }
 
 func TestFail(t *testing.T) {
+	sp := skipchain.NewSpeed()
+	defer sp.Done()
 	if testing.Short() {
 		t.Skip("Stress-test of localtest with premature close")
 	}

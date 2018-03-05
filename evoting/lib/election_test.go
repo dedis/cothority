@@ -12,6 +12,8 @@ import (
 )
 
 func TestFetchElection(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -50,6 +52,8 @@ func TestFetchElection(t *testing.T) {
 }
 
 func TestStore(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -66,6 +70,8 @@ func TestStore(t *testing.T) {
 }
 
 func TestBox(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -79,6 +85,8 @@ func TestBox(t *testing.T) {
 }
 
 func TestMixes(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -92,6 +100,8 @@ func TestMixes(t *testing.T) {
 }
 
 func TestPartials(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -105,12 +115,16 @@ func TestPartials(t *testing.T) {
 }
 
 func TestIsUser(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	e := &Election{Creator: 0, Users: []uint32{0}}
 	assert.True(t, e.IsUser(0))
 	assert.False(t, e.IsUser(1))
 }
 
 func TestIsCreator(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	e := &Election{Creator: 0, Users: []uint32{0, 1}}
 	assert.True(t, e.IsCreator(0))
 	assert.False(t, e.IsCreator(1))

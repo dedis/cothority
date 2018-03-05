@@ -9,6 +9,8 @@ import (
 )
 
 func TestSplit(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	_, X := RandomKeyPair()
 	ballots := genBox(X, 2).Ballots
 
@@ -20,6 +22,8 @@ func TestSplit(t *testing.T) {
 }
 
 func TestCombine(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	_, X1 := RandomKeyPair()
 	_, X2 := RandomKeyPair()
 

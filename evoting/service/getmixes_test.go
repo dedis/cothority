@@ -13,6 +13,8 @@ import (
 )
 
 func TestGetMixes_UserNotLoggedIn(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -25,6 +27,8 @@ func TestGetMixes_UserNotLoggedIn(t *testing.T) {
 }
 
 func TestGetMixes_UserNotPart(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -45,6 +49,8 @@ func TestGetMixes_UserNotPart(t *testing.T) {
 }
 
 func TestGetMixes_ElectionNotShuffled(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -65,6 +71,8 @@ func TestGetMixes_ElectionNotShuffled(t *testing.T) {
 }
 
 func TestGetMixes_Full(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 

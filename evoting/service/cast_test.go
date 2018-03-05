@@ -16,6 +16,8 @@ import (
 )
 
 func TestCast_InvalidElectionID(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -28,6 +30,8 @@ func TestCast_InvalidElectionID(t *testing.T) {
 }
 
 func TestCast_UserNotPart(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -48,6 +52,8 @@ func TestCast_UserNotPart(t *testing.T) {
 }
 
 func TestCast_ElectionAlreadyClosed(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -79,6 +85,8 @@ func TestCast_ElectionAlreadyClosed(t *testing.T) {
 }
 
 func TestCast_ElectionEnded(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -100,6 +108,8 @@ func TestCast_ElectionEnded(t *testing.T) {
 }
 
 func TestCast_NotStarted(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -121,6 +131,8 @@ func TestCast_NotStarted(t *testing.T) {
 }
 
 func TestCast_Full(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 

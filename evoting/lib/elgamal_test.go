@@ -11,6 +11,8 @@ import (
 )
 
 func TestElGamal(t *testing.T) {
+	s := NewSpeed()
+	defer s.Done()
 	secret := cothority.Suite.Scalar().Pick(random.New())
 	public := cothority.Suite.Point().Mul(secret, nil)
 	message := []byte("nevv")

@@ -15,6 +15,8 @@ import (
 )
 
 func TestLink_WrongPin(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -26,6 +28,8 @@ func TestLink_WrongPin(t *testing.T) {
 }
 
 func TestLink_InvalidRoster(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
@@ -37,6 +41,8 @@ func TestLink_InvalidRoster(t *testing.T) {
 }
 
 func TestLink_Full(t *testing.T) {
+	sp := lib.NewSpeed()
+	defer sp.Done()
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 

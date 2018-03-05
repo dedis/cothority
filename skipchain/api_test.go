@@ -24,6 +24,8 @@ func init() {
 }
 
 func TestClient_CreateGenesis(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
@@ -42,6 +44,8 @@ func TestClient_CreateGenesis(t *testing.T) {
 }
 
 func TestClient_CreateRootControl(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
@@ -51,6 +55,8 @@ func TestClient_CreateRootControl(t *testing.T) {
 }
 
 func TestClient_ParallelGetUpdateChain(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	if testing.Short() {
 		t.Skip("Long run not good for Travis")
 	}
@@ -78,6 +84,8 @@ func TestClient_ParallelGetUpdateChain(t *testing.T) {
 }
 
 func TestClient_CreateRootInter(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	l := onet.NewTCPTest(cothority.Suite)
 	_, ro, _ := l.GenTree(5, true)
 	defer l.CloseAll()
@@ -104,6 +112,8 @@ func TestClient_CreateRootInter(t *testing.T) {
 func TestClient_GetUpdateChain(t *testing.T) {
 	// Create a small chain and test whether we can get from one element
 	// of the chain to the last element with a valid slice of SkipBlocks
+	sp := NewSpeed()
+	defer sp.Done()
 	local := onet.NewTCPTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
@@ -167,6 +177,8 @@ func TestClient_GetUpdateChain(t *testing.T) {
 }
 
 func TestClient_StoreSkipBlock(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	nbrHosts := 3
 	l := onet.NewTCPTest(cothority.Suite)
 	_, ro, _ := l.GenTree(nbrHosts, true)
@@ -216,6 +228,8 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 }
 
 func TestClient_GetAllSkipchains(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	nbrHosts := 3
 	l := onet.NewTCPTest(cothority.Suite)
 	_, ro, _ := l.GenTree(nbrHosts, true)
@@ -243,6 +257,8 @@ func TestClient_GetAllSkipchains(t *testing.T) {
 }
 
 func TestClient_GetSingleBlockByIndex(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	nbrHosts := 3
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(nbrHosts, true)
@@ -267,6 +283,8 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 }
 
 func TestClient_CreateLinkPrivate(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	ls := linked(1)
 	defer ls.local.CloseAll()
 	require.Equal(t, 0, len(ls.service.Storage.Clients))
@@ -275,6 +293,8 @@ func TestClient_CreateLinkPrivate(t *testing.T) {
 }
 
 func TestClient_SettingAuthentication(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	ls := linked(1)
 	defer ls.local.CloseAll()
 	require.Equal(t, 0, len(ls.service.Storage.Clients))
@@ -284,6 +304,8 @@ func TestClient_SettingAuthentication(t *testing.T) {
 }
 
 func TestClient_Follow(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	ls := linked(3)
 	defer ls.local.CloseAll()
 	require.Equal(t, 0, len(ls.service.Storage.Clients))
@@ -349,6 +371,8 @@ func TestClient_Follow(t *testing.T) {
 }
 
 func TestClient_DelFollow(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	ls := linked(3)
 	defer ls.local.CloseAll()
 
@@ -365,6 +389,8 @@ func TestClient_DelFollow(t *testing.T) {
 }
 
 func TestClient_ListFollow(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	ls := linked(3)
 	defer ls.local.CloseAll()
 
@@ -426,10 +452,13 @@ type testData struct {
 }
 
 func TestClient_ParallelWrite(t *testing.T) {
+	sp := NewSpeed()
+	defer sp.Done()
 	numClients := 20
 	numWrites := 50
 	if testing.Short() {
 		numClients = 2
+		numWrites = 10
 	}
 
 	l := onet.NewTCPTest(cothority.Suite)
