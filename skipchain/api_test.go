@@ -24,6 +24,9 @@ func init() {
 }
 
 func TestClient_CreateGenesis(t *testing.T) {
+	if testing.Short() {
+		t.Skip("limiting travis time")
+	}
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
@@ -109,6 +112,9 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	defer local.CloseAll()
 
 	conodes := 10
+	if testing.Short() {
+		conodes = 3
+	}
 	sbCount := conodes - 1
 	servers, roster, gs := local.MakeSRS(cothority.Suite, conodes, skipchainSID)
 	s := gs.(*Service)

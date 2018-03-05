@@ -121,6 +121,9 @@ func TestCast_NotStarted(t *testing.T) {
 }
 
 func TestCast_Full(t *testing.T) {
+	if testing.Short() {
+		t.Skip("limiting travis time")
+	}
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 

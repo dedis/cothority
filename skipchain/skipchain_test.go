@@ -195,6 +195,10 @@ func TestService_MultiLevel(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
+	maxlevel := 3
+	if testing.Short() {
+		maxlevel = 2
+	}
 	servers, el, genService := local.MakeSRS(cothority.Suite, 3, skipchainSID)
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
@@ -202,7 +206,7 @@ func TestService_MultiLevel(t *testing.T) {
 	}
 	service := genService.(*Service)
 
-	for base := 1; base <= 3; base++ {
+	for base := 1; base <= maxlevel; base++ {
 		for height := 1; height <= base; height++ {
 			log.Lvl1("Making genesis for", base, height)
 			if base == 1 && height > 1 {
