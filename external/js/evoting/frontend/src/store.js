@@ -22,9 +22,8 @@ const store = new Vuex.Store({
       model: false,
       color: ''
     },
-    names: {
-
-    }
+    names: {},
+    now: Math.floor(new Date().getTime() / 1000)
   },
   getters: {
     isAuthenticated: state => {
@@ -46,6 +45,9 @@ const store = new Vuex.Store({
     },
     SET_SNACKBAR (state, snackbar) {
       state.snackbar = snackbar
+    },
+    SET_NOW (state, now) {
+      state.now = now
     }
   },
   plugins: [createPersistedState({ key: 'evoting', paths: ['user'] })]

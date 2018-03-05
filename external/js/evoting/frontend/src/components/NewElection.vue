@@ -29,34 +29,28 @@
               ></v-text-field>
             </v-flex>
             <v-flex xs12>
-              <v-dialog
-                ref="dialog"
-                persistent
-                v-model="modal"
-                lazy
-                full-width
-                width="290px"
-                :return-value.sync="end"
-              >
-                <v-text-field
-                  slot="activator"
-                  label="End date"
-                  v-model="end"
-                  prepend-icon="event"
-                  :rules=[validateDate]
-                  required
-                  readonly
-                ></v-text-field>
-                <v-date-picker
-                  v-model="end"
-                  :min="today"
-                  scrollable
-                >
-                  <v-spacer></v-spacer>
-                  <v-btn flat color="primary" @click="modal = false">Cancel</v-btn>
-                  <v-btn flat color="primary" @click="$refs.dialog.save(end)">OK</v-btn>
-                </v-date-picker>
-              </v-dialog>
+              <datetime-picker
+                label="Start Time"
+                :datetime="`${today} 00:00`"
+                @input="updateStartTime"
+                ></datetime-picker>
+            </v-flex>
+            <v-flex xs12>
+              <datetime-picker
+                label="End Time"
+                :datetime="`${today} 23:59`"
+                @input="updateEndTime"
+                ></datetime-picker>
+            </v-flex>
+            <v-flex xs12>
+              <v-text-field
+                label="Max Choices"
+                v-model="maxChoices"
+                type="number"
+                prepend-icon="format_list_numbered"
+                :rules=[validateMaxChoices]
+                required
+              ></v-text-field>
             </v-flex>
             <v-flex xs12>
               <v-select
@@ -109,7 +103,7 @@
                 prepend-icon="filter_list"
                 chips
                 tags
-                :rules=[validateSciper]
+                :rules=[validateVoterSciper]
                 clearable
                 required
                 v-model="voterScipers"
@@ -139,7 +133,8 @@
 
 <script>
 import config from '../config'
-import { scipersToUint8Array } from '../utils'
+import DateTimePicker from './DateTimePicker'
+import { timestampToString } from '@/utils'
 
 export default {
   methods: {
@@ -159,6 +154,16 @@ export default {
       if (items.length === 0) {
         return 'Atleast one sciper is required'
       }
+      if (items.length < this.maxChoices) {
+        return 'Please enter atleast as many candidates as specified in Max Choices'
+      }
+      const sciperFormat = /^\d{6}$/
+      return sciperFormat.test(items[items.length - 1]) || 'Invalid Sciper'
+    },
+    validateVoterSciper (items) {
+      if (items.length === 0) {
+        return 'Atleast one sciper is required'
+      }
       const sciperFormat = /^\d{6}$/
       return sciperFormat.test(items[items.length - 1]) || 'Invalid Sciper'
     },
@@ -168,14 +173,26 @@ export default {
       }
       return /\w+/.test(items[items.length - 1]) || 'Invalid Group'
     },
-    validateDate (date) {
-      return (!!date && new Date(date) >= new Date(this.today)) || 'Date is required'
-    },
     validateName (name) {
       return !!name || 'Name field is required'
     },
     validateDescription (description) {
       return !!description || 'Description field is required'
+    },
+    validateMaxChoices (maxChoices) {
+      if (!maxChoices) {
+        return 'Please enter the maximum votes allowed per ballot'
+      }
+      if (maxChoices <= 0) {
+        return 'Max Choices should atleast be 1'
+      }
+      return maxChoices <= 9 || 'Max Choices can be atmost 9'
+    },
+    updateStartTime (dt) {
+      this.start = dt
+    },
+    updateEndTime (dt) {
+      this.end = dt
     },
     submitHandler (e) {
       e.preventDefault()
@@ -189,8 +206,10 @@ export default {
           creator: parseInt(this.$store.state.user.sciper),
           users: this.voterScipers.map(e => parseInt(e)),
           description: this.description,
-          end: this.end,
-          data: scipersToUint8Array(this.candidateScipers)
+          start: Math.floor(this.start / 1000),
+          end: Math.floor(this.end / 1000),
+          candidates: this.candidateScipers.map(x => parseInt(x)),
+          maxChoices: parseInt(this.maxChoices)
         }
       }
       const { socket } = this.$store.state
@@ -226,18 +245,14 @@ export default {
             model: true
           })
         })
-      // construct the protobuf
-      // send request to conode
-      // PROFIT
     }
   },
   data () {
-    let today = new Date()
-    today = today.getFullYear() + '-' + (today.getMonth() + 1).toString().padStart(2, '0') + '-' + today.getDate()
-    console.log(today)
+    const today = timestampToString(this.$store.state.now, false)
     return {
       name: null,
-      end: null,
+      end: new Date(`${today} 23:59:00`).getTime(),
+      start: new Date(`${today} 00:00:00`).getTime(),
       description: null,
       modal: false,
       groups: [],
@@ -245,8 +260,12 @@ export default {
       candidateScipers: [],
       valid: false,
       submitted: false,
-      today
+      today,
+      maxChoices: null
     }
+  },
+  components: {
+    'datetime-picker': DateTimePicker
   }
 }
 </script>

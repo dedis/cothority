@@ -8,7 +8,7 @@
         <v-card-title>
           <v-container fluid>
             <v-layout class="election-info-container" row>
-              <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ election.end }}</p></v-flex>
+              <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ endDate(election.end) }}</p></v-flex>
               <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ creatorName }} ({{ election.creator }})</p></v-flex>
             </v-layout>
             <v-layout>
@@ -40,6 +40,7 @@
 
 <script>
 import kyber from '@dedis/kyber-js'
+import { timestampToString } from '@/utils'
 
 const curve = new kyber.curve.edwards25519.Curve()
 export default {
@@ -61,6 +62,9 @@ export default {
     },
     percentage (num, den) {
       return num / den * 100
+    },
+    endDate (timestamp) {
+      return timestampToString(timestamp, true)
     }
   },
   data () {

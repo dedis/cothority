@@ -35,6 +35,10 @@ export default {
   },
   mounted () {
     setInterval(() => {
+      this.$store.commit('SET_NOW', Math.floor(new Date().getTime() / 1000))
+    }, 60000)
+
+    setInterval(() => {
       const { socket, user } = this.$store.state
       socket.send('Login', 'LoginReply', {
         id: config.masterKey,

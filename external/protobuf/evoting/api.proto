@@ -22,9 +22,11 @@ message Election {
     optional Roster roster = 5;
     optional bytes key = 6;
     optional uint32 stage = 7;
-    required bytes data = 8;
-    required string description = 9;
-    required string end = 10;
+    repeated uint32 candidates = 8 [packed=true];
+    required int32 maxChoices = 9;
+    required string description = 10;
+    required sint64 start = 11;
+    required sint64 end = 12;
 }
 
 message Ballot {

@@ -6,17 +6,17 @@
       </v-toolbar>
       <v-card-title class="election-card-name">
         <v-layout class="election-info-container" row>
-          <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ end }}</p></v-flex>
+          <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ endDate }}</p></v-flex>
           <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ creatorName }} ({{ creator }})</p></v-flex>
         </v-layout>
       </v-card-title>
       <v-card-actions>
         <v-layout row wrap>
         <v-flex v-if="stage === 0" xs5>
-        <v-btn :disabled="disabled" :to="voteLink" color="primary">Vote</v-btn>
+          <v-btn :disabled="disabled || $store.state.now > end || $store.state.now < start" :to="voteLink" color="primary">Vote</v-btn>
         </v-flex>
         <v-flex v-if="$store.state.loginReply.admin && stage === 0 && creator === parseInt($store.state.user.sciper)" class="text-xs-right" xs5>
-          <v-btn :disabled="disabled" v-on:click.native="finalize" color="orange">Finalize</v-btn>
+          <v-btn :disabled="disabled || $store.state.now < start" v-on:click.native="finalize" color="orange">Finalize</v-btn>
         </v-flex>
         <v-flex v-if="stage === 2" xs10>
           <v-btn :disabled="disabled" :to="resultLink" color="success">View Results</v-btn>
@@ -47,10 +47,18 @@
 
 <script>
 import config from '@/config'
+import { timestampToString } from '@/utils'
+
 export default {
+  computed: {
+    endDate () {
+      return timestampToString(this.end, true)
+    }
+  },
   props: {
     name: String,
-    end: String,
+    end: Number,
+    start: Number,
     creator: Number,
     description: String,
     stage: Number,

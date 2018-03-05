@@ -8,7 +8,7 @@
         <v-card-title>
           <v-container fluid>
             <v-layout class="election-info-container" row>
-              <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ election.end }}</p></v-flex>
+              <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ endDate(election.end) }}</p></v-flex>
             <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ creatorName }} ({{ election.creator }})</p></v-flex>
             </v-layout>
             <v-layout>
@@ -19,20 +19,22 @@
             <v-form v-model="valid" v-on:submit="submitHandler">
               <v-layout row wrap>
                 <v-flex xs12>
-                  <v-radio-group
-                    label="Please select a candidate"
-                    v-model="ballot"
-                    :rules=[validateBallot]>
-                    <v-radio
-                      v-for="candidate in candidates(election.data)"
+                  <p>In the following list, please select at most {{ election.maxChoices }} candidates. You may click on a name to see their motivation and presentation</p>
+                    <v-checkbox
+                      v-for="candidate in election.candidates"
                       :key="candidate"
-                      :label="`${candidateNames[candidate]}`"
                       :value="`${candidate}`"
-                    ></v-radio>
+                      v-model="ballot"
+                      :rules=[validateBallot]
+                      >
+                      <template slot="label">
+                        <a @click.stop target="_blank" :href="`https://people.epfl.ch/${candidate}`">{{ candidateNames[candidate] }}</a>
+                      </template>
+                    </v-checkbox>
                   </v-radio-group>
                 </v-flex>
                 <v-flex xs12 class="text-xs-center">
-                  <v-btn type="submit" :disabled="!valid || submitted" color="primary">Submit</v-btn>
+                  <v-btn type="submit" :disabled="!(valid && ballot.length !== 0) || submitted" color="primary">Submit</v-btn>
                 </v-flex>
               </v-layout>
             </v-form>
@@ -45,7 +47,7 @@
 
 <script>
 import kyber from '@dedis/kyber-js'
-import { scipersToUint8Array } from '../utils'
+import { scipersToUint8Array, timestampToString } from '../utils'
 
 const curve = new kyber.curve.edwards25519.Curve()
 
@@ -58,16 +60,15 @@ export default {
     }
   },
   methods: {
-    candidates (data) {
-      const arr = []
-      for (let i = 0; i < data.length; i += 3) {
-        const num = data[i] + data[i + 1] * (1 << 8) + data[i + 2] * (1 << 16)
-        arr.push(num)
-      }
-      return arr
+    endDate (timestamp) {
+      return timestampToString(timestamp, true)
     },
     validateBallot (ballot) {
-      return !!ballot || 'Please select a candidate'
+      const { election } = this
+      return ballot.length <= election.maxChoices || `Maximum ${election.maxChoices} allowed`
+    },
+    dateStr (timestamp) {
+      return timestampToString(timestamp, true)
     },
     submitHandler (e) {
       e.preventDefault()
@@ -99,7 +100,6 @@ export default {
       const { socket } = this.$store.state
       socket.send('Cast', 'CastReply', castMsg)
         .then(() => {
-          console.log('Submitted Successfully')
           this.submitted = false
           this.$store.commit('SET_SNACKBAR', {
             color: 'success',
@@ -122,7 +122,7 @@ export default {
   },
   data () {
     return {
-      ballot: null,
+      ballot: [],
       valid: false,
       submitted: false,
       creatorName: '',
@@ -142,7 +142,7 @@ export default {
           this.$store.state.names[this.creator] = this.creatorName
         })
     }
-    const scipers = this.candidates(this.election.data)
+    const scipers = this.election.candidates
     for (let i = 0; i < scipers.length; i++) {
       const sciper = scipers[i]
       this.candidateNames[sciper] = this.$store.state.names[sciper] || ''
@@ -161,7 +161,8 @@ export default {
   },
   watch: {
     candidateNames: {
-      deep: true
+      deep: true,
+      handler (val, oldVal) {}
     }
   }
 }

@@ -27,6 +27,7 @@
             :id="getId(election.id)"
             :name="election.name"
             :end="election.end"
+            :start="election.start"
             :creator="election.creator"
             :description="election.description"
             :stage="election.stage"></election-card>
@@ -45,6 +46,7 @@
             :id="getId(election.id)"
             :name="election.name"
             :end="election.end"
+            :start="election.start"
             :creator="election.creator"
             :description="election.description"
             :stage="election.stage"></election-card>
