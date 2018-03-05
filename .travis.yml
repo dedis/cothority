@@ -12,8 +12,6 @@ install:
   - gimme 1.9
   - . $HOME/.gimme/envs/go1.9.env
   - go get github.com/dedis/Coding || true
-  - export PATH=$PATH:/usr/local/go/bin
-  - export PATH=$PATH:$(go env GOPATH)/bin
   # Because we are using "language: node_js" the "git clone" is not in the
   # GOPATH. So make a copy of it over where it is supposed to be.
   - git clone . `go env GOPATH`/src/github.com/dedis/cothority
@@ -32,8 +30,6 @@ matrix:
     - language: go
 
       install:
-        - export PATH=$PATH:/usr/local/go/bin
-        - export PATH=$PATH:$(go env GOPATH)/bin
         - go get -t ./...
         - go get github.com/dedis/Coding || true
        
