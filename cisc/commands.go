@@ -83,20 +83,14 @@ func getCommands() cli.Commands {
 				{
 					Name:      "join",
 					Aliases:   []string{"j"},
-					Usage:     "propose to join an existing identity",
-					ArgsUsage: "group.toml id",
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "name, n",
-							Usage: "name of the device used in the identity",
-						},
-					},
-					Action: scJoin,
+					Usage:     "propose to join an existing identity by adding this device-key to the skipchain",
+					ArgsUsage: "group.toml id [name]",
+					Action:    scJoin,
 				},
 				{
-					Name:      "del",
-					Aliases:   []string{"d", "rm"},
-					Usage:     "remove this device from an identity",
+					Name:      "unjoin",
+					Aliases:   []string{"uj", "rm"},
+					Usage:     "remove this device from an identity by proposing to remove its device-key from the skipchain",
 					ArgsUsage: "name [skipchain-id]",
 					Action:    scDel,
 				},

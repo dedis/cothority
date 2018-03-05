@@ -5,14 +5,19 @@ Cisc uses a personal blockchain handled by the cothority. It
  can store key/value pairs, and has a special module for managing
  ssh-public-keys.
 
-Based upon skipchains, cisc serves a data-block with different entries that can be handled by a number of devices who propose changes and cryptographically vote to approve or deny those changes. Different data-types exist that will interpret the data-block and offer a service.
+Based upon skipchains, cisc serves a data-block with different entries that can
+be handled by a number of devices who propose changes and cryptographically vote
+to approve or deny those changes. Different data-types exist that will interpret
+the data-block and offer a service.
 
-Besides having devices that can vote on changes, simple followers can download the data-block and get cryptographically signed updates to that data-block to be sure of the authenticity of the new data-block.
+Besides having devices that can vote on changes, simple followers can download
+the data-block and get cryptographically signed updates to that data-block to be
+sure of the authenticity of the new data-block.
 
 - CISC - CISC Identity SkipChain
 - Skipchain - blockchain structure developed by the EPFL/DEDIS lab
 - Conode - a server program offering services like CISC and others
-- Device - a computer that has voting power on an identity-skipchain
+- Device - a computer or smartphone that has voting power on an identity-skipchain
 - Data - all key/value pairs stored on the SkipChain
 - Proposed Data - data that has been proposed but not yet voted with a threshold
 
@@ -65,7 +70,10 @@ link to it:
 cisc link pin localhost:7002 123456
 ```
 
-of course you'll have another pin than the one shown here.
+of course you'll have another pin than the one shown here. This command will
+create a new private/public key pair to communicate with the remote conode. The
+public key is stored in the remote conode, and administrative functions needing
+authentication will be signed using the corresponding private key.
 
 ### Creating an identity
 
@@ -86,6 +94,9 @@ for this new skipchain. It holds the IP-address and the public key for each of
 the conodes.
 This will print an ID of your new skipchain, which is a 64-digit hex number.
 We'll need it later to join the skipchain from another device.
+When creating a new skipchain, a new block containing the name of the device and
+its public key (generated automatically) is created and stored in the skipchain
+service.
 
 ### Storing a key/value pair
 
@@ -106,7 +117,7 @@ we can give the configuration-directory to the `cisc` command and simulate a
 second computer. Let's try to join the create skipchain from above:
 
 ```bash
-cisc -config device2 skipchain join public.toml 1234...cdef
+cisc -config device2 skipchain join public.toml 1234...cdef device2
 ```
 
 The `-config device2` indicates that the `cisc` command should now use the `device2`
@@ -114,7 +125,9 @@ directory for storage of all the configuration. This means that we can use
 `cisc` to represent the 1st device, and `cisc -config device2` for the second device.
 Again, the `public.toml` indicates the conodes to use to connect to the skipchain.
 The number `1234...cdef` is the 64-digit hex number from the `cisc skipchain create`
-command from above.
+command from above. The last argument, `device2`, sets the name of the new device
+to be added to the skipchain. The command will automatically create a new
+private/public keypair and add the public key to the proposed new configuration.
 
 Before we can do anything with the skipchain from this second device, we need to
 approve it from the first one:
@@ -159,6 +172,24 @@ cisc data update
 ```
 
 And the new key/value pair should appear in the data-part.
+
+## Public/Private keys
+
+There are three types of public/private key pairs involved in the CISC setup:
+- conode-keys - the public keys of the conodes are stored in the public.toml
+and are used in the conode-to-conode interaction to verify the authenticity of
+the remote conode. The same keys are also used to collectively sign the new
+blocks once they are accepted by the cothority.
+- admin-keys - when the `cisc` command connects to a conode, he needs to
+authenticate himself to proof that he has admin-rights, for example to set
+up a new skipchain. The public key is stored on the remote conode and will
+be used to verify if the request to create a new skipchain is valid or not.
+- device-keys - every new device that joins a skipchain creates its own
+public/private key pair that is used to sign new proposed data. Only when
+a threshold of device-keys signs a proposed data will it be included as a
+new block to the skipchain. The new block includes the individual signatures from the
+device-keys, as well as a collective signature created by all the conodes
+to indicate the new block is valid.
 
 # Command reference
 
