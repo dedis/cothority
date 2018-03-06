@@ -16,4 +16,4 @@ COPY co4/public.toml co4/public.toml
 # 3 - number of nodes to run
 # 2 - debug-level: 0 - none .. 5 - a lot
 # -wait - don't return from script when all nodes are started
-CMD ["conode/run_conode.sh", "local",  "4", "2", "-wait" ]
+CMD ["env", "GODEBUG=gctrace=1", "conode/run_conode.sh", "local",  "4", "3", "-wait" ]

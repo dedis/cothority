@@ -194,49 +194,6 @@ func (s *Service) UpdateDarc(req *ocs.UpdateDarc) (reply *ocs.UpdateDarcReply,
 	return &ocs.UpdateDarcReply{SB: latestSB}, nil
 }
 
-// GetDarcPath searches a path from the given darc to the identity. If it
-// finds a valid path, it only returns the last part of the darc chain, as
-// this is sufficient in an online setting where all darcs are available when
-// the signature has to be verified.
-func (s *Service) GetDarcPath(req *ocs.GetDarcPath) (reply *ocs.GetDarcPathReply,
-	err error) {
-	d := s.getDarc(req.BaseDarcID)
-	if d == nil {
-		return nil, errors.New("this Darc doesn't exist")
-	}
-	log.Lvlf2("Searching %d/%s, starting from %x", req.Role, req.Identity.String(),
-		req.BaseDarcID)
-	path := s.searchPath([]darc.Darc{*d}, req.Identity, darc.Role(req.Role))
-	if len(path) == 0 {
-		return nil, errors.New("didn't find a path to the given identity")
-	}
-	// We only send the last darc in the path to save space. Once we receive
-	// a signature we'll re-create the path and make sure it's a valid path.
-	// path = path[len(path)-1:]
-	return &ocs.GetDarcPathReply{Path: &path}, nil
-}
-
-// GetLatestDarc searches for new darcs and returns the
-// whole path for the requester to verify.
-func (s *Service) GetLatestDarc(req *ocs.GetLatestDarc) (reply *ocs.GetLatestDarcReply, err error) {
-	start := s.getDarc(req.DarcID)
-	if start == nil {
-		return nil, errors.New("this Darc doesn't exist")
-	}
-	path := []*darc.Darc{start}
-	s.saveMutex.Lock()
-	defer s.saveMutex.Unlock()
-	darcs := s.Storage.Accounts[string(start.GetBaseID())]
-	for v, d := range darcs.Darcs {
-		if v > start.Version {
-			path = append(path, d)
-		}
-	}
-	return &ocs.GetLatestDarcReply{
-		Darcs: &path,
-	}, nil
-}
-
 // WriteRequest adds a block the OCS-skipchain with a new file.
 func (s *Service) WriteRequest(req *ocs.WriteRequest) (reply *ocs.WriteReply,
 	err error) {
@@ -324,6 +281,50 @@ func (s *Service) ReadRequest(req *ocs.ReadRequest) (reply *ocs.ReadReply,
 	if replies != len(reply.SB.Roster.List) {
 		log.Warn("Got only", replies, "replies for write-propagation")
 	}
+
+	log.Lvl3("Done storing read request and propagating")
+	return
+}
+
+// GetDarcPath searches a path from the given darc to the identity. If it
+// finds a valid path, it only returns the last part of the darc chain, as
+// this is sufficient in an online setting where all darcs are available when
+// the signature has to be verified.
+func (s *Service) GetDarcPath(req *ocs.GetDarcPath) (reply *ocs.GetDarcPathReply,
+	err error) {
+	log.Lvlf2("Searching %d/%s, starting from %x", req.Role, req.Identity.String(),
+		req.BaseDarcID)
+	d := s.getDarc(req.BaseDarcID)
+	if d == nil {
+		return nil, errors.New("this Darc doesn't exist")
+	}
+	path := s.searchPath([]darc.Darc{*d}, req.Identity, darc.Role(req.Role))
+	if len(path) == 0 {
+		return nil, errors.New("didn't find a path to the given identity")
+	}
+	log.Lvl3("Sending back darc-path with length", len(path))
+	return &ocs.GetDarcPathReply{Path: &path}, nil
+}
+
+// GetLatestDarc searches for new darcs and returns the
+// whole path for the requester to verify.
+func (s *Service) GetLatestDarc(req *ocs.GetLatestDarc) (reply *ocs.GetLatestDarcReply, err error) {
+	log.Lvlf2("Getting latest darc for %x", req.DarcID)
+	start := s.getDarc(req.DarcID)
+	if start == nil {
+		return nil, errors.New("this Darc doesn't exist")
+	}
+	path := []*darc.Darc{start}
+	s.saveMutex.Lock()
+	defer s.saveMutex.Unlock()
+	darcs := s.Storage.Accounts[string(start.GetBaseID())]
+	for v, d := range darcs.Darcs {
+		if v > start.Version {
+			path = append(path, d)
+		}
+	}
+	log.Lvl3("Returning path to latest darc")
+	reply = &ocs.GetLatestDarcReply{Darcs: &path}
 	return
 }
 
