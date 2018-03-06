@@ -143,12 +143,12 @@ type Storage struct {
 // that will be verified. If the verification returns true, the new SkipBlock
 // will be stored, else it will be discarded and an error will be returned.
 //
-// If the latest block given is nil it will create a new skipchain and store
-// the given block as genesis-block.
+// If the latest block given is nil and the GenesisID is empty, it will create
+// a new skipchain and store the given block as genesis-block.
 //
-// If the latest block is non-nil and exists, the skipblock will be added to the
-// skipchain after verification that it fits and no other block already has been
-// added.
+// If the latest block is non-nil and exists, the new skipblock will be added
+// to a block after the given latest block (we do not guarantee that it will be
+// the block immediately after it) as long as the verification is OK.
 func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, error) {
 	// Initial checks on the proposed block.
 	prop := psbd.NewBlock
@@ -169,7 +169,9 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 	var prev *SkipBlock
 	var changed []*SkipBlock
 
-	if psbd.LatestID.IsNull() && psbd.NewBlock.Index == 0 {
+	// Here we use GenesisID instead of SkipChainID() because SkipChainID()
+	// does not tell us if it's a genesis block.
+	if psbd.LatestID.IsNull() && psbd.NewBlock.GenesisID.IsNull() {
 		// A new chain is created
 		log.Lvl3("Creating new skipchain with roster", psbd.NewBlock.Roster.List)
 		prop.Height = prop.MaximumHeight

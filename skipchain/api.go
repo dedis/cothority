@@ -27,7 +27,8 @@ func NewClient() *Client {
 
 // StoreSkipBlockSignature asks the cothority to store the new skipblock, and eventually
 // attach it to the 'latest' skipblock.
-//  - latest is the skipblock where the new skipblock is appended. If ro and d
+//  - latest is a skipblock, where new skipblock is going to be added after it,
+//   but we do not guarantee it is going to be immediately after it. If ro and d
 //   are nil, a new skipchain will be created with 'latest' as genesis-block.
 //  - ro is the new roster for that block. If ro is nil, the previous roster
 //   will be used.
@@ -81,7 +82,8 @@ func (c *Client) StoreSkipBlockSignature(latest *SkipBlock, ro *onet.Roster, d n
 
 // StoreSkipBlock asks the cothority to store the new skipblock, and eventually
 // attach it to the 'latest' skipblock.
-//  - latest is the skipblock where the new skipblock is appended. If ro and d
+//  - latest is a skipblock, where new skipblock is going to be added after it,
+//   but we do not guarantee it is going to be immediately after it. If ro and d
 //   are nil, a new skipchain will be created with 'latest' as genesis-block.
 //  - ro is the new roster for that block. If ro is nil, the previous roster
 //   will be used.
