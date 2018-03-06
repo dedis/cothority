@@ -88,11 +88,10 @@ func getCommands() cli.Commands {
 					Action:    scJoin,
 				},
 				{
-					Name:      "unjoin",
-					Aliases:   []string{"uj", "rm"},
-					Usage:     "remove this device from an identity by proposing to remove its device-key from the skipchain",
+					Name:      "leave",
+					Usage:     "leave the skipchain by removing this device from the identity",
 					ArgsUsage: "name [skipchain-id]",
-					Action:    scDel,
+					Action:    scLeave,
 				},
 				{
 					Name:    "list",
