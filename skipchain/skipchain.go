@@ -151,18 +151,15 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 	if !s.ServerIdentity().Equal(prop.Roster.Get(0)) {
 		return nil, errors.New(
 			"only leader is allowed to add blocks")
-
 	}
 	if len(s.Storage.Clients) > 0 {
 		if psbd.Signature == nil {
 			return nil, errors.New(
 				"cannot create new skipblock without authentication")
-
 		}
 		if !s.authenticate(psbd.NewBlock.CalculateHash(), *psbd.Signature) {
 			return nil, errors.New(
 				"wrong signature for this skipchain")
-
 		}
 	}
 	var prev *SkipBlock
@@ -182,7 +179,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		err := s.verifyBlock(prop)
 		if err != nil {
 			return nil, err
-
 		}
 
 		if !prop.ParentBlockID.IsNull() {
@@ -190,7 +186,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			if parent == nil {
 				return nil, errors.New(
 					"Didn't find parent")
-
 			}
 			parent.ChildSL = append(parent.ChildSL, prop.Hash)
 			changed = append(changed, parent)
@@ -199,7 +194,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 
 	} else {
 		// We're appending a block to an existing chain
-		log.Lvlf3("Adding block with roster %+v to %x", psbd.NewBlock.Roster.List, psbd.LatestID)
+		log.Lvlf3("Adding block with roster %+v to latest -%x-", psbd.NewBlock.Roster.List, psbd.LatestID)
 
 		// If they chose to send not LatestID, it means they want us to find it
 		// for them, based on the given NewBlock.GenesisID.
@@ -225,7 +220,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			if gen == nil {
 				return nil, errors.New(
 					"Unknown latest block, unknown chain-id")
-
 			}
 			// If we know of this chain, try to sync it.
 			latest := s.findLatest(gen)
@@ -1060,8 +1054,8 @@ func (s *Service) addForwardLink(src, dst *SkipBlock) error {
 
 	// create the message we want to sign for this round
 	roster := src.Roster
-	log.Lvlf3("%s is adding forward-link to %s: %d->%d", s.ServerIdentity(),
-		roster.List, src.Index, dst.Index)
+	log.Lvlf3("%s is adding forward-link to %x: %d->%d", s.ServerIdentity(),
+		dst.Hash, src.Index, dst.Index)
 	data, err := network.Marshal(dst)
 	if err != nil {
 		return fmt.Errorf("Couldn't marshal block: %s", err.Error())
