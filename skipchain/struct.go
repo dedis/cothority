@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	bolt "github.com/coreos/bbolt"
@@ -512,13 +513,17 @@ func (bl *BlockLink) Copy() *BlockLink {
 type SkipBlockDB struct {
 	*bolt.DB
 	bucketName string
+	// latestBlocks is used as a simple caching mechanism
+	latestBlocks map[string]SkipBlockID
+	latestMutex  sync.Mutex
 }
 
 // NewSkipBlockDB returns an initialized SkipBlockDB structure.
 func NewSkipBlockDB(db *bolt.DB, bn string) *SkipBlockDB {
 	return &SkipBlockDB{
-		DB:         db,
-		bucketName: bn,
+		DB:           db,
+		bucketName:   bn,
+		latestBlocks: map[string]SkipBlockID{},
 	}
 }
 
@@ -571,6 +576,7 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 			if err != nil {
 				return err
 			}
+			db.latestUpdate(sb)
 		}
 		result = sb.Hash
 		return nil
@@ -582,6 +588,22 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 	}
 
 	return result
+}
+
+func (db *SkipBlockDB) latestUpdate(sb *SkipBlock) {
+	db.latestMutex.Lock()
+	defer db.latestMutex.Unlock()
+	idStr := string(sb.SkipChainID())
+	latest, exists := db.latestBlocks[idStr]
+	if !exists {
+		db.latestBlocks[idStr] = sb.Hash
+	} else {
+		old := db.GetByID(latest)
+		if old == nil || old.Index < sb.Index {
+			log.Lvlf3("updating sc %x: storing index %d", idStr, sb.Index)
+			db.latestBlocks[idStr] = sb.Hash
+		}
+	}
 }
 
 // Length returns the actual length using mutexes
@@ -686,6 +708,13 @@ func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 		return nil, errors.New("got nil skipblock")
 	}
 	latest := sb
+	db.latestMutex.Lock()
+	latestID, exists := db.latestBlocks[string(sb.SkipChainID())]
+	if exists {
+		latest = db.GetByID(latestID)
+	}
+	db.latestMutex.Unlock()
+
 	// TODO this can be optimised by using multiple bucket.Get in a single transaction
 	for latest.GetForwardLen() > 0 {
 		latest = db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash())
@@ -693,6 +722,7 @@ func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 			return nil, errors.New("missing block")
 		}
 	}
+	db.latestUpdate(latest)
 	return latest, nil
 }
 
