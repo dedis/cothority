@@ -14,7 +14,8 @@ import (
 	"os"
 )
 
-const Letsencrypt_cert = `-----BEGIN CERTIFICATE-----
+// constant containing the needed certificate
+const LetsencryptCert = `-----BEGIN CERTIFICATE-----
 MIIEkjCCA3qgAwIBAgIQCgFBQgAAAVOFc2oLheynCDANBgkqhkiG9w0BAQsFADA/
 MSQwIgYDVQQKExtEaWdpdGFsIFNpZ25hdHVyZSBUcnVzdCBDby4xFzAVBgNVBAMT
 DkRTVCBSb290IENBIFgzMB4XDTE2MDMxNzE2NDA0NloXDTIxMDMxNzE2NDA0Nlow
@@ -42,41 +43,41 @@ PfZ+G6Z6h7mjem0Y+iWlkYcV4PIWL1iwBi8saCbGS5jN2p8M+X+Q7UNKEkROb3N6
 KOqkqm57TH2H3eDJAkSnh6/DNFu0Qg==
 -----END CERTIFICATE-----`
 
-func compare(c_old, c_new, k string) {
+func compare(cOld, cNew, k string) {
 	log.Info("Compare old against new cert: " + k)
-	cert_1, err := pemToCertificate(c_old)
+	cert1, err := pemToCertificate(cOld)
 	if err != nil {
 		log.Info("the old value is not a cert")
 		return
 	}
-	cert_2, err := pemToCertificate(c_new)
+	cert2, err := pemToCertificate(cNew)
 	if err != nil {
 		log.Info("the new value is not a cert")
 		return
 	}
-	if cert_1.Equal(cert_2) {
+	if cert1.Equal(cert2) {
 		log.Info("No change in the certificate")
 
 	} else {
 		log.Info("The new certificate is different :")
-		if !((cert_1.NotAfter).Equal(cert_2.NotAfter)) {
-			log.Info("    Expiration date modification: " + cert_1.NotAfter.String() + " to " + cert_2.NotAfter.String())
+		if !((cert1.NotAfter).Equal(cert2.NotAfter)) {
+			log.Info("    Expiration date modification: " + cert1.NotAfter.String() + " to " + cert2.NotAfter.String())
 		}
-		if !((cert_1.Subject.CommonName) == (cert_2.Subject.CommonName)) {
-			log.Info("    Subject modification: " + cert_1.Subject.CommonName + " to " + cert_2.Subject.CommonName)
+		if !((cert1.Subject.CommonName) == (cert2.Subject.CommonName)) {
+			log.Info("    Subject modification: " + cert1.Subject.CommonName + " to " + cert2.Subject.CommonName)
 		}
-		if !((cert_1.Issuer.CommonName) == (cert_2.Issuer.CommonName)) {
-			log.Info("    Issuer modification: " + cert_1.Issuer.CommonName + " to " + cert_2.Issuer.CommonName)
+		if !((cert1.Issuer.CommonName) == (cert2.Issuer.CommonName)) {
+			log.Info("    Issuer modification: " + cert1.Issuer.CommonName + " to " + cert2.Issuer.CommonName)
 		}
 
-		if !((cert_1.PublicKey.(*rsa.PublicKey).N).Cmp(cert_2.PublicKey.(*rsa.PublicKey).N) == 0) {
+		if !((cert1.PublicKey.(*rsa.PublicKey).N).Cmp(cert2.PublicKey.(*rsa.PublicKey).N) == 0) {
 			log.Info("    PublicKey modification")
 		}
 	}
 }
 
-func pemToCertificate(cert_pem string) (*x509.Certificate, error) {
-	block, _ := pem.Decode([]byte(cert_pem))
+func pemToCertificate(certPem string) (*x509.Certificate, error) {
+	block, _ := pem.Decode([]byte(certPem))
 	if block == nil {
 		return nil, errors.New("Fail decode pem")
 	}
@@ -92,27 +93,26 @@ func isCert(cert string) bool {
 	return err == nil
 }
 func check(cert string) bool {
-	root_pool := x509.NewCertPool()
-	cert_roots, err := pemToCertificate(Letsencrypt_cert)
+	rootPool := x509.NewCertPool()
+	certRoots, err := pemToCertificate(LetsencryptCert)
 	if err != nil {
 		log.Info("The root cert is not valid")
 	}
-	root_pool.AddCert(cert_roots)
-	cert_check, err := pemToCertificate(cert)
+	rootPool.AddCert(certRoots)
+	certCheck, err := pemToCertificate(cert)
 	if err != nil {
 		log.Info("The checked cert is not valid")
 	}
 	opts := x509.VerifyOptions{
-		DNSName: cert_check.DNSNames[0],
-		Roots:   root_pool,
+		DNSName: certCheck.DNSNames[0],
+		Roots:   rootPool,
 	}
-	if _, err := cert_check.Verify(opts); err != nil {
+	if _, err := certCheck.Verify(opts); err != nil {
 		log.Info("certificate not valid: " + err.Error())
 		return false
-	} else {
-		log.Info("Cert OK")
-		return true
 	}
+	log.Info("Cert OK")
+	return true
 
 }
 func renewCert(cert string) string {
@@ -130,20 +130,20 @@ func renewCert(cert string) string {
 		log.Fatal(err)
 	}
 	//renew the certificate
-	cert_ren, err := cli.RenewCertificate(string(certuri))
+	certRen, err := cli.RenewCertificate(string(certuri))
 	if err != nil {
 		log.Fatal("Problem while renewing Certificate:" + err.Error())
 	}
 	//write in the memory
-	fullchain, err := cli.Bundle(cert_ren)
+	fullchain, err := cli.Bundle(certRen)
 	if err != nil {
 		log.Fatal("can't bundles the certificate", err)
 	}
 	ioutil.WriteFile("fullchain.pem", fullchain, 0644)
 	log.Info("Certificate successfully renewed")
 	//return the cert
-	cert_PEM := pem.EncodeToMemory(&pem.Block{Bytes: cert_ren.Certificate.Raw, Type: "CERTIFICATE"})
-	return string(cert_PEM)
+	certPem := pem.EncodeToMemory(&pem.Block{Bytes: certRen.Certificate.Raw, Type: "CERTIFICATE"})
+	return string(certPem)
 }
 
 func revokeCert(cert string) {
@@ -169,9 +169,9 @@ func revokeCert(cert string) {
 		log.Fatal("Can not Register to the ACME:", err)
 	}
 	//revoke the certificate
-	re_err := cli.RevokeCertificate(key, []byte(cert))
-	if re_err != nil {
-		log.Fatal("error while revoke:", re_err)
+	reErr := cli.RevokeCertificate(key, []byte(cert))
+	if reErr != nil {
+		log.Fatal("error while revoke:", reErr)
 	}
 	log.Print("Succesfully revoked")
 }
@@ -249,13 +249,13 @@ func getCert(domain string) string {
 		log.Fatal(err)
 	}
 	log.Print("New Certificate Successfuly created")
-	cert_PEM := pem.EncodeToMemory(&pem.Block{Bytes: cert.Certificate.Raw, Type: "CERTIFICATE"})
+	certPem := pem.EncodeToMemory(&pem.Block{Bytes: cert.Certificate.Raw, Type: "CERTIFICATE"})
 	fullchain, err := cli.Bundle(cert)
 	if err != nil {
 		log.Fatal("can't bundles the certificate:", err)
 	}
 	ioutil.WriteFile("fullchain.pem", fullchain, 0644)
-	return string(cert_PEM)
+	return string(certPem)
 }
 
 //code adapted from :https://ericchiang.github.io/post/go-letsencrypt/ "
