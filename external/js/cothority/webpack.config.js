@@ -1,5 +1,6 @@
 const path = require("path");
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+const nodeExternals = require("webpack-node-externals");
 
 const nodeConfig = {
   target: "node",
@@ -23,6 +24,7 @@ const nodeConfig = {
       }
     ]
   },
+  externals: [nodeExternals()],
   plugins: [new UglifyJsPlugin()]
 };
 
@@ -48,6 +50,7 @@ const browserConfig = {
       }
     ]
   },
+  externals: ["bufferutil", "utf-8-validate"],
   plugins: [new UglifyJsPlugin()]
 };
 
