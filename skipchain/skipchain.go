@@ -212,30 +212,22 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			prev, _ = s.db.GetLatest(b)
 		}
 
-		// If we cannot find the latest block, it might be that we are
-		// out of date, so try to catch up.
+		var needSync bool
+
+		// If we cannot find the latest block, try to set it to the
+		// genesis and then update it later.
 		if prev == nil {
 			if !s.blockIsFriendly(psbd.NewBlock) {
-				log.Lvlf2("%s: block is not friendly: %x", s.ServerIdentity(), psbd.NewBlock.Hash)
+				log.Lvlf2("%s: block is not friendly: %x",
+					s.ServerIdentity(), psbd.NewBlock.Hash)
 				return nil, errors.New("chain not followed")
 			}
 
-			gen := s.db.GetByID(psbd.NewBlock.SkipChainID())
-			if gen == nil {
+			prev = s.db.GetByID(psbd.NewBlock.SkipChainID())
+			if prev == nil {
 				return nil, errors.New("unknown latest block, unknown chain-id")
 			}
-
-			// If we know of this chain, try to sync it.
-			latest := s.findLatest(gen)
-			log.Lvlf2("Catching up chain %x from index %v", gen.Hash, latest.Index)
-			err := s.syncChain(latest.Roster, latest.Hash)
-			if err != nil {
-				return nil, errors.New("failed to catch up with error: " + err.Error())
-			}
-
-			// set prev to the latest one we know, it'll be update
-			// later anyway, in the lock
-			prev = latest
+			needSync = true
 		}
 
 		// Check the roster.
@@ -249,6 +241,19 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		chainID := prev.SkipChainID()
 		s.chains.lock(chainID)
 		defer s.chains.unlock(chainID)
+
+		// Try to find the latest block if the flag is set.
+		// Synchronisation should only be done when we are locked
+		// because it modifies the database.
+		if needSync {
+			latest := s.findLatest(prev)
+			log.Lvlf2("Catching up chain %x from index %v", prev.SkipChainID(), latest.Index)
+			err := s.syncChain(latest.Roster, latest.Hash)
+			if err != nil {
+				return nil, errors.New("failed to catch up with error: " + err.Error())
+			}
+			prev = latest
+		}
 
 		// Once we have the lock on this skipchain, refresh
 		// prev in case someone else added a block to it while

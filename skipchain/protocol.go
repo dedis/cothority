@@ -253,6 +253,12 @@ func (p *GetBlocks) HandleGetBlocks(msg ProtoStructGetBlocks) error {
 		}
 		next = s.ForwardLink[linkNum].To
 	}
+	if len(result) == 0 {
+		// Not found, so send no reply. Another conode will
+		// hopefully find it and send it.
+		return nil
+	}
+
 	return p.SendToParent(&ProtoGetBlocksReply{SkipBlocks: result})
 }
 

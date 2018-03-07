@@ -25,25 +25,27 @@ func NewClient() *Client {
 	return &Client{Client: onet.NewClient(cothority.Suite, "Skipchain")}
 }
 
-// StoreSkipBlockSignature asks the cothority to store the new skipblock, and eventually
-// attach it to the 'latest' skipblock.
-//  - latest is a skipblock, where new skipblock is going to be added after it,
-//   but we do not guarantee it is going to be immediately after it. If ro and d
-//   are nil, a new skipchain will be created with 'latest' as genesis-block.
+// StoreSkipBlockSignature asks the cothority to store the new skipblock, and
+// eventually attach it to after the target skipblock.
+//  - target is a skipblock, and the new skipblock is going to be added after
+//    it, not necessarily immediately after it.  The caller should use the
+//    genesis skipblock as the target. But for backward compatibility, any
+//    skipblock can be used.  If ro and d are nil, a new skipchain will be
+//    created with target as the genesis-block.
 //  - ro is the new roster for that block. If ro is nil, the previous roster
-//   will be used.
+//    will be used.
 //  - d is the data for the new block. It can be nil. If it is not of type
-//   []byte, it will be marshalled using `network.Marshal`.
+//    []byte, it will be marshalled using `network.Marshal`.
 //  - priv is the private key that will be used to sign the skipblock. If priv
-//   is nil, the skipblock will not be signed.
-func (c *Client) StoreSkipBlockSignature(latest *SkipBlock, ro *onet.Roster, d network.Message, priv kyber.Scalar) (reply *StoreSkipBlockReply, err error) {
-	log.Lvlf3("%#v", latest)
+//    is nil, the skipblock will not be signed.
+func (c *Client) StoreSkipBlockSignature(target *SkipBlock, ro *onet.Roster, d network.Message, priv kyber.Scalar) (reply *StoreSkipBlockReply, err error) {
+	log.Lvlf3("%#v", target)
 	var newBlock *SkipBlock
-	var latestID SkipBlockID
+	var targetID SkipBlockID
 	if ro == nil && d == nil {
-		newBlock = latest
+		newBlock = target
 	} else {
-		newBlock = latest.Copy()
+		newBlock = target.Copy()
 		if ro != nil {
 			newBlock.Roster = ro
 		}
@@ -60,9 +62,9 @@ func (c *Client) StoreSkipBlockSignature(latest *SkipBlock, ro *onet.Roster, d n
 				newBlock.Data = buf
 			}
 		}
-		latestID = latest.Hash
+		targetID = target.Hash
 	}
-	host := latest.Roster.Get(0)
+	host := target.Roster.Get(0)
 	reply = &StoreSkipBlockReply{}
 	var sig *[]byte
 	if priv != nil {
@@ -72,7 +74,7 @@ func (c *Client) StoreSkipBlockSignature(latest *SkipBlock, ro *onet.Roster, d n
 		}
 		sig = &signature
 	}
-	err = c.SendProtobuf(host, &StoreSkipBlock{TargetSkipChainID: latestID, NewBlock: newBlock,
+	err = c.SendProtobuf(host, &StoreSkipBlock{TargetSkipChainID: targetID, NewBlock: newBlock,
 		Signature: sig}, reply)
 	if err != nil {
 		return nil, err
@@ -81,16 +83,18 @@ func (c *Client) StoreSkipBlockSignature(latest *SkipBlock, ro *onet.Roster, d n
 }
 
 // StoreSkipBlock asks the cothority to store the new skipblock, and eventually
-// attach it to the 'latest' skipblock.
-//  - latest is a skipblock, where new skipblock is going to be added after it,
-//   but we do not guarantee it is going to be immediately after it. If ro and d
-//   are nil, a new skipchain will be created with 'latest' as genesis-block.
+// attach it after the target skipblock.
+//  - target is a skipblock, where new skipblock is going to be added after it,
+//    but not necessarily immediately after it.  The caller should use the
+//    genesis skipblock as the target. But for backward compatibility, any
+//    skipblock can be used.  If ro and d are nil, a new skipchain will be
+//    created with target as the genesis-block.
 //  - ro is the new roster for that block. If ro is nil, the previous roster
-//   will be used.
+//    will be used.
 //  - d is the data for the new block. It can be nil. If it is not of type
-//   []byte, it will be marshalled using `network.Marshal`.
-func (c *Client) StoreSkipBlock(latest *SkipBlock, ro *onet.Roster, d network.Message) (reply *StoreSkipBlockReply, err error) {
-	return c.StoreSkipBlockSignature(latest, ro, d, nil)
+//    []byte, it will be marshalled using `network.Marshal`.
+func (c *Client) StoreSkipBlock(target *SkipBlock, ro *onet.Roster, d network.Message) (reply *StoreSkipBlockReply, err error) {
+	return c.StoreSkipBlockSignature(target, ro, d, nil)
 }
 
 // CreateGenesisSignature is a convenience function to create a new SkipChain with the
@@ -99,9 +103,9 @@ func (c *Client) StoreSkipBlock(latest *SkipBlock, ro *onet.Roster, d network.Me
 //  - baseH is the base-height - the distance between two non-height-1 skipblocks
 //  - maxH is the maximum height, which must be <= baseH
 //  - ver is a slice of verifications to apply to that block
-//  - data can be nil or any data that will be network.Marshaled to the skipblock,
-//    except if the data is of type []byte, in which case it will be stored
-//    as-is on the skipchain.
+//  - data can be nil or any data that will be network.Marshaled to the
+//    skipblock, except if the data is of type []byte, in which case it will be
+//    stored as-is on the skipchain.
 //  - parent is the responsible parent-block, can be 'nil'
 //  - priv is a private key that is allowed to sign for new skipblocks
 //
