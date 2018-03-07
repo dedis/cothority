@@ -21,7 +21,7 @@ import (
 	"github.com/dedis/onet/log"
 )
 
-const defaultTimeout = 1 * time.Second
+const defaultTimeout = 10 * time.Second
 
 // VerificationFunction can be passes to each protocol node. It will be called
 // (in a go routine) during the (start/handle) challenge prepare phase of the
@@ -632,7 +632,7 @@ func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) e
 	}
 }
 
-// startAnnouncementPrepare create its announcement for the prepare round and
+// startAnnouncement creates its announcement for the prepare round and
 // sends it down the tree.
 func (bft *ProtocolBFTCoSi) startAnnouncement(t RoundType) error {
 	bft.announceChan <- announceChan{Announce: Announce{TYPE: t, Timeout: bft.Timeout}}
