@@ -14,7 +14,7 @@ import (
 	"os"
 )
 
-//LetsencrypteCert constant contains the needed certificate
+// LetsencrypteCert constant contains the needed certificate
 const LetsencryptCert = `-----BEGIN CERTIFICATE-----
 MIIEkjCCA3qgAwIBAgIQCgFBQgAAAVOFc2oLheynCDANBgkqhkiG9w0BAQsFADA/
 MSQwIgYDVQQKExtEaWdpdGFsIFNpZ25hdHVyZSBUcnVzdCBDby4xFzAVBgNVBAMT
