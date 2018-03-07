@@ -72,7 +72,7 @@ func (c *Client) StoreSkipBlockSignature(latest *SkipBlock, ro *onet.Roster, d n
 		}
 		sig = &signature
 	}
-	err = c.SendProtobuf(host, &StoreSkipBlock{LatestID: latestID, NewBlock: newBlock,
+	err = c.SendProtobuf(host, &StoreSkipBlock{TargetSkipChainID: latestID, NewBlock: newBlock,
 		Signature: sig}, reply)
 	if err != nil {
 		return nil, err
