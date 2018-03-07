@@ -1122,7 +1122,7 @@ func nukeBlocksFrom(t *testing.T, db *SkipBlockDB, where SkipBlockID) {
 		}
 
 		// nuke it
-		t.Log("nuking block", sb.Index)
+		log.Lvl2("nuking block", sb.Index)
 		err := db.Update(func(tx *bolt.Tx) error {
 			err := tx.Bucket([]byte(db.bucketName)).Delete(where)
 			if err != nil {

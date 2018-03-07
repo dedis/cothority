@@ -221,8 +221,9 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 				return nil, errors.New(
 					"Unknown latest block, unknown chain-id")
 			}
-			// If we know of this chain, try to sync it.
-			latest := s.findLatest(gen)
+			// If we know of this chain, try to sync it. First get latest from database,
+			// ignore errors - we try as hard as we can.
+			latest, _ := s.db.GetLatest(gen)
 			log.Lvlf3("Catching up chain %x from index %v", gen.Hash, latest.Index)
 			err := s.syncChain(latest.Roster, latest.Hash)
 			if err != nil {
@@ -250,8 +251,11 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		// Once we have the lock on this skipchain, refresh
 		// prev in case someone else added a block to it while
 		// we were waiting for the lock.
-		prev = s.db.GetByID(prev.Hash)
-		prev = s.findLatest(prev)
+		var err error
+		prev, err = s.db.GetLatest(prev)
+		if err != nil {
+			return nil, errors.New("error while trying to find latest block: " + err.Error())
+		}
 
 		if len(prev.ForwardLink) > 0 {
 			return nil, errors.New(
@@ -379,21 +383,6 @@ func (s *Service) GetUpdateChain(latestKnown *GetUpdateChain) (network.Message, 
 	reply := &GetUpdateChainReply{blocks}
 
 	return reply, nil
-}
-
-// Search the local DB starting at bl and finding the latest block we know.
-func (s *Service) findLatest(bl *SkipBlock) *SkipBlock {
-	for {
-		if len(bl.ForwardLink) == 0 {
-			return bl
-		}
-		next := bl.ForwardLink[len(bl.ForwardLink)-1].Hash()
-		nextBl := s.db.GetByID(next)
-		if nextBl == nil {
-			return bl
-		}
-		bl = nextBl
-	}
 }
 
 // syncChain communicates with conodes in the Roster via getBlocks
@@ -1335,7 +1324,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	}
 
 	var err error
-	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock, -1)
+	s.propagate, err = messaging.NewPropagationFunc(c, "SkipchainPropagate", s.propagateSkipBlock, 1)
 	if err != nil {
 		return nil, err
 	}

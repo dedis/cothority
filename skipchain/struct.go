@@ -529,6 +529,10 @@ func NewSkipBlockDB(db *bolt.DB, bn string) *SkipBlockDB {
 
 // GetByID returns a new copy of the skip-block or nil if it doesn't exist
 func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
+	start := time.Now()
+	defer func() {
+		log.Lvl3("Time to get skipblock:", time.Since(start))
+	}()
 	var result *SkipBlock
 	err := db.View(func(tx *bolt.Tx) error {
 		sb, err := db.getFromTx(tx, sbID)
@@ -704,6 +708,10 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 
 // GetLatest searches for the latest available block for that skipblock.
 func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
+	start := time.Now()
+	defer func() {
+		log.Lvl3("Time to get latest:", time.Since(start))
+	}()
 	if sb == nil {
 		return nil, errors.New("got nil skipblock")
 	}
@@ -712,15 +720,19 @@ func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 	latestID, exists := db.latestBlocks[string(sb.SkipChainID())]
 	if exists {
 		latest = db.GetByID(latestID)
+		if latest == nil {
+			latest = sb
+		}
 	}
 	db.latestMutex.Unlock()
 
 	// TODO this can be optimised by using multiple bucket.Get in a single transaction
 	for latest.GetForwardLen() > 0 {
-		latest = db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash())
-		if latest == nil {
-			return nil, errors.New("missing block")
+		next := db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).Hash())
+		if next == nil {
+			return latest, errors.New("missing block")
 		}
+		latest = next
 	}
 	db.latestUpdate(latest)
 	return latest, nil
