@@ -68,7 +68,11 @@ public class ServerIdentity {
     }
 
     public byte[] SendMessage(String path, byte[] data) throws CothorityCommunicationException {
-        return new SyncSendMessage(path, data).response.array();
+        SyncSendMessage ssm = new SyncSendMessage(path, data);
+        if (ssm.response == null){
+            throw new CothorityCommunicationException("Error while retrieving response - try again. Error-string is: " + ssm.error);
+        }
+        return ssm.response.array();
     }
 
     public class SyncSendMessage {
