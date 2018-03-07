@@ -36,6 +36,11 @@ const browserConfig = {
     library: "cothority",
     libraryTarget: "umd"
   },
+  resolve: {
+    alias: {
+      ws: path.resolve(__dirname, "lib", "shims", "ws.js")
+    }
+  },
   module: {
     rules: [
       {
