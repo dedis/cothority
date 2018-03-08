@@ -26,7 +26,7 @@ func NewClient() *Client {
 }
 
 // StoreSkipBlockSignature asks the cothority to store the new skipblock, and
-// eventually attach it to after the target skipblock.
+// eventually attach it after the target skipblock.
 //  - target is a skipblock, and the new skipblock is going to be added after
 //    it, not necessarily immediately after it.  The caller should use the
 //    genesis skipblock as the target. But for backward compatibility, any
