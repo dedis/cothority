@@ -30,7 +30,7 @@ export default {
   data () {
     return {
       fixed: false,
-      title: 'Evoting'
+      title: 'Elections 2018'
     }
   },
   mounted () {
