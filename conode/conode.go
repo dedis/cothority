@@ -107,6 +107,7 @@ func main() {
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
+		log.SetShowTime(true)
 		return nil
 	}
 
