@@ -1,6 +1,6 @@
 # Moving!
 
-** Onchain-secrets is moving to https://github.com/dedis/cothority ** !
+**Onchain-secrets is moving to https://github.com/dedis/cothority** !
 
 # Onchain secrets
 
