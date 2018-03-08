@@ -1,0 +1,40 @@
+syntax = "proto2";
+
+import "server-identity.proto";
+import "roster.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "SkipBlockProto";
+
+message SkipBlock {
+    required int32 index = 1;
+    required int32 height = 2;
+    required int32 max_height = 3;
+    required int32 base_height = 4;
+    repeated bytes backlinks = 5;
+    repeated bytes verifiers = 6;
+    optional bytes parent = 7;
+    required bytes genesis = 8;
+    required bytes data = 9;
+    required Roster roster = 10;
+    required bytes hash = 11;
+    repeated BlockLink forward = 12;
+    repeated BlockLink children = 13;
+}
+
+message BlockLink {
+    required bytes sig = 1;
+    required bytes msg = 2;
+    repeated Exception exceptions = 3;
+}
+
+message SchnorrSig {
+    required bytes challenge = 1;
+    required bytes response = 2;
+}
+
+message Exception {
+    required int32 index = 1;
+    required bytes commitment = 2;
+}
+
