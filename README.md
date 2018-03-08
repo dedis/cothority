@@ -1,3 +1,7 @@
+# Moving!
+
+** Onchain-secrets is moving to https://github.com/dedis/cothority ** !
+
 # Onchain secrets
 
 This is a first implementation of a skipchain that implements the
