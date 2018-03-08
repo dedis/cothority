@@ -6,10 +6,9 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/ocs/darc"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/suites"
-	"github.com/dedis/onchain-secrets"
-	"github.com/dedis/onchain-secrets/darc"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -29,12 +28,12 @@ func TestService_proof(t *testing.T) {
 
 	// Creating a write request
 	encKey := []byte{1, 2, 3}
-	write := ocs.NewWrite(cothority.Suite, o.sc.OCS.Hash, o.sc.X, o.readers, encKey)
+	write := NewWrite(cothority.Suite, o.sc.OCS.Hash, o.sc.X, o.readers, encKey)
 	write.Data = []byte{}
 	sigPath := darc.NewSignaturePath([]*darc.Darc{o.readers}, *o.writerI, darc.User)
 	sig, err := darc.NewDarcSignature(write.Reader.GetID(), sigPath, o.writer)
 	require.Nil(t, err)
-	wr, err := o.service.WriteRequest(&ocs.WriteRequest{
+	wr, err := o.service.WriteRequest(&WriteRequest{
 		OCS:       o.sc.OCS.Hash,
 		Write:     *write,
 		Signature: *sig,
@@ -45,30 +44,30 @@ func TestService_proof(t *testing.T) {
 	// Making a read request
 	sigRead, err := darc.NewDarcSignature(wr.SB.Hash, sigPath, o.writer)
 	require.Nil(t, err)
-	read := ocs.Read{
+	read := Read{
 		DataID:    wr.SB.Hash,
 		Signature: *sigRead,
 	}
-	rr, err := o.service.ReadRequest(&ocs.ReadRequest{
+	rr, err := o.service.ReadRequest(&ReadRequest{
 		OCS:  o.sc.OCS.Hash,
 		Read: read,
 	})
 	require.Nil(t, err)
 
 	// Decoding the file
-	symEnc, err := o.service.DecryptKeyRequest(&ocs.DecryptKeyRequest{
+	symEnc, err := o.service.DecryptKeyRequest(&DecryptKeyRequest{
 		Read: rr.SB.Hash,
 	})
 	require.Nil(t, err)
 	priv, err := o.writer.GetPrivate()
 	require.Nil(t, err)
-	sym, err2 := ocs.DecodeKey(cothority.Suite, o.sc.X, write.Cs, symEnc.XhatEnc, priv)
+	sym, err2 := DecodeKey(cothority.Suite, o.sc.X, write.Cs, symEnc.XhatEnc, priv)
 	require.Nil(t, err2)
 	require.Equal(t, encKey, sym)
 
 	// Create a wrong Decryption request by abusing skipchain's database and
 	// writing a wrong reader public key to the OCS-data.
-	ocsd := ocs.NewOCS(rr.SB.Data)
+	ocsd := NewOCS(rr.SB.Data)
 	ocsd.Read.Signature.SignaturePath.Signer.Ed25519.Point = cothority.Suite.Point()
 	rr.SB.Data, err = protobuf.Encode(ocsd)
 	require.Nil(t, err)
@@ -81,13 +80,13 @@ func TestService_proof(t *testing.T) {
 			return tx.Bucket([]byte(bucket)).Put(rr.SB.Hash, val)
 		}))
 	}
-	symEnc, err = o.service.DecryptKeyRequest(&ocs.DecryptKeyRequest{
+	symEnc, err = o.service.DecryptKeyRequest(&DecryptKeyRequest{
 		Read: rr.SB.Hash,
 	})
 	require.NotNil(t, err)
 
 	// GetReadRequests
-	requests, err := o.service.GetReadRequests(&ocs.GetReadRequests{
+	requests, err := o.service.GetReadRequests(&GetReadRequests{
 		Start: wr.SB.Hash,
 		Count: 0,
 	})
@@ -108,18 +107,18 @@ func TestService_GetDarcPath(t *testing.T) {
 	err := newReader.SetEvolution(o.readers, path, o.writer)
 	require.Nil(t, err)
 
-	_, err = o.service.UpdateDarc(&ocs.UpdateDarc{
+	_, err = o.service.UpdateDarc(&UpdateDarc{
 		OCS:  o.sc.OCS.SkipChainID(),
 		Darc: *w,
 	})
 	require.Nil(t, err)
-	_, err = o.service.UpdateDarc(&ocs.UpdateDarc{
+	_, err = o.service.UpdateDarc(&UpdateDarc{
 		OCS:  o.sc.OCS.SkipChainID(),
 		Darc: *newReader,
 	})
 	require.Nil(t, err)
 
-	request := &ocs.GetDarcPath{
+	request := &GetDarcPath{
 		OCS:        o.sc.OCS.SkipChainID(),
 		BaseDarcID: o.readers.GetID(),
 		Identity:   *wDarcID,
@@ -155,13 +154,13 @@ func TestService_UpdateDarcOffline(t *testing.T) {
 		err := newReader.SetEvolution(latestReader, nil, o.writer)
 		require.Nil(t, err)
 
-		_, err = o.service.UpdateDarc(&ocs.UpdateDarc{
+		_, err = o.service.UpdateDarc(&UpdateDarc{
 			OCS:  o.sc.OCS.SkipChainID(),
 			Darc: *newReader,
 		})
 		require.Nil(t, err)
 
-		_, err = o.service.GetDarcPath(&ocs.GetDarcPath{
+		_, err = o.service.GetDarcPath(&GetDarcPath{
 			OCS:        o.sc.OCS.SkipChainID(),
 			BaseDarcID: o.readers.GetID(),
 			Identity:   *w.Identity(),
@@ -194,7 +193,7 @@ func TestService_UpdateDarcOnline(t *testing.T) {
 		err := newReader.SetEvolutionOnline(latestReader, o.writer)
 		require.Nil(t, err)
 
-		_, err = o.service.UpdateDarc(&ocs.UpdateDarc{
+		_, err = o.service.UpdateDarc(&UpdateDarc{
 			OCS:  o.sc.OCS.SkipChainID(),
 			Darc: *newReader,
 		})
@@ -213,7 +212,6 @@ func TestStress(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Not stress-testing on travis")
 	}
-	log.SetDebugVisible(1)
 
 	nbrThreads := 30
 	nbrLoops := 10
@@ -229,12 +227,12 @@ func TestStress(t *testing.T) {
 				// Creating a write request
 				log.Lvlf1("Loop %d in thread %d: Write", loop, n)
 				encKey := []byte{1, 2, 3}
-				write := ocs.NewWrite(cothority.Suite, o.sc.OCS.Hash, o.sc.X, o.readers, encKey)
+				write := NewWrite(cothority.Suite, o.sc.OCS.Hash, o.sc.X, o.readers, encKey)
 				write.Data = []byte{}
 				sigPath := darc.NewSignaturePath([]*darc.Darc{o.readers}, *o.writerI, darc.User)
 				sig, err := darc.NewDarcSignature(write.Reader.GetID(), sigPath, o.writer)
 				require.Nil(t, err)
-				wr, err := o.service.WriteRequest(&ocs.WriteRequest{
+				wr, err := o.service.WriteRequest(&WriteRequest{
 					OCS:       o.sc.OCS.Hash,
 					Write:     *write,
 					Signature: *sig,
@@ -247,11 +245,11 @@ func TestStress(t *testing.T) {
 				log.Lvlf1("Loop %d in thread %d: Read", loop, n)
 				sigRead, err := darc.NewDarcSignature(wr.SB.Hash, sigPath, o.writer)
 				require.Nil(t, err)
-				read := ocs.Read{
+				read := Read{
 					DataID:    wr.SB.Hash,
 					Signature: *sigRead,
 				}
-				rr, err := o.service.ReadRequest(&ocs.ReadRequest{
+				rr, err := o.service.ReadRequest(&ReadRequest{
 					OCS:  o.sc.OCS.Hash,
 					Read: read,
 				})
@@ -259,13 +257,13 @@ func TestStress(t *testing.T) {
 
 				// Decoding the file
 				log.Lvlf1("Loop %d in thread %d: DecryptKey", loop, n)
-				symEnc, err := o.service.DecryptKeyRequest(&ocs.DecryptKeyRequest{
+				symEnc, err := o.service.DecryptKeyRequest(&DecryptKeyRequest{
 					Read: rr.SB.Hash,
 				})
 				require.Nil(t, err)
 				priv, err := o.writer.GetPrivate()
 				require.Nil(t, err)
-				sym, err2 := ocs.DecodeKey(cothority.Suite, o.sc.X, write.Cs, symEnc.XhatEnc, priv)
+				sym, err2 := DecodeKey(cothority.Suite, o.sc.X, write.Cs, symEnc.XhatEnc, priv)
 				require.Nil(t, err2)
 				require.Equal(t, encKey, sym)
 			}
@@ -282,7 +280,7 @@ type ocsStruct struct {
 	writer   *darc.Signer
 	writerI  *darc.Identity
 	readers  *darc.Darc
-	sc       *ocs.CreateSkipchainsReply
+	sc       *CreateSkipchainsReply
 }
 
 func createOCS(t *testing.T) *ocsStruct {
@@ -303,7 +301,7 @@ func createOCS(t *testing.T) *ocsStruct {
 	o.readers.AddOwner(o.writerI)
 	o.readers.AddUser(o.writerI)
 	var err error
-	o.sc, err = o.service.CreateSkipchains(&ocs.CreateSkipchainsRequest{
+	o.sc, err = o.service.CreateSkipchains(&CreateSkipchainsRequest{
 		Roster:  *roster,
 		Writers: *o.readers,
 	})
