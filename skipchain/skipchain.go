@@ -1151,7 +1151,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 		}
 		return sig, nil
 	case <-time.After(s.propTimeout):
-		return nil, errors.New("timed out while waiting for signature")
+		return nil, errors.New("timed out while waiting for signature during " + s.propTimeout.String())
 	}
 }
 
