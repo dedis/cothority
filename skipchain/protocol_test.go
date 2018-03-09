@@ -25,7 +25,6 @@ func init() {
 
 // TestGB tests the GetBlocks protocol
 func TestGB(t *testing.T) {
-	t.Skip("See https://github.com/dedis/cothority/issues/1027")
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 	servers, ro, _ := local.GenTree(3, true)
