@@ -25,7 +25,8 @@ import (
 	"github.com/dedis/onet/log"
 )
 
-const defaultTimeout = 1 * time.Second
+// Make this variable so we can set it to 100ms in the tests.
+var defaultTimeout = 10 * time.Second
 
 // VerificationFunction can be passes to each protocol node. It will be called
 // (in a go routine) during the (start/handle) challenge prepare phase of the
@@ -564,6 +565,7 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(c chan responseChan) error {
 
 // readCommitChan reads until all commit messages are received or a timeout for message type `t`
 func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error {
+	timeout := time.After(bft.Timeout)
 	for {
 		if bft.isClosing() {
 			return errors.New("Closing")
@@ -586,14 +588,19 @@ func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error
 				}
 			case RoundCommit:
 				bft.tempCommitCommit = append(bft.tempCommitCommit, comm.Commitment)
-				if t == RoundCommit && len(bft.tempCommitCommit) == len(bft.Children()) {
+				// In case the prepare round had some exceptions, we
+				// will not wait for more commits from the commit
+				// round. The possibility of having a different set
+				// of nodes failing in both cases is inferiour to the
+				// speedup in case of one node failing in both rounds.
+				if t == RoundCommit && len(bft.tempCommitCommit) == len(bft.tempPrepareCommit) {
 					return nil
 				}
 			}
-		case <-time.After(bft.Timeout):
+		case <-timeout:
 			// in some cases this might be ok because we accept a certain number of faults
 			// the caller is responsible for checking if enough messages are received
-			log.Lvl1("timeout while trying to read commit messages")
+			log.Lvl1("timeout while trying to read commit message")
 			return nil
 		}
 	}
@@ -601,6 +608,7 @@ func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error
 
 // should do nothing if the channel is closed
 func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) error {
+	timeout := time.After(bft.Timeout)
 	for {
 		if bft.isClosing() {
 			return errors.New("Closing")
@@ -620,16 +628,21 @@ func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) e
 				bft.tempPrepareResponse = append(bft.tempPrepareResponse, r.Response)
 				bft.tempExceptions = append(bft.tempExceptions, r.Exceptions...)
 				bft.tempPrepareResponsePublics = append(bft.tempPrepareResponsePublics, from)
-				if t == RoundPrepare && len(bft.tempPrepareResponse) == len(bft.Children()) {
+				// There is no need to have more responses than we have
+				// commits. We _should_ check here if we get the same
+				// responses from the same nodes. But as this is deprecated
+				// and replaced by ByzCoinX, we'll leave it like that.
+				if t == RoundPrepare && len(bft.tempPrepareResponse) == len(bft.tempPrepareCommit) {
 					return nil
 				}
 			case RoundCommit:
 				bft.tempCommitResponse = append(bft.tempCommitResponse, r.Response)
-				if t == RoundCommit && len(bft.tempCommitResponse) == len(bft.Children()) {
+				// Same reasoning as in RoundPrepare.
+				if t == RoundCommit && len(bft.tempCommitResponse) == len(bft.tempCommitCommit) {
 					return nil
 				}
 			}
-		case <-time.After(bft.Timeout):
+		case <-timeout:
 			log.Lvl1("timeout while trying to read response messages")
 			return nil
 		}

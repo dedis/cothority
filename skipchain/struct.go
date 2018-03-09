@@ -22,7 +22,7 @@ import (
 )
 
 // How long to wait before a timeout is generated in the propagation.
-const defaultPropagateTimeout = 5 * time.Second
+const defaultPropagateTimeout = 15 * time.Second
 
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte
