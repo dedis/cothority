@@ -371,6 +371,12 @@ func getCommands() cli.Commands {
 					Usage:     "request a certificate to letsencrypt and store it to the skipchain",
 					ArgsUsage: "name of the directory",
 					Action:    certRequest,
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "directory, dir",
+							Usage: "write on the www folder",
+						},
+					},
 				},
 				{
 					Name:      "list",
@@ -378,6 +384,20 @@ func getCommands() cli.Commands {
 					Usage:     "list the certificate",
 					ArgsUsage: "",
 					Action:    certList,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "verbose, v",
+							Usage: "Display the fullchain certificate",
+						},
+						cli.BoolFlag{
+							Name:  "public, p",
+							Usage: "Display the public certificate",
+						},
+						cli.BoolFlag{
+							Name:  "chain, c",
+							Usage: "Display the chain certificate",
+						},
+					},
 				},
 				{
 					Name:      "verify",
@@ -397,7 +417,7 @@ func getCommands() cli.Commands {
 					Name:      "revoke",
 					Aliases:   []string{"k"},
 					Usage:     "revoke and delete a certificate",
-					ArgsUsage: "the key",
+					ArgsUsage: "[certificate] [registerkey.pem]",
 					Action:    certRevoke,
 				},
 				{
