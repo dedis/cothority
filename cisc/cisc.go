@@ -888,11 +888,12 @@ func certRequest(c *cli.Context) error {
 	domain := c.Args().Get(0)
 
 	//Request Certificate (see certificate.go)
-	cert := getCert(domain)
+	cert := getCert("cothoritynet", domain)
 	//check the validity of the certificate(see certificate.go)
 	log.Print("Verify the validity of the cert:")
+	// To include at the end
 	if !check(cert) {
-		log.Fatal("Certificate not valid, can't add it to proposal storage ")
+		//log.Fatal("Certificate not valid, can't add it to proposal storage ")
 	}
 
 	id, err := cfg.findSC(c.Args().Get(1))
@@ -926,11 +927,28 @@ func certList(c *cli.Context) error {
 	}
 
 	log.Infof("config for id %x", id.ID)
+
 	for k, v := range id.Data.Storage {
 		if isCert(v) {
-			log.Infof("%s: %s", k, v)
+			certLE, _ := pemToCertificate(v)
+			public, chain := splitCertPublicChain(v)
+			if c.Bool("v") || c.Bool("p") && c.Bool("c") {
+				log.Infof("%s - Expiry Date: %s", k, certLE.NotAfter)
+				log.Infof("%s", v)
+			} else if c.Bool("p") {
+				log.Info("Certificate of the domain")
+				log.Infof("%s - Expiry Date: %s", k, certLE.NotAfter)
+				log.Infof("%s", public)
+			} else if c.Bool("c") {
+				log.Info("Chain certificate")
+				log.Infof("%s - Expiry Date: %s", k, certLE.NotAfter)
+				log.Infof("%s", chain)
+			} else {
+				log.Infof("%s - Expiry Date: %s", k, certLE.NotAfter)
+			}
 		}
 	}
+
 	return nil
 }
 
@@ -941,14 +959,20 @@ func certStore(c *cli.Context) error {
 		log.Fatal("Please give a key cert pair")
 	}
 	domain := c.Args().Get(0)
-	cert := c.Args().Get(1)
+	path := c.Args().Get(1)
 	//check the validity of the certificate
+	certBytes, err := ioutil.ReadFile(path)
+	cert := string(certBytes)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	if !isCert(cert) {
 		log.Fatal("Please give a cert")
 	}
 	log.Print("Verify the validity of the cert:")
 	if !check(cert) {
-		log.Fatal("Certificate not valid, can't add it to proposal storage ")
+		//log.Fatal("Certificate not valid, can't add it to proposal storage ")
 	}
 
 	id, err := cfg.findSC(c.Args().Get(2))
@@ -999,6 +1023,7 @@ func certRenew(c *cli.Context) error {
 	if c.NArg() < 1 {
 		log.Fatal("Please give a domain name")
 	}
+
 	domain := c.Args().Get(0)
 	id, err := cfg.findSC(c.Args().Get(1))
 	if err != nil {
@@ -1008,6 +1033,8 @@ func certRenew(c *cli.Context) error {
 		scList(c)
 		return errors.New("Please give skipchain-id")
 	}
+
+	log.Info("Checking certificate")
 
 	if _, ok := id.Data.Storage[domain]; !ok {
 		log.Fatal("Didn't find key", domain, "in the config")
@@ -1033,11 +1060,11 @@ func certRenew(c *cli.Context) error {
 
 func certRevoke(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	if c.NArg() < 1 {
-		log.Fatal("Please give the certificate to delete")
+	if c.NArg() < 2 {
+		log.Fatal("Please give the certificate to delete and the register key of the certificate")
 	}
 
-	id, err := cfg.findSC(c.Args().Get(1))
+	id, err := cfg.findSC(c.Args().Get(2))
 	if err != nil {
 		return err
 	}
@@ -1056,7 +1083,7 @@ func certRevoke(c *cli.Context) error {
 		log.Fatal("The values are not a certificate")
 	}
 	//revoke the certificate (see certificate.go)
-	revokeCert(cert)
+	revokeCert(c.Args().Get(1), cert)
 	delete(prop.Storage, key)
 	cfg.proposeSendVoteUpdate(id, prop)
 	return cfg.saveConfig(c)
@@ -1064,7 +1091,7 @@ func certRevoke(c *cli.Context) error {
 
 func certRetrieve(c *cli.Context) error {
 	if c.NArg() < 1 {
-		log.Fatal("Please give the key to retrieve the cert")
+		log.Fatal("Please give the key of the certificate")
 	}
 	k := c.Args().Get(0)
 	cfg := loadConfigOrFail(c)
@@ -1078,6 +1105,8 @@ func certRetrieve(c *cli.Context) error {
 	}
 
 	cert := id.Data.Storage[k]
+	public, chain := splitCertPublicChain(cert)
+
 	if cert == "" {
 		log.Fatal("Cisc don't store a certificate for this domain ")
 	}
@@ -1086,10 +1115,15 @@ func certRetrieve(c *cli.Context) error {
 	}
 	log.Print("Verify the validity of the cert:")
 	if !check(cert) {
-		log.Fatal("Certificate not valid, can't add it to proposal storage ")
+		// TODO remove the next comment
+		//	log.Fatal("Certificate not valid")
 	}
-
-	log.Info("Valid certificate, Retrive it to: " + k + ".pem")
-	ioutil.WriteFile(k+".pem", []byte(cert), 0644)
+	log.Info("Valid certificate")
+	log.Info("Retrieve the domain certificate to: " + k + ".pem")
+	ioutil.WriteFile(k+".pem", []byte(public), 0644)
+	if chain != "" {
+		log.Info("Retrieve the fullchain certificate to: " + k + "_fullchain.pem")
+		ioutil.WriteFile(k+"_fullchain.pem", []byte(cert), 0644)
+	}
 	return cfg.saveConfig(c)
 }
