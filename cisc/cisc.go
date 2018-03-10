@@ -876,27 +876,31 @@ func followUpdate(c *cli.Context) error {
 }
 
 /*
- * Commands related to the certificate store/retrieve
+ * Commands related to certificate management
+ * Request, add, retrieve, revoke, renew, list the certificates
  */
 
 //Request a Certificate to Letsencrypt Ca and store it.
 func certRequest(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	if c.NArg() < 1 {
-		log.Fatal("Please give a domain name ")
+	if c.NArg() < 2 {
+		log.Fatal("Please give a domain name and the corresponding directory containing the www folder")
 	}
 	domain := c.Args().Get(0)
-
+	dir := c.Args().Get(1)
+	if _, err := os.Stat("/home/" + dir + "/www"); os.IsNotExist(err) {
+		log.Fatal("The directory does not contain www repo")
+	}
 	//Request Certificate (see certificate.go)
-	cert := getCert("cothoritynet", domain)
+	cert := getCert(dir, domain)
 	//check the validity of the certificate(see certificate.go)
 	log.Print("Verify the validity of the cert:")
-	// To include at the end
+	// NEEEED TODO
 	if !check(cert) {
-		//log.Fatal("Certificate not valid, can't add it to proposal storage ")
+		log.Fatal("Certificate not valid, can't add it to proposal storage ")
 	}
 
-	id, err := cfg.findSC(c.Args().Get(1))
+	id, err := cfg.findSC(c.Args().Get(2))
 	if err != nil {
 		return err
 	}
@@ -972,7 +976,7 @@ func certStore(c *cli.Context) error {
 	}
 	log.Print("Verify the validity of the cert:")
 	if !check(cert) {
-		//log.Fatal("Certificate not valid, can't add it to proposal storage ")
+		log.Fatal("Certificate not valid, can't add it to proposal storage ")
 	}
 
 	id, err := cfg.findSC(c.Args().Get(2))
@@ -1116,7 +1120,7 @@ func certRetrieve(c *cli.Context) error {
 	log.Print("Verify the validity of the cert:")
 	if !check(cert) {
 		// TODO remove the next comment
-		//	log.Fatal("Certificate not valid")
+		log.Fatal("Certificate not valid")
 	}
 	log.Info("Valid certificate")
 	log.Info("Retrieve the domain certificate to: " + k + ".pem")
