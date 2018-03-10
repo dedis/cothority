@@ -895,7 +895,7 @@ func certRequest(c *cli.Context) error {
 	cert := getCert(dir, domain)
 	//check the validity of the certificate(see certificate.go)
 	log.Print("Verify the validity of the cert:")
-	// NEEEED TODO
+
 	if !check(cert) {
 		log.Fatal("Certificate not valid, can't add it to proposal storage ")
 	}
@@ -1119,7 +1119,6 @@ func certRetrieve(c *cli.Context) error {
 	}
 	log.Print("Verify the validity of the cert:")
 	if !check(cert) {
-		// TODO remove the next comment
 		log.Fatal("Certificate not valid")
 	}
 	log.Info("Valid certificate")
