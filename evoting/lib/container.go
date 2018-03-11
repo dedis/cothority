@@ -83,9 +83,9 @@ func genBox(key kyber.Point, n int) *Box {
 func Split(ballots []*Ballot) (alpha, beta []kyber.Point) {
 	n := len(ballots)
 	alpha, beta = make([]kyber.Point, n), make([]kyber.Point, n)
-	for i, ballot := range ballots {
-		alpha[i] = ballot.Alpha
-		beta[i] = ballot.Beta
+	for i := range ballots {
+		alpha[i] = ballots[i].Alpha
+		beta[i] = ballots[i].Beta
 	}
 	return
 }

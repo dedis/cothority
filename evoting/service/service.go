@@ -192,14 +192,14 @@ func (s *Service) Login(req *evoting.Login) (*evoting.LoginReply, error) {
 }
 
 // LookupSciper calls https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
-// to convert scipers to names
+// to convert Sciper numbers to names.
 func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciperReply, error) {
 	if len(req.Sciper) != 6 {
-		return nil, errors.New("sciper should be 6 digits only")
+		return nil, errors.New("Sciper should be 6 digits only")
 	}
 	sciper, err := strconv.Atoi(req.Sciper)
 	if err != nil {
-		return nil, errors.New("couldn't convert sciper to integer")
+		return nil, errors.New("Couldn't convert Sciper to integer")
 	}
 
 	url := "https://people.epfl.ch/cgi-bin/people/vCard"
@@ -207,7 +207,7 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 		url = req.LookupURL
 	}
 
-	// Make sure the only varialbe expansion in there is what we want it to be.
+	// Make sure the only variable expansion in there is what we want it to be.
 	if strings.Contains(url, "%") {
 		return nil, errors.New("Percent not allowed in LookupURL")
 	}
@@ -220,7 +220,7 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 	defer resp.Body.Close()
 
 	if resp.Header.Get("Content-type") != "text/x-vcard; charset=utf-8" {
-		return nil, errors.New("invalid or unknown sciper")
+		return nil, errors.New("Invalid or unknown sciper")
 	}
 
 	bodyLimit := io.LimitReader(resp.Body, 1<<17)

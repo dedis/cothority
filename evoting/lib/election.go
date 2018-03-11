@@ -124,20 +124,34 @@ func (e *Election) Box() (*Box, error) {
 		return nil, err
 	}
 
-	// Use map to only included a user's last ballot.
-	mapping := make(map[uint32]*Ballot)
+	ballots := make([]*Ballot, 0)
 	for _, block := range chain {
 		_, blob, _ := network.Unmarshal(block.Data, cothority.Suite)
 		if ballot, ok := blob.(*Ballot); ok {
-			mapping[ballot.User] = ballot
+			ballots = append(ballots, ballot)
 		}
 	}
 
-	ballots := make([]*Ballot, 0)
-	for _, ballot := range mapping {
-		ballots = append(ballots, ballot)
+	// Reverse ballot list
+	for i, j := 0, len(ballots)-1; i < j; i, j = i+1, j-1 {
+		ballots[i], ballots[j] = ballots[j], ballots[i]
 	}
-	return &Box{Ballots: ballots}, nil
+
+	// Only keep last casted ballot per user
+	mapping := make(map[uint32]bool)
+	unique := make([]*Ballot, 0)
+	for _, ballot := range ballots {
+		if _, found := mapping[ballot.User]; !found {
+			unique = append(unique, ballot)
+			mapping[ballot.User] = true
+		}
+	}
+
+	// Reverse back list of unique ballots
+	for i, j := 0, len(unique)-1; i < j; i, j = i+1, j-1 {
+		unique[i], unique[j] = unique[j], unique[i]
+	}
+	return &Box{Ballots: unique}, nil
 }
 
 // Mixes returns all mixes created by the roster conodes.
