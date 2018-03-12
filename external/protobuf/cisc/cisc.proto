@@ -24,7 +24,8 @@ message Data {
     required sint32 threshold = 1;
     map<string, Device> device = 2;
     map<string, string> storage = 3;
-    map<string, bytes> votes = 4;
+    optional Roster roster = 4;
+    map<string, bytes> votes = 5;
 }
 
 message StoreKeys {
