@@ -34,11 +34,23 @@ type Election struct {
 	Key    kyber.Point           // Key is the DKG public key.
 	Stage  uint32                // Stage indicates the phase of the election.
 
-	Candidates  []uint32 // Candidates is the list of candidate scipers.
-	MaxChoices  int      // MaxChoices is the max votes in allowed in a ballot.
-	Description string   // Description in string format.
-	Start       int64    // Start denotes the election start unix timestamp
-	End         int64    // End (termination) datetime as unix timestamp.
+	Candidates []uint32 // Candidates is the list of candidate scipers.
+	MaxChoices int      // MaxChoices is the max votes in allowed in a ballot.
+	Subtitle   string   // Description in string format.
+	MoreInfo   string   // MoreInfo is the url to AE Website for the given election.
+	Start      int64    // Start denotes the election start unix timestamp
+	End        int64    // End (termination) datetime as unix timestamp.
+
+	Theme  string // Theme denotes the CSS class for selecting background color of card title.
+	Footer footer // Footer denotes the Election footer
+}
+
+// footer denotes the fields for the election footer
+type footer struct {
+	Text         string // Text is for storing footer content.
+	ContactTitle string // ContactTitle stores the title of the Contact person.
+	ContactPhone string // ContactPhone stores the phone number of the Contact person.
+	ContactEmail string // ContactEmail stores the email address of the Contact person.
 }
 
 func init() {
