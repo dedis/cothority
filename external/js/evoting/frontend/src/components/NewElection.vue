@@ -2,7 +2,7 @@
   <v-layout row wrap>
     <v-flex sm12 offset-md3 md6>
       <v-card>
-        <v-toolbar card dark>
+        <v-toolbar card dark :class="theme">
           <v-toolbar-title class="white--text">New Election</v-toolbar-title>
         </v-toolbar>
         <v-container fluid>
@@ -18,24 +18,31 @@
                 required
               ></v-text-field>
             </v-flex>
-            <v-flex xs12>
+            <v-flex md6 xs12>
               <v-text-field
-                label="Election Description"
-                v-model="description"
+                label="Election Subtitle"
+                v-model="subtitle"
                 :counter=100
                 prepend-icon="mode_comment"
-                :rules=[validateDescription]
+                :rules=[validateSubtitle]
                 required
               ></v-text-field>
             </v-flex>
-            <v-flex xs12>
+            <v-flex md6 xs12>
+              <v-text-field
+                label="More Info Link"
+                v-model="moreInfo"
+                prepend-icon="info"
+              ></v-text-field>
+            </v-flex>
+            <v-flex md6 xs12>
               <datetime-picker
                 label="Start Time"
                 :datetime="`${today} 00:00`"
                 @input="updateStartTime"
                 ></datetime-picker>
             </v-flex>
-            <v-flex xs12>
+            <v-flex md6 xs12>
               <datetime-picker
                 label="End Time"
                 :datetime="`${today} 23:59`"
@@ -75,53 +82,67 @@
                 </template>
               </v-select>
             </v-flex>
-            <!--<v-flex xs12>
-              <v-select
-                label="Voter Groups"
-                prepend-icon="filter_list"
-                chips
-                tags
-                clearable
-                :rules=[validateGroup]
-                v-model.trim="groups"
-              > 
-                <template slot="selection" slot-scope="data">
-                  <v-chip
-                    close
-                    label
-                    @input="removeGroup(data.item)"
-                    :selected="data.selected"
-                  >
-                    <strong>{{ data.item }}</strong>&nbsp;
-                  </v-chip>
-                </template>
-              </v-select>
-            </v-flex>-->
             <v-flex xs12>
+              <upload-button prepend-icon="filter_list" title="Voters" :selectedCallback="parseVoterList">
+              </upload-button>
+            </v-flex>
+            <v-flex md6 xs12>
               <v-select
-                label="Voter Scipers"
-                prepend-icon="filter_list"
-                chips
-                tags
-                :rules=[validateVoterSciper]
-                clearable
+                label="Department"
+                :items="departments"
+                v-model="theme"
+                prepend-icon="color_lens"
+                item-text="name"
+                item-value="class"
+                :rules=[validateTheme]
                 required
-                v-model="voterScipers"
-              > 
-                <template slot="selection" slot-scope="data">
-                  <v-chip
-                    label
-                    close
-                    @input="removeVoterSciper(data.item)"
-                    :selected="data.selected"
+              >
+                <template slot="item" slot-scope="data">
+                  <v-avatar
+                    :size="24"
+                    :class="data.item.class"
                   >
-                    <strong>{{ data.item }}</strong>&nbsp;
-                  </v-chip>
+                  </v-avatar>
+                  <v-list-tile-content>
+                    <v-list-tile-title>{{ data.item.name }}</v-list-tile-title>
+                  </v-list-tile-content>
                 </template>
               </v-select>
             </v-flex>
+            <v-flex md6 xs12>
+              <v-text-field
+                label="Footer Text"
+                v-model="footerText"
+                :counter=80
+                prepend-icon="create"
+              ></v-text-field>
+            </v-flex>
+            <v-flex md4 xs12>
+              <v-text-field
+                label="Contact Title"
+                v-model="footerContactTitle"
+                :counter=20
+                prepend-icon="create"
+              ></v-text-field>
+            </v-flex>
+            <v-flex md4 xs12>
+              <v-text-field
+                label="Contact Phone"
+                v-model="footerContactPhone"
+                prepend-icon="phone"
+              ></v-text-field>
+            </v-flex>
+            <v-flex md4 xs12>
+              <v-text-field
+                label="Contact Email"
+                v-model="footerContactEmail"
+                :counter=50
+                prepend-icon="email"
+                :rules=[validateEmail]
+              ></v-text-field>
+            </v-flex>
             <v-flex xs12 class="text-xs-center">
-              <v-btn type="submit" :disabled="!valid || submitted" color="primary">Create Election</v-btn>
+              <v-btn type="submit" :disabled="!valid || submitted || voterScipers.length === 0" color="primary">Create Election</v-btn>
             </v-flex>
           </v-layout>
         </v-form>
@@ -134,10 +155,38 @@
 <script>
 import config from '../config'
 import DateTimePicker from './DateTimePicker'
+import UploadButton from './UploadButton'
 import { timestampToString } from '@/utils'
 
 export default {
   methods: {
+    parseVoterList (file) {
+      if (file == null || file.type !== 'text/plain') {
+        // show snackbar
+        return
+      }
+      const fr = new FileReader()
+      fr.onload = event => {
+        const { result } = event.target
+        const scipersStrArr = result.trim().split('\n')
+        if (scipersStrArr.length === 0) {
+          // show snackbar
+          console.error(new Error('Atleast one sciper is required'))
+          return
+        }
+        for (let i = 0; i < scipersStrArr.length; i++) {
+          if (!(/^\d{6}$/.test(scipersStrArr[i]))) {
+            // show snackbar
+            console.error(new Error(`Invalid sciper ${scipersStrArr[i]} at line ${i}`))
+            return
+          }
+        }
+        const scipers = scipersStrArr.map(x => parseInt(x))
+        this.voterScipers = scipers
+        this.$store.state.scipersReadFromFile = scipers.length
+      }
+      fr.readAsText(file)
+    },
     removeGroup (item) {
       this.groups.splice(this.groups.indexOf(item), 1)
       this.groups = [...this.groups]
@@ -149,6 +198,13 @@ export default {
     removeVoterSciper (item) {
       this.voterScipers.splice(this.voterScipers.indexOf(item), 1)
       this.voterScipers = [...this.voterScipers]
+    },
+    validateTheme (theme) {
+      const classes = this.departments.map(x => x.class)
+      return classes.indexOf(theme) !== -1 || 'Invalid theme'
+    },
+    validateEmail (email) {
+      return email === '' || /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email) || 'Invalid email'
     },
     validateSciper (items) {
       if (items.length === 0) {
@@ -176,8 +232,8 @@ export default {
     validateName (name) {
       return !!name || 'Name field is required'
     },
-    validateDescription (description) {
-      return !!description || 'Description field is required'
+    validateSubtitle (subtitle) {
+      return !!subtitle || 'Subtitle field is required'
     },
     validateMaxChoices (maxChoices) {
       if (!maxChoices) {
@@ -204,12 +260,20 @@ export default {
         election: {
           name: this.name,
           creator: parseInt(this.$store.state.user.sciper),
-          users: this.voterScipers.map(e => parseInt(e)),
-          description: this.description,
+          users: this.voterScipers,
+          subtitle: this.subtitle,
+          moreInfo: this.moreInfo,
           start: Math.floor(this.start / 1000),
           end: Math.floor(this.end / 1000),
           candidates: this.candidateScipers.map(x => parseInt(x)),
-          maxChoices: parseInt(this.maxChoices)
+          maxChoices: parseInt(this.maxChoices),
+          theme: this.theme,
+          footer: {
+            text: this.footerText,
+            contactTitle: this.footerContactTitle,
+            contactEmail: this.footerContactEmail,
+            contactPhone: this.footerContactPhone
+          }
         }
       }
       const { socket } = this.$store.state
@@ -253,7 +317,7 @@ export default {
       name: null,
       end: new Date(`${today} 23:59:00`).getTime(),
       start: new Date(`${today} 00:00:00`).getTime(),
-      description: null,
+      subtitle: null,
       modal: false,
       groups: [],
       voterScipers: [],
@@ -261,11 +325,31 @@ export default {
       valid: false,
       submitted: false,
       today,
-      maxChoices: null
+      moreInfo: '',
+      maxChoices: null,
+      departments: [
+        { name: 'EPFL', class: 'epfl' },
+        { name: 'ENAC', class: 'enac' },
+        { name: 'SB', class: 'sb' },
+        { name: 'STI', class: 'sti' },
+        { name: 'IC', class: 'ic' },
+        { name: 'SV', class: 'sv' },
+        { name: 'CDM', class: 'cdm' },
+        { name: 'CDH', class: 'cdh' },
+        { name: 'INTER', class: 'inter' },
+        { name: 'Associations', class: 'assoc' }
+      ],
+      theme: '',
+      footerText: '',
+      footerContactTitle: '',
+      footerContactPhone: '',
+      footerContactEmail: ''
     }
   },
   components: {
-    'datetime-picker': DateTimePicker
+    'datetime-picker': DateTimePicker,
+    'upload-button': UploadButton
   }
 }
 </script>
+

@@ -24,9 +24,19 @@ message Election {
     optional uint32 stage = 7;
     repeated uint32 candidates = 8 [packed=true];
     required int32 maxChoices = 9;
-    required string description = 10;
-    required sint64 start = 11;
-    required sint64 end = 12;
+    required string subtitle = 10;
+    required string moreInfo = 11;
+    required sint64 start = 12;
+    required sint64 end = 13;
+    required string theme = 14;
+    required Footer footer = 15;
+}
+
+message Footer {
+  required string text = 1;
+  required string contactTitle = 2;
+  required string contactPhone = 3;
+  required string contactEmail = 4;
 }
 
 message Ballot {

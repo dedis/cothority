@@ -28,8 +28,10 @@
             :name="election.name"
             :end="election.end"
             :start="election.start"
+            :theme="election.theme"
             :creator="election.creator"
-            :description="election.description"
+            :subtitle="election.subtitle"
+            :moreInfo="election.moreInfo"
             :stage="election.stage"></election-card>
         </v-layout>
       </div>
@@ -47,8 +49,10 @@
             :name="election.name"
             :end="election.end"
             :start="election.start"
+            :theme="election.theme"
             :creator="election.creator"
-            :description="election.description"
+            :subtitle="election.subtitle"
+            :moreInfo="election.moreInfo"
             :stage="election.stage"></election-card>
         </v-layout>
       </div>

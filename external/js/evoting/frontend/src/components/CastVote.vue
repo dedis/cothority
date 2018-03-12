@@ -2,20 +2,21 @@
   <v-layout row wrap>
     <v-flex sm12 offset-md3 md6>
       <v-card>
-        <v-toolbar card dark>
+        <v-toolbar card dark :class="election.theme">
           <v-toolbar-title class="white--text">{{ election.name }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <div v-if="election.moreInfo">
+            <a target="_blank" :href="election.moreInfo"><v-icon>info</v-icon></a>
+          </div>
         </v-toolbar>
         <v-card-title>
           <v-container fluid>
-            <v-layout class="election-info-container" row>
-              <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ endDate(election.end) }}</p></v-flex>
-            <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ creatorName }} ({{ election.creator }})</p></v-flex>
-            </v-layout>
             <v-layout>
               <v-flex xs12>
-                <p><v-icon>comment</v-icon>{{ election.description }}</p>
+                {{ election.subtitle }}
               </v-flex>
             </v-layout>
+            <br>
             <v-form v-model="valid" v-on:submit="submitHandler">
               <v-layout row wrap>
                 <v-flex xs12>
@@ -42,6 +43,11 @@
         </v-card-title>
       </v-card>
     </v-flex>
+    <v-footer app>
+      <v-layout row wrap>
+        <v-flex xs6 text-xs-left>&copy; 2018 {{ election.footer.text }}</v-flex><v-flex text-xs-right>{{ election.footer.contactPhone }}, <a :href="`mailto:${election.footer.contactEmail}`">{{ election.footer.contactTitle }}</a></v-flex>
+      </v-layout>
+    </v-footer>
   </v-layout>
 </template>
 

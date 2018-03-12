@@ -1,4 +1,5 @@
 <template>
+  <div>
   <v-toolbar
     app
   >
@@ -44,6 +45,7 @@
         <v-btn to="/logout" flat><v-icon>exit_to_app</v-icon></v-btn>
     </v-toolbar-items>
   </v-toolbar>
+  </div>
 </template>
 
 <style>
@@ -57,6 +59,10 @@
 export default {
   props: {
     title: String
+  },
+  data () {
+    return {
+    }
   }
 }
 </script>

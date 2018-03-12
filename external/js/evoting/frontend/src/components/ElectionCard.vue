@@ -1,37 +1,34 @@
 <template>
   <div class="flex sm12 md4 election-card">
     <v-card>
-      <v-toolbar card dark>
+      <v-toolbar card dark :class="theme">
         <v-toolbar-title class="white--text">{{ name }}</v-toolbar-title>
+        <v-spacer></v-spacer>
+        <div v-if="moreInfo">
+          <a target="_blank" :href="moreInfo"><v-icon>info</v-icon></a>
+        </div>
       </v-toolbar>
       <v-card-title class="election-card-name">
-        <v-layout class="election-info-container" row>
-          <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ endDate }}</p></v-flex>
-          <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ creatorName }} ({{ creator }})</p></v-flex>
+        <v-layout>
+          <v-flex xs12>{{ subtitle }}</v-flex>
         </v-layout>
       </v-card-title>
       <v-card-actions>
         <v-layout row wrap>
-        <v-flex v-if="stage === 0" xs5>
+        <v-flex v-if="stage === 0" xs6>
           <v-btn :disabled="disabled || $store.state.now > end || $store.state.now < start" :to="voteLink" color="primary">Vote</v-btn>
         </v-flex>
-        <v-flex v-if="$store.state.loginReply.admin && stage === 0 && creator === parseInt($store.state.user.sciper)" class="text-xs-right" xs5>
+        <v-flex v-if="$store.state.loginReply.admin && stage === 0 && creator === parseInt($store.state.user.sciper)" class="text-xs-right" xs6>
           <v-btn :disabled="disabled || $store.state.now < start" v-on:click.native="finalize" color="orange">Finalize</v-btn>
         </v-flex>
-        <v-flex v-if="stage === 2" xs10>
+        <v-flex v-if="stage === 2" xs12>
           <v-btn :disabled="disabled" :to="resultLink" color="success">View Results</v-btn>
-        </v-flex>
-        <v-spacer></v-spacer>
-        <v-flex xs2 class="text-xs-right">
-        <v-btn icon @click.native="show = !show">
-          <v-icon>{{ show ? 'keyboard_arrow_down' : 'keyboard_arrow_up' }}</v-icon>
-        </v-btn>
         </v-flex>
         </v-layout>
       </v-card-actions>
       <v-slide-y-transition>
         <v-card-text class="grey--text" v-show="show">
-          {{ description }}
+          {{ subtitle }}
         </v-card-text>
       </v-slide-y-transition>
     </v-card>
@@ -60,9 +57,11 @@ export default {
     end: Number,
     start: Number,
     creator: Number,
-    description: String,
+    subtitle: String,
+    moreInfo: String,
     stage: Number,
-    id: String
+    id: String,
+    theme: String
   },
   methods: {
     finalize (event) {

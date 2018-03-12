@@ -4,16 +4,16 @@
       <v-card>
         <v-toolbar card dark>
           <v-toolbar-title class="white--text">{{ election.name }}</v-toolbar-title>
+          <v-spacer></v-spacer>
+          <div v-if="election.moreInfo">
+            <a target="_blank" :href="election.moreInfo"><v-icon>info</v-icon></a>
+          </div>
         </v-toolbar>
         <v-card-title>
           <v-container fluid>
-            <v-layout class="election-info-container" row>
-              <v-flex class="election-info"><p><v-icon>alarm</v-icon> {{ endDate(election.end) }}</p></v-flex>
-              <v-flex class="election-info"><p><v-icon>account_box</v-icon> {{ creatorName }} ({{ election.creator }})</p></v-flex>
-            </v-layout>
             <v-layout>
               <v-flex xs12>
-                <p><v-icon>comment</v-icon>{{ election.description }}</p>
+                {{ election.subtitle }}
               </v-flex>
             </v-layout>
             <v-layout

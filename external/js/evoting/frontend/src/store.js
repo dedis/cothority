@@ -23,7 +23,8 @@ const store = new Vuex.Store({
       color: ''
     },
     names: {},
-    now: Math.floor(new Date().getTime() / 1000)
+    now: Math.floor(new Date().getTime() / 1000),
+    scipersReadFromFile: 0
   },
   getters: {
     isAuthenticated: state => {
