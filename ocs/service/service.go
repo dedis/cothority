@@ -408,6 +408,9 @@ func (s *Service) DecryptKeyRequest(req *DecryptKeyRequest) (reply *DecryptKeyRe
 		return nil, errors.New("This is not a read-block")
 	}
 	fileSB := s.db().GetByID(read.Read.DataID)
+	if fileSB == nil {
+		return nil, errors.New("didn't find that block")
+	}
 	file := NewOCS(fileSB.Data)
 	if file == nil || file.Write == nil {
 		return nil, errors.New("Data-block is broken")
@@ -485,14 +488,13 @@ func (s *Service) DecryptKeyRequest(req *DecryptKeyRequest) (reply *DecryptKeyRe
 func (s *Service) storeSkipBlock(latest *skipchain.SkipBlock, d []byte) (sb *skipchain.SkipBlock, err error) {
 	block := latest.Copy()
 	block.Data = d
-	if block.Index == 0 {
-		block.GenesisID = block.SkipChainID()
-	}
+	block.GenesisID = block.SkipChainID()
 	block.Index++
 	// Using an unset LatestID with block.GenesisID set is to ensure concurrent
 	// append.
 	reply, err := s.skipchain.StoreSkipBlock(&skipchain.StoreSkipBlock{
-		NewBlock: block,
+		NewBlock:          block,
+		TargetSkipChainID: latest.SkipChainID(),
 	})
 	if err != nil {
 		return nil, err
