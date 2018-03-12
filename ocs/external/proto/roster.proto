@@ -1,0 +1,12 @@
+syntax = "proto2";
+
+import "server-identity.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "RosterProto";
+
+message Roster {
+    required bytes id = 1;
+    repeated ServerIdentity list = 2;
+    required bytes aggregate = 3;
+}

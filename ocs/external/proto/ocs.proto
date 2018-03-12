@@ -1,0 +1,215 @@
+syntax = "proto2";
+import "skipblock.proto";
+import "darc.proto";
+import "roster.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "OCSProto";
+
+// ***
+// These are the messages used in the API-calls
+// ***
+
+// Transaction holds either:
+// - a read request
+// - a write
+// - a key-update
+// - a write and a key-update
+// Additionally, it can hold a slice of bytes with any data that the user wants to
+// add to bind to that transaction.
+// Every Transaction must have a Unix timestamp.
+message Transaction {
+  // 	 Write holds an eventual write-request with a document
+  optional Write write = 1;
+  // 	 Read holds an eventual read-request, which is approved, for a document
+  optional Read read = 2;
+  // 	 Darc defines either the readers allowed for this write-request
+  // 	 or is an update to an existing Darc
+  optional Darc darc = 3;
+  // 	 Meta is any free-form data in that skipblock
+  optional bytes meta = 4;
+  // 	 Unix timestamp to record the transaction creation time
+  required sint64 timestamp = 5;
+}
+
+// Write stores the data and the encrypted secret
+message Write {
+  // 	 Data should be encrypted by the application under the symmetric key in U and Cs
+  required bytes data = 1;
+  // 	 U is the encrypted random value for the ElGamal encryption
+  required bytes u = 2;
+  // 	 Ubar, E and f will be used by the server to verify the writer did
+  // 	 correctly encrypt the key. It binds the policy (the darc) with the
+  // 	 cyphertext.
+  // 	 Ubar is used for the log-equality proof
+  required bytes ubar = 3;
+  // 	 E is the non-interactive challenge as scalar
+  required bytes e = 4;
+  // 	 f is the proof - written in uppercase here so it is an exported field,
+  // 	 but in the OCS-paper it's lowercase.
+  required bytes f = 5;
+  // 	 Cs are the ElGamal parts for the symmetric key material (might
+  // 	 also contain an IV)
+  repeated bytes cs = 6;
+  // 	 ExtraData is clear text and application-specific
+  optional bytes extradata = 7;
+  // 	 Reader points to a darc where the reading-rights are stored
+  required Darc reader = 8;
+  // 	 Signature must come from a valid writer stored in the admin darc of the OCS
+  // 	 skipchain. For backwards-compatibility, this is an optional field.
+  // 	 But for every new write-request, it must be set.
+  optional Signature signature = 9;
+}
+
+// Read stores a read-request which is the secret encrypted under the
+// pseudonym's public key. The Data is the skipblock-id of the skipblock
+// holding the data.
+message Read {
+  // 	 DataID is the document-id for the read request
+  required bytes dataid = 1;
+  // 	 Signature is a Schnorr-signature using the private key of the
+  // 	 reader on the message 'DataID'
+  required Signature signature = 2;
+}
+
+// ReadDoc represents one read-request by a reader.
+message ReadDoc {
+  required Identity reader = 1;
+  required bytes readid = 2;
+  required bytes dataid = 3;
+}
+
+// ***
+// Requests and replies to/from the service
+// ***
+
+// CreateSkipchainsRequest asks for setting up a new OCS-skipchain.
+message CreateSkipchainsRequest {
+  required Roster roster = 1;
+  required Darc writers = 2;
+}
+
+// CreateSkipchainsReply returns the skipchain-id of the OCS-skipchain
+message CreateSkipchainsReply {
+  optional SkipBlock ocs = 1;
+  required bytes x = 2;
+}
+
+// GetDarcPath returns the shortest path from the base darc to a darc
+// containing the identity.
+message GetDarcPath {
+  required bytes ocs = 1;
+  required bytes basedarcid = 2;
+  required Identity identity = 3;
+  required sint32 role = 4;
+}
+
+// GetDarcPathReply returns the shortest path to prove that the identity
+// can sign. If there is no such path, Path is nil.
+message GetDarcPathReply {
+  repeated Darc path = 1;
+}
+
+// UpdateDarc allows to set up new accounts or edit existing
+// read-rights in documents.
+message UpdateDarc {
+  required bytes ocs = 1;
+  required Darc darc = 2;
+}
+
+// UpdateDarcReply contains the skipblock with the account stored
+// in it. If the requested update is invalid, a nil skipblcok will
+// be returned.
+message UpdateDarcReply {
+  optional SkipBlock sb = 1;
+}
+
+// WriteRequest asks the OCS-skipchain to store data on the skipchain.
+// Readers can be empty if Write points to a valid reader that is already
+// stored on the skipchain.
+// The identity of the signature has to be a valid Writer-identity and
+// must be the same as the publisher in the Write-request.
+message WriteRequest {
+  required bytes ocs = 1;
+  required Write write = 2;
+  required Signature signature = 3;
+  optional Darc readers = 4;
+}
+
+// WriteReply returns the created skipblock which is the write-id
+message WriteReply {
+  optional SkipBlock sb = 1;
+}
+
+// ReadRequest asks the OCS-skipchain to allow a reader to access a document.
+message ReadRequest {
+  required bytes ocs = 1;
+  required Read read = 2;
+}
+
+// ReadReply is the added skipblock, if successful.
+message ReadReply {
+  optional SkipBlock sb = 1;
+}
+
+// SharedPublicRequest asks for the shared public key of the corresponding
+// skipchain-ID.
+message SharedPublicRequest {
+  required bytes genesis = 1;
+}
+
+// SharedPublicReply sends back the shared public key.
+message SharedPublicReply {
+  required bytes x = 1;
+}
+
+// DecryptKeyRequest is sent to the service with the read-request. Optionally
+// it can be given an Ephemeral public key under which the reply should be
+// encrypted, but then a Signature on the key from the reader is needed.
+message DecryptKeyRequest {
+  required bytes read = 1;
+  optional bytes ephemeral = 2;
+  optional Signature signature = 3;
+}
+
+// DecryptKeyReply is sent back to the api with the key encrypted under the
+// reader's public key.
+message DecryptKeyReply {
+  repeated bytes cs = 1;
+  required bytes xhatenc = 2;
+  required bytes x = 3;
+}
+
+// GetReadRequests asks for a list of requests
+message GetReadRequests {
+  required bytes start = 1;
+  required sint32 count = 2;
+}
+
+// GetReadRequestsReply returns the requests
+message GetReadRequestsReply {
+  repeated ReadDoc documents = 1;
+}
+
+// GetBunchRequest asks for a list of bunches
+message GetBunchRequest {
+}
+
+// GetBunchReply returns the genesis blocks of all registered OCS.
+message GetBunchReply {
+  repeated SkipBlock bunches = 1;
+}
+
+// GetLatestDarc returns the path to the latest darc. DarcBaseID
+// can be nil if DarcID has version==0.
+message GetLatestDarc {
+  required bytes ocs = 1;
+  required bytes darcid = 2;
+}
+
+// GetLatestDarcReply returns a list of all darcs, starting from
+// the one requested. If the darc has not been found, it
+// returns a nil list.
+message GetLatestDarcReply {
+  repeated Darc darcs = 1;
+}

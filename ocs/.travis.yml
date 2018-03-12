@@ -1,0 +1,28 @@
+sudo: required
+
+language: java
+
+services:
+  - docker
+
+cache:
+  directories:
+  - $HOME/.m2
+
+install:
+  - gimme 1.9
+  - . $HOME/.gimme/envs/go1.9.env
+  - go get github.com/dedis/Coding || true
+  # Because we are using "language: java" the "git clone" is not in the
+  # GOPATH. So make a copy of it over where it is supposed to be.
+  - git clone . `go env GOPATH`/src/github.com/dedis/onchain-secrets
+  - (cd `go env GOPATH`/src/github.com/dedis/onchain-secrets && go get -t ./... )
+  
+script:
+  - make test_fmt test_lint
+  - make docker docker_test
+  - (cd `go env GOPATH`/src/github.com/dedis/onchain-secrets && go test -v -short $(go list ./... | grep -v /vendor/) )
+  - (cd external/java; mvn test)
+
+notifications:
+  email: false
