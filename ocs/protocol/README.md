@@ -1,13 +1,19 @@
+Navigation: [DEDIS](https://github.com/dedis/doc/README.md) ::
+[Cothority](../../README.md) ::
+[Applications](../../doc/Applications.md) ::
+[Onchain Secrets](../README.md) ::
+Protocols
+
 # Protocols
 
 The onet-framework uses protocol at its lowest level to define communication
 patterns betwen nodes. In this directory two protocols are defined that
 are both used by the service:
 
-- dkg - Distributed Key Generation, an implementation of the following paper:
+- [DKG](DKG.md) - Distributed Key Generation, an implementation of the following paper:
 "Secure Distributed Key Generation for Discrete-Log
 Based Cryptosystems" by R. Gennaro, S. Jarecki, H. Krawczyk, and T. Rabin.
-- ocs - onchain-secret, an implementation of the work-in-progress by
+- [ocs](Renecrypt.md) - onchain-secret, an implementation of the work-in-progress by
 Kokoris Kogias Eleftherios <eleftherios.kokoriskogias@epfl.ch>
 
 ## Distributed Key Generation

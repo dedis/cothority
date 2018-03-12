@@ -1,4 +1,10 @@
-# OCSmgr - OnChainSecrets manager
+Navigation: [DEDIS](https://github.com/dedis/doc/README.md) ::
+[Cothority](../README.md) ::
+[Applications](../doc/Applications.md) ::
+[Onchain Secrets](README.md) ::
+Onchain Secrets CLI
+
+# Onchain Secrets CLI
 
 This app interacts with the onchain-secrets service and allows for storing encrypted
 files on the skipchain while only giving the key to registered readers.
@@ -68,8 +74,8 @@ for writing, so anybody knowing the id of the skipchain can fill it up!
 Once the conodes are running, you can setup your first ocs-skipchain:
 
 ```bash
-go get github.com/dedis/onchain-secrets/ocsmgr
-ocsmgr manage create public.toml
+go get github.com/dedis/onchain-secrets/ocs
+ocs manage create public.toml
 ```
 
 ## Writing a file to the skipchain
@@ -79,7 +85,7 @@ keypair for the reader that will be allowed to read it from the skipchain.
 We can also add more than one reader, but let's start with one:
 
 ```bash
-READER=$( ocsmgr keypair )
+READER=$( ocs keypair )
 READER_PRIV=$( echo $READER | cut -f 1 -d : )
 READER_PUB=$( echo $READER | cut -f 2 -d : )
 ```
@@ -89,7 +95,7 @@ the holder of the private key we created to read it:
 
 ```bash
 wget -Oindex.html https://news.ycombinator.com
-FILE_ID=$( ocsmgr write index.html $READER_PUB | grep Stored | cut -f 2 )
+FILE_ID=$( ocs write index.html $READER_PUB | grep Stored | cut -f 2 )
 ```
 
 Now `index.html` is stored on the OCS-skipchain, encrypted with a symmetric key that
@@ -98,7 +104,7 @@ stored on the skipchain and stores it in $FILE_ID.
 
 ## Reading the file from the skipchain
 
-Reading a file from the skipchain is a two-step process, but `ocsmgr`
+Reading a file from the skipchain is a two-step process, but `ocs`
 does both steps with one call:
 
 1. send a read-request to the skipchain
@@ -111,7 +117,7 @@ It will not be sent, but used for creating a signature to authenticate
 to the cothority.
 
 ```bash
-ocsmgr read -o index_copy.html $FILE_ID $READER_PRIV
+ocs read -o index_copy.html $FILE_ID $READER_PRIV
 ```
 
 A verification using `cmp` shows it's the same file:
@@ -123,26 +129,26 @@ cmp index.html index_copy.html && echo The files are the same
 ## Joining an existing skipchain
 
 Instead of running everything from a single account, you can also join an
-existing skipchain. For this we add the `-c second` argument to `ocsmgr`, so
+existing skipchain. For this we add the `-c second` argument to `ocs`, so
 that all configuration will be stored in the `second/`-directory (the default
-directory is `~/.config/ocsmgr`).
+directory is `~/.config/ocs`).
 
 First we need the id of the skipchain:
 
 ```bash
-OCS_ID=$( ocsmgr manage list | cut -f 2 )
+OCS_ID=$( ocs manage list | cut -f 2 )
 ```
 
 And then we can join the previous OCS-skipchain:
 
 ```bash
-ocsmgr -c second manage join public.toml $OCS_ID
+ocs -c second manage join public.toml $OCS_ID
 ```
 
 Now we can request and fetch the file using this chain:
 
 ```bash
-ocsmgr -c second read -o index_copy2.html $FILE_ID $READER_PRIV
+ocs -c second read -o index_copy2.html $FILE_ID $READER_PRIV
 ```
 
 And again we can verify all files are the same:

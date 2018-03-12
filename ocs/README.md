@@ -1,11 +1,13 @@
-# Moving!
+Navigation: [DEDIS](https://github.com/dedis/doc/README.md) ::
+[Cothority](../README.md) ::
+[Applications](../doc/Applications.md) ::
+Onchain Secrets
 
-**Onchain-secrets is moving to https://github.com/dedis/cothority** !
-
-# Onchain secrets
+# Onchain Secrets
 
 This is a first implementation of a skipchain that implements the
-onchain-secrets protocol as developed by DEDIS/EPFL. It allows the
+onchain-secrets protocol as developed by DEDIS/EPFL and presented in the
+[SCARAB](https://eprint.iacr.org/2018/209.pdf) paper. It allows the
 storage of encrypted data on the skipchain with a read-access list
 and then re-encrypts that data so that only one of the readers can
 have access to it. In such a way the access to the data is always
@@ -13,6 +15,9 @@ logged, and eventual leakage can be tracked, or a payment system can
 be set up. Additionally, the list of readers can be updated after the
 write of the encrypted data, so that changing groups of people can access
 the data, or that access can be revoked.
+
+It also uses [Distributed Access Rights Control](darc/README.md) to delegate
+write and read rights to groups of people.
 
 ## Basic Workflow
 
@@ -45,78 +50,15 @@ This is how onchain-secrets work:
     - an **auditor** can traverse the skipchain and see when a reader
     accessed a certain document.
 
-## App
+## Links
 
-The OnChain-Secret Manager (ocsmgr) is a text-based app that interacts with the
-onchain-secrets skipchain. You can find more information in its directory
-at [ocsmgr/README.md]
-
-# Repository
-
-This repository holds the protocol for Distributed Key Generation and
-for the OnChain-Secret key re-encryption. It also holds the service
-that allows a client-app to interact with these protocols. Finally
-there is an app to use the service and to store files securely on
-the skipchain.
-
-## Protocols
-
-Two protocols are used in the onchain-secrets: one to do a Distributed
-Key Generation (DKG) using  "Secure Distributed Key Generation for Discrete-Log
-Based Cryptosystems" by R. Gennaro, S. Jarecki, H. Krawczyk, and T. Rabin.
-
-DKG enables a group of participants to generate a distributed key
-with each participants holding only a share of the associated private key.
-The private key is never computed locally but generated distributively
-whereas the public part of the key is known by every participants.
-
-The second protocol uses that distributed key to re-encrypt a symmetric
-key
-
-## Service
-
-The service ensures the correct usage of the skipchains and offers an
-API to the OCS-protocols:
-
-- creating a skipchain
-- writing an encrypted symmetric key and a data-blob
-- create a read request
-- get public key of the Distributed Key Generator (DKG)
-- get all read requests
-
-The skipchain has the following transactions:
-- write-blocks
-	- the symmetrically encrypted data ( <10MB)
-	- encryption key (secret-share encrypted)
-- read-blocks
-	- signed request from a reader for a data-blob
-- readers
-    - a list of readers that are allowed to access a data-blob. Either a
-    static list, or a modifiable list that can be updated by
-    one or more administrators
-
-## Conode
-
-A Cothority Node (conode) is a daemon that can run the protocols and
-services needed for ocs skipchains. You can run it locally for testing
-purposes or install it on a public server to create public cothorities.
-
-## App
-
-ocsmgr is a minimalistic app that interacts with the onchain-secrets skipchain.
-For more information, refer to the README-file in <a href="ocsmgr/README.md">ocsmgr</a>
-
-## Docker-files
-
-The Dockerfile can be used for putting the nodes in a docker-container. You
-can build it using:
-
-```bash
-make docker
-```
-
-Once it's built, run it with
-
-```bash
-make docker_run
-```
+- [OCS Command Line Interface](CLI.md)
+- [OCS Reencryption Protocol](protocol/Reencrypt.md)
+- [OCS Distributed Key Generation](protocol/DKG.md)
+- [Client API](service/README.md) offers an API to connect from a client to an
+OCS service
+- [Distributed Access Rights Control](darc/README.md) - the data structure used
+to define access control
+- [SCARAB](https://eprint.iacr.org/2018/209.pdf) - Hidden in Plain Sight
+- [Skipchain](../skipchain/README.md) is the storage data structure used for the
+transactions

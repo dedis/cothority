@@ -692,6 +692,9 @@ func (s *Service) verifySignature(msg []byte, sig darc.Signature, base darc.Darc
 // verifyWrite makes sure that the write request is correctly signed from
 // a writer that has a valid path from the admin darc in the ocs skipchain.
 func (s *Service) verifyWrite(ocs skipchain.SkipBlockID, write *Write) error {
+	if err := write.CheckProof(cothority.Suite, ocs); err != nil {
+		return errors.New("proof verification failed: " + err.Error())
+	}
 	s.saveMutex.Lock()
 	log.Lvl3("Verifying write request")
 	defer s.saveMutex.Unlock()
