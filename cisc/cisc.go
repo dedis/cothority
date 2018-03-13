@@ -880,24 +880,30 @@ func followUpdate(c *cli.Context) error {
  * Request, add, retrieve, revoke, renew, list the certificates
  */
 
-//Request a Certificate to Letsencrypt Ca and store it.
+// Request a Certificate to Letsencrypt Ca and store it in the skipchain
+// It receives as argument ... TODO
 func certRequest(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	if c.NArg() < 2 {
-		log.Fatal("Please give a domain name and the corresponding directory containing the www folder")
+		return errors.New("Please give a domain name and the corresponding directory containing the www folder")
 	}
 	domain := c.Args().Get(0)
 	dir := c.Args().Get(1)
 	if _, err := os.Stat("/home/" + dir + "/www"); os.IsNotExist(err) {
-		log.Fatal("The directory does not contain www repo")
+		return errors.New("The directory does not contain www repo")
 	}
-	//Request Certificate (see certificate.go)
-	cert := getCert(dir, domain)
-	//check the validity of the certificate(see certificate.go)
-	log.Print("Verify the validity of the cert:")
 
-	if !check(cert) {
-		log.Fatal("Certificate not valid, can't add it to proposal storage ")
+	// Request Certificate (see certificate.go)
+	cert, err := getCert(dir, domain)
+	if err != nil {
+		return errors.New("Error in requesting certificate: ")
+	}
+
+	// Check the validity of the certificate(see certificate.go)
+	log.Info("Verify the validity of the cert:")
+
+	if !isValid(cert) {
+		//return errors.New("Certificate is not valid, can't add it to proposal storage ")
 	}
 
 	id, err := cfg.findSC(c.Args().Get(2))
@@ -910,14 +916,17 @@ func certRequest(c *cli.Context) error {
 	}
 
 	prop := id.GetProposed()
-	log.Print("Valid Certificate, added to proposal storage")
+	log.Info("Valid Certificate, added to proposal storage")
 	prop.Storage[domain] = cert
-	//send the certificate to proposal
+
+	// Send the certificate to proposal
 	cfg.proposeSendVoteUpdate(id, prop)
 	return cfg.saveConfig(c)
 }
 
-//List only the certificate
+// List all the certificates stored in the skipchain, by giving -v
+// it displays the fullchain.pem by giving -p only the domain certificate
+// and by giving -c it only displays the chain certificate
 func certList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 
@@ -934,49 +943,50 @@ func certList(c *cli.Context) error {
 
 	for k, v := range id.Data.Storage {
 		if isCert(v) {
-			certLE, _ := pemToCertificate(v)
+			certLE, err := pemToCertificate(v)
+			if err != nil {
+				return errors.New("Error in conversion to x509 certificate: " + err.Error())
+			}
 			public, chain := splitCertPublicChain(v)
+			log.Infof("%s - Expiry Date: %s", k, certLE.NotAfter)
 			if c.Bool("v") || c.Bool("p") && c.Bool("c") {
-				log.Infof("%s - Expiry Date: %s", k, certLE.NotAfter)
 				log.Infof("%s", v)
 			} else if c.Bool("p") {
 				log.Info("Certificate of the domain")
-				log.Infof("%s - Expiry Date: %s", k, certLE.NotAfter)
 				log.Infof("%s", public)
 			} else if c.Bool("c") {
 				log.Info("Chain certificate")
-				log.Infof("%s - Expiry Date: %s", k, certLE.NotAfter)
 				log.Infof("%s", chain)
-			} else {
-				log.Infof("%s - Expiry Date: %s", k, certLE.NotAfter)
 			}
 		}
 	}
 
-	return nil
+	return cfg.saveConfig(c)
 }
 
-//Store a cert without request it
+// Store a non-requested certificate by giving as argument the key (will correspond to the key stored in the skipchain)
+// and the .pem file corresponding to the certificate
 func certStore(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	if c.NArg() < 2 {
-		log.Fatal("Please give a key cert pair")
+		return errors.New("Please give a key certificate pair")
 	}
 	domain := c.Args().Get(0)
 	path := c.Args().Get(1)
-	//check the validity of the certificate
+
+	// Check the validity of the certificate
 	certBytes, err := ioutil.ReadFile(path)
 	cert := string(certBytes)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	if !isCert(cert) {
-		log.Fatal("Please give a cert")
+		return errors.New("Please give a certificate")
 	}
-	log.Print("Verify the validity of the cert:")
-	if !check(cert) {
-		log.Fatal("Certificate not valid, can't add it to proposal storage ")
+	log.Info("Verify the validity of the cert:")
+	if !isValid(cert) {
+		return errors.New("Certificate is not valid, can't add it to proposal storage ")
 	}
 
 	id, err := cfg.findSC(c.Args().Get(2))
@@ -989,16 +999,17 @@ func certStore(c *cli.Context) error {
 	}
 
 	prop := id.GetProposed()
-	log.Print("Valid Certificate, added to proposal storage")
+	log.Info("Valid Certificate, added to proposal storage")
 	prop.Storage[domain] = cert
 	cfg.proposeSendVoteUpdate(id, prop)
 	return cfg.saveConfig(c)
 }
 
-//check a certificate
+// Verify the validity of a certificate by giving as argument
+// the key corresponding to this one
 func certVerify(c *cli.Context) error {
 	if c.NArg() < 1 {
-		log.Fatal("Please give the certificate key for verification")
+		return errors.New("Please give the certificate key for verification")
 	}
 	cfg := loadConfigOrFail(c)
 	id, err := cfg.findSC(c.Args().Get(1))
@@ -1015,17 +1026,20 @@ func certVerify(c *cli.Context) error {
 	cert := id.Data.Storage[k]
 
 	if !isCert(cert) {
-		log.Fatal("The values are not a certificate")
+		return errors.New("The values do not correspond to a certificate")
 	}
-	log.Print("Verify the validity of the cert:")
-	check(cert)
+	log.Info("Verify the validity of the cert:")
+	if !isValid(cert) {
+		return errors.New("Certificate is not valid")
+	}
 	return cfg.saveConfig(c)
 }
 
+// Renew a certificate by giving the domain name of this one
 func certRenew(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	if c.NArg() < 1 {
-		log.Fatal("Please give a domain name")
+		return errors.New("Please give a domain name")
 	}
 
 	domain := c.Args().Get(0)
@@ -1038,34 +1052,40 @@ func certRenew(c *cli.Context) error {
 		return errors.New("Please give skipchain-id")
 	}
 
-	log.Info("Checking certificate")
+	log.Info("Checking the certificate")
 
 	if _, ok := id.Data.Storage[domain]; !ok {
-		log.Fatal("Didn't find key", domain, "in the config")
+		return errors.New("Didn't find key " + domain + " in the config")
 	}
 
 	cert := id.Data.Storage[domain]
 	if !isCert(cert) {
-		log.Fatal("The values is not a certificate")
+		return errors.New("The values do not correspond to a certificate")
 	}
-	//renew the cert (see certificate.go)
-	newcert := renewCert(cert)
-	//check the certificate
-	log.Print("Verify the validity of the cert:")
-	if !check(newcert) {
-		log.Fatal("Certificate is not valid, can't add it to proposal storage ")
+	// Renew the cert (see certificate.go)
+	newcert, err := renewCert(cert)
+	if err != nil {
+		return errors.New("Error while renewing certificate: " + err.Error())
+	}
+	// Check the certificate
+	log.Info("Verify the validity of the cert:")
+	if !isValid(newcert) {
+		return errors.New("Certificate is not valid, can't add it to proposal storage ")
 	}
 	prop := id.GetProposed()
-	log.Print("Valid Certificate, added to proposal storage")
+	log.Info("Valid Certificate, added to proposal storage")
 	prop.Storage[domain] = newcert
 	cfg.proposeSendVoteUpdate(id, prop)
 	return cfg.saveConfig(c)
 }
 
+// Revoke a certificate by giving the key corresponding to the certificate
+// and the register key of this certificate. This certificate will be then
+// deleted from the skipchain
 func certRevoke(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	if c.NArg() < 2 {
-		log.Fatal("Please give the certificate to delete and the register key of the certificate")
+		return errors.New("Please give the certificate to delete and the register key of the certificate")
 	}
 
 	id, err := cfg.findSC(c.Args().Get(2))
@@ -1080,22 +1100,28 @@ func certRevoke(c *cli.Context) error {
 	key := c.Args().First()
 	prop := id.GetProposed()
 	if _, ok := prop.Storage[key]; !ok {
-		log.Fatal("Didn't find key", key, "in the config")
+		return errors.New("Didn't find key " + key + " in the config")
 	}
 	cert, _ := prop.Storage[key]
 	if !isCert(cert) {
-		log.Fatal("The values are not a certificate")
+		return errors.New("The values are not a certificate")
 	}
-	//revoke the certificate (see certificate.go)
-	revokeCert(c.Args().Get(1), cert)
+
+	// Revoke the certificate (see certificate.go)
+	err = revokeCert(c.Args().Get(1), cert)
+	if err != nil {
+		return errors.New("Error revoking the certificate: " + err.Error())
+	}
 	delete(prop.Storage, key)
 	cfg.proposeSendVoteUpdate(id, prop)
 	return cfg.saveConfig(c)
 }
 
+// Retrieve the fullchain.pem by giving the key corresponding to the certificate
+// in the skipchain
 func certRetrieve(c *cli.Context) error {
 	if c.NArg() < 1 {
-		log.Fatal("Please give the key of the certificate")
+		return errors.New("Please give the key of the certificate")
 	}
 	k := c.Args().Get(0)
 	cfg := loadConfigOrFail(c)
@@ -1112,14 +1138,14 @@ func certRetrieve(c *cli.Context) error {
 	public, chain := splitCertPublicChain(cert)
 
 	if cert == "" {
-		log.Fatal("Cisc don't store a certificate for this domain ")
+		return errors.New("Cisc do not store a certificate for this key")
 	}
 	if !isCert(cert) {
-		log.Fatal("the values stores in ths key/values pair is not a certificate")
+		return errors.New("The value corresponding to the key is not a certificate")
 	}
-	log.Print("Verify the validity of the cert:")
-	if !check(cert) {
-		log.Fatal("Certificate not valid")
+	log.Info("Verify the validity of the cert:")
+	if !isValid(cert) {
+		//	return errors.New("Certificate is not valid")
 	}
 	log.Info("Valid certificate")
 	log.Info("Retrieve the domain certificate to: " + k + ".pem")
