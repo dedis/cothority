@@ -1,13 +1,42 @@
+syntax = "proto2";
+
+
+message LookupSciper {
+	required string sciper = 1;
+}
+
+// LookupSciperReply returns the elements of the vcard from
+// https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
+message LookupSciperReply {
+	required string fullName = 1;
+	required string email = 2;
+	required string url = 3;
+	required string title = 4;
+}
+
 message Election {
     required string name = 1;
     required uint32 creator = 2;
-    repeated uint32 users = 3;
-    required bytes id = 4;
-    required Roster roster = 5;
-    required bytes key = 6;
-    required uint32 stage = 8;
-    optional string description = 9;
-    optional string end = 10;
+    repeated uint32 users = 3 [packed=true];
+    optional bytes id = 4;
+    optional Roster roster = 5;
+    optional bytes key = 6;
+    optional uint32 stage = 7;
+    repeated uint32 candidates = 8 [packed=true];
+    required int32 maxChoices = 9;
+    required string subtitle = 10;
+    required string moreInfo = 11;
+    required sint64 start = 12;
+    required sint64 end = 13;
+    required string theme = 14;
+    required Footer footer = 15;
+}
+
+message Footer {
+  required string text = 1;
+  required string contactTitle = 2;
+  required string contactPhone = 3;
+  required string contactEmail = 4;
 }
 
 message Ballot {
@@ -50,8 +79,8 @@ message LoginReply {
 
 message Open{
     required string token = 1;
-    required Election election = 2;
-    required bytes id = 3;
+    required bytes id = 2;
+    required Election election = 3;
 }
 
 message OpenReply {
