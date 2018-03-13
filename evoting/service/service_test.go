@@ -66,10 +66,10 @@ func TestService(t *testing.T) {
 		Token: loginAdmin.Token,
 		ID:    replyLink.ID,
 		Election: &lib.Election{
-			Name:        "bla",
-			Creator:     idAdmin,
-			Users:       []uint32{idUser1, idUser2, idUser3, idAdmin},
-			Description: "test",
+			Name:     "bla",
+			Creator:  idAdmin,
+			Users:    []uint32{idUser1, idUser2, idUser3, idAdmin},
+			Subtitle: "test",
 			// The test hopefully ends before the next day...
 			End: time.Now().Unix() + 86400,
 		},
