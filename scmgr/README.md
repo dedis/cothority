@@ -1,8 +1,14 @@
+Navigation: [DEDIS](https://github.com/dedis/doc/README.md) ::
+[Cothority](../README.md) ::
+[Applications](../doc/Applications.md) ::
+[Skipchain](../skipchain/README.md) ::
+SkipChain Manager
+
 # SkipChain Manager - scmgr
 
 Using the skipchain-manager, you can set up, modify and query skipchains.
 For an actual application using the skipchains, refer
-to [https://github.com/dedis/cothority/cisc].
+to [CISC](../cisc/README.md).
 
 The `scmgr` will be running on your local machine and it will communicate with
 one or more remote conodes. For it to work, you need the `public.toml` of a
