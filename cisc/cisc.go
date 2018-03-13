@@ -292,9 +292,9 @@ func scJoin(c *cli.Context) error {
 	return cfg.saveConfig(c)
 }
 
-func scDel(c *cli.Context) error {
+func scLeave(c *cli.Context) error {
 	if c.NArg() == 0 {
-		return errors.New("Please give device to delete")
+		return errors.New("Please give device that you want to remove from identity")
 	}
 	cfg := loadConfigOrFail(c)
 	var id *identity.Identity

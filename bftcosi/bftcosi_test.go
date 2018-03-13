@@ -177,6 +177,7 @@ func TestNodeFailure(t *testing.T) {
 	}
 
 	const TestProtocolName = "DummyBFTCoSiNodeFailure"
+	defaultTimeout = 100 * time.Millisecond
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {

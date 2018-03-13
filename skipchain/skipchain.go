@@ -139,16 +139,13 @@ type Storage struct {
 // The conode servicing the request needs to be part of the actual valid latest
 // skipblock, else it will fail.
 //
-// It takes a hash for the latest valid SkipBlock and a SkipBlock
-// that will be verified. If the verification returns true, the new SkipBlock
-// will be stored, else it will be discarded and an error will be returned.
+// It takes TargetSkipChainID, which is the chain that the client wants to
+// append to, and a new SkipBlock.  The new SkipBlock will be verified. If it
+// passes, then the block is appended to the chain otherwise an error is
+// returned.
 //
-// If the latest block given is nil it will create a new skipchain and store
-// the given block as genesis-block.
-//
-// If the latest block is non-nil and exists, the skipblock will be added to the
-// skipchain after verification that it fits and no other block already has been
-// added.
+// If TargetSkipChainID is an empty slice, the service will create a new
+// skipchain and store the given block as genesis-block.
 func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, error) {
 	// Initial checks on the proposed block.
 	prop := psbd.NewBlock
@@ -169,7 +166,8 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 	var prev *SkipBlock
 	var changed []*SkipBlock
 
-	if psbd.LatestID.IsNull() && psbd.NewBlock.Index == 0 {
+	// If TargetSkipChainID is not given, it is a genesis block.
+	if psbd.TargetSkipChainID.IsNull() {
 		// A new chain is created
 		log.Lvl3("Creating new skipchain with roster", psbd.NewBlock.Roster.List)
 		prop.Height = prop.MaximumHeight
@@ -199,52 +197,40 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 
 	} else {
 
-		// We're appending a block to an existing chain
-		log.Lvlf3("Adding block with roster %+v to %x", psbd.NewBlock.Roster.List, psbd.LatestID)
+		// We're appending a block to an existing chain.
+		log.Lvlf3("Adding block with roster %+v to %x",
+			psbd.NewBlock.Roster.List, psbd.TargetSkipChainID)
 
-		// If they chose to send not LatestID, it means they want us to find it
-		// for them, based on the given NewBlock.GenesisID.
-		if psbd.LatestID.IsNull() {
-			gen := s.db.GetByID(psbd.NewBlock.SkipChainID())
-			if gen != nil {
-				// Ignore error here because even if prev ends up
-				// nil, we'll handle it in the next step.
-				prev, _ = s.db.GetLatest(gen)
-			}
-		} else {
-			prev = s.db.GetByID(psbd.LatestID)
+		// At this point the TargetSkipChainID must have something in
+		// it, so we look for the correct skipchain identified by it.
+		// For backward compatibility, TargetSkipChainID does not need
+		// to be a genesis block, it can also be a block on one of the
+		// chains.
+		if b := s.db.GetByID(psbd.TargetSkipChainID); b != nil {
+			// Ignore error here because even if prev ends up
+			// nil, we'll handle it in the next step.
+			prev, _ = s.db.GetLatest(b)
 		}
 
-		if prev == nil {
-			// Did not find the block they claim is the latest. So
-			// if this is a chain we are supposed to be following
-			// (is friendly), then talk to peers to catch up.
+		var needSync bool
 
+		// If we cannot find the latest block, try to set it to the
+		// genesis and then update it later.
+		if prev == nil {
 			if !s.blockIsFriendly(psbd.NewBlock) {
-				log.Lvlf2("%s: block is not friendly: %x", s.ServerIdentity(), psbd.NewBlock.Hash)
+				log.Lvlf2("%s: block is not friendly: %x",
+					s.ServerIdentity(), psbd.NewBlock.Hash)
 				return nil, errors.New("chain not followed")
 			}
 
-			gen := s.db.GetByID(psbd.NewBlock.SkipChainID())
-			if gen == nil {
+			prev = s.db.GetByID(psbd.NewBlock.SkipChainID())
+			if prev == nil {
 				return nil, errors.New("unknown latest block, unknown chain-id")
 			}
-
-			// If we know of this chain, try to sync it.
-			latest := s.findLatest(gen)
-			log.Lvlf2("Catching up chain %x from index %v", gen.Hash, latest.Index)
-			err := s.syncChain(latest.Roster, latest.Hash)
-			if err != nil {
-				return nil, errors.New("failed to catch up")
-
-			}
-			prev = s.db.GetByID(psbd.LatestID)
-			if prev == nil {
-				return nil, errors.New(
-					"Didn't find latest block, even after catchup")
-
-			}
+			needSync = true
 		}
+
+		// Check the roster.
 		if i, _ := prev.Roster.Search(s.ServerIdentity().ID); i < 0 {
 			return nil, errors.New("this node is not in the previous roster")
 		}
@@ -256,6 +242,19 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		s.chains.lock(chainID)
 		defer s.chains.unlock(chainID)
 
+		// Try to find the latest block if the flag is set.
+		// Synchronisation should only be done when we are locked
+		// because it modifies the database.
+		if needSync {
+			latest := s.findLatest(prev)
+			log.Lvlf2("Catching up chain %x from index %v", prev.SkipChainID(), latest.Index)
+			err := s.syncChain(latest.Roster, latest.Hash)
+			if err != nil {
+				return nil, errors.New("failed to catch up with error: " + err.Error())
+			}
+			prev = latest
+		}
+
 		// Once we have the lock on this skipchain, refresh
 		// prev in case someone else added a block to it while
 		// we were waiting for the lock.
@@ -265,7 +264,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		if len(prev.ForwardLink) > 0 {
 			return nil, errors.New(
 				"the latest block already has a follower")
-
 		}
 
 		prop.MaximumHeight = prev.MaximumHeight
@@ -345,7 +343,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		Previous: prev,
 		Latest:   prop,
 	}
-	log.Lvlf3("Block added, replying. New latest is: %x", prop.Hash)
+	log.Lvlf3("Block added, replying. New latest is: %x, at index %d", prop.Hash, prop.Index)
 	return reply, nil
 }
 

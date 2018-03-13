@@ -1,3 +1,7 @@
+Navigation: [DEDIS](https://github.com/dedis/doc/README.md) ::
+[Cothority](../README.md) ::
+Conode
+
 # Conode
 
 A Conode is a Collective Authority Node and is a server in the cothority.

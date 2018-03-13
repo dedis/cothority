@@ -64,15 +64,14 @@ func init() {
 
 // External calls
 
-// StoreSkipBlock - Requests a new skipblock to be appended to
-// the given SkipBlock. If the given SkipBlock has Index 0
-// a new SkipChain will be created. If LatestID is the zero value,
-// the latest block from the chain with hash NewBlock.GenesisID
-// will be used.
+// StoreSkipBlock - Requests a new skipblock to be appended to the given
+// SkipBlock. If the given TargetSkipChainID is an empty slice, then a genesis
+// block is created.  Otherwise, the new block is added to the skipchain
+// specified by TargetSkipChainID.
 type StoreSkipBlock struct {
-	LatestID  SkipBlockID
-	NewBlock  *SkipBlock
-	Signature *[]byte
+	TargetSkipChainID SkipBlockID
+	NewBlock          *SkipBlock
+	Signature         *[]byte
 }
 
 // StoreSkipBlockReply - returns the signed SkipBlock with updated backlinks
