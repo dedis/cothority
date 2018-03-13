@@ -70,12 +70,12 @@ export default {
 
 /* override - bug in vuetify https://github.com/vuetifyjs/vuetify/issues/3091 */
 .breadcrumbs li:last-child a {
-  cursor: pointer;
-  pointer-events: auto;
+  cursor: pointer !important;
+  pointer-events: auto !important;
 }
 
 .theme--light .breadcrumbs li:last-child .breadcrumbs__item {
-  color: #1976d2;
+  color: #1976d2 !important;
 }
 </style>
 
