@@ -369,14 +369,8 @@ func getCommands() cli.Commands {
 					Name:      "request",
 					Aliases:   []string{"q"},
 					Usage:     "request a certificate to letsencrypt and store it to the skipchain",
-					ArgsUsage: "name of the directory",
+					ArgsUsage: "domain-name cert-dir www-dir",
 					Action:    certRequest,
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "directory, dir",
-							Usage: "write on the www folder",
-						},
-					},
 				},
 				{
 					Name:      "list",
