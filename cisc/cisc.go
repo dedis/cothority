@@ -908,7 +908,7 @@ func certRequest(c *cli.Context) error {
 	log.Info("Verify the validity of the cert:")
 
 	if !isValid(cert) {
-		//return errors.New("Certificate is not valid, can't add it to proposal storage")
+		return errors.New("Certificate is not valid, can't add it to proposal storage")
 	}
 
 	id, err := cfg.findSC(c.Args().Get(3))
@@ -1126,7 +1126,7 @@ func certRevoke(c *cli.Context) error {
 }
 
 // Retrieve the fullchain.pem by giving the key corresponding to the certificate
-// in the skipchain
+// in the skipchain, you can give optionally a directory to write the certificates on it
 func certRetrieve(c *cli.Context) error {
 	if c.NArg() < 1 {
 		return errors.New("Please give the key of the certificate")
@@ -1153,14 +1153,20 @@ func certRetrieve(c *cli.Context) error {
 	}
 	log.Info("Verify the validity of the cert:")
 	if !isValid(cert) {
-		//	return errors.New("Certificate is not valid")
+		return errors.New("Certificate is not valid")
 	}
 	log.Info("Valid certificate")
-	log.Info("Retrieve the domain certificate to: " + k + ".pem")
-	ioutil.WriteFile(k+".pem", []byte(public), 0644)
-	if chain != "" {
-		log.Info("Retrieve the fullchain certificate to: " + k + "_fullchain.pem")
-		ioutil.WriteFile(k+"_fullchain.pem", []byte(cert), 0644)
+	if c.String("directory") != "" {
+		if _, err = os.Stat(c.String("dir")); os.IsNotExist(err) {
+			os.MkdirAll(c.String("dir"), 0777)
+		}
 	}
+	log.Info("Retrieve the domain certificate to: " + c.String("dir") + "/" + k + ".pem")
+	ioutil.WriteFile(c.String("dir")+"/"+k+".pem", []byte(public), 0644)
+	if chain != "" {
+		log.Info("Retrieve the fullchain certificate to: " + c.String("dir") + "/" + k + "_fullchain.pem")
+		ioutil.WriteFile(c.String("dir")+"/"+k+"_fullchain.pem", []byte(cert), 0644)
+	}
+
 	return cfg.saveConfig(c)
 }

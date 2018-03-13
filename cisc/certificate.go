@@ -45,6 +45,9 @@ PfZ+G6Z6h7mjem0Y+iWlkYcV4PIWL1iwBi8saCbGS5jN2p8M+X+Q7UNKEkROb3N6
 KOqkqm57TH2H3eDJAkSnh6/DNFu0Qg==
 -----END CERTIFICATE-----`
 
+// LetsEncryptURL is the URL needed to create a new client
+const LetsEncryptURL = "https://acme-v01.api.letsencrypt.org/directory"
+
 // Convert a certificate of type string into certificate of type x509.Certificate
 func pemToCertificate(certPem string) (*x509.Certificate, error) {
 	block, _ := pem.Decode([]byte(certPem))
@@ -56,14 +59,14 @@ func pemToCertificate(certPem string) (*x509.Certificate, error) {
 }
 
 // Verify if the string given as arguments correspond to a certificate
-// Return true if it is the case and return false otherwise
+// Return true if it is the case and false otherwise
 func isCert(cert string) bool {
 	_, err := pemToCertificate(cert)
 	return err == nil
 }
 
 // Check if the string in argument correspond to a valid certificate
-// Return true if it is the case and return false otherwise
+// Return true if it is the case and false otherwise
 func isValid(cert string) bool {
 	rootPool := x509.NewCertPool()
 	certRoots, err := pemToCertificate(LetsencryptCert)
@@ -89,8 +92,8 @@ func isValid(cert string) bool {
 	return true
 }
 
-// Renew the a certificate that is caracterized by its string version
-// Returns the renewed fullchain.pem
+// Renew the certificate that is caracterized by its string version
+// and returns the new certificate
 func renewCert(cert string) (string, error) {
 
 	oldcert, err := pemToCertificate(cert)
@@ -103,8 +106,8 @@ func renewCert(cert string) (string, error) {
 	certuri := "https://acme-v01.api.letsencrypt.org/acme/cert/0" + serial
 
 	// Create a client to the acme of letsencrypt.
-	//cli, err := letsencrypt.NewClient("https://acme-v01.api.letsencrypt.org/directory")
-	cli, err := letsencrypt.NewClient("https://acme-staging.api.letsencrypt.org/directory")
+	cli, err := letsencrypt.NewClient(LetsEncryptURL)
+
 	if err != nil {
 		return "", err
 	}
@@ -126,16 +129,15 @@ func renewCert(cert string) (string, error) {
 	return string(fullchain), nil
 }
 
-// Revoke a certificate by giving as arguments the path to the registerkey.pem
-// this key is created when registering to the ACME server and the string corresponding
-// to the certificate
-// Returns nothing
+// Revoke a certificate by giving as arguments the certificate
+// and the path to the registerkey.pem key
+// This key is created when registering to the ACME server
 func revokeCert(path string, cert string) error {
 
 	// Create a client to the acme of letsencrypt
 	log.Info("Revoking the key")
-	//cli, err := letsencrypt.NewClient("https://acme-v01.api.letsencrypt.org/directory")
-	cli, err := letsencrypt.NewClient("https://acme-staging.api.letsencrypt.org/directory")
+	cli, err := letsencrypt.NewClient(LetsEncryptURL)
+
 	if err != nil {
 		return err
 	}
@@ -164,22 +166,19 @@ func revokeCert(path string, cert string) error {
 
 // Code adapted from: https://ericchiang.github.io/post/go-letsencrypt/
 // Request a certificate by first registering to the ACME server and then by completing
-// a challenge
-// Returns the certificate as string type
+// a challenge then it returns the certificate as string type
 func getCert(wwwDir string, certDir string, domain string) (string, error) {
 
 	certPath := certDir + "/" + domain
+
 	// Create a client to the acme of letsencrypt.
 	log.Info("Requesting RSA keys")
-	//cli, err := letsencrypt.NewClient("https://acme-v01.api.letsencrypt.org/directory")
-	cli, err := letsencrypt.NewClient("https://acme-staging.api.letsencrypt.org/directory")
+	cli, err := letsencrypt.NewClient(LetsEncryptURL)
+
 	if err != nil {
 		return "", err
 	}
 
-	//if _, err = os.Stat("/home/" + dir + "/cert/" + domain); os.IsNotExist(err) {
-	//	os.MkdirAll("/home/"+dir+"/cert/"+domain, 0777)
-	//}
 	if _, err = os.Stat(certPath); os.IsNotExist(err) {
 		os.MkdirAll(certPath, 0777)
 	}
@@ -269,7 +268,9 @@ func getCert(wwwDir string, certDir string, domain string) (string, error) {
 }
 
 // Code adapted from: https://ericchiang.github.io/post/go-letsencrypt/
-// TODO
+// Generate a new certificate signing request by giving the domain of our serrver
+// and create the private key in the process. This request will be needed finalise the creation
+// of our certificate
 func newCSR(domain string, certPath string) (*x509.CertificateRequest, *rsa.PrivateKey, error) {
 	var certKey *rsa.PrivateKey
 	certKey, err := loadKey(certPath + "/privkey.pem")
