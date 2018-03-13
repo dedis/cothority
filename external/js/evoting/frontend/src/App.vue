@@ -119,5 +119,9 @@ export default {
   .assoc {
     background-color: #aebd00 !important;
   }
+
+  .election-info {
+    text-decoration: none !important;
+  }
 </style>
 

@@ -6,7 +6,7 @@
           <v-toolbar-title class="white--text">{{ election.name }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <div v-if="election.moreInfo">
-            <a target="_blank" :href="election.moreInfo"><v-icon>info</v-icon></a>
+            <a class="election-info" target="_blank" :href="election.moreInfo"><v-icon>info</v-icon></a>
           </div>
         </v-toolbar>
         <v-card-title>
@@ -82,7 +82,7 @@ export default {
 
       const { key } = this.election
       // encrypt the ballot
-      const embedMsg = scipersToUint8Array([this.ballot])
+      const embedMsg = scipersToUint8Array(this.ballot)
       const m = curve.point().embed(embedMsg)
       const r = curve.scalar().pick()
       // u = gr

@@ -2,11 +2,11 @@
   <v-layout row wrap>
     <v-flex sm12 offset-md3 md6>
       <v-card>
-        <v-toolbar card dark>
+        <v-toolbar card dark :class="election.theme">
           <v-toolbar-title class="white--text">{{ election.name }}</v-toolbar-title>
           <v-spacer></v-spacer>
           <div v-if="election.moreInfo">
-            <a target="_blank" :href="election.moreInfo"><v-icon>info</v-icon></a>
+            <a class="election-info" target="_blank" :href="election.moreInfo"><v-icon>info</v-icon></a>
           </div>
         </v-toolbar>
         <v-card-title>
@@ -116,18 +116,16 @@ export default {
           this.$store.state.names[this.creator] = this.creatorName
         })
     }
-    const c = this.candidates(this.election.candidates)
+    const c = this.election.candidates
     for (let i = 0; i < c.length; i++) {
       this.counts[c[i]] = 0
     }
-    const scipers = this.candidates(this.election.candidates)
-    for (let i = 0; i < scipers.length; i++) {
-      const sciper = scipers[i]
+    for (let i = 0; i < c.length; i++) {
+      const sciper = c[i]
       this.candidateNames[sciper] = this.$store.state.names[sciper] || null
       if (this.candidateNames[sciper]) {
         continue
       }
-      console.log(`Looking up ${sciper}`)
       this.$store.state.socket.send('LookupSciper', 'LookupSciperReply', {
         sciper: sciper.toString()
       })

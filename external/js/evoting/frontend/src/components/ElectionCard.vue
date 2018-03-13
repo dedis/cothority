@@ -5,7 +5,7 @@
         <v-toolbar-title class="white--text">{{ name }}</v-toolbar-title>
         <v-spacer></v-spacer>
         <div v-if="moreInfo">
-          <a target="_blank" :href="moreInfo"><v-icon>info</v-icon></a>
+          <a class="election-info" target="_blank" :href="moreInfo"><v-icon>info</v-icon></a>
         </div>
       </v-toolbar>
       <v-card-title class="election-card-name">
