@@ -881,32 +881,37 @@ func followUpdate(c *cli.Context) error {
  */
 
 // Request a Certificate to Letsencrypt Ca and store it in the skipchain
-// It receives as argument ... TODO
+// It receives as argument the domain name the certificate path where
+// the keys and the fullchain will be stored the and the www path to complete
+// the challenge
 func certRequest(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
-	if c.NArg() < 2 {
-		return errors.New("Please give a domain name and the corresponding directory containing the www folder")
+	if c.NArg() < 3 {
+		return errors.New("Please give a domain name, the path to the certificate repository and the path to the www folder")
 	}
 	domain := c.Args().Get(0)
-	dir := c.Args().Get(1)
-	if _, err := os.Stat("/home/" + dir + "/www"); os.IsNotExist(err) {
-		return errors.New("The directory does not contain www repo")
-	}
+	certDir := c.Args().Get(1)
+	wwwDir := c.Args().Get(2)
+	certPath := certDir + "/" + domain
 
 	// Request Certificate (see certificate.go)
-	cert, err := getCert(dir, domain)
+	cert, err := getCert(wwwDir, certDir, domain)
 	if err != nil {
-		return errors.New("Error in requesting certificate: ")
+
+		// Delete generated file if an error happens
+		os.Remove(certPath + "/registerkey.pem")
+		os.Remove(certPath + "/privkey.pem")
+		return errors.New("Error in requesting certificate: " + err.Error())
 	}
 
 	// Check the validity of the certificate(see certificate.go)
 	log.Info("Verify the validity of the cert:")
 
 	if !isValid(cert) {
-		//return errors.New("Certificate is not valid, can't add it to proposal storage ")
+		//return errors.New("Certificate is not valid, can't add it to proposal storage")
 	}
 
-	id, err := cfg.findSC(c.Args().Get(2))
+	id, err := cfg.findSC(c.Args().Get(3))
 	if err != nil {
 		return err
 	}
@@ -964,8 +969,9 @@ func certList(c *cli.Context) error {
 	return cfg.saveConfig(c)
 }
 
-// Store a non-requested certificate by giving as argument the key (will correspond to the key stored in the skipchain)
-// and the .pem file corresponding to the certificate
+// Store a non-requested certificate by giving as argument the key
+// this one will correspond to the key stored in the skipchain
+// and the .pem file corresponding to the certificate file
 func certStore(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	if c.NArg() < 2 {
@@ -1006,7 +1012,7 @@ func certStore(c *cli.Context) error {
 }
 
 // Verify the validity of a certificate by giving as argument
-// the key corresponding to this one
+// the key corresponding to this latter
 func certVerify(c *cli.Context) error {
 	if c.NArg() < 1 {
 		return errors.New("Please give the certificate key for verification")
@@ -1035,7 +1041,7 @@ func certVerify(c *cli.Context) error {
 	return cfg.saveConfig(c)
 }
 
-// Renew a certificate by giving the domain name of this one
+// Renew a certificate by giving the domain name/key
 func certRenew(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	if c.NArg() < 1 {
@@ -1062,11 +1068,13 @@ func certRenew(c *cli.Context) error {
 	if !isCert(cert) {
 		return errors.New("The values do not correspond to a certificate")
 	}
+
 	// Renew the cert (see certificate.go)
 	newcert, err := renewCert(cert)
 	if err != nil {
 		return errors.New("Error while renewing certificate: " + err.Error())
 	}
+
 	// Check the certificate
 	log.Info("Verify the validity of the cert:")
 	if !isValid(newcert) {
