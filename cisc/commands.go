@@ -381,7 +381,7 @@ func getCommands() cli.Commands {
 				{
 					Name:      "list",
 					Aliases:   []string{"l"},
-					Usage:     "list the certificate",
+					Usage:     "List the certificate",
 					ArgsUsage: "",
 					Action:    certList,
 					Flags: []cli.Flag{
@@ -403,14 +403,14 @@ func getCommands() cli.Commands {
 					Name:      "verify",
 					Aliases:   []string{"v"},
 					Usage:     "verify the certificate against the root certificate",
-					ArgsUsage: "key",
+					ArgsUsage: "Key of the certificate",
 					Action:    certVerify,
 				},
 				{
 					Name:      "renew",
 					Aliases:   []string{"u"},
 					Usage:     "renew a certificate",
-					ArgsUsage: "the key",
+					ArgsUsage: "Key of the certificate",
 					Action:    certRenew,
 				},
 				{
@@ -424,7 +424,7 @@ func getCommands() cli.Commands {
 					Name:      "retrieve",
 					Aliases:   []string{"r"},
 					Usage:     "retrieve the certificate of a given key",
-					ArgsUsage: "key and optionnaly a file name to write the retrieved cert ",
+					ArgsUsage: "key and optionally a directory to write the retrieved certificate",
 					Action:    certRetrieve,
 				},
 				{
