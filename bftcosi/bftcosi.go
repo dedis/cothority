@@ -21,9 +21,6 @@ import (
 	"github.com/dedis/onet/log"
 )
 
-// Make this variable so we can set it to 100ms in the tests.
-var defaultTimeout = 10 * time.Second
-
 // VerificationFunction can be passes to each protocol node. It will be called
 // (in a go routine) during the (start/handle) challenge prepare phase of the
 // protocol. The passed message is the same as sent in the challenge phase.
@@ -129,7 +126,7 @@ type collectStructs struct {
 }
 
 // NewBFTCoSiProtocol returns a new bftcosi struct
-func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (*ProtocolBFTCoSi, error) {
+func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction, to time.Duration) (*ProtocolBFTCoSi, error) {
 	// initialize the bftcosi node/protocol-instance
 	bft := &ProtocolBFTCoSi{
 		TreeNodeInstance: n,
@@ -144,7 +141,7 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (
 		allowedExceptions:    (len(n.Tree().List()) - 1) / 3, // also known as t
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
-		Timeout:              defaultTimeout,
+		Timeout:              to,
 	}
 
 	idx, _ := n.Roster().Search(bft.ServerIdentity().ID)
@@ -267,12 +264,6 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 // from a non-root Node.  If the root does not finish correctly, then the
 // signature will be nil.
 func (bft *ProtocolBFTCoSi) Signature() *BFTSignature {
-	bft.successfulMut.Lock()
-	ok := bft.successful
-	bft.successfulMut.Unlock()
-	if !ok {
-		return nil
-	}
 
 	// create exceptions for the nodes that were late to respond in the
 	// commit phase
@@ -285,6 +276,17 @@ func (bft *ProtocolBFTCoSi) Signature() *BFTSignature {
 				Commitment: bft.Suite().Point().Null(),
 			}
 			i++
+		}
+	}
+
+	bft.successfulMut.Lock()
+	ok := bft.successful
+	bft.successfulMut.Unlock()
+	if !ok {
+		return &BFTSignature{
+			Sig:        nil,
+			Msg:        bft.Msg,
+			Exceptions: exceptions,
 		}
 	}
 

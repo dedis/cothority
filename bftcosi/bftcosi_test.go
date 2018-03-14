@@ -46,9 +46,7 @@ func (co *Counters) get(i int) *Counter {
 var counters = &Counters{}
 var cMux sync.Mutex
 
-func init() {
-	defaultTimeout = 100 * time.Millisecond
-}
+const defaultTimeout = 100 * time.Millisecond
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -59,7 +57,7 @@ func TestBftCoSi(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify)
+		return NewBFTCoSiProtocol(n, verify, defaultTimeout)
 	})
 
 	log.Lvl2("Simple count")
@@ -73,7 +71,7 @@ func TestThreshold(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify)
+		return NewBFTCoSiProtocol(n, verify, defaultTimeout)
 	})
 
 	tests := []struct{ h, t int }{
@@ -114,7 +112,7 @@ func TestNodeFailure(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify)
+		return NewBFTCoSiProtocol(n, verify, defaultTimeout)
 	})
 
 	nbrHostsArr := []int{5, 7, 10}
@@ -220,76 +218,6 @@ func verify(m []byte, d []byte) bool {
 		log.Error("Didn't receive correct data")
 		return false
 	}
-	return true
-}
-
-// Verify-function that will refuse if we're the `refuseCount`ed call.
-func verifyRefuse(m []byte, d []byte) bool {
-	c, err := strconv.Atoi(string(d))
-	log.ErrFatal(err)
-	counter := counters.get(c)
-	counter.Lock()
-	defer counter.Unlock()
-	counter.veriCount++
-	if counter.veriCount == counter.refuseCount {
-		log.Lvl2("Refusing for count==", counter.refuseCount)
-		return false
-	}
-	log.Lvl3("Verification called", counter.veriCount, "times")
-	log.Lvl3("Ignoring message:", string(m))
-	if len(d) == 0 {
-		log.Error("Didn't receive correct data")
-		return false
-	}
-	return true
-}
-
-// Verify-function that will refuse for all calls >= `refuseCount`.
-func verifyRefuseMore(m []byte, d []byte) bool {
-	c, err := strconv.Atoi(string(d))
-	log.ErrFatal(err)
-	counter := counters.get(c)
-	counter.Lock()
-	defer counter.Unlock()
-	counter.veriCount++
-	if counter.veriCount <= counter.refuseCount {
-		log.Lvlf2("Refusing for %d<=%d", counter.veriCount,
-			counter.refuseCount)
-		return false
-	}
-	log.Lvl3("Verification called", counter.veriCount, "times")
-	log.Lvl3("Ignoring message:", string(m))
-	if len(d) == 0 {
-		log.Error("Didn't receive correct data")
-		return false
-	}
-	return true
-}
-
-func bitCount(x int) int {
-	count := 0
-	for x != 0 {
-		x &= x - 1
-		count++
-	}
-	return count
-}
-
-// Verify-function that will refuse if the `called` bit is 0.
-func verifyRefuseBit(m []byte, d []byte) bool {
-	c, err := strconv.Atoi(string(d))
-	log.ErrFatal(err)
-	counter := counters.get(c)
-	counter.Lock()
-	defer counter.Unlock()
-	log.Lvl4("Counter", c, counter.refuseCount, counter.veriCount)
-	myBit := uint(counter.veriCount)
-	counter.veriCount++
-	if counter.refuseCount&(1<<myBit) != 0 {
-		log.Lvl2("Refusing for myBit ==", myBit)
-		return false
-	}
-	log.Lvl3("Verification called", counter.veriCount, "times")
 	return true
 }
 

@@ -970,10 +970,10 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(mergeConfigID, s.MergeConfig)
 	s.RegisterProcessorFunc(mergeConfigReplyID, s.MergeConfigReply)
 	s.ProtocolRegister(bftSignFinal, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyFinal)
+		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyFinal, timeout/2)
 	})
 	s.ProtocolRegister(bftSignMerge, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyMerge)
+		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyMerge, timeout/2)
 	})
 	return s, nil
 }

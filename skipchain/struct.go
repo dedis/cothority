@@ -19,8 +19,9 @@ import (
 	"gopkg.in/satori/go.uuid.v1"
 )
 
-// How long to wait before a timeout is generated in the propagation.
-const defaultPropagateTimeout = 15 * time.Second
+// How long to wait before a timeout is generated in the propagation. It is not
+// set to a constant because we'd like to change it in the test.
+var defaultPropagateTimeout = 15 * time.Second
 
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte
@@ -704,6 +705,14 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 		return errors.New("didn't find our block in forward-links")
 	}
 	return nil
+}
+
+func (db *SkipBlockDB) getLatestByID(genID SkipBlockID) (*SkipBlock, error) {
+	gen := db.GetByID(genID)
+	if gen == nil {
+		return nil, fmt.Errorf("cannot find genesis block %x", genID)
+	}
+	return db.GetLatest(gen)
 }
 
 // GetLatest searches for the latest available block for that skipblock.
