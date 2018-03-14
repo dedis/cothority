@@ -929,9 +929,9 @@ func certRequest(c *cli.Context) error {
 	return cfg.saveConfig(c)
 }
 
-// List all the certificates stored in the skipchain, by giving -v
-// it displays the fullchain.pem by giving -p only the domain certificate
-// and by giving -c it only displays the chain certificate
+// List all the certificates stored in the skipchain, by giving -v it displays
+// the fullchain.pem by giving -p only the domain certificate and by giving -c
+// it only displays the chain certificate
 func certList(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 
@@ -969,9 +969,9 @@ func certList(c *cli.Context) error {
 	return cfg.saveConfig(c)
 }
 
-// Store a non-requested certificate by giving as argument the key
-// this one will correspond to the key stored in the skipchain
-// and the .pem file corresponding to the certificate file
+// Store a non-requested certificate by giving as argument the key this one will
+// correspond to the key stored in the skipchain and the .pem file corresponding
+// to the certificate file
 func certStore(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	if c.NArg() < 2 {
@@ -1011,8 +1011,8 @@ func certStore(c *cli.Context) error {
 	return cfg.saveConfig(c)
 }
 
-// Verify the validity of a certificate by giving as argument
-// the key corresponding to this latter
+// Verify the validity of a certificate by giving as argument the key
+// corresponding to this latter
 func certVerify(c *cli.Context) error {
 	if c.NArg() < 1 {
 		return errors.New("Please give the certificate key for verification")
@@ -1087,9 +1087,9 @@ func certRenew(c *cli.Context) error {
 	return cfg.saveConfig(c)
 }
 
-// Revoke a certificate by giving the key corresponding to the certificate
-// and the register key of this certificate. This certificate will be then
-// deleted from the skipchain
+// Revoke a certificate by giving the key corresponding to the certificate and
+// the register key of this certificate. This certificate will be then deleted
+// from the skipchain
 func certRevoke(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	if c.NArg() < 2 {

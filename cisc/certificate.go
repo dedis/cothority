@@ -129,9 +129,9 @@ func renewCert(cert string) (string, error) {
 	return string(fullchain), nil
 }
 
-// Revoke a certificate by giving as arguments the certificate
-// and the path to the registerkey.pem key
-// This key is created when registering to the ACME server
+// Revoke a certificate by giving as arguments the certificate and the path to
+// the registerkey.pem key. This key is created when registering to the ACME
+// server
 func revokeCert(path string, cert string) error {
 
 	// Create a client to the acme of letsencrypt
@@ -165,8 +165,8 @@ func revokeCert(path string, cert string) error {
 }
 
 // Code adapted from: https://ericchiang.github.io/post/go-letsencrypt/
-// Request a certificate by first registering to the ACME server and then by completing
-// a challenge then it returns the certificate as string type
+// Request a certificate by first registering to the ACME server and then by
+// completing a challenge then it returns the certificate as string type
 func getCert(wwwDir string, certDir string, domain string) (string, error) {
 
 	certPath := certDir + "/" + domain
@@ -268,9 +268,9 @@ func getCert(wwwDir string, certDir string, domain string) (string, error) {
 }
 
 // Code adapted from: https://ericchiang.github.io/post/go-letsencrypt/
-// Generate a new certificate signing request by giving the domain of our serrver
-// and create the private key in the process. This request will be needed finalise the creation
-// of our certificate
+// Generate a new certificate signing request by giving the domain of our server
+// and create the private key in the process. This request will be needed to
+// finalise the creation of our certificate
 func newCSR(domain string, certPath string) (*x509.CertificateRequest, *rsa.PrivateKey, error) {
 	var certKey *rsa.PrivateKey
 	certKey, err := loadKey(certPath + "/privkey.pem")
