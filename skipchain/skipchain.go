@@ -52,6 +52,7 @@ type Service struct {
 	bftTimeout         time.Duration
 	propTimeout        time.Duration
 	chains             chainLocker
+	mustNotFail        bool
 }
 
 type chainLocker struct {
@@ -194,7 +195,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 
 	} else {
 		// We're appending a block to an existing chain
-		log.LLvlf3("Adding block with roster %+v to latest -%x-", psbd.NewBlock.Roster.List, psbd.LatestID)
+		log.Lvlf3("Adding block with roster %+v to latest -%x-", psbd.NewBlock.Roster.List, psbd.LatestID)
 
 		// If they chose to send not LatestID, it means they want us to find it
 		// for them, based on the given NewBlock.GenesisID.
@@ -243,7 +244,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		// Now that we are sure we are responsible for this chain,
 		// make sure that concurrent requests to us to append to
 		// it can not happen.
-		log.LLvl3("Going to lock this chain to append block")
+		log.Lvl3("Going to lock this chain to append block")
 		chainID := prev.SkipChainID()
 		s.chains.lock(chainID)
 		defer s.chains.unlock(chainID)
@@ -416,7 +417,7 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 // in the roster, in order to find an answer, even in the case that a few
 // nodes in the network are down.
 func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*SkipBlock, error) {
-	subCount := (len(roster.List)-1)/3 + 1
+	subCount := len(roster.List) - (len(roster.List)-1)/3
 	r := roster.RandomSubset(s.ServerIdentity(), subCount)
 	tr := r.GenerateStar()
 	pi, err := s.CreateProtocol(ProtocolGetBlocks, tr)
@@ -870,6 +871,17 @@ func (s *Service) deprecatedProcessorGetBlockReply(env *network.Envelope) {
 // verifyFollowBlock makes sure that a signature-request for a forward-link
 // is valid.
 func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
+	trySync := func(newest *SkipBlock) error {
+		latest, err := s.db.getLatestByID(newest.SkipChainID())
+		if err != nil {
+			return fmt.Errorf("failed to sync skipchain: %v", err)
+		}
+		if err = s.syncChain(newest.Roster, latest.SkipChainID()); err != nil {
+			return fmt.Errorf("failed to sync skipchain: %v", err)
+		}
+		return nil
+	}
+
 	err := func() error {
 		_, fsInt, err := network.Unmarshal(data, cothority.Suite)
 		if err != nil {
@@ -881,7 +893,13 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		}
 		previous := s.db.GetByID(fs.Previous)
 		if previous == nil {
-			return errors.New("Didn't find newest block")
+			if err = trySync(fs.Newest); err != nil {
+				return err
+			}
+			previous = s.db.GetByID(fs.Previous)
+			if previous == nil {
+				return errors.New("Didn't find newest block")
+			}
 		}
 		newest := fs.Newest
 		if len(newest.BackLinkIDs) <= fs.TargetHeight {
@@ -895,12 +913,8 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		}
 		target := s.db.GetByID(newest.BackLinkIDs[fs.TargetHeight])
 		if target == nil {
-			latest, err := s.db.getLatestByID(newest.SkipChainID())
-			if err != nil {
+			if err = trySync(newest); err != nil {
 				return err
-			}
-			if err = s.syncChain(newest.Roster, latest.SkipChainID()); err != nil {
-				return fmt.Errorf("failed to sync skipchain: %v", err)
 			}
 			target = s.db.GetByID(newest.BackLinkIDs[fs.TargetHeight])
 			if target == nil {
@@ -1088,7 +1102,7 @@ func (s *Service) addForwardLink(src, dst *SkipBlock) error {
 
 // startBFT starts a BFT-protocol with the given parameters.
 func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) (*bftcosi.BFTSignature, error) {
-	log.LLvl4(s.ServerIdentity().Address, "starting BFT -", proto)
+	log.Lvl4(s.ServerIdentity().Address, "starting BFT -", proto)
 	bf := 2
 	if len(roster.List)-1 > 2 {
 		bf = len(roster.List) - 1
@@ -1142,6 +1156,9 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	// Register the function generating the protocol instance
 	root.Msg = msg
 	root.Data = data
+	if s.mustNotFail {
+		root.AllowedExceptions = 0
+	}
 
 	if s.bftTimeout != 0 {
 		root.Timeout = s.bftTimeout
@@ -1160,7 +1177,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 		if sig.Sig == nil {
 			return nil, errors.New("couldn't sign forward-link")
 		}
-		log.LLvl4(s.ServerIdentity().Address, "BFT completed -", proto)
+		log.Lvl4(s.ServerIdentity().Address, "BFT completed -", proto)
 		return sig, nil
 	case <-time.After(s.propTimeout):
 		return nil, errors.New("timed out while waiting for signature during " + s.propTimeout.String())

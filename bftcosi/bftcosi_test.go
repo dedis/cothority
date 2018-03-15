@@ -93,7 +93,7 @@ func TestThreshold(t *testing.T) {
 		node, err := local.CreateProtocol(TestProtocolName, tree)
 		log.ErrFatal(err)
 		bc := node.(*ProtocolBFTCoSi)
-		assert.Equal(t, thr, bc.allowedExceptions, "hosts was %d", hosts)
+		assert.Equal(t, thr, bc.AllowedExceptions, "hosts was %d", hosts)
 
 		// we need to wait a bit for the protocols to finish because
 		// some might not receive challenges and only exit after the

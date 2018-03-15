@@ -42,11 +42,12 @@ type ProtocolBFTCoSi struct {
 	Data []byte
 	// Timeout is how long to wait while gathering commits.
 	Timeout time.Duration
+	// AllowedExceptions for how much exception is allowed. If more than
+	// AllowedExceptions number of conodes refuse to sign, no signature
+	// will be created. It is set to (n-1)/3 by default.
+	AllowedExceptions int
 	// last block computed
 	lastBlock string
-	// allowedExceptions for how much exception is allowed. If more than allowedExceptions number
-	// of conodes refuse to sign, no signature will be created.
-	allowedExceptions int
 	// our index in the Roster list
 	index int
 
@@ -127,6 +128,7 @@ type collectStructs struct {
 
 // NewBFTCoSiProtocol returns a new bftcosi struct
 func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction, to time.Duration) (*ProtocolBFTCoSi, error) {
+	t := (len(n.Tree().List()) - 1) / 3
 	// initialize the bftcosi node/protocol-instance
 	bft := &ProtocolBFTCoSi{
 		TreeNodeInstance: n,
@@ -138,7 +140,7 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction, t
 		},
 		verifyChan:           make(chan bool),
 		VerificationFunction: verify,
-		allowedExceptions:    (len(n.Tree().List()) - 1) / 3, // also known as t
+		AllowedExceptions:    t,
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
 		Timeout:              to,
@@ -268,7 +270,7 @@ func (bft *ProtocolBFTCoSi) Signature() *BFTSignature {
 	// create exceptions for the nodes that were late to respond in the
 	// commit phase
 	var i int
-	exceptions := make([]Exception, bft.allowedExceptions)
+	exceptions := make([]Exception, bft.AllowedExceptions)
 	for _, tn := range bft.Children() {
 		if _, ok := bft.respondedNodesCommit[tn.ServerIdentity.Public]; !ok {
 			exceptions[i] = Exception{
@@ -338,7 +340,7 @@ func (bft *ProtocolBFTCoSi) handleAnnouncement(msg announceChan) error {
 		return bft.startCommitment(ann.TYPE)
 	}
 	errs := bft.SendToChildrenInParallel(&ann)
-	if len(errs) > bft.allowedExceptions {
+	if len(errs) > bft.AllowedExceptions {
 		return errs[0]
 	}
 	return nil
@@ -441,7 +443,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 	}
 
 	// check if we have no more than threshold failed nodes
-	if len(ch.Signature.Exceptions) > int(bft.allowedExceptions) {
+	if len(ch.Signature.Exceptions) > int(bft.AllowedExceptions) {
 		return fmt.Errorf("%s: More than threshold (%d/%d) refused to sign - aborting",
 			bft.Roster(), len(ch.Signature.Exceptions), len(bft.Roster().List))
 	}
@@ -589,7 +591,7 @@ func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error
 				}
 				bft.respondedNodesPrepare[from] = msg.TreeNode
 				bft.tempPrepareCommit = append(bft.tempPrepareCommit, comm.Commitment)
-				if t == RoundPrepare && len(bft.tempPrepareCommit) == len(bft.Children())-bft.allowedExceptions {
+				if t == RoundPrepare && len(bft.tempPrepareCommit) == len(bft.Children())-bft.AllowedExceptions {
 					bft.committedInPreparePhase = true
 					return nil
 				}
@@ -603,7 +605,7 @@ func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error
 				}
 				bft.respondedNodesCommit[from] = msg.TreeNode
 				bft.tempCommitCommit = append(bft.tempCommitCommit, comm.Commitment)
-				if t == RoundCommit && len(bft.tempCommitCommit) == len(bft.Children())-bft.allowedExceptions {
+				if t == RoundCommit && len(bft.tempCommitCommit) == len(bft.Children())-bft.AllowedExceptions {
 					bft.committedInCommitPhase = true
 					return nil
 				}
