@@ -487,7 +487,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 
 	// return if we're not root
 	if !bft.IsRoot() {
-		return bft.SendTo(bft.Parent(), bzrReturn)
+		return bft.SendToParent(bzrReturn)
 	}
 
 	// Since cosi does not support exceptions yet, we have to remove the

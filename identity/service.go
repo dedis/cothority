@@ -788,9 +788,5 @@ func newIdentityService(c *onet.Context) (onet.Service, error) {
 	s.tagsLimits = make(map[string]int8)
 	s.pointsLimits = make(map[string]int8)
 
-	// we do not support failure
-	scs := c.Service(skipchain.ServiceName).(*skipchain.Service)
-	scs.MustNotFail = true
-
 	return s, nil
 }

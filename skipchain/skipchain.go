@@ -42,9 +42,6 @@ func init() {
 // Service handles adding new SkipBlocks
 type Service struct {
 	*onet.ServiceProcessor
-	// MustNotFail is a flag to determine whether failures are allowed in
-	// the bft protocol.
-	MustNotFail        bool
 	db                 *SkipBlockDB
 	propagate          messaging.PropagationFunc
 	verifiers          map[VerifierID]SkipBlockVerifier
@@ -1158,9 +1155,6 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	// Register the function generating the protocol instance
 	root.Msg = msg
 	root.Data = data
-	if s.MustNotFail {
-		root.AllowedExceptions = 0
-	}
 
 	if s.bftTimeout != 0 {
 		root.Timeout = s.bftTimeout

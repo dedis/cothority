@@ -56,10 +56,6 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	// for us.
 	deadServer := servers[len(servers)-1]
 
-	if !fail {
-		service.MustNotFail = true
-	}
-
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
 	log.ErrFatal(err)
@@ -148,7 +144,6 @@ func TestService_GetUpdateChain(t *testing.T) {
 	sbCount := conodes - 1
 	servers, el, gs := local.MakeHELS(conodes, skipchainSID, cothority.Suite)
 	s := gs.(*Service)
-	s.MustNotFail = true
 
 	sbs := make([]*SkipBlock, sbCount)
 	var err error
@@ -321,7 +316,6 @@ func TestService_Verification(t *testing.T) {
 	sbLength := 4
 	_, el, genService := local.MakeHELS(sbLength, skipchainSID, cothority.Suite)
 	service := genService.(*Service)
-	service.MustNotFail = true
 
 	elRoot := onet.NewRoster(el.List[0:3])
 	sbRoot, err := makeGenesisRoster(service, elRoot)
@@ -566,7 +560,6 @@ func TestService_ParallelGenesis(t *testing.T) {
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, roster, s1 := makeHELS(local, 5)
-	s1.MustNotFail = true
 	sb0 := &SkipBlock{
 		SkipBlockFix: &SkipBlockFix{
 			MaximumHeight: 1,
@@ -617,7 +610,6 @@ func TestService_ParallelStoreBlock(t *testing.T) {
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, roster, s1 := makeHELS(local, 5)
-	s1.MustNotFail = true
 	ssb := &StoreSkipBlock{
 		NewBlock: &SkipBlock{
 			SkipBlockFix: &SkipBlockFix{
@@ -682,7 +674,6 @@ func TestService_Propagation(t *testing.T) {
 		services[i] = s.(*Service)
 	}
 	service := genService.(*Service)
-	service.MustNotFail = true
 
 	// longer timeout because we have a lot of nodes
 	service.propTimeout = 20 * time.Second
@@ -1149,7 +1140,4 @@ func nukeBlocksFrom(t *testing.T, db *SkipBlockDB, where SkipBlockID) {
 		}
 		where = sb.ForwardLink[0].Hash()
 	}
-}
-
-func delayedCloseAll(local *onet.LocalTest) {
 }
