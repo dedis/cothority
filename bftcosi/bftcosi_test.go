@@ -46,6 +46,8 @@ func (co *Counters) get(i int) *Counter {
 var counters = &Counters{}
 var cMux sync.Mutex
 
+const defaultTimeout = 100 * time.Millisecond
+
 func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
@@ -55,11 +57,11 @@ func TestBftCoSi(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify)
+		return NewBFTCoSiProtocol(n, verify, defaultTimeout)
 	})
 
 	log.Lvl2("Simple count")
-	runProtocol(t, TestProtocolName, 0)
+	runProtocol(t, TestProtocolName, 0, []int{3, 4, 13})
 }
 
 var tSuite = cothority.Suite
@@ -69,16 +71,16 @@ func TestThreshold(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify)
+		return NewBFTCoSiProtocol(n, verify, defaultTimeout)
 	})
 
 	tests := []struct{ h, t int }{
 		{1, 0},
 		{2, 0},
-		{3, 1},
+		{3, 0},
 		{4, 1},
 		{5, 1},
-		{6, 2},
+		{7, 2},
 	}
 	for _, s := range tests {
 		local := onet.NewLocalTest(tSuite)
@@ -92,83 +94,13 @@ func TestThreshold(t *testing.T) {
 		log.ErrFatal(err)
 		bc := node.(*ProtocolBFTCoSi)
 		assert.Equal(t, thr, bc.allowedExceptions, "hosts was %d", hosts)
+
+		// we need to wait a bit for the protocols to finish because
+		// some might not receive challenges and only exit after the
+		// timeout
+		time.Sleep(defaultTimeout * 2)
 		local.CloseAll()
 	}
-}
-
-func TestCheckRefuse(t *testing.T) {
-	const TestProtocolName = "DummyBFTCoSiRefuse"
-
-	// Register test protocol using BFTCoSi
-	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verifyRefuse)
-	})
-
-	for refuseCount := 1; refuseCount <= 3; refuseCount++ {
-		log.Lvl2("Refuse at", refuseCount)
-		runProtocol(t, TestProtocolName, refuseCount)
-	}
-}
-
-func TestCheckRefuseMore(t *testing.T) {
-	const TestProtocolName = "DummyBFTCoSiRefuseMore"
-
-	// Register test protocol using BFTCoSi
-	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verifyRefuseMore)
-	})
-
-	for _, n := range []int{3, 4, 13} {
-		for refuseCount := 1; refuseCount <= 3; refuseCount++ {
-			log.Lvl2("RefuseMore at", refuseCount)
-			runProtocolOnce(t, n, TestProtocolName, refuseCount, refuseCount <= n-(n+1)*2/3)
-		}
-	}
-}
-
-func TestCheckRefuseBit(t *testing.T) {
-	const TestProtocolName = "DummyBFTCoSiRefuseBit"
-
-	// Register test protocol using BFTCoSi
-	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verifyRefuseBit)
-	})
-
-	wg := sync.WaitGroup{}
-	for _, n := range []int{3} {
-		for refuseCount := 0; refuseCount < 1<<uint(n); refuseCount++ {
-			wg.Add(1)
-			go func(n, fc int) {
-				log.Lvl1("RefuseBit at", n, fc)
-				runProtocolOnce(t, n, TestProtocolName, fc, bitCount(fc) < (n+1)*2/3)
-				log.Lvl3("Done with", n, fc)
-				wg.Done()
-			}(n, refuseCount)
-		}
-	}
-	wg.Wait()
-}
-
-func TestCheckRefuseParallel(t *testing.T) {
-	//t.Skip("Skipping and hoping it will be resolved with #467")
-	const TestProtocolName = "DummyBFTCoSiRefuseParallel"
-
-	// Register test protocol using BFTCoSi
-	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verifyRefuseBit)
-	})
-
-	wg := sync.WaitGroup{}
-	n := 3
-	for fc := 0; fc < 8; fc++ {
-		wg.Add(1)
-		go func(fc int) {
-			runProtocolOnce(t, n, TestProtocolName, fc, bitCount(fc) < (n+1)*2/3)
-			log.Lvl3("Done with", n, fc)
-			wg.Done()
-		}(fc)
-	}
-	wg.Wait()
 }
 
 func TestNodeFailure(t *testing.T) {
@@ -177,24 +109,23 @@ func TestNodeFailure(t *testing.T) {
 	}
 
 	const TestProtocolName = "DummyBFTCoSiNodeFailure"
-	defaultTimeout = 100 * time.Millisecond
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify)
+		return NewBFTCoSiProtocol(n, verify, defaultTimeout)
 	})
 
 	nbrHostsArr := []int{5, 7, 10}
 	for _, nbrHosts := range nbrHostsArr {
-		if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, nbrHosts/3, nbrHosts-1); err != nil {
+		if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, 1, nbrHosts-1); err != nil {
 			t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, TestProtocolName, 0, true, err)
 		}
 	}
 }
 
-func runProtocol(t *testing.T, name string, refuseCount int) {
-	for _, nbrHosts := range []int{3, 4, 13} {
-		runProtocolOnce(t, nbrHosts, name, refuseCount, true)
+func runProtocol(t *testing.T, name string, refuseCount int, hosts []int) {
+	for _, n := range hosts {
+		runProtocolOnce(t, n, name, refuseCount, true)
 	}
 }
 
@@ -242,10 +173,8 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	// kill the leafs first
 	killCount = min(killCount, len(servers))
 	for i := len(servers) - 1; i > len(servers)-killCount-1; i-- {
-		log.Lvl3("Closing server:", servers[i].ServerIdentity.Public, servers[i].Address())
-		if e := servers[i].Close(); e != nil {
-			return e
-		}
+		log.Lvl3("Pausing server:", servers[i].ServerIdentity.Public, servers[i].Address())
+		servers[i].Pause()
 	}
 
 	go root.Start()
@@ -255,7 +184,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	select {
 	case <-done:
 		counter.Lock()
-		if counter.veriCount != nbrHosts-killCount {
+		if counter.veriCount < nbrHosts-((nbrHosts-1)/3) {
 			return errors.New("each host should have called verification")
 		}
 		// if assert refuses we don't care for unlocking (t.Refuse)
@@ -289,76 +218,6 @@ func verify(m []byte, d []byte) bool {
 		log.Error("Didn't receive correct data")
 		return false
 	}
-	return true
-}
-
-// Verify-function that will refuse if we're the `refuseCount`ed call.
-func verifyRefuse(m []byte, d []byte) bool {
-	c, err := strconv.Atoi(string(d))
-	log.ErrFatal(err)
-	counter := counters.get(c)
-	counter.Lock()
-	defer counter.Unlock()
-	counter.veriCount++
-	if counter.veriCount == counter.refuseCount {
-		log.Lvl2("Refusing for count==", counter.refuseCount)
-		return false
-	}
-	log.Lvl3("Verification called", counter.veriCount, "times")
-	log.Lvl3("Ignoring message:", string(m))
-	if len(d) == 0 {
-		log.Error("Didn't receive correct data")
-		return false
-	}
-	return true
-}
-
-// Verify-function that will refuse for all calls >= `refuseCount`.
-func verifyRefuseMore(m []byte, d []byte) bool {
-	c, err := strconv.Atoi(string(d))
-	log.ErrFatal(err)
-	counter := counters.get(c)
-	counter.Lock()
-	defer counter.Unlock()
-	counter.veriCount++
-	if counter.veriCount <= counter.refuseCount {
-		log.Lvlf2("Refusing for %d<=%d", counter.veriCount,
-			counter.refuseCount)
-		return false
-	}
-	log.Lvl3("Verification called", counter.veriCount, "times")
-	log.Lvl3("Ignoring message:", string(m))
-	if len(d) == 0 {
-		log.Error("Didn't receive correct data")
-		return false
-	}
-	return true
-}
-
-func bitCount(x int) int {
-	count := 0
-	for x != 0 {
-		x &= x - 1
-		count++
-	}
-	return count
-}
-
-// Verify-function that will refuse if the `called` bit is 0.
-func verifyRefuseBit(m []byte, d []byte) bool {
-	c, err := strconv.Atoi(string(d))
-	log.ErrFatal(err)
-	counter := counters.get(c)
-	counter.Lock()
-	defer counter.Unlock()
-	log.Lvl4("Counter", c, counter.refuseCount, counter.veriCount)
-	myBit := uint(counter.veriCount)
-	counter.veriCount++
-	if counter.refuseCount&(1<<myBit) != 0 {
-		log.Lvl2("Refusing for myBit ==", myBit)
-		return false
-	}
-	log.Lvl3("Verification called", counter.veriCount, "times")
 	return true
 }
 

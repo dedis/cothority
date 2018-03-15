@@ -25,9 +25,6 @@ import (
 	"github.com/dedis/onet/log"
 )
 
-// Make this variable so we can set it to 100ms in the tests.
-var defaultTimeout = 10 * time.Second
-
 // VerificationFunction can be passes to each protocol node. It will be called
 // (in a go routine) during the (start/handle) challenge prepare phase of the
 // protocol. The passed message is the same as sent in the challenge phase.
@@ -51,10 +48,6 @@ type ProtocolBFTCoSi struct {
 	Timeout time.Duration
 	// last block computed
 	lastBlock string
-	// refusal to sign for the commit phase or not. This flag is set during the
-	// Challenge of the commit phase and will be used during the response of the
-	// commit phase to put an exception or to sign.
-	signRefusal bool
 	// allowedExceptions for how much exception is allowed. If more than allowedExceptions number
 	// of conodes refuse to sign, no signature will be created.
 	allowedExceptions int
@@ -95,6 +88,9 @@ type ProtocolBFTCoSi struct {
 	closing bool
 	// mutex for closing down properly
 	closingMutex sync.Mutex
+	// successful is a flag to indicate whether the protocol finished successfully
+	successful    bool
+	successfulMut sync.Mutex
 }
 
 // collectStructs holds the variables that are used during the protocol to hold
@@ -114,34 +110,42 @@ type collectStructs struct {
 	tmpMutex sync.Mutex
 	// exceptions given during the rounds that is used in the signature
 	tempExceptions []Exception
+	// respondedNodesPrepare stores a list of nodes that sent a commit
+	// message in the prepare phase
+	respondedNodesPrepare map[kyber.Point]*onet.TreeNode
+	// respondedNodesCommit stores a list of nodes that sent a commit
+	// message in the commit phase
+	respondedNodesCommit map[kyber.Point]*onet.TreeNode
 	// temporary buffer of "prepare" commitments
 	tempPrepareCommit []kyber.Point
 	// temporary buffer of "commit" commitments
 	tempCommitCommit []kyber.Point
 	// temporary buffer of "prepare" responses
 	tempPrepareResponse []kyber.Scalar
-	// temporary buffer of the public keys for nodes that responded
-	tempPrepareResponsePublics []kyber.Point
 	// temporary buffer of "commit" responses
 	tempCommitResponse []kyber.Scalar
+
+	committedInPreparePhase bool
+	committedInCommitPhase  bool
 }
 
 // NewBFTCoSiProtocol returns a new bftcosi struct
-func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (*ProtocolBFTCoSi, error) {
+func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction, to time.Duration) (*ProtocolBFTCoSi, error) {
 	// initialize the bftcosi node/protocol-instance
-	nodes := len(n.Tree().List())
 	bft := &ProtocolBFTCoSi{
 		TreeNodeInstance: n,
 		collectStructs: collectStructs{
-			prepare: crypto.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
-			commit:  crypto.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
+			prepare:               crypto.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
+			commit:                crypto.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
+			respondedNodesPrepare: make(map[kyber.Point]*onet.TreeNode),
+			respondedNodesCommit:  make(map[kyber.Point]*onet.TreeNode),
 		},
 		verifyChan:           make(chan bool),
 		VerificationFunction: verify,
-		allowedExceptions:    nodes - (nodes+1)*2/3,
+		allowedExceptions:    (len(n.Tree().List()) - 1) / 3, // also known as t
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
-		Timeout:              defaultTimeout,
+		Timeout:              to,
 	}
 
 	idx, _ := n.Roster().Search(bft.ServerIdentity().ID)
@@ -156,7 +160,6 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (
 	}
 
 	n.OnDoneCallback(bft.nodeDone)
-
 	return bft, nil
 }
 
@@ -178,6 +181,8 @@ func (bft *ProtocolBFTCoSi) Start() error {
 // By closing the channels for the leafs we can avoid having
 // `if !bft.IsLeaf` in the code.
 func (bft *ProtocolBFTCoSi) Dispatch() error {
+	defer bft.Done()
+
 	bft.closingMutex.Lock()
 	if bft.closing {
 		return nil
@@ -214,59 +219,85 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 		}
 	}
 
-	// Finish the prepare round
-	if err := bft.handleChallengePrepare(<-bft.challengePrepareChan); err != nil {
-		return err
-	}
-	if !bft.IsLeaf() {
-		if err := bft.handleResponsePrepare(bft.responseChan); err != nil {
-			return err
-		}
-	}
+	var gotChallengePrepare bool
+	for {
+		select {
+		case c := <-bft.challengePrepareChan:
+			if gotChallengePrepare {
+				log.Warn(bft.Name(), "got multiple challenges - potential ddos")
+				continue
+			}
+			// Finish the prepare round
+			if err := bft.handleChallengePrepare(c); err != nil {
+				return err
+			}
+			if !bft.IsLeaf() {
+				if err := bft.handleResponsePrepare(bft.responseChan); err != nil {
+					return err
+				}
+			}
+			gotChallengePrepare = true
+		case c := <-bft.challengeCommitChan:
 
-	// Finish the commit round
-	if err := bft.handleChallengeCommit(<-bft.challengeCommitChan); err != nil {
-		return err
-	}
-	if !bft.IsLeaf() {
-		if err := bft.handleResponseCommit(bft.responseChan); err != nil {
-			return err
+			// Finish the commit round
+			if err := bft.handleChallengeCommit(c); err != nil {
+				return err
+			}
+			if !bft.IsLeaf() {
+				if err := bft.handleResponseCommit(bft.responseChan); err != nil {
+					return err
+				}
+			}
+			bft.successfulMut.Lock()
+			bft.successful = true
+			bft.successfulMut.Unlock()
+			// we return here even when prepare is not done yet,
+			// because we may not have received the challenge for
+			// the prepare phase
+			return nil
+		case <-time.After(bft.Timeout):
+			return fmt.Errorf("timeout waiting for challenge - " +
+				"might be OK because the protocol already finished")
 		}
 	}
-	return nil
 }
 
 // Signature will generate the final signature, the output of the BFTCoSi
-// protocol.
-// The signature contains the commit round signature, with the message.
-// If the prepare phase failed, the signature will be nil and the Exceptions
-// will contain the exception from the prepare phase. It can be useful to see
-// which cosigners refused to sign (each exceptions contains the index of a
-// refusing-to-sign signer).
-// Expect this function to have an undefined behavior when called from a
-// non-root Node.
+// protocol.  The signature contains the commit round signature, with the
+// message.  Expect this function to have an undefined behavior when called
+// from a non-root Node.  If the root does not finish correctly, then the
+// signature will be nil.
 func (bft *ProtocolBFTCoSi) Signature() *BFTSignature {
-	bftSig := &BFTSignature{
-		Sig:        bft.commit.Signature(),
-		Msg:        bft.Msg,
-		Exceptions: nil,
-	}
-	if bft.signRefusal {
-		bftSig.Sig = nil
-		bftSig.Exceptions = bft.tempExceptions
-	}
-
-	// This is a hack to include exceptions which are the result of offline
-	// nodes rather than nodes that refused to sign.
-	if bftSig.Exceptions == nil {
-		for _, ex := range bft.tempExceptions {
-			if ex.Commitment.Equal(bft.Suite().Point().Null()) {
-				bftSig.Exceptions = append(bftSig.Exceptions, ex)
+	// create exceptions for the nodes that were late to respond in the
+	// commit phase
+	var i int
+	exceptions := make([]Exception, bft.allowedExceptions)
+	for _, tn := range bft.Children() {
+		if _, ok := bft.respondedNodesCommit[tn.ServerIdentity.Public]; !ok {
+			exceptions[i] = Exception{
+				Index:      tn.RosterIndex,
+				Commitment: bft.Suite().Point().Null(),
 			}
+			i++
 		}
 	}
 
-	return bftSig
+	bft.successfulMut.Lock()
+	ok := bft.successful
+	bft.successfulMut.Unlock()
+	if !ok {
+		return &BFTSignature{
+			Sig:        nil,
+			Msg:        bft.Msg,
+			Exceptions: exceptions,
+		}
+	}
+
+	return &BFTSignature{
+		Sig:        bft.commit.Signature(),
+		Msg:        bft.Msg,
+		Exceptions: exceptions,
+	}
 }
 
 // RegisterOnDone registers a callback to call when the bftcosi protocols has
@@ -309,7 +340,11 @@ func (bft *ProtocolBFTCoSi) handleAnnouncement(msg announceChan) error {
 		bft.Timeout = ann.Timeout
 		return bft.startCommitment(ann.TYPE)
 	}
-	return bft.sendToChildren(&ann)
+	errs := bft.SendToChildrenInParallel(&ann)
+	if len(errs) > bft.allowedExceptions {
+		return errs[0]
+	}
+	return nil
 }
 
 // handleCommitmentPrepare handles incoming commit messages in the prepare phase
@@ -326,12 +361,7 @@ func (bft *ProtocolBFTCoSi) handleCommitmentPrepare(c chan commitChan) error {
 		return err
 	}
 
-	// TODO this will not always work for non-star graphs
-	if len(bft.tempPrepareCommit) < len(bft.Children())-bft.allowedExceptions {
-		bft.signRefusal = true
-		log.Error("not enough prepare commitment messages")
-	}
-
+	// at this point we should have n-t commit messages
 	commitment := bft.prepare.Commit(bft.Suite().RandomStream(), bft.tempPrepareCommit)
 	if bft.IsRoot() {
 		return bft.startChallenge(RoundPrepare)
@@ -350,14 +380,11 @@ func (bft *ProtocolBFTCoSi) handleCommitmentCommit(c chan commitChan) error {
 
 	// wait until we have enough RoundCommit commitments or timeout
 	// should do nothing if `c` is closed
-	bft.readCommitChan(c, RoundCommit)
-
-	// TODO this will not always work for non-star graphs
-	if len(bft.tempCommitCommit) < len(bft.Children())-bft.allowedExceptions {
-		bft.signRefusal = true
-		log.Error("not enough commit commitment messages")
+	if err := bft.readCommitChan(c, RoundCommit); err != nil {
+		return err
 	}
 
+	// at this point we should have a threshold number of commitments
 	commitment := bft.commit.Commit(bft.Suite().RandomStream(), bft.tempCommitCommit)
 	if bft.IsRoot() {
 		// do nothing:
@@ -388,9 +415,10 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(msg challengePrepareChan) err
 		bft.verifyChan <- bft.VerificationFunction(bft.Msg, bft.Data)
 	}()
 	if bft.IsLeaf() {
-		return bft.startResponse(RoundPrepare)
+		return bft.handleResponsePrepare(bft.responseChan)
 	}
-	return bft.sendToChildren(&ch)
+	// only send to the committed children
+	return bft.multicast(&ch, bft.respondedNodesPrepare)
 }
 
 // handleChallengeCommit verifies the signature and checks if not more than
@@ -412,15 +440,13 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 		Exceptions: ch.Signature.Exceptions,
 	}
 	if err := bftPrepareSig.Verify(bft.Suite(), bft.Roster().Publics()); err != nil {
-		log.Error(bft.Name(), "Verification of the signature failed:", err)
-		bft.signRefusal = true
+		return fmt.Errorf("%s: Verification of the signature failed: %v", bft.Name(), err)
 	}
 
 	// check if we have no more than threshold failed nodes
 	if len(ch.Signature.Exceptions) > int(bft.allowedExceptions) {
-		log.Errorf("%s: More than threshold (%d/%d) refused to sign - aborting.",
+		return fmt.Errorf("%s: More than threshold (%d/%d) refused to sign - aborting",
 			bft.Roster(), len(ch.Signature.Exceptions), len(bft.Roster().List))
-		bft.signRefusal = true
 	}
 
 	// store the exceptions for later usage
@@ -430,12 +456,13 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 		// bft.responseChan should be closed
 		return bft.handleResponseCommit(bft.responseChan)
 	}
-	return bft.sendToChildren(&ch)
+	// only send to the committed children
+	return bft.multicast(&ch, bft.respondedNodesCommit)
 }
 
-// handleResponsePrepare handles response messages in the prepare phase.
-// If the node is not the root, it'll aggregate the response and forward to
-// the parent. Otherwise it verifies the response.
+// handleResponsePrepare handles response messages in the prepare phase.  If
+// the node is not the root, it'll aggregate the response and forward to the
+// parent. Otherwise it verifies the response.
 func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 	bft.tmpMutex.Lock()
 	defer bft.tmpMutex.Unlock() // NOTE potentially locked for the whole timeout
@@ -446,27 +473,19 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 		return err
 	}
 
-	// TODO this will only work for star-graphs
-	// check if we have enough messages
-	if len(bft.tempPrepareResponse) < len(bft.Children())-bft.allowedExceptions {
-		log.Error("not enough prepare response messages")
-		bft.signRefusal = true
-	}
-
 	// wait for verification
 	bzrReturn, ok := bft.waitResponseVerification()
-	// append response
 	if !ok {
-		log.Lvl2(bft.Roster(), "Refused to sign")
+		return fmt.Errorf("%v verification failed", bft.Name())
 	}
 
-	// Return if we're not root
+	// return if we're not root
 	if !bft.IsRoot() {
 		return bft.SendTo(bft.Parent(), bzrReturn)
 	}
 
-	// Since cosi does not support exceptions yet, we have to remove
-	// the responses that are not supposed to be there,i.e. exceptions.
+	// Since cosi does not support exceptions yet, we have to remove the
+	// responses that are not supposed to be there, i.e. exceptions.
 	cosiSig := bft.prepare.Signature()
 	correctResponseBuff, err := bzrReturn.Response.MarshalBinary()
 	if err != nil {
@@ -489,9 +508,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 	}
 
 	if err := sig.Verify(bft.Suite(), bft.Roster().Publics()); err != nil {
-		log.Error(bft.Name(), "Verification of the signature failed:", err)
-		bft.signRefusal = true
-		return err
+		return fmt.Errorf("%s: Verification of the signature failed: %v", bft.Name(), err)
 	}
 	log.Lvl3(bft.Name(), "Verification of signature successful")
 
@@ -512,13 +529,8 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(c chan responseChan) error {
 
 	// wait until we have enough RoundCommit responses or timeout
 	// does nothing if channel is closed
-	bft.readResponseChan(c, RoundCommit)
-
-	// TODO this will only work for star-graphs
-	// check if we have enough messages
-	if len(bft.tempCommitResponse) < len(bft.Children())-bft.allowedExceptions {
-		log.Error("not enough commit response messages")
-		bft.signRefusal = true
+	if err := bft.readResponseChan(c, RoundCommit); err != nil {
+		return err
 	}
 
 	r := &Response{
@@ -536,39 +548,27 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(c chan responseChan) error {
 		return err
 	}
 
-	if bft.signRefusal {
-		r.Exceptions = append(r.Exceptions, Exception{
-			Index:      bft.index,
-			Commitment: bft.commit.GetCommitment(),
-		})
-		// don't include our own!
-		r.Response.Sub(r.Response, bft.commit.GetResponse())
-	}
-
-	// notify we have finished to participate in this signature
-	log.Lvl3(bft.Name(), "refusal=", bft.signRefusal)
 	// if root we have finished
 	if bft.IsRoot() {
 		sig := bft.Signature()
 		if bft.onSignatureDone != nil {
 			bft.onSignatureDone(sig)
 		}
-		bft.Done()
 		return nil
 	}
 
-	// otherwise , send the response up
-	err = bft.SendTo(bft.Parent(), r)
+	err = bft.SendToParent(r)
 	bft.Done()
 	return err
 }
 
-// readCommitChan reads until all commit messages are received or a timeout for message type `t`
+// readCommitChan reads a threshold (n-t) of the commit messages or until the
+// timeout for message type `t`.
 func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error {
 	timeout := time.After(bft.Timeout)
 	for {
 		if bft.isClosing() {
-			return errors.New("Closing")
+			return errors.New("closing")
 		}
 
 		select {
@@ -578,35 +578,48 @@ func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error
 				return nil
 			}
 
+			from := msg.ServerIdentity.Public
 			comm := msg.Commitment
 			// store the message and return when we have enough
 			switch comm.TYPE {
 			case RoundPrepare:
+				if bft.committedInPreparePhase {
+					continue
+				}
+				if _, ok := bft.respondedNodesPrepare[from]; ok {
+					log.Warnf("%s: node %v already responded - potential malicious behaviour")
+					continue
+				}
+				bft.respondedNodesPrepare[from] = msg.TreeNode
 				bft.tempPrepareCommit = append(bft.tempPrepareCommit, comm.Commitment)
-				if t == RoundPrepare && len(bft.tempPrepareCommit) == len(bft.Children()) {
+				if t == RoundPrepare && len(bft.tempPrepareCommit) == len(bft.Children())-bft.allowedExceptions {
+					bft.committedInPreparePhase = true
 					return nil
 				}
 			case RoundCommit:
+				if bft.committedInCommitPhase {
+					continue
+				}
+				if _, ok := bft.respondedNodesCommit[from]; ok {
+					log.Warnf("%s: node %v already responded - potential malicious behaviour")
+					continue
+				}
+				bft.respondedNodesCommit[from] = msg.TreeNode
 				bft.tempCommitCommit = append(bft.tempCommitCommit, comm.Commitment)
-				// In case the prepare round had some exceptions, we
-				// will not wait for more commits from the commit
-				// round. The possibility of having a different set
-				// of nodes failing in both cases is inferiour to the
-				// speedup in case of one node failing in both rounds.
-				if t == RoundCommit && len(bft.tempCommitCommit) == len(bft.tempPrepareCommit) {
+				if t == RoundCommit && len(bft.tempCommitCommit) == len(bft.Children())-bft.allowedExceptions {
+					bft.committedInCommitPhase = true
 					return nil
 				}
 			}
 		case <-timeout:
-			// in some cases this might be ok because we accept a certain number of faults
-			// the caller is responsible for checking if enough messages are received
-			log.Lvl1("timeout while trying to read commit message")
-			return nil
+			// if there is a timeout, then we cannot continue
+			return fmt.Errorf("timeout while trying to read commit message for phase %v", t)
 		}
 	}
 }
 
-// should do nothing if the channel is closed
+// readResponseChan reads a threshold (n-t) of response messages, the threshold
+// must be from the committed set of nodes.  It returns an error on timeout.
 func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) error {
 	timeout := time.After(bft.Timeout)
 	for {
@@ -620,31 +633,26 @@ func (bft *ProtocolBFTCoSi) readResponseChan(c chan responseChan, t RoundType) e
 				log.Lvl3("Channel closed")
 				return nil
 			}
-			from := msg.ServerIdentity.Public
 			r := msg.Response
 
 			switch msg.Response.TYPE {
 			case RoundPrepare:
 				bft.tempPrepareResponse = append(bft.tempPrepareResponse, r.Response)
 				bft.tempExceptions = append(bft.tempExceptions, r.Exceptions...)
-				bft.tempPrepareResponsePublics = append(bft.tempPrepareResponsePublics, from)
-				// There is no need to have more responses than we have
-				// commits. We _should_ check here if we get the same
-				// responses from the same nodes. But as this is deprecated
-				// and replaced by ByzCoinX, we'll leave it like that.
+				// NOTE here we assume all nodes that committed will respond
 				if t == RoundPrepare && len(bft.tempPrepareResponse) == len(bft.tempPrepareCommit) {
 					return nil
 				}
 			case RoundCommit:
 				bft.tempCommitResponse = append(bft.tempCommitResponse, r.Response)
-				// Same reasoning as in RoundPrepare.
+				// NOTE here we assume all nodes that committed will respond
 				if t == RoundCommit && len(bft.tempCommitResponse) == len(bft.tempCommitCommit) {
 					return nil
 				}
 			}
 		case <-timeout:
-			log.Lvl1("timeout while trying to read response messages")
-			return nil
+			// if there is a timeout, then we cannot continue
+			return fmt.Errorf("%s: timeout while trying to read response message for phase %v", bft.Name(), t)
 		}
 	}
 }
@@ -662,7 +670,7 @@ func (bft *ProtocolBFTCoSi) startCommitment(t RoundType) error {
 	return bft.SendToParent(&Commitment{TYPE: t, Commitment: cm})
 }
 
-// startChallenge creates the challenge and sends it to its children
+// startChallenge creates the challenge and sends it to children that committed
 func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 	switch t {
 	case RoundPrepare:
@@ -700,21 +708,6 @@ func (bft *ProtocolBFTCoSi) startChallenge(t RoundType) error {
 	return nil
 }
 
-// startResponse dispatches the response to the correct round-type
-func (bft *ProtocolBFTCoSi) startResponse(t RoundType) error {
-	if !bft.IsLeaf() {
-		panic("Only leaf can call startResponse")
-	}
-
-	switch t {
-	case RoundPrepare:
-		return bft.handleResponsePrepare(bft.responseChan)
-	case RoundCommit:
-		return bft.handleResponseCommit(bft.responseChan)
-	}
-	return nil
-}
-
 // waitResponseVerification waits till the end of the verification and returns
 // the BFTCoSiResponse along with the flag:
 // true => no exception, the verification is correct
@@ -722,7 +715,9 @@ func (bft *ProtocolBFTCoSi) startResponse(t RoundType) error {
 func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 	log.Lvl3(bft.Name(), "Waiting for response verification:")
 	// wait the verification
-	verified := <-bft.verifyChan
+	if !<-bft.verifyChan {
+		return nil, false
+	}
 
 	// sanity check
 	if bft.IsLeaf() && len(bft.tempPrepareResponse) != 0 {
@@ -734,26 +729,12 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 		return nil, false
 	}
 
-	if !verified {
-		// Add our exception
-		bft.tempExceptions = append(bft.tempExceptions, Exception{
-			Index:      bft.index,
-			Commitment: bft.prepare.GetCommitment(),
-		})
-		// Don't include our response!
-		resp = bft.Suite().Scalar().Set(resp).Sub(resp, bft.prepare.GetResponse())
-		log.Lvl3(bft.Name(), "Response verification: failed")
-	}
-
-	// if we didn't get all the responses, add them to the exception
-	// 1, find children that are not in tempPrepareResponsePublics
-	// 2, for the missing ones, find the global index and then add it to the exception
-	publicsMap := make(map[kyber.Point]bool)
-	for _, p := range bft.tempPrepareResponsePublics {
-		publicsMap[p] = true
-	}
+	// Create the exceptions for nodes that were not included in the first
+	// 2/3 of the responses. We do this in two steps. (1) Find children
+	// that are not in respondedNodesPrepare and (2) for the missing
+	// ones, find the global index and then add it to the exception.
 	for _, tn := range bft.Children() {
-		if !publicsMap[tn.ServerIdentity.Public] {
+		if _, ok := bft.respondedNodesPrepare[tn.ServerIdentity.Public]; !ok {
 			// We assume the server was also not available for the commitment
 			// so no need to subtract the commitment.
 			// Conversely, we cannot handle nodes which fail right
@@ -771,8 +752,8 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 		Response:   resp,
 	}
 
-	log.Lvl3(bft.Name(), "Response verification:", verified)
-	return r, verified
+	log.Lvl3(bft.Name(), "Response verified")
+	return r, true
 }
 
 // nodeDone is either called by the end of EndProtocol or by the end of the
@@ -805,11 +786,11 @@ func (bft *ProtocolBFTCoSi) setClosing() {
 	bft.closingMutex.Unlock()
 }
 
-func (bft *ProtocolBFTCoSi) sendToChildren(msg interface{}) error {
-	// TODO send to only nodes that did reply
-	errs := bft.SendToChildrenInParallel(msg)
-	if len(errs) > bft.allowedExceptions {
-		return fmt.Errorf("sendToChildren failed with errors: %v", errs)
+func (bft *ProtocolBFTCoSi) multicast(msg interface{}, nodes map[kyber.Point]*onet.TreeNode) error {
+	for _, tn := range nodes {
+		if err := bft.SendTo(tn, msg); err != nil {
+			log.Error(err)
+		}
 	}
 	return nil
 }
