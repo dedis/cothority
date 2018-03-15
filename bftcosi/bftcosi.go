@@ -267,6 +267,15 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 // signature will be nil.
 func (bft *ProtocolBFTCoSi) Signature() *BFTSignature {
 
+	bft.successfulMut.Lock()
+	ok := bft.successful
+	bft.successfulMut.Unlock()
+	if !ok {
+		return &BFTSignature{
+			Msg: bft.Msg,
+		}
+	}
+
 	// create exceptions for the nodes that were late to respond in the
 	// commit phase
 	var i int
@@ -278,17 +287,6 @@ func (bft *ProtocolBFTCoSi) Signature() *BFTSignature {
 				Commitment: bft.Suite().Point().Null(),
 			}
 			i++
-		}
-	}
-
-	bft.successfulMut.Lock()
-	ok := bft.successful
-	bft.successfulMut.Unlock()
-	if !ok {
-		return &BFTSignature{
-			Sig:        nil,
-			Msg:        bft.Msg,
-			Exceptions: exceptions,
 		}
 	}
 
@@ -411,7 +409,16 @@ func (bft *ProtocolBFTCoSi) handleChallengePrepare(msg challengePrepareChan) err
 		bft.prepare.Challenge(ch.Challenge)
 	}
 	go func() {
-		bft.verifyChan <- bft.VerificationFunction(bft.Msg, bft.Data)
+		select {
+		case bft.verifyChan <- bft.VerificationFunction(bft.Msg, bft.Data):
+		case <-time.After(bft.Timeout):
+			log.Error(bft.Name(), "verification didn't complete after", bft.Timeout)
+			// we might not have a reader on bft.verifyChan if nodes exit early
+			select {
+			case bft.verifyChan <- false:
+			default:
+			}
+		}
 	}()
 	if bft.IsLeaf() {
 		return bft.handleResponsePrepare(bft.responseChan)

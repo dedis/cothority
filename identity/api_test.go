@@ -354,6 +354,7 @@ func TestVerificationFunction(t *testing.T) {
 	services := l.GetServices(hosts, identityService)
 	s0 := services[0].(*Service)
 	defer l.CloseAll()
+
 	for _, s := range services {
 		log.Lvl3(s.(*Service).Storage.Identities)
 	}

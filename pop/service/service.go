@@ -708,7 +708,13 @@ func (s *Service) PropagateFinal(msg network.Message) {
 //signs FinalStatement with BFTCosi and Propagates signature to other nodes
 func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	data []byte) error {
-	tree := final.Desc.Roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
+
+	bf := 2
+	if len(final.Desc.Roster.List)-1 > 2 {
+		bf = len(final.Desc.Roster.List) - 1
+	}
+
+	tree := final.Desc.Roster.GenerateNaryTreeWithRoot(bf, s.ServerIdentity())
 	if tree == nil {
 		return errors.New(
 			"Root does not exist")
@@ -724,8 +730,10 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	if !ok {
 		return errors.New(
 			"protocol instance is invalid")
-
 	}
+
+	// pop is not fault tolerant
+	root.AllowedExceptions = 0
 
 	root.Msg, err = final.Hash()
 	if err != nil {

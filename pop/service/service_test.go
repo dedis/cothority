@@ -412,6 +412,7 @@ func TestService_MergeRequest(t *testing.T) {
 	log.Lvlf2("Group 1, Server: %s", srvcs[1].ServerIdentity())
 	log.Lvlf2("Group 2, Server: %s", srvcs[2].ServerIdentity())
 	log.Lvlf2("Group 2, Server: %s", srvcs[3].ServerIdentity())
+	// right signature
 	mr.ID = []byte(hash[0])
 	sg, err = schnorr.Sign(tSuite, priv[0], mr.ID)
 	log.ErrFatal(err)
@@ -436,7 +437,6 @@ func TestService_MergeRequest(t *testing.T) {
 			s.data.Finals[hash[i/2]].Verify() == nil,
 			fmt.Sprintf("Signature in node %d is not created", i))
 	}
-
 }
 
 func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int,
