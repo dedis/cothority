@@ -105,7 +105,7 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 	return func(el *onet.Roster, msg network.Message, to time.Duration) (int, error) {
 		bf := 8
 		if thresh != 0 && len(el.List) > 2 {
-			bf = len(el.List) - 1
+			bf = len(el.List)
 		}
 		tree := el.GenerateNaryTreeWithRoot(bf, c.ServerIdentity())
 		if tree == nil {
@@ -198,15 +198,7 @@ func (p *Propagate) Dispatch() error {
 					return err
 				}
 			}
-			/*
-				if p.allowedFailures != 0 && !p.IsRoot() {
-					panic("when there are failures, only root should reach here")
-				}
-				if p.received == p.subtreeCount-p.allowedFailures {
-					process = false
-				}
-			*/
-			if p.received == p.subtreeCount {
+			if p.received >= p.subtreeCount-p.allowedFailures {
 				process = false
 			}
 		case <-time.After(timeout):
