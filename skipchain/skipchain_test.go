@@ -97,7 +97,6 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	if id == nil {
 		t.Fatal("second block last id is nil")
 	}
-	log.Lvl3("Storing a new skipblock")
 	psbr2, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: id, NewBlock: next})
 	if err != nil {
 		t.Fatal("StoreSkipBlock:", err)
@@ -775,6 +774,11 @@ func TestService_AddFollow(t *testing.T) {
 	master2, err := services[1].StoreSkipBlock(ssb)
 	log.ErrFatal(err)
 	require.True(t, services[1].db.GetByID(master1.Latest.Hash).ForwardLink[0].Hash().Equal(master2.Latest.Hash))
+
+	// The propagation in skipchain might still be happening in the
+	// background because the root does not wait for all replies. So we
+	// wait a bit for it to finish.
+	time.Sleep(time.Second)
 }
 
 func TestService_CreateLinkPrivate(t *testing.T) {

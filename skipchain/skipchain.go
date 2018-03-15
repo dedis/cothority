@@ -416,7 +416,7 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 // in the roster, in order to find an answer, even in the case that a few
 // nodes in the network are down.
 func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*SkipBlock, error) {
-	subCount := len(roster.List) - (len(roster.List)-1)/3
+	subCount := (len(roster.List)-1)/3 + 1
 	r := roster.RandomSubset(s.ServerIdentity(), subCount)
 	tr := r.GenerateStar()
 	pi, err := s.CreateProtocol(ProtocolGetBlocks, tr)
@@ -912,6 +912,9 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		}
 		target := s.db.GetByID(newest.BackLinkIDs[fs.TargetHeight])
 		if target == nil {
+			// we are synching twice, but usually it should not
+			// happen because if trySync is used above, then we
+			// should be up-to-date
 			if err = trySync(newest); err != nil {
 				return err
 			}

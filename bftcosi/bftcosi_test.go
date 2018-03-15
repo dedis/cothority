@@ -117,7 +117,7 @@ func TestNodeFailure(t *testing.T) {
 
 	nbrHostsArr := []int{5, 7, 10}
 	for _, nbrHosts := range nbrHostsArr {
-		if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, 1, nbrHosts-1); err != nil {
+		if err := runProtocolOnceGo(nbrHosts, TestProtocolName, 0, true, nbrHosts/3, nbrHosts-1); err != nil {
 			t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, TestProtocolName, 0, true, err)
 		}
 	}
