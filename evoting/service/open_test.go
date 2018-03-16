@@ -80,6 +80,7 @@ func TestOpen_EndLessThanNow(t *testing.T) {
 	election := &lib.Election{}
 	_, err := s.Open(&evoting.Open{Token: token, ID: master.ID, Election: election})
 	assert.NotNil(t, err)
+	assert.Equal(t, "election cannot end before current time", err.Error())
 }
 
 func TestOpen_Full(t *testing.T) {
