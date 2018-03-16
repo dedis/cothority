@@ -63,8 +63,7 @@ func TestService(t *testing.T) {
 
 	// Create a new election
 	replyOpen, err := s.Open(&evoting.Open{
-		Token: loginAdmin.Token,
-		ID:    replyLink.ID,
+		ID: replyLink.ID,
 		Election: &lib.Election{
 			Name:     "bla",
 			Creator:  idAdmin,

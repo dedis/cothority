@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"errors"
+
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share/dkg/rabin"
 	"github.com/dedis/onet"
@@ -30,6 +32,7 @@ type Election struct {
 	Users   []uint32 // Users is the list of registered voters.
 
 	ID     skipchain.SkipBlockID // ID is the hash of the genesis block.
+	Master skipchain.SkipBlockID // Master is the hash of the master skipchain.
 	Roster *onet.Roster          // Roster is the set of responsible nodes
 	Key    kyber.Point           // Key is the DKG public key.
 	Stage  uint32                // Stage indicates the phase of the election.
@@ -89,6 +92,41 @@ func FetchElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, er
 	return election, nil
 }
 
+func GetElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, error) {
+	chain, err := chain(roster, id)
+	if err != nil {
+		return nil, err
+	}
+
+	transaction := NewTransaction(chain[1].Data)
+	if transaction == nil || transaction.Election == nil {
+		return nil, errors.New("no election found")
+	}
+
+	election := transaction.Election
+
+	n, numMixes, numPartials := len(election.Roster.List), 0, 0
+	for _, block := range chain {
+		_, blob, _ := network.Unmarshal(block.Data, cothority.Suite)
+		if _, ok := blob.(*Mix); ok {
+			numMixes++
+		} else if _, ok := blob.(*Partial); ok {
+			numPartials++
+		}
+	}
+
+	if numMixes == 0 && numPartials == 0 {
+		election.Stage = Running
+	} else if numMixes == n && numPartials == 0 {
+		election.Stage = Shuffled
+	} else if numMixes == n && numPartials == n {
+		election.Stage = Decrypted
+	} else {
+		election.Stage = Corrupt
+	}
+	return election, nil
+}
+
 // GenChain creates an election skipchain for a specific stage and a given number of ballots.
 func (e *Election) GenChain(numBallots int) []*dkg.DistKeyGenerator {
 	chain, _ := New(e.Roster, nil)
@@ -123,7 +161,7 @@ func (e *Election) Store(data interface{}) error {
 		return err
 	}
 
-	if _, err := client.StoreSkipBlock(chain[len(chain)-1], e.Roster, data); err != nil {
+	if _, err := client.StoreSkipBlock(chain[len(chain)-1], nil, data); err != nil {
 		return err
 	}
 	return nil

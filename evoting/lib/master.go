@@ -9,6 +9,10 @@ import (
 	"github.com/dedis/cothority/skipchain"
 )
 
+func init() {
+	network.RegisterMessages(Master{}, Link{})
+}
+
 // Master is the foundation object of the entire service.
 // It contains mission critical information that can only be accessed and
 // set by an administrators.
@@ -27,8 +31,9 @@ type Link struct {
 	ID skipchain.SkipBlockID
 }
 
-func init() {
-	network.RegisterMessages(Master{}, Link{})
+func UnmarshalMaster(data []byte) *Master {
+	_, blob, _ := network.Unmarshal(data, cothority.Suite)
+	return blob.(*Master)
 }
 
 // FetchMaster retrieves the master object from its skipchain.
@@ -40,6 +45,17 @@ func FetchMaster(roster *onet.Roster, id skipchain.SkipBlockID) (*Master, error)
 
 	_, blob, _ := network.Unmarshal(chain[1].Data, cothority.Suite)
 	return blob.(*Master), nil
+}
+
+// GetMaster retrieves the master object from its skipchain.
+func GetMaster(roster *onet.Roster, id skipchain.SkipBlockID) (*Master, error) {
+	chain, err := chain(roster, id)
+	if err != nil {
+		return nil, err
+	}
+
+	_, blob, err := network.Unmarshal(chain[1].Data, cothority.Suite)
+	return blob.(*Master), err
 }
 
 // GenChain generates a master skipchain with the given list of links.

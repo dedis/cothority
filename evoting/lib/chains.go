@@ -14,9 +14,15 @@ func New(roster *onet.Roster, data interface{}) (*skipchain.SkipBlock, error) {
 
 // chain returns a skipchain for a given id.
 func chain(roster *onet.Roster, id skipchain.SkipBlockID) ([]*skipchain.SkipBlock, error) {
-	chain, err := client.GetUpdateChain(roster, id)
+	cl := skipchain.NewClient()
+	chain, err := cl.GetUpdateChain(roster, id)
 	if err != nil {
 		return nil, err
 	}
 	return chain.Update, nil
+}
+
+func NewSkipchain(roster *onet.Roster, verifier []skipchain.VerifierID, data interface{}) (
+	*skipchain.SkipBlock, error) {
+	return client.CreateGenesis(roster, 1, 1, verifier, data, nil)
 }

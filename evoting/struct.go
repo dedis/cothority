@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting/lib"
@@ -28,6 +29,9 @@ func init() {
 		Ping{},
 	)
 }
+
+var VerificationID = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, ServiceName))
+var VerificationFunction = []skipchain.VerifierID{VerificationID}
 
 // Login message.
 type Login struct {
@@ -96,9 +100,10 @@ type LinkReply struct {
 
 // Open message.
 type Open struct {
-	Token    string                // Token for authentication.
-	ID       skipchain.SkipBlockID // ID of the master skipchain.
-	Election *lib.Election         // Election object.
+	User      uint32                // Token for authentication.
+	ID        skipchain.SkipBlockID // ID of the master skipchain.
+	Election  *lib.Election         // Election object.
+	Signature []byte
 }
 
 // OpenReply message.
@@ -109,7 +114,7 @@ type OpenReply struct {
 
 // Cast message.
 type Cast struct {
-	Token  string                // Token for authentication.
+	User   uint32                // Token for authentication.
 	ID     skipchain.SkipBlockID // ID of the election skipchain.
 	Ballot *lib.Ballot           // Ballot to be casted.
 }
