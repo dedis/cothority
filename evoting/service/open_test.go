@@ -2,6 +2,7 @@ package service
 
 import (
 	"testing"
+	"time"
 
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
@@ -65,7 +66,7 @@ func TestOpen_CloseConnection(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestOpen_Full(t *testing.T) {
+func TestOpen_EndLessThanNow(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -77,6 +78,22 @@ func TestOpen_Full(t *testing.T) {
 	master.GenChain(nil)
 
 	election := &lib.Election{}
+	_, err := s.Open(&evoting.Open{Token: token, ID: master.ID, Election: election})
+	assert.NotNil(t, err)
+}
+
+func TestOpen_Full(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
+	s := local.GetServices(nodes, serviceID)[0].(*Service)
+	token := s.state.register(0, true)
+
+	master := &lib.Master{Roster: roster}
+	master.GenChain(nil)
+
+	election := &lib.Election{End: time.Now().Unix() + 3600}
 	r, _ := s.Open(&evoting.Open{Token: token, ID: master.ID, Election: election})
 	assert.NotNil(t, r)
 

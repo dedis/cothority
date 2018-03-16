@@ -111,6 +111,11 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		return nil, err
 	}
 
+	// sanity check - do not allow elections to be created retrospectively
+	if req.Election.End < time.Now().Unix() {
+		return nil, errors.New("election cannot end before current time")
+	}
+
 	genesis, err := lib.New(master.Roster, nil)
 	if err != nil {
 		return nil, err
