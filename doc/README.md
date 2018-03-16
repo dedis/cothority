@@ -19,7 +19,7 @@ Cothority is a collection of applications that run
 on a set of servers called conodes.
 
 - An [overview](../README.md) of its functionalities
-- [Godoc](https://godoc.org/dedis/cothority) of the project
+- [Godoc](https://godoc.org/github.com/dedis/cothority) of the project
 - Two webpages:
   - [Pulsar](https://pulsar.dedis.ch) - publicly verifiable randomness
   - [Status](http://status.dedis.ch) - status of our test-network
@@ -33,7 +33,7 @@ Kyber is a library exporting basic cryptographic primitives mainly geared
 towards elliptic curves.
 
 - An [overview](https://github.com/dedis/kyber/blob/master/README.md)
-- [Godoc](https://godoc.org/dedis/kyber) of the project
+- [Godoc](https://godoc.org/github.com/dedis/kyber) of the project
 - [Javascript](../external/js/kyber/README.md)
 code to use basic cryptographic primitives - not as extensive as the kyber library
 
@@ -44,7 +44,7 @@ services and apps. It offers peer-to-peer connections and a websockets interface
 for communication with clients.
 
 - An [overview](https://github.com/dedis/onet/wiki) of its functionalities
-- [Godoc](https://godoc.org/dedis/onet) of the project
+- [Godoc](https://godoc.org/github.com/dedis/onet) of the project
 
 ### Others
 

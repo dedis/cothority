@@ -15,7 +15,7 @@ the signature.
 
 ## NSDI-version
 The following calls should be implemented in the service:
-See (https://github.com/dedis/cothority/tree/documentation/README.md)/issues/554#issuecomment-243092585
+See https://github.com/dedis/cothority/issues/554#issuecomment-243092585
 
 # API calls
 

@@ -1,4 +1,5 @@
-// This package contains the simulation files and the code needed to run it.
+// This package contains the cosi simulation configuration and the code needed
+// to run it.
 //
 // Please see
 // https://github.com/dedis/cothority/blob/master/cosi/simulation/README.md for

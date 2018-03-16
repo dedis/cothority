@@ -1,4 +1,4 @@
-// This is a part of the js integration test.
+// This is a part of the JavaScript integration test.
 package main
 
 import (

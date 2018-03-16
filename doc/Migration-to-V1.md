@@ -2,9 +2,10 @@ Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](../README.md) ::
 Migration to V1
 
-# Migration to V1
+# Migration From V0 to V1
 
-If you are about to migrate to V1, here is a summary of things to take care of:
+If you are about to migrate from V0 to V1, here is a summary of things to take
+care of:
 - moving of libraries
 - depend on V1
 - renaming of methods
