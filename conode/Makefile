@@ -1,6 +1,6 @@
 CONTAINER = conode
 IMAGE_NAME = dedis/$(CONTAINER)
-VERSION = 1.1.1-2
+VERSION = 2.0-2
 DATA_DIR = $(shell pwd)/conode_data
 
 all: docker
@@ -8,10 +8,16 @@ all: docker
 docker: Dockerfile
 	docker build -t $(IMAGE_NAME):$(VERSION) -t $(IMAGE_NAME):latest ./
 
-docker_run:
+docker_setup:
 	mkdir -p $(DATA_DIR)
-	docker run -it --rm -p 6879-6880:6879-6880 --name $(CONTAINER) -v $(DATA_DIR):/root/.local/share/conode/ \
-	    -v $(DATA_DIR):/root/.config/conode $(IMAGE_NAME)
+	docker run -it --rm -P --name $(CONTAINER) -v $(DATA_DIR):/conode_data \
+	    $(IMAGE_NAME) ./conode setup
+
+docker_run:
+	if [ ! -f conode_data/private.toml ]; then make docker_setup; fi
+	mkdir -p $(DATA_DIR)
+	docker run -it --rm -P --name $(CONTAINER) -v $(DATA_DIR):/conode_data \
+	    $(IMAGE_NAME)
 
 docker_stop:
 	docker rm -f $(CONTAINER)

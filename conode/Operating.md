@@ -1,38 +1,13 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](../README.md) ::
+[Conode](README.md) ::
 Operating a Conode
 
 # Operating a Conode
 
-The conode can be installed and started like this:
+Here you find some general information about how to run a conode.
 
-```
-go get github.com/dedis/cothority
-cd $(go env GOPATH)/src/github.com/dedis/cothority/conode
-./run_conode.sh public
-```
-
-The first time you run `run_conode.sh public` it will set up a new conode.
-Subsequent times, it starts the server, logging to stdout. You can run it in a
-screen session to make it survive logouts.
-
-You should run it as a non-root user. It can also be run from a Docker image
-(documentation to come, when Dockerfile is merged from the other repository to
-here).
-
-For more information about how to run a conode on the command line, see
-[Running a Conode](RunningConode.md).
-
-## Configuration
-
-The setup routine writes the config files into `$HOME/.config/conode` on Linux
-(`$HOME/Library/conode` on MacOS, `%USERPROFILE%/AppData/Local/Conode` on Windows).
-
-The `private.toml` file holds the server config, including the private key. It
-also includes the server's public address on the network. The server will listen
-to this port, as well as to this port + 1 (for websocket connections).
-
-# Reverse proxy
+## Reverse proxy
 
 Conode should only be run as a non-root user.
 
@@ -44,7 +19,7 @@ If you want that the websocket port is on a port under 1024 (i.e. 443 for
 HTTPS), you can use setcap to give the conode binary the necessary privs: `sudo
 setcap CAP_NET_BIND_SERVICE=+eip $(go env GOPATH)/bin/conode`
 
-# Backups
+## Backups
 
 On Linux, the following files need to be backed up:
 1. `$HOME/.config/conode/private.toml`
@@ -54,7 +29,7 @@ The DB file is a BoltDB file, and more information about considerations while
 backing them up is in
 [Database backup](https://github.com/dedis/onet/wiki/Database-backup-and-recovery).
 
-# Recovery from a crash
+## Recovery from a crash
 
 If you have a backup of the private.toml file and a recent backup of the .db
 file, you can put them onto a new server, and start the conode. The IP address
@@ -87,31 +62,6 @@ Thus it would be possible to set the roster of a skipchain to include a server
 identity like "tcp://conode-master.example.com:6979" and then change the
 definition of conode-master.example.com in DNS in order to change the IP address
 of the master.
-
-## Catch-up Behavior
-
-(This section applies to the [Skipchain Service](../skipchain/README.md),
-and to any service which depends on Skipchains.)
-
-If the conode is a follower for a given skipchain, then when it is asked to add
-a block onto that skipchain by the leader, it will contact other nodes in the
-last known roster for that skipchain in order to get copies of blocks that it is
-missing. Once it has followed the skipchain to the latest block mentioned in the
-proposed update, it will add the proposed block.
-
-If the conode is a leader on a skipchain, when it is asked to add a block with a
-latest block id that it does not know, it will attempt to catch up from other
-conodes in the last known roster of the skipchain. If it can find the latest
-block requested by the client from another member of the cothority, then it will
-catch up to that block, and start the process of adding the block (i.e. request
-that other conodes sign the block, and sign forward links to it, adding the
-block into the chain). If the client proposes a block for a skipchain that is
-not known to the conode, it will not attempt to catch up with other conodes.
-
-Thus, it is imperative that the leader's DB is backed up regularly. Even though
-it is possible that the leader can recover from peers, genesis blocks (which
-start new skipchains) can *only* be backed up via out-of-band methods of
-protecting the integrity of the leader's DB file.
 
 ## Reverting the cothority
 
