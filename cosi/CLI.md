@@ -1,4 +1,4 @@
-Navigation: [DEDIS](https://github.com/dedis/doc/README.md) ::
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](../README.md) ::
 [Building Blocks](../doc/BuildingBlocks.md) ::
 [Collective Signing](README.md) ::

@@ -1,4 +1,4 @@
-Navigation: [DEDIS](https://github.com/dedis/doc/README.md) ::
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](../README.md) ::
 [Building Blocks](../doc/BuildingBlocks.md) ::
 Collective Signing
@@ -42,7 +42,7 @@ links:
 - [CoSi CLI](CLI.md) is a command line interface for interacting with CoSi
 - [CoSi protocol](protocol) the protocol used for collective signing
 - [CoSi service](service) the service with the outward looking API
-- [CoSi RFC]((https://github.com/dedis/doc/README.md)/cosi) a draft for a CoSi RFC
+- [CoSi RFC]((https://github.com/dedis/doc/tree/master/README.md)/cosi) a draft for a CoSi RFC
 
 ## Other Standalone CoSi Clients
 

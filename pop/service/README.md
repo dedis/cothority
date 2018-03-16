@@ -1,4 +1,4 @@
-Navigation: [DEDIS](https://github.com/dedis/doc/README.md) ::
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](../../README.md) ::
 [Apps](../../doc/Apps.md) ::
 [Proof of Personhood](../README.md) ::

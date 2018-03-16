@@ -1,6 +1,6 @@
 [![Build Status](https://travis-ci.org/dedis/cothority.svg?branch=master)](https://travis-ci.org/dedis/cothority) [![Coverage Status](https://coveralls.io/repos/github/dedis/cothority/badge.svg)](https://coveralls.io/github/dedis/cothority)
 
-Navigation: [DEDIS](https://github.com/dedis/doc/README.md) ::
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 Cothority
 
 # Cothority
@@ -28,7 +28,7 @@ This is an overview of this README::
     might want to set up your own conode
 
 Don't forget that the cothority is part of a [bigger
-environment](https://github.com/dedis/doc/README.md).
+environment](https://github.com/dedis/doc/tree/master/README.md).
 
 ## Disclaimer
 

@@ -1,4 +1,4 @@
-Navigation: [DEDIS](https://github.com/dedis/doc/README.md) ::
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](../README.md) ::
 Conode
 
@@ -13,119 +13,35 @@ be run either for local tests or on a public server. The currently running
 conodes are available under http://status.dedis.ch.
 
 You can run the conode either using the binary, the `run_conode.sh`-script
-or with docker.
+or with docker:
 
-## Docker
+- Using [command line](CLI.md)
+- Using [Docker](Docker.md)
 
-In order to start a conode on your computer with docker, you can use the
-pre-compiled docker image at [https://hub.docker.com/r/dedis/conode] and
-follow the instructions. You can also create your own docker-image and
-run it with
+## Operating a Conode
 
-```bash
-make docker
-make docker_run
-```
+Conode is the program that allows you to be part of a cothority. For the server you need:
 
-If you use `make docker_run` the first time, a directory called `conode_data` will be
-created and you will be asked for a port - use 6879 or adapt the Makefile - and a
-description of you node. Your public and private key for the conode will be stored
-in `conode_data`. If you run `make docker_run` again, the stored configuration will
-be used.
+- 24/7 availability
+- 512MB of RAM and 1GB of disk-space
+- a public IP-address and two consecutive, open ports
+- go1.9 or go1.10 installed and set up according to https://golang.org/doc/install
 
-To stop the docker, simply run `make docker_stop` or kill the docker-container. All
-configuration is stored in `conode_data`
+You find further information about what is important when you operate a conode
+in the following document: [Operating a Conode](Operating.md).
 
-For more information, see [Docker.md]
+Once you have a conode up and running, you can inform us on dedis@epfl.ch and
+we will include your conode in the DEDIS-cothority.
 
-## Conode Binary
+## Creating Your own Cothority
 
-### Preparation
-
-To use the code of this package you need to:
-
-- Install [Golang](https://golang.org/doc/install)
-- Optional: Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your workspace directory
-- Put $GOPATH/bin in your PATH: `export PATH=$PATH:$(go env GOPATH)/bin`
-
-To build and install the cothority server, execute:
-
-```bash
-go get -u github.com/dedis/cothority/conode
-```
-
-### Functionality Overview
+For most of the apps you need at least 3 running nodes. Once you have them up
+and running, you will need a `roster.toml` that includes all the
+`public.toml`-files from your conodes:
 
 ```
-conode help
-NAME:
-   conode - run a cothority server
-
-USAGE:
-   conode [global options] command [command options] [arguments...]
-
-VERSION:
-   1.1
-
-COMMANDS:
-     setup, s  Setup server configuration (interactive)
-     server    Start cothority server
-     check, c  Check if the servers in the group definition are up and running
-     help, h   Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --config value, -c value  configuration file of the server (default: "/Users/cosh/Library/Conode/private.toml")
-   --debug value, -d value   debug-level: 1 for terse, 5 for maximal (default: 0)
-   --help, -h                show help
-   --version, -v             print the version
+cat ../*/conode_data/public.toml > roster.toml
 ```
 
-### Using the Cothority Server
-
-#### Configuration
-
-To configure your conode you need to *open two consecutive ports* (e.g., 6879 and 6880) on your machine, then execute
-
-```
-conode setup
-```
-
-and follow the instructions of the dialog. After a successful setup there should be two configuration files:
-
-- The *public configuration file* of your cothority server is located at `$HOME/.config/conode/public.toml`. Adapt the `description` variable to your liking and send the file to other cothority operators to request access to the cothority.
-- The *private configuration file* of your cothoriy server is located at `$HOME/.config/conode/private.toml`.
-
-**Warning:** Never (!!!) share the file `private.toml` with anybody, as it contains the private key of your conode.
-
-**Note:**
-
-- The [public configuration file](dedis-cothority.toml) of the DEDIS cothority provides an example of how such a file with multiple conodes usually looks like.
-- On macOS the configuration files are located at `$HOME/Library/Conode/{public,private}.toml`.
-
-#### Usage
-
-To start your conode with the default (private) configuration file, located at `$HOME/.config/conode/private.toml`, execute:
-
-```
-conode
-```
-
-## run_conode.sh Script
-
-If you want to run a conode on a long-term basis, you can use `run_conode.sh`. This brings you:
-
-* migration of data if we change it
-* loop around conode if it quits
-* automatic updates (-update)
-* sending of log-files (-mail)
-
-You can run it with all extras like so:
-
-`./run_conode.sh -mail -update`
-
-It will send an email to DEDIS with the last 200 lines of log-output every time conode restarts.
-You can change the MAILADDR-variable at the top of the script to change the address
-
-## Further Information
-
-For further details on the cothority server, please refer to the [wiki](https://github.com/dedis/cothority/wiki/Conode).
+You will find more details about the available apps on
+[Applications](https://github.com/dedis/cothority/tree/master/doc/Applications.md).
