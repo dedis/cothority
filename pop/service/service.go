@@ -708,7 +708,6 @@ func (s *Service) PropagateFinal(msg network.Message) {
 //signs FinalStatement with BFTCosi and Propagates signature to other nodes
 func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	data []byte) error {
-
 	bf := 2
 	if len(final.Desc.Roster.List)-1 > 2 {
 		bf = len(final.Desc.Roster.List) - 1
@@ -732,6 +731,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 			"protocol instance is invalid")
 	}
 
+	root.Timeout = timeout / 2
 	// pop is not fault tolerant
 	root.AllowedExceptions = 0
 
@@ -978,10 +978,10 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.RegisterProcessorFunc(mergeConfigID, s.MergeConfig)
 	s.RegisterProcessorFunc(mergeConfigReplyID, s.MergeConfigReply)
 	s.ProtocolRegister(bftSignFinal, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyFinal, timeout/2)
+		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyFinal)
 	})
 	s.ProtocolRegister(bftSignMerge, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyMerge, timeout/2)
+		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyMerge)
 	})
 	return s, nil
 }

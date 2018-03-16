@@ -40,7 +40,8 @@ type ProtocolBFTCoSi struct {
 	Msg []byte
 	// Data going along the msg to the verification
 	Data []byte
-	// Timeout is how long to wait while gathering commits.
+	// Timeout is how long to wait while gathering commits. It should be
+	// set by the caller after creating the protocol.
 	Timeout time.Duration
 	// AllowedExceptions for how much exception is allowed. If more than
 	// AllowedExceptions number of conodes refuse to sign, no signature
@@ -127,7 +128,7 @@ type collectStructs struct {
 }
 
 // NewBFTCoSiProtocol returns a new bftcosi struct
-func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction, to time.Duration) (*ProtocolBFTCoSi, error) {
+func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (*ProtocolBFTCoSi, error) {
 	t := (len(n.Tree().List()) - 1) / 3
 	// initialize the bftcosi node/protocol-instance
 	bft := &ProtocolBFTCoSi{
@@ -143,7 +144,7 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction, t
 		AllowedExceptions:    t,
 		Msg:                  make([]byte, 0),
 		Data:                 make([]byte, 0),
-		Timeout:              to,
+		Timeout:              5 * time.Second,
 	}
 
 	idx, _ := n.Roster().Search(bft.ServerIdentity().ID)
@@ -254,7 +255,7 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 			// the prepare phase
 			return nil
 		case <-time.After(bft.Timeout):
-			return fmt.Errorf("timeout waiting for challenge - " +
+			return errors.New("timeout waiting for challenge - " +
 				"might be OK because the protocol already finished")
 		}
 	}

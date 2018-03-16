@@ -1158,7 +1158,9 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	// Register the function generating the protocol instance
 	root.Msg = msg
 	root.Data = data
+	root.Timeout = defaultPropagateTimeout / 2
 
+	// give the option for tests to set the timeout
 	if s.bftTimeout != 0 {
 		root.Timeout = s.bftTimeout
 	}
@@ -1357,10 +1359,10 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 	s.ProtocolRegister(bftNewBlock, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyNewBlock, defaultPropagateTimeout/2)
+		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyNewBlock)
 	})
 	s.ProtocolRegister(bftFollowBlock, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyFollowBlock, defaultPropagateTimeout/2)
+		return bftcosi.NewBFTCoSiProtocol(n, s.bftVerifyFollowBlock)
 	})
 	return s, nil
 }

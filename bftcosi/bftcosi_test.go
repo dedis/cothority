@@ -57,7 +57,7 @@ func TestBftCoSi(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify, defaultTimeout)
+		return NewBFTCoSiProtocol(n, verify)
 	})
 
 	log.Lvl2("Simple count")
@@ -71,7 +71,7 @@ func TestThreshold(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify, defaultTimeout)
+		return NewBFTCoSiProtocol(n, verify)
 	})
 
 	tests := []struct{ h, t int }{
@@ -112,7 +112,7 @@ func TestNodeFailure(t *testing.T) {
 
 	// Register test protocol using BFTCoSi
 	onet.GlobalProtocolRegister(TestProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewBFTCoSiProtocol(n, verify, defaultTimeout)
+		return NewBFTCoSiProtocol(n, verify)
 	})
 
 	nbrHostsArr := []int{5, 7, 10}
@@ -157,6 +157,7 @@ func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool,
 	// Register the function generating the protocol instance
 	var root *ProtocolBFTCoSi
 	root = node.(*ProtocolBFTCoSi)
+	root.Timeout = defaultTimeout
 	root.Msg = msg
 	cMux.Lock()
 	counter := &Counter{refuseCount: refuseCount}
