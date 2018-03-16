@@ -144,18 +144,19 @@ type ChallengePrepare struct {
 	Challenge kyber.Scalar
 }
 
-// ChallengeCommit  is the challenge used by BftCoSi during the "commit"
-// phase. It contains the basic challenge (out of the block we want to sign) +
-// the signature of the "prepare" round. It also contains the exception list
-// coming from the "prepare" phase. This exception list has been collected by
-// the root during the response of the "prepare" phase and broadcast it through
-// the challenge of the "commit". These are needed in order to verify the
-// signature and to see how many peers did not sign. It's not spoofable because
-// otherwise the signature verification will be wrong.
+// ChallengeCommit  is the challenge used by BftCoSi during the "commit" phase.
+// It contains the basic challenge (out of the block we want to sign) + the
+// signature of the "prepare" round. It also contains the exception list coming
+// from the "prepare" phase. This exception list has been collected by the root
+// during the response of the "prepare" phase and broadcast it through the
+// challenge of the "commit". These are needed in order to verify the signature
+// and to see how many peers did not sign. It's not spoofable because otherwise
+// the signature verification will be wrong.
 type ChallengeCommit struct {
 	// Challenge for the current round
 	Challenge kyber.Scalar
-	// Signature is the signature response generated at the previous round (prepare)
+	// Signature is the signature response generated at the previous round
+	// (prepare)
 	Signature *BFTSignature
 }
 
@@ -166,14 +167,15 @@ type challengePrepareChan struct {
 	ChallengePrepare
 }
 
-// challengeCommitChan is the type of the channel used to catch the response messages.
+// challengeCommitChan is the type of the channel used to catch the response
+// messages.
 type challengeCommitChan struct {
 	*onet.TreeNode
 	ChallengeCommit
 }
 
-// Response is the struct used by ByzCoin during the response. It
-// contains the response + the basic exception list.
+// Response is the struct used by ByzCoin during the response. It contains the
+// response + the basic exception list.
 type Response struct {
 	Response   kyber.Scalar
 	Exceptions []Exception
@@ -187,11 +189,9 @@ type responseChan struct {
 }
 
 // Exception represents the exception mechanism used in BFTCosi to indicate a
-// signer did not want to sign.
-// The index is the index of the public key of the cosigner that do not want to
-// sign.
-// The commit is needed in order to be able to
-// correctly verify the signature
+// signer did not want to sign.  The index is the index of the public key of
+// the cosigner that do not want to sign.  The commit is needed in order to be
+// able to correctly verify the signature.
 type Exception struct {
 	Index      int
 	Commitment kyber.Point

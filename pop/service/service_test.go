@@ -436,7 +436,6 @@ func TestService_MergeRequest(t *testing.T) {
 			s.data.Finals[hash[i/2]].Verify() == nil,
 			fmt.Sprintf("Signature in node %d is not created", i))
 	}
-
 }
 
 func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int,

@@ -103,7 +103,11 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 	log.Lvl3("Registering new propagation for", c.ServerIdentity(),
 		name, pid)
 	return func(el *onet.Roster, msg network.Message, to time.Duration) (int, error) {
-		tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
+		bf := 8
+		if thresh != 0 && len(el.List) > 2 {
+			bf = len(el.List)
+		}
+		tree := el.GenerateNaryTreeWithRoot(bf, c.ServerIdentity())
 		if tree == nil {
 			return 0, errors.New("Didn't find root in tree")
 		}
@@ -194,8 +198,7 @@ func (p *Propagate) Dispatch() error {
 					return err
 				}
 			}
-			// propagate to as many as we can
-			if p.received == p.subtreeCount {
+			if p.received >= p.subtreeCount-p.allowedFailures {
 				process = false
 			}
 		case <-time.After(timeout):

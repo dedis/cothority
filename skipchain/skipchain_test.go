@@ -24,12 +24,13 @@ import (
 
 func init() {
 	skipchainSID = onet.ServiceFactory.ServiceID(ServiceName)
+	defaultPropagateTimeout = time.Second * 5
 }
 
 var skipchainSID onet.ServiceID
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 2)
+	log.MainTest(m)
 }
 
 func TestService_StoreSkipBlock_Failure(t *testing.T) {
@@ -48,20 +49,12 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
+
 	servers, el, genService := local.MakeHELS(4, skipchainSID, cothority.Suite)
 	service := genService.(*Service)
 	// This is the poor server who will play the part of the dead server
 	// for us.
 	deadServer := servers[len(servers)-1]
-
-	if fail {
-		// Set low timeout to make the test finish quickly.
-		service.bftTimeout = 100 * time.Millisecond
-		// WATCH OUT: log levels higher than 3 require a timeout of 500 ms.
-		// service.bftTimeout = 500 * time.Millisecond
-
-		service.propTimeout = 5 * service.bftTimeout
-	}
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
@@ -681,6 +674,10 @@ func TestService_Propagation(t *testing.T) {
 	}
 	service := genService.(*Service)
 
+	// longer timeout because we have a lot of nodes
+	service.propTimeout = 20 * time.Second
+	service.bftTimeout = service.propTimeout / 2
+
 	sbRoot, err := makeGenesisRosterArgs(service, ro, nil, VerificationNone,
 		3, 3)
 	log.ErrFatal(err)
@@ -777,6 +774,11 @@ func TestService_AddFollow(t *testing.T) {
 	master2, err := services[1].StoreSkipBlock(ssb)
 	log.ErrFatal(err)
 	require.True(t, services[1].db.GetByID(master1.Latest.Hash).ForwardLink[0].Hash().Equal(master2.Latest.Hash))
+
+	// The propagation in skipchain might still be happening in the
+	// background because the root does not wait for all replies. So we
+	// wait a bit for it to finish.
+	time.Sleep(time.Second)
 }
 
 func TestService_CreateLinkPrivate(t *testing.T) {
@@ -1087,12 +1089,12 @@ func TestService_LeaderCatchup(t *testing.T) {
 	}
 
 	// At this point, both servers have all blocks. Now remove blocks from
-	// the leader's DB starting at the third one to simulate the situation where the leader
-	// boots with an old backup.
+	// the leader's DB starting at the third one to simulate the situation
+	// where the leader boots with an old backup.
 	nukeBlocksFrom(t, leader.db, third)
 
-	// Write one more onto the leader: it will need to sync it's chain in order
-	// to handle this write.
+	// Write one more onto the leader: it will need to sync it's chain in
+	// order to handle this write.
 	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbrep.Latest.Hash,
 		NewBlock: sbRoot})
 	if err != nil {
@@ -1105,8 +1107,10 @@ func TestService_LeaderCatchup(t *testing.T) {
 	// Simulate follower old backup.
 	nukeBlocksFrom(t, follower.db, third)
 
-	// Write onto leader; the follower will need to sync to be able to sign this.
-	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbrep.Latest.Hash,
+	// Write onto leader; the follower will need to sync to be able to sign
+	// this.
+	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{
+		LatestID: ssbrep.Latest.Hash,
 		NewBlock: sbRoot})
 	if err != nil {
 		t.Fatal(err)

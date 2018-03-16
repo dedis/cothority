@@ -12,13 +12,11 @@ collective signatures and be assured that the blockchain is valid.
 package identity
 
 import (
-	"reflect"
-	"sync"
-
 	"errors"
-
 	"fmt"
 	"math/big"
+	"reflect"
+	"sync"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/messaging"
@@ -789,5 +787,6 @@ func newIdentityService(c *onet.Context) (onet.Service, error) {
 	skipchain.RegisterVerification(c, VerifyIdentity, s.VerifyBlock)
 	s.tagsLimits = make(map[string]int8)
 	s.pointsLimits = make(map[string]int8)
+
 	return s, nil
 }

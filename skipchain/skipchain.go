@@ -870,6 +870,17 @@ func (s *Service) deprecatedProcessorGetBlockReply(env *network.Envelope) {
 // verifyFollowBlock makes sure that a signature-request for a forward-link
 // is valid.
 func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
+	trySync := func(newest *SkipBlock) error {
+		latest, err := s.db.getLatestByID(newest.SkipChainID())
+		if err != nil {
+			return fmt.Errorf("failed to sync skipchain: %v", err)
+		}
+		if err = s.syncChain(newest.Roster, latest.SkipChainID()); err != nil {
+			return fmt.Errorf("failed to sync skipchain: %v", err)
+		}
+		return nil
+	}
+
 	err := func() error {
 		_, fsInt, err := network.Unmarshal(data, cothority.Suite)
 		if err != nil {
@@ -881,7 +892,13 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		}
 		previous := s.db.GetByID(fs.Previous)
 		if previous == nil {
-			return errors.New("Didn't find newest block")
+			if err = trySync(fs.Newest); err != nil {
+				return err
+			}
+			previous = s.db.GetByID(fs.Previous)
+			if previous == nil {
+				return errors.New("Didn't find newest block")
+			}
 		}
 		newest := fs.Newest
 		if len(newest.BackLinkIDs) <= fs.TargetHeight {
@@ -895,7 +912,16 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		}
 		target := s.db.GetByID(newest.BackLinkIDs[fs.TargetHeight])
 		if target == nil {
-			return errors.New("Don't have target-block")
+			// we are synching twice, but usually it should not
+			// happen because if trySync is used above, then we
+			// should be up-to-date
+			if err = trySync(newest); err != nil {
+				return err
+			}
+			target = s.db.GetByID(newest.BackLinkIDs[fs.TargetHeight])
+			if target == nil {
+				return errors.New("Don't have target-block")
+			}
 		}
 		if target.GetForwardLen() >= fs.TargetHeight+1 {
 			return errors.New("Already have forward-link at height " +
@@ -907,7 +933,7 @@ func (s *Service) bftVerifyFollowBlock(msg []byte, data []byte) bool {
 		return nil
 	}()
 	if err != nil {
-		log.Error(err)
+		log.Error(s.ServerIdentity().Address, err)
 		return false
 	}
 	return true
@@ -1078,6 +1104,7 @@ func (s *Service) addForwardLink(src, dst *SkipBlock) error {
 
 // startBFT starts a BFT-protocol with the given parameters.
 func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) (*bftcosi.BFTSignature, error) {
+	log.Lvl4(s.ServerIdentity().Address, "starting BFT -", proto)
 	bf := 2
 	if len(roster.List)-1 > 2 {
 		bf = len(roster.List) - 1
@@ -1131,7 +1158,9 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	// Register the function generating the protocol instance
 	root.Msg = msg
 	root.Data = data
+	root.Timeout = defaultPropagateTimeout / 2
 
+	// give the option for tests to set the timeout
 	if s.bftTimeout != 0 {
 		root.Timeout = s.bftTimeout
 	}
@@ -1149,6 +1178,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 		if sig.Sig == nil {
 			return nil, errors.New("couldn't sign forward-link")
 		}
+		log.Lvl4(s.ServerIdentity().Address, "BFT completed -", proto)
 		return sig, nil
 	case <-time.After(s.propTimeout):
 		return nil, errors.New("timed out while waiting for signature during " + s.propTimeout.String())
