@@ -1,3 +1,9 @@
+// Package service is a SCARAB implementation,  a  secure  and  decentralized
+// data-sharing  platform  with access-control and auditability.
+//
+// Please see
+// https://github.com/dedis/cothority/blob/master/ocs/service/README.md for
+// more information on the API.
 package service
 
 /*

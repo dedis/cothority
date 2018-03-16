@@ -1,5 +1,6 @@
 // +build experimental
 
+// This package contains the simulation files and the code needed to run it.
 package main
 
 import (

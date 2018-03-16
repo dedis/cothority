@@ -1,3 +1,5 @@
+// Package evoting is client side API for communicating with the evoting
+// service.
 package evoting
 
 import (

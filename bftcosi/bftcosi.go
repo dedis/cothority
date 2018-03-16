@@ -1,16 +1,19 @@
+// Package bftcosi is a PBFT-like protocol but uses collective signing
+// (DEPRECATED).
+//
+// BFTCoSi is a byzantine-fault-tolerant protocol to sign a message given a
+// verification-function. It uses two rounds of signing - the first round
+// indicates the willingness of the rounds to sign the message, and the second
+// round is only started if at least a 'threshold' number of nodes signed off
+// in the first round. Please see
+// https://github.com/dedis/cothority/blob/master/bftcosi/README.md for
+// details.
+//
+// DEPRECATED: this package is kept here for historical and research purposes.
+// It should not be used in other services as it has been deprecated by the
+// byzcoinx package.
+//
 package bftcosi
-
-/*
-BFTCoSi is a byzantine-fault-tolerant protocol to sign a message given a
-verification-function. It uses two rounds of signing - the first round
-indicates the willingness of the rounds to sign the message, and the second
-round is only started if at least a 'threshold' number of nodes signed off in
-the first round.
-
-WARNING: this package is kept here for historical and research purposes. It
-should not be used in other services as it has been deprecated by the byzcoinx
-package.
-*/
 
 import (
 	"crypto/sha512"

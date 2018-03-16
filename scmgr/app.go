@@ -1,6 +1,5 @@
-/*
-* The skipchain-manager lets you create, modify and query skipchains
- */
+// The skipchain-manager (scmgr) is a CLI which lets you create, modify and
+// query skipchains.
 package main
 
 import (

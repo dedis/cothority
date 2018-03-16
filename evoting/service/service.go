@@ -1,3 +1,4 @@
+// Package service is the evoting service designed for use at EPFL.
 package service
 
 import (

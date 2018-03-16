@@ -1,29 +1,26 @@
+// Package service implements a Proof-of-Personhood (pop) party.
+//
+// Proof-of-personhood parties provide a number of "attendees" with an
+// "anonymous token" that enables them to "authenticate" to a service as being
+// part of the party.
+//
+// These parties are held by a number of "organisers" who set up a party by
+// defining place, time and purpose of that party and by publishing a "party
+// configuration" that is signed by the organisers "conodes".  At the party,
+// they "register" all attendees' public keys.  Once the party is over, they
+// create a "party transcript" that is signed by all organisers' conodes.
+//
+// The attendees create their "pop token" by joining their private key to the
+// party transcript. They can now use that token to sign a "message" in a
+// "context" from a service and send the resulting "signature" and "tag" back
+// to the service.
+//
+// On the service's side, it can use the party transcript to verify that the
+// signature has been created using a private key present in the party
+// transcript.  The tag will be unique to that attendee/context pair, but
+// another service using another context will not be able to link two tags to
+// the same or different attendee.
 package service
-
-/*
-Service for a Proof-of-Personhood party
-
-Proof-of-personhood parties provide a number of "attendees" with an "anonymous
-token" that enables them to "authenticate" to a service as being part of the
-party.
-
-These parties are held by a number of "organisers" who set up a party by
-defining place, time and purpose of that party and by publishing a
-"party configuration" that is signed by the organisers "conodes".
-At the party, they "register" all attendees' public keys.
-Once the party is over, they create a "party transcript" that is signed by all
-organisers' conodes.
-
-The attendees create their "pop token" by joining their private key to the
-party transcript. They can now use that token to sign a "message" in a "context"
-from a service and send the resulting "signature" and "tag" back to the service.
-
-On the service's side, it can use the party transcript to verify that the
-signature has been created using a private key present in the party transcript.
-The tag will be unique to that attendee/context pair, but another service using
-another context will not be able to link two tags to the same or different
-attendee.
-*/
 
 import (
 	"bytes"

@@ -1,3 +1,4 @@
+// This is command line interface for communicating with the evoting service.
 package main
 
 import (
@@ -7,13 +8,12 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/evoting"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
-
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/evoting"
 )
 
 var (

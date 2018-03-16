@@ -1,3 +1,7 @@
+// Package protocol is the fault tolerant cosi protocol implementation.
+//
+// For more information on the protocol, please see
+// https://github.com/dedis/cothority/blob/master/ftcosi/protocol/README.md.
 package protocol
 
 import (

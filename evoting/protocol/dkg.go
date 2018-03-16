@@ -1,10 +1,5 @@
 package protocol
 
-/*
-The onchain-protocol implements the key-reencryption described in Lefteris'
-paper-draft about onchain-secrets (called BlockMage).
-*/
-
 import (
 	"errors"
 	"fmt"
