@@ -114,9 +114,11 @@ type OpenReply struct {
 
 // Cast message.
 type Cast struct {
-	User   uint32                // Token for authentication.
 	ID     skipchain.SkipBlockID // ID of the election skipchain.
 	Ballot *lib.Ballot           // Ballot to be casted.
+
+	User      uint32 // Token for authentication.
+	Signature []byte
 }
 
 // CastReply message.
@@ -124,8 +126,9 @@ type CastReply struct{}
 
 // Shuffle message.
 type Shuffle struct {
-	Token string                // Token for authentication.
-	ID    skipchain.SkipBlockID // ID of the election skipchain.
+	ID        skipchain.SkipBlockID // ID of the election skipchain.
+	User      uint32
+	Signature []byte
 }
 
 // ShuffleReply message.
@@ -133,8 +136,9 @@ type ShuffleReply struct{}
 
 // Decrypt message.
 type Decrypt struct {
-	Token string                // Token for authentication.
-	ID    skipchain.SkipBlockID // ID of the election skipchain.
+	ID        skipchain.SkipBlockID // ID of the election skipchain.
+	User      uint32
+	Signature []byte
 }
 
 // DecryptReply message.
@@ -142,8 +146,7 @@ type DecryptReply struct{}
 
 // GetBox message.
 type GetBox struct {
-	Token string                // Token for authentication.
-	ID    skipchain.SkipBlockID // ID of the election skipchain.
+	ID skipchain.SkipBlockID // ID of the election skipchain.
 }
 
 // GetBoxReply message.
@@ -153,8 +156,7 @@ type GetBoxReply struct {
 
 // GetMixes message.
 type GetMixes struct {
-	Token string                // Token for authentication.
-	ID    skipchain.SkipBlockID // ID of the election skipchain.
+	ID skipchain.SkipBlockID // ID of the election skipchain.
 }
 
 // GetMixesReply message.
@@ -164,8 +166,7 @@ type GetMixesReply struct {
 
 // GetPartials message.
 type GetPartials struct {
-	Token string                // Token for authentication.
-	ID    skipchain.SkipBlockID // ID of the election skipchain.
+	ID skipchain.SkipBlockID // ID of the election skipchain.
 }
 
 // GetPartialsReply message.
@@ -175,8 +176,7 @@ type GetPartialsReply struct {
 
 // Reconstruct message.
 type Reconstruct struct {
-	Token string                // Token for authentication
-	ID    skipchain.SkipBlockID // ID of the election skipchain.
+	ID skipchain.SkipBlockID // ID of the election skipchain.
 }
 
 // ReconstructReply message.

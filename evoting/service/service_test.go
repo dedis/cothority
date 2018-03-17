@@ -5,17 +5,89 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/evoting"
-	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
+
+	"github.com/dedis/cothority/evoting"
+	"github.com/dedis/cothority/evoting/lib"
+	"github.com/dedis/cothority/skipchain"
 )
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
+
+func mockMasterSkipchain(master *lib.Master, links ...skipchain.SkipBlockID) {
+	chain, _ := lib.NewSkipchain(master.Roster, skipchain.VerificationStandard, nil)
+
+	master.ID = chain.Hash
+	lib.Store(master.ID, master.Roster, master)
+
+	for _, link := range links {
+		lib.Store(master.ID, master.Roster, &lib.Link{ID: link})
+	}
+}
+
+// func mockElectionSkipchain(election *lib.Election, size int) []*dkg.DistKeyGenerator {
+// 	chain, _ := lib.NewSkipchain(election.Roster, evoting.VerificationFunction, nil)
+
+// 	n := len(election.Roster.List)
+// 	dkgs, _ := lib.DKGSimulate(n, n-1)
+// 	shared, _ := lib.NewSharedSecret(dkgs[0])
+
+// 	key := shared.X
+
+// 	election.ID = chain.Hash
+// 	election.Key = key
+// 	fmt.Println("ZZZZZZZZZZZZZZZ")
+// 	tx := lib.NewTransaction(election, election.Creator)
+// 	lib.Store(election.ID, election.Roster, lib.NewTransaction(election, election.Creator))
+
+// 	// Create ballots
+// 	ballots := make([]*lib.Ballot, size)
+// 	for i := range ballots {
+// 		a, b := lib.Encrypt(key, []byte{byte(i)})
+// 		ballots[i] = &lib.Ballot{User: uint32(i), Alpha: a, Beta: b}
+// 		lib.Store(election.ID, election.Roster, ballots[i])
+// 	}
+
+// 	// Create mixes
+// 	mixes := make([]*lib.Mix, n)
+// 	x, y := lib.Split(ballots)
+// 	for i := range mixes {
+// 		v, w, prover := shuffle.Shuffle(cothority.Suite, nil, key, x, y, random.New())
+// 		proof, _ := proof.HashProve(cothority.Suite, "", prover)
+// 		mixes[i] = &lib.Mix{Ballots: lib.Combine(v, w), Proof: proof, Node: string(i)}
+// 		x, y = v, w
+// 	}
+
+// 	// Create partials
+// 	partials, latest := make([]*lib.Partial, n), mixes[len(mixes)-1]
+// 	for i, gen := range dkgs {
+// 		secret, _ := lib.NewSharedSecret(gen)
+// 		points := make([]kyber.Point, len(latest.Ballots))
+// 		for j, ballot := range latest.Ballots {
+// 			points[j] = lib.Decrypt(secret.V, ballot.Alpha, ballot.Beta)
+// 		}
+// 		partials[i] = &lib.Partial{Points: points, Node: string(i)}
+// 	}
+
+// 	if election.Stage == lib.Shuffled {
+// 		for _, m := range mixes {
+// 			lib.Store(election.ID, election.Roster, m)
+// 		}
+// 	} else if election.Stage == lib.Decrypted {
+// 		for _, m := range mixes {
+// 			lib.Store(election.ID, election.Roster, m)
+// 		}
+// 		for _, p := range partials {
+// 			lib.Store(election.ID, election.Roster, p)
+// 		}
+// 	}
+// 	return dkgs
+// }
 
 func TestService(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
@@ -36,7 +108,6 @@ func TestService(t *testing.T) {
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
 	pin := "1234"
 	s.pin = pin
-	// token := s.state.register(0, false)
 
 	// Creating master skipchain
 	replyLink, err := s.Link(&evoting.Link{
@@ -47,20 +118,6 @@ func TestService(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	login := func(user uint32) *evoting.LoginReply {
-		login := &evoting.Login{
-			ID:   replyLink.ID,
-			User: user,
-		}
-		require.Nil(t, login.Sign(nodeKP.Private))
-		replyLogin, err := s.Login(login)
-		require.Nil(t, err)
-		return replyLogin
-	}
-
-	// Logging in as administrator
-	loginAdmin := login(idAdmin)
-
 	// Create a new election
 	replyOpen, err := s.Open(&evoting.Open{
 		ID: replyLink.ID,
@@ -69,25 +126,25 @@ func TestService(t *testing.T) {
 			Creator:  idAdmin,
 			Users:    []uint32{idUser1, idUser2, idUser3, idAdmin},
 			Subtitle: "test",
-			// The test hopefully ends before the next day...
-			End: time.Now().Unix() + 86400,
+			End:      time.Now().Unix() + 86400,
 		},
+		User:      idAdmin,
+		Signature: []byte{},
 	})
 	require.Nil(t, err)
 
 	vote := func(user uint32, bufCand []byte) *evoting.CastReply {
-		loginUser := login(user)
 		k, c := lib.Encrypt(replyOpen.Key, bufCand)
-		log.Lvl2(cothority.Suite.Point().Sub(c, replyOpen.Key))
 		ballot := &lib.Ballot{
 			User:  user,
 			Alpha: k,
 			Beta:  c,
 		}
 		cast, err := s.Cast(&evoting.Cast{
-			Token:  loginUser.Token,
-			ID:     replyOpen.ID,
-			Ballot: ballot,
+			ID:        replyOpen.ID,
+			Ballot:    ballot,
+			User:      user,
+			Signature: []byte{},
 		})
 		require.Nil(t, err)
 		return cast
@@ -100,24 +157,26 @@ func TestService(t *testing.T) {
 
 	// Shuffle all votes
 	_, err = s.Shuffle(&evoting.Shuffle{
-		Token: loginAdmin.Token,
-		ID:    replyOpen.ID,
+		ID:        replyOpen.ID,
+		User:      idAdmin,
+		Signature: []byte{},
 	})
 	require.Nil(t, err)
 
 	// Decrypt all votes
 	_, err = s.Decrypt(&evoting.Decrypt{
-		Token: loginAdmin.Token,
-		ID:    replyOpen.ID,
+		ID:        replyOpen.ID,
+		User:      idAdmin,
+		Signature: []byte{},
 	})
 	require.Nil(t, err)
 
 	// Reconstruct votes
 	reconstructReply, err := s.Reconstruct(&evoting.Reconstruct{
-		Token: loginAdmin.Token,
-		ID:    replyOpen.ID,
+		ID: replyOpen.ID,
 	})
 	require.Nil(t, err)
+
 	for _, p := range reconstructReply.Points {
 		log.Lvl2("Point is:", p.String())
 	}

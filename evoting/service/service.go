@@ -27,31 +27,6 @@ import (
 // timeout for protocol termination.
 const timeout = 60 * time.Second
 
-var (
-	errInvalidPin       = errors.New("Invalid pin")
-	errInvalidSignature = errors.New("Invalid signature")
-	errNotLoggedIn      = errors.New("User is not logged in")
-	errNotAdmin         = errors.New("Admin privileges required")
-	errNotCreator       = errors.New("User is not election creator")
-	errNotPart          = errors.New("User is not part of election")
-
-	errNotStarted       = errors.New("Election has not started yet")
-	errNotShuffled      = errors.New("Election has not been shuffled yet")
-	errNotDecrypted     = errors.New("Election has not been decrypted yet")
-	errAlreadyShuffled  = errors.New("Election has already been shuffled")
-	errAlreadyDecrypted = errors.New("Election has already been decrypted")
-	errAlreadyClosed    = errors.New("Election has already been closed")
-	errInvalidEndDate   = errors.New("Election has invalid end date")
-	errAlreadyEnded     = errors.New("Election has ended")
-	errCorrupt          = errors.New("Election skipchain is corrupt")
-
-	errEmptyTransaction = errors.New("Empty transaction block")
-	errMasterNotFound   = errors.New("Master skipchain not found")
-
-	errProtocolUnknown = errors.New("Protocol unknown")
-	errProtocolTimeout = errors.New("Protocol timeout")
-)
-
 // serviceID is the onet identifier.
 var serviceID onet.ServiceID
 
@@ -61,15 +36,16 @@ type Service struct {
 
 	secrets map[string]*lib.SharedSecret // secrets is map a of DKG products.
 
-	skipchain *skipchain.Service
-	state     *state       // state is the log of currently logged in users.
-	node      *onet.Roster // nodes is a unitary roster.
-	pin       string       // pin is the current service number.
+	state *state       // state is the log of currently logged in users.
+	node  *onet.Roster // nodes is a unitary roster.
+	pin   string       // pin is the current service number.
 }
 
 // synchronizer is broadcasted to all roster nodes before every protocol.
 type synchronizer struct {
-	ID skipchain.SkipBlockID
+	ID        skipchain.SkipBlockID
+	User      uint32
+	Signature []byte
 }
 
 func init() {
@@ -85,10 +61,10 @@ func (s *Service) Ping(req *evoting.Ping) (*evoting.Ping, error) {
 // Link message handler. Generates a new master skipchain.
 func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 	if req.Pin != s.pin {
-		return nil, errInvalidPin
+		return nil, errors.New("link error: invalid pin")
 	}
 
-	genesis, err := lib.New(req.Roster, nil)
+	genesis, err := lib.NewSkipchain(req.Roster, skipchain.VerificationStandard, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -99,14 +75,14 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 		Admins: req.Admins,
 		Key:    req.Key,
 	}
-	if err := master.Store(master); err != nil {
+	if err := lib.Store(master.ID, master.Roster, master); err != nil {
 		return nil, err
 	}
 	return &evoting.LinkReply{ID: genesis.Hash}, nil
 }
 
 func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
-	master, err := lib.FetchMaster(s.node, req.ID)
+	master, err := lib.GetMaster(s.node, req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -124,12 +100,16 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 
 	instance, _ := s.CreateProtocol(protocol.NameDKG, tree)
 	protocol := instance.(*protocol.SetupDKG)
-	config, _ := network.Marshal(&synchronizer{genesis.Hash})
+	config, _ := network.Marshal(&synchronizer{
+		ID:        genesis.Hash,
+		User:      req.User,
+		Signature: req.Signature,
+	})
 	protocol.SetConfig(&onet.GenericConfig{Data: config})
+
 	if err = protocol.Start(); err != nil {
 		return nil, err
 	}
-
 	select {
 	case <-protocol.Done:
 		secret, _ := lib.NewSharedSecret(protocol.DKG)
@@ -139,123 +119,21 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		req.Election.Key = secret.X
 		s.secrets[genesis.Short()] = secret
 
-		transaction := &lib.Transaction{
-			Election:  req.Election,
-			User:      req.User,
-			Signature: req.Signature,
-		}
-
+		transaction := lib.NewTransaction(req.Election, req.User, req.Signature)
 		if err = s.ver(genesis.Hash, transaction); err != nil {
 			return nil, err
 		}
 
-		if err := req.Election.Store(transaction); err != nil {
+		if err = lib.Store(req.Election.ID, s.node, transaction); err != nil {
 			return nil, err
 		}
-		if err = master.Store(&lib.Link{ID: genesis.Hash}); err != nil {
+		if err = lib.Store(master.ID, s.node, &lib.Link{ID: genesis.Hash}); err != nil {
 			return nil, err
 		}
-
 		return &evoting.OpenReply{ID: genesis.Hash, Key: secret.X}, nil
 	case <-time.After(timeout):
-		return nil, errProtocolTimeout
+		return nil, errors.New("open error, protocol timeout")
 	}
-}
-
-// Open message handler. Generates a new election.
-// func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
-// 	if _, err := s.vet(req.Token, nil, true); err != nil {
-// 		return nil, err
-// 	}
-
-// 	master, err := lib.FetchMaster(s.node, req.ID)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	// sanity check - do not allow elections to be created retrospectively
-// 	if req.Election.End < time.Now().Unix() {
-// 		return nil, errors.New("election cannot end before current time")
-// 	}
-
-// 	genesis, err := lib.New(master.Roster, nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	size := len(master.Roster.List)
-// 	rooted := master.Roster.NewRosterWithRoot(s.ServerIdentity())
-// 	if rooted == nil {
-// 		return nil, errors.New("we're not in the roster")
-// 	}
-// 	tree := rooted.GenerateNaryTree(size)
-// 	if tree == nil {
-// 		return nil, errors.New("error while creating the tree")
-// 	}
-// 	instance, err := s.CreateProtocol(protocol.NameDKG, tree)
-// 	protocol := instance.(*protocol.SetupDKG)
-
-// 	config, _ := network.Marshal(&synchronizer{genesis.Hash})
-// 	protocol.SetConfig(&onet.GenericConfig{Data: config})
-
-// 	if err = protocol.Start(); err != nil {
-// 		return nil, err
-// 	}
-
-// 	select {
-// 	case <-protocol.Done:
-// 		secret, _ := lib.NewSharedSecret(protocol.DKG)
-// 		req.Election.ID = genesis.Hash
-// 		req.Election.Roster = master.Roster
-// 		req.Election.Key = secret.X
-// 		s.secrets[genesis.Short()] = secret
-
-// 		if err := req.Election.Store(req.Election); err != nil {
-// 			return nil, err
-// 		}
-
-// 		if err = master.Store(&lib.Link{ID: genesis.Hash}); err != nil {
-// 			return nil, err
-// 		}
-
-// 		return &evoting.OpenReply{ID: genesis.Hash, Key: secret.X}, nil
-// 	case <-time.After(timeout):
-// 		return nil, errProtocolTimeout
-// 	}
-// }
-
-// Login message handler. Log potential user in state.
-func (s *Service) Login(req *evoting.Login) (*evoting.LoginReply, error) {
-	master, err := lib.FetchMaster(s.node, req.ID)
-	if err != nil {
-		return nil, err
-	}
-
-	if req.Verify(master.Key) != nil {
-		return nil, errInvalidSignature
-	}
-
-	links, err := master.Links()
-	if err != nil {
-		return nil, err
-	}
-
-	elections := make([]*lib.Election, 0)
-	for _, link := range links {
-		election, err := lib.FetchElection(s.node, link.ID)
-		if err != nil {
-			return nil, err
-		}
-
-		if (election.IsUser(req.User) && time.Now().Unix() >= election.Start) ||
-			election.IsCreator(req.User) {
-			elections = append(elections, election)
-		}
-	}
-
-	admin := master.IsAdmin(req.User)
-	token := s.state.register(req.User, admin)
-	return &evoting.LoginReply{Token: token, Admin: admin, Elections: elections}, nil
 }
 
 // LookupSciper calls https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
@@ -276,7 +154,7 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 
 	// Make sure the only varialbe expansion in there is what we want it to be.
 	if strings.Contains(url, "%") {
-		return nil, errors.New("Percent not allowed in LookupURL")
+		return nil, errors.New("percent not allowed in LookupURL")
 	}
 	url = fmt.Sprintf(url+"?id=%06d", sciper)
 
@@ -321,78 +199,20 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 }
 
 // Cast message handler. Cast a ballot in a given election.
-// func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
-// 	election, err := s.vet(req.Token, req.ID, false)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	if election.Stage >= lib.Shuffled {
-// 		return nil, errAlreadyClosed
-// 	}
-
-// 	if election.End < time.Now().Unix() {
-// 		return nil, errAlreadyEnded
-// 	}
-
-// 	if err = election.Store(req.Ballot); err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &evoting.CastReply{}, nil
-// }
-
 func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
-	transaction := &lib.Transaction{
-		Ballot:    req.Ballot,
-		User:      req.User,
-		Signature: []byte{},
-	}
-
+	transaction := lib.NewTransaction(req.Ballot, req.User, req.Signature)
 	if err := s.ver(req.ID, transaction); err != nil {
 		return nil, err
 	}
-
-	latest, err := s.skipchain.GetDB().GetLatest(s.skipchain.GetDB().GetByID(req.ID))
-	if err != nil {
+	if err := lib.Store(req.ID, s.node, transaction); err != nil {
 		return nil, err
 	}
-
-	client := skipchain.NewClient()
-	if _, err := client.StoreSkipBlock(latest, nil, transaction); err != nil {
-		return nil, err
-	}
-
 	return &evoting.CastReply{}, nil
 }
 
-func (s *Service) getElection(id skipchain.SkipBlockID) (*lib.Election, error) {
-	chain := s.assemble(id)
-	if chain == nil || len(chain) < 1 {
-		return nil, errors.New("no election found")
-	}
-
-	transaction := lib.NewTransaction(chain[1].Data)
-	if transaction == nil || transaction.Election == nil {
-		return nil, errors.New("no election in second block")
-	}
-
-	latest := lib.NewTransaction(chain[len(chain)-1].Data)
-	if latest != nil {
-		if latest.Election != nil || latest.Ballot != nil {
-			transaction.Election.Stage = lib.Running
-		} else if latest.Mix != nil {
-			transaction.Election.Stage = lib.Shuffled
-		} else {
-			transaction.Election.Stage = lib.Decrypted
-		}
-	}
-	return transaction.Election, nil
-}
-
-// GetBox message handler. Vet accumulated encrypted ballots.
+// GetBox message handler to retrieve the casted ballot in an election.
 func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
-	election, err := s.vet(req.Token, req.ID, false)
+	election, err := lib.GetElection(s.node, req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -401,74 +221,67 @@ func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
 	if err != nil {
 		return nil, err
 	}
-
 	return &evoting.GetBoxReply{Box: box}, nil
 }
 
 // GetMixes message handler. Vet all created mixes.
 func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error) {
-	election, err := s.vet(req.Token, req.ID, false)
+	election, err := lib.GetElection(s.node, req.ID)
 	if err != nil {
 		return nil, err
-	}
-
-	if election.Stage < lib.Shuffled {
-		return nil, errNotShuffled
 	}
 
 	mixes, err := election.Mixes()
 	if err != nil {
 		return nil, err
 	}
-
 	return &evoting.GetMixesReply{Mixes: mixes}, nil
 }
 
 // GetPartials message handler. Vet all created partial decryptions.
 func (s *Service) GetPartials(req *evoting.GetPartials) (*evoting.GetPartialsReply, error) {
-	election, err := s.vet(req.Token, req.ID, false)
+	election, err := lib.GetElection(s.node, req.ID)
 	if err != nil {
 		return nil, err
-	}
-
-	if election.Stage < lib.Decrypted {
-		return nil, errNotDecrypted
 	}
 
 	partials, err := election.Partials()
 	if err != nil {
 		return nil, err
 	}
-
 	return &evoting.GetPartialsReply{Partials: partials}, nil
 }
 
 // Shuffle message handler. Initiate shuffle protocol.
 func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
-	election, err := s.vet(req.Token, req.ID, true)
+	err := s.ver(req.ID, lib.NewTransaction(&lib.Mix{}, req.User, req.Signature))
 	if err != nil {
 		return nil, err
 	}
 
-	if election.Stage >= lib.Shuffled {
-		return nil, errAlreadyShuffled
+	election, err := lib.GetElection(s.node, req.ID)
+	if err != nil {
+		return nil, err
 	}
 
 	rooted := election.Roster.NewRosterWithRoot(s.ServerIdentity())
-	if rooted == nil {
-		return nil, errors.New("we're not in the roster")
-	}
 	tree := rooted.GenerateNaryTree(1)
 	if tree == nil {
 		return nil, errors.New("failed to generate tree")
 	}
+
 	instance, _ := s.CreateProtocol(protocol.NameShuffle, tree)
 	protocol := instance.(*protocol.Shuffle)
+	protocol.User = req.User
+	protocol.Signature = req.Signature
 	protocol.Election = election
 
-	config, _ := network.Marshal(&synchronizer{election.ID})
+	config, _ := network.Marshal(&synchronizer{
+		ID:        req.ID,
+		User:      req.User,
+		Signature: req.Signature,
+	})
 	protocol.SetConfig(&onet.GenericConfig{Data: config})
-
 	if err = protocol.Start(); err != nil {
 		return nil, err
 	}
@@ -477,60 +290,61 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 	case <-protocol.Finished:
 		return &evoting.ShuffleReply{}, nil
 	case <-time.After(timeout):
-		return nil, errProtocolTimeout
+		return nil, errors.New("shuffle error, protocol timeout")
 	}
 }
 
 // Decrypt message handler. Initiate decryption protocol.
 func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
-	election, err := s.vet(req.Token, req.ID, true)
+	err := s.ver(req.ID, lib.NewTransaction(&lib.Partial{}, req.User, req.Signature))
 	if err != nil {
 		return nil, err
 	}
 
-	if election.Stage >= lib.Decrypted {
-		return nil, errAlreadyDecrypted
-	} else if election.Stage < lib.Shuffled {
-		return nil, errNotShuffled
+	election, err := lib.GetElection(s.node, req.ID)
+	if err != nil {
+		return nil, err
 	}
 
 	rooted := election.Roster.NewRosterWithRoot(s.ServerIdentity())
-	if rooted == nil {
-		return nil, errors.New("we're not in the roster")
-	}
 	tree := rooted.GenerateNaryTree(1)
 	if tree == nil {
 		return nil, errors.New("error while generating tree")
 	}
 	instance, _ := s.CreateProtocol(protocol.NameDecrypt, tree)
 	protocol := instance.(*protocol.Decrypt)
+	protocol.User = req.User
+	protocol.Signature = req.Signature
 	protocol.Secret = s.secrets[skipchain.SkipBlockID(election.ID).Short()]
 	protocol.Election = election
 
-	config, _ := network.Marshal(&synchronizer{election.ID})
+	config, _ := network.Marshal(&synchronizer{
+		ID:        req.ID,
+		User:      req.User,
+		Signature: req.Signature,
+	})
 	protocol.SetConfig(&onet.GenericConfig{Data: config})
 
 	if err = protocol.Start(); err != nil {
 		return nil, err
 	}
-
 	select {
 	case <-protocol.Finished:
 		return &evoting.DecryptReply{}, nil
 	case <-time.After(timeout):
-		return nil, errProtocolTimeout
+		return nil, errors.New("decrypt error, protocol timeout")
 	}
 }
 
 // Reconstruct message handler. Fully decrypt partials using Lagrange interpolation.
 func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructReply, error) {
-	election, err := s.vet(req.Token, req.ID, false)
+	election, err := lib.GetElection(s.node, req.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	if election.Stage < lib.Decrypted {
-		return nil, errNotDecrypted
+		return nil, errors.New("reconstruct error, election not closed yet")
 	}
 
 	partials, err := election.Partials()
@@ -559,7 +373,7 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 	onet.ProtocolInstance, error) {
 
 	_, blob, _ := network.Unmarshal(conf.Data, cothority.Suite)
-	id := blob.(*synchronizer).ID
+	sync := blob.(*synchronizer)
 
 	switch node.ProtocolName() {
 	case protocol.NameDKG:
@@ -568,123 +382,110 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 		go func() {
 			<-protocol.Done
 			secret, _ := lib.NewSharedSecret(protocol.DKG)
-			s.secrets[id.Short()] = secret
+			s.secrets[sync.ID.Short()] = secret
 		}()
 		return protocol, nil
 	case protocol.NameShuffle:
-		election, err := lib.FetchElection(s.node, id)
+		election, err := lib.GetElection(s.node, sync.ID)
 		if err != nil {
 			return nil, err
 		}
 
 		instance, _ := protocol.NewShuffle(node)
 		protocol := instance.(*protocol.Shuffle)
+		protocol.User = sync.User
+		protocol.Signature = sync.Signature
 		protocol.Election = election
 
-		config, _ := network.Marshal(&synchronizer{election.ID})
+		config, _ := network.Marshal(&synchronizer{
+			ID:        sync.ID,
+			User:      sync.User,
+			Signature: sync.Signature,
+		})
 		protocol.SetConfig(&onet.GenericConfig{Data: config})
-
 		return protocol, nil
 	case protocol.NameDecrypt:
-		election, err := lib.FetchElection(s.node, id)
+		election, err := lib.GetElection(s.node, sync.ID)
 		if err != nil {
 			return nil, err
 		}
 
 		instance, _ := protocol.NewDecrypt(node)
 		protocol := instance.(*protocol.Decrypt)
-		protocol.Secret = s.secrets[id.Short()]
+		protocol.Secret = s.secrets[sync.ID.Short()]
+		protocol.User = sync.User
+		protocol.Signature = sync.Signature
 		protocol.Election = election
 
-		config, _ := network.Marshal(&synchronizer{election.ID})
+		config, _ := network.Marshal(&synchronizer{
+			ID:        sync.ID,
+			User:      sync.User,
+			Signature: sync.Signature,
+		})
 		protocol.SetConfig(&onet.GenericConfig{Data: config})
-
 		return protocol, nil
 	default:
-		return nil, errProtocolUnknown
+		return nil, errors.New("protocol error, unknown protocol")
 	}
-}
-
-// vet checks the user stamp and fetches the election corresponding to the
-// given id while making sure the user is either a voter or the creator.
-func (s *Service) vet(token string, id skipchain.SkipBlockID, admin bool) (
-	*lib.Election, error) {
-
-	stamp := s.state.get(token)
-	if stamp == nil {
-		return nil, errNotLoggedIn
-	} else if admin && !stamp.admin {
-		return nil, errNotAdmin
-	}
-
-	if id != nil {
-		election, err := lib.FetchElection(s.node, id)
-		if err != nil {
-			return nil, err
-		} else if election.Stage == lib.Corrupt {
-			return nil, errCorrupt
-		}
-
-		if time.Now().Unix() < election.Start {
-			return nil, errNotStarted
-		}
-
-		if admin && !election.IsCreator(stamp.user) {
-			return nil, errNotCreator
-		} else if !admin && !election.IsUser(stamp.user) {
-			return nil, errNotPart
-		}
-
-		return election, nil
-	}
-	return nil, nil
-}
-
-func (s *Service) assemble(id skipchain.SkipBlockID) []*skipchain.SkipBlock {
-	db := s.skipchain.GetDB()
-
-	latest := db.GetByID(id)
-	if latest == nil {
-		return nil
-	}
-
-	blocks := []*skipchain.SkipBlock{latest}
-	for len(latest.ForwardLink) > 0 {
-		block := db.GetByID(latest.ForwardLink[0].To)
-		if block == nil {
-			return blocks
-		}
-		blocks = append(blocks, block)
-		latest = block
-	}
-	return blocks
 }
 
 func (s *Service) ver(genesis skipchain.SkipBlockID, transaction *lib.Transaction) error {
 	if transaction.Election != nil {
 		election := transaction.Election
 		if election.End < time.Now().Unix() {
-			return errInvalidEndDate
+			return errors.New("open error, invalid end date")
 		}
 
-		chain := s.assemble(election.Master)
-
-		master := lib.UnmarshalMaster(chain[1].Data)
+		master, err := lib.GetMaster(s.node, election.Master)
+		if err != nil {
+			return err
+		}
 		if !master.IsAdmin(transaction.User) {
-			return errNotAdmin
+			return errors.New("open error, user not admin")
 		}
 		return nil
 	} else if transaction.Ballot != nil {
-		election, err := s.getElection(genesis)
+		election, err := lib.GetElection(s.node, genesis)
 		if err != nil {
-			return nil
+			return err
 		}
+
+		if election.Stage > lib.Running {
+			return errors.New("cast error, election not in running stage")
+		} else if !election.IsUser(transaction.User) {
+			return errors.New("cast error, user not part")
+		}
+		return nil
+	} else if transaction.Mix != nil {
+		election, err := lib.GetElection(s.node, genesis)
+		if err != nil {
+			return err
+		}
+
+		if election.Stage >= lib.Shuffled {
+			return errors.New("shuffle error, election already shuffled")
+		} else if !election.IsCreator(transaction.User) {
+			return errors.New("shuffle error, user is not election creator")
+		}
+		return nil
+	} else if transaction.Partial != nil {
+		election, err := lib.GetElection(s.node, genesis)
+		if err != nil {
+			return err
+		}
+
+		if election.Stage >= lib.Decrypted {
+			return errors.New("decrypt error, election already decrypted")
+		} else if !election.IsCreator(transaction.User) {
+			return errors.New("decrypt error, user is not election creator")
+		}
+		return nil
 	}
-	return errEmptyTransaction
+	return errors.New("transaction error, empty transaction")
 }
 
 func (s *Service) verify(id []byte, skipblock *skipchain.SkipBlock) bool {
-	transaction := lib.NewTransaction(skipblock.Data)
+	transaction := lib.UnmarshalTransaction(skipblock.Data)
 	if transaction == nil {
 		return false
 	}
@@ -699,7 +500,6 @@ func (s *Service) verify(id []byte, skipblock *skipchain.SkipBlock) bool {
 func new(context *onet.Context) (onet.Service, error) {
 	service := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(context),
-		skipchain:        context.Service(skipchain.ServiceName).(*skipchain.Service),
 		secrets:          make(map[string]*lib.SharedSecret),
 		state:            &state{log: make(map[string]*stamp)},
 		pin:              nonce(48),
@@ -709,7 +509,6 @@ func new(context *onet.Context) (onet.Service, error) {
 		service.Ping,
 		service.Link,
 		service.Open,
-		service.Login,
 		service.Cast,
 		service.GetBox,
 		service.GetMixes,

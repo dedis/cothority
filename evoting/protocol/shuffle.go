@@ -37,8 +37,11 @@ const NameShuffle = "shuffle"
 type Shuffle struct {
 	*onet.TreeNodeInstance
 
-	Election *lib.Election // Election to be shuffled.
-	Finished chan bool     // Flag to signal protocol termination.
+	User      uint32
+	Signature []byte
+	Election  *lib.Election // Election to be shuffled.
+
+	Finished chan bool // Flag to signal protocol termination.
 }
 
 func init() {
@@ -89,7 +92,8 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 	}
 
 	mix := &lib.Mix{Ballots: lib.Combine(g, d), Proof: proof, Node: s.Name()}
-	if err := s.Election.Store(mix); err != nil {
+	transaction := lib.NewTransaction(mix, s.User, s.Signature)
+	if err := lib.Store(s.Election.ID, s.Election.Roster, transaction); err != nil {
 		return err
 	}
 

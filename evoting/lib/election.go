@@ -2,13 +2,12 @@ package lib
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/share/dkg/rabin"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
 )
 
@@ -60,148 +59,93 @@ func init() {
 	network.RegisterMessages(Election{}, Ballot{}, Box{}, Mix{}, Partial{})
 }
 
-// FetchElection retrieves the election object from its skipchain and sets its stage.
-func FetchElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, error) {
-	chain, err := chain(roster, id)
-	if err != nil {
-		return nil, err
-	}
-
-	_, blob, _ := network.Unmarshal(chain[1].Data, cothority.Suite)
-	election := blob.(*Election)
-
-	n, numMixes, numPartials := len(election.Roster.List), 0, 0
-	for _, block := range chain {
-		_, blob, _ := network.Unmarshal(block.Data, cothority.Suite)
-		if _, ok := blob.(*Mix); ok {
-			numMixes++
-		} else if _, ok := blob.(*Partial); ok {
-			numPartials++
-		}
-	}
-
-	if numMixes == 0 && numPartials == 0 {
-		election.Stage = Running
-	} else if numMixes == n && numPartials == 0 {
-		election.Stage = Shuffled
-	} else if numMixes == n && numPartials == n {
-		election.Stage = Decrypted
-	} else {
-		election.Stage = Corrupt
-	}
-	return election, nil
-}
-
 func GetElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, error) {
-	chain, err := chain(roster, id)
+	client := skipchain.NewClient()
+	reply, err := client.GetUpdateChain(roster, id)
 	if err != nil {
 		return nil, err
 	}
 
-	transaction := NewTransaction(chain[1].Data)
+	transaction := UnmarshalTransaction(reply.Update[1].Data)
 	if transaction == nil || transaction.Election == nil {
-		return nil, errors.New("no election found")
+		return nil, errors.New(fmt.Sprintf("no election structure in %s", id.Short()))
 	}
-
 	election := transaction.Election
 
-	n, numMixes, numPartials := len(election.Roster.List), 0, 0
-	for _, block := range chain {
-		_, blob, _ := network.Unmarshal(block.Data, cothority.Suite)
-		if _, ok := blob.(*Mix); ok {
-			numMixes++
-		} else if _, ok := blob.(*Partial); ok {
-			numPartials++
+	n, mixes, partials := len(election.Roster.List), 0, 0
+	for _, block := range reply.Update {
+		transaction := UnmarshalTransaction(block.Data)
+		if transaction != nil && transaction.Mix != nil {
+			mixes++
+		} else if transaction != nil && transaction.Partial != nil {
+			partials++
 		}
 	}
 
-	if numMixes == 0 && numPartials == 0 {
+	if mixes < n && partials == 0 {
 		election.Stage = Running
-	} else if numMixes == n && numPartials == 0 {
+	} else if mixes == n && partials < n {
 		election.Stage = Shuffled
-	} else if numMixes == n && numPartials == n {
+	} else if mixes == n && partials == n {
 		election.Stage = Decrypted
 	} else {
 		election.Stage = Corrupt
 	}
 	return election, nil
-}
-
-// GenChain creates an election skipchain for a specific stage and a given number of ballots.
-func (e *Election) GenChain(numBallots int) []*dkg.DistKeyGenerator {
-	chain, _ := New(e.Roster, nil)
-
-	n := len(e.Roster.List)
-	dkgs, _ := DKGSimulate(n, n-1)
-	secret, _ := NewSharedSecret(dkgs[0])
-
-	e.ID = chain.Hash
-	e.Key = secret.X
-
-	box := genBox(secret.X, numBallots)
-	mixes := box.genMix(secret.X, n)
-	partials := mixes[n-1].genPartials(dkgs)
-
-	e.Store(e)
-	e.storeBallots(box.Ballots)
-
-	if e.Stage == Shuffled {
-		e.storeMixes(mixes)
-	} else if e.Stage == Decrypted {
-		e.storeMixes(mixes)
-		e.storePartials(partials)
-	}
-	return dkgs
-}
-
-// Store appends a given structure to the election skipchain.
-func (e *Election) Store(data interface{}) error {
-	chain, err := chain(e.Roster, e.ID)
-	if err != nil {
-		return err
-	}
-
-	if _, err := client.StoreSkipBlock(chain[len(chain)-1], nil, data); err != nil {
-		return err
-	}
-	return nil
 }
 
 // Box accumulates all the ballots while only keeping the last ballot for each user.
 func (e *Election) Box() (*Box, error) {
-	chain, err := chain(e.Roster, e.ID)
+	client := skipchain.NewClient()
+	reply, err := client.GetUpdateChain(e.Roster, e.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Use map to only included a user's last ballot.
-	mapping := make(map[uint32]*Ballot)
-	for _, block := range chain {
-		_, blob, _ := network.Unmarshal(block.Data, cothority.Suite)
-		if ballot, ok := blob.(*Ballot); ok {
-			mapping[ballot.User] = ballot
+	ballots := make([]*Ballot, 0)
+	for _, block := range reply.Update {
+		transaction := UnmarshalTransaction(block.Data)
+		if transaction != nil && transaction.Ballot != nil {
+			ballots = append(ballots, transaction.Ballot)
 		}
 	}
 
-	ballots := make([]*Ballot, 0)
-	for _, ballot := range mapping {
-		ballots = append(ballots, ballot)
+	// Reverse ballot list
+	for i, j := 0, len(ballots)-1; i < j; i, j = i+1, j-1 {
+		ballots[i], ballots[j] = ballots[j], ballots[i]
 	}
-	return &Box{Ballots: ballots}, nil
+
+	// Only keep last casted ballot per user
+	mapping := make(map[uint32]bool)
+	unique := make([]*Ballot, 0)
+	for _, ballot := range ballots {
+		if _, found := mapping[ballot.User]; !found {
+			unique = append(unique, ballot)
+			mapping[ballot.User] = true
+		}
+	}
+
+	// Reverse back list of unique ballots
+	for i, j := 0, len(unique)-1; i < j; i, j = i+1, j-1 {
+		unique[i], unique[j] = unique[j], unique[i]
+	}
+	return &Box{Ballots: unique}, nil
 }
 
 // Mixes returns all mixes created by the roster conodes.
 func (e *Election) Mixes() ([]*Mix, error) {
-	chain, err := chain(e.Roster, e.ID)
+	client := skipchain.NewClient()
+	reply, err := client.GetUpdateChain(e.Roster, e.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	mixes := make([]*Mix, 0)
-	for _, block := range chain {
-		_, blob, _ := network.Unmarshal(block.Data, cothority.Suite)
-		if mix, ok := blob.(*Mix); ok {
-			mixes = append(mixes, mix)
+	for _, block := range reply.Update {
+		transaction := UnmarshalTransaction(block.Data)
+		if transaction != nil && transaction.Mix != nil {
+			mixes = append(mixes, transaction.Mix)
 		}
 	}
 
@@ -210,16 +154,17 @@ func (e *Election) Mixes() ([]*Mix, error) {
 
 // Partials returns the partial decryption for each roster conode.
 func (e *Election) Partials() ([]*Partial, error) {
-	chain, err := chain(e.Roster, e.ID)
+	client := skipchain.NewClient()
+	reply, err := client.GetUpdateChain(e.Roster, e.ID)
 	if err != nil {
 		return nil, err
 	}
 
 	partials := make([]*Partial, 0)
-	for _, block := range chain {
-		_, blob, _ := network.Unmarshal(block.Data, cothority.Suite)
-		if partial, ok := blob.(*Partial); ok {
-			partials = append(partials, partial)
+	for _, block := range reply.Update {
+		transaction := UnmarshalTransaction(block.Data)
+		if transaction != nil && transaction.Partial != nil {
+			partials = append(partials, transaction.Partial)
 		}
 	}
 
@@ -239,34 +184,4 @@ func (e *Election) IsUser(user uint32) bool {
 // IsCreator checks if a given user is the creator of the election.
 func (e *Election) IsCreator(user uint32) bool {
 	return user == e.Creator
-}
-
-// storeBallots appends a list of ballots to the election skipchain.
-func (e *Election) storeBallots(ballots []*Ballot) error {
-	for _, ballot := range ballots {
-		if err := e.Store(ballot); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// storeBallots appends a list of mixes to the election skipchain.
-func (e *Election) storeMixes(mixes []*Mix) error {
-	for _, mix := range mixes {
-		if err := e.Store(mix); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// storeBallots appends a list of partials to the election skipchain.
-func (e *Election) storePartials(partials []*Partial) error {
-	for _, partial := range partials {
-		if err := e.Store(partial); err != nil {
-			return err
-		}
-	}
-	return nil
 }

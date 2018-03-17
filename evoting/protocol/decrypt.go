@@ -31,9 +31,13 @@ const NameDecrypt = "decrypt"
 type Decrypt struct {
 	*onet.TreeNodeInstance
 
+	User      uint32
+	Signature []byte
+
 	Secret   *lib.SharedSecret // Secret is the private key share from the DKG.
 	Election *lib.Election     // Election to be decrypted.
-	Finished chan bool         // Flag to signal protocol termination.
+
+	Finished chan bool // Flag to signal protocol termination.
 }
 
 func init() {
@@ -65,27 +69,16 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 		return err
 	}
 
-	// var partial *lib.Partial
-	// if !Verify(d.Election.Key, box, mixes) {
-	// 	partial = &lib.Partial{Flag: true, Node: d.Name()}
-	// } else {
-	// 	last := mixes[len(mixes)-1].Ballots
-	// 	points := make([]kyber.Point, len(box.Ballots))
-	// 	for i := range points {
-	// 		points[i] = lib.Decrypt(d.Secret.V, last[i].Alpha, last[i].Beta)
-	// 	}
-	// 	partial = &lib.Partial{Points: points, Flag: false, Node: d.Name()}
-	// }
-
 	last := mixes[len(mixes)-1].Ballots
 	points := make([]kyber.Point, len(box.Ballots))
 	for i := range points {
 		points[i] = lib.Decrypt(d.Secret.V, last[i].Alpha, last[i].Beta)
 	}
+
 	flag := Verify(d.Election.Key, box, mixes)
 	partial := &lib.Partial{Points: points, Flag: flag, Node: d.Name()}
-
-	if err = d.Election.Store(partial); err != nil {
+	transaction := lib.NewTransaction(partial, d.User, d.Signature)
+	if err = lib.Store(d.Election.ID, d.Election.Roster, transaction); err != nil {
 		return err
 	}
 

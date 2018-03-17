@@ -5,24 +5,24 @@ import (
 	"github.com/dedis/onet"
 )
 
-var client = skipchain.NewClient()
-
-// New creates a new skipchain for a given roster and stores data in the genesis block.
-func New(roster *onet.Roster, data interface{}) (*skipchain.SkipBlock, error) {
-	return client.CreateGenesis(roster, 1, 1, skipchain.VerificationStandard, data, nil)
-}
-
-// chain returns a skipchain for a given id.
-func chain(roster *onet.Roster, id skipchain.SkipBlockID) ([]*skipchain.SkipBlock, error) {
-	cl := skipchain.NewClient()
-	chain, err := cl.GetUpdateChain(roster, id)
-	if err != nil {
-		return nil, err
-	}
-	return chain.Update, nil
-}
-
 func NewSkipchain(roster *onet.Roster, verifier []skipchain.VerifierID, data interface{}) (
 	*skipchain.SkipBlock, error) {
+	client := skipchain.NewClient()
 	return client.CreateGenesis(roster, 1, 1, verifier, data, nil)
+}
+
+func Store(id skipchain.SkipBlockID, roster *onet.Roster, data ...interface{}) error {
+	client := skipchain.NewClient()
+	reply, err := client.GetUpdateChain(roster, id)
+	if err != nil {
+		return err
+	}
+
+	for _, d := range data {
+		_, err = client.StoreSkipBlock(reply.Update[len(reply.Update)-1], nil, d)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
