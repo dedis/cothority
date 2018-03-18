@@ -122,7 +122,7 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		s.secrets[genesis.Short()] = secret
 
 		transaction := lib.NewTransaction(req.Election, req.User, req.Signature)
-		if err = s.ver(genesis.Hash, transaction); err != nil {
+		if err = transaction.Verify(genesis.Hash, s.node); err != nil {
 			return nil, err
 		}
 
@@ -203,7 +203,7 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 // Cast message handler. Cast a ballot in a given election.
 func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 	transaction := lib.NewTransaction(req.Ballot, req.User, req.Signature)
-	if err := s.ver(req.ID, transaction); err != nil {
+	if err := transaction.Verify(req.ID, s.node); err != nil {
 		return nil, err
 	}
 	if err := lib.Store(req.ID, s.node, transaction); err != nil {
@@ -256,8 +256,8 @@ func (s *Service) GetPartials(req *evoting.GetPartials) (*evoting.GetPartialsRep
 
 // Shuffle message handler. Initiate shuffle protocol.
 func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
-	err := s.ver(req.ID, lib.NewTransaction(&lib.Mix{}, req.User, req.Signature))
-	if err != nil {
+	decoy := lib.NewTransaction(&lib.Mix{}, req.User, req.Signature)
+	if err := decoy.Verify(req.ID, s.node); err != nil {
 		return nil, err
 	}
 
@@ -298,8 +298,8 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 
 // Decrypt message handler. Initiate decryption protocol.
 func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
-	err := s.ver(req.ID, lib.NewTransaction(&lib.Partial{}, req.User, req.Signature))
-	if err != nil {
+	decoy := lib.NewTransaction(&lib.Partial{}, req.User, req.Signature)
+	if err := decoy.Verify(req.ID, s.node); err != nil {
 		return nil, err
 	}
 
@@ -431,68 +431,13 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 	}
 }
 
-func (s *Service) ver(genesis skipchain.SkipBlockID, transaction *lib.Transaction) error {
-	if transaction.Election != nil {
-		election := transaction.Election
-		if election.End < time.Now().Unix() {
-			return errors.New("open error, invalid end date")
-		}
-
-		master, err := lib.GetMaster(s.node, election.Master)
-		if err != nil {
-			return err
-		}
-		if !master.IsAdmin(transaction.User) {
-			return errors.New("open error, user not admin")
-		}
-		return nil
-	} else if transaction.Ballot != nil {
-		election, err := lib.GetElection(s.node, genesis)
-		if err != nil {
-			return err
-		}
-
-		if election.Stage > lib.Running {
-			return errors.New("cast error, election not in running stage")
-		} else if !election.IsUser(transaction.User) {
-			return errors.New("cast error, user not part")
-		}
-		return nil
-	} else if transaction.Mix != nil {
-		election, err := lib.GetElection(s.node, genesis)
-		if err != nil {
-			return err
-		}
-
-		if election.Stage >= lib.Shuffled {
-			return errors.New("shuffle error, election already shuffled")
-		} else if !election.IsCreator(transaction.User) {
-			return errors.New("shuffle error, user is not election creator")
-		}
-		return nil
-	} else if transaction.Partial != nil {
-		election, err := lib.GetElection(s.node, genesis)
-		if err != nil {
-			return err
-		}
-
-		if election.Stage >= lib.Decrypted {
-			return errors.New("decrypt error, election already decrypted")
-		} else if !election.IsCreator(transaction.User) {
-			return errors.New("decrypt error, user is not election creator")
-		}
-		return nil
-	}
-	return errors.New("transaction error, empty transaction")
-}
-
 func (s *Service) verify(id []byte, skipblock *skipchain.SkipBlock) bool {
 	transaction := lib.UnmarshalTransaction(skipblock.Data)
 	if transaction == nil {
 		return false
 	}
 
-	if s.ver(skipblock.GenesisID, transaction) != nil {
+	if transaction.Verify(skipblock.GenesisID, skipblock.Roster) != nil {
 		return false
 	}
 	return true

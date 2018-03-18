@@ -1,6 +1,10 @@
 package lib
 
 import (
+	"errors"
+	"time"
+
+	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 
 	uuid "github.com/satori/go.uuid"
@@ -54,4 +58,60 @@ func NewTransaction(data interface{}, user uint32, signature []byte) *Transactio
 		return nil
 	}
 	return transaction
+}
+
+// Verify checks that the corresponding transaction is valid before storing it.
+func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster) error {
+	if t.Election != nil {
+		election := t.Election
+		if election.End < time.Now().Unix() {
+			return errors.New("open error: invalid end date")
+		}
+
+		master, err := GetMaster(roster, election.Master)
+		if err != nil {
+			return err
+		}
+		if !master.IsAdmin(t.User) {
+			return errors.New("open error: user not admin")
+		}
+		return nil
+	} else if t.Ballot != nil {
+		election, err := GetElection(roster, genesis)
+		if err != nil {
+			return err
+		}
+
+		if election.Stage > Running {
+			return errors.New("cast error: election not in running stage")
+		} else if !election.IsUser(t.User) {
+			return errors.New("cast error: user not part")
+		}
+		return nil
+	} else if t.Mix != nil {
+		election, err := GetElection(roster, genesis)
+		if err != nil {
+			return err
+		}
+
+		if election.Stage >= Shuffled {
+			return errors.New("shuffle error: election already shuffled")
+		} else if !election.IsCreator(t.User) {
+			return errors.New("shuffle error: user is not election creator")
+		}
+		return nil
+	} else if t.Partial != nil {
+		election, err := GetElection(roster, genesis)
+		if err != nil {
+			return err
+		}
+
+		if election.Stage >= Decrypted {
+			return errors.New("decrypt error: election already decrypted")
+		} else if !election.IsCreator(t.User) {
+			return errors.New("decrypt error: user is not election creator")
+		}
+		return nil
+	}
+	return errors.New("transaction error: empty transaction")
 }
