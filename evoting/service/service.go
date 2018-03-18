@@ -82,13 +82,14 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 	return &evoting.LinkReply{ID: genesis.Hash}, nil
 }
 
+// Open message hander. Create a new election with accompanying skipchain.
 func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 	master, err := lib.GetMaster(s.node, req.ID)
 	if err != nil {
 		return nil, err
 	}
 
-	genesis, err := lib.NewSkipchain(master.Roster, evoting.VerificationFunction, nil)
+	genesis, err := lib.NewSkipchain(master.Roster, lib.TransactionVerifiers, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -517,7 +518,7 @@ func new(context *onet.Context) (onet.Service, error) {
 		service.Reconstruct,
 		service.LookupSciper,
 	)
-	skipchain.RegisterVerification(context, evoting.VerificationID, service.verify)
+	skipchain.RegisterVerification(context, lib.TransactionVerifierID, service.verify)
 
 	pin := make([]byte, 16)
 	random.Bytes(pin, random.New())

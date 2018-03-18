@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/dedis/kyber"
@@ -43,7 +42,7 @@ func GetMaster(roster *onet.Roster, id skipchain.SkipBlockID) (*Master, error) {
 	}
 
 	if len(reply.Update) < 2 {
-		return nil, errors.New(fmt.Sprintf("no master structure in %s", id.Short()))
+		return nil, fmt.Errorf("no master structure in %s", id.Short())
 	}
 	_, blob, err := network.Unmarshal(reply.Update[1].Data, cothority.Suite)
 	return blob.(*Master), err

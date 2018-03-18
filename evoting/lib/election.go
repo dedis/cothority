@@ -1,7 +1,6 @@
 package lib
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/dedis/kyber"
@@ -59,6 +58,7 @@ type footer struct {
 	ContactEmail string // ContactEmail stores the email address of the Contact person.
 }
 
+// GetElection fetches the election structure from its skipchain and sets the stage.
 func GetElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, error) {
 	client := skipchain.NewClient()
 	reply, err := client.GetUpdateChain(roster, id)
@@ -68,7 +68,7 @@ func GetElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, erro
 
 	transaction := UnmarshalTransaction(reply.Update[1].Data)
 	if transaction == nil || transaction.Election == nil {
-		return nil, errors.New(fmt.Sprintf("no election structure in %s", id.Short()))
+		return nil, fmt.Errorf("no election structure in %s", id.Short())
 	}
 	election := transaction.Election
 

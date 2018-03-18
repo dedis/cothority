@@ -4,30 +4,24 @@ import (
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
-	uuid "github.com/satori/go.uuid"
 
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/cothority/skipchain"
 )
 
 func init() {
-	network.RegisterMessages(
-		Link{}, LinkReply{},
-		LookupSciper{}, LookupSciperReply{},
-		Open{}, OpenReply{},
-		Cast{}, CastReply{},
-		Shuffle{}, ShuffleReply{},
-		Decrypt{}, DecryptReply{},
-		GetBox{}, GetBoxReply{},
-		GetMixes{}, GetMixesReply{},
-		GetPartials{}, GetPartialsReply{},
-		Reconstruct{}, ReconstructReply{},
-		Ping{},
-	)
+	network.RegisterMessage(Ping{})
+	network.RegisterMessages(Link{}, LinkReply{})
+	network.RegisterMessages(LookupSciper{}, LookupSciperReply{})
+	network.RegisterMessages(Open{}, OpenReply{})
+	network.RegisterMessages(Cast{}, CastReply{})
+	network.RegisterMessages(Shuffle{}, ShuffleReply{})
+	network.RegisterMessages(Decrypt{}, DecryptReply{})
+	network.RegisterMessages(GetBox{}, GetBoxReply{})
+	network.RegisterMessages(GetMixes{}, GetMixesReply{})
+	network.RegisterMessages(GetPartials{}, GetPartialsReply{})
+	network.RegisterMessages(Reconstruct{}, ReconstructReply{})
 }
-
-var VerificationID = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, ServiceName))
-var VerificationFunction = []skipchain.VerifierID{VerificationID}
 
 // LookupSciper takes a sciper number and returns elements of the user.
 type LookupSciper struct {
@@ -60,10 +54,11 @@ type LinkReply struct {
 
 // Open message.
 type Open struct {
-	User      uint32                // Token for authentication.
-	ID        skipchain.SkipBlockID // ID of the master skipchain.
-	Election  *lib.Election         // Election object.
-	Signature []byte
+	ID       skipchain.SkipBlockID // ID of the master skipchain.
+	Election *lib.Election         // Election object.
+
+	User      uint32 // User identifier.
+	Signature []byte // Signature authenticating the message.
 }
 
 // OpenReply message.
@@ -77,8 +72,8 @@ type Cast struct {
 	ID     skipchain.SkipBlockID // ID of the election skipchain.
 	Ballot *lib.Ballot           // Ballot to be casted.
 
-	User      uint32 // Token for authentication.
-	Signature []byte
+	User      uint32 // User identifier.
+	Signature []byte // Signature authenticating the message.
 }
 
 // CastReply message.
@@ -86,9 +81,10 @@ type CastReply struct{}
 
 // Shuffle message.
 type Shuffle struct {
-	ID        skipchain.SkipBlockID // ID of the election skipchain.
-	User      uint32
-	Signature []byte
+	ID skipchain.SkipBlockID // ID of the election skipchain.
+
+	User      uint32 // User identifier.
+	Signature []byte // Signature authenticating the message.
 }
 
 // ShuffleReply message.
@@ -96,9 +92,10 @@ type ShuffleReply struct{}
 
 // Decrypt message.
 type Decrypt struct {
-	ID        skipchain.SkipBlockID // ID of the election skipchain.
-	User      uint32
-	Signature []byte
+	ID skipchain.SkipBlockID // ID of the election skipchain.
+
+	User      uint32 // User identifier.
+	Signature []byte // Signature authenticating the message.
 }
 
 // DecryptReply message.
