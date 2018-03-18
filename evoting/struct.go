@@ -1,15 +1,11 @@
 package evoting
 
 import (
-	"strconv"
-
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 	uuid "github.com/satori/go.uuid"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/cothority/skipchain"
 )
@@ -32,42 +28,6 @@ func init() {
 
 var VerificationID = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, ServiceName))
 var VerificationFunction = []skipchain.VerifierID{VerificationID}
-
-// Login message.
-type Login struct {
-	ID        skipchain.SkipBlockID // ID of the master skipchain.
-	User      uint32                // User identifier.
-	Signature []byte                // Signature from the front-end.
-}
-
-// Digest appends the digits of the user identifier to the skipblock ID.
-func (l *Login) Digest() []byte {
-	message := l.ID
-	for _, c := range strconv.Itoa(int(l.User)) {
-		d, _ := strconv.Atoi(string(c))
-		message = append(message, byte(d))
-	}
-	return message
-}
-
-// Sign creates a Schnorr signature of the login digest.
-func (l *Login) Sign(secret kyber.Scalar) error {
-	sig, err := schnorr.Sign(cothority.Suite, secret, l.Digest())
-	l.Signature = sig
-	return err
-}
-
-// Verify checks the Schnorr signature.
-func (l *Login) Verify(public kyber.Point) error {
-	return schnorr.Verify(cothority.Suite, public, l.Digest(), l.Signature)
-}
-
-// LoginReply message.
-type LoginReply struct {
-	Token     string          // Token (time-limited) for further calls.
-	Admin     bool            // Admin indicates if user has admin rights.
-	Elections []*lib.Election // Elections the user participates in.
-}
 
 // LookupSciper takes a sciper number and returns elements of the user.
 type LookupSciper struct {

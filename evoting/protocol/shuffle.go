@@ -79,7 +79,7 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 	}
 
 	if len(ballots) < 2 {
-		return errors.New("Not enough (> 2) ballots to shuffle")
+		return errors.New("not enough (> 2) ballots to shuffle")
 
 	}
 

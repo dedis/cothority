@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
+	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -23,6 +25,11 @@ import (
 	"github.com/dedis/cothority/evoting/protocol"
 	"github.com/dedis/cothority/skipchain"
 )
+
+func init() {
+	network.RegisterMessage(synchronizer{})
+	serviceID, _ = onet.RegisterNewService(evoting.ServiceName, new)
+}
 
 // timeout for protocol termination.
 const timeout = 60 * time.Second
@@ -36,9 +43,8 @@ type Service struct {
 
 	secrets map[string]*lib.SharedSecret // secrets is map a of DKG products.
 
-	state *state       // state is the log of currently logged in users.
-	node  *onet.Roster // nodes is a unitary roster.
-	pin   string       // pin is the current service number.
+	node *onet.Roster // nodes is a unitary roster.
+	pin  string       // pin is the current service number.
 }
 
 // synchronizer is broadcasted to all roster nodes before every protocol.
@@ -46,11 +52,6 @@ type synchronizer struct {
 	ID        skipchain.SkipBlockID
 	User      uint32
 	Signature []byte
-}
-
-func init() {
-	network.RegisterMessage(synchronizer{})
-	serviceID, _ = onet.RegisterNewService(evoting.ServiceName, new)
 }
 
 // Ping message handler.
@@ -501,8 +502,6 @@ func new(context *onet.Context) (onet.Service, error) {
 	service := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(context),
 		secrets:          make(map[string]*lib.SharedSecret),
-		state:            &state{log: make(map[string]*stamp)},
-		pin:              nonce(48),
 	}
 
 	service.RegisterHandlers(
@@ -519,6 +518,10 @@ func new(context *onet.Context) (onet.Service, error) {
 		service.LookupSciper,
 	)
 	skipchain.RegisterVerification(context, evoting.VerificationID, service.verify)
+
+	pin := make([]byte, 16)
+	random.Bytes(pin, random.New())
+	service.pin = hex.EncodeToString(pin)
 
 	service.node = onet.NewRoster([]*network.ServerIdentity{service.ServerIdentity()})
 

@@ -11,6 +11,10 @@ import (
 	"github.com/dedis/cothority/skipchain"
 )
 
+func init() {
+	network.RegisterMessages(Election{}, Ballot{}, Box{}, Mix{}, Partial{})
+}
+
 const (
 	// Running depicts that an election is open for ballot casting.
 	Running = iota
@@ -53,10 +57,6 @@ type footer struct {
 	ContactTitle string // ContactTitle stores the title of the Contact person.
 	ContactPhone string // ContactPhone stores the phone number of the Contact person.
 	ContactEmail string // ContactEmail stores the email address of the Contact person.
-}
-
-func init() {
-	network.RegisterMessages(Election{}, Ballot{}, Box{}, Mix{}, Partial{})
 }
 
 func GetElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, error) {
