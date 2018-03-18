@@ -376,7 +376,7 @@ func getCommands() cli.Commands {
 					Name:      "list",
 					Aliases:   []string{"l"},
 					Usage:     "List the certificate",
-					ArgsUsage: "",
+					ArgsUsage: "[Skipchain-ID]",
 					Action:    certList,
 					Flags: []cli.Flag{
 						cli.BoolFlag{
@@ -397,28 +397,28 @@ func getCommands() cli.Commands {
 					Name:      "verify",
 					Aliases:   []string{"v"},
 					Usage:     "verify the certificate against the root certificate",
-					ArgsUsage: "key of the certificate",
+					ArgsUsage: "cert-key [Skipchain-ID]",
 					Action:    certVerify,
 				},
 				{
 					Name:      "renew",
 					Aliases:   []string{"u"},
 					Usage:     "renew a certificate",
-					ArgsUsage: "key of the certificate",
+					ArgsUsage: "cert-key [Skipchain-ID]",
 					Action:    certRenew,
 				},
 				{
 					Name:      "revoke",
 					Aliases:   []string{"k"},
 					Usage:     "revoke and delete a certificate",
-					ArgsUsage: "[certificate] [registerkey.pem]",
+					ArgsUsage: "certificate key_name [Skipchain-ID]",
 					Action:    certRevoke,
 				},
 				{
 					Name:      "retrieve",
 					Aliases:   []string{"r"},
 					Usage:     "retrieve the certificate of a given key",
-					ArgsUsage: "Give the key corresponding to the certificate",
+					ArgsUsage: "key [Skipchain-ID]",
 					Action:    certRetrieve,
 					Flags: []cli.Flag{
 						cli.StringFlag{
@@ -431,7 +431,7 @@ func getCommands() cli.Commands {
 					Name:      "add",
 					Aliases:   []string{"a"},
 					Usage:     "add a key/cert pair",
-					ArgsUsage: "key/cert pair",
+					ArgsUsage: "domain path [Skipchain-ID]",
 					Action:    certStore,
 				},
 			},
