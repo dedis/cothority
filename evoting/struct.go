@@ -17,6 +17,7 @@ func init() {
 	network.RegisterMessages(Cast{}, CastReply{})
 	network.RegisterMessages(Shuffle{}, ShuffleReply{})
 	network.RegisterMessages(Decrypt{}, DecryptReply{})
+	network.RegisterMessages(GetElections{}, GetElectionsReply{})
 	network.RegisterMessages(GetBox{}, GetBoxReply{})
 	network.RegisterMessages(GetMixes{}, GetMixesReply{})
 	network.RegisterMessages(GetPartials{}, GetPartialsReply{})
@@ -100,6 +101,17 @@ type Decrypt struct {
 
 // DecryptReply message.
 type DecryptReply struct{}
+
+// GetElections message.
+type GetElections struct {
+	User   uint32                // User identifier.
+	Master skipchain.SkipBlockID // Master skipchain ID.
+}
+
+// GetElectionsReply message.
+type GetElectionsReply struct {
+	Elections []*lib.Election // Elections is the retrieved list of elections.
+}
 
 // GetBox message.
 type GetBox struct {

@@ -212,6 +212,31 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 	return &evoting.CastReply{}, nil
 }
 
+// GetElections message handler. Return all elections in which the given user participates.
+func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElectionsReply, error) {
+	master, err := lib.GetMaster(s.node, req.Master)
+	if err != nil {
+		return nil, err
+	}
+
+	links, err := master.Links()
+	if err != nil {
+		return nil, err
+	}
+
+	elections := make([]*lib.Election, 0)
+	for _, l := range links {
+		election, err := lib.GetElection(s.node, l.ID)
+		if err != nil {
+			return nil, err
+		}
+		if election.IsUser(req.User) || election.IsCreator(req.User) {
+			elections = append(elections, election)
+		}
+	}
+	return &evoting.GetElectionsReply{Elections: elections}, nil
+}
+
 // GetBox message handler to retrieve the casted ballot in an election.
 func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
 	election, err := lib.GetElection(s.node, req.ID)
@@ -455,6 +480,7 @@ func new(context *onet.Context) (onet.Service, error) {
 		service.Link,
 		service.Open,
 		service.Cast,
+		service.GetElections,
 		service.GetBox,
 		service.GetMixes,
 		service.Shuffle,
