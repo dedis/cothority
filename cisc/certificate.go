@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/dedis/onet/log"
@@ -49,8 +50,8 @@ KOqkqm57TH2H3eDJAkSnh6/DNFu0Qg==
 const LetsEncryptURL = "https://acme-v01.api.letsencrypt.org/directory"
 
 // Convert a certificate of type string into certificate of type x509.Certificate
-func pemToCertificate(certPem string) (*x509.Certificate, error) {
-	block, _ := pem.Decode([]byte(certPem))
+func pemToCertificate(certPem []byte) (*x509.Certificate, error) {
+	block, _ := pem.Decode(certPem)
 	if block == nil {
 		return nil, errors.New("Fail to decode pem")
 	}
@@ -60,24 +61,22 @@ func pemToCertificate(certPem string) (*x509.Certificate, error) {
 
 // Verify if the string given as arguments correspond to a certificate
 // Return true if it is the case and false otherwise
-func isCert(cert string) bool {
+func isCert(cert []byte) bool {
 	_, err := pemToCertificate(cert)
 	return err == nil
 }
 
 // Check if the string in argument correspond to a valid certificate
 // Return true if it is the case and false otherwise
-func isValid(cert string) bool {
+func isValid(cert []byte) bool {
 	rootPool := x509.NewCertPool()
-	certRoots, err := pemToCertificate(LetsencryptCert)
+	certRoots, err := pemToCertificate([]byte(LetsencryptCert))
 	if err != nil {
-		log.Info("The root certificate is not valid")
 		return false
 	}
 	rootPool.AddCert(certRoots)
 	certCheck, err := pemToCertificate(cert)
 	if err != nil {
-		log.Info("The checked certificate is not valid")
 		return false
 	}
 	opts := x509.VerifyOptions{
@@ -85,59 +84,56 @@ func isValid(cert string) bool {
 		Roots:   rootPool,
 	}
 	if _, err := certCheck.Verify(opts); err != nil {
-		log.Info("The certificate is not valid: " + err.Error())
 		return false
 	}
 	log.Info("Certificate OK")
 	return true
 }
 
-// Renew the certificate that is caracterized by its string version
+// Renew the certificate that is characterized by its string version
 // and returns the new certificate
-func renewCert(cert string) (string, error) {
-
+func renewCert(cert []byte) ([]byte, error) {
 	oldcert, err := pemToCertificate(cert)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	// Get the serial number and compute the URI
-	serial := fmt.Sprintf("%x", oldcert.SerialNumber)
-	certuri := "https://acme-v01.api.letsencrypt.org/acme/cert/0" + serial
+	// compute the URI with seial
+	certuri := fmt.Sprintf("https://acme-v01.api.letsencrypt.org/acme/cert/0%x", oldcert.SerialNumber)
 
 	// Create a client to the acme of letsencrypt.
 	cli, err := letsencrypt.NewClient(LetsEncryptURL)
-
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Renew the certificate
-	certRen, err := cli.RenewCertificate(string(certuri))
+	certRen, err := cli.RenewCertificate(certuri)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Write in the memory
 	fullchain, err := cli.Bundle(certRen)
 	if err != nil {
-		return "", errors.New("can't bundle the certificate" + err.Error())
+		return nil, errors.New("can't bundle the certificate" + err.Error())
 	}
-	ioutil.WriteFile("fullchain.pem", fullchain, 0644)
+	err = ioutil.WriteFile("fullchain.pem", fullchain, 0644)
+	if err != nil {
+		return nil, errors.New("can't create fullchain.pem" + err.Error())
+	}
 	log.Info("Certificate successfully renewed")
 
-	return string(fullchain), nil
+	return fullchain, nil
 }
 
 // Revoke a certificate by giving as arguments the certificate and the path to
 // the registerkey.pem key. This key is created when registering to the ACME
 // server
-func revokeCert(path string, cert string) error {
-
+func revokeCert(path string, cert []byte) error {
 	// Create a client to the acme of letsencrypt
 	log.Info("Revoking the key")
 	cli, err := letsencrypt.NewClient(LetsEncryptURL)
-
 	if err != nil {
 		return err
 	}
@@ -146,6 +142,7 @@ func revokeCert(path string, cert string) error {
 		if os.IsNotExist(err) {
 			return errors.New("key can not be found")
 		}
+		return err
 	}
 
 	// Find or generate the private key and register with the ACME server.
@@ -156,51 +153,52 @@ func revokeCert(path string, cert string) error {
 	}
 
 	// Revoke the certificate
-	err = cli.RevokeCertificate(key, []byte(cert))
+	err = cli.RevokeCertificate(key, cert)
 	if err != nil {
 		return err
 	}
-	log.Info("Succesfully revoked")
+
 	return nil
 }
 
 // Code adapted from: https://ericchiang.github.io/post/go-letsencrypt/
 // Request a certificate by first registering to the ACME server and then by
 // completing a challenge then it returns the certificate as string type
-func getCert(wwwDir string, certDir string, domain string) (string, error) {
-
-	certPath := certDir + "/" + domain
+func getCert(wwwDir string, certDir string, domain string) ([]byte, error) {
+	certPath := path.Join(certDir, domain) //certDir + "/" + domain
 
 	// Create a client to the acme of letsencrypt.
 	log.Info("Requesting RSA keys")
 	cli, err := letsencrypt.NewClient(LetsEncryptURL)
-
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	if _, err = os.Stat(certPath); os.IsNotExist(err) {
 		os.MkdirAll(certPath, 0777)
 	}
+	if err != nil {
+		return nil, err
+	}
 	if _, err = os.Stat(wwwDir); os.IsNotExist(err) {
-		return "", err
+		return nil, err
 	}
 
 	// Find or generate the private key to register on the ACME server.
 	var key *rsa.PrivateKey
-	key, err = loadKey(certPath + "/registerkey.pem")
+	key, err = loadKey(path.Join(certPath, "registerkey.pem"))
 	if err != nil {
 		log.Info("New RSA key generation for registering, keep it safe")
 		key, err = rsa.GenerateKey(rand.Reader, 2048)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
-		ioutil.WriteFile(certPath+"/registerkey.pem", pem.EncodeToMemory(&pem.Block{Bytes: x509.MarshalPKCS1PrivateKey(key), Type: "RSA PRIVATE KEY"}), 0644)
+		ioutil.WriteFile(path.Join(certPath, "registerkey.pem"), pem.EncodeToMemory(&pem.Block{Bytes: x509.MarshalPKCS1PrivateKey(key), Type: "RSA PRIVATE KEY"}), 0644)
 	}
 
 	// Register to the ACME server
 	if _, err := cli.NewRegistration(key); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	log.Info("Registration successful!")
@@ -208,7 +206,7 @@ func getCert(wwwDir string, certDir string, domain string) (string, error) {
 	// Get the http-challenge
 	auth, _, err := cli.NewAuthorization(key, "dns", domain)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	httpChalURL := ""
 	for _, chal := range auth.Challenges {
@@ -217,54 +215,57 @@ func getCert(wwwDir string, certDir string, domain string) (string, error) {
 		}
 	}
 	if httpChalURL == "" {
-		return "", errors.New("http-01 challenge not found")
+		return nil, errors.New("http-01 challenge not found")
 	}
 	chal, err := cli.Challenge(httpChalURL)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Get the path and the resource needed to perform the challenge
-	path, resource, err := chal.HTTP(key)
+	pathChallenge, resource, err := chal.HTTP(key)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Copy the resource for the challenge
 	if os.MkdirAll(wwwDir+"/.well-known/acme-challenge/", 0711) != nil {
-		return "", errors.New("Problem creating new dir for challenge : " + err.Error())
+		return nil, errors.New("Problem creating new dir for challenge : " + err.Error())
 	}
-	if err := ioutil.WriteFile(wwwDir+"/"+path, []byte(resource), 0644); err != nil {
-		return "", err
+	if err := ioutil.WriteFile(path.Join(wwwDir, pathChallenge), []byte(resource), 0644); err != nil {
+		return nil, err
 	}
 
 	// Complete the challenge
 	if err := cli.ChallengeReady(key, chal); err != nil {
-		return "", errors.New("Challenge not complete" + err.Error())
+		return nil, errors.New("Challenge not complete" + err.Error())
 	}
 	log.Info("Challenge Complete")
 
 	// Create a certificate request
 	csr, _, err := newCSR(domain, certPath)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Request a certificate for the domain
 	cert, err := cli.NewCertificate(key, csr)
-
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	log.Info("New Certificate Successfuly created")
+
 	fullchain, err := cli.Bundle(cert)
-
 	if err != nil {
-		return "", errors.New("Can't bundle the certificate" + err.Error())
+		return nil, errors.New("Can't bundle the certificate" + err.Error())
 	}
-	ioutil.WriteFile(certPath+"/fullchain.pem", fullchain, 0644)
 
-	return string(fullchain), nil
+	err = ioutil.WriteFile(path.Join(certPath, "fullchain.pem"), fullchain, 0644)
+	if err != nil {
+		return nil, err
+	}
+
+	return fullchain, nil
 }
 
 // Code adapted from: https://ericchiang.github.io/post/go-letsencrypt/
@@ -273,17 +274,17 @@ func getCert(wwwDir string, certDir string, domain string) (string, error) {
 // finalise the creation of our certificate
 func newCSR(domain string, certPath string) (*x509.CertificateRequest, *rsa.PrivateKey, error) {
 	var certKey *rsa.PrivateKey
-	certKey, err := loadKey(certPath + "/privkey.pem")
+	certKey, err := loadKey(path.Join(certPath, "privkey.pem"))
 	if err != nil {
 		log.Info("New RSA private key generation for the certificate, keep it safe")
 		certKey, err = rsa.GenerateKey(rand.Reader, 4096)
 		if err != nil {
 			return nil, nil, err
 		}
-		ioutil.WriteFile(certPath+"/privkey.pem", pem.EncodeToMemory(&pem.Block{Bytes: x509.MarshalPKCS1PrivateKey(certKey), Type: "RSA PRIVATE KEY"}), 0644)
-	}
-	if err != nil {
-		return nil, nil, err
+		err = ioutil.WriteFile(path.Join(certPath, "privkey.pem"), pem.EncodeToMemory(&pem.Block{Bytes: x509.MarshalPKCS1PrivateKey(certKey), Type: "RSA PRIVATE KEY"}), 0644)
+		if err != nil {
+			return nil, nil, err
+		}
 	}
 	template := &x509.CertificateRequest{
 		SignatureAlgorithm: x509.SHA256WithRSA,
