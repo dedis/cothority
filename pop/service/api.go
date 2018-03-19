@@ -49,7 +49,7 @@ func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar)
 	if err != nil {
 		return err
 	}
-	err = c.SendProtobuf(si, &storeConfig{p, sg}, nil)
+	err = c.SendProtobuf(si, &StoreConfig{p, sg}, nil)
 	if err != nil {
 		return err
 	}
@@ -60,8 +60,8 @@ func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar)
 func (c *Client) FetchFinal(dst network.Address, hash []byte) (
 	*FinalStatement, error) {
 	si := &network.ServerIdentity{Address: dst}
-	res := &finalizeResponse{}
-	err := c.SendProtobuf(si, &fetchRequest{hash}, res)
+	res := &FinalizeResponse{}
+	err := c.SendProtobuf(si, &FetchRequest{hash}, res)
 	if err != nil {
 		return nil, err
 	}
@@ -77,14 +77,14 @@ func (c *Client) FetchFinal(dst network.Address, hash []byte) (
 func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []kyber.Point,
 	priv kyber.Scalar) (*FinalStatement, error) {
 	si := &network.ServerIdentity{Address: dst}
-	req := &finalizeRequest{}
+	req := &FinalizeRequest{}
 	req.DescID = p.Hash()
 	req.Attendees = attendees
 	hash, err := req.hash()
 	if err != nil {
 		return nil, err
 	}
-	res := &finalizeResponse{}
+	res := &FinalizeResponse{}
 	sg, err := schnorr.Sign(cothority.Suite, priv, hash)
 	if err != nil {
 		return nil, err
@@ -103,14 +103,14 @@ func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []kyber.Poi
 func (c *Client) Merge(dst network.Address, p *PopDesc, priv kyber.Scalar) (
 	*FinalStatement, error) {
 	si := &network.ServerIdentity{Address: dst}
-	res := &finalizeResponse{}
+	res := &FinalizeResponse{}
 	hash := p.Hash()
 	sg, err := schnorr.Sign(cothority.Suite, priv, hash)
 	if err != nil {
 		return nil, err
 	}
 
-	e := c.SendProtobuf(si, &mergeRequest{hash, sg}, res)
+	e := c.SendProtobuf(si, &MergeRequest{hash, sg}, res)
 	if e != nil {
 		return nil, e
 	}
