@@ -39,7 +39,7 @@ const (
 	DefaultName = "conode"
 
 	// Version of this binary
-	Version = "1.1"
+	Version = "2.0"
 )
 
 func main() {

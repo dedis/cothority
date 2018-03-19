@@ -1,4 +1,4 @@
-Navigation: [DEDIS](https://github.com/dedis/doc/README.md) ::
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](../README.md) ::
 [Conode](README.md) ::
 Docker
@@ -10,8 +10,7 @@ installed. First you need to setup the conode, use the following command to
 setup conode in your `~/conode_data`-directory:
 
 ```
-docker run -it --rm -p 6879-6880:6879-6880 --name conode -v ~/conode_data:/root/.local/share/conode/ \
-          	    -v ~/conode_data:/root/.config/conode/ dedis/conode:latest
+docker run -it --rm -P --name conode -v ~/conode_data:/conode_data dedis/conode:latest ./conode setup
 ```
 
 This will create a `conode_data`-directory and ask you for the configuration details:
@@ -23,31 +22,38 @@ to accept incoming connections
 - Folder: press <enter> for the default folder - it will be redirected to `conode_data`
 
 There are two important files in there:
-- private.toml - do not give this away - it's your private key!
-- public.toml - the description of your conode that you can send to dedis@epfl.ch
+- `private.toml` - do not give this away - it's your private key!
+- `public.toml` - the description of your conode that you can send to dedis@epfl.ch
 and ask us to include it
 
 If you change the port-number, you will have to adjust the numbers
 used in the `docker run`-command.
 
-### Starting Conode Using Crontab
+## Starting Conode
+
+Once a conode is setup, you can start it like that:
+
+```
+docker run --rm -P --name conode -v ~/conode_data:/conode_data dedis/conode:latest
+```
+
+### Using Crontab
 
 An easy way to start a conode upon system-startup is crontab. Add the following
 line to your crontab (`crontab -e`) and your conode will start with the next
 system-startup:
 
 ```
-@reboot docker run -it --rm -p 6879-6880:6879-6880 --name conode -v ~/conode_data:/root/.local/share/conode/ \
-          	    -v ~/conode_data:/root/.config/conode/ dedis/conode:latest
+@reboot docker run --rm -P --name conode -v ~/conode_data:/conode_data dedis/conode:latest
 ```
 
-### Starting conode using systemd
+### Using systemd
 
 If you have systemd, you can simply copy the `conode.service`-file and add it to
 your systemd-startup. Of course you should do this as a non-root user:
 
 ```
-wget https://raw.githubusercontent.com/dedis/cothority/docker_conode/conode/conode.service
+wget https://raw.githubusercontent.com/dedis/cothority/conode/conode.service
 systemctl --user enable conode.service
 systemctl --user start conode
 ```
@@ -55,27 +61,33 @@ systemctl --user start conode
 Unfortunately systemd doesn't allow a user to run a service at system startup,
 and all user services get stopped once the user logs out!
 
-### Setting up more than one node
+## Setting up more than one node
 
 You can start multiple nodes on the same server by using one user per node and
 set up the nodes as described above. Be sure to change the port-numbers and
 remember that two ports are used.
 
-### Joining the dedis-cothority
+## Joining the dedis-cothority
 
 The only existing cothority for the moment is available at
 http://status.dedis.ch. You can send us an email at dedis@epfl.ch to be added to
 this list.
 
-### Apps
+## Compiling your own docker file
 
-For most of the apps you need at least 3 running nodes. Once you have them up
-and running, you will need a `roster.toml` that includes all the
-`public.toml`-files from your conodes:
+To create your own docker-image and use it, you can create it like this:
 
+```bash
+go get github.com/dedis/cothority
+cd $(go env GOPATH)/src/github.com/dedis/cothority/conode
+make docker
 ```
-cat ../*/conode_data/public.toml > roster.toml
-```
 
-You will find more details about the available apps on
-[Applications](../doc/Applications.md).
+If you use `make docker_run` the first time, a directory called `conode_data` will be
+created and you will be asked for a port - use 6879 or adapt the Makefile - and a
+description of you node. Your public and private key for the conode will be stored
+in `conode_data`. If you run `make docker_run` again, the stored configuration will
+be used.
+
+To stop the docker, simply run `make docker_stop` or kill the docker-container. All
+configuration is stored in `conode_data`
