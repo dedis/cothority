@@ -110,10 +110,10 @@ type collectStructs struct {
 	tempExceptions []Exception
 	// respondedNodesPrepare stores a list of nodes that sent a commit
 	// message in the prepare phase
-	respondedNodesPrepare map[kyber.Point]*onet.TreeNode
+	respondedNodesPrepare map[string]*onet.TreeNode
 	// respondedNodesCommit stores a list of nodes that sent a commit
 	// message in the commit phase
-	respondedNodesCommit map[kyber.Point]*onet.TreeNode
+	respondedNodesCommit map[string]*onet.TreeNode
 	// temporary buffer of "prepare" commitments
 	tempPrepareCommit []kyber.Point
 	// temporary buffer of "commit" commitments
@@ -136,8 +136,8 @@ func NewBFTCoSiProtocol(n *onet.TreeNodeInstance, verify VerificationFunction) (
 		collectStructs: collectStructs{
 			prepare:               crypto.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
 			commit:                crypto.NewCosi(n.Suite(), n.Private(), n.Roster().Publics()),
-			respondedNodesPrepare: make(map[kyber.Point]*onet.TreeNode),
-			respondedNodesCommit:  make(map[kyber.Point]*onet.TreeNode),
+			respondedNodesPrepare: make(map[string]*onet.TreeNode),
+			respondedNodesCommit:  make(map[string]*onet.TreeNode),
 		},
 		verifyChan:           make(chan bool),
 		VerificationFunction: verify,
@@ -282,7 +282,7 @@ func (bft *ProtocolBFTCoSi) Signature() *BFTSignature {
 	var i int
 	exceptions := make([]Exception, bft.AllowedExceptions)
 	for _, tn := range bft.Children() {
-		if _, ok := bft.respondedNodesCommit[tn.ServerIdentity.Public]; !ok {
+		if _, ok := bft.respondedNodesCommit[tn.ServerIdentity.Public.String()]; !ok {
 			exceptions[i] = Exception{
 				Index:      tn.RosterIndex,
 				Commitment: bft.Suite().Point().Null(),
@@ -447,7 +447,7 @@ func (bft *ProtocolBFTCoSi) handleChallengeCommit(msg challengeCommitChan) error
 		Exceptions: ch.Signature.Exceptions,
 	}
 	if err := bftPrepareSig.Verify(bft.Suite(), bft.Roster().Publics()); err != nil {
-		return fmt.Errorf("%s: Verification of the signature failed: %v", bft.Name(), err)
+		return fmt.Errorf("%s: Verification of the commit-challenge signature failed: %v", bft.Name(), err)
 	}
 
 	// check if we have no more than threshold failed nodes
@@ -483,7 +483,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 	// wait for verification
 	bzrReturn, ok := bft.waitResponseVerification()
 	if !ok {
-		return fmt.Errorf("%v verification failed", bft.Name())
+		return fmt.Errorf("%v verification of the prepare-response failed", bft.Name())
 	}
 
 	// return if we're not root
@@ -515,7 +515,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 	}
 
 	if err := sig.Verify(bft.Suite(), bft.Roster().Publics()); err != nil {
-		return fmt.Errorf("%s: Verification of the signature failed: %v", bft.Name(), err)
+		return fmt.Errorf("%s: Verification of the prepare-response signature failed: %v", bft.Name(), err)
 	}
 	log.Lvl3(bft.Name(), "Verification of signature successful")
 
@@ -593,11 +593,11 @@ func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error
 				if bft.committedInPreparePhase {
 					continue
 				}
-				if _, ok := bft.respondedNodesPrepare[from]; ok {
+				if _, ok := bft.respondedNodesPrepare[from.String()]; ok {
 					log.Warnf("%s: node %v already responded - potential malicious behaviour")
 					continue
 				}
-				bft.respondedNodesPrepare[from] = msg.TreeNode
+				bft.respondedNodesPrepare[from.String()] = msg.TreeNode
 				bft.tempPrepareCommit = append(bft.tempPrepareCommit, comm.Commitment)
 				if t == RoundPrepare && len(bft.tempPrepareCommit) == len(bft.Children())-bft.AllowedExceptions {
 					bft.committedInPreparePhase = true
@@ -607,11 +607,11 @@ func (bft *ProtocolBFTCoSi) readCommitChan(c chan commitChan, t RoundType) error
 				if bft.committedInCommitPhase {
 					continue
 				}
-				if _, ok := bft.respondedNodesCommit[from]; ok {
+				if _, ok := bft.respondedNodesCommit[from.String()]; ok {
 					log.Warnf("%s: node %v already responded - potential malicious behaviour")
 					continue
 				}
-				bft.respondedNodesCommit[from] = msg.TreeNode
+				bft.respondedNodesCommit[from.String()] = msg.TreeNode
 				bft.tempCommitCommit = append(bft.tempCommitCommit, comm.Commitment)
 				if t == RoundCommit && len(bft.tempCommitCommit) == len(bft.Children())-bft.AllowedExceptions {
 					bft.committedInCommitPhase = true
@@ -741,7 +741,7 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 	// that are not in respondedNodesPrepare and (2) for the missing
 	// ones, find the global index and then add it to the exception.
 	for _, tn := range bft.Children() {
-		if _, ok := bft.respondedNodesPrepare[tn.ServerIdentity.Public]; !ok {
+		if _, ok := bft.respondedNodesPrepare[tn.ServerIdentity.Public.String()]; !ok {
 			// We assume the server was also not available for the commitment
 			// so no need to subtract the commitment.
 			// Conversely, we cannot handle nodes which fail right
@@ -793,7 +793,7 @@ func (bft *ProtocolBFTCoSi) setClosing() {
 	bft.closingMutex.Unlock()
 }
 
-func (bft *ProtocolBFTCoSi) multicast(msg interface{}, nodes map[kyber.Point]*onet.TreeNode) error {
+func (bft *ProtocolBFTCoSi) multicast(msg interface{}, nodes map[string]*onet.TreeNode) error {
 	for _, tn := range nodes {
 		if err := bft.SendTo(tn, msg); err != nil {
 			log.Error(err)
