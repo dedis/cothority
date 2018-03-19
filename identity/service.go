@@ -1,14 +1,12 @@
-/*
-Identity is a service that allows storing of key/value pairs that belong to
-a given identity that is shared between multiple devices. In order to
-add/remove devices or add/remove key/value-pairs, a 'threshold' of devices
-need to vote on those changes.
-
-The key/value-pairs are stored in a personal blockchain and signed by the
-cothority using forward-links, so that an external observer can check the
-collective signatures and be assured that the blockchain is valid.
-*/
-
+// Package identity implements a service that allows storing of key/value pairs
+// that belong to a given identity that is shared between multiple devices. In
+// order to add/remove devices or add/remove key/value-pairs, a 'threshold' of
+// devices need to vote on those changes.
+//
+// The key/value-pairs are stored in a personal blockchain and signed by the
+// cothority using forward-links, so that an external observer can check the
+// collective signatures and be assured that the blockchain is valid.
+//
 package identity
 
 import (

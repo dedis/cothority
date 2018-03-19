@@ -28,4 +28,4 @@ shuffle them and decrypt all votes
 Another block that is on the very edge of application and building block is the
 [skipchain](../skipchain/README.md). It's more than a building block, because it
 already has some functionality. But it's not an application, because you cannot
-do anything useful with it as-is...
+do anything useful with it as-is.

@@ -1,6 +1,6 @@
-// CoSi is a scalable protocol for collectively signing messages.
-// CoSi produces compact signatures that clients can verify efficiently,
-// and that convey the precise set of cosigners for transparency.
+// ftCoSi is a fault-tolerant and scalable protocol for collectively signing
+// messages.  It produces compact signatures that clients can verify
+// efficiently, and that convey the precise set of cosigners for transparency.
 package main
 
 import (

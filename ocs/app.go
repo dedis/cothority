@@ -1,7 +1,8 @@
-/*
-* This is a template for creating an app. It only has one command which
-* prints out the name of the app.
- */
+// This is the CLI for accessing an onchain-secrets service.
+//
+// However, the CLI functionality is not complete, the primary way to access
+// OCS is through the Java API. Please see the top-level OCS README for more
+// information - https://github.com/dedis/cothority/blob/master/ocs/README.md.
 package main
 
 import (

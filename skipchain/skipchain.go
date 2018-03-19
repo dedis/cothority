@@ -1,11 +1,14 @@
-// Package skipchain implements a service in the cothority that
-// keeps track of a skipchain. It offers API-calls to create
-// new skipchains, add blocks to existing skipchains, and
-// request updates to known skipchain.
+// Package skipchain implements a service in the cothority that keeps track of
+// a skipchain.
 //
-// The basic strcture needed from a clients point of view is
-// Client, that has all the methods defined on it to interact
-// with a skipchain.
+// It offers API-calls to create new skipchains, add blocks to existing
+// skipchains, and request updates to known skipchain.
+//
+// The basic strcture needed from a clients point of view is Client, that has
+// all the methods defined on it to interact with a skipchain.
+//
+// Please consult the README for more information
+// https://github.com/dedis/cothority/blob/master/skipchain/README.md.
 package skipchain
 
 import (
