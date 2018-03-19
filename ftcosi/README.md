@@ -42,21 +42,21 @@ service on a testbed and to have a well-documented reusable code for it.
 
 ## Implementation
 The protocol has four messages: 
-* Announcement which is sent from the root down the tree and announce the
+- Announcement which is sent from the root down the tree and announce the
 proposal.
-* Commitment which is sent back up to the root, containing an aggregated
+- Commitment which is sent back up to the root, containing an aggregated
 commitment from all nodes.  
-* Challenge which is sent from the root down the tree and contains the
+- Challenge which is sent from the root down the tree and contains the
 aggregated challenge.  
-* Response which is sent back up to the root, containing the final aggregated
+- Response which is sent back up to the root, containing the final aggregated
 signature, then used by the root to sign the proposal.
 
 The protocol uses five files: 
-* `struct.go` defines the messages sent around and the protocol constants.  
-* `protocol.go` defines the root node behavior.
-* `subprotocol.go` defines non-root nodes behavior.
-* `gen_tree.go` contains the function that generates trees.
-* `helper_functions.go` defines some functions that are used by both the root
+- `struct.go` defines the messages sent around and the protocol constants.  
+- `protocol.go` defines the root node behavior.
+- `subprotocol.go` defines non-root nodes behavior.
+- `gen_tree.go` contains the function that generates trees.
+- `helper_functions.go` defines some functions that are used by both the root
 and the other nodes.
 
 Under-the-hood, there are two protocols. A main protocol which only runs on

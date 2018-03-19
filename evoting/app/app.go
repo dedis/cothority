@@ -1,4 +1,4 @@
-// This is command line interface for communicating with the evoting service.
+// This is a command line interface for communicating with the evoting service.
 package main
 
 import (
