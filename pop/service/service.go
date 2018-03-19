@@ -54,10 +54,10 @@ func init() {
 	if cothority.Suite == suites.MustFind("Ed25519") {
 		onet.RegisterNewService(Name, newService)
 		network.RegisterMessage(&saveData{})
-		checkConfigID = network.RegisterMessage(checkConfig{})
-		checkConfigReplyID = network.RegisterMessage(checkConfigReply{})
-		mergeConfigID = network.RegisterMessage(mergeConfig{})
-		mergeConfigReplyID = network.RegisterMessage(mergeConfigReply{})
+		checkConfigID = network.RegisterMessage(CheckConfig{})
+		checkConfigReplyID = network.RegisterMessage(CheckConfigReply{})
+		mergeConfigID = network.RegisterMessage(MergeConfig{})
+		mergeConfigReplyID = network.RegisterMessage(MergeConfigReply{})
 	}
 }
 
@@ -133,9 +133,9 @@ type merge struct {
 
 type syncChans struct {
 	// channel to return the configreply
-	ccChannel chan *checkConfigReply
+	ccChannel chan *CheckConfigReply
 	// channel to return the mergereply
-	mcChannel chan *mergeConfigReply
+	mcChannel chan *MergeConfigReply
 }
 
 // ErrorReadPIN means that there is a PIN to read in the server-logs
@@ -159,7 +159,7 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 }
 
 // StoreConfig saves the pop-config locally
-func (s *Service) StoreConfig(req *storeConfig) (network.Message, error) {
+func (s *Service) StoreConfig(req *StoreConfig) (network.Message, error) {
 	log.Lvlf2("StoreConfig: %s %v %x", s.Context.ServerIdentity(), req.Desc, req.Desc.Hash())
 	if req.Desc.Roster == nil {
 		return nil, errors.New("no roster set")
@@ -173,8 +173,8 @@ func (s *Service) StoreConfig(req *storeConfig) (network.Message, error) {
 	}
 	s.data.Finals[string(hash)] = &FinalStatement{Desc: req.Desc, Signature: []byte{}}
 	s.syncs[string(hash)] = &syncChans{
-		ccChannel: make(chan *checkConfigReply, 1),
-		mcChannel: make(chan *mergeConfigReply, 1),
+		ccChannel: make(chan *CheckConfigReply, 1),
+		mcChannel: make(chan *MergeConfigReply, 1),
 	}
 	if len(req.Desc.Parties) > 0 {
 		meta := newMerge()
@@ -183,13 +183,13 @@ func (s *Service) StoreConfig(req *storeConfig) (network.Message, error) {
 		meta.statementsMap[string(hash)] = s.data.Finals[string(hash)]
 	}
 	s.save()
-	return &storeConfigReply{hash}, nil
+	return &StoreConfigReply{hash}, nil
 }
 
 // FinalizeRequest returns the FinalStatement if all conodes already received
 // a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
 // pruned attendees-public-key-list and the collective signature.
-func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, error) {
+func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Message, error) {
 	log.Lvlf2("Finalize: %s %+v", s.Context.ServerIdentity(), req)
 	if s.data.Public == nil {
 		return nil, errors.New("Not linked yet")
@@ -209,13 +209,13 @@ func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, error)
 	}
 	if final.Verify() == nil {
 		log.Lvl2("Sending known final statement")
-		return &finalizeResponse{final}, nil
+		return &FinalizeResponse{final}, nil
 	}
 
 	// Contact all other nodes and ask them if they already have a config.
 	final.Attendees = make([]kyber.Point, len(req.Attendees))
 	copy(final.Attendees, req.Attendees)
-	cc := &checkConfig{final.Desc.Hash(), req.Attendees}
+	cc := &CheckConfig{final.Desc.Hash(), req.Attendees}
 	for _, c := range final.Desc.Roster.List {
 		if !c.ID.Equal(s.ServerIdentity().ID) {
 			log.Lvl2("Contacting", c, cc.Attendees)
@@ -242,12 +242,12 @@ func (s *Service) FinalizeRequest(req *finalizeRequest) (network.Message, error)
 	if err != nil {
 		return nil, err
 	}
-	return &finalizeResponse{final}, nil
+	return &FinalizeResponse{final}, nil
 }
 
 // FetchFinal returns FinalStatement by hash
 // used after Finalization
-func (s *Service) FetchFinal(req *fetchRequest) (network.Message,
+func (s *Service) FetchFinal(req *FetchRequest) (network.Message,
 	error) {
 	log.Lvlf2("FetchFinal: %s %v", s.Context.ServerIdentity(), req.ID)
 	var fs *FinalStatement
@@ -262,12 +262,12 @@ func (s *Service) FetchFinal(req *fetchRequest) (network.Message,
 			"Not all other conodes finalized yet")
 
 	}
-	return &finalizeResponse{fs}, nil
+	return &FinalizeResponse{fs}, nil
 }
 
 // MergeRequest starts Merge process and returns FinalStatement after
 // used after finalization
-func (s *Service) MergeRequest(req *mergeRequest) (network.Message,
+func (s *Service) MergeRequest(req *MergeRequest) (network.Message,
 	error) {
 	log.Lvlf2("MergeRequest: %s %v", s.Context.ServerIdentity(), req.ID)
 	if s.data.Public == nil {
@@ -285,7 +285,7 @@ func (s *Service) MergeRequest(req *mergeRequest) (network.Message,
 
 	}
 	if final.Merged {
-		return &finalizeResponse{final}, nil
+		return &FinalizeResponse{final}, nil
 	}
 	m, ok := s.data.merges[string(req.ID)]
 	if !ok {
@@ -349,7 +349,7 @@ func (s *Service) MergeRequest(req *mergeRequest) (network.Message,
 	m.statementsMap[hash] = newFinal
 
 	s.save()
-	return &finalizeResponse{newFinal}, nil
+	return &FinalizeResponse{newFinal}, nil
 }
 
 // MergeConfig receives a final statement of requesting party,
@@ -358,7 +358,7 @@ func (s *Service) MergeRequest(req *mergeRequest) (network.Message,
 func (s *Service) MergeConfig(req *network.Envelope) {
 	log.Lvlf2("%s gets MergeConfig from %s", s.Context.ServerIdentity().String(),
 		req.ServerIdentity.String())
-	mc, ok := req.Msg.(*mergeConfig)
+	mc, ok := req.Msg.(*MergeConfig)
 	if !ok {
 		log.Errorf("Didn't get a MergeConfig: %#v", req.Msg)
 		return
@@ -367,7 +367,7 @@ func (s *Service) MergeConfig(req *network.Envelope) {
 		log.Error("MergeConfig is empty")
 		return
 	}
-	mcr := &mergeConfigReply{PopStatusOK, mc.Final.Desc.Hash(), nil}
+	mcr := &MergeConfigReply{PopStatusOK, mc.Final.Desc.Hash(), nil}
 	var final *FinalStatement
 	func() {
 		var m *merge
@@ -413,10 +413,10 @@ func (s *Service) MergeConfig(req *network.Envelope) {
 func (s *Service) MergeConfigReply(req *network.Envelope) {
 	log.Lvlf2("MergeConfigReply: %s from %s got %v",
 		s.ServerIdentity(), req.ServerIdentity.String(), req.Msg)
-	mcrVal, ok := req.Msg.(*mergeConfigReply)
+	mcrVal, ok := req.Msg.(*MergeConfigReply)
 
 	if syncData, found := s.syncs[string(mcrVal.PopHash)]; found {
-		mcr := func() *mergeConfigReply {
+		mcr := func() *MergeConfigReply {
 			if !ok {
 				log.Errorf("Didn't get a CheckConfigReply: %v", req.Msg)
 				return nil
@@ -450,13 +450,13 @@ func (s *Service) MergeConfigReply(req *network.Envelope) {
 // the config has been found, it strips its own attendees from the one missing
 // in the other configuration.
 func (s *Service) CheckConfig(req *network.Envelope) {
-	cc, ok := req.Msg.(*checkConfig)
+	cc, ok := req.Msg.(*CheckConfig)
 	if !ok {
 		log.Errorf("Didn't get a CheckConfig: %#v", req.Msg)
 		return
 	}
 
-	ccr := &checkConfigReply{PopStatusOK, cc.PopHash, nil}
+	ccr := &CheckConfigReply{PopStatusOK, cc.PopHash, nil}
 	if len(s.data.Finals) > 0 {
 		var final *FinalStatement
 		if final, ok = s.data.Finals[string(cc.PopHash)]; !ok {
@@ -481,10 +481,10 @@ func (s *Service) CheckConfig(req *network.Envelope) {
 // CheckConfigReply strips the attendees missing in the reply, if the
 // PopStatus == PopStatusOK.
 func (s *Service) CheckConfigReply(req *network.Envelope) {
-	ccrVal, ok := req.Msg.(*checkConfigReply)
+	ccrVal, ok := req.Msg.(*CheckConfigReply)
 
 	if syncData, found := s.syncs[string(ccrVal.PopHash)]; found {
-		ccr := func() *checkConfigReply {
+		ccr := func() *CheckConfigReply {
 			if !ok {
 				log.Errorf("Didn't get a CheckConfigReply: %v", req.Msg)
 				return nil
@@ -842,14 +842,14 @@ func (s *Service) merge(final *FinalStatement, m *merge) (*FinalStatement,
 			// that's unlikely due to running in cycle
 			continue
 		}
-		mc := &mergeConfig{Final: final, ID: hash}
+		mc := &MergeConfig{Final: final, ID: hash}
 		for _, si := range party.Roster.List {
 			log.Lvlf2("Sending from %s to %s", s.ServerIdentity(), si)
 			err := s.SendRaw(si, mc)
 			if err != nil {
 				return nil, err
 			}
-			var mcr *mergeConfigReply
+			var mcr *MergeConfigReply
 			select {
 			case mcr = <-syncData.mcChannel:
 				break
