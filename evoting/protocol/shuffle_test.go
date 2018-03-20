@@ -5,6 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/require"
+
 	"github.com/dedis/onet"
 	"github.com/stretchr/testify/require"
 
@@ -39,6 +41,7 @@ func (s *shuffleService) NewProtocol(n *onet.TreeNodeInstance, c *onet.GenericCo
 		shuffle.User = s.user
 		shuffle.Signature = s.signature
 		shuffle.Election = s.election
+
 		return shuffle, nil
 	default:
 		return nil, errors.New("Unknown protocol")

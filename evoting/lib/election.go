@@ -108,7 +108,6 @@ func (e *Election) Box() (*Box, error) {
 		transaction := UnmarshalTransaction(block.Data)
 		if transaction != nil && transaction.Ballot != nil {
 			ballots = append(ballots, transaction.Ballot)
-		}
 	}
 
 	// Reverse ballot list

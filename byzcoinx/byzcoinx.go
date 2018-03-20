@@ -1,3 +1,8 @@
+// Package byzcoinx implements a PBFT-like protocol using collective signing.
+//
+// Please see https://github.com/dedis/cothority/blob/master/byzcoinx/README.md
+// for details.
+//
 package byzcoinx
 
 import (

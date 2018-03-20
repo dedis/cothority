@@ -9,10 +9,10 @@ BftCoSi
 
 If you use a single CoSi round to reach consensus, there are a number of things
 that might go wrong:
-- if any of the node stalls the final phase of the signature, you cannot start
-another round without risking that node to finalize the signature later
-- if a node drops out, you cannot blame him without risking that the blamer
-itself blames a hones node
+- If any of the node stalls the final phase of the signature, you cannot start
+another round without risking that node to finalize the signature later.
+- If a node drops out, you cannot blame him without risking that the blamer
+itself blames a honest node.
 
 Using PBFT we can solve this problem, but then we cannot use more than 10-15
 nodes, because PBFT needs to broadcast all messages and thus incurs a O(n^2)

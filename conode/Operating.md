@@ -15,7 +15,7 @@ The current recommended way to add HTTPS to the websocket port is to use a web
 server like Apache or nginx in reverse proxy mode to forward connections from
 port 443 to port 6880, the default websocket port.
 
-If you want that the websocket port is on a port under 1024 (i.e. 443 for
+If you want the websocket port to be on a port under 1024 (i.e. 443 for
 HTTPS), you can use setcap to give the conode binary the necessary privs: `sudo
 setcap CAP_NET_BIND_SERVICE=+eip $(go env GOPATH)/bin/conode`
 
@@ -25,9 +25,9 @@ On Linux, the following files need to be backed up:
 1. `$HOME/.config/conode/private.toml`
 2. `$HOME/.local/share/conode/$PUBLIC_KEY.db`
 
-The DB file is a BoltDB file, and more information about considerations while
-backing them up is in
-[Database backup](https://github.com/dedis/onet/wiki/Database-backup-and-recovery).
+The DB file is a [BoltDB](https://github.com/coreos/bbolt) file, and more
+information about considerations while backing them up is in [Database
+backup](https://github.com/dedis/onet/wiki/Database-backup-and-recovery).
 
 ## Recovery from a crash
 

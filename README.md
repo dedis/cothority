@@ -14,7 +14,7 @@ to access the services of a cothority and/or run your own conode. The cothority
 project is developed and maintained by the [DEDIS](http://dedis.epfl.ch) lab at
 [EPFL](https://epfl.ch).
 
-This is an overview of this README::
+This is an overview of this README:
 - [Documentation](#documentation) with links to different parts of the cothority
   - [Topically ordered](#topically-ordered) explains the different functional
     pieces from the cothority from a research point of view
@@ -210,12 +210,12 @@ status --group $DEDIS_GROUP
 
 ## Collective Signing
 
-Another service available is collective signing, or CoSi, that requests a
-collective signature from a set of conodes. The signature is created on a given
-input data. For installation, type:
+Another service available is fault-tolerant collective signing, or ftCoSi. It
+requests a collective signature from a set of conodes. The signature is created
+on a given input data. For installation, type:
 
 ```go
-go get github.com/dedis/cothority/cosi
+go get github.com/dedis/cothority/ftcosi
 export DEDIS_GROUP=$(go env GOPATH)/src/github.com/dedis/cothority/dedis-cothority.toml
 ```
 
@@ -223,19 +223,19 @@ Now you can create a file and have it signed by the cothority:
 
 ```go
 date > /tmp/my_file
-cosi sign --group $DEDIS_GROUP /tmp/my_file | tee sig.json
+ftcosi sign --group $DEDIS_GROUP /tmp/my_file | tee sig.json
 ```
 
 And later somebody can verify the signature is correct by running the following command:
 
 ```go
-cosi verify --group $DEDIS_GROUP --signature sig.json /tmp/my_file
+ftcosi verify --group $DEDIS_GROUP --signature sig.json /tmp/my_file
 ```
 
 If everything is correct, it should print
 
 ```
-[+] OK: Signature is valid
+[+] OK: Signature is valid.
 ```
 
 # Participating in the cothority
