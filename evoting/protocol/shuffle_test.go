@@ -5,9 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
-
 	"github.com/dedis/onet"
+
 	"github.com/stretchr/testify/require"
 
 	"github.com/dedis/cothority"
