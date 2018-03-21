@@ -4,12 +4,12 @@ import (
 	"errors"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 
 	uuid "github.com/satori/go.uuid"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
 )
 
@@ -41,6 +41,19 @@ func UnmarshalTransaction(data []byte) *Transaction {
 	transaction, _ := blob.(*Transaction)
 	return transaction
 }
+
+//func UnmarshalTransaction(b []byte) *Transaction {
+//	tt := &Transaction{User: 1, Signature: []byte{}}
+//	fmt.Println(protobuf.Encode(tt))
+//	dw := &Transaction{}
+//	err := protobuf.Decode(b, dw)
+//	if err != nil {
+//		log.Error(err)
+//		return nil
+//	}
+//
+//	return dw
+//}
 
 // NewTransaction constructs a new transaction for the given arguments.
 func NewTransaction(data interface{}, user uint32, signature []byte) *Transaction {

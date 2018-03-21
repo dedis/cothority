@@ -76,6 +76,7 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 			return err
 		}
 		ballots = mixes[len(mixes)-1].Ballots
+		defer s.finish()
 	}
 
 	if len(ballots) < 2 {
@@ -84,8 +85,8 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 	}
 
 	a, b := lib.Split(ballots)
-	g, d, prover := shuffle.Shuffle(cothority.Suite, nil, s.Election.Key, a, b, random.New())
-	proof, err := proof.HashProve(cothority.Suite, "", prover)
+	g, d, prov := shuffle.Shuffle(cothority.Suite, nil, s.Election.Key, a, b, random.New())
+	proof, err := proof.HashProve(cothority.Suite, "", prov)
 	if err != nil {
 		return err
 	}
@@ -102,8 +103,14 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 	return s.SendToChildren(&PromptShuffle{})
 }
 
+// finish terminates the protocol within onet.
+func (s *Shuffle) finish() {
+	s.Done()
+	s.Finished <- true
+}
+
 // HandleTerminate concludes the protocol.
 func (s *Shuffle) HandleTerminate(terminate MessageTerminate) error {
-	s.Finished <- true
+	s.finish()
 	return nil
 }

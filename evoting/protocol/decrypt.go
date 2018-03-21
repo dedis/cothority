@@ -47,7 +47,7 @@ func init() {
 
 // NewDecrypt initializes the protocol object and registers all the handlers.
 func NewDecrypt(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	decrypt := &Decrypt{TreeNodeInstance: node, Finished: make(chan bool)}
+	decrypt := &Decrypt{TreeNodeInstance: node, Finished: make(chan bool, 1)}
 	decrypt.RegisterHandlers(decrypt.HandlePrompt, decrypt.HandleTerminate)
 	return decrypt, nil
 }
@@ -60,6 +60,10 @@ func (d *Decrypt) Start() error {
 // HandlePrompt retrieves the mixes, verifies them and performs a partial decryption
 // on the last mix before appending it to the election skipchain.
 func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
+	if !d.IsRoot() {
+		defer d.finish()
+	}
+
 	box, err := d.Election.Box()
 	if err != nil {
 		return err
@@ -88,9 +92,15 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 	return d.SendToChildren(&PromptDecrypt{})
 }
 
+// finish terminates the protocol within onet.
+func (d *Decrypt) finish() {
+	d.Done()
+	d.Finished <- true
+}
+
 // HandleTerminate concludes to the protocol.
 func (d *Decrypt) HandleTerminate(terminate MessageTerminateDecrypt) error {
-	d.Finished <- true
+	d.finish()
 	return nil
 }
 
