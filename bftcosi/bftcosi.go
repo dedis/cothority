@@ -221,9 +221,12 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 	var gotChallengePrepare bool
 	for {
 		select {
-		case c := <-bft.challengePrepareChan:
+		case c, ok := <-bft.challengePrepareChan:
+			if !ok {
+				return errors.New("Protocol cleanup while waiting for challengePrepare")
+			}
 			if gotChallengePrepare {
-				log.Warn(bft.Name(), "got multiple challenges - potential ddos")
+				log.Warn(bft.Name(), "got prepare-challenge after prepare-round is done - potential ddos")
 				continue
 			}
 			// Finish the prepare round
@@ -236,7 +239,10 @@ func (bft *ProtocolBFTCoSi) Dispatch() error {
 				}
 			}
 			gotChallengePrepare = true
-		case c := <-bft.challengeCommitChan:
+		case c, ok := <-bft.challengeCommitChan:
+			if !ok {
+				return errors.New("Protocol cleanup while waiting for challengeCommit")
+			}
 
 			// Finish the commit round
 			if err := bft.handleChallengeCommit(c); err != nil {
@@ -565,7 +571,6 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(c chan responseChan) error {
 	}
 
 	err = bft.SendToParent(r)
-	bft.Done()
 	return err
 }
 
@@ -766,7 +771,6 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 // nodeDone is either called by the end of EndProtocol or by the end of the
 // response phase of the commit round.
 func (bft *ProtocolBFTCoSi) nodeDone() bool {
-	bft.Shutdown()
 	if bft.onDone != nil {
 		// only true for the root
 		bft.onDone()
