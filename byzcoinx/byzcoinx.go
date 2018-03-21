@@ -131,6 +131,7 @@ func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.FtCosi, error) {
 // 4, wait for the commit phase to finish
 // 5, send the final signature
 func (bft *ByzCoinX) Dispatch() error {
+	defer bft.Done()
 
 	if !bft.IsRoot() {
 		return fmt.Errorf("non-root should not start this protocol")

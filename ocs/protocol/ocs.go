@@ -93,6 +93,7 @@ func (o *OCS) Start() error {
 // Reencrypt is received by every node to give his part of
 // the share
 func (o *OCS) reencrypt(r structReencrypt) error {
+	defer o.Done()
 	log.Lvl3(o.Name() + ": starting reencrypt")
 	ui, err := o.getUI(r.U, r.Xc)
 	if err != nil {

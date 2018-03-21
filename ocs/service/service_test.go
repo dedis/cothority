@@ -271,6 +271,14 @@ func TestStress(t *testing.T) {
 		}(thread)
 	}
 	wg.Wait()
+	active := false
+	for _, s := range o.local.Servers {
+		for _, tn := range o.local.GetTreeNodeInstances(s.ServerIdentity.ID) {
+			log.Lvl1("Still active: ", tn.Info())
+			active = true
+		}
+	}
+	require.False(t, active)
 }
 
 type ocsStruct struct {

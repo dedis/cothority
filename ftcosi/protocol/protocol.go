@@ -101,6 +101,7 @@ func (p *FtCosi) Shutdown() error {
 // Dispatch is the main method of the protocol, defining the root node behaviour
 // and sequential handling of subprotocols.
 func (p *FtCosi) Dispatch() error {
+	defer p.Done()
 	if !p.IsRoot() {
 		return nil
 	}
