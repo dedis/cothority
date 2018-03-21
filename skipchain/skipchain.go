@@ -778,6 +778,12 @@ func (s *Service) AddClientKey(pub kyber.Point) {
 	s.save()
 }
 
+// SetBFTTimeout can be used in tests to change the timeout passed
+// to BFTCoSi.
+func (s *Service) SetBFTTimeout(t time.Duration) {
+	s.bftTimeout = t
+}
+
 func (s *Service) verifySigs(msg, sig []byte) bool {
 	// If there are no clients, all signatures verify.
 	if len(s.Storage.Clients) == 0 {
