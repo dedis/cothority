@@ -138,7 +138,7 @@ func (s *Service) CreateSkipchains(req *CreateSkipchainsRequest) (reply *CreateS
 	}
 	log.Lvl3("Started DKG-protocol - waiting for done", len(req.Roster.List))
 	select {
-	case <-setupDKG.Done:
+	case <-setupDKG.SetupDone:
 		shared, err := setupDKG.SharedSecret()
 		if err != nil {
 			return nil, err
@@ -519,7 +519,7 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		}
 		setupDKG := pi.(*protocol.SetupDKG)
 		go func(conf *onet.GenericConfig) {
-			<-setupDKG.Done
+			<-setupDKG.SetupDone
 			shared, err := setupDKG.SharedSecret()
 			if err != nil {
 				log.Error(err)

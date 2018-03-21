@@ -50,7 +50,7 @@ func setupDKG(t *testing.T, nbrNodes int) {
 	log.ErrFatal(pi.Start())
 	timeout := network.WaitRetry * time.Duration(network.MaxRetryConnect*nbrNodes*2) * time.Millisecond
 	select {
-	case <-protocol.Done:
+	case <-protocol.SetupDone:
 		log.Lvl2("root-node is Done")
 		require.NotNil(t, protocol.DKG)
 	case <-time.After(timeout):

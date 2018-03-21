@@ -31,9 +31,9 @@ type SetupDKG struct {
 	keypair *key.Pair
 	publics []kyber.Point
 	// Whether we started the `DKG.SecretCommits`
-	commit bool
-	Wait   bool
-	Done   chan bool
+	commit    bool
+	Wait      bool
+	SetupDone chan bool
 
 	structStartDeal    chan structStartDeal
 	structDeal         chan structDeal
@@ -48,7 +48,7 @@ func NewSetupDKG(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	o := &SetupDKG{
 		TreeNodeInstance: n,
 		keypair:          key.NewKeyPair(cothority.Suite),
-		Done:             make(chan bool, 1),
+		SetupDone:        make(chan bool, 1),
 		Threshold:        uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3),
 		nodes:            n.List(),
 	}
@@ -79,6 +79,7 @@ func (o *SetupDKG) Start() error {
 
 // Dispatch takes care for channel-messages that need to be treated in the correct order.
 func (o *SetupDKG) Dispatch() error {
+	defer o.Done()
 	err := o.allStartDeal(<-o.structStartDeal)
 	if err != nil {
 		return err
@@ -116,7 +117,7 @@ func (o *SetupDKG) Dispatch() error {
 	}
 
 	if o.DKG.Finished() {
-		o.Done <- true
+		o.SetupDone <- true
 		return nil
 	}
 	err = errors.New("protocol is finished but dkg is not")
