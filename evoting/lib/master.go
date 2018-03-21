@@ -7,7 +7,6 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
 )
 
@@ -44,8 +43,12 @@ func GetMaster(roster *onet.Roster, id skipchain.SkipBlockID) (*Master, error) {
 	if len(reply.Update) < 2 {
 		return nil, fmt.Errorf("no master structure in %s", id.Short())
 	}
-	_, blob, err := network.Unmarshal(reply.Update[1].Data, cothority.Suite)
-	return blob.(*Master), err
+
+	transaction := UnmarshalTransaction(reply.Update[1].Data)
+	if transaction != nil && transaction.Master != nil {
+		return transaction.Master, nil
+	}
+	return nil, fmt.Errorf("no master structure in %s", id.Short())
 }
 
 // Links returns all the links appended to the master skipchain.
@@ -58,8 +61,10 @@ func (m *Master) Links() ([]*Link, error) {
 
 	links := make([]*Link, 0)
 	for i := 2; i < len(reply.Update); i++ {
-		_, blob, _ := network.Unmarshal(reply.Update[i].Data, cothority.Suite)
-		links = append(links, blob.(*Link))
+		transaction := UnmarshalTransaction(reply.Update[i].Data)
+		if transaction != nil && transaction.Link != nil {
+			links = append(links, transaction.Link)
+		}
 	}
 	return links, nil
 }

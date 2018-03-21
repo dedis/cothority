@@ -66,7 +66,7 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 		return nil, errors.New("link error: invalid pin")
 	}
 
-	genesis, err := lib.NewSkipchain(req.Roster, skipchain.VerificationStandard, nil)
+	genesis, err := lib.NewSkipchain(req.Roster, lib.TransactionVerifiers, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,8 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 		Admins: req.Admins,
 		Key:    req.Key,
 	}
-	if err := lib.Store(master.ID, master.Roster, master); err != nil {
+	transaction := lib.NewTransaction(master, 0, []byte{})
+	if err := lib.Store(master.ID, master.Roster, transaction); err != nil {
 		return nil, err
 	}
 	return &evoting.LinkReply{ID: genesis.Hash}, nil
@@ -126,11 +127,13 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		if err = transaction.Verify(genesis.Hash, s.node); err != nil {
 			return nil, err
 		}
-
 		if err = lib.Store(req.Election.ID, s.node, transaction); err != nil {
 			return nil, err
 		}
-		if err = lib.Store(master.ID, s.node, &lib.Link{ID: genesis.Hash}); err != nil {
+
+		link := &lib.Link{ID: genesis.Hash}
+		transaction = lib.NewTransaction(link, req.User, req.Signature)
+		if err = lib.Store(master.ID, s.node, transaction); err != nil {
 			return nil, err
 		}
 		return &evoting.OpenReply{ID: genesis.Hash, Key: secret.X}, nil

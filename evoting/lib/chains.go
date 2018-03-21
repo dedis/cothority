@@ -2,6 +2,7 @@ package lib
 
 import (
 	"github.com/dedis/onet"
+	"github.com/dedis/protobuf"
 
 	"github.com/dedis/cothority/skipchain"
 )
@@ -14,18 +15,21 @@ func NewSkipchain(roster *onet.Roster, verifier []skipchain.VerifierID, data int
 }
 
 // Store appends a new block holding data to an existing skipchain.
-func Store(id skipchain.SkipBlockID, roster *onet.Roster, data ...interface{}) error {
+func Store(id skipchain.SkipBlockID, roster *onet.Roster, transaction *Transaction) error {
 	client := skipchain.NewClient()
 	reply, err := client.GetUpdateChain(roster, id)
 	if err != nil {
 		return err
 	}
 
-	for _, d := range data {
-		_, err = client.StoreSkipBlock(reply.Update[len(reply.Update)-1], nil, d)
-		if err != nil {
-			return err
-		}
+	enc, err := protobuf.Encode(transaction)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.StoreSkipBlock(reply.Update[len(reply.Update)-1], nil, enc)
+	if err != nil {
+		return err
 	}
 	return nil
 }

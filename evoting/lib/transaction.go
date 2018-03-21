@@ -4,12 +4,13 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
 
 	uuid "github.com/satori/go.uuid"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
 )
 
@@ -26,6 +27,9 @@ var TransactionVerifiers = []skipchain.VerifierID{TransactionVerifierID}
 // Transaction is the sole data structure withing the blocks of an election
 // skipchain, it holds all the other containers.
 type Transaction struct {
+	Master *Master
+	Link   *Link
+
 	Election *Election
 	Ballot   *Ballot
 	Mix      *Mix
@@ -37,28 +41,26 @@ type Transaction struct {
 
 // UnmarshalTransaction decodes a data blob to a transaction structure.
 func UnmarshalTransaction(data []byte) *Transaction {
-	_, blob, _ := network.Unmarshal(data, cothority.Suite)
-	transaction, _ := blob.(*Transaction)
+	transaction := &Transaction{}
+	err := protobuf.DecodeWithConstructors(
+		data,
+		transaction,
+		network.DefaultConstructors(cothority.Suite),
+	)
+	if err != nil {
+		return nil
+	}
 	return transaction
 }
-
-//func UnmarshalTransaction(b []byte) *Transaction {
-//	tt := &Transaction{User: 1, Signature: []byte{}}
-//	fmt.Println(protobuf.Encode(tt))
-//	dw := &Transaction{}
-//	err := protobuf.Decode(b, dw)
-//	if err != nil {
-//		log.Error(err)
-//		return nil
-//	}
-//
-//	return dw
-//}
 
 // NewTransaction constructs a new transaction for the given arguments.
 func NewTransaction(data interface{}, user uint32, signature []byte) *Transaction {
 	transaction := &Transaction{User: user, Signature: signature}
 	switch data.(type) {
+	case *Master:
+		transaction.Master = data.(*Master)
+	case *Link:
+		transaction.Link = data.(*Link)
 	case *Election:
 		transaction.Election = data.(*Election)
 	case *Ballot:
@@ -75,7 +77,19 @@ func NewTransaction(data interface{}, user uint32, signature []byte) *Transactio
 
 // Verify checks that the corresponding transaction is valid before storing it.
 func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster) error {
-	if t.Election != nil {
+	if t.Master != nil {
+		return nil
+	} else if t.Link != nil {
+		master, err := GetMaster(roster, genesis)
+		if err != nil {
+			return err
+		}
+
+		if !master.IsAdmin(t.User) {
+			return errors.New("link error: user not admin")
+		}
+		return nil
+	} else if t.Election != nil {
 		election := t.Election
 		if election.End < time.Now().Unix() {
 			return errors.New("open error: invalid end date")
