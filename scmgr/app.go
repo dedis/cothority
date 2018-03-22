@@ -347,7 +347,7 @@ func scAdd(c *cli.Context) error {
 	var priv kyber.Scalar
 	link := cfg.Values.Link[roster.List[0].Public.String()]
 	if link != nil {
-		log.Lvl1("Found link-entry for", roster.List[0].Address)
+		log.Info("Found link-entry for", roster.List[0].Address)
 		priv = link.Private
 	}
 
