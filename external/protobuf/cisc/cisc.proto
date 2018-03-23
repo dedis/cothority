@@ -2,6 +2,7 @@ syntax = "proto2";
 
 //imports
 import "../pop/final.proto";
+import "../server/roster.proto";
 import "../skip/skipblock.proto";
 
 option java_package = "ch.epfl.dedis.proto";

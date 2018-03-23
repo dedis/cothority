@@ -4,6 +4,7 @@ const net = require("../net");
 const protobuf = require("../protobuf");
 const misc = require("../misc");
 const identity = require("../identity.js");
+const crypto = require("crypto");
 
 const kyber = require("@dedis/kyber-js");
 
@@ -64,6 +65,7 @@ class Client {
         try {
           lastBlock = client.verifyUpdateChainReply(data);
         } catch (err) {
+          console.log(err);
           // tries again with random conodes
           nbErr++;
           continue;
@@ -109,16 +111,16 @@ class Client {
 
       const forwardLinks = currBlock.forward;
       if (forwardLinks.length == 0)
-        throw new Error("No forward links included in the skipblocks");
+        //throw new Error("No forward links included in the skipblocks");
+        return currBlock;
 
       // only take the highest link since we move "as fast as possible" on
       // the skipchain, i.e. we skip the biggest number of blocks
       const lastLink = forwardLinks[forwardLinks.length - 1];
-      // XXX to change later to source_hash, dest_hash, dst_roster_id
-      const message = nextBlock.hash;
       const roster = identity.Roster.fromProtobuf(currBlock.roster);
-      //var err = this.verifyForwardLink(roster, message, lastLink);
-      //if (err) return [null, err];
+      var err = this.verifyForwardLink(roster, lastLink);
+      //if (err) console.log("error verifying: " + err);
+      if (err) throw err;
 
       // move to the next block
       currBlock = nextBlock;
@@ -134,83 +136,107 @@ class Client {
    * @param {Object} BlockLink object (protobuf)
    * @returns {Boolean} true if signature is valid, false otherwise
    */
-  verifyForwardLink(roster, message, link) {
+  verifyForwardLink(roster, flink) {
+    const message = flink.signature.message;
+    const mbuff = new Uint8Array(message);
     // verify the signature length and get the bitmask
-    const sigLen = link.signature.length;
-    const pointLen = group.pointLen();
-    const scalarlLen = group.scalarLen();
-    if (link && link.signature.length < pointLen + scalarLen)
+    var bftSig = flink.signature;
+    const sigLen = bftSig.signature.length;
+    const pointLen = this.group.pointLen();
+    const scalarLen = this.group.scalarLen();
+    console.log(
+      "sig len ",
+      sigLen,
+      ", pointLen ",
+      pointLen,
+      " scalarLen ",
+      scalarLen
+    );
+    if (sigLen < pointLen + scalarLen)
       return new Error("signature length invalid");
 
     // compute the bitmask and the reduced public key
-    const bitmask = link.signature.slice(
+    const bitmask = bftSig.signature.slice(
       pointLen + scalarLen,
-      link.signature.length
+      bftSig.signature.length
     );
-    const bitmaskLenth = getBitmaskLength(bitmask);
-    if (bitmaskLength > roster.length)
+    const bitmaskLength = misc.getBitmaskLength(bitmask);
+    const expectedBitmaskLength = roster.length + 8 - roster.length % 8;
+    if (bitmaskLength > expectedBitmaskLength)
       return new Error("bitmask length invalid");
 
     const threshold = (roster.length - 1) / 3;
-    if (bitmaskLength > threshold)
-      return new Error("nb of signers absent above threshold");
+    // all indices of the absent nodes from the roster
+    /*const absenteesIdx = misc.getSetBits(bitmask);*/
+    //console.log(
+    //"absenteesIdx: ",
+    //absenteesIdx,
+    //" (length ",
+    //absenteesIdx.length,
+    //" vs threshold ",
+    //threshold
+    //);
+    //if (absenteesIdx.length > threshold)
+    //return new Error("nb of signers absent above threshold");
 
     // get the roster aggregate key and subtract any exception listed.
     const aggregate = roster.aggregateKey();
-
-    // all indices of the absent nodes from the roster
-    const absenteesIdx = getSetBits(bitmask);
-    // compute reduced public key
-    absenteesIdx.forEach(idx => {
-      aggregate.sub(aggregate, roster.get(idx));
-    });
-
-    // commitment to subtract from the signature
-    const absentCommitment = this.group.point().null();
-    if (link.exceptions) {
-      const excLength = link.exceptions.length;
-      for (var i = 0; i < excLength; i++) {
-        var exception = link.exceptions[i];
-        // subtract the absent public key from the roster aggregate key
-        aggregate.sub(aggregate, roster.get(exception.index));
-        // aggregate all the absent commitment
-        var individual = group.point();
-        individual.unmarshalBinary(exception.commitment);
-        absentCommitment.add(absentCommitment, individual);
-      }
-    }
+    //compute reduced public key
+    /*absenteesIdx.forEach(idx => {*/
+    //aggregate.sub(aggregate, roster.get(idx));
+    /*});*/
 
     // XXX suppose c = H(R || Pub || m) , with R being the FULL commitment
     // that is being generated at challenge time and the signature is
     // R' || s with R' being the reduced commitment
     // R' = R - SUM(exception-commitment)
-    const R = group.point();
-    R.unmarshalBinary(link.signature.slice(0, pointLen));
-    const reducedR = R.clone();
-    reducedR.sub(reducedR, commitment);
-    const s = group.scalar();
-    s.unmarshalBinary(link.signature.slice(pointLen, pointLen + scalarLen));
-
+    const R = this.group.point();
+    R.unmarshalBinary(bftSig.signature.slice(0, pointLen));
+    const s = this.group.scalar();
+    s.unmarshalBinary(bftSig.signature.slice(pointLen, pointLen + scalarLen));
     // recompute challenge = H(R || P || M)
     // with P being the roster aggregate public key minus the public keys
     // indicated by the bitmask
-    const buffPub = publicKey.marshalBinary();
-    const challenge = schnorr.hashSchnorr(
-      suite,
+    const challenge = hashSchnorr(
+      this.group,
       R.marshalBinary(),
       aggregate.marshalBinary(),
       message
     );
+    // compute -(c * Aggregate)
+    const mca = this.group.point().neg(aggregate);
+    mca.mul(challenge, mca);
     // compute sG
-    const left = suite.point().mul(s, null);
+    const left = this.group.point().mul(s, null);
+    left.add(left, mca);
     // compute R + challenge * Public
-    const right = suite.point().mul(challenge, publicKey);
-    right.add(right, reducedR);
+    //const right = this.group.point().mul(challenge, aggregate);
+    //right.add(right, R);
+    const right = R;
     if (!right.equal(left)) {
-      return new Error("invalid signature");
+      //return new Error("invalid signature");
+      console.log("invalid signature...");
+      return false;
     }
     return null;
   }
+}
+
+/**
+ *
+ * hashSchnorr returns a scalar out of hashing the given inputs.
+ * @param {...Uint8Array} inputs
+ * @return {Scalar}
+ *
+ **/
+function hashSchnorr(suite, ...inputs) {
+  const h = crypto.createHash("sha256");
+  for (let i of inputs) {
+    h.update(i);
+  }
+  const scalar = suite.scalar();
+  scalar.setBytes(Uint8Array.from(h.digest()));
+  return scalar;
 }
 
 module.exports.Client = Client;

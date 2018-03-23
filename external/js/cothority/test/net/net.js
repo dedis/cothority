@@ -106,8 +106,9 @@ describe("roster socket", () => {
 });
 
 describe("real server status", () => {
+  var proc;
   after(function() {
-    helpers.killGolang();
+    helpers.killGolang(proc);
   });
 
   it("can talk to status", done => {
@@ -129,7 +130,11 @@ describe("real server status", () => {
     });
 
     helpers
-      .runGolang(build_dir)
+      .runGolang(build_dir, data => data.match(/OK/))
+      .then(proces => {
+        proc = proces;
+        return Promise.resolve(true);
+      })
       .then(fn)
       .catch(err => {
         done();
