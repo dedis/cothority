@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/dedis/kyber"
@@ -28,7 +29,7 @@ import (
 )
 
 func init() {
-	network.RegisterMessage(synchronizer{})
+	network.RegisterMessages(synchronizer{}, storage{})
 	serviceID, _ = onet.RegisterNewService(evoting.ServiceName, new)
 }
 
@@ -38,14 +39,24 @@ const timeout = 60 * time.Second
 // serviceID is the onet identifier.
 var serviceID onet.ServiceID
 
+// storageKey identifies the on-disk storage.
+var storageKey = []byte("storage")
+
 // Service is the core structure of the application.
 type Service struct {
 	*onet.ServiceProcessor
 
-	secrets map[string]*lib.SharedSecret // secrets is map a of DKG products.
+	mutex   sync.Mutex
+	storage *storage
 
-	node *onet.Roster // nodes is a unitary roster.
-	pin  string       // pin is the current service number.
+	pin string // pin is the current service number.
+}
+
+// Storage saves the shared secrets and stages for each election on disk.
+type storage struct {
+	Roster  *onet.Roster
+	Secrets map[string]*lib.SharedSecret
+	Rosters map[string]*onet.Roster
 }
 
 // synchronizer is broadcasted to all roster nodes before every protocol.
@@ -86,7 +97,7 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 
 // Open message hander. Create a new election with accompanying skipchain.
 func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
-	master, err := lib.GetMaster(s.node, req.ID)
+	master, err := lib.GetMaster(s.roster(), req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -121,21 +132,24 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		req.Election.Master = req.ID
 		req.Election.Roster = master.Roster
 		req.Election.Key = secret.X
-		s.secrets[genesis.Short()] = secret
 
 		transaction := lib.NewTransaction(req.Election, req.User, req.Signature)
-		if err = transaction.Verify(genesis.Hash, s.node); err != nil {
-			return nil, err
-		}
-		if err = lib.Store(req.Election.ID, s.node, transaction); err != nil {
+		if err = lib.Store(req.Election.ID, master.Roster, transaction); err != nil {
 			return nil, err
 		}
 
 		link := &lib.Link{ID: genesis.Hash}
 		transaction = lib.NewTransaction(link, req.User, req.Signature)
-		if err = lib.Store(master.ID, s.node, transaction); err != nil {
+		if err = lib.Store(master.ID, master.Roster, transaction); err != nil {
 			return nil, err
 		}
+
+		s.mutex.Lock()
+		s.storage.Secrets[genesis.Short()] = secret
+		s.storage.Roster = req.Election.Roster
+		s.mutex.Unlock()
+		s.save()
+
 		return &evoting.OpenReply{ID: genesis.Hash, Key: secret.X}, nil
 	case <-time.After(timeout):
 		return nil, errors.New("open error, protocol timeout")
@@ -207,10 +221,7 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 // Cast message handler. Cast a ballot in a given election.
 func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 	transaction := lib.NewTransaction(req.Ballot, req.User, req.Signature)
-	if err := transaction.Verify(req.ID, s.node); err != nil {
-		return nil, err
-	}
-	if err := lib.Store(req.ID, s.node, transaction); err != nil {
+	if err := lib.Store(req.ID, s.roster(), transaction); err != nil {
 		return nil, err
 	}
 	return &evoting.CastReply{}, nil
@@ -218,7 +229,7 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 
 // GetElections message handler. Return all elections in which the given user participates.
 func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElectionsReply, error) {
-	master, err := lib.GetMaster(s.node, req.Master)
+	master, err := lib.GetMaster(s.roster(), req.Master)
 	if err != nil {
 		return nil, err
 	}
@@ -230,7 +241,7 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 
 	elections := make([]*lib.Election, 0)
 	for _, l := range links {
-		election, err := lib.GetElection(s.node, l.ID)
+		election, err := lib.GetElection(s.roster(), l.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -243,7 +254,7 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 
 // GetBox message handler to retrieve the casted ballot in an election.
 func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
-	election, err := lib.GetElection(s.node, req.ID)
+	election, err := lib.GetElection(s.roster(), req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +268,7 @@ func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
 
 // GetMixes message handler. Vet all created mixes.
 func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error) {
-	election, err := lib.GetElection(s.node, req.ID)
+	election, err := lib.GetElection(s.roster(), req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +282,7 @@ func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error
 
 // GetPartials message handler. Vet all created partial decryptions.
 func (s *Service) GetPartials(req *evoting.GetPartials) (*evoting.GetPartialsReply, error) {
-	election, err := lib.GetElection(s.node, req.ID)
+	election, err := lib.GetElection(s.roster(), req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -285,12 +296,7 @@ func (s *Service) GetPartials(req *evoting.GetPartials) (*evoting.GetPartialsRep
 
 // Shuffle message handler. Initiate shuffle protocol.
 func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
-	decoy := lib.NewTransaction(&lib.Mix{}, req.User, req.Signature)
-	if err := decoy.Verify(req.ID, s.node); err != nil {
-		return nil, err
-	}
-
-	election, err := lib.GetElection(s.node, req.ID)
+	election, err := lib.GetElection(s.roster(), req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -316,7 +322,6 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 	if err = protocol.Start(); err != nil {
 		return nil, err
 	}
-
 	select {
 	case <-protocol.Finished:
 		return &evoting.ShuffleReply{}, nil
@@ -327,12 +332,7 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 
 // Decrypt message handler. Initiate decryption protocol.
 func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
-	decoy := lib.NewTransaction(&lib.Partial{}, req.User, req.Signature)
-	if err := decoy.Verify(req.ID, s.node); err != nil {
-		return nil, err
-	}
-
-	election, err := lib.GetElection(s.node, req.ID)
+	election, err := lib.GetElection(s.roster(), req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -346,7 +346,9 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 	protocol := instance.(*protocol.Decrypt)
 	protocol.User = req.User
 	protocol.Signature = req.Signature
-	protocol.Secret = s.secrets[skipchain.SkipBlockID(election.ID).Short()]
+	s.mutex.Lock()
+	protocol.Secret = s.storage.Secrets[skipchain.SkipBlockID(election.ID).Short()]
+	s.mutex.Unlock()
 	protocol.Election = election
 
 	config, _ := network.Marshal(&synchronizer{
@@ -369,18 +371,16 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 
 // Reconstruct message handler. Fully decrypt partials using Lagrange interpolation.
 func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructReply, error) {
-	election, err := lib.GetElection(s.node, req.ID)
+	election, err := lib.GetElection(s.roster(), req.ID)
 	if err != nil {
 		return nil, err
-	}
-
-	if election.Stage < lib.Decrypted {
-		return nil, errors.New("reconstruct error, election not closed yet")
 	}
 
 	partials, err := election.Partials()
 	if err != nil {
 		return nil, err
+	} else if len(partials) != len(s.roster().List) {
+		return nil, errors.New("reconstruct error, election not closed yet")
 	}
 
 	points := make([]kyber.Point, 0)
@@ -413,11 +413,14 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 		go func() {
 			<-protocol.Done
 			secret, _ := lib.NewSharedSecret(protocol.DKG)
-			s.secrets[sync.ID.Short()] = secret
+			s.mutex.Lock()
+			s.storage.Secrets[sync.ID.Short()] = secret
+			s.mutex.Unlock()
+			s.save()
 		}()
 		return protocol, nil
 	case protocol.NameShuffle:
-		election, err := lib.GetElection(s.node, sync.ID)
+		election, err := lib.GetElection(s.roster(), sync.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -434,16 +437,19 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 			Signature: sync.Signature,
 		})
 		protocol.SetConfig(&onet.GenericConfig{Data: config})
+
 		return protocol, nil
 	case protocol.NameDecrypt:
-		election, err := lib.GetElection(s.node, sync.ID)
+		election, err := lib.GetElection(s.roster(), sync.ID)
 		if err != nil {
 			return nil, err
 		}
 
 		instance, _ := protocol.NewDecrypt(node)
 		protocol := instance.(*protocol.Decrypt)
-		protocol.Secret = s.secrets[sync.ID.Short()]
+		s.mutex.Lock()
+		protocol.Secret = s.storage.Secrets[sync.ID.Short()]
+		s.mutex.Unlock()
 		protocol.User = sync.User
 		protocol.Signature = sync.Signature
 		protocol.Election = election
@@ -472,11 +478,49 @@ func (s *Service) verify(id []byte, skipblock *skipchain.SkipBlock) bool {
 	return true
 }
 
+func (s *Service) roster() *onet.Roster {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	return s.storage.Roster
+}
+
+func (s *Service) save() {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	if err := s.Save(storageKey, s.storage); err != nil {
+		log.Error(err)
+	}
+}
+
+func (s *Service) load() error {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	blob, err := s.Load(storageKey)
+	if err != nil {
+		return err
+	} else if blob == nil {
+		s.storage.Roster = onet.NewRoster([]*network.ServerIdentity{s.ServerIdentity()})
+		return nil
+	}
+
+	var ok bool
+	s.storage, ok = blob.(*storage)
+	if !ok {
+		return errors.New("service error: could not unmarshal storage")
+	}
+
+	return nil
+}
+
 // new initializes the service and registers all the message handlers.
 func new(context *onet.Context) (onet.Service, error) {
 	service := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(context),
-		secrets:          make(map[string]*lib.SharedSecret),
+		storage: &storage{
+			Secrets: make(map[string]*lib.SharedSecret),
+			Rosters: make(map[string]*onet.Roster),
+		},
 	}
 
 	service.RegisterHandlers(
@@ -499,9 +543,10 @@ func new(context *onet.Context) (onet.Service, error) {
 	random.Bytes(pin, random.New())
 	service.pin = hex.EncodeToString(pin)
 
-	service.node = onet.NewRoster([]*network.ServerIdentity{service.ServerIdentity()})
+	if err := service.load(); err != nil {
+		return nil, err
+	}
 
 	log.Lvl1("Pin:", service.pin)
-
 	return service, nil
 }

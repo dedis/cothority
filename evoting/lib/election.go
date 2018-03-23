@@ -70,28 +70,28 @@ func GetElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, erro
 	if transaction == nil || transaction.Election == nil {
 		return nil, fmt.Errorf("no election structure in %s", id.Short())
 	}
-	election := transaction.Election
+	// election := transaction.Election
 
-	n, mixes, partials := len(election.Roster.List), 0, 0
-	for _, block := range reply.Update {
-		transaction := UnmarshalTransaction(block.Data)
-		if transaction != nil && transaction.Mix != nil {
-			mixes++
-		} else if transaction != nil && transaction.Partial != nil {
-			partials++
-		}
-	}
+	// n, mixes, partials := len(election.Roster.List), 0, 0
+	// for _, block := range reply.Update {
+	// 	transaction := UnmarshalTransaction(block.Data)
+	// 	if transaction != nil && transaction.Mix != nil {
+	// 		mixes++
+	// 	} else if transaction != nil && transaction.Partial != nil {
+	// 		partials++
+	// 	}
+	// }
 
-	if mixes < n && partials == 0 {
-		election.Stage = Running
-	} else if mixes == n && partials < n {
-		election.Stage = Shuffled
-	} else if mixes == n && partials == n {
-		election.Stage = Decrypted
-	} else {
-		election.Stage = Corrupt
-	}
-	return election, nil
+	// if mixes < n && partials == 0 {
+	// 	election.Stage = Running
+	// } else if mixes == n && partials < n {
+	// 	election.Stage = Shuffled
+	// } else if mixes == n && partials == n {
+	// 	election.Stage = Decrypted
+	// } else {
+	// 	election.Stage = Corrupt
+	// }
+	return transaction.Election, nil
 }
 
 // Box accumulates all the ballots while only keeping the last ballot for each user.

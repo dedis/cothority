@@ -109,7 +109,10 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster)
 			return err
 		}
 
-		if election.Stage > Running {
+		mixes, err := election.Mixes()
+		if err != nil {
+			return err
+		} else if len(mixes) > 0 {
 			return errors.New("cast error: election not in running stage")
 		} else if !election.IsUser(t.User) {
 			return errors.New("cast error: user not part")
@@ -121,7 +124,10 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster)
 			return err
 		}
 
-		if election.Stage >= Shuffled {
+		mixes, err := election.Mixes()
+		if err != nil {
+			return err
+		} else if len(mixes) == len(roster.List) {
 			return errors.New("shuffle error: election already shuffled")
 		} else if !election.IsCreator(t.User) {
 			return errors.New("shuffle error: user is not election creator")
@@ -133,7 +139,17 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster)
 			return err
 		}
 
-		if election.Stage >= Decrypted {
+		mixes, err := election.Mixes()
+		if err != nil {
+			return err
+		} else if len(mixes) != len(roster.List) {
+			return errors.New("decrypt error, election not shuffled yet")
+		}
+
+		partials, err := election.Partials()
+		if err != nil {
+			return err
+		} else if len(partials) == len(roster.List) {
 			return errors.New("decrypt error: election already decrypted")
 		} else if !election.IsCreator(t.User) {
 			return errors.New("decrypt error: user is not election creator")

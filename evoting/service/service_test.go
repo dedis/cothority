@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -52,6 +53,7 @@ func TestService(t *testing.T) {
 		Election: &lib.Election{
 			Creator: idAdmin,
 			Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
+			Roster:  roster,
 			End:     time.Now().Unix() + 86400,
 		},
 		User:      idAdmin,
@@ -105,5 +107,6 @@ func TestService(t *testing.T) {
 
 	for _, p := range reconstructReply.Points {
 		log.Lvl2("Point is:", p.String())
+		fmt.Println(p.Data())
 	}
 }

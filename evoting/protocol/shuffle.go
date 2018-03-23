@@ -90,7 +90,6 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 	if err != nil {
 		return err
 	}
-
 	mix := &lib.Mix{Ballots: lib.Combine(g, d), Proof: proof, Node: s.Name()}
 	transaction := lib.NewTransaction(mix, s.User, s.Signature)
 	if err := lib.Store(s.Election.ID, s.Election.Roster, transaction); err != nil {
