@@ -60,6 +60,10 @@ function Socket(addr, service) {
       }
 
       ws.onopen = () => {
+        const errMsg = requestModel.verify(data);
+        if (errMsg) {
+          reject(new Error(errMsg));
+        }
         const message = requestModel.create(data);
         const marshal = requestModel.encode(message).finish();
         ws.send(marshal);
