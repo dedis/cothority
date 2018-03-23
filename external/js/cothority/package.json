@@ -1,6 +1,6 @@
 {
   "name": "@dedis/cothority",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "module for interacting with cothority nodes",
   "main": "dist/bundle.node.min.js",
   "browser": "dist/bundle.min.js",
@@ -21,13 +21,10 @@
     "@dedis/kyber-js": "0.0.7",
     "co": "^4.6.0",
     "crypto-shuffle": "^1.0.1",
-    "isomorphic-ws": "^4.0.0",
     "protobufjs": "^6.8.5",
     "pure-uuid": "^1.5.0",
     "topl": "^0.3.1",
-    "utf8": "^3.0.0",
-    "wtfnode": "^0.5.7",
-    "xo": "^0.18.2"
+    "ws": "^4.0.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
@@ -46,7 +43,7 @@
     "uglify-es": "^3.3.10",
     "uglifyjs-webpack-plugin": "^1.2.0",
     "webpack": "^3.11.0",
-    "ws": "^4.1.0"
+    "webpack-node-externals": "^1.6.0"
   },
   "files": [
     "dist",

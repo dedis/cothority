@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"io"
@@ -19,6 +20,11 @@ import (
 	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
 )
+
+type sigHex struct {
+	Hash      string
+	Signature string
+}
 
 // checkConfig contacts all servers and verifies if it receives a valid
 // signature from each.
@@ -76,7 +82,10 @@ func verifyPrintResult(err error) {
 
 // writeSigAsJSON - writes the JSON out to a file
 func writeSigAsJSON(res *s.SignatureResponse, outW io.Writer) {
-	b, err := json.Marshal(res)
+	b, err := json.Marshal(sigHex{
+		Hash:      hex.EncodeToString(res.Hash),
+		Signature: hex.EncodeToString(res.Signature)},
+	)
 	log.ErrFatal(err, "Couldn't encode signature:")
 
 	var out bytes.Buffer
@@ -174,11 +183,14 @@ func verify(fileName, sigFileName, groupToml string) error {
 	if err != nil {
 		return err
 	}
-	sig := &s.SignatureResponse{}
 	log.Lvl4("Unmarshalling signature ")
-	if err := json.Unmarshal(sigBytes, sig); err != nil {
+	sigStr := &sigHex{}
+	if err = json.Unmarshal(sigBytes, sigStr); err != nil {
 		return err
 	}
+	sig := &s.SignatureResponse{}
+	sig.Hash, err = hex.DecodeString(sigStr.Hash)
+	sig.Signature, err = hex.DecodeString(sigStr.Signature)
 	fGroup, err := os.Open(groupToml)
 	if err != nil {
 		return err

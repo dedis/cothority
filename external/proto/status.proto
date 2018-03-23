@@ -1,0 +1,19 @@
+syntax = "proto2";
+
+import "server-identity.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "StatusProto";
+
+message Request{
+
+}
+
+message Response {
+    map<string, Status> system = 1;
+    optional ServerIdentity server = 2;
+
+    message Status {
+        map<string, string> field = 1;
+    }
+}

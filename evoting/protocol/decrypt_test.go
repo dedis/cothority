@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting/lib"
@@ -45,7 +45,7 @@ func (s *decryptService) NewProtocol(node *onet.TreeNodeInstance, conf *onet.Gen
 }
 
 func TestDecryptProtocol(t *testing.T) {
-	for _, nodes := range []int{3} {
+	for _, nodes := range []int{3, 5, 7} {
 		runDecrypt(t, nodes)
 	}
 }
@@ -75,9 +75,9 @@ func runDecrypt(t *testing.T, n int) {
 	case <-decrypt.Finished:
 		partials, _ := election.Partials()
 		for _, partial := range partials {
-			log.Lvl1(partial)
+			require.True(t, partial.Flag)
 		}
-	case <-time.After(5 * time.Second):
+	case <-time.After(60 * time.Second):
 		assert.True(t, false)
 	}
 }

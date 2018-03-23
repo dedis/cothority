@@ -1,3 +1,4 @@
+// Package service is the evoting service designed for use at EPFL.
 package service
 
 import (
@@ -28,24 +29,24 @@ import (
 const timeout = 60 * time.Second
 
 var (
-	errInvalidPin       = errors.New("Invalid pin")
-	errInvalidSignature = errors.New("Invalid signature")
-	errNotLoggedIn      = errors.New("User is not logged in")
-	errNotAdmin         = errors.New("Admin privileges required")
-	errNotCreator       = errors.New("User is not election creator")
-	errNotPart          = errors.New("User is not part of election")
+	errInvalidPin       = errors.New("invalid pin")
+	errInvalidSignature = errors.New("invalid signature")
+	errNotLoggedIn      = errors.New("user is not logged in")
+	errNotAdmin         = errors.New("admin privileges required")
+	errNotCreator       = errors.New("user is not election creator")
+	errNotPart          = errors.New("user is not part of election")
 
-	errNotStarted       = errors.New("Election has not started yet")
-	errNotShuffled      = errors.New("Election has not been shuffled yet")
-	errNotDecrypted     = errors.New("Election has not been decrypted yet")
-	errAlreadyShuffled  = errors.New("Election has already been shuffled")
-	errAlreadyDecrypted = errors.New("Election has already been decrypted")
-	errAlreadyClosed    = errors.New("Election has already been closed")
-	errAlreadyEnded     = errors.New("Election has ended")
-	errCorrupt          = errors.New("Election skipchain is corrupt")
+	errNotStarted       = errors.New("election has not started yet")
+	errNotShuffled      = errors.New("election has not been shuffled yet")
+	errNotDecrypted     = errors.New("election has not been decrypted yet")
+	errAlreadyShuffled  = errors.New("election has already been shuffled")
+	errAlreadyDecrypted = errors.New("election has already been decrypted")
+	errAlreadyClosed    = errors.New("election has already been closed")
+	errAlreadyEnded     = errors.New("election has ended")
+	errCorrupt          = errors.New("election skipchain is corrupt")
 
-	errProtocolUnknown = errors.New("Protocol unknown")
-	errProtocolTimeout = errors.New("Protocol timeout")
+	errProtocolUnknown = errors.New("protocol unknown")
+	errProtocolTimeout = errors.New("protocol timeout")
 )
 
 // serviceID is the onet identifier.
@@ -109,6 +110,11 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 	master, err := lib.FetchMaster(s.node, req.ID)
 	if err != nil {
 		return nil, err
+	}
+
+	// sanity check - do not allow elections to be created retrospectively
+	if req.Election.End < time.Now().Unix() {
+		return nil, errors.New("election cannot end before current time")
 	}
 
 	genesis, err := lib.New(master.Roster, nil)
@@ -192,14 +198,14 @@ func (s *Service) Login(req *evoting.Login) (*evoting.LoginReply, error) {
 }
 
 // LookupSciper calls https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
-// to convert scipers to names
+// to convert Sciper numbers to names.
 func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciperReply, error) {
 	if len(req.Sciper) != 6 {
 		return nil, errors.New("sciper should be 6 digits only")
 	}
 	sciper, err := strconv.Atoi(req.Sciper)
 	if err != nil {
-		return nil, errors.New("couldn't convert sciper to integer")
+		return nil, errors.New("couldn't convert Sciper to integer")
 	}
 
 	url := "https://people.epfl.ch/cgi-bin/people/vCard"
@@ -207,9 +213,9 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 		url = req.LookupURL
 	}
 
-	// Make sure the only varialbe expansion in there is what we want it to be.
+	// Make sure the only variable expansion in there is what we want it to be.
 	if strings.Contains(url, "%") {
-		return nil, errors.New("Percent not allowed in LookupURL")
+		return nil, errors.New("percent not allowed in LookupURL")
 	}
 	url = fmt.Sprintf(url+"?id=%06d", sciper)
 

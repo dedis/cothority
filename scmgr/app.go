@@ -1,6 +1,5 @@
-/*
-* The skipchain-manager lets you create, modify and query skipchains
- */
+// The skipchain-manager (scmgr) is a CLI which lets you create, modify and
+// query skipchains.
 package main
 
 import (
@@ -348,7 +347,7 @@ func scAdd(c *cli.Context) error {
 	var priv kyber.Scalar
 	link := cfg.Values.Link[roster.List[0].Public.String()]
 	if link != nil {
-		log.Lvl1("Found link-entry for", roster.List[0].Address)
+		log.Info("Found link-entry for", roster.List[0].Address)
 		priv = link.Private
 	}
 
@@ -454,7 +453,7 @@ func dnsList(c *cli.Context) error {
 			return err
 		}
 		for _, sb := range sbs {
-			if sb.SkipChainID().Equal(g.Hash) {
+			if sb.SkipChainID().Equal(g.Hash) && sb.Index > 0 {
 				sub = append(sub, sb)
 			}
 		}
@@ -569,12 +568,16 @@ func dnsUpdate(c *cli.Context) error {
 			continue
 		}
 		for _, sb := range gasr.SkipChains {
-			log.Infof("Found skipchain %x", sb.SkipChainID())
-			cfg.Db.Store(sb)
-			if fetchNew {
-				log.Info("Recursive fetch")
+			if cfg.Db.GetByID(sb.SkipChainID()) == nil {
+				if !fetchNew {
+					log.Lvlf2("Ignoring unknown skipchain %x", sb.SkipChainID())
+					continue
+				}
+				log.Lvl1("Adding new roster to search")
 				sisNew = updateNewSIs(sb.Roster, sisNew, sisAll)
 			}
+			log.Infof("Found skipchain %x", sb.SkipChainID())
+			cfg.Db.Store(sb)
 		}
 	}
 	return cfg.save(c)

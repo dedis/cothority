@@ -1,68 +1,93 @@
-The collective authority (cothority) project provides a framework for development, analysis, and deployment of decentralized, distributed (cryptographic) protocols. A given set of servers running these protocols is referred to as a collective authority or cothority. Individual servers are called cothority servers or conodes. The code in this repository allows you to access the services of a cothority and/or run your own conode. The cothority project is developed and maintained by the https://dedis.ch lab at https://epfl.ch.
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
+[Cothority](../README.md) ::
+[Conode](README.md) ::
+Docker
 
-## Disclaimer
+# Docker
 
-The software in this repository is highly experimental and under heavy development. Do not use it for anything security-critical yet.
+You need a server with a public IP address and at least 1GB of RAM and docker
+installed. First you need to setup the conode, use the following command to
+setup conode in your `~/conode_data`-directory:
 
-All usage is at your own risk!
-
-## Usage
-
-You need a server with a public IP address and at least 1GB of RAM and docker installed. First you need to setup the conode, use the following command to setup conode in your `~/conode_data`-directory:
-
-```bash
-docker run -it --rm -p 6879-6880:6879-6880 --name conode -v ~/conode_data:/root/.local/share/conode/ \
-          	    -v ~/conode_data:/root/.config/conode/ dedis/conode:latest
+```
+docker run -it --rm -P --name conode -v ~/conode_data:/conode_data dedis/conode:latest ./conode setup
 ```
 
 This will create a `conode_data`-directory and ask you for the configuration details:
 - PORT: the indicated port and port+1 will be used for communication
-- IP-address: if it cannot detect your IP-address, it will ask for it. This usually means that something is wrong. Perhaps you didn't allow your firewall to accept incoming connections
+- IP-address: if it cannot detect your IP-address, it will ask for it. This
+usually means that something is wrong. Perhaps you didn't allow your firewall
+to accept incoming connections
 - Description: any description you want to share with the world
 - Folder: press <enter> for the default folder - it will be redirected to `conode_data`
 
 There are two important files in there:
-- private.toml - do not give this away - it's your private key!
-- public.toml - the description of your conode that you can send to dedis@epfl.ch and ask us to include it
+- `private.toml` - do not give this away - it's your private key!
+- `public.toml` - the description of your conode that you can send to dedis@epfl.ch
+and ask us to include it
 
 If you change the port-number, you will have to adjust the numbers
 used in the `docker run`-command.
 
-### Starting Conode Using Crontab
+## Starting Conode
 
-An easy way to start a conode upon system-startup is crontab. Add the following line to your crontab (`crontab -e`) and your conode will start with the next system-startup:
+Once a conode is setup, you can start it like that:
 
 ```
-@reboot docker run -it --rm -p 6879-6880:6879-6880 --name conode -v ~/conode_data:/root/.local/share/conode/ \
-          	    -v ~/conode_data:/root/.config/conode/ dedis/conode:latest
+docker run --rm -P --name conode -v ~/conode_data:/conode_data dedis/conode:latest
 ```
 
-### Starting conode using systemd
+### Using Crontab
 
-If you have systemd, you can simply copy the `conode.service`-file and add it to your systemd-startup. Of course you should do this as a non-root user:
+An easy way to start a conode upon system-startup is crontab. Add the following
+line to your crontab (`crontab -e`) and your conode will start with the next
+system-startup:
 
-```bash
-wget https://raw.githubusercontent.com/dedis/cothority/docker_conode/conode/conode.service
+```
+@reboot docker run --rm -P --name conode -v ~/conode_data:/conode_data dedis/conode:latest
+```
+
+### Using systemd
+
+If you have systemd, you can simply copy the `conode.service`-file and add it to
+your systemd-startup. Of course you should do this as a non-root user:
+
+```
+wget https://raw.githubusercontent.com/dedis/cothority/conode/conode.service
 systemctl --user enable conode.service
 systemctl --user start conode
 ```
 
-Unfortunately systemd doesn't allow a user to run a service at system startup, and all user services get stopped once the user logs out!
+Unfortunately systemd doesn't allow a user to run a service at system startup,
+and all user services get stopped once the user logs out!
 
-### Setting up more than one node
+## Setting up more than one node
 
-You can start multiple nodes on the same server by using one user per node and set up the nodes as described above. Be sure to change the port-numbers and remember that two ports are used. 
+You can start multiple nodes on the same server by using one user per node and
+set up the nodes as described above. Be sure to change the port-numbers and
+remember that two ports are used.
 
-### Joining the dedis-cothority
+## Joining the dedis-cothority
 
-The only existing cothority for the moment is available at http://status.dedis.ch. You can send us an email at dedis@epfl.ch to be added to this list.
+The only existing cothority for the moment is available at
+http://status.dedis.ch. You can send us an email at dedis@epfl.ch to be added to
+this list.
 
-### Apps
+## Compiling your own docker file
 
-For most of the apps you need at least 3 running nodes. Once you have them up and running, you will need a `roster.toml` that includes all the `public.toml`-files from your conodes:
+To create your own docker-image and use it, you can create it like this:
 
 ```bash
-cat ../*/conode_data/public.toml > roster.toml
+go get github.com/dedis/cothority
+cd $(go env GOPATH)/src/github.com/dedis/cothority/conode
+make docker
 ```
 
-You will find more details about the available apps on https://github.com/dedis/cothority/wiki
+If you use `make docker_run` the first time, a directory called `conode_data` will be
+created and you will be asked for a port - use 6879 or adapt the Makefile - and a
+description of you node. Your public and private key for the conode will be stored
+in `conode_data`. If you run `make docker_run` again, the stored configuration will
+be used.
+
+To stop the docker, simply run `make docker_stop` or kill the docker-container. All
+configuration is stored in `conode_data`

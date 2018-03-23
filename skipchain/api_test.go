@@ -24,6 +24,9 @@ func init() {
 }
 
 func TestClient_CreateGenesis(t *testing.T) {
+	if testing.Short() {
+		t.Skip("limiting travis time")
+	}
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
@@ -109,6 +112,9 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	defer local.CloseAll()
 
 	conodes := 10
+	if testing.Short() {
+		conodes = 3
+	}
 	sbCount := conodes - 1
 	servers, roster, gs := local.MakeSRS(cothority.Suite, conodes, skipchainSID)
 	s := gs.(*Service)
@@ -128,7 +134,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 		newSB.Roster = onet.NewRoster(roster.List[i : i+2])
 		service := local.Services[servers[i].ServerIdentity.ID][skipchainSID].(*Service)
 		log.Lvl2("Doing skipblock", i, servers[i].ServerIdentity, newSB.Roster.List)
-		reply, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: sbs[i-1].Hash, NewBlock: newSB})
+		reply, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbs[i-1].Hash, NewBlock: newSB})
 		require.Nil(t, err)
 		require.NotNil(t, reply.Latest)
 		sbs[i] = reply.Latest
@@ -426,8 +432,8 @@ type testData struct {
 }
 
 func TestClient_ParallelWrite(t *testing.T) {
-	numClients := 20
-	numWrites := 50
+	numClients := 15
+	numWrites := 15
 	if testing.Short() {
 		numClients = 2
 	}

@@ -1,5 +1,6 @@
 const path = require("path");
 const UglifyJsPlugin = require("uglifyjs-webpack-plugin");
+const nodeExternals = require("webpack-node-externals");
 
 const nodeConfig = {
   target: "node",
@@ -23,6 +24,7 @@ const nodeConfig = {
       }
     ]
   },
+  externals: [nodeExternals()],
   plugins: [new UglifyJsPlugin()]
 };
 
@@ -34,6 +36,11 @@ const browserConfig = {
     path: path.resolve(__dirname, "dist"),
     library: "cothority",
     libraryTarget: "umd"
+  },
+  resolve: {
+    alias: {
+      ws: path.resolve(__dirname, "lib", "shims", "ws.js")
+    }
   },
   module: {
     rules: [
@@ -49,6 +56,7 @@ const browserConfig = {
       }
     ]
   },
+  externals: ["bufferutil", "utf-8-validate"],
   plugins: [new UglifyJsPlugin()]
 };
 

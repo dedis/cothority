@@ -85,6 +85,9 @@ func TestDecrypt_ElectionNotShuffled(t *testing.T) {
 }
 
 func TestDecrypt_ElectionClosed(t *testing.T) {
+	if testing.Short() {
+		t.Skip("limiting travis time")
+	}
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
@@ -105,6 +108,9 @@ func TestDecrypt_ElectionClosed(t *testing.T) {
 }
 
 func TestDecrypt_Full(t *testing.T) {
+	if testing.Short() {
+		t.Skip("limiting travis time")
+	}
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 

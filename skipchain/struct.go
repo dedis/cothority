@@ -22,7 +22,7 @@ import (
 )
 
 // How long to wait before a timeout is generated in the propagation.
-const defaultPropagateTimeout = 5 * time.Second
+const defaultPropagateTimeout = 15 * time.Second
 
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte
@@ -472,7 +472,9 @@ func NewForwardLink(from, to *SkipBlock) *ForwardLink {
 		From: from.Hash,
 		To:   to.Hash,
 	}
-	if !from.Roster.ID.Equal(to.Roster.ID) {
+
+	if from.Roster != nil && to.Roster != nil &&
+		!from.Roster.ID.Equal(to.Roster.ID) {
 		fl.NewRoster = to.Roster
 	}
 	return fl

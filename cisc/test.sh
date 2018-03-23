@@ -40,7 +40,7 @@ main(){
   test DataVote
   test DataRoster
   test IdConnect
-  test IdDel
+  test IdLeave
   test KeyAdd
   test KeyFile
   test KeyAdd2
@@ -60,7 +60,7 @@ testRevoke(){
   testOK runCl 1 data vote -yes
   testOK runCl 2 data vote -yes
 
-  testOK runCl 1 skipchain del client3
+  testOK runCl 1 skipchain leave client3
   testOK runCl 2 data vote -yes
 
   testFail runCl 3 ssh add service1
@@ -224,13 +224,13 @@ EOL
   testGrep "types,elf,dwarf" runCl 1 kv ls --key "$key"
 }
 
-testIdDel(){
+testIdLeave(){
   clientSetup 3
   testOK runCl 2 ssh add server2
   testOK runCl 1 data vote -yes
   testGrep client2 runCl 1 data list
   testGrep server2 runCl 1 data list
-  testOK runCl 1 skipchain del client2
+  testOK runCl 1 skipchain leave client2
   testOK runCl 3 data vote -yes
   testNGrep client2 runCl 3 data list
   testOK runCl 1 data update
