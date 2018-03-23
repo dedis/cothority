@@ -94,7 +94,7 @@ function Socket(addr, service) {
       };
 
       ws.onerror = error => {
-        reject(new Error("could not connect to " + this.url + ":" + error));
+        reject(error);
       };
     });
   };
