@@ -18,7 +18,7 @@
   "author": "DEDIS",
   "license": "ISC",
   "dependencies": {
-    "@dedis/kyber-js": "^0.0.7",
+    "@dedis/kyber-js": "0.0.7",
     "co": "^4.6.0",
     "crypto-shuffle": "^1.0.1",
     "protobufjs": "^6.8.5",

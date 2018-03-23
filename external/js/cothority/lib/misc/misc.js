@@ -25,7 +25,8 @@ function uint8ArrayToHex(buffer) {
  * @return {Uint8Array} byte buffer
  */
 function hexToUint8Array(hex) {
-  if (typeof hex !== "string") throw new TypeError();
+  if (typeof hex !== "string")
+    throw new TypeError("hex " + hex + "is not string");
 
   return new Uint8Array(Math.ceil(hex.length / 2)).map((element, index) => {
     return parseInt(hex.substr(index * 2, 2), 16);
