@@ -121,33 +121,30 @@ class RosterSocket {
    * @returns {Promise} holds the returned data in case of success.
    */
   send(request, response, data) {
-    const socket = this;
-    const fn = co.wrap(function*(req, resp, data, socket) {
-      request = req;
-      response = resp;
-      data = data;
-      var addresses = socket.addresses;
-      var service = socket.service;
+    const that = this;
+    const fn = co.wrap(function*() {
+      const addresses = that.addresses;
+      const service = that.service;
       shuffle(addresses);
       // try first the last good server we know
-      if (socket.lastGoodServer) addresses.unshift(socket.lastGoodServer);
+      if (that.lastGoodServer) addresses.unshift(that.lastGoodServer);
 
-      for (var i = 0; i < addresses.length; i++) {
-        var addr = addresses[i];
+      for (let i = 0; i < addresses.length; i++) {
+        const addr = addresses[i];
         try {
-          var socket = new Socket(addr, service);
+          const socket = new Socket(addr, service);
           console.log("RosterSocket: trying out " + addr + "/" + service);
-          var data = yield socket.send(request, response, data);
-          socket.lastGoodServer = addr;
-          return Promise.resolve(data);
+          const socketResponse = yield socket.send(request, response, data);
+          that.lastGoodServer = addr;
+          return Promise.resolve(socketResponse);
         } catch (err) {
-          console.log("rostersocket: " + err);
+          console.error("rostersocket: " + err);
           continue;
         }
       }
-      return Promise.reject("no conodes are available");
+      return Promise.reject(new Error("no conodes are available"));
     });
-    return fn(request, response, data, socket);
+    return fn();
   }
 }
 
