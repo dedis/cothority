@@ -55,7 +55,7 @@ func (s *decryptService) NewProtocol(node *onet.TreeNodeInstance, conf *onet.Gen
 }
 
 func TestDecryptProtocol(t *testing.T) {
-	for _, nodes := range []int{3, 5, 7} {
+	for _, nodes := range []int{3, 5} {
 		runDecrypt(t, nodes)
 	}
 }
@@ -78,7 +78,6 @@ func runDecrypt(t *testing.T, n int) {
 		Key:     key,
 		Creator: 0,
 		Users:   []uint32{0, 1, 2},
-		Stage:   lib.Running,
 	}
 	for i := range services {
 		services[i].(*decryptService).secret, _ = lib.NewSharedSecret(dkgs[i])

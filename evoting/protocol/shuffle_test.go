@@ -47,7 +47,7 @@ func (s *shuffleService) NewProtocol(n *onet.TreeNodeInstance, c *onet.GenericCo
 }
 
 func TestShuffleProtocol(t *testing.T) {
-	for _, nodes := range []int{3, 5, 7} {
+	for _, nodes := range []int{3, 5} {
 		runShuffle(t, nodes)
 	}
 }
@@ -70,7 +70,6 @@ func runShuffle(t *testing.T, n int) {
 		Key:     key,
 		Creator: 0,
 		Users:   []uint32{0, 1, 2},
-		Stage:   lib.Running,
 	}
 	for i := range services {
 		services[i].(*shuffleService).election = election

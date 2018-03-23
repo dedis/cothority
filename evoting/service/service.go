@@ -345,9 +345,7 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 	protocol := instance.(*protocol.Decrypt)
 	protocol.User = req.User
 	protocol.Signature = req.Signature
-	s.mutex.Lock()
-	protocol.Secret = s.storage.Secrets[skipchain.SkipBlockID(election.ID).Short()]
-	s.mutex.Unlock()
+	protocol.Secret = s.secret(election.ID)
 	protocol.Election = election
 
 	config, _ := network.Marshal(&synchronizer{
@@ -445,9 +443,7 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 
 		instance, _ := protocol.NewDecrypt(node)
 		protocol := instance.(*protocol.Decrypt)
-		s.mutex.Lock()
-		protocol.Secret = s.storage.Secrets[sync.ID.Short()]
-		s.mutex.Unlock()
+		protocol.Secret = s.secret(sync.ID)
 		protocol.User = sync.User
 		protocol.Signature = sync.Signature
 		protocol.Election = election
@@ -464,6 +460,7 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 	}
 }
 
+// verify is the skpchain verification handler.
 func (s *Service) verify(id []byte, skipblock *skipchain.SkipBlock) bool {
 	transaction := lib.UnmarshalTransaction(skipblock.Data)
 	if transaction == nil {
@@ -476,12 +473,22 @@ func (s *Service) verify(id []byte, skipblock *skipchain.SkipBlock) bool {
 	return true
 }
 
+// roster returns the roster from the storage.
 func (s *Service) roster() *onet.Roster {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	return s.storage.Roster
 }
 
+// secret returns the shared secret for a given election.
+func (s *Service) secret(id skipchain.SkipBlockID) *lib.SharedSecret {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+	secret, _ := s.storage.Secrets[id.Short()]
+	return secret
+}
+
+// save saves the storage onto the disk.
 func (s *Service) save() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -490,6 +497,7 @@ func (s *Service) save() {
 	}
 }
 
+// load fetches the storage from disk.
 func (s *Service) load() error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
