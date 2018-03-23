@@ -11,6 +11,7 @@ main(){
 	startTest
 	buildConode github.com/dedis/cothority/skipchain
 	CFG=$BUILDDIR/scmgr_config
+	test DNSUpdate
 	test Restart
 	test Config
 	test Create
@@ -25,6 +26,20 @@ main(){
 	test NewChain
 	test Failure
 	stopTest
+}
+
+testDNSUpdate(){
+	startCl
+	setupGenesis
+	testOK runSc scdns fetch public.toml $ID
+	testOK [ "$(runScOut scdns list | grep Genesis | wc -l)" -eq 1 ]
+	mv $CFG tmpcfg
+	setupGenesis
+	mv tmpcfg $CFG
+	testOK runSc scdns update
+	testOK [ "$(runScOut scdns list | grep Genesis | wc -l)" -eq 1 ]
+	testOK runSc scdns update -new
+	testOK [ "$(runScOut scdns list | grep Genesis | wc -l)" -eq 2 ]
 }
 
 testNewChain(){
@@ -262,11 +277,15 @@ testConfig(){
 	CFG=$OLDCFG
 
 	# $CFG/data cannot be empty
-	testFail find "$CFG/data" -maxdepth 0 -type d -empty
+	testFail [ -d "$CFG/data" ]
 }
 
 runSc(){
-	dbgRun ./$APP -c $CFG -d $DBG_APP $@
+	dbgRun ./$APP -c $CFG -d $DBG_APP "$@"
+}
+
+runScOut(){
+	DEBUG_COLOR="" ./$APP -c $CFG "$@"
 }
 
 startCl(){

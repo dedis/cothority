@@ -1,9 +1,10 @@
-# Cothority
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
+[Cothority](../README.md) ::
+Links
 
-The Cothority (Collective Authority) is a project maintained by the
-[DEDIS](https://dedis.epfl.ch) lab. Its goal is to collect projects that
-handle aspects of collective authorities to support scalable, self-organizing
-communities. This document collects web-pages, blog-posts, wikis,
+# Cothority-links
+
+This document collects web-pages, blog-posts, wikis,
 godocs, papers and more in a central place as a reference.
 
 ## Key Repositories
@@ -17,13 +18,13 @@ research projects. We organise it into three key repositories below.
 Cothority is a collection of applications that run
 on a set of servers called conodes.
 
-- An [overview](https://github.com/dedis/cothority/wiki) of its functionalities
-- [Godoc](https://godoc.org/dedis/cothority) of the project
+- An [overview](../README.md) of its functionalities
+- [Godoc](https://godoc.org/github.com/dedis/cothority) of the project
 - Two webpages:
   - [Pulsar](https://pulsar.dedis.ch) - publicly verifiable randomness
   - [Status](http://status.dedis.ch) - status of our test-network
 - [CISC](../cisc/README.md) - store ssh keys, webpages or any key/value pair on a blockchain
-- [Javascript](https://github.com/dedis/cothority/tree/master/external/js/cothority)
+- [Javascript](../external/js/cothority/README.md)
 code to connect to conodes
 
 ### Kyber
@@ -32,8 +33,8 @@ Kyber is a library exporting basic cryptographic primitives mainly geared
 towards elliptic curves.
 
 - An [overview](https://github.com/dedis/kyber/blob/master/README.md)
-- [Godoc](https://godoc.org/dedis/kyber) of the project
-- [Javascript](https://github.com/dedis/cothority/tree/master/external/js/kyber)
+- [Godoc](https://godoc.org/github.com/dedis/kyber) of the project
+- [Javascript](../external/js/kyber/README.md)
 code to use basic cryptographic primitives - not as extensive as the kyber library
 
 ### Onet
@@ -43,7 +44,7 @@ services and apps. It offers peer-to-peer connections and a websockets interface
 for communication with clients.
 
 - An [overview](https://github.com/dedis/onet/wiki) of its functionalities
-- [Godoc](https://godoc.org/dedis/onet) of the project
+- [Godoc](https://godoc.org/github.com/dedis/onet) of the project
 
 ### Others
 
@@ -74,6 +75,10 @@ not real names
 A number of papers have been written that are implemented partially or fully
 in the cothority:
 
+- SCARAB (Onchain-Secrets): Hidden in plain sight
+https://eprint.iacr.org/2018/209.pdf
+- OmniLedger: A Secure, Scale-Out, Decentralized Ledger via Sharding.
+https://eprint.iacr.org/2017/406.pdf
 - MedCo: Enabling Privacy-Conscious Exploration of Distributed Clinical and Genomic Data. https://infoscience.epfl.ch/record/232605/files/GenoPri17_paper_6_CAMERA_READY.pdf?version=1
 - Scalable Bias-Resistant Distributed Randomness. https://infoscience.epfl.ch/record/230355/files
 - CHAINIAC: Proactive Software-Update Transparency via Collectively Signed Skipchains and Verified Builds. https://infoscience.epfl.ch/record/229405/files/usenixsec17-final.pdf?version=1

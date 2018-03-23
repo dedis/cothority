@@ -75,11 +75,13 @@ type propagationContext interface {
 
 // NewPropagationFunc registers a new protocol name with the context c and will
 // set f as handler for every new instance of that protocol.
-// The protocol will fail if more than t nodes per subtree fail to respond.
-// If t == -1, t defaults to len(n.Roster().List-1)/3. Thus, for a roster of
+// The protocol will fail if more than thresh nodes per subtree fail to respond.
+// If thresh == -1, the threshold defaults to len(n.Roster().List-1)/3. Thus, for a roster of
 // 5, t = int(4/3) = 1, e.g. 1 node out of the 5 can fail.
-func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t int) (PropagationFunc, error) {
+func NewPropagationFunc(c propagationContext, name string, f PropagationStore, thresh int) (PropagationFunc, error) {
 	pid, err := c.ProtocolRegister(name, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		// Make a local copy in order to avoid a data race.
+		t := thresh
 		if t == -1 {
 			t = (len(n.Roster().List) - 1) / 3
 		}
@@ -101,7 +103,11 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 	log.Lvl3("Registering new propagation for", c.ServerIdentity(),
 		name, pid)
 	return func(el *onet.Roster, msg network.Message, to time.Duration) (int, error) {
-		tree := el.GenerateNaryTreeWithRoot(8, c.ServerIdentity())
+		rooted := el.NewRosterWithRoot(c.ServerIdentity())
+		if rooted == nil {
+			return 0, errors.New("we're not in the roster")
+		}
+		tree := rooted.GenerateNaryTree(8)
 		if tree == nil {
 			return 0, errors.New("Didn't find root in tree")
 		}
@@ -148,6 +154,7 @@ func (p *Propagate) Start() error {
 func (p *Propagate) Dispatch() error {
 	process := true
 	log.Lvl4(p.ServerIdentity(), "Start dispatch")
+	defer p.Done()
 	for process {
 		p.Lock()
 		timeout := p.sd.Timeout
@@ -211,7 +218,6 @@ func (p *Propagate) Dispatch() error {
 			p.onDoneCb(p.received + 1)
 		}
 	}
-	p.Done()
 	return nil
 }
 

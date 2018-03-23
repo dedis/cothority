@@ -13,8 +13,8 @@ import (
 // We need to register all messages so the network knows how to handle them.
 func init() {
 	for _, msg := range []interface{}{
-		checkConfig{}, checkConfigReply{},
-		PinRequest{}, fetchRequest{}, mergeRequest{},
+		CheckConfig{}, CheckConfigReply{},
+		PinRequest{}, FetchRequest{}, MergeRequest{},
 	} {
 		network.RegisterMessage(msg)
 	}
@@ -33,32 +33,32 @@ const (
 	PopStatusOK
 )
 
-// checkConfig asks whether the pop-config and the attendees are available.
-type checkConfig struct {
+// CheckConfig asks whether the pop-config and the attendees are available.
+type CheckConfig struct {
 	PopHash   []byte
 	Attendees []kyber.Point
 }
 
-// checkConfigReply sends back an integer for the Pop. 0 means no config yet,
+// CheckConfigReply sends back an integer for the Pop. 0 means no config yet,
 // other values are defined as constants.
 // If PopStatus == PopStatusOK, then the Attendees will be the common attendees between
 // the two nodes.
-type checkConfigReply struct {
+type CheckConfigReply struct {
 	PopStatus int
 	PopHash   []byte
 	Attendees []kyber.Point
 }
 
-// mergeConfig asks if party is ready to merge
-type mergeConfig struct {
+// MergeConfig asks if party is ready to merge
+type MergeConfig struct {
 	// FinalStatement of current party
 	Final *FinalStatement
 	// Hash of PopDesc party to merge with
 	ID []byte
 }
 
-// mergeConfigReply responds with info of asked party
-type mergeConfigReply struct {
+// MergeConfigReply responds with info of asked party
+type MergeConfigReply struct {
 	// status of merging process
 	PopStatus int
 	// hash of party was asking to merge
@@ -75,27 +75,27 @@ type PinRequest struct {
 	Public kyber.Point
 }
 
-// storeConfig presents a config to store
-type storeConfig struct {
+// StoreConfig presents a config to store
+type StoreConfig struct {
 	Desc      *PopDesc
 	Signature []byte
 }
 
-// storeConfigReply gives back the hash.
-// TODO: storeConfigReply will give in a later version a handler that can be used to
+// StoreConfigReply gives back the hash.
+// TODO: StoreConfigReply will give in a later version a handler that can be used to
 // identify that config.
-type storeConfigReply struct {
+type StoreConfigReply struct {
 	ID []byte
 }
 
-// finalizeRequest asks to finalize on the given descid-popconfig.
-type finalizeRequest struct {
+// FinalizeRequest asks to finalize on the given descid-popconfig.
+type FinalizeRequest struct {
 	DescID    []byte
 	Attendees []kyber.Point
 	Signature []byte
 }
 
-func (fr *finalizeRequest) hash() ([]byte, error) {
+func (fr *FinalizeRequest) hash() ([]byte, error) {
 	h := cothority.Suite.Hash()
 	_, err := h.Write(fr.DescID)
 	if err != nil {
@@ -114,20 +114,20 @@ func (fr *finalizeRequest) hash() ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
-// finalizeResponse returns the FinalStatement if all conodes already received
+// FinalizeResponse returns the FinalStatement if all conodes already received
 // a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
 // pruned attendees-public-key-list and the collective signature.
-type finalizeResponse struct {
+type FinalizeResponse struct {
 	Final *FinalStatement
 }
 
-// fetchRequest asks to get FinalStatement
-type fetchRequest struct {
+// FetchRequest asks to get FinalStatement
+type FetchRequest struct {
 	ID []byte
 }
 
-// mergeRequest asks to start merging process for given Party
-type mergeRequest struct {
+// MergeRequest asks to start merging process for given Party
+type MergeRequest struct {
 	ID        []byte
 	Signature []byte
 }

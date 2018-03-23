@@ -29,39 +29,30 @@ func init() {
 var skipchainSID onet.ServiceID
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 2)
+	log.MainTest(m)
 }
 
 func TestService_StoreSkipBlock_Failure(t *testing.T) {
 	if testing.Short() {
 		t.Skip("node failure tests do not run on travis, see #1000")
 	}
-	storeSkipBlock(t, true)
+	storeSkipBlock(t, 4, true)
 }
 
 func TestService_StoreSkipBlock(t *testing.T) {
-	storeSkipBlock(t, false)
+	storeSkipBlock(t, 4, false)
 }
 
-func storeSkipBlock(t *testing.T, fail bool) {
+func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 	// First create a roster to attach the data to it
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
-	servers, el, genService := local.MakeSRS(cothority.Suite, 4, skipchainSID)
+	servers, el, genService := local.MakeSRS(cothority.Suite, nbrServers, skipchainSID)
 	service := genService.(*Service)
 	// This is the poor server who will play the part of the dead server
 	// for us.
 	deadServer := servers[len(servers)-1]
-
-	if fail {
-		// Set low timeout to make the test finish quickly.
-		service.bftTimeout = 100 * time.Millisecond
-		// WATCH OUT: log levels higher than 3 require a timeout of 500 ms.
-		// service.bftTimeout = 500 * time.Millisecond
-
-		service.propTimeout = 5 * service.bftTimeout
-	}
 
 	// Setting up root roster
 	sbRoot, err := makeGenesisRoster(service, el)
@@ -76,7 +67,7 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	genesis.Roster = sbRoot.Roster
 	genesis.VerifierIDs = VerificationStandard
 	blockCount := 0
-	psbr, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: genesis})
+	psbr, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: genesis})
 	if err != nil {
 		t.Fatal("StoreSkipBlock:", err)
 	}
@@ -104,7 +95,7 @@ func storeSkipBlock(t *testing.T, fail bool) {
 	if id == nil {
 		t.Fatal("second block last id is nil")
 	}
-	psbr2, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: id, NewBlock: next})
+	psbr2, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: id, NewBlock: next})
 	if err != nil {
 		t.Fatal("StoreSkipBlock:", err)
 	}
@@ -125,7 +116,7 @@ func storeSkipBlock(t *testing.T, fail bool) {
 
 	next.ParentBlockID = next.Hash
 	next.Data = []byte("And the Spirit of God moved upon the face of the waters.")
-	psbr3, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: psbr2.Latest.Hash, NewBlock: next})
+	psbr3, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: psbr2.Latest.Hash, NewBlock: next})
 	assert.NotNil(t, psbr3)
 	assert.NotNil(t, psbr3.Latest)
 	latest3 := psbr3.Latest
@@ -204,6 +195,10 @@ func TestService_MultiLevel(t *testing.T) {
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
+	maxlevel := 3
+	if testing.Short() {
+		maxlevel = 2
+	}
 	servers, el, genService := local.MakeSRS(cothority.Suite, 3, skipchainSID)
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
@@ -211,7 +206,7 @@ func TestService_MultiLevel(t *testing.T) {
 	}
 	service := genService.(*Service)
 
-	for base := 1; base <= 3; base++ {
+	for base := 1; base <= maxlevel; base++ {
 		for height := 1; height <= base; height++ {
 			log.Lvl1("Making genesis for", base, height)
 			if base == 1 && height > 1 {
@@ -226,7 +221,7 @@ func TestService_MultiLevel(t *testing.T) {
 				log.Lvl3("Adding block", sbi)
 				sb := NewSkipBlock()
 				sb.Roster = el
-				psbr, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: latest.Hash, NewBlock: sb})
+				psbr, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: latest.Hash, NewBlock: sb})
 				log.ErrFatal(err)
 				latest = psbr.Latest
 				for n, i := range sb.BackLinkIDs {
@@ -296,7 +291,7 @@ func TestService_SignBlock(t *testing.T) {
 	el2 := onet.NewRoster(el.List[0:2])
 	sb := NewSkipBlock()
 	sb.Roster = el2
-	reply, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: sbRoot.Hash, NewBlock: sb})
+	reply, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
 	log.ErrFatal(err)
 	sbRoot = reply.Previous
 	sbSecond := reply.Latest
@@ -326,7 +321,7 @@ func TestService_ProtocolVerification(t *testing.T) {
 	log.ErrFatal(err)
 	sbNext := sbRoot.Copy()
 	sbNext.BackLinkIDs = []SkipBlockID{sbRoot.Hash}
-	_, err = s1.StoreSkipBlock(&StoreSkipBlock{LatestID: sbRoot.Hash, NewBlock: sbNext})
+	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sbNext})
 	log.ErrFatal(err)
 	for i := 0; i < 3; i++ {
 		select {
@@ -383,15 +378,15 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 			Data:          []byte{},
 		},
 	}
-	ssbr, err := s1.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: sbRoot})
+	ssbr, err := s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sbRoot})
 	log.ErrFatal(err)
 	roster2 := onet.NewRoster(roster.List[:nbrHosts-1])
 	log.Lvl1("Proposing roster", roster2)
 	sb1 := ssbr.Latest.Copy()
 	sb1.Roster = roster2
-	ssbr, err = s2.StoreSkipBlock(&StoreSkipBlock{LatestID: sbRoot.Hash, NewBlock: sb1})
+	ssbr, err = s2.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb1})
 	require.NotNil(t, err)
-	ssbr, err = s1.StoreSkipBlock(&StoreSkipBlock{LatestID: sbRoot.Hash, NewBlock: sb1})
+	ssbr, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb1})
 	log.ErrFatal(err)
 	require.NotNil(t, ssbr.Latest)
 
@@ -405,14 +400,14 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 		},
 	}
 	sbErr.ParentBlockID = SkipBlockID([]byte{1, 2, 3})
-	_, err = s1.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: sbErr})
+	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sbErr})
 	require.NotNil(t, err)
-	_, err = s1.StoreSkipBlock(&StoreSkipBlock{LatestID: sbErr.ParentBlockID, NewBlock: sbErr})
+	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbErr.ParentBlockID, NewBlock: sbErr})
 	// Last successful log...
 	require.NotNil(t, err)
 
 	sbErr = ssbr.Latest.Copy()
-	_, err = s3.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbr.Latest.Hash, NewBlock: sbErr})
+	_, err = s3.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbr.Latest.Hash, NewBlock: sbErr})
 	require.NotNil(t, err)
 }
 
@@ -433,7 +428,7 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 			Data:          []byte{},
 		},
 	}
-	ssbrep, err := s1.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: sbRoot})
+	ssbrep, err := s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sbRoot})
 	log.ErrFatal(err)
 
 	last := time.Now()
@@ -441,15 +436,15 @@ func TestService_StoreSkipBlockSpeed(t *testing.T) {
 		now := time.Now()
 		log.Lvl3(i, now.Sub(last))
 		last = now
-		ssbrep, err = s1.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbrep.Latest.Hash,
+		ssbrep, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbrep.Latest.Hash,
 			NewBlock: sbRoot})
 		log.ErrFatal(err)
 	}
 }
 
-func TestService_ParallelStore(t *testing.T) {
+func TestService_ParallelGUC(t *testing.T) {
 	if testing.Short() {
-		t.Skip("parallel store does not run on travis, see #1000")
+		t.Skip("parallel GUC does not run on travis, see #1000")
 	}
 	nbrRoutines := 10
 	local := onet.NewLocalTest(cothority.Suite)
@@ -464,7 +459,7 @@ func TestService_ParallelStore(t *testing.T) {
 			Data:          []byte{},
 		},
 	}
-	ssbrep, err := s1.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: sbRoot})
+	ssbrep, err := s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sbRoot})
 	log.ErrFatal(err)
 
 	wg := &sync.WaitGroup{}
@@ -474,7 +469,7 @@ func TestService_ParallelStore(t *testing.T) {
 			cl := NewClient()
 			block := sbRoot.Copy()
 			for {
-				_, err := s1.StoreSkipBlock(&StoreSkipBlock{LatestID: latest.Hash, NewBlock: block})
+				_, err := s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: latest.Hash, NewBlock: block})
 				if err == nil {
 					log.Lvl1("Done with", i)
 					wg.Done()
@@ -492,6 +487,113 @@ func TestService_ParallelStore(t *testing.T) {
 		}(i, ssbrep.Latest.Copy())
 	}
 	wg.Wait()
+}
+
+func TestService_ParallelGenesis(t *testing.T) {
+	if testing.Short() {
+		t.Skip("parallel tests too big for travis")
+	}
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	_, roster, s1 := makeHELS(local, 5)
+	sb0 := &SkipBlock{
+		SkipBlockFix: &SkipBlockFix{
+			MaximumHeight: 1,
+			BaseHeight:    1,
+			Roster:        roster,
+			Data:          []byte{},
+		},
+	}
+
+	const nbrRoutines = 20
+	const numBlocks = 100
+	errs := make(chan error, nbrRoutines*numBlocks)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(nbrRoutines)
+	for i := 0; i < nbrRoutines; i++ {
+		go func(sb *SkipBlock) {
+			for j := 0; j < numBlocks; j++ {
+				_, err := s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sb})
+				if err != nil {
+					errs <- err
+					break
+				}
+			}
+			wg.Done()
+		}(sb0.Copy())
+	}
+	wg.Wait()
+
+	select {
+	case err := <-errs:
+		t.Error("got an error", err)
+	default:
+		t.Log("congratulations, no errors")
+	}
+
+	n := s1.db.Length()
+	if n != numBlocks*nbrRoutines {
+		t.Error("num blocks is wrong:", n)
+	}
+}
+
+func TestService_ParallelStoreBlock(t *testing.T) {
+	if testing.Short() {
+		t.Skip("parallel tests too big for travis")
+	}
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	_, roster, s1 := makeHELS(local, 5)
+	ssb := &StoreSkipBlock{
+		NewBlock: &SkipBlock{
+			SkipBlockFix: &SkipBlockFix{
+				MaximumHeight: 1,
+				BaseHeight:    1,
+				Roster:        roster,
+				Data:          []byte{},
+			},
+		},
+	}
+	reply, err := s1.StoreSkipBlock(ssb)
+	if err != nil {
+		t.Error(err)
+	}
+
+	const nbrRoutines = 20
+	const numBlocks = 100
+	errs := make(chan error, nbrRoutines*numBlocks)
+
+	wg := &sync.WaitGroup{}
+	wg.Add(nbrRoutines)
+	for i := 0; i < nbrRoutines; i++ {
+		go func(sb *SkipBlock) {
+			for j := 0; j < numBlocks; j++ {
+				_, err := s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: []byte{}, NewBlock: sb})
+				if err != nil {
+					errs <- err
+					break
+				}
+			}
+			wg.Done()
+		}(reply.Latest.Copy())
+	}
+	wg.Wait()
+
+	select {
+	case err := <-errs:
+		t.Error("got an error", err)
+	default:
+		t.Log("congratulations, no errors")
+	}
+
+	n := s1.db.Length()
+	// plus 1 for the genesis block
+	if n != numBlocks*nbrRoutines+1 {
+		t.Error("num blocks is wrong:", n)
+	}
 }
 
 func TestService_Propagation(t *testing.T) {
@@ -514,7 +616,7 @@ func TestService_Propagation(t *testing.T) {
 		3, 3)
 	log.ErrFatal(err)
 	require.NotNil(t, sbRoot)
-	_, err = service.StoreSkipBlock(&StoreSkipBlock{LatestID: sbRoot.Hash, NewBlock: sbRoot})
+	_, err = service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sbRoot})
 	log.ErrFatal(err)
 }
 
@@ -535,7 +637,7 @@ func TestService_AddFollow(t *testing.T) {
 	sb.BaseHeight = 2
 	sb.Data = []byte{}
 	sb.VerifierIDs = []VerifierID{VerifyBase}
-	ssb := &StoreSkipBlock{LatestID: nil, NewBlock: sb, Signature: nil}
+	ssb := &StoreSkipBlock{TargetSkipChainID: []byte{}, NewBlock: sb, Signature: nil}
 
 	_, err := service.StoreSkipBlock(ssb)
 	require.NotNil(t, err)
@@ -560,7 +662,7 @@ func TestService_AddFollow(t *testing.T) {
 	// Not fully authenticated roster
 	log.Lvl2("2nd roster is not registered")
 	services[1].Storage.FollowIDs = []SkipBlockID{[]byte{0}}
-	ssb.LatestID = master0.Latest.Hash
+	ssb.TargetSkipChainID = master0.Latest.Hash
 	sb = sb.Copy()
 	ssb.NewBlock = sb
 	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[0], ro.List[1]}) // two in roster
@@ -594,7 +696,7 @@ func TestService_AddFollow(t *testing.T) {
 	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[1], ro.List[0], ro.List[2]})
 	sb.Hash = sb.CalculateHash()
 	ssb.NewBlock = sb
-	ssb.LatestID = master1.Latest.Hash
+	ssb.TargetSkipChainID = master1.Latest.Hash
 	sig, err = schnorr.Sign(cothority.Suite, priv1, ssb.NewBlock.CalculateHash())
 	log.ErrFatal(err)
 	ssb.Signature = &sig
@@ -683,6 +785,7 @@ func TestService_Unlink(t *testing.T) {
 	msg, _ = kp.Public.MarshalBinary()
 	msg = append([]byte("unlink:"), msg...)
 	sig, err = schnorr.Sign(cothority.Suite, kp.Private, msg)
+	require.Nil(t, err)
 	_, err = service.Unlink(&Unlink{
 		Public:    kp.Public,
 		Signature: sig,
@@ -838,7 +941,7 @@ func makeGenesisRosterArgs(s *Service, el *onet.Roster, parent SkipBlockID,
 	sb.BaseHeight = base
 	sb.ParentBlockID = parent
 	sb.VerifierIDs = vid
-	psbr, err := s.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: sb})
+	psbr, err := s.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: []byte{}, NewBlock: sb})
 	if err != nil {
 		return nil, err
 	}
@@ -869,8 +972,8 @@ func waitPropagationFinished(t *testing.T, local *onet.LocalTest) {
 	for propagating {
 		propagating = false
 		for _, s := range services {
-			if s.IsPropagating() {
-				log.Lvl1("Service", s, "is still propagating")
+			if s.chains.numLocks() != 0 {
+				log.Lvl1("Service", s, "is still locking chains")
 				propagating = true
 			}
 		}
@@ -900,12 +1003,12 @@ func TestService_LeaderCatchup(t *testing.T) {
 			Data:          []byte{},
 		},
 	}
-	ssbrep, err := leader.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: sbRoot})
+	ssbrep, err := leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: []byte{}, NewBlock: sbRoot})
 	log.ErrFatal(err)
 
 	var third SkipBlockID
 	for i := 0; i < 10; i++ {
-		ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbrep.Latest.Hash,
+		ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbrep.Latest.Hash,
 			NewBlock: sbRoot})
 		if err != nil {
 			t.Fatal(err)
@@ -922,7 +1025,7 @@ func TestService_LeaderCatchup(t *testing.T) {
 
 	// Write one more onto the leader: it will need to sync it's chain in order
 	// to handle this write.
-	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbrep.Latest.Hash,
+	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbrep.Latest.Hash,
 		NewBlock: sbRoot})
 	if err != nil {
 		t.Fatal(err)
@@ -935,7 +1038,7 @@ func TestService_LeaderCatchup(t *testing.T) {
 	nukeBlocksFrom(t, follower.db, third)
 
 	// Write onto leader; the follower will need to sync to be able to sign this.
-	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{LatestID: ssbrep.Latest.Hash,
+	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbrep.Latest.Hash,
 		NewBlock: sbRoot})
 	if err != nil {
 		t.Fatal(err)
@@ -996,7 +1099,7 @@ func TestRosterAddCausesSync(t *testing.T) {
 			Data:          []byte{},
 		},
 	}
-	ssbrep, err := leader.StoreSkipBlock(&StoreSkipBlock{LatestID: nil, NewBlock: sbRoot})
+	ssbrep, err := leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: []byte{}, NewBlock: sbRoot})
 	if err != nil {
 		t.Error(err)
 	}
@@ -1011,8 +1114,8 @@ func TestRosterAddCausesSync(t *testing.T) {
 		},
 	}
 	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{
-		LatestID: ssbrep.Latest.Hash,
-		NewBlock: newBlock})
+		TargetSkipChainID: ssbrep.Latest.Hash,
+		NewBlock:          newBlock})
 	if err != nil {
 		t.Error(err)
 	}
@@ -1024,8 +1127,8 @@ func TestRosterAddCausesSync(t *testing.T) {
 	// Add a block on. #4 will be asked to sign a forward link on a block
 	// it has never heard of, so it will sync.
 	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{
-		LatestID: ssbrep.Latest.Hash,
-		NewBlock: newBlock})
+		TargetSkipChainID: ssbrep.Latest.Hash,
+		NewBlock:          newBlock})
 	if err != nil {
 		t.Error(err)
 	}

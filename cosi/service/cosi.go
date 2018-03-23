@@ -1,3 +1,5 @@
+// Package service implements a cosi service for which clients can connect to
+// and then sign messages.
 package service
 
 import (

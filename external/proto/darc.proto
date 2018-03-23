@@ -1,0 +1,90 @@
+syntax = "proto2";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "DarcProto";
+
+// ***
+// These are the messages used in the API-calls
+// ***
+
+// Darc is the basic structure representing an access control. A Darc can evolve in the way that
+// a new Darc points to the previous one and is signed by the owner(s) of the previous Darc.
+message Darc {
+  // 	 Identities who are allowed to evolve this Darc.
+  repeated Identity owners = 1;
+  // 	 Identities who can perform actions (write/read) with data on a skipchain.
+  repeated Identity users = 2;
+  // 	 Version should be monotonically increasing over the evolution of a Darc.
+  required sint32 version = 3;
+  // 	 Description is a free-form field that can hold any data as required by the user.
+  // 	 Darc itself will never depend on any of the data in here.
+  optional bytes description = 4;
+  // 	 BaseID is the ID of the first darc of this Series
+  optional bytes baseid = 5;
+  // 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+  // 	 and needs to be created by an Owner from the previous valid Darc.
+  optional Signature signature = 6;
+}
+
+// Identity is a generic structure can be either an Ed25519 public key or a Darc
+message Identity {
+  // 	 Darc identity
+  optional IdentityDarc darc = 1;
+  // 	 Public-key identity
+  optional IdentityEd25519 ed25519 = 2;
+  // 	 Public-key identity
+  optional IdentityX509EC x509ec = 3;
+}
+
+// IdentityEd25519 holds a Ed25519 public key (Point)
+message IdentityEd25519 {
+  required bytes point = 1;
+}
+
+// IdentityX509EC holds a public key from a X509EC
+message IdentityX509EC {
+  required bytes public = 1;
+}
+
+// IdentityDarc is a structure that points to a Darc with a given DarcID on a skipchain
+message IdentityDarc {
+  required bytes id = 1;
+}
+
+// Signature is a signature on a Darc to accept a given decision.
+// can be verified using the appropriate identity.
+message Signature {
+  // 	 The signature itself
+  required bytes signature = 1;
+  // 	 Represents the path to get up to information to be able to verify this signature
+  required SignaturePath signaturepath = 2;
+}
+
+// SignaturePath is a struct that holds information necessary for signature verification
+message SignaturePath {
+  // 	 Darc(s) that justify the right of the signer to push a new Darc
+  repeated Darc darcs = 1;
+  // 	 the Idenity (public key or another Darc) of the signer
+  required Identity signer = 2;
+  // 	 Is the signer Owner of a Darc or an user
+  required sint32 role = 3;
+}
+
+// Signer is a generic structure that can hold different types of signers
+message Signer {
+  optional SignerEd25519 ed25519 = 1;
+  optional SignerX509EC x509ec = 2;
+}
+
+// SignerEd25519 holds a public and private keys necessary to sign Darcs
+message SignerEd25519 {
+  required bytes point = 1;
+  required bytes secret = 2;
+}
+
+// SignerX509EC holds a public and private keys necessary to sign Darcs,
+// but the private key will not be given out.
+message SignerX509EC {
+  required bytes point = 1;
+  required bytes secret = 2;
+}

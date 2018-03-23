@@ -1,3 +1,9 @@
+// Package status is a service for reporting the all the services running on a
+// server.
+//
+// This file contains all the code to run a Stat service. The Stat receives
+// takes a request for the Status reports of the server, and sends back the
+// status reports for each service in the server.
 package status
 
 import (
@@ -5,10 +11,6 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 )
-
-// This file contains all the code to run a Stat service. The Stat receives takes a
-// request for the Status reports of the server, and sends back the status reports for each service
-// in the server.
 
 // ServiceName is the name to refer to the Status service.
 const ServiceName = "Status"
@@ -20,25 +22,18 @@ func init() {
 
 }
 
-// Stat is the service that returns the status reports of all services running on a server.
+// Stat is the service that returns the status reports of all services running
+// on a server.
 type Stat struct {
 	*onet.ServiceProcessor
 }
 
-// Request is what the Status service is expected to receive from clients.
-type Request struct{}
-
-// Response is what the Status service will reply to clients.
-type Response struct {
-	Status         map[string]onet.Status
-	ServerIdentity *network.ServerIdentity
-}
-
 // Request treats external request to this service.
 func (st *Stat) Request(req *Request) (network.Message, error) {
-	log.Lvl3("Returning", st.Context.ReportStatus())
+	statuses := st.Context.ReportStatus()
+	log.Lvl4("Returning", statuses)
 	return &Response{
-		Status:         st.Context.ReportStatus(),
+		Status:         statuses,
 		ServerIdentity: st.ServerIdentity(),
 	}, nil
 }

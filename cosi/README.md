@@ -1,83 +1,89 @@
-[![Build Status](https://travis-ci.org/dedis/cothority.svg?branch=master)](https://travis-ci.org/dedis/cothority)
-[![Coverage Status](https://coveralls.io/repos/github/dedis/cothority/badge.svg?branch=master)](https://coveralls.io/github/dedis/costhority?branch=master)
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
+[Cothority](../README.md) ::
+[Building Blocks](../doc/BuildingBlocks.md) ::
+Collective Signing
 
+# Collective Signing (CoSi)
 
-# CoSi
+*WARNING*: this package is kept here for historical and research purposes. It
+should not be used in other services as it has been deprecated by the
+[ftcosi](../ftcosi)
+package.
 
-This package provides functionality to request and verify collective signatures as well as run a standalone server for handling collective signing requests.
+CoSi is a protocol that enables a decentralized (potentially large) group of
+independent servers to efficiently issue aggregate Schnorr signatures. These
+collective signatures (*co-signatures*) convey the same information as a list of
+conventional signatures but are much more compact and efficient to verify against
+the aggregate public key of the server group. In practice, a co-signature is not
+much bigger than an individual Schnorr signature.
 
-## Getting Started
+CoSi is intended to facilitate increased transparency and security-hardening
+for critical Internet authorities such as certificate authorities,
+[time services](http://www.nist.gov/pml/div688/grp40/its.cfm),
+naming authorities such as [DNSSEC](http://www.dnssec.net),
+software distribution and update services,
+directory services used by tools such as [Tor](https://www.torproject.org),
+and next-generation cryptocurrencies.
 
-To use the code of this package you need to:
+# Implementation
 
-- Install [Golang](https://golang.org/doc/install)
-- Optional: Set [`$GOPATH`](https://golang.org/doc/code.html#GOPATH) to point to your workspace directory
-- Put $GOPATH/bin in your PATH: `export PATH=$PATH:$(go env GOPATH)/bin`
-
-To build and install the CoSi application, execute:
-
-```
-go get -u github.com/dedis/cothority/cosi
-```
-
-## Functionality Overview
-
-```
-cosi help
-NAME:
-   CoSi App - Collectively sign or verify a file; run a server for collective signing
-
-USAGE:
-   cosi [global options] command [command options] [arguments...]
-
-VERSION:
-   0.10
-
-COMMANDS:
-     sign, s    Requests a collectively signature for a 'file'; signature is written to STDOUT by default
-     verify, v  Verifies a collective signature of a 'file'; signature is read from STDIN by default
-     check, c   Checks if the servers in the group definition are up and running
-     server     Starts a CoSi server
-     help, h    Shows a list of commands or help for one command
-
-GLOBAL OPTIONS:
-   --debug value, -d value  debug-level: 1 for terse, 5 for maximal (default: 0)
-   --help, -h               show help
-   --version, -v            print the version
-```
-
-## Using the CoSi Client
-
-### Configuration
-
-To tell the CoSi client which existing cothority (public key) it should use for signing requests (signature verification), you need to specify a configuration file. For example, you could use the [DEDIS cothority configuration file](../dedis-cothority.toml) which is included in this repository. To have a shortcut for later on, set:
+CoSi is implemented as a single protocol. It uses four types of messages:
+announcement, commitment, challenge and response. The root initializes the
+protocol with the announcement message. It is then propagated down the tree,
+where the tree is specified by the service or the program that initializes the
+protocol. Upon receiving the announcement, the leafs begin propagating
+commitment messages back up, which are aggregated at the intermediate nodes.
+As a result, the root should receive an aggregate commitment from all the
+nodes. Then, the root starts a second round-trip by propagating the challenge
+message down the tree. Like before, upon receiving the challenge, the leafs
+begin to propagate the response messages back up and are aggregated by the
+intermediate nodes. Finally, using the aggregate response, the root generates
+a final signature. An illustration is shown below.
 
 ```
-export COTHORITY=$(go env GOPATH)/src/github.com/dedis/cothority/dedis-cothority.toml 
+       root     announcement  ▲    challenge    ▲
+       /   \         |        |        |        |
+     node  node      |        |        |        |
+     /  \    \       |        |        |        |
+    /    \    \      |        |        |        |
+  leaf  leaf  leaf   ▼    commitment   ▼     response
 ```
 
-### Usage
+We provide hooks functionality where the initiator of the protocol is able to
+add custom behaviour at every stage of the protocol. For instance, the
+initiator can create a hook and register it with the final signature such that
+the signature is sent back to one of the receiver's channels.
 
-To request a collective (Schnorr) signature `file.sig` on a `file` from the DEDIS cothority, use:
+## Research Paper
 
-```
-cosi sign -g $COTHORITY -o file.sig file
-```
+For further background and technical details, please refer to the
+[research paper](http://arxiv.org/pdf/1503.08768.pdf) or one of the following
+links:
 
-To verify a collective (Schnorr) signature `file.sig` of the `file`, use:
+- [Certificate Cothority - Towards Trustworthy Collective CAs](https://petsymposium.org/2015/papers/syta-cc-hotpets2015.pdf),
+[HotPETS 2015](https://petsymposium.org/2015/hotpets.php)
+- [Enhancing Bitcoin Security and Performance with Strong Consistency via Collective Signing](http://arxiv.org/abs/1602.06997),
+[USENIX Security 2016](https://www.usenix.org/conference/usenixsecurity16) (to appear)
 
-```
-cosi verify -g $COTHORITY -s file.sig file
-```
+## Links
 
-To check the status of a collective signing group, use:
+- [ftcosi](../ftcosi) is a fault tolerant version of CoSi *Please use ftCoSi*
+- [CoSi CLI](CLI.md) is a command line interface for interacting with CoSi
+- [CoSi protocol](protocol) the protocol used for collective signing
+- [CoSi service](service) the service with the outward looking API
+- [CoSi RFC]((https://github.com/dedis/doc/tree/master/README.md)/cosi) a draft for a CoSi RFC
 
-```
-cosi check -g $COTHORITY
-```
+## Other Standalone CoSi Clients
 
-This will first contact each server individually and then check a few random collective signing group constellations. If there are connectivity problems, due to firewalls or bad connections, for example, you will see a "Timeout on signing" or similar error message.
-
-## Further Information
-
-For more details, e.g., to learn how you can run your own CoSi server or cothority, see the [wiki](https://github.com/dedis/cothority/wiki/CoSi).
+- C language, signature verification only: in [temporary fork of libsodium](https://github.com/bford/libsodium).
+See the new `crypto_sign_ed25519_verify_cosi` function in the
+[crypto_sign/ed25519/ref10](https://github.com/bford/libsodium/blob/master/src/libsodium/crypto_sign/ed25519/ref10/open.c)
+module, and the test suites for CoSi signature verification in
+[libsodium/test/default/sign.c](https://github.com/bford/libsodium/blob/master/test/default/sign.c).
+Run `make check` as usual for libsodium to run all tests including these.
+- Go language, verification and signing code: in
+[temporary fork of golang.org/x/crypto](https://github.com/bford/golang-x-crypto).
+See the new [ed25519/cosi] package, with
+[extensive godoc API documentation here](https://godoc.org/github.com/bford/golang-x-crypto/ed25519/cosi).
+Run `go test` to run the standard test suite, and `go test -bench=.` to run a
+suite of performance benchmarks.

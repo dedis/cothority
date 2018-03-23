@@ -1,6 +1,5 @@
-/*
-* The skipchain-manager lets you create, modify and query skipchains
- */
+// The skipchain-manager (scmgr) is a CLI which lets you create, modify and
+// query skipchains.
 package main
 
 import (
@@ -32,6 +31,8 @@ import (
 	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
+
+var bucketName = []byte("skipblocks")
 
 type config struct {
 	// The database holding all skipblocks
@@ -346,7 +347,7 @@ func scAdd(c *cli.Context) error {
 	var priv kyber.Scalar
 	link := cfg.Values.Link[roster.List[0].Public.String()]
 	if link != nil {
-		log.Lvl1("Found link-entry for", roster.List[0].Address)
+		log.Info("Found link-entry for", roster.List[0].Address)
 		priv = link.Private
 	}
 
@@ -357,7 +358,7 @@ func scAdd(c *cli.Context) error {
 	}
 	cfg.Db.Store(ssbr.Latest)
 	log.ErrFatal(cfg.save(c))
-	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.GenesisID)
+	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.SkipChainID())
 	return nil
 }
 
@@ -421,7 +422,7 @@ func dnsFetch(c *cli.Context) error {
 		return err
 	}
 	latest := gcr.Update[len(gcr.Update)-1]
-	genesis := latest.GenesisID
+	genesis := latest.SkipChainID()
 	if genesis == nil {
 		genesis = latest.Hash
 	}
@@ -452,7 +453,7 @@ func dnsList(c *cli.Context) error {
 			return err
 		}
 		for _, sb := range sbs {
-			if sb.GenesisID.Equal(g.Hash) {
+			if sb.SkipChainID().Equal(g.Hash) && sb.Index > 0 {
 				sub = append(sub, sb)
 			}
 		}
@@ -488,7 +489,7 @@ func dnsIndex(c *cli.Context) error {
 	log.Info("Going through all skipchain-ids and writing the genesis-block")
 	for i, g := range genesis {
 		block := &blocks.Blocks[i]
-		block.GenesisID = hex.EncodeToString(g.Hash)
+		block.SkipchainID = hex.EncodeToString(g.Hash)
 		block.Servers = make([]string, len(g.Roster.List))
 		block.Data = g.Data
 
@@ -498,8 +499,8 @@ func dnsIndex(c *cli.Context) error {
 
 		// Write the genesis block file
 		content, _ := json.Marshal(block)
-		log.Infof("Writing %s.js", block.GenesisID)
-		err := ioutil.WriteFile(filepath.Join(output, block.GenesisID+".js"), content, 0644)
+		log.Infof("Writing %s.js", block.SkipchainID)
+		err := ioutil.WriteFile(filepath.Join(output, block.SkipchainID+".js"), content, 0644)
 
 		if err != nil {
 			log.Info("Cannot write block-specific file")
@@ -567,12 +568,16 @@ func dnsUpdate(c *cli.Context) error {
 			continue
 		}
 		for _, sb := range gasr.SkipChains {
-			log.Infof("Found skipchain %x", sb.SkipChainID())
-			cfg.Db.Store(sb)
-			if fetchNew {
-				log.Info("Recursive fetch")
+			if cfg.Db.GetByID(sb.SkipChainID()) == nil {
+				if !fetchNew {
+					log.Lvlf2("Ignoring unknown skipchain %x", sb.SkipChainID())
+					continue
+				}
+				log.Lvl1("Adding new roster to search")
 				sisNew = updateNewSIs(sb.Roster, sisNew, sisAll)
 			}
+			log.Infof("Found skipchain %x", sb.SkipChainID())
+			cfg.Db.Store(sb)
 		}
 	}
 	return cfg.save(c)
@@ -599,9 +604,9 @@ func cleanJSFiles(dir string) error {
 
 // JSON skipblock element to be written in the index.js file
 type jsonBlock struct {
-	GenesisID string
-	Servers   []string
-	Data      []byte
+	SkipchainID string
+	Servers     []string
+	Data        []byte
 }
 
 // JSON list of skipblocks element to be written in the index.js file
@@ -688,7 +693,7 @@ func loadConfig(c *cli.Context) (*config, error) {
 				return nil, err
 			}
 			db.Update(func(tx *bolt.Tx) error {
-				_, err := tx.CreateBucket([]byte("skipblocks"))
+				_, err := tx.CreateBucket(bucketName)
 				if err != nil {
 					return fmt.Errorf("create bucket: %s", err)
 				}
@@ -698,7 +703,7 @@ func loadConfig(c *cli.Context) (*config, error) {
 				}
 				return nil
 			})
-			cfg.Db = skipchain.NewSkipBlockDB(db, "skipblocks")
+			cfg.Db = skipchain.NewSkipBlockDB(db, bucketName)
 			return cfg, nil
 		}
 		return nil, fmt.Errorf("Could not open file %s", cfgPath)
@@ -707,7 +712,7 @@ func loadConfig(c *cli.Context) (*config, error) {
 	if err != nil {
 		return nil, err
 	}
-	cfg.Db = skipchain.NewSkipBlockDB(db, "skipblocks")
+	cfg.Db = skipchain.NewSkipBlockDB(db, bucketName)
 	err = cfg.Db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte("config"))
 		v := b.Get([]byte("values"))
@@ -779,7 +784,7 @@ func updateNewSIs(roster *onet.Roster, sisNew []*network.ServerIdentity,
 func findLinkFromAddress(cfg *config, address string) (*link, error) {
 	var l *link
 	for _, o := range cfg.Values.Link {
-		if o.Address == network.NewAddress(network.PlainTCP, address) {
+		if o.Address.NetworkAddress() == address {
 			l = o
 			break
 		}

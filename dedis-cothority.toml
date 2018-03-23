@@ -1,20 +1,20 @@
 [[servers]]
-  Address = "tcp://dedis.nella.org:6879"
-  Public = "4e3008c1a2b6e022fb60b76b834f174911653e9c9b4156cc8845bfb334075655"
-  Description = "Jeff's server - dedis.nella.org"
-
-[[servers]]
-  Address = "tcp://conode.gasser.blue:7770"
-  Public = "e5e23e58539a09d3211d8fa0fb3475d48655e0c06d83e93c8e6e7d16aa87c106"
-  Description = "Ineiti's Cothority-server"
-
-[[servers]]
-  Address = "tcp://conode.dedis.ch:7770"
+  Address = "tls://conode.dedis.ch:7770"
   Public = "036bf316e1ea6e7e99e0bb713419d16c0b6794bf9dc442cc4cf36c3f935e93cf"
   Description = "EPFL Cothority-server"
 
 [[servers]]
-  Address = "tcp://employees.org:6879"
+  Address = "tls://dedis.nella.org:6879"
+  Public = "4e3008c1a2b6e022fb60b76b834f174911653e9c9b4156cc8845bfb334075655"
+  Description = "Jeff's server - dedis.nella.org"
+
+[[servers]]
+  Address = "tls://conode.gasser.blue:7770"
+  Public = "e5e23e58539a09d3211d8fa0fb3475d48655e0c06d83e93c8e6e7d16aa87c106"
+  Description = "Ineiti's Cothority-server"
+
+[[servers]]
+  Address = "tls://employees.org:6879"
   Suite = "Ed25519"
   Public = "1e7f67a33f945f13db2f51ae1547e5678d88e40cd599611a4f7deede29d8abea"
   Description = "jra@employees.org"

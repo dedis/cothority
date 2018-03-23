@@ -1,3 +1,7 @@
+// This is the command line interface to communicate with the pop service.
+//
+// More details can be found here -
+// https://github.com/dedis/cothority/blob/master/pop/README.md.
 package main
 
 import (
@@ -12,9 +16,9 @@ import (
 	"strings"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/check"
-	_ "github.com/dedis/cothority/cosi/protocol"
-	_ "github.com/dedis/cothority/cosi/service"
+	"github.com/dedis/cothority/ftcosi/check"
+	_ "github.com/dedis/cothority/ftcosi/protocol"
+	_ "github.com/dedis/cothority/ftcosi/service"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/pop/service"

@@ -5,7 +5,7 @@ const UUID = require("pure-uuid");
 const protobuf = require("protobufjs");
 const co = require("co");
 const shuffle = require("crypto-shuffle");
-const WebSocket = require("isomorphic-ws");
+const WS = require("ws");
 
 const root = require("../protobuf/index.js").root;
 const identity = require("../identity.js");
@@ -36,7 +36,7 @@ function Socket(addr, service) {
     return new Promise((resolve, reject) => {
       const path = this.url + "/" + request;
       console.log("net.Socket: new WebSocket(" + path + ")");
-      const ws = new WebSocket(this.url + "/" + request);
+      const ws = new WS(this.url + "/" + request);
       ws.binaryType = "arraybuffer";
 
       const requestModel = this.protobuf.lookup(request);
@@ -47,7 +47,23 @@ function Socket(addr, service) {
       if (responseModel === undefined)
         reject(new Error("Model " + response + " not found"));
 
+      // This makes the API consistent with nativescript-websockets
+      if (typeof ws.open === "function") {
+        ws._notify = ws._notifyBrowser;
+        Object.defineProperty(WS.prototype, "_notify", {
+          enumerable: false
+        });
+
+        Object.defineProperty(ws, "_notify", { enumerable: false });
+
+        ws.open();
+      }
+
       ws.onopen = () => {
+        const errMsg = requestModel.verify(data);
+        if (errMsg) {
+          reject(new Error(errMsg));
+        }
         const message = requestModel.create(data);
         const marshal = requestModel.encode(message).finish();
         ws.send(marshal);
@@ -55,17 +71,30 @@ function Socket(addr, service) {
 
       ws.onmessage = event => {
         ws.close();
-        const buffer = new Uint8Array(event.data);
+        const { data } = event;
+        let buffer;
+        if (ws.android) {
+          data.rewind();
+          const len = data.limit();
+          buffer = new Uint8Array(len);
+          for (let i = 0; i < len; i++) {
+            buffer[i] = data.get(i);
+          }
+        } else {
+          buffer = new Uint8Array(data);
+        }
         const unmarshal = responseModel.decode(buffer);
         resolve(unmarshal);
       };
 
       ws.onclose = event => {
-        if (!event.wasClean) reject(new Error(event.reason));
+        if (!event.wasClean || event.code === 4000) {
+          reject(new Error(event.reason));
+        }
       };
 
       ws.onerror = error => {
-        reject(new Error("could not connect to " + this.url + ":" + error));
+        reject(error);
       };
     });
   };
@@ -92,33 +121,30 @@ class RosterSocket {
    * @returns {Promise} holds the returned data in case of success.
    */
   send(request, response, data) {
-    const socket = this;
-    const fn = co.wrap(function*(req, resp, data, socket) {
-      request = req;
-      response = resp;
-      data = data;
-      var addresses = socket.addresses;
-      var service = socket.service;
+    const that = this;
+    const fn = co.wrap(function*() {
+      const addresses = that.addresses;
+      const service = that.service;
       shuffle(addresses);
       // try first the last good server we know
-      if (socket.lastGoodServer) addresses.unshift(socket.lastGoodServer);
+      if (that.lastGoodServer) addresses.unshift(that.lastGoodServer);
 
-      for (var i = 0; i < addresses.length; i++) {
-        var addr = addresses[i];
+      for (let i = 0; i < addresses.length; i++) {
+        const addr = addresses[i];
         try {
-          var socket = new Socket(addr, service);
+          const socket = new Socket(addr, service);
           console.log("RosterSocket: trying out " + addr + "/" + service);
-          var data = yield socket.send(request, response, data);
-          socket.lastGoodServer = addr;
-          return Promise.resolve(data);
+          const socketResponse = yield socket.send(request, response, data);
+          that.lastGoodServer = addr;
+          return Promise.resolve(socketResponse);
         } catch (err) {
-          console.log("rostersocket: " + err);
+          console.error("rostersocket: " + err);
           continue;
         }
       }
-      return Promise.reject("no conodes are available");
+      return Promise.reject(new Error("no conodes are available"));
     });
-    return fn(request, response, data, socket);
+    return fn();
   }
 }
 

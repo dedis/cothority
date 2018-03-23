@@ -1,3 +1,4 @@
+// This is a part of the JavaScript integration test.
 package main
 
 import (
@@ -10,6 +11,8 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
@@ -50,6 +53,20 @@ func main() {
 		latest = sb.Latest
 	}
 
+	reply, err := client.GetUpdateChain(ro, inter.Hash)
+	log.ErrFatal(err)
+	block := reply.Update[0]
+	link := block.ForwardLink[len(block.ForwardLink)-1]
+	fmt.Println("Link signature: ", len(link.Signature.Sig))
+	policy := cosi.NewThresholdPolicy(len(ro.List))
+	publics := make([]kyber.Point, len(ro.List))
+	for i := range ro.List {
+		publics[i] = ro.List[i].Public
+	}
+	err = cosi.Verify(cothority.Suite, publics, link.Signature.Msg, link.Signature.Sig, policy)
+	if err != nil {
+		panic(err)
+	}
 	serversToml := make([]*app.ServerToml, n)
 	for i, si := range ro.List {
 		serversToml[i] = app.NewServerToml(

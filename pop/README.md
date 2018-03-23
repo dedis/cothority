@@ -1,154 +1,52 @@
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
+[Cothority](../README.md) ::
+[Apps](../doc/Apps.md) ::
+Proof of Personhood
+
 # Proof of Personhood
 
-pop command can be used by the following group of users:
+Different services on the internet would like to offer anonymity to users, but
+still require the ability to block users that misbehave or to reject computer
+generated logins. The current state of the art uses Captchas to verify if a
+connection is made by a user or by an automatic process. Unfortunately it is
+very difficult today to create Captchas that are easy for humans and difficult
+for machines.
 
-- organizers (org)
-- attendees (attendee)
+Also the Tor-network has this problem, that due to the anonymity it provides,
+some users can abuse the network to attack websites by impersonating a multitude
+of users, while in reality they are only one entity. So a lot of websites
+present a Captcha when visited through the Tor-network, to prevent some kind of
+spamming attacks.
 
-Each group has its own set of commands to start, finalize and use the keys.
+Our solution to this problem is Proof of Personhood, where we link a physical
+person to a cryptographic token in such a way that one physical person can only
+receive one token. Furthermore this token can be used to authenticate as
+anonymous member of the group with a tag that is specific to that user/service
+combination. This allows for example Wikipedia to authenticate a user and eventually
+block him, while making it impossible for example that Wikipedia and an evoting
+service collude to find out what that user is voting on an anonymous voting
+platform.
 
-## Organizers
+Work done by Maria Fernanda Borge Chavez at the DEDIS-lab at EPFL worked out how
+we can use cryptography to create a token that can prove a person knows a
+secret, without giving away which person of a group it is. Furthermore, if we
+have different services like Wikipedia, Tor, or even voting systems, it is
+possible that each service gets its own view of the group and that they cannot
+collude to learn more about connections between the user.
 
-An organizer has to run his own conode to be able to create and
-participate as an organizer in a party. For setting up a conode,
-see [../conode/README.md].
+## Links
 
-Once the conode is setup, he needs to _link_ to the conode, then
-discuss what configuration to use together with the other organizers
-and _store_ this configuration.
+This is a list of available documents regarding Proof of Personhood as it evolved
+over time, papers, reports, and presentations.
 
-During the party, each organizer has to scan every attendee's public
-key and he has to make sure that the attendee leaves the room once he's
-been scanned by all organizers. When the organizer scanned all
-public keys, he can _register_ the keys. Once all organizers
-registered the keys, they can _finalize_ the party and create a
-*Final Statement*.
-
-### Link
-
-First every organizer has to link to his conode:
-
-```bash
-pop org link 127.0.0.1:2002
-# Read pin from command line
-pop org link 127.0.0.1:2002 PIN
-```
-
-### Store the configuration
-
-The organizers have to decide on the name of the party, the time
-and the location. Once they agree on this information, they can
-create a `description.toml`-file by adding all their conode's
-`public.toml`-files at the end of the file - example:
-
-```toml
-Name = "Proof-of-Personhood Party"
-DateTime = "2017-08-08 15:00 UTC"
-Location = "Earth, City"
-[[servers]]
-  Address = "tcp://127.0.0.1:2002"
-  Public = "lWHQZiMkxchMd7hfpn18HLqJUqiGRpIzSTyFYzWD9Zc="
-  Description = "Cot-1"
-[[servers]]
-  Address = "tcp://127.0.0.1:2004"
-  Public = "hbCeQID3RhQ0tVI8G/XkmyJv+Xr8qosVpCyJUppZcPw="
-  Description = "Cot-2"
-```
-
-This file has to be an exact copy for each organizer, as the conodes
-will calculate a hash on that file and use it to reference the
-party afterwards.
-
-```toml
-pop org config description.toml
-```
-
-This will print out the hash of the description, which should be the same
-for all organizers. If it differs, the conodes will consider them as
-being part of a different party and they will not be able to create a valid
-final statement. 
-
-### Register attendees public keys
-
-The attendees create public/private key pairs, store the private key
-and send the public key to the organizers. Each organizer should have
-all keys from all attendees.
-
-Supposing three attendees were at the party, then to register all public keys, 
-each organizer has to do:
-
-```bash
-pop org public "[key1,key2,key3]" DESCRIPTION_HASH 
-```
-
-### Finalize the party
-
-Now that all keys are stored by all organizers, each organizer can start
-to finalize the party and create the _collective signature_ on the
-final.toml:
-
-```bash
-pop org final DESCRIPTION_HASH
-```
-
-This will output the final statement, if successful. Store this final
-statement to give to the attendees. This can be saved as `final.toml`
-
-## Attendees
-
-### Create public/private key pair
-
-Each attendee has to create his key-pair. He is responsible to store
-this keypair securely:
-
-```bash
-pop -d 2 attendee create
-```
-
-### Send public key to organizers
-
-By any means, email or qrcode, these public keys should now be sent to 
-all the organizers.
-
-### Create pop-token
-
-The pop-token can be created by running the following command:
-
-```bash
-pop attendee join PRIVATE_KEY `final.toml`
-```
-
-### Sign a message
-
-An attendee with a valid pop-token can sign a message it receives from
-a service. The service will send a `message` and a `context`. The message
-is a nonce, while the context will be the same and represent the service.
-
-```bash
-pop attendee sign MESSAGE CONTEXT DESCRIPTION_HASH
-```
-
-This command will output the signature and the tag that has to be
-sent back to the service.
-
-## Authentication Service
-
-A service will want to verify signatures from attendees. For this, he
-will have to store the final statement locally to be able to verify
-if a signature is valid or not. Storing this final statement can be
-done in this way:
-
-```bash
-pop auth store `final.toml`
-```
-
-### Verify a message
-
-Once the final statement has been stored, the service can verify if
-a signature/tag pair is valid:
-
-```bash
-pop attendee verify MESSAGE CONTEXT SIGNATURE TAG DESCRIPTION_HASH
-```
-
-It will return whether the signature is valid or not.
+- [Client API](service/README.md)
+- Student project: [Adding DAGA to PoP](https://github.com/dedis/student_17/daga_pop):
+  - [Report](https://docs.google.com/viewer?url=https://github.com/dedis/student_17/raw/master/pop_ethereum/report_pop_ethereum.pdf)
+  - [Presentation](https://docs.google.com/viewer?url=https://github.com/dedis/student_17/raw/master/pop_ethereum/presentation_pop_ethereum.pdf)
+- Student project: [Proof of Personhood on Ethereum](https://github.com/dedis/student_17/pop_ethereum):
+  - [Report](https://docs.google.com/viewer?url=https://github.com/dedis/student_17/raw/master/pop_ethereum/report_pop_ethereum.pdf)
+  - [Presentation](https://docs.google.com/viewer?url=https://github.com/dedis/student_17/raw/master/pop_ethereum/presentation_pop_ethereum.pdf)
+- Student project: [Cross Platform Mobile App](https://github.com/dedis/student_17/cpmac):
+- Paper: Proof-of-Personhood: Redemocratizing Permissionless Cryptocurrencies: https://zerobyte.io/publications/2017-BKJGGF-pop.pdf
+- Slides: PoP talk at 33c3: https://pop.dedis.ch/documents/slides_pop_33c3.pdf
+- Paper: Pseudonym Parties: An Offline Foundation for Online ... - Bryan Ford: http://ww.bford.info/log/2007/0327-PseudonymParties.pdf

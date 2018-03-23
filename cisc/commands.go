@@ -83,22 +83,15 @@ func getCommands() cli.Commands {
 				{
 					Name:      "join",
 					Aliases:   []string{"j"},
-					Usage:     "propose to join an existing identity",
-					ArgsUsage: "group.toml id",
-					Flags: []cli.Flag{
-						cli.StringFlag{
-							Name:  "name, n",
-							Usage: "name of the device used in the identity",
-						},
-					},
-					Action: scJoin,
+					Usage:     "propose to join an existing identity by adding this device-key to the skipchain",
+					ArgsUsage: "group.toml id [name]",
+					Action:    scJoin,
 				},
 				{
-					Name:      "del",
-					Aliases:   []string{"d", "rm"},
-					Usage:     "remove this device from an identity",
+					Name:      "leave",
+					Usage:     "leave the skipchain by removing this device from the identity",
 					ArgsUsage: "name [skipchain-id]",
-					Action:    scDel,
+					Action:    scLeave,
 				},
 				{
 					Name:    "list",
@@ -166,11 +159,11 @@ func getCommands() cli.Commands {
 					Action:    dataVote,
 					Flags: []cli.Flag{
 						cli.BoolFlag{
-							Name:  "no",
+							Name:  "no, n",
 							Usage: "refuse vote",
 						},
 						cli.BoolFlag{
-							Name:  "yes",
+							Name:  "yes, y",
 							Usage: "accept vote",
 						},
 					},
@@ -188,6 +181,12 @@ func getCommands() cli.Commands {
 					Aliases: []string{"ls", "l"},
 					Usage:   "list all values",
 					Action:  kvList,
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "key",
+							Usage: "only prints the value mapped to this key",
+						},
+					},
 				},
 				{
 					Name:      "value",
@@ -202,6 +201,18 @@ func getCommands() cli.Commands {
 					Usage:     "add a new key/value pair",
 					ArgsUsage: "key value [skipchain-id]",
 					Action:    kvAdd,
+				},
+				{
+					Name:      "file",
+					Usage:     "add a key/value pair from a file.Key is given in flag, and value is the file in utf-8.",
+					ArgsUsage: "csvFile [skipchain-id]",
+					Action:    kvAddFile,
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "key",
+							Usage: "key name where to add the file. Default is the name of the file",
+						},
+					},
 				},
 				{
 					Name:      "del",
@@ -312,6 +323,12 @@ func getCommands() cli.Commands {
 					Aliases: []string{"ls", "l"},
 					Usage:   "list all skipchains and keys",
 					Action:  followList,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "id-only",
+							Usage: "only list the skipchain ID",
+						},
+					},
 				},
 				{
 					Name:    "update",

@@ -22,8 +22,8 @@ import (
 	"strings"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/cosi/check"
-	_ "github.com/dedis/cothority/cosi/service"
+	"github.com/dedis/cothority/ftcosi/check"
+	_ "github.com/dedis/cothority/ftcosi/service"
 	_ "github.com/dedis/cothority/identity"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
@@ -39,7 +39,7 @@ const (
 	DefaultName = "conode"
 
 	// Version of this binary
-	Version = "1.1"
+	Version = "2.0"
 )
 
 func main() {

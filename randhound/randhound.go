@@ -1,10 +1,9 @@
+// +build experimental
+
 // Package randhound is a client/server protocol for creating public random
 // strings in an unbiasable and verifiable way given that a threshold of
 // participants is honest. The protocol is driven by the client which scavenges
 // the public randomness from the servers over the course of two round-trips.
-
-// +build experimental
-
 package randhound
 
 import (

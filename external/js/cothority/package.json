@@ -1,6 +1,6 @@
 {
   "name": "@dedis/cothority",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "module for interacting with cothority nodes",
   "main": "dist/bundle.node.min.js",
   "browser": "dist/bundle.min.js",
@@ -8,7 +8,8 @@
     "build": "node node_modules/.bin/webpack",
     "doc": "node node_modules/.bin/jsdoc2md -f 'lib/**' > doc/doc.md",
     "protobuf": "node lib/protobuf/build/build_proto.js",
-    "test": "node node_modules/.bin/mocha --recursive --reporter spec"
+    "test": "node node_modules/.bin/mocha --recursive --reporter spec",
+    "prepublishOnly": "npm run protobuf && npm run build"
   },
   "keywords": [
     "cothority",
@@ -17,24 +18,20 @@
   "author": "DEDIS",
   "license": "ISC",
   "dependencies": {
-    "@dedis/kyber-js": "0.0.6",
+    "@dedis/kyber-js": "0.0.7",
     "co": "^4.6.0",
     "crypto-shuffle": "^1.0.1",
-    "isomorphic-ws": "^4.0.0",
-    "protobufjs": "^6.8.4",
+    "protobufjs": "^6.8.5",
     "pure-uuid": "^1.5.0",
     "topl": "^0.3.1",
-    "utf8": "^3.0.0",
-    "ws": "^4.0.0",
-    "wtfnode": "^0.5.7",
-    "xo": "^0.18.2"
+    "ws": "^4.0.0"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
     "babel-loader": "^7.1.2",
     "babel-preset-stage-3": "^6.24.1",
     "chai": "^4.1.2",
-    "eslint": "^4.17.0",
+    "eslint": "^4.18.1",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-prettier": "^2.5.0",
     "file": "^0.2.2",
@@ -44,12 +41,13 @@
     "mock-socket": "^7.1.0",
     "prettier": "1.10.2",
     "uglify-es": "^3.3.10",
-    "uglifyjs-webpack-plugin": "^1.1.8",
-    "webpack": "^3.11.0"
+    "uglifyjs-webpack-plugin": "^1.2.0",
+    "webpack": "^3.11.0",
+    "webpack-node-externals": "^1.6.0"
   },
   "files": [
-	"dist",
-	"doc",
-	"index.html"
+    "dist",
+    "doc",
+    "index.html"
   ]
 }

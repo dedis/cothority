@@ -1,6 +1,8 @@
 package skipchain
 
 import (
+	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -22,6 +24,9 @@ func init() {
 }
 
 func TestClient_CreateGenesis(t *testing.T) {
+	if testing.Short() {
+		t.Skip("limiting travis time")
+	}
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
@@ -107,6 +112,9 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	defer local.CloseAll()
 
 	conodes := 10
+	if testing.Short() {
+		conodes = 3
+	}
 	sbCount := conodes - 1
 	servers, roster, gs := local.MakeSRS(cothority.Suite, conodes, skipchainSID)
 	s := gs.(*Service)
@@ -126,7 +134,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 		newSB.Roster = onet.NewRoster(roster.List[i : i+2])
 		service := local.Services[servers[i].ServerIdentity.ID][skipchainSID].(*Service)
 		log.Lvl2("Doing skipblock", i, servers[i].ServerIdentity, newSB.Roster.List)
-		reply, err := service.StoreSkipBlock(&StoreSkipBlock{LatestID: sbs[i-1].Hash, NewBlock: newSB})
+		reply, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbs[i-1].Hash, NewBlock: newSB})
 		require.Nil(t, err)
 		require.NotNil(t, reply.Latest)
 		sbs[i] = reply.Latest
@@ -179,10 +187,13 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	var sb1 *StoreSkipBlockReply
 	sb1, err = c.StoreSkipBlock(inter, ro2, nil)
 	log.ErrFatal(err)
-	log.Lvl1("Proposing same roster again")
-	_, err = c.StoreSkipBlock(inter, ro2, nil)
-	require.NotNil(t, err,
-		"Appending two Blocks to the same last block should fail")
+	// This now works, because in order to implement concurrent writes
+	// correctly, we need to have StoreSkipBlock advance latest to the
+	// true latest block, atomically.
+	//log.Lvl1("Proposing same roster again")
+	//_, err = c.StoreSkipBlock(inter, ro2, nil)
+	//require.NotNil(t, err,
+	//	"Appending two Blocks to the same last block should fail")
 	log.Lvl1("Proposing following roster")
 	sb1, err = c.StoreSkipBlock(sb1.Latest, ro2, []byte{1, 2, 3})
 	log.ErrFatal(err)
@@ -418,4 +429,79 @@ func newTestClient(l *onet.LocalTest) *Client {
 type testData struct {
 	A int
 	B string
+}
+
+func TestClient_ParallelWrite(t *testing.T) {
+	numClients := 15
+	numWrites := 15
+	if testing.Short() {
+		numClients = 2
+	}
+
+	l := onet.NewTCPTest(cothority.Suite)
+	svrs, ro, _ := l.GenTree(5, true)
+	defer l.CloseAll()
+
+	cl := newTestClient(l)
+	msg := []byte("genesis")
+	gen, err := cl.CreateGenesis(ro, 1, 1, VerificationRoot, msg, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	s := l.Services[svrs[0].ServerIdentity.ID][sid].(*Service)
+
+	wg := sync.WaitGroup{}
+	errCh := make(chan error, numClients*numWrites)
+
+	for i := 0; i < numClients; i++ {
+		wg.Add(1)
+		go func(i int) {
+			cl := newTestClient(l)
+			msg := []byte(fmt.Sprintf("hello from client %v", i))
+
+			for j := 0; j < numWrites; j++ {
+				_, err := cl.StoreSkipBlock(gen, nil, msg)
+				if err != nil {
+					errCh <- err
+					break
+				}
+			}
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+
+	select {
+	case err := <-errCh:
+		t.Fatal(err)
+	default:
+		t.Log("congrats, no errors")
+	}
+
+	num := s.db.Length()
+	// plus 1 for the genesis block
+	expected := numClients*numWrites + 1
+	if num != expected {
+		t.Fatal("length db", num)
+	}
+
+	// Read the chain back, check it.
+	reply, err := cl.GetUpdateChain(ro, gen.SkipChainID())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(reply.Update) != expected {
+		t.Fatal("not enough updates")
+	}
+	for i, x := range reply.Update {
+		// Genesis does not match the expected string. NBD.
+		if i == 0 {
+			continue
+		}
+		msg := string(x.Data)
+		if !strings.HasPrefix(msg, "hello from client ") {
+			t.Errorf("block %v: %v", i, string(x.Data))
+		}
+	}
 }

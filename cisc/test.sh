@@ -40,8 +40,9 @@ main(){
   test DataVote
   test DataRoster
   test IdConnect
-  test IdDel
+  test IdLeave
   test KeyAdd
+  test KeyFile
   test KeyAdd2
   test KeyAddWeb
   test KeyDel
@@ -59,7 +60,7 @@ testRevoke(){
   testOK runCl 1 data vote -yes
   testOK runCl 2 data vote -yes
 
-  testOK runCl 1 skipchain del client3
+  testOK runCl 1 skipchain leave client3
   testOK runCl 2 data vote -yes
 
   testFail runCl 3 ssh add service1
@@ -205,13 +206,31 @@ testKeyAdd(){
   testGrep key1 runCl 1 kv ls
 }
 
-testIdDel(){
+testKeyFile() {
+  clientSetup 2
+  csvFile=$(mktemp)
+  cat > $csvFile  <<EOL
+key,val1,val2
+jobs,ranger,warrior
+types,elf,dwarf
+EOL
+  key="csv"
+  testOK runCl 1 kv file $csvFile --key "$key"
+  rm $csvFile
+  testOK runCl 2 data update
+  testOK runCl 2 data vote -yes
+  testOK runCl 1 data update
+  testGrep "jobs,ranger,warrior" runCl 1 kv ls --key "$key"
+  testGrep "types,elf,dwarf" runCl 1 kv ls --key "$key"
+}
+
+testIdLeave(){
   clientSetup 3
   testOK runCl 2 ssh add server2
   testOK runCl 1 data vote -yes
   testGrep client2 runCl 1 data list
   testGrep server2 runCl 1 data list
-  testOK runCl 1 skipchain del client2
+  testOK runCl 1 skipchain leave client2
   testOK runCl 3 data vote -yes
   testNGrep client2 runCl 3 data list
   testOK runCl 1 data update
@@ -253,24 +272,24 @@ testIdConnect(){
 }
 
 testDataVote(){
-  clientSetup 2
+  clientSetup 3
   testOK runCl 1 kv add one two
   testNGrep one runCl 1 kv ls
 
   testOK runCl 2 data vote -no
   testNGrep one runCl 2 kv ls
-  echo "y" | testOK runCl 2 data vote
+  testOK runCl 2 data vote -y
 
   testOK runCl 1 kv add three four
   testNGrep three runCl 1 kv ls
-  echo "n" | testOK runCl 2 data vote
+  testOK runCl 2 data vote -n
   testNGrep three runCl 1 kv ls
-  echo "y" | testOK runCl 2 data vote
+  testOK runCl 3 data vote -y
   testGrep three runCl 1 kv ls
   testGrep three runCl 2 kv ls
 
   testOK runCl 1 kv add five six
-  echo "y" | testOK runCl 2 data vote
+  testOK runCl 2 data vote -y
   testGrep five runCl 1 kv ls
   testGrep five runCl 2 kv ls
 }

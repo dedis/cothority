@@ -16,9 +16,9 @@ message SkipBlock {
     optional bytes genesis = 8;
     required bytes data = 9;
     required Roster roster = 10;
-    optional bytes hash = 11;
-    repeated BlockLink forward = 12;
-    repeated BlockLink children = 13;
+    required bytes hash = 11;
+    repeated ForwardLink forward = 12;
+    repeated bytes children = 13;
 }
 
 message SkipBlockMap {
@@ -34,10 +34,16 @@ message SkipBlockData {
     repeated SkipBlockDataEntry entries = 1;
 }
 
-message BlockLink {
-    required bytes hash = 1;
+message ForwardLink {
+    required bytes from = 1;
+    required bytes to = 2;
+    optional Roster newRoster = 3;
+    required ByzcoinXSignature signature = 4;
+}
+
+message ByzcoinXSignature {
+    required bytes message = 1;
     required bytes signature = 2;
-    repeated Exception exceptions = 3;
 }
 
 message Exception {
@@ -92,5 +98,5 @@ message ForwardSignature {
     required int32 targetHeight = 1;
     required bytes previous = 2;
     required SkipBlock newest = 3;
-    required BlockLink forwardLink = 4;
+    required ForwardLink forwardLink = 4;
 }

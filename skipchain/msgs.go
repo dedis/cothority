@@ -64,16 +64,14 @@ func init() {
 
 // External calls
 
-// StoreSkipBlock - Requests a new skipblock to be appended to
-// the given SkipBlock. If the given SkipBlock has Index 0 (which
-// is invalid), a new SkipChain will be created.
-// if AuthSkipchain == true, then the signature has to be a valid
-// Schnorr signature on the hash of the NewBlock by either one of the
-// conodes in the roster or by one of the clients.
+// StoreSkipBlock - Requests a new skipblock to be appended to the given
+// SkipBlock. If the given TargetSkipChainID is an empty slice, then a genesis
+// block is created.  Otherwise, the new block is added to the skipchain
+// specified by TargetSkipChainID.
 type StoreSkipBlock struct {
-	LatestID  SkipBlockID
-	NewBlock  *SkipBlock
-	Signature *[]byte
+	TargetSkipChainID SkipBlockID
+	NewBlock          *SkipBlock
+	Signature         *[]byte
 }
 
 // StoreSkipBlockReply - returns the signed SkipBlock with updated backlinks
@@ -275,7 +273,7 @@ type AddFollow struct {
 	SkipchainID SkipBlockID
 	Follow      FollowType
 	NewChain    PolicyNewChain
-	Conode      string
+	Conode      *network.ServerIdentity
 	Signature   []byte
 }
 

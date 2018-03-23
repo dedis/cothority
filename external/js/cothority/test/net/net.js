@@ -6,6 +6,9 @@ const network = require("../../lib/net");
 const cothority = require("../../lib");
 const identity = require("../../lib/identity.js");
 
+const helpers = require("../helpers.js");
+const co = require("co");
+
 const kyber = require("@dedis/kyber-js");
 const ed25519 = new kyber.curve.edwards25519.Curve();
 const serverAddr = "ws://127.0.0.1:9000";
@@ -100,4 +103,42 @@ describe("roster socket", () => {
         throw err;
       });
   });
+});
+
+describe("real server status", () => {
+  var proc;
+  after(function() {
+    helpers.killGolang(proc);
+  });
+
+  it("can talk to status", done => {
+    const build_dir = process.cwd() + "/test/skipchain/build";
+
+    var fn = co.wrap(function*() {
+      [roster, id] = helpers.readSkipchainInfo(build_dir);
+      const socket = new network.RosterSocket(roster, "Status");
+      socket
+        .send("Request", "Response", {})
+        .then(data => {
+          expect(data.system.Db.field.Open).to.equal("true");
+          done();
+        })
+        .catch(err => {
+          throw err;
+          done();
+        });
+    });
+
+    helpers
+      .runGolang(build_dir)
+      .then(proces => {
+        proc = proces;
+        return Promise.resolve(true);
+      })
+      .then(fn)
+      .catch(err => {
+        done();
+        throw err;
+      });
+  }).timeout(5000);
 });
