@@ -11,7 +11,7 @@ import (
 func NewSkipchain(roster *onet.Roster, verifier []skipchain.VerifierID, data interface{}) (
 	*skipchain.SkipBlock, error) {
 	client := skipchain.NewClient()
-	return client.CreateGenesis(roster, 1, 1, verifier, data, nil)
+	return client.CreateGenesis(roster, 8, 4, verifier, data, nil)
 }
 
 // Store appends a new block holding data to an existing skipchain.

@@ -56,7 +56,6 @@ type Service struct {
 type storage struct {
 	Roster  *onet.Roster
 	Secrets map[string]*lib.SharedSecret
-	Rosters map[string]*onet.Roster
 }
 
 // synchronizer is broadcasted to all roster nodes before every protocol.
@@ -357,7 +356,6 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 		Signature: req.Signature,
 	})
 	protocol.SetConfig(&onet.GenericConfig{Data: config})
-
 	if err = protocol.Start(); err != nil {
 		return nil, err
 	}
@@ -519,7 +517,6 @@ func new(context *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(context),
 		storage: &storage{
 			Secrets: make(map[string]*lib.SharedSecret),
-			Rosters: make(map[string]*onet.Roster),
 		},
 	}
 

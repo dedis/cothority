@@ -35,36 +35,39 @@ type Link struct {
 // GetMaster retrieves the master object from its skipchain.
 func GetMaster(roster *onet.Roster, id skipchain.SkipBlockID) (*Master, error) {
 	client := skipchain.NewClient()
-	reply, err := client.GetUpdateChain(roster, id)
+
+	block, err := client.GetSingleBlockByIndex(roster, id, 1)
 	if err != nil {
 		return nil, err
 	}
 
-	if len(reply.Update) < 2 {
+	transaction := UnmarshalTransaction(block.Data)
+	if transaction == nil && transaction.Master == nil {
 		return nil, fmt.Errorf("no master structure in %s", id.Short())
 	}
-
-	transaction := UnmarshalTransaction(reply.Update[1].Data)
-	if transaction != nil && transaction.Master != nil {
-		return transaction.Master, nil
-	}
-	return nil, fmt.Errorf("no master structure in %s", id.Short())
+	return transaction.Master, nil
 }
 
 // Links returns all the links appended to the master skipchain.
 func (m *Master) Links() ([]*Link, error) {
 	client := skipchain.NewClient()
-	reply, err := client.GetUpdateChain(m.Roster, m.ID)
+
+	block, err := client.GetSingleBlockByIndex(m.Roster, m.ID, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	links := make([]*Link, 0)
-	for i := 2; i < len(reply.Update); i++ {
-		transaction := UnmarshalTransaction(reply.Update[i].Data)
+	for {
+		transaction := UnmarshalTransaction(block.Data)
 		if transaction != nil && transaction.Link != nil {
 			links = append(links, transaction.Link)
 		}
+
+		if len(block.ForwardLink) <= 0 {
+			break
+		}
+		block, _ = client.GetSingleBlock(m.Roster, block.ForwardLink[0].To)
 	}
 	return links, nil
 }

@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
@@ -107,6 +106,5 @@ func TestService(t *testing.T) {
 
 	for _, p := range reconstructReply.Points {
 		log.Lvl2("Point is:", p.String())
-		fmt.Println(p.Data())
 	}
 }
