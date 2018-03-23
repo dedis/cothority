@@ -84,7 +84,9 @@ function Socket(addr, service) {
       };
 
       ws.onclose = event => {
-        if (!event.wasClean) reject(new Error(event.reason));
+        if (!event.wasClean || event.code === 4000) {
+          reject(new Error(event.reason));
+        }
       };
 
       ws.onerror = error => {
