@@ -118,11 +118,6 @@ func renewCert(cert []byte) ([]byte, error) {
 	if err != nil {
 		return nil, errors.New("can't bundle the certificate" + err.Error())
 	}
-	err = ioutil.WriteFile("fullchain.pem", fullchain, 0644)
-	if err != nil {
-		return nil, errors.New("can't create fullchain.pem" + err.Error())
-	}
-	log.Info("Certificate successfully renewed")
 
 	return fullchain, nil
 }
@@ -162,7 +157,7 @@ func revokeCert(path string, cert []byte) error {
 // Request a certificate by first registering to the ACME server and then by
 // completing a challenge then it returns the certificate as string type
 func getCert(wwwDir string, certDir string, domain string) ([]byte, error) {
-	certPath := path.Join(certDir, domain) //certDir + "/" + domain
+	certPath := path.Join(certDir, domain)
 
 	// Create a client to the acme of letsencrypt.
 	log.Info("Requesting RSA keys")
@@ -172,7 +167,7 @@ func getCert(wwwDir string, certDir string, domain string) ([]byte, error) {
 	}
 
 	if _, err = os.Stat(certPath); os.IsNotExist(err) {
-		os.MkdirAll(certPath, 0777)
+		err = os.MkdirAll(certPath, 0777)
 	}
 	if err != nil {
 		return nil, err
@@ -226,7 +221,7 @@ func getCert(wwwDir string, certDir string, domain string) ([]byte, error) {
 	}
 
 	// Copy the resource for the challenge
-	if os.MkdirAll(wwwDir+"/.well-known/acme-challenge/", 0711) != nil {
+	if os.MkdirAll(path.Join(wwwDir, ".well-known/acme-challenge/"), 0711) != nil {
 		return nil, errors.New("Problem creating new dir for challenge : " + err.Error())
 	}
 	if err := ioutil.WriteFile(path.Join(wwwDir, pathChallenge), []byte(resource), 0644); err != nil {
@@ -235,7 +230,7 @@ func getCert(wwwDir string, certDir string, domain string) ([]byte, error) {
 
 	// Complete the challenge
 	if err := cli.ChallengeReady(key, chal); err != nil {
-		return nil, errors.New("Challenge not complete" + err.Error())
+		return nil, errors.New("Challenge not complete " + err.Error())
 	}
 	log.Info("Challenge Complete")
 
