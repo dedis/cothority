@@ -1061,7 +1061,7 @@ func certRenew(c *cli.Context) error {
 
 	err = ioutil.WriteFile(path.Join(cfg.KeyPath[domain], "fullchain.pem"), newcert, 0644)
 	if err != nil {
-		errors.New("Can't create fullchain.pem" + err.Error())
+		return errors.New("Can't create fullchain.pem" + err.Error())
 	}
 	log.Info("Certificate successfully renewed")
 
