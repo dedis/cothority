@@ -139,9 +139,6 @@ func revokeCert(path string, cert []byte) error {
 	}
 
 	if _, err := os.Stat(path); err != nil {
-		if os.IsNotExist(err) {
-			return errors.New("key can not be found")
-		}
 		return err
 	}
 

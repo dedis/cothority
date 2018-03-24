@@ -892,14 +892,14 @@ func certRequest(c *cli.Context) error {
 	domain := c.Args().Get(0)
 	certDir := c.Args().Get(1)
 	wwwDir := c.Args().Get(2)
-	certPath := certDir + "/" + domain
+	certPath := path.Join(certDir, domain) //certDir + "/" + domain
 
 	// Request Certificate (see certificate.go)
 	cert, err := getCert(wwwDir, certDir, domain)
 	if err != nil {
 		// Delete generated file if an error happens
-		os.Remove(certPath + "/registerkey.pem")
-		os.Remove(certPath + "/privkey.pem")
+		os.Remove(path.Join(certPath, "registerkey.pem"))
+		os.Remove(path.Join(certPath, "privkey.pem"))
 		return errors.New("Error in requesting certificate: " + err.Error())
 	}
 
@@ -1127,19 +1127,19 @@ func certRetrieve(c *cli.Context) error {
 		return errors.New("Certificate is not valid")
 	}
 	log.Info("Valid certificate")
-	if c.String("directory") != "" {
-		if _, err = os.Stat(c.String("dir")); os.IsNotExist(err) {
-			os.MkdirAll(c.String("dir"), 0777)
+	if c.String("d") != "" {
+		if _, err = os.Stat(c.String("d")); os.IsNotExist(err) {
+			os.MkdirAll(c.String("d"), 0777)
 		}
 	}
-	log.Info("Retrieve the domain certificate to: " + c.String("dir") + "/" + k + ".pem")
-	err = ioutil.WriteFile(path.Join(c.String("dir"), k+".pem"), []byte(public), 0644)
+	log.Info("Retrieve the domain certificate to: " + c.String("d") + "/" + k + ".pem")
+	err = ioutil.WriteFile(path.Join(c.String("d"), k+".pem"), []byte(public), 0644)
 	if err != nil {
 		return err
 	}
 	if chain != "" {
-		log.Info("Retrieve the fullchain certificate to: " + c.String("dir") + "/" + k + "_fullchain.pem")
-		err = ioutil.WriteFile(path.Join(c.String("dir"), k+"_fullchain.pem"), cert, 0644)
+		log.Info("Retrieve the fullchain certificate to: " + c.String("d") + "/" + k + "_fullchain.pem")
+		err = ioutil.WriteFile(path.Join(c.String("d"), k+"_fullchain.pem"), cert, 0644)
 		if err != nil {
 			return err
 		}
