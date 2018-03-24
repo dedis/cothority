@@ -889,15 +889,16 @@ func certRequest(c *cli.Context) error {
 	if c.NArg() < 3 {
 		return errors.New("Please give a domain name, the path to the certificate repository and the path to the www folder")
 	}
+
 	domain := c.Args().Get(0)
 	certDir := c.Args().Get(1)
 	wwwDir := c.Args().Get(2)
-	certPath := path.Join(certDir, domain) //certDir + "/" + domain
+	certPath := path.Join(certDir, domain)
 
 	// Request Certificate (see certificate.go)
 	cert, err := getCert(wwwDir, certDir, domain)
 	if err != nil {
-		// Delete generated file if an error happens
+		// Delete generated files if an error happens
 		os.Remove(path.Join(certPath, "registerkey.pem"))
 		os.Remove(path.Join(certPath, "privkey.pem"))
 		return errors.New("Error in requesting certificate: " + err.Error())
@@ -917,6 +918,7 @@ func certRequest(c *cli.Context) error {
 	prop := id.GetProposed()
 	log.Info("Valid Certificate, added to proposal storage")
 	prop.Storage[domain] = string(cert)
+	cfg.KeyPath[domain] = certPath
 
 	// Send the certificate to proposal
 	cfg.proposeSendVoteUpdate(id, prop)
@@ -942,8 +944,12 @@ func certList(c *cli.Context) error {
 			if err != nil {
 				return errors.New("Error in conversion to x509 certificate: " + err.Error())
 			}
+			certPath := cfg.KeyPath[k]
+			if certPath == "" {
+				certPath = "Not defined"
+			}
 			public, chain := splitCertPublicChain(v)
-			log.Infof("%s - Expiry Date: %s", k, certLE.NotAfter)
+			log.Infof("%s - Expiry Date: %s - Certificate directory: %s", k, certLE.NotAfter, certPath)
 			if c.Bool("v") || c.Bool("p") && c.Bool("c") {
 				log.Infof("%s", v)
 			} else if c.Bool("p") {
@@ -1052,6 +1058,12 @@ func certRenew(c *cli.Context) error {
 	if err != nil {
 		return errors.New("Error while renewing certificate: " + err.Error())
 	}
+
+	err = ioutil.WriteFile(path.Join(cfg.KeyPath[domain], "fullchain.pem"), newcert, 0644)
+	if err != nil {
+		errors.New("Can't create fullchain.pem" + err.Error())
+	}
+	log.Info("Certificate successfully renewed")
 
 	// Check the certificate
 	log.Info("Verify the validity of the cert:")
