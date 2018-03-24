@@ -230,14 +230,12 @@ func (cfg *ciscConfig) findSC(idHex string) (*identity.Identity, error) {
 // Call findSC and check if the ID is valid if not it lists the available ID(s) and return an error
 func (cfg *ciscConfig) findSCOrList(c *cli.Context, idHex string) (*identity.Identity, error) {
 	id, err := cfg.findSC(idHex)
-	if id == nil {
+	if id == nil && err == nil {
 		scList(c)
 		return nil, errors.New("Please give skipchain-id")
 	}
-	if err != nil {
-		return nil, err
-	}
-	return id, nil
+
+	return id, err
 }
 
 // Returns the config-file from the configuration
