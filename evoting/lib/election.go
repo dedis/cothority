@@ -22,10 +22,11 @@ type Election struct {
 	Creator uint32   // Creator is the election responsible.
 	Users   []uint32 // Users is the list of registered voters.
 
-	ID     skipchain.SkipBlockID // ID is the hash of the genesis block.
-	Master skipchain.SkipBlockID // Master is the hash of the master skipchain.
-	Roster *onet.Roster          // Roster is the set of responsible nodes
-	Key    kyber.Point           // Key is the DKG public key.
+	ID        skipchain.SkipBlockID // ID is the hash of the genesis block.
+	Master    skipchain.SkipBlockID // Master is the hash of the master skipchain.
+	Roster    *onet.Roster          // Roster is the set of responsible nodes.
+	Key       kyber.Point           // Key is the DKG public key.
+	MasterKey kyber.Point           // MasterKey is the front-end public key.
 
 	Candidates []uint32 // Candidates is the list of candidate scipers.
 	MaxChoices int      // MaxChoices is the max votes in allowed in a ballot.

@@ -131,6 +131,7 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		req.Election.Master = req.ID
 		req.Election.Roster = master.Roster
 		req.Election.Key = secret.X
+		req.Election.MasterKey = master.Key
 
 		transaction := lib.NewTransaction(req.Election, req.User, req.Signature)
 		if err = lib.Store(req.Election.ID, master.Roster, transaction); err != nil {
