@@ -37,8 +37,11 @@ const NameShuffle = "shuffle"
 type Shuffle struct {
 	*onet.TreeNodeInstance
 
-	Election *lib.Election // Election to be shuffled.
-	Finished chan bool     // Flag to signal protocol termination.
+	User      uint32
+	Signature []byte
+	Election  *lib.Election // Election to be shuffled.
+
+	Finished chan bool // Flag to signal protocol termination.
 }
 
 func init() {
@@ -73,22 +76,23 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 			return err
 		}
 		ballots = mixes[len(mixes)-1].Ballots
+		defer s.finish()
 	}
 
 	if len(ballots) < 2 {
-		return errors.New("Not enough (> 2) ballots to shuffle")
+		return errors.New("not enough (> 2) ballots to shuffle")
 
 	}
 
 	a, b := lib.Split(ballots)
-	g, d, prover := shuffle.Shuffle(cothority.Suite, nil, s.Election.Key, a, b, random.New())
-	proof, err := proof.HashProve(cothority.Suite, "", prover)
+	g, d, prov := shuffle.Shuffle(cothority.Suite, nil, s.Election.Key, a, b, random.New())
+	proof, err := proof.HashProve(cothority.Suite, "", prov)
 	if err != nil {
 		return err
 	}
-
 	mix := &lib.Mix{Ballots: lib.Combine(g, d), Proof: proof, Node: s.Name()}
-	if err := s.Election.Store(mix); err != nil {
+	transaction := lib.NewTransaction(mix, s.User, s.Signature)
+	if err := lib.Store(s.Election.ID, s.Election.Roster, transaction); err != nil {
 		return err
 	}
 
@@ -98,8 +102,14 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 	return s.SendToChildren(&PromptShuffle{})
 }
 
+// finish terminates the protocol within onet.
+func (s *Shuffle) finish() {
+	s.Done()
+	s.Finished <- true
+}
+
 // HandleTerminate concludes the protocol.
 func (s *Shuffle) HandleTerminate(terminate MessageTerminate) error {
-	s.Finished <- true
+	s.finish()
 	return nil
 }

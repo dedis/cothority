@@ -1,68 +1,27 @@
 package evoting
 
 import (
-	"strconv"
-
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/cothority/skipchain"
 )
 
 func init() {
-	network.RegisterMessages(
-		Link{}, LinkReply{},
-		LookupSciper{}, LookupSciperReply{},
-		Open{}, OpenReply{},
-		Cast{}, CastReply{},
-		Shuffle{}, ShuffleReply{},
-		Decrypt{}, DecryptReply{},
-		GetBox{}, GetBoxReply{},
-		GetMixes{}, GetMixesReply{},
-		GetPartials{}, GetPartialsReply{},
-		Reconstruct{}, ReconstructReply{},
-		Ping{},
-	)
-}
-
-// Login message.
-type Login struct {
-	ID        skipchain.SkipBlockID // ID of the master skipchain.
-	User      uint32                // User identifier.
-	Signature []byte                // Signature from the front-end.
-}
-
-// Digest appends the digits of the user identifier to the skipblock ID.
-func (l *Login) Digest() []byte {
-	message := l.ID
-	for _, c := range strconv.Itoa(int(l.User)) {
-		d, _ := strconv.Atoi(string(c))
-		message = append(message, byte(d))
-	}
-	return message
-}
-
-// Sign creates a Schnorr signature of the login digest.
-func (l *Login) Sign(secret kyber.Scalar) error {
-	sig, err := schnorr.Sign(cothority.Suite, secret, l.Digest())
-	l.Signature = sig
-	return err
-}
-
-// Verify checks the Schnorr signature.
-func (l *Login) Verify(public kyber.Point) error {
-	return schnorr.Verify(cothority.Suite, public, l.Digest(), l.Signature)
-}
-
-// LoginReply message.
-type LoginReply struct {
-	Token     string          // Token (time-limited) for further calls.
-	Admin     bool            // Admin indicates if user has admin rights.
-	Elections []*lib.Election // Elections the user participates in.
+	network.RegisterMessage(Ping{})
+	network.RegisterMessages(Link{}, LinkReply{})
+	network.RegisterMessages(LookupSciper{}, LookupSciperReply{})
+	network.RegisterMessages(Open{}, OpenReply{})
+	network.RegisterMessages(Cast{}, CastReply{})
+	network.RegisterMessages(Shuffle{}, ShuffleReply{})
+	network.RegisterMessages(Decrypt{}, DecryptReply{})
+	network.RegisterMessages(GetElections{}, GetElectionsReply{})
+	network.RegisterMessages(GetBox{}, GetBoxReply{})
+	network.RegisterMessages(GetMixes{}, GetMixesReply{})
+	network.RegisterMessages(GetPartials{}, GetPartialsReply{})
+	network.RegisterMessages(Reconstruct{}, ReconstructReply{})
 }
 
 // LookupSciper takes a sciper number and returns elements of the user.
@@ -96,9 +55,11 @@ type LinkReply struct {
 
 // Open message.
 type Open struct {
-	Token    string                // Token for authentication.
 	ID       skipchain.SkipBlockID // ID of the master skipchain.
 	Election *lib.Election         // Election object.
+
+	User      uint32 // User identifier.
+	Signature []byte // Signature authenticating the message.
 }
 
 // OpenReply message.
@@ -109,9 +70,11 @@ type OpenReply struct {
 
 // Cast message.
 type Cast struct {
-	Token  string                // Token for authentication.
 	ID     skipchain.SkipBlockID // ID of the election skipchain.
 	Ballot *lib.Ballot           // Ballot to be casted.
+
+	User      uint32 // User identifier.
+	Signature []byte // Signature authenticating the message.
 }
 
 // CastReply message.
@@ -119,8 +82,10 @@ type CastReply struct{}
 
 // Shuffle message.
 type Shuffle struct {
-	Token string                // Token for authentication.
-	ID    skipchain.SkipBlockID // ID of the election skipchain.
+	ID skipchain.SkipBlockID // ID of the election skipchain.
+
+	User      uint32 // User identifier.
+	Signature []byte // Signature authenticating the message.
 }
 
 // ShuffleReply message.
@@ -128,17 +93,29 @@ type ShuffleReply struct{}
 
 // Decrypt message.
 type Decrypt struct {
-	Token string                // Token for authentication.
-	ID    skipchain.SkipBlockID // ID of the election skipchain.
+	ID skipchain.SkipBlockID // ID of the election skipchain.
+
+	User      uint32 // User identifier.
+	Signature []byte // Signature authenticating the message.
 }
 
 // DecryptReply message.
 type DecryptReply struct{}
 
+// GetElections message.
+type GetElections struct {
+	User   uint32                // User identifier.
+	Master skipchain.SkipBlockID // Master skipchain ID.
+}
+
+// GetElectionsReply message.
+type GetElectionsReply struct {
+	Elections []*lib.Election // Elections is the retrieved list of elections.
+}
+
 // GetBox message.
 type GetBox struct {
-	Token string                // Token for authentication.
-	ID    skipchain.SkipBlockID // ID of the election skipchain.
+	ID skipchain.SkipBlockID // ID of the election skipchain.
 }
 
 // GetBoxReply message.
@@ -148,8 +125,7 @@ type GetBoxReply struct {
 
 // GetMixes message.
 type GetMixes struct {
-	Token string                // Token for authentication.
-	ID    skipchain.SkipBlockID // ID of the election skipchain.
+	ID skipchain.SkipBlockID // ID of the election skipchain.
 }
 
 // GetMixesReply message.
@@ -159,8 +135,7 @@ type GetMixesReply struct {
 
 // GetPartials message.
 type GetPartials struct {
-	Token string                // Token for authentication.
-	ID    skipchain.SkipBlockID // ID of the election skipchain.
+	ID skipchain.SkipBlockID // ID of the election skipchain.
 }
 
 // GetPartialsReply message.
@@ -170,8 +145,7 @@ type GetPartialsReply struct {
 
 // Reconstruct message.
 type Reconstruct struct {
-	Token string                // Token for authentication
-	ID    skipchain.SkipBlockID // ID of the election skipchain.
+	ID skipchain.SkipBlockID // ID of the election skipchain.
 }
 
 // ReconstructReply message.

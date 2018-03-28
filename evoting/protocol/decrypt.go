@@ -31,9 +31,13 @@ const NameDecrypt = "decrypt"
 type Decrypt struct {
 	*onet.TreeNodeInstance
 
+	User      uint32
+	Signature []byte
+
 	Secret   *lib.SharedSecret // Secret is the private key share from the DKG.
 	Election *lib.Election     // Election to be decrypted.
-	Finished chan bool         // Flag to signal protocol termination.
+
+	Finished chan bool // Flag to signal protocol termination.
 }
 
 func init() {
@@ -43,7 +47,7 @@ func init() {
 
 // NewDecrypt initializes the protocol object and registers all the handlers.
 func NewDecrypt(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	decrypt := &Decrypt{TreeNodeInstance: node, Finished: make(chan bool)}
+	decrypt := &Decrypt{TreeNodeInstance: node, Finished: make(chan bool, 1)}
 	decrypt.RegisterHandlers(decrypt.HandlePrompt, decrypt.HandleTerminate)
 	return decrypt, nil
 }
@@ -56,6 +60,10 @@ func (d *Decrypt) Start() error {
 // HandlePrompt retrieves the mixes, verifies them and performs a partial decryption
 // on the last mix before appending it to the election skipchain.
 func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
+	if !d.IsRoot() {
+		defer d.finish()
+	}
+
 	box, err := d.Election.Box()
 	if err != nil {
 		return err
@@ -70,10 +78,11 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 	for i := range points {
 		points[i] = lib.Decrypt(d.Secret.V, last[i].Alpha, last[i].Beta)
 	}
+
 	flag := Verify(d.Election.Key, box, mixes)
 	partial := &lib.Partial{Points: points, Flag: flag, Node: d.Name()}
-
-	if err = d.Election.Store(partial); err != nil {
+	transaction := lib.NewTransaction(partial, d.User, d.Signature)
+	if err = lib.Store(d.Election.ID, d.Election.Roster, transaction); err != nil {
 		return err
 	}
 
@@ -83,9 +92,15 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 	return d.SendToChildren(&PromptDecrypt{})
 }
 
+// finish terminates the protocol within onet.
+func (d *Decrypt) finish() {
+	d.Done()
+	d.Finished <- true
+}
+
 // HandleTerminate concludes to the protocol.
 func (d *Decrypt) HandleTerminate(terminate MessageTerminateDecrypt) error {
-	d.Finished <- true
+	d.finish()
 	return nil
 }
 

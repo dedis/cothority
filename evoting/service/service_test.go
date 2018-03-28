@@ -5,12 +5,14 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/evoting"
-	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+
 	"github.com/stretchr/testify/require"
+
+	"github.com/dedis/cothority/evoting"
+	"github.com/dedis/cothority/evoting/lib"
 )
 
 func TestMain(m *testing.M) {
@@ -34,61 +36,42 @@ func TestService(t *testing.T) {
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s := local.GetServices(nodes, serviceID)[0].(*Service)
-	pin := "1234"
-	s.pin = pin
-	// token := s.state.register(0, false)
 
 	// Creating master skipchain
 	replyLink, err := s.Link(&evoting.Link{
-		Pin:    pin,
+		Pin:    s.pin,
 		Roster: roster,
 		Key:    nodeKP.Public,
 		Admins: []uint32{idAdmin},
 	})
 	require.Nil(t, err)
 
-	login := func(user uint32) *evoting.LoginReply {
-		login := &evoting.Login{
-			ID:   replyLink.ID,
-			User: user,
-		}
-		require.Nil(t, login.Sign(nodeKP.Private))
-		replyLogin, err := s.Login(login)
-		require.Nil(t, err)
-		return replyLogin
-	}
-
-	// Logging in as administrator
-	loginAdmin := login(idAdmin)
-
 	// Create a new election
 	replyOpen, err := s.Open(&evoting.Open{
-		Token: loginAdmin.Token,
-		ID:    replyLink.ID,
+		ID: replyLink.ID,
 		Election: &lib.Election{
-			Name:     "bla",
-			Creator:  idAdmin,
-			Users:    []uint32{idUser1, idUser2, idUser3, idAdmin},
-			Subtitle: "test",
-			// The test hopefully ends before the next day...
-			End: time.Now().Unix() + 86400,
+			Creator: idAdmin,
+			Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
+			Roster:  roster,
+			End:     time.Now().Unix() + 86400,
 		},
+		User:      idAdmin,
+		Signature: []byte{},
 	})
 	require.Nil(t, err)
 
 	vote := func(user uint32, bufCand []byte) *evoting.CastReply {
-		loginUser := login(user)
 		k, c := lib.Encrypt(replyOpen.Key, bufCand)
-		log.Lvl2(cothority.Suite.Point().Sub(c, replyOpen.Key))
 		ballot := &lib.Ballot{
 			User:  user,
 			Alpha: k,
 			Beta:  c,
 		}
 		cast, err := s.Cast(&evoting.Cast{
-			Token:  loginUser.Token,
-			ID:     replyOpen.ID,
-			Ballot: ballot,
+			ID:        replyOpen.ID,
+			Ballot:    ballot,
+			User:      user,
+			Signature: []byte{},
 		})
 		require.Nil(t, err)
 		return cast
@@ -101,24 +84,26 @@ func TestService(t *testing.T) {
 
 	// Shuffle all votes
 	_, err = s.Shuffle(&evoting.Shuffle{
-		Token: loginAdmin.Token,
-		ID:    replyOpen.ID,
+		ID:        replyOpen.ID,
+		User:      idAdmin,
+		Signature: []byte{},
 	})
 	require.Nil(t, err)
 
 	// Decrypt all votes
 	_, err = s.Decrypt(&evoting.Decrypt{
-		Token: loginAdmin.Token,
-		ID:    replyOpen.ID,
+		ID:        replyOpen.ID,
+		User:      idAdmin,
+		Signature: []byte{},
 	})
 	require.Nil(t, err)
 
 	// Reconstruct votes
 	reconstructReply, err := s.Reconstruct(&evoting.Reconstruct{
-		Token: loginAdmin.Token,
-		ID:    replyOpen.ID,
+		ID: replyOpen.ID,
 	})
 	require.Nil(t, err)
+
 	for _, p := range reconstructReply.Points {
 		log.Lvl2("Point is:", p.String())
 	}
