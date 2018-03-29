@@ -154,6 +154,7 @@ func (p *Propagate) Start() error {
 func (p *Propagate) Dispatch() error {
 	process := true
 	log.Lvl4(p.ServerIdentity(), "Start dispatch")
+	defer p.Done()
 	for process {
 		p.Lock()
 		timeout := p.sd.Timeout
@@ -217,7 +218,6 @@ func (p *Propagate) Dispatch() error {
 			p.onDoneCb(p.received + 1)
 		}
 	}
-	p.Done()
 	return nil
 }
 

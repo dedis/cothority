@@ -432,8 +432,8 @@ type testData struct {
 }
 
 func TestClient_ParallelWrite(t *testing.T) {
-	numClients := 20
-	numWrites := 50
+	numClients := 15
+	numWrites := 15
 	if testing.Short() {
 		numClients = 2
 	}

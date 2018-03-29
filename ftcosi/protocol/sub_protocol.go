@@ -95,6 +95,7 @@ func (p *SubFtCosi) Shutdown() error {
 
 // Dispatch is the main method of the subprotocol, running on each node and handling the messages in order
 func (p *SubFtCosi) Dispatch() error {
+	defer p.Done()
 
 	// ----- Announcement -----
 	announcement, channelOpen := <-p.ChannelAnnouncement

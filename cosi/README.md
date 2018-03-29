@@ -25,6 +25,35 @@ software distribution and update services,
 directory services used by tools such as [Tor](https://www.torproject.org),
 and next-generation cryptocurrencies.
 
+# Implementation
+
+CoSi is implemented as a single protocol. It uses four types of messages:
+announcement, commitment, challenge and response. The root initializes the
+protocol with the announcement message. It is then propagated down the tree,
+where the tree is specified by the service or the program that initializes the
+protocol. Upon receiving the announcement, the leafs begin propagating
+commitment messages back up, which are aggregated at the intermediate nodes.
+As a result, the root should receive an aggregate commitment from all the
+nodes. Then, the root starts a second round-trip by propagating the challenge
+message down the tree. Like before, upon receiving the challenge, the leafs
+begin to propagate the response messages back up and are aggregated by the
+intermediate nodes. Finally, using the aggregate response, the root generates
+a final signature. An illustration is shown below.
+
+```
+       root     announcement  ▲    challenge    ▲
+       /   \         |        |        |        |
+     node  node      |        |        |        |
+     /  \    \       |        |        |        |
+    /    \    \      |        |        |        |
+  leaf  leaf  leaf   ▼    commitment   ▼     response
+```
+
+We provide hooks functionality where the initiator of the protocol is able to
+add custom behaviour at every stage of the protocol. For instance, the
+initiator can create a hook and register it with the final signature such that
+the signature is sent back to one of the receiver's channels.
+
 ## Research Paper
 
 For further background and technical details, please refer to the

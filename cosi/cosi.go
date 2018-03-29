@@ -1,4 +1,5 @@
-// CoSi is a scalable protocol for collectively signing messages.
+// CoSi is a scalable protocol for collectively signing messages (DEPRECATED).
+//
 // CoSi produces compact signatures that clients can verify efficiently,
 // and that convey the precise set of cosigners for transparency.
 package main

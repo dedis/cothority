@@ -1,16 +1,19 @@
+// Package bftcosi is a PBFT-like protocol but uses collective signing
+// (DEPRECATED).
+//
+// BFTCoSi is a byzantine-fault-tolerant protocol to sign a message given a
+// verification-function. It uses two rounds of signing - the first round
+// indicates the willingness of the rounds to sign the message, and the second
+// round is only started if at least a 'threshold' number of nodes signed off
+// in the first round. Please see
+// https://gopkg.in/dedis/cothority.v2/blob/master/bftcosi/README.md for
+// details.
+//
+// DEPRECATED: this package is kept here for historical and research purposes.
+// It should not be used in other services as it has been deprecated by the
+// byzcoinx package.
+//
 package bftcosi
-
-/*
-BFTCoSi is a byzantine-fault-tolerant protocol to sign a message given a
-verification-function. It uses two rounds of signing - the first round
-indicates the willingness of the rounds to sign the message, and the second
-round is only started if at least a 'threshold' number of nodes signed off in
-the first round.
-
-WARNING: this package is kept here for historical and research purposes. It
-should not be used in other services as it has been deprecated by the byzcoinx
-package.
-*/
 
 import (
 	"crypto/sha512"
@@ -507,6 +510,7 @@ func (bft *ProtocolBFTCoSi) handleResponsePrepare(c chan responseChan) error {
 // the commit phase. A key distinction is that the protocol ends at the end of
 // this function and final signature is generated if it is called by the root.
 func (bft *ProtocolBFTCoSi) handleResponseCommit(c chan responseChan) error {
+	defer bft.Done()
 	bft.tmpMutex.Lock()
 	defer bft.tmpMutex.Unlock()
 
@@ -553,13 +557,10 @@ func (bft *ProtocolBFTCoSi) handleResponseCommit(c chan responseChan) error {
 		if bft.onSignatureDone != nil {
 			bft.onSignatureDone(sig)
 		}
-		bft.Done()
 		return nil
 	}
 
-	// otherwise , send the response up
-	err = bft.SendTo(bft.Parent(), r)
-	bft.Done()
+	err = bft.SendToParent(r)
 	return err
 }
 
@@ -778,7 +779,6 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 // nodeDone is either called by the end of EndProtocol or by the end of the
 // response phase of the commit round.
 func (bft *ProtocolBFTCoSi) nodeDone() bool {
-	bft.Shutdown()
 	if bft.onDone != nil {
 		// only true for the root
 		bft.onDone()

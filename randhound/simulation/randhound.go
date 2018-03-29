@@ -1,5 +1,7 @@
 // +build experimental
 
+// This package contains the randhound simulation configuration and the code
+// needed to run it.
 package main
 
 import (

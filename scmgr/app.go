@@ -1,6 +1,5 @@
-/*
-* The skipchain-manager lets you create, modify and query skipchains
- */
+// The skipchain-manager (scmgr) is a CLI which lets you create, modify and
+// query skipchains.
 package main
 
 import (
@@ -348,7 +347,7 @@ func scAdd(c *cli.Context) error {
 	var priv kyber.Scalar
 	link := cfg.Values.Link[roster.List[0].Public.String()]
 	if link != nil {
-		log.Lvl1("Found link-entry for", roster.List[0].Address)
+		log.Info("Found link-entry for", roster.List[0].Address)
 		priv = link.Private
 	}
 
@@ -424,12 +423,16 @@ func dnsFetch(c *cli.Context) error {
 	}
 	latest := gcr.Update[len(gcr.Update)-1]
 	genesis := latest.SkipChainID()
-	if genesis == nil {
-		genesis = latest.Hash
-	}
-	log.Infof("Fetched skipchain with id: %x", genesis)
 	cfg := getConfigOrFail(c)
 	cfg.Db.Store(latest)
+	if cfg.Db.GetByID(genesis) == nil {
+		genesisBlock, err := skipchain.NewClient().GetSingleBlock(group.Roster, genesis)
+		if err != nil {
+			return err
+		}
+		cfg.Db.Store(genesisBlock)
+	}
+	log.Infof("Fetched skipchain with id: %x", genesis)
 	log.ErrFatal(cfg.save(c))
 	return nil
 }

@@ -1,3 +1,7 @@
+// Package protocol is the fault tolerant cosi protocol implementation.
+//
+// For more information on the protocol, please see
+// https://gopkg.in/dedis/cothority.v2/blob/master/ftcosi/protocol/README.md.
 package protocol
 
 import (
@@ -97,6 +101,7 @@ func (p *FtCosi) Shutdown() error {
 // Dispatch is the main method of the protocol, defining the root node behaviour
 // and sequential handling of subprotocols.
 func (p *FtCosi) Dispatch() error {
+	defer p.Done()
 	if !p.IsRoot() {
 		return nil
 	}

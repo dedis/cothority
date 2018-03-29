@@ -1,3 +1,5 @@
+// Package check provides some helper functions to check the configuration
+// file.
 package check
 
 import (

@@ -1,3 +1,7 @@
+// This is the command line interface to communicate with the pop service.
+//
+// More details can be found here -
+// https://gopkg.in/dedis/cothority.v2/blob/master/pop/README.md.
 package main
 
 import (

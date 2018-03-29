@@ -32,14 +32,14 @@ testDNSUpdate(){
 	startCl
 	setupGenesis
 	testOK runSc scdns fetch public.toml $ID
-	testOK [ "$(runSc scdns list | grep Genesis | wc -l)" -eq 1 ]
+	testOK [ "$(runScOut scdns list | grep Genesis | wc -l)" -eq 1 ]
 	mv $CFG tmpcfg
 	setupGenesis
 	mv tmpcfg $CFG
 	testOK runSc scdns update
-	testOK [ "$(runSc scdns list | grep Genesis | wc -l)" -eq 1 ]
+	testOK [ "$(runScOut scdns list | grep Genesis | wc -l)" -eq 1 ]
 	testOK runSc scdns update -new
-	testOK [ "$(runSc scdns list | grep Genesis | wc -l)" -eq 2 ]
+	testOK [ "$(runScOut scdns list | grep Genesis | wc -l)" -eq 2 ]
 }
 
 testNewChain(){
@@ -281,7 +281,11 @@ testConfig(){
 }
 
 runSc(){
-	dbgRun ./$APP -c $CFG -d $DBG_APP $@
+	dbgRun ./$APP -c $CFG -d $DBG_APP "$@"
+}
+
+runScOut(){
+	DEBUG_COLOR="" ./$APP -c $CFG "$@"
 }
 
 startCl(){
