@@ -1,3 +1,9 @@
+// Package status is a service for reporting the all the services running on a
+// server.
+//
+// This file contains all the code to run a Stat service. The Stat receives
+// takes a request for the Status reports of the server, and sends back the
+// status reports for each service in the server.
 package status
 
 import (
@@ -5,10 +11,6 @@ import (
 	"gopkg.in/dedis/onet.v2/log"
 	"gopkg.in/dedis/onet.v2/network"
 )
-
-// This file contains all the code to run a Stat service. The Stat receives takes a
-// request for the Status reports of the server, and sends back the status reports for each service
-// in the server.
 
 // ServiceName is the name to refer to the Status service.
 const ServiceName = "Status"
@@ -20,7 +22,8 @@ func init() {
 
 }
 
-// Stat is the service that returns the status reports of all services running on a server.
+// Stat is the service that returns the status reports of all services running
+// on a server.
 type Stat struct {
 	*onet.ServiceProcessor
 }

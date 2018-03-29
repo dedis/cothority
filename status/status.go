@@ -1,20 +1,18 @@
-// Status takes in a file containing a list of servers and returns the status reports of all of the servers.
-// A status is a list of connections and packets sent and received for each server in the file.
+// Status takes in a file containing a list of servers and returns the status
+// reports of all of the servers.  A status is a list of connections and
+// packets sent and received for each server in the file.
 package main
 
 import (
-	"os"
-
 	"errors"
+	"os"
+	"sort"
+	"strings"
 
 	status "gopkg.in/dedis/cothority.v2/status/service"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/app"
 	"gopkg.in/dedis/onet.v2/log"
-
-	"sort"
-	"strings"
-
 	"gopkg.in/urfave/cli.v1"
 )
 

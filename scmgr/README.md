@@ -48,10 +48,11 @@ To link your conode and your client, you need to have access to the
 
 ### Link using private.toml
 
-The `private.toml`-file is in `~/.config/conode` for Linux-systems and in
-`~/Library/Conode` for MacOSX-systems. If you started a local cothority for testing,
-you should have three directories, `co1`, `co2` and `co3` where you run the
-`run_conode.sh`-command.
+The `private.toml`-file is usually in `~/.config/conode` for Linux-systems and
+in `~/Library/Application\ Support/conode` for MacOSX-systems. However, if you
+started a local cothority for testing using `run_conode.sh`, you should have
+three directories, `co1`, `co2` and `co3` and the `private.toml`-file will be
+in those directories.
 
 So for the testing system, the command is:
 
@@ -59,13 +60,13 @@ So for the testing system, the command is:
 scmgr link add co1/private.toml
 ```
 
-That command will create a new private/public keypair for your client and register
-it with one of your conodes.
+This command will create a new private/public keypair for your client and
+register it with one of your conodes.
 
 ## Creating a new skipchain
 
-Now that you linked to your conode, you can create a new skipchain on it, with its
-only participant being _co1_:
+Now that you are linked to your conode, you can create a new skipchain on it,
+with its only participant being _co1_:
 
 ```bash
 scmgr skipchain create -b 10 -he 10 co1/public.toml
