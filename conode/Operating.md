@@ -5,7 +5,11 @@ Operating a Conode
 
 # Operating a Conode
 
-Here you find some general information about how to run a conode.
+Here you find some general information about how to run a conode. For command
+line examples, please refer to:
+- [Command Line](CLI.md) for running a conode in a virtual machine or on a
+server
+- [Docker](Docker.md) how to run a conode with the pre-compiled docker image
 
 ## Reverse proxy
 

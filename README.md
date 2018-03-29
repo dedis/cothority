@@ -254,7 +254,7 @@ to set up a network on a machine and only let it be accessed locally.
 
 - [conode](conode/README.md) is the cothority
 server, a special app that includes all services and protocols.
-- [How to run a conode](OperatingConode.md)
+- [How to run a conode](conode/Operating.md)
 gives an overview of the environment where a conode can be run
 - [DEDIS-cothority](doc/Join.md)
 explains how to join the DEDIS-cothority
