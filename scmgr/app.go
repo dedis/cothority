@@ -423,12 +423,16 @@ func dnsFetch(c *cli.Context) error {
 	}
 	latest := gcr.Update[len(gcr.Update)-1]
 	genesis := latest.SkipChainID()
-	if genesis == nil {
-		genesis = latest.Hash
-	}
-	log.Infof("Fetched skipchain with id: %x", genesis)
 	cfg := getConfigOrFail(c)
 	cfg.Db.Store(latest)
+	if cfg.Db.GetByID(genesis) == nil {
+		genesisBlock, err := skipchain.NewClient().GetSingleBlock(group.Roster, genesis)
+		if err != nil {
+			return err
+		}
+		cfg.Db.Store(genesisBlock)
+	}
+	log.Infof("Fetched skipchain with id: %x", genesis)
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
