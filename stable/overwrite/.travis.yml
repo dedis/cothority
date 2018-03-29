@@ -1,0 +1,16 @@
+language: go
+
+go:
+  - 1.9
+
+install:
+  - go get -t ./...
+  - go get github.com/dedis/Coding || true
+
+go_import_path: gopkg.in/dedis/cothority.v2
+
+script:
+  - make test_stable
+
+notifications:
+  email: false
