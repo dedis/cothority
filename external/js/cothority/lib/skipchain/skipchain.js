@@ -137,8 +137,17 @@ class Client {
    * @returns {error} Error in case a link is wrong
    */
   verifyForwardLink(roster, flink) {
+    // check that the message is correct
     const message = flink.signature.message;
-    const mbuff = new Uint8Array(message);
+    const h = crypto.createHash("sha256");
+    h.update(flink.from);
+    h.update(flink.to);
+    if (flink.roster !== undefined) {
+      return new Error("forwardlink verification with a roster change is not implemented yet");
+    }
+    if (!h.digest().equals(message)) {
+      return new Error("recreated message does not match");
+    }
     // verify the signature length and get the bitmask
     var bftSig = flink.signature;
     const sigLen = bftSig.signature.length;
