@@ -1,1 +1,5 @@
 conode_data
+
+# This might be left from a failed "make docker", and we never want
+# to check it in, so list it here.
+.netrc

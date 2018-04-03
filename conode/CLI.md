@@ -19,6 +19,12 @@ To build and install the cothority server, execute:
 go get -u github.com/dedis/cothority/conode
 ```
 
+*Experimental vgo support:* If you want a build which uses precisely
+the same versions of all dependencies as the developers used, [install
+vgo](https://github.com/golang/vgo). If vgo is found in
+$GOPATH/bin/vgo, it will be used for building in preference to the
+normal Go build tool.
+
 ## Configuration
 
 To configure your conode you need to *open two consecutive ports* (e.g., 6879 and 6880) on your machine, then execute
