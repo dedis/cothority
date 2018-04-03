@@ -134,7 +134,7 @@ class Client {
    * @param {Roster} the roster who created the signature
    * @param {Uint8Array} the message
    * @param {Object} BlockLink object (protobuf)
-   * @returns {Boolean} true if signature is valid, false otherwise
+   * @returns {error} Error in case a link is wrong
    */
   verifyForwardLink(roster, flink) {
     const message = flink.signature.message;
@@ -144,14 +144,6 @@ class Client {
     const sigLen = bftSig.signature.length;
     const pointLen = this.group.pointLen();
     const scalarLen = this.group.scalarLen();
-    console.log(
-      "sig len ",
-      sigLen,
-      ", pointLen ",
-      pointLen,
-      " scalarLen ",
-      scalarLen
-    );
     if (sigLen < pointLen + scalarLen)
       return new Error("signature length invalid");
 
@@ -214,9 +206,7 @@ class Client {
     //right.add(right, R);
     const right = R;
     if (!right.equal(left)) {
-      //return new Error("invalid signature");
-      console.log("invalid signature...");
-      return false;
+      return new Error("invalid signature");
     }
     return null;
   }
