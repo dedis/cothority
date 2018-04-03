@@ -245,8 +245,12 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 		if err != nil {
 			return nil, err
 		}
+		// Check if user is a voter or election creator.
 		if election.IsUser(req.User) || election.IsCreator(req.User) {
-			elections = append(elections, election)
+			// Filter the election by Stage. 0 denotes no filtering.
+			if req.Stage == 0 || req.Stage == election.Stage {
+				elections = append(elections, election)
+			}
 		}
 	}
 	return &evoting.GetElectionsReply{Elections: elections}, nil

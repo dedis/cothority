@@ -106,6 +106,7 @@ type DecryptReply struct{}
 type GetElections struct {
 	User   uint32                // User identifier.
 	Master skipchain.SkipBlockID // Master skipchain ID.
+	Stage  lib.ElectionState     // Election Stage filter. 0 for all elections.
 }
 
 // GetElectionsReply message.

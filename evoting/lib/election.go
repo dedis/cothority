@@ -10,6 +10,18 @@ import (
 	"github.com/dedis/cothority/skipchain"
 )
 
+// ElectionState is the type for storing the stage of Election.
+type ElectionState uint32
+
+const (
+	// Running depicts that an election is open for ballot casting
+	Running ElectionState = iota + 1
+	// Shuffled depicts that the mixes have been created
+	Shuffled
+	// Decrypted depicts that the partials have been decrypted
+	Decrypted
+)
+
 func init() {
 	network.RegisterMessages(Election{}, Ballot{}, Box{}, Mix{}, Partial{})
 }
@@ -27,6 +39,7 @@ type Election struct {
 	Roster    *onet.Roster          // Roster is the set of responsible nodes.
 	Key       kyber.Point           // Key is the DKG public key.
 	MasterKey kyber.Point           // MasterKey is the front-end public key.
+	Stage     ElectionState         // Stage indicates the phase of election and is used for filtering in frontend
 
 	Candidates []uint32 // Candidates is the list of candidate scipers.
 	MaxChoices int      // MaxChoices is the max votes in allowed in a ballot.
@@ -61,7 +74,33 @@ func GetElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, erro
 	if transaction == nil || transaction.Election == nil {
 		return nil, fmt.Errorf("no election structure in %s", id.Short())
 	}
-	return transaction.Election, nil
+	election := transaction.Election
+	err = election.setStage()
+	if err != nil {
+		return nil, err
+	}
+	return election, nil
+}
+
+func (e *Election) setStage() error {
+	mixes, err := e.Mixes()
+	if err != nil {
+		return err
+	}
+
+	partials, err := e.Partials()
+	if err != nil {
+		return err
+	}
+
+	if len(mixes) == 0 {
+		e.Stage = Running
+	} else if len(partials) == len(e.Roster.List) {
+		e.Stage = Decrypted
+	} else {
+		e.Stage = Shuffled
+	}
+	return nil
 }
 
 // Box accumulates all the ballots while only keeping the last ballot for each user.
