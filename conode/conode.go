@@ -49,7 +49,7 @@ const (
 func main() {
 
 	cliApp := cli.NewApp()
-	cliApp.Name = "conode"
+	cliApp.Name = DefaultName
 	cliApp.Usage = "run a cothority server"
 	cliApp.Version = Version
 
@@ -61,8 +61,8 @@ func main() {
 			Action:  setup,
 			Flags: []cli.Flag{
 				cli.BoolFlag{
-					Name:  "batch",
-					Usage: "configure it in batch mode",
+					Name:  "non-interactive",
+					Usage: "generate private.toml in non-interactive mode",
 				},
 				cli.IntFlag{
 					Name:  "port",
@@ -72,7 +72,7 @@ func main() {
 				cli.StringFlag{
 					Name:  "description",
 					Usage: "the description to use",
-					Value: "configured by batch mode",
+					Value: "configured in non-interactive mode",
 				},
 			},
 		},
@@ -112,7 +112,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: path.Join(cfgpath.GetConfigPath("conode"), app.DefaultServerConfig),
+			Value: path.Join(cfgpath.GetConfigPath(DefaultName), app.DefaultServerConfig),
 			Usage: "Configuration file of the server",
 		},
 	}
@@ -150,7 +150,7 @@ func setup(c *cli.Context) error {
 		log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 	}
 
-	if c.Bool("batch") {
+	if c.Bool("non-interactive") {
 		port := c.Int("port")
 		portStr := fmt.Sprintf("%v", port)
 
@@ -168,15 +168,14 @@ func setup(c *cli.Context) error {
 			Description: c.String("description"),
 		}
 
-		dir := cfgpath.GetConfigPath("conode")
-		out := path.Join(dir, "private.toml")
+		out := path.Join(cfgpath.GetConfigPath(DefaultName), app.DefaultServerConfig)
 		err := conf.Save(out)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Wrote config file to %v\n", out)
 		}
 
 		// We are not going to write out the public.toml file here.
-		// We don't because in the current use case for --batch, which
+		// We don't because in the current use case for --non-interactive, which
 		// is for containers to auto-generate configs on startup, the
 		// roster (i.e. public IP addresses + public keys) will be generated
 		// based on how Kubernetes does service discovery. Writing the public.toml
@@ -191,7 +190,7 @@ func setup(c *cli.Context) error {
 		return err
 	}
 
-	app.InteractiveConfig(cothority.Suite, "conode")
+	app.InteractiveConfig(cothority.Suite, DefaultName)
 	return nil
 }
 
