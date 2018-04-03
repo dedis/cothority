@@ -2,8 +2,10 @@ package lib
 
 import (
 	"errors"
+	"strconv"
 	"time"
 
+	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
@@ -75,8 +77,29 @@ func NewTransaction(data interface{}, user uint32, signature []byte) *Transactio
 	return transaction
 }
 
+// Digest appends the digits of sciper to master genesis skipblock ID
+func (t *Transaction) Digest(roster *onet.Roster, genesis skipchain.SkipBlockID) []byte {
+	var election *Election
+	if t.Election != nil {
+		election = t.Election
+	} else {
+		election, _ = GetElection(roster, genesis)
+	}
+	// Master or Link transaction
+	if election == nil {
+		return nil
+	}
+	message := election.Master
+	for _, c := range strconv.Itoa(int(t.User)) {
+		d, _ := strconv.Atoi(string(c))
+		message = append(message, byte(d))
+	}
+	return message
+}
+
 // Verify checks that the corresponding transaction is valid before storing it.
 func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster) error {
+	digest := t.Digest(roster, genesis)
 	if t.Master != nil {
 		return nil
 	} else if t.Link != nil {
@@ -91,6 +114,10 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster)
 		return nil
 	} else if t.Election != nil {
 		election := t.Election
+		err := schnorr.Verify(cothority.Suite, election.MasterKey, digest, t.Signature)
+		if err != nil {
+			return err
+		}
 		if election.End < time.Now().Unix() {
 			return errors.New("open error: invalid end date")
 		}
@@ -105,6 +132,10 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster)
 		return nil
 	} else if t.Ballot != nil {
 		election, err := GetElection(roster, genesis)
+		if err != nil {
+			return err
+		}
+		err = schnorr.Verify(cothority.Suite, election.MasterKey, digest, t.Signature)
 		if err != nil {
 			return err
 		}
@@ -123,6 +154,10 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster)
 		if err != nil {
 			return err
 		}
+		err = schnorr.Verify(cothority.Suite, election.MasterKey, digest, t.Signature)
+		if err != nil {
+			return err
+		}
 
 		mixes, err := election.Mixes()
 		if err != nil {
@@ -135,6 +170,10 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster)
 		return nil
 	} else if t.Partial != nil {
 		election, err := GetElection(roster, genesis)
+		if err != nil {
+			return err
+		}
+		err = schnorr.Verify(cothority.Suite, election.MasterKey, digest, t.Signature)
 		if err != nil {
 			return err
 		}
