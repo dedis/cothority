@@ -1,10 +1,13 @@
 package service
 
 import (
+	"strconv"
 	"testing"
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -17,6 +20,15 @@ import (
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
+}
+
+func generateSignature(private kyber.Scalar, ID []byte, sciper uint32) ([]byte, error) {
+	message := ID
+	for _, c := range strconv.Itoa(int(sciper)) {
+		d, _ := strconv.Atoi(string(c))
+		message = append(message, byte(d))
+	}
+	return schnorr.Sign(cothority.Suite, private, message)
 }
 
 func TestService(t *testing.T) {
@@ -46,6 +58,9 @@ func TestService(t *testing.T) {
 	})
 	require.Nil(t, err)
 
+	signature, err := generateSignature(nodeKP.Private, replyLink.ID, idAdmin)
+	require.Nil(t, err)
+
 	// Create a new election
 	replyOpen, err := s.Open(&evoting.Open{
 		ID: replyLink.ID,
@@ -56,12 +71,14 @@ func TestService(t *testing.T) {
 			End:     time.Now().Unix() + 86400,
 		},
 		User:      idAdmin,
-		Signature: []byte{},
+		Signature: signature,
 	})
 	require.Nil(t, err)
 
 	vote := func(user uint32, bufCand []byte) *evoting.CastReply {
 		k, c := lib.Encrypt(replyOpen.Key, bufCand)
+		sig, err := generateSignature(nodeKP.Private, replyLink.ID, user)
+		require.Nil(t, err)
 		ballot := &lib.Ballot{
 			User:  user,
 			Alpha: k,
@@ -71,7 +88,7 @@ func TestService(t *testing.T) {
 			ID:        replyOpen.ID,
 			Ballot:    ballot,
 			User:      user,
-			Signature: []byte{},
+			Signature: sig,
 		})
 		require.Nil(t, err)
 		return cast
@@ -86,7 +103,7 @@ func TestService(t *testing.T) {
 	_, err = s.Shuffle(&evoting.Shuffle{
 		ID:        replyOpen.ID,
 		User:      idAdmin,
-		Signature: []byte{},
+		Signature: signature,
 	})
 	require.Nil(t, err)
 
@@ -94,7 +111,7 @@ func TestService(t *testing.T) {
 	_, err = s.Decrypt(&evoting.Decrypt{
 		ID:        replyOpen.ID,
 		User:      idAdmin,
-		Signature: []byte{},
+		Signature: signature,
 	})
 	require.Nil(t, err)
 
