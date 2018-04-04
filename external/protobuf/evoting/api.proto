@@ -70,7 +70,7 @@ message GetElections {
 }
 
 message GetElectionsReply {
-    required Election elections = 1;
+    repeated Election elections = 1;
 }
 
 message Open{
