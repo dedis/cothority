@@ -170,7 +170,7 @@ func setup(c *cli.Context) error {
 
 		out := path.Join(cfgpath.GetConfigPath(DefaultName), app.DefaultServerConfig)
 		err := conf.Save(out)
-		if err != nil {
+		if err == nil {
 			fmt.Fprintf(os.Stderr, "Wrote config file to %v\n", out)
 		}
 
