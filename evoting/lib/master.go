@@ -1,13 +1,18 @@
 package lib
 
 import (
+	"fmt"
+
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 
-	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
 )
+
+func init() {
+	network.RegisterMessages(Master{}, Link{})
+}
 
 // Master is the foundation object of the entire service.
 // It contains mission critical information that can only be accessed and
@@ -27,58 +32,42 @@ type Link struct {
 	ID skipchain.SkipBlockID
 }
 
-func init() {
-	network.RegisterMessages(Master{}, Link{})
-}
+// GetMaster retrieves the master object from its skipchain.
+func GetMaster(roster *onet.Roster, id skipchain.SkipBlockID) (*Master, error) {
+	client := skipchain.NewClient()
 
-// FetchMaster retrieves the master object from its skipchain.
-func FetchMaster(roster *onet.Roster, id skipchain.SkipBlockID) (*Master, error) {
-	chain, err := chain(roster, id)
+	block, err := client.GetSingleBlockByIndex(roster, id, 1)
 	if err != nil {
 		return nil, err
 	}
 
-	_, blob, _ := network.Unmarshal(chain[1].Data, cothority.Suite)
-	return blob.(*Master), nil
-}
-
-// GenChain generates a master skipchain with the given list of links.
-func (m *Master) GenChain(links ...skipchain.SkipBlockID) {
-	chain, _ := New(m.Roster, nil)
-
-	m.ID = chain.Hash
-	m.Store(m)
-
-	for _, link := range links {
-		m.Store(&Link{ID: link})
+	transaction := UnmarshalTransaction(block.Data)
+	if transaction == nil && transaction.Master == nil {
+		return nil, fmt.Errorf("no master structure in %s", id.Short())
 	}
-}
-
-// Store appends a given structure to the master skipchain.
-func (m *Master) Store(data interface{}) error {
-	chain, err := chain(m.Roster, m.ID)
-	if err != nil {
-		return err
-	}
-
-	latest := chain[len(chain)-1]
-	if _, err := client.StoreSkipBlock(latest, m.Roster, data); err != nil {
-		return err
-	}
-	return nil
+	return transaction.Master, nil
 }
 
 // Links returns all the links appended to the master skipchain.
 func (m *Master) Links() ([]*Link, error) {
-	chain, err := chain(m.Roster, m.ID)
+	client := skipchain.NewClient()
+
+	block, err := client.GetSingleBlockByIndex(m.Roster, m.ID, 0)
 	if err != nil {
 		return nil, err
 	}
 
 	links := make([]*Link, 0)
-	for i := 2; i < len(chain); i++ {
-		_, blob, _ := network.Unmarshal(chain[i].Data, cothority.Suite)
-		links = append(links, blob.(*Link))
+	for {
+		transaction := UnmarshalTransaction(block.Data)
+		if transaction != nil && transaction.Link != nil {
+			links = append(links, transaction.Link)
+		}
+
+		if len(block.ForwardLink) <= 0 {
+			break
+		}
+		block, _ = client.GetSingleBlock(m.Roster, block.ForwardLink[0].To)
 	}
 	return links, nil
 }

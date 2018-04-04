@@ -1,22 +1,35 @@
 package lib
 
 import (
-	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
+	"github.com/dedis/protobuf"
+
+	"github.com/dedis/cothority/skipchain"
 )
 
-var client = skipchain.NewClient()
-
-// New creates a new skipchain for a given roster and stores data in the genesis block.
-func New(roster *onet.Roster, data interface{}) (*skipchain.SkipBlock, error) {
-	return client.CreateGenesis(roster, 1, 1, skipchain.VerificationStandard, data, nil)
+// NewSkipchain creates a new skipchain for a given roster and verification function.
+func NewSkipchain(roster *onet.Roster, verifier []skipchain.VerifierID, data interface{}) (
+	*skipchain.SkipBlock, error) {
+	client := skipchain.NewClient()
+	return client.CreateGenesis(roster, 8, 4, verifier, data, nil)
 }
 
-// chain returns a skipchain for a given id.
-func chain(roster *onet.Roster, id skipchain.SkipBlockID) ([]*skipchain.SkipBlock, error) {
-	chain, err := client.GetUpdateChain(roster, id)
+// Store appends a new block holding data to an existing skipchain.
+func Store(id skipchain.SkipBlockID, roster *onet.Roster, transaction *Transaction) error {
+	client := skipchain.NewClient()
+	reply, err := client.GetUpdateChain(roster, id)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return chain.Update, nil
+
+	enc, err := protobuf.Encode(transaction)
+	if err != nil {
+		return err
+	}
+
+	_, err = client.StoreSkipBlock(reply.Update[len(reply.Update)-1], nil, enc)
+	if err != nil {
+		return err
+	}
+	return nil
 }

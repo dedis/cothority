@@ -17,6 +17,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"net"
 	"os"
 	"path"
 	"strings"
@@ -27,9 +28,12 @@ import (
 	_ "github.com/dedis/cothority/identity"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
+	"github.com/dedis/kyber/util/encoding"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -45,7 +49,7 @@ const (
 func main() {
 
 	cliApp := cli.NewApp()
-	cliApp.Name = "conode"
+	cliApp.Name = DefaultName
 	cliApp.Usage = "run a cothority server"
 	cliApp.Version = Version
 
@@ -55,6 +59,22 @@ func main() {
 			Aliases: []string{"s"},
 			Usage:   "Setup server configuration (interactive)",
 			Action:  setup,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "non-interactive",
+					Usage: "generate private.toml in non-interactive mode",
+				},
+				cli.IntFlag{
+					Name:  "port",
+					Usage: "which port to listen on",
+					Value: 6879,
+				},
+				cli.StringFlag{
+					Name:  "description",
+					Usage: "the description to use",
+					Value: "configured in non-interactive mode",
+				},
+			},
 		},
 		{
 			Name:   "server",
@@ -92,7 +112,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: path.Join(cfgpath.GetConfigPath("conode"), app.DefaultServerConfig),
+			Value: path.Join(cfgpath.GetConfigPath(DefaultName), app.DefaultServerConfig),
 			Usage: "Configuration file of the server",
 		},
 	}
@@ -129,7 +149,48 @@ func setup(c *cli.Context) error {
 	if c.String("debug") != "" {
 		log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 	}
-	app.InteractiveConfig(cothority.Suite, "conode")
+
+	if c.Bool("non-interactive") {
+		port := c.Int("port")
+		portStr := fmt.Sprintf("%v", port)
+
+		serverBinding := network.NewAddress(network.TLS, net.JoinHostPort("", portStr))
+		kp := key.NewKeyPair(cothority.Suite)
+
+		pub, _ := encoding.PointToStringHex(cothority.Suite, kp.Public)
+		priv, _ := encoding.ScalarToStringHex(cothority.Suite, kp.Private)
+
+		conf := &app.CothorityConfig{
+			Suite:       cothority.Suite.String(),
+			Public:      pub,
+			Private:     priv,
+			Address:     serverBinding,
+			Description: c.String("description"),
+		}
+
+		out := path.Join(cfgpath.GetConfigPath(DefaultName), app.DefaultServerConfig)
+		err := conf.Save(out)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Wrote config file to %v\n", out)
+		}
+
+		// We are not going to write out the public.toml file here.
+		// We don't because in the current use case for --non-interactive, which
+		// is for containers to auto-generate configs on startup, the
+		// roster (i.e. public IP addresses + public keys) will be generated
+		// based on how Kubernetes does service discovery. Writing the public.toml
+		// file based on the data we have here, would result in writing an invalid
+		// public Address.
+
+		// If we had written it, it would look like this:
+		//  server := app.NewServerToml(cothority.Suite, kp.Public, conf.Address, conf.Description)
+		//  group := app.NewGroupToml(server)
+		//  group.Save(path.Join(dir, "public.toml"))
+
+		return err
+	}
+
+	app.InteractiveConfig(cothority.Suite, DefaultName)
 	return nil
 }
 

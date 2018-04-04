@@ -1,13 +1,44 @@
+syntax = "proto2";
+
+
+message LookupSciper {
+	required string sciper = 1;
+}
+
+// LookupSciperReply returns the elements of the vcard from
+// https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
+message LookupSciperReply {
+	required string fullName = 1;
+	required string email = 2;
+	required string url = 3;
+	required string title = 4;
+}
+
 message Election {
     required string name = 1;
     required uint32 creator = 2;
-    repeated uint32 users = 3;
-    required bytes id = 4;
-    required Roster roster = 5;
-    required bytes key = 6;
-    required uint32 stage = 8;
-    optional string description = 9;
-    optional string end = 10;
+    repeated uint32 users = 3 [packed=true];
+    optional bytes id = 4;
+    optional bytes master = 5;
+    optional Roster roster = 6;
+    optional bytes key = 7;
+    optional bytes masterKey = 8;
+    optional uint32 stage = 9;
+    repeated uint32 candidates = 10 [packed=true];
+    required int32 maxChoices = 11;
+    required string subtitle = 12;
+    required string moreInfo = 13;
+    required sint64 start = 14;
+    required sint64 end = 15;
+    required string theme = 16;
+    required Footer footer = 17;
+}
+
+message Footer {
+  required string text = 1;
+  required string contactTitle = 2;
+  required string contactPhone = 3;
+  required string contactEmail = 4;
 }
 
 message Ballot {
@@ -15,10 +46,6 @@ message Ballot {
     required bytes alpha = 2;
     required bytes beta = 3;
     // optional bytes text = 4;
-}
-
-message Box {
-    repeated Ballot ballots = 1;
 }
 
 message Ping {
@@ -36,22 +63,21 @@ message LinkReply {
     optional bytes master = 1;
 }
 
-message Login {
-    required bytes id = 1;
-    required uint32 user = 2;
-    required bytes signature = 3;
+message GetElections {
+    required uint32 user = 1;
+    required bytes master = 2;
+    optional uint32 stage = 3;
 }
 
-message LoginReply {
-    required string token = 1;
-    required bool admin = 2;
-    repeated Election elections = 3;
+message GetElectionsReply {
+    required Election elections = 1;
 }
 
 message Open{
-    required string token = 1;
+    required bytes id = 1;
     required Election election = 2;
-    required bytes id = 3;
+    required uint32 user = 3;
+    required bytes signature = 4;
 }
 
 message OpenReply {
@@ -60,9 +86,10 @@ message OpenReply {
 }
 
 message Cast {
-    required string token = 1;
-    required bytes id = 2;
-    required Ballot ballot = 3;
+    required bytes id = 1;
+    required Ballot ballot = 2;
+    required uint32 user = 3;
+    required bytes signature = 4;
 }
 
 message CastReply {
@@ -72,80 +99,28 @@ message CastReply {
 message Shuffle {
     required string token = 1;
     required bytes id = 2;
+    required uint32 user = 3;
+    required bytes signature = 4;
 }
 
 message ShuffleReply {
-    // required Box shuffled = 1;
 }
 
 message Decrypt {
-    required string token = 1;
-    required bytes id = 2;
+    required bytes id = 1;
+    required uint32 user = 2;
+    required bytes signature = 3;
 }
 
 message DecryptReply {
-    //required Box decrypted = 1;
 }
 
-message GetBox {
-	required string token = 1;
-	required bytes id = 2;
-}
-
-message GetBoxReply {
-	repeated Box box = 1;
-}
-
-message GetMixes {
-	required string token = 1;
-	required bytes id = 2;
-}
-
-message Mix {
-	repeated Ballot ballots = 1;
-	required bytes proof = 2;
-
-	required string node = 3;
-}
-
-message GetMixesReply {
-	repeated Mix mixes = 1;
-}
-
-message Partial {
-    repeated bytes points = 1;
-
-	required bool flag = 2;
-	required string node = 3;
-}
-
-message GetPartials {
-	required string token = 1;
-	required bytes id = 2;
-}
-
-message GetPartialsReply {
-    repeated Partial partials = 1;
-}
 
 message Reconstruct {
-	required string token = 1;
-	required bytes id = 2;
+	required bytes id = 1;
 }
 
 // ReconstructReply message.
 message ReconstructReply {
 	repeated bytes points = 1;
 }
-
-/*
-message Aggregate {
-    required string token = 1;
-    required string genesis = 2;
-    required int32 type = 3;
-}
-
-message AggregateReply {
-    required Box box = 1;
-}
-*/

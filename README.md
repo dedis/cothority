@@ -20,7 +20,7 @@ This is an overview of this README:
     pieces from the cothority from a research point of view
   - [Network ordered](#network-ordered) gives an overview from a networking point
     of view
-  - [Links](doc/Links.md) collects
+  - [Links](doc/README.md) collects
   links to other repositories, papers and webpages that are important to the cothority.
 - [1st steps](#first-steps) giving two example apps ready to use
 - [Participating](#participating) on how to help us getting cothority even better
@@ -254,7 +254,7 @@ to set up a network on a machine and only let it be accessed locally.
 
 - [conode](conode/README.md) is the cothority
 server, a special app that includes all services and protocols.
-- [How to run a conode](OperatingConode.md)
+- [How to run a conode](conode/Operating.md)
 gives an overview of the environment where a conode can be run
 - [DEDIS-cothority](doc/Join.md)
 explains how to join the DEDIS-cothority
