@@ -1,12 +1,23 @@
 CONTAINER = conode
 IMAGE_NAME = dedis/$(CONTAINER)
-VERSION = 2.0-2
+GITCOMMIT := $(shell git rev-parse --short HEAD)
+GITUNTRACKEDCHANGES := $(shell git status --porcelain --untracked-files=no)
+ifneq ($(GITUNTRACKEDCHANGES),)
+	GITCOMMIT := $(GITCOMMIT)-dirty
+endif
+VERSION = $(GITCOMMIT)
 DATA_DIR = $(shell pwd)/conode_data
 
 all: docker
 
 docker: Dockerfile
-	docker build -t $(IMAGE_NAME):$(VERSION) -t $(IMAGE_NAME):latest ./
+	[ -f $(HOME)/.netrc ] && cp $(HOME)/.netrc .
+	docker build -t $(IMAGE_NAME):$(VERSION) .
+	rm -f .netrc
+
+push:
+	@[ -n "$(GITUNTRACKEDCHANGES)" ] && echo "Pushing dirty images not allowed." && exit 1 || true
+	docker push $(IMAGE_NAME):$(VERSION)
 
 docker_setup:
 	mkdir -p $(DATA_DIR)

@@ -27,6 +27,9 @@ VERSION="$VERSION_ONET-$VERSION_SUB"
 #   TAGS="-tags vartime" ./run_conode.sh
 # Note: TAGS is also used by the integration tests.
 
+# Default to not using vgo, unless we find it in main.
+vgo=go
+
 main(){
 	if [ ! "$1" ]; then
 		showHelp
@@ -45,6 +48,12 @@ main(){
 		PATH=$PATH:$gopath/bin
 		export PATH
 	fi
+
+	# Find out if vgo is available. If so, use it.
+	if [ -x $gopath/bin/vgo ]; then
+	    vgo=$gopath/bin/vgo
+	fi
+	
 	case $( uname ) in
 	Darwin)
 		PATH_CO=~/Library
@@ -117,7 +126,7 @@ runLocal(){
 	done
 
 	killall -9 conode || true
-	go install $TAGS $pkg/conode
+	$vgo install $TAGS $pkg/conode
 
 	rm -f public.toml
 	for n in $( seq $NBR ); do
@@ -201,7 +210,7 @@ runPublic(){
 	if [ "$UPDATE" ]; then
 		update
 	else
-		go install $TAGS $pkg/conode
+		$vgo install $TAGS $pkg/conode
 	fi
 	migrate
 	if [ ! -f $PATH_CONODE/private.toml ]; then
