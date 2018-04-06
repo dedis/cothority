@@ -36,3 +36,33 @@ message StoreConfig {
 message StoreConfigReply {
     required bytes id = 1;
 }
+
+// Contains the informations on the proposed party,
+// with the list of the current accepted conodes
+message ProposeParty {
+    required PopDesc desc = 1;
+}
+
+// Used to ask for the current state of the configuration
+// of the party
+message GetPropose {
+    required string name = 1;
+}
+
+// Used as a join proposal for a speciic party
+message ProposeJoin {
+    required string name = 1;
+    required ServerIdentity conode = 2;
+}
+
+// Used to ask for the list of current unconfirmed conodes
+// that want to join the party
+message ProposePoll {
+    required string name = 1;
+}
+
+// Contains the list of the unconfirmed conodes that want to
+// join the party
+message ProposePollReply {
+    repeated ServerIdentity newConodes = 2;
+}
