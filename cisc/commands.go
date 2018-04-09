@@ -359,5 +359,82 @@ func getCommands() cli.Commands {
 				},
 			},
 		},
+
+		{
+			Name:    "cert",
+			Aliases: []string{"c"},
+			Usage:   "create and use links with admin privileges",
+			Subcommands: cli.Commands{
+				{
+					Name:      "request",
+					Aliases:   []string{"q"},
+					Usage:     "request a certificate to letsencrypt and store it to the skipchain",
+					ArgsUsage: "domain-name cert-dir www-dir",
+					Action:    certRequest,
+				},
+				{
+					Name:      "list",
+					Aliases:   []string{"l"},
+					Usage:     "List the certificate",
+					ArgsUsage: "[Skipchain-ID]",
+					Action:    certList,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "verbose, v",
+							Usage: "Display the fullchain certificate",
+						},
+						cli.BoolFlag{
+							Name:  "public, p",
+							Usage: "Display the public certificate",
+						},
+						cli.BoolFlag{
+							Name:  "chain, c",
+							Usage: "Display the chain certificate",
+						},
+					},
+				},
+				{
+					Name:      "verify",
+					Aliases:   []string{"v"},
+					Usage:     "verify the certificate against the root certificate",
+					ArgsUsage: "cert-key [Skipchain-ID]",
+					Action:    certVerify,
+				},
+				{
+					Name:      "renew",
+					Aliases:   []string{"u"},
+					Usage:     "renew a certificate",
+					ArgsUsage: "cert-key [Skipchain-ID]",
+					Action:    certRenew,
+				},
+				{
+					Name:      "revoke",
+					Aliases:   []string{"k"},
+					Usage:     "revoke and delete a certificate",
+					ArgsUsage: "certificate key_name [Skipchain-ID]",
+					Action:    certRevoke,
+				},
+				{
+					Name:      "retrieve",
+					Aliases:   []string{"r"},
+					Usage:     "retrieve the certificate of a given key",
+					ArgsUsage: "key [Skipchain-ID]",
+					Action:    certRetrieve,
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "directory, d",
+							Usage: "Give a directory to write the retrieved certificate",
+						},
+					},
+				},
+				{
+					Name:      "add",
+					Aliases:   []string{"a"},
+					Usage:     "add a key/cert pair",
+					ArgsUsage: "domain path [Skipchain-ID]",
+					Action:    certStore,
+				},
+			},
+		},
 	}
 }
