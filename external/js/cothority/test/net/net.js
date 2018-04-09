@@ -105,6 +105,68 @@ describe("roster socket", () => {
   });
 });
 
+describe("leader socket", () => {
+  it("fails with no node", () => {
+    const roster = new identity.Roster(ed25519, []);
+    expect(function() {
+      const socket = new network.LeaderSocket(roster, "cisc");
+    }).to.throw("Roster should have atleast one node");
+  });
+
+  it("uses the first node in the roster", done => {
+    function createMockServerForLeader(port) {
+      const mockServer = new WebSocket.Server({
+        host: "127.0.0.1",
+        port: port
+      });
+
+      mockServer.on("connection", function connection(ws) {
+        ws.on("message", function incoming(msg) {
+          const proto = root.lookup("ServerIdentity");
+          const ret = {
+            id: [],
+            public: [],
+            address: `tcp://127.0.0.1:${port - 1}`,
+            description: ""
+          };
+          const marshalled = proto.encode(ret).finish();
+          ws.send(marshalled);
+        });
+      });
+      return mockServer;
+    }
+
+    const n = 5;
+    // create the addresses
+    const identities = [];
+    let server;
+    for (let i = 0; i < n; i++) {
+      identities[i] = new identity.ServerIdentity(
+        ed25519,
+        ed25519.point().pick(),
+        "tcp://127.0.0.1:600" + i
+      );
+      if (i == 0) {
+        wsAddr = identities[i].websocketAddr + "/test/identity";
+        server = createMockServerForLeader("6001");
+      }
+    }
+    const roster = new identity.Roster(ed25519, identities);
+    // create the socket and see if we have any messages back
+    const socket = new network.LeaderSocket(roster, "test");
+    socket
+      .send("Request", "ServerIdentity", {})
+      .then(data => {
+        expect(data.address).to.equal("tcp://127.0.0.1:6000");
+        server.close(done);
+      })
+      .catch(err => {
+        server.close(done);
+        throw err;
+      });
+  });
+});
+
 describe("real server status", () => {
   var proc;
   after(function() {
