@@ -104,14 +104,16 @@ type DecryptReply struct{}
 
 // GetElections message.
 type GetElections struct {
-	User   uint32                // User identifier.
-	Master skipchain.SkipBlockID // Master skipchain ID.
-	Stage  lib.ElectionState     // Election Stage filter. 0 for all elections.
+	User      uint32                // User identifier.
+	Master    skipchain.SkipBlockID // Master skipchain ID.
+	Stage     lib.ElectionState     // Election Stage filter. 0 for all elections.
+	Signature []byte                // Signature authenticating the message.
 }
 
 // GetElectionsReply message.
 type GetElectionsReply struct {
 	Elections []*lib.Election // Elections is the retrieved list of elections.
+	IsAdmin   bool            // Is the user in the list of admins in the master?
 }
 
 // GetBox message.

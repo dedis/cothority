@@ -140,6 +140,12 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster)
 			return err
 		}
 
+		// t.User is trusted at this point, so make sure that they did not try to sneak
+		// through a different user-id in the ballot.
+		if t.User != t.Ballot.User {
+			return errors.New("ballot user-id differs from transaction user-id")
+		}
+
 		mixes, err := election.Mixes()
 		if err != nil {
 			return err

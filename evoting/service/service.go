@@ -16,6 +16,7 @@ import (
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
+	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -146,6 +147,10 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		req.Election.Roster = master.Roster
 		req.Election.Key = secret.X
 		req.Election.MasterKey = master.Key
+		// req.User is untrusted in this moment, but lib.Store below will refuse to write
+		// req.Election into the skipchain if req.User+req.Signature is not valid,
+		// so IF it is written, then it is trusted.
+		req.Election.Creator = req.User
 
 		transaction := lib.NewTransaction(req.Election, req.User, req.Signature)
 		if err = lib.Store(req.Election.ID, master.Roster, transaction); err != nil {
@@ -255,6 +260,22 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 		return nil, err
 	}
 
+	// At this point, req.User is untrusted input from the bad
+	// guys. We need to validate req.User before using
+	// it. Usually, we count on lib.Store
+	// (->skipchain.StoreSkipblock->verifier) to check the userID
+	// signature for us, but since GetElections is a read-only method,
+	// there is no call to lib.Store to check req.User for us.
+	digest := master.ID
+	for _, c := range strconv.Itoa(int(req.User)) {
+		d, _ := strconv.Atoi(string(c))
+		digest = append(digest, byte(d))
+	}
+	err = schnorr.Verify(cothority.Suite, master.Key, digest, req.Signature)
+	if err != nil {
+		return nil, fmt.Errorf("user-id signature not valid: %v", err)
+	}
+
 	elections := make([]*lib.Election, 0)
 	for _, l := range links {
 		election, err := lib.GetElection(s.roster(), l.ID)
@@ -269,7 +290,7 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 			}
 		}
 	}
-	return &evoting.GetElectionsReply{Elections: elections}, nil
+	return &evoting.GetElectionsReply{Elections: elections, IsAdmin: master.IsAdmin(req.User)}, nil
 }
 
 // GetBox message handler to retrieve the casted ballot in an election.
