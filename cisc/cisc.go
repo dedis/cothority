@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"path"
 	"strings"
@@ -357,7 +358,20 @@ func scQrcode(c *cli.Context) error {
 		return errors.New("Please chose one of the existing skipchain-ids")
 	}
 	scid := []byte(id.ID)
-	str := fmt.Sprintf("cisc://%s/%x", id.Data.Roster.RandomServerIdentity().Address.NetworkAddress(),
+	address := strings.Split(id.Data.Roster.RandomServerIdentity().Address.NetworkAddress(), ":")
+
+	if address[0] == "localhost" {
+		conn, err := net.Dial("udp", "8.8.8.8:80")
+		if err != nil {
+			return err
+		}
+		defer conn.Close()
+
+		localAddr := conn.LocalAddr().(*net.UDPAddr)
+		address[0] = localAddr.IP.String()
+	}
+
+	str := fmt.Sprintf("cisc://%s/%x", address[0]+":"+address[1],
 		scid)
 	log.Info("QrCode for", str)
 	qr, err := qrgo.NewQR(str)
