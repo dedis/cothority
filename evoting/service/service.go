@@ -28,6 +28,8 @@ import (
 	"github.com/dedis/cothority/skipchain"
 )
 
+var errOnlyLeader = errors.New("operation only allowed on the leader node")
+
 func init() {
 	network.RegisterMessages(synchronizer{}, storage{})
 	serviceID, _ = onet.RegisterNewService(evoting.ServiceName, new)
@@ -55,6 +57,7 @@ type Service struct {
 // Storage saves the shared secrets and stages for each election on disk.
 type storage struct {
 	Roster  *onet.Roster
+	Master  skipchain.SkipBlockID
 	Secrets map[string]*lib.SharedSecret
 }
 
@@ -91,6 +94,13 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 	if err := lib.Store(master.ID, master.Roster, transaction); err != nil {
 		return nil, err
 	}
+
+	s.mutex.Lock()
+	s.storage.Master = genesis.Hash
+	s.storage.Roster = req.Roster
+	s.mutex.Unlock()
+	s.save()
+
 	return &evoting.LinkReply{ID: genesis.Hash}, nil
 }
 
@@ -99,6 +109,10 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 	master, err := lib.GetMaster(s.roster(), req.ID)
 	if err != nil {
 		return nil, err
+	}
+
+	if !s.ServerIdentity().Equal(master.Roster.List[0]) {
+		return nil, errOnlyLeader
 	}
 
 	genesis, err := lib.NewSkipchain(master.Roster, lib.TransactionVerifiers, nil)
@@ -146,7 +160,6 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 
 		s.mutex.Lock()
 		s.storage.Secrets[genesis.Short()] = secret
-		s.storage.Roster = req.Election.Roster
 		s.mutex.Unlock()
 		s.save()
 
@@ -220,6 +233,9 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 
 // Cast message handler. Cast a ballot in a given election.
 func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
+	if !s.leader() {
+		return nil, errOnlyLeader
+	}
 	transaction := lib.NewTransaction(req.Ballot, req.User, req.Signature)
 	if err := lib.Store(req.ID, s.roster(), transaction); err != nil {
 		return nil, err
@@ -300,6 +316,10 @@ func (s *Service) GetPartials(req *evoting.GetPartials) (*evoting.GetPartialsRep
 
 // Shuffle message handler. Initiate shuffle protocol.
 func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
+	if !s.leader() {
+		return nil, errOnlyLeader
+	}
+
 	election, err := lib.GetElection(s.roster(), req.ID)
 	if err != nil {
 		return nil, err
@@ -336,6 +356,10 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 
 // Decrypt message handler. Initiate decryption protocol.
 func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
+	if !s.leader() {
+		return nil, errOnlyLeader
+	}
+
 	election, err := lib.GetElection(s.roster(), req.ID)
 	if err != nil {
 		return nil, err
@@ -372,6 +396,10 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 
 // Reconstruct message handler. Fully decrypt partials using Lagrange interpolation.
 func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructReply, error) {
+	if !s.leader() {
+		return nil, errOnlyLeader
+	}
+
 	election, err := lib.GetElection(s.roster(), req.ID)
 	if err != nil {
 		return nil, err
@@ -483,6 +511,18 @@ func (s *Service) roster() *onet.Roster {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	return s.storage.Roster
+}
+
+// leader returns true if this server has had it's master skipchain set,
+// and is the leader of the roster.
+func (s *Service) leader() bool {
+	s.mutex.Lock()
+	defer s.mutex.Unlock()
+
+	if s.storage.Master.IsNull() {
+		return false
+	}
+	return s.ServerIdentity().Equal(s.storage.Roster.List[0])
 }
 
 // secret returns the shared secret for a given election.

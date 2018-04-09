@@ -47,11 +47,12 @@ func TestService(t *testing.T) {
 	nodeKP := key.NewKeyPair(cothority.Suite)
 
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
-	s := local.GetServices(nodes, serviceID)[0].(*Service)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+	s1 := local.GetServices(nodes, serviceID)[1].(*Service)
 
 	// Creating master skipchain
-	replyLink, err := s.Link(&evoting.Link{
-		Pin:    s.pin,
+	replyLink, err := s0.Link(&evoting.Link{
+		Pin:    s0.pin,
 		Roster: roster,
 		Key:    nodeKP.Public,
 		Admins: []uint32{idAdmin},
@@ -61,8 +62,22 @@ func TestService(t *testing.T) {
 	signature, err := generateSignature(nodeKP.Private, replyLink.ID, idAdmin)
 	require.Nil(t, err)
 
+	// Try to create a new election on server[1], should fail.
+	replyOpen, err := s1.Open(&evoting.Open{
+		ID: replyLink.ID,
+		Election: &lib.Election{
+			Creator: idAdmin,
+			Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
+			Roster:  roster,
+			End:     time.Now().Unix() + 86400,
+		},
+		User:      idAdmin,
+		Signature: signature,
+	})
+	require.Equal(t, err, errOnlyLeader)
+
 	// Create a new election
-	replyOpen, err := s.Open(&evoting.Open{
+	replyOpen, err = s0.Open(&evoting.Open{
 		ID: replyLink.ID,
 		Election: &lib.Election{
 			Creator: idAdmin,
@@ -75,6 +90,24 @@ func TestService(t *testing.T) {
 	})
 	require.Nil(t, err)
 
+	// Try to cast a vote on a non-leader, should fail.
+	k, c := lib.Encrypt(replyOpen.Key, bufCand1)
+	sig, err := generateSignature(nodeKP.Private, replyLink.ID, idUser1)
+	require.Nil(t, err)
+	ballot := &lib.Ballot{
+		User:  idUser1,
+		Alpha: k,
+		Beta:  c,
+	}
+	_, err = s1.Cast(&evoting.Cast{
+		ID:        replyOpen.ID,
+		Ballot:    ballot,
+		User:      idUser1,
+		Signature: sig,
+	})
+	require.Equal(t, err, errOnlyLeader)
+
+	// Prepare a helper for testing voting.
 	vote := func(user uint32, bufCand []byte) *evoting.CastReply {
 		k, c := lib.Encrypt(replyOpen.Key, bufCand)
 		sig, err := generateSignature(nodeKP.Private, replyLink.ID, user)
@@ -84,7 +117,7 @@ func TestService(t *testing.T) {
 			Alpha: k,
 			Beta:  c,
 		}
-		cast, err := s.Cast(&evoting.Cast{
+		cast, err := s0.Cast(&evoting.Cast{
 			ID:        replyOpen.ID,
 			Ballot:    ballot,
 			User:      user,
@@ -99,24 +132,46 @@ func TestService(t *testing.T) {
 	vote(idUser2, bufCand1)
 	vote(idUser3, bufCand2)
 
+	// Shuffle on non-leader
+	_, err = s1.Shuffle(&evoting.Shuffle{
+		ID:        replyOpen.ID,
+		User:      idAdmin,
+		Signature: signature,
+	})
+	require.Equal(t, err, errOnlyLeader)
+
 	// Shuffle all votes
-	_, err = s.Shuffle(&evoting.Shuffle{
+	_, err = s0.Shuffle(&evoting.Shuffle{
 		ID:        replyOpen.ID,
 		User:      idAdmin,
 		Signature: signature,
 	})
 	require.Nil(t, err)
+
+	// Decrypt on non-leader
+	_, err = s1.Decrypt(&evoting.Decrypt{
+		ID:        replyOpen.ID,
+		User:      idAdmin,
+		Signature: signature,
+	})
+	require.Equal(t, err, errOnlyLeader)
 
 	// Decrypt all votes
-	_, err = s.Decrypt(&evoting.Decrypt{
+	_, err = s0.Decrypt(&evoting.Decrypt{
 		ID:        replyOpen.ID,
 		User:      idAdmin,
 		Signature: signature,
 	})
 	require.Nil(t, err)
 
+	// Reconstruct on non-leader
+	reconstructReply, err := s1.Reconstruct(&evoting.Reconstruct{
+		ID: replyOpen.ID,
+	})
+	require.Equal(t, err, errOnlyLeader)
+
 	// Reconstruct votes
-	reconstructReply, err := s.Reconstruct(&evoting.Reconstruct{
+	reconstructReply, err = s0.Reconstruct(&evoting.Reconstruct{
 		ID: replyOpen.ID,
 	})
 	require.Nil(t, err)
