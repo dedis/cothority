@@ -1,10 +1,10 @@
 "use strict";
 
 const net = require("./net");
-const Socket = net.Socket;
-const RosterSocket = net.RosterSocket;
+const { Socket, RosterSocket, LeaderSocket } = net;
 
 module.exports = {
-    Socket,
-    RosterSocket,
+  Socket,
+  RosterSocket,
+  LeaderSocket
 };
