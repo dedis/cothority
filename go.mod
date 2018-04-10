@@ -1,29 +1,11 @@
 module "github.com/dedis/cothority"
 
 require (
-	"github.com/BurntSushi/toml" v0.3.0
 	"github.com/bford/golang-x-crypto" v0.0.0-20160518072526-27db609c9d03
-	"github.com/coreos/bbolt" v1.3.1-coreos.6
-	"github.com/daviddengcn/go-colortext" v0.0.0-20171126034257-17e75f6184bc
-	"github.com/dedis/fixbuf" v1.0.2
-	"github.com/dedis/kyber" v0.0.0-20180404073306-83f872f4f2ee
-	"github.com/dedis/onet" v0.0.0-20180404142611-b45aa4dcfaec
-	"github.com/dedis/protobuf" v1.0.3
-	"github.com/golangplus/bytes" v0.0.0-20160111154220-45c989fe5450
-	"github.com/golangplus/fmt" v0.0.0-20150411045040-2a5d6d7d2995
-	"github.com/golangplus/testing" v0.0.0-20180327235837-af21d9c3145e
-	"github.com/gorilla/websocket" v1.2.0
-	"github.com/montanaflynn/stats" v0.0.0-20171201202039-1bf9dbcd8cbe
+	"github.com/dedis/onet" v0.0.0-20180410144522-645e84787422
 	"github.com/qantik/qrgo" v0.0.0-20160917134849-0c6b902c59f6
 	"github.com/satori/go.uuid" v1.2.0
 	"github.com/stretchr/objx" v0.0.0-20180129172003-8a3f7159479f
-	"github.com/stretchr/testify" v1.2.1
-	"golang.org/x/crypto" v0.0.0-20180403160946-b2aa35443fbc
-	"golang.org/x/net" v0.0.0-20180404174746-b3c676e531a6
 	"golang.org/x/sys" v0.0.0-20180404203733-1d206c9fa897
-	"golang.org/x/text" v0.0.0-20171214130843-f21a4dfb5e38
-	"gopkg.in/check.v1" v0.0.0-20161208181325-20d25e280405
-	"gopkg.in/satori/go.uuid.v1" v1.2.0-gopkgin-v1.2.0
-	"gopkg.in/tylerb/graceful.v1" v1.2.15-gopkgin-v1.2.15
 	"gopkg.in/urfave/cli.v1" v1.20.0-gopkgin-v1.20.0
 )
