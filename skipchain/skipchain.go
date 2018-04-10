@@ -15,6 +15,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"reflect"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -901,7 +903,8 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 				return false
 			}
 			if !f(fl.To, fs.Newest) {
-				log.Lvlf2("verification function failed: %v %s", f, ver)
+				fname := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+				log.Lvlf2("verification function failed: %v %s", fname, ver)
 				return false
 			}
 		}

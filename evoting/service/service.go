@@ -521,7 +521,9 @@ func (s *Service) verify(id []byte, skipblock *skipchain.SkipBlock) bool {
 		return false
 	}
 
-	if transaction.Verify(skipblock.GenesisID, skipblock.Roster) != nil {
+	err := transaction.Verify(skipblock.GenesisID, skipblock.Roster)
+	if err != nil {
+		log.Lvl2("verify failed:", err)
 		return false
 	}
 	return true
