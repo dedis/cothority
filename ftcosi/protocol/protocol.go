@@ -152,9 +152,17 @@ func (p *FtCosi) Dispatch() error {
 		return err
 	}
 
-	// generate challenge
+	// signs the proposal
+	ok := <-verifyChan
+	if !ok {
+		// root should not fail the verification otherwise it would not have
+		// started the protocol
+		p.FinalSignature <- nil
+		return fmt.Errorf("verification failed on root node")
+	}
+
 	log.Lvl3("root-node generating global challenge")
-	secret, commitment, finalMask, err := generateCommitmentAndAggregate(p.suite, p.TreeNodeInstance, p.publics, commitments)
+	secret, commitment, finalMask, err := generateCommitmentAndAggregate(p.suite, p.TreeNodeInstance, p.publics, commitments, ok)
 	if err != nil {
 		return err
 	}
@@ -202,14 +210,8 @@ func (p *FtCosi) Dispatch() error {
 		return fmt.Errorf("nodes timed out while waiting for response %v", errs)
 	}
 
-	// signs the proposal
-	if !<-verifyChan {
-		// root should not fail the verification otherwise it would not have
-		// started the protocol
-		p.FinalSignature <- nil
-		return fmt.Errorf("verification failed on root node")
-	}
-	response, err := generateResponse(p.suite, p.TreeNodeInstance, responses, secret, cosiChallenge)
+	// generate challenge
+	response, err := generateResponse(p.suite, p.TreeNodeInstance, responses, secret, cosiChallenge, ok)
 	if err != nil {
 		return err
 	}
@@ -295,6 +297,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 	if len(errs) > 0 {
 		return nil, nil, fmt.Errorf("failed to collect commitments with errors %v", errs)
 	}
+
 	return commitments, runningSubProtocols, nil
 }
 
