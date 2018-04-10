@@ -16,7 +16,7 @@ message LookupSciperReply {
 
 message Election {
     required string name = 1;
-    required uint32 creator = 2;
+    optional uint32 creator = 2;
     repeated uint32 users = 3 [packed=true];
     optional bytes id = 4;
     optional bytes master = 5;
@@ -67,10 +67,12 @@ message GetElections {
     required uint32 user = 1;
     required bytes master = 2;
     optional uint32 stage = 3;
+    required bytes signature = 4;
 }
 
 message GetElectionsReply {
     repeated Election elections = 1;
+    required bool isAdmin = 2;
 }
 
 message Open{
@@ -93,14 +95,12 @@ message Cast {
 }
 
 message CastReply {
-    // required bytes block = 1;
 }
 
 message Shuffle {
-    required string token = 1;
-    required bytes id = 2;
-    required uint32 user = 3;
-    required bytes signature = 4;
+    required bytes id = 1;
+    required uint32 user = 2;
+    required bytes signature = 3;
 }
 
 message ShuffleReply {
