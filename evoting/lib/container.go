@@ -69,16 +69,6 @@ func (m *Mix) genPartials(dkgs []*dkg.DistKeyGenerator) []*Partial {
 	return partials
 }
 
-// genBox generates a box of encrypted ballots.
-func genBox(key kyber.Point, n int) *Box {
-	ballots := make([]*Ballot, n)
-	for i := range ballots {
-		a, b := Encrypt(key, []byte{byte(i)})
-		ballots[i] = &Ballot{User: uint32(i), Alpha: a, Beta: b}
-	}
-	return &Box{Ballots: ballots}
-}
-
 // Split separates the ElGamal pairs of a list of ballots into separate lists.
 func Split(ballots []*Ballot) (alpha, beta []kyber.Point) {
 	n := len(ballots)

@@ -8,6 +8,16 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+// genBox generates a box of encrypted ballots.
+func genBox(key kyber.Point, n int) *Box {
+	ballots := make([]*Ballot, n)
+	for i := range ballots {
+		a, b := Encrypt(key, []byte{byte(i)})
+		ballots[i] = &Ballot{User: uint32(i), Alpha: a, Beta: b}
+	}
+	return &Box{Ballots: ballots}
+}
+
 func TestSplit(t *testing.T) {
 	_, X := RandomKeyPair()
 	ballots := genBox(X, 2).Ballots
