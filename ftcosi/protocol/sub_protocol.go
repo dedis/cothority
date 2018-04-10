@@ -167,6 +167,7 @@ func (p *SubFtCosi) Dispatch() error {
 	log.Lvl3(p.ServerIdentity().Address, "finished receiving commitments, ", len(commitments), "commitment(s) received")
 
 	var secret kyber.Scalar
+	var ok bool
 
 	if p.IsRoot() {
 		// send commitment to super-protocol
@@ -176,19 +177,34 @@ func (p *SubFtCosi) Dispatch() error {
 		}
 		p.subCommitment <- commitments[0]
 	} else {
-		// do not commit if the verification does not succeed
-		if !<-verifyChan {
-			log.Lvl2(p.ServerIdentity().Address, "verification failed, terminating")
-			return nil
+		ok = <-verifyChan
+		if !ok {
+			log.Lvl2(p.ServerIdentity().Address, "verification failed, unsetting the mask")
 		}
 
 		// otherwise, compute personal commitment and send to parent
 		var commitment kyber.Point
 		var mask *cosi.Mask
-		secret, commitment, mask, err = generateCommitmentAndAggregate(p.suite, p.TreeNodeInstance, p.Publics, commitments)
+		secret, commitment, mask, err = generateCommitmentAndAggregate(p.suite, p.TreeNodeInstance, p.Publics, commitments, ok)
 		if err != nil {
 			return err
 		}
+
+		// unset the mask if the verification failed and remove commitment
+		var found bool
+		if !ok {
+			for i := range p.Publics {
+				if p.Public().Equal(p.Publics[i]) {
+					mask.SetBit(i, false)
+					found = true
+					break
+				}
+			}
+		}
+		if !ok && !found {
+			return fmt.Errorf("%s was unable to find its own public key", p.ServerIdentity().Address)
+		}
+
 		err = p.SendToParent(&Commitment{commitment, mask.Mask()})
 		if err != nil {
 			return err
@@ -232,7 +248,7 @@ func (p *SubFtCosi) Dispatch() error {
 	} else {
 		// generate own response and send to parent
 		response, err := generateResponse(
-			p.suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge)
+			p.suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge, ok)
 		if err != nil {
 			return err
 		}
