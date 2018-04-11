@@ -1,0 +1,79 @@
+syntax = "proto2";
+import "skipblock.proto";
+import "roster.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "LleapProto";
+
+// ***
+// These are the messages used in the API-calls
+// ***
+
+// CreateSkipchain asks the cisc-service to set up a new skipchain.
+message CreateSkipchain {
+  // 	 Version of the protocol
+  required sint32 version = 1;
+  // 	 Roster defines which nodes participate in the skipchain.
+  required Roster roster = 2;
+  // 	 Writers represent keys that are allowed to add new key/value pairs to the skipchain.
+  repeated bytes writers = 3;
+  // 	 Signature, if available, will have to include the nonce sent by cisc.
+  optional bytes signature = 4;
+}
+
+// CreateSkipchainResponse holds the genesis-block of the new skipchain.
+message CreateSkipchainResponse {
+  // 	 Version of the protocol
+  required sint32 version = 1;
+  // 	 Skipblock of the created skipchain or empty if there was an error.
+  optional SkipBlock skipblock = 2;
+}
+
+// SetKeyValue asks for inclusion for a new key/value pair. The value needs
+// to be signed by one of the Writers from the createSkipchain call.
+message SetKeyValue {
+  // 	 Version of the protocol
+  required sint32 version = 1;
+  // 	 SkipchainID is the hash of the first skipblock
+  required bytes skipchainid = 2;
+  // 	 Key where the value is stored
+  required bytes key = 3;
+  // 	 Value, if Writers were present in CreateSkipchain, the value should be
+  // 	 signed by one of the keys.
+  required bytes value = 4;
+  // 	 Signature is an RSA-sha384 signature on the key/value pair concatenated
+  required bytes signature = 5;
+}
+
+// SetKeyValueResponse gives the timestamp and the skipblock-id
+message SetKeyValueResponse {
+  // 	 Version of the protocol
+  required sint32 version = 1;
+  // 	 Timestamp is milliseconds since the unix epoch (1/1/1970, 12am UTC)
+  optional sint64 timestamp = 2;
+  // 	 Skipblock ID is the hash of the block where the value is stored
+  optional bytes skipblockid = 3;
+}
+
+// GetValue looks up the value in the given skipchain and returns the
+// stored value, or an error if either the skipchain or the key doesn't exist.
+message GetValue {
+  // 	 Version of the protocol
+  required sint32 version = 1;
+  // 	 SkipchainID represents the skipchain where the value is stored
+  required bytes skipchainid = 2;
+  // 	 Key to retrieve
+  required bytes key = 3;
+}
+
+// GetValueResponse returns the value or an error if the key hasn't been found.
+message GetValueResponse {
+  // 	Version of the protocol
+  required sint32 version = 1;
+  // 	 Value of the key
+  optional bytes value = 2;
+  // 	 Signature as sent when the value was stored
+  optional bytes signature = 3;
+  // 	 Proof the value is correct
+  optional bytes proof = 4;
+}
