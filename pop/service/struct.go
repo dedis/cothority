@@ -5,6 +5,8 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
+	"sort"
+
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet/network"
@@ -12,12 +14,47 @@ import (
 
 // We need to register all messages so the network knows how to handle them.
 func init() {
-	for _, msg := range []interface{}{
-		CheckConfig{}, CheckConfigReply{},
+	network.RegisterMessages(CheckConfig{}, CheckConfigReply{},
 		PinRequest{}, FetchRequest{}, MergeRequest{},
-	} {
-		network.RegisterMessage(msg)
-	}
+		StoreConfig{}, StoreConfigReply{},
+		GetProposals{}, GetProposalsReply{})
+}
+
+func newMerge() *merge {
+	mm := &merge{}
+	mm.statementsMap = make(map[string]*FinalStatement)
+	mm.distrib = false
+	return mm
+}
+
+type byIdentity []*network.ServerIdentity
+
+func (p byIdentity) Len() int      { return len(p) }
+func (p byIdentity) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p byIdentity) Less(i, j int) bool {
+	return p[i].String() < p[j].String()
+}
+
+type byPoint []kyber.Point
+
+func (p byPoint) Len() int      { return len(p) }
+func (p byPoint) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+func (p byPoint) Less(i, j int) bool {
+	return p[i].String() < p[j].String()
+}
+
+func sortAll(locs []string, roster []*network.ServerIdentity, atts []kyber.Point) {
+	sort.Strings(locs)
+	sort.Sort(byIdentity(roster))
+	sort.Sort(byPoint(atts))
+}
+
+// sliceToArr does what the name suggests, we need it to turn a slice into
+// something hashable.
+func sliceToArr(msg []byte) [32]byte {
+	var arr [32]byte
+	copy(arr[:], msg)
+	return arr
 }
 
 const (
@@ -130,4 +167,15 @@ type FetchRequest struct {
 type MergeRequest struct {
 	ID        []byte
 	Signature []byte
+}
+
+// GetProposals asks the conode to return a list of all waiting proposals. A waiting
+// proposal is either deleted after 1h or if it has been confirmed using
+// StoreConfig.
+type GetProposals struct {
+}
+
+// GetProposalsReply returns the list of all waiting proposals on that node.
+type GetProposalsReply struct {
+	Proposals []PopDesc
 }

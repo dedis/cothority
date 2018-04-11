@@ -203,10 +203,57 @@ func orgConfig(c *cli.Context) error {
 	return nil
 }
 
+// read all newly proposed configs
+func orgProposed(c *cli.Context) error {
+	if c.NArg() < 1 {
+		return errors.New("Please give IP:Port of the conode you want to read proposed configs from")
+	}
+	client := service.NewClient()
+	proposed, err := client.GetProposals(network.Address("tls://" + c.Args().First()))
+	if err != nil {
+		return err
+	}
+	if len(proposed) == 0 {
+		log.Info("Didn't find any proposed configurations")
+		return nil
+	}
+	if !c.Bool("quiet") {
+		log.Info("Found", len(proposed), "configurations:")
+	}
+	for i, pd := range proposed {
+		if !c.Bool("quiet") {
+			log.Infof("Configuration #%d", i)
+		}
+		p := PopDescGroupToml{
+			Name:     pd.Name,
+			DateTime: pd.DateTime,
+			Location: pd.Location,
+		}
+		for _, s := range pd.Roster.List {
+			st := &app.ServerToml{
+				Address:     s.Address,
+				Suite:       cothority.Suite.String(),
+				Public:      s.Public.String(),
+				Description: s.Description,
+			}
+			p.Servers = append(p.Servers, st)
+		}
+		var buf bytes.Buffer
+		err = toml.NewEncoder(&buf).Encode(p)
+		if err != nil {
+			return err
+		}
+		// Here we use fmt.Print because this toml should be copy/pastable
+		// or redirectable into a file.
+		fmt.Print(strings.Replace(buf.String(), "\n\n", "\n", -1))
+	}
+	return nil
+}
+
 // adds a public key to the list
 func orgPublic(c *cli.Context) error {
 	if c.NArg() < 2 {
-		log.Fatal("Please give a public key and hash of a party")
+		return errors.New("Please give a public key and hash of a party")
 	}
 	log.Lvl3("Org: Adding public keys", c.Args().First())
 	str := c.Args().First()
