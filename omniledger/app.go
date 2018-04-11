@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dedis/lleap"
+	"github.com/dedis/student_18_omniledger/omniledger/service"
 	"gopkg.in/dedis/onet.v2/app"
 
 	"gopkg.in/dedis/onet.v2/log"
@@ -65,7 +65,7 @@ func create(c *cli.Context) error {
 		return errors.New("please give: group.toml public.key")
 	}
 	group := readGroup(c)
-	client := lleap.NewClient()
+	client := service.NewClient()
 	keyStr, err := ioutil.ReadFile(c.Args().Get(1))
 	if err != nil {
 		return errors.New("couldn't read key-file: " + err.Error())
@@ -109,7 +109,7 @@ func set(c *cli.Context) error {
 
 	key := c.Args().Get(3)
 	value := c.Args().Get(4)
-	resp, err := lleap.NewClient().SetKeyValue(group.Roster, scid, priv,
+	resp, err := service.NewClient().SetKeyValue(group.Roster, scid, priv,
 		[]byte(key), []byte(value))
 	if err != nil {
 		return errors.New("couldn't set new key/value pair: " + err.Error())
@@ -132,7 +132,7 @@ func get(c *cli.Context) error {
 		return err
 	}
 	key := c.Args().Get(2)
-	resp, err := lleap.NewClient().GetValue(group.Roster, scid, []byte(key))
+	resp, err := service.NewClient().GetValue(group.Roster, scid, []byte(key))
 	if err != nil {
 		return errors.New("couldn't get value: " + err.Error())
 	}
