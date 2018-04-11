@@ -17,6 +17,12 @@ message CheckConfigReply {
     required bytes attendees = 3;
 }
 
+message GetProposals {}
+
+message GetProposalsReply {
+  repeated PopDesc proposals = 1;
+}
+
 message MergeConfig {
     required FinalStatement final = 1;
     required bytes id = 2;

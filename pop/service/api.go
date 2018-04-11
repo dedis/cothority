@@ -56,6 +56,18 @@ func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar)
 	return nil
 }
 
+// GetProposals asks the conode if there is any proposed description waiting
+// to be confirmed.
+func (c *Client) GetProposals(dst network.Address) ([]PopDesc, error) {
+	si := &network.ServerIdentity{Address: dst}
+	rep := &GetProposalsReply{}
+	err := c.SendProtobuf(si, &GetProposals{}, rep)
+	if err != nil {
+		return nil, err
+	}
+	return rep.Proposals, nil
+}
+
 // FetchFinal sends Request to update local final statement
 func (c *Client) FetchFinal(dst network.Address, hash []byte) (
 	*FinalStatement, error) {
