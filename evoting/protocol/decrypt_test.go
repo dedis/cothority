@@ -26,13 +26,17 @@ type decryptService struct {
 	user      uint32
 	signature []byte
 
-	secret   *lib.SharedSecret
-	election *lib.Election
+	secret    *lib.SharedSecret
+	election  *lib.Election
+	skipchain *skipchain.Service
 }
 
 func init() {
 	new := func(ctx *onet.Context) (onet.Service, error) {
-		return &decryptService{ServiceProcessor: onet.NewServiceProcessor(ctx)}, nil
+		return &decryptService{
+			ServiceProcessor: onet.NewServiceProcessor(ctx),
+			skipchain:        ctx.Service(skipchain.ServiceName).(*skipchain.Service),
+		}, nil
 	}
 	decryptServiceID, _ = onet.RegisterNewService(NameDecrypt, new)
 }
@@ -71,7 +75,7 @@ func runDecrypt(t *testing.T, n int) {
 	shared, _ := lib.NewSharedSecret(dkgs[0])
 	key := shared.X
 
-	chain, _ := lib.NewSkipchain(roster, skipchain.VerificationStandard, nil)
+	chain, _ := lib.NewSkipchain(services[0].(*decryptService).skipchain, roster, skipchain.VerificationStandard)
 	election := &lib.Election{
 		ID:      chain.Hash,
 		Roster:  roster,
@@ -87,14 +91,14 @@ func runDecrypt(t *testing.T, n int) {
 	}
 
 	tx := lib.NewTransaction(election, election.Creator, []byte{})
-	lib.Store(election.ID, election.Roster, tx)
+	lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 
 	ballots := make([]*lib.Ballot, 3)
 	for i := 0; i < 3; i++ {
 		a, b := lib.Encrypt(key, []byte{byte(i)})
 		ballots[i] = &lib.Ballot{User: uint32(i), Alpha: a, Beta: b}
 		tx = lib.NewTransaction(ballots[i], election.Creator, []byte{})
-		lib.Store(election.ID, election.Roster, tx)
+		lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 	}
 
 	mixes := make([]*lib.Mix, n)
@@ -104,7 +108,7 @@ func runDecrypt(t *testing.T, n int) {
 		proof, _ := proof.HashProve(cothority.Suite, "", prover)
 		mix := &lib.Mix{Ballots: lib.Combine(v, w), Proof: proof, Node: string(i)}
 		tx = lib.NewTransaction(mix, election.Creator, []byte{})
-		lib.Store(election.ID, election.Roster, tx)
+		lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 		x, y = v, w
 	}
 

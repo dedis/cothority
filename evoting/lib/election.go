@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/dedis/kyber"
@@ -61,10 +62,11 @@ type footer struct {
 }
 
 // GetElection fetches the election structure from its skipchain and sets the stage.
-func GetElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, error) {
-	client := skipchain.NewClient()
+func GetElection(s *skipchain.Service, id skipchain.SkipBlockID) (*Election, error) {
 
-	block, err := client.GetSingleBlockByIndex(roster, id, 1)
+	block, err := s.GetSingleBlockByIndex(
+		&skipchain.GetSingleBlockByIndex{Genesis: id, Index: 1},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -75,30 +77,27 @@ func GetElection(roster *onet.Roster, id skipchain.SkipBlockID) (*Election, erro
 		return nil, fmt.Errorf("no election structure in %s", id.Short())
 	}
 	election := transaction.Election
-	err = election.setStage()
+	err = election.setStage(s)
 	if err != nil {
 		return nil, err
 	}
 	return election, nil
 }
 
-func (e *Election) setStage() error {
-	mixes, err := e.Mixes()
+func (e *Election) setStage(s *skipchain.Service) error {
+	db := s.GetDB()
+	latest, err := db.GetLatest(db.GetByID(e.ID))
 	if err != nil {
-		return err
+		return errors.New("error getting latest skipblock")
 	}
+	transaction := UnmarshalTransaction(latest.Data)
 
-	partials, err := e.Partials()
-	if err != nil {
-		return err
-	}
-
-	if len(mixes) == 0 {
-		e.Stage = Running
-	} else if len(partials) == len(e.Roster.List) {
+	if transaction.Partial != nil {
 		e.Stage = Decrypted
-	} else {
+	} else if transaction.Mix != nil {
 		e.Stage = Shuffled
+	} else {
+		e.Stage = Running
 	}
 	return nil
 }
