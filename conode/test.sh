@@ -9,6 +9,7 @@ main(){
     setupConode
     test Build
     test Conode
+    test Database
     stopTest
 }
 
@@ -19,6 +20,23 @@ testConode(){
     testOK runCo 1 check -g public.toml
     cat co3/public.toml >> public.toml
     testFail runCo 1 check -g public.toml
+}
+
+testDatabase(){
+    runCoBG 1
+    sleep .1
+
+    # rename database file
+    hexPK=$(cat co1/public.toml  | grep 'Public = '  | cut -d = -f 2 - | tr -d ' "')
+    shaPK=$(ls -t "$CONODE_SERVICE_PATH" | head -n 1 | sed 's/.db$//g')
+    testOK mv "$CONODE_SERVICE_PATH/$shaPK.db" "$CONODE_SERVICE_PATH/$hexPK.db"
+
+    # run conode again
+    pkill conode
+    rm -f "$COLOG"1.log.dead
+    runCoBG 1
+    sleep .1
+    testOK ls "$CONODE_SERVICE_PATH/$shaPK.db"
 }
 
 testBuild(){
