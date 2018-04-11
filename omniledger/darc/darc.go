@@ -1,5 +1,5 @@
 /*
-Package darc in most of our projects we need some kind of access control to 
+Package darc in most of our projects we need some kind of access control to
 protect resources. Instead of having a simple password
 or public key for authentication, we want to have access control that can be:
 evolved with a threshold number of keys
@@ -15,18 +15,17 @@ import (
 	//"fmt"
 
 	"bytes"
-	"strings"
 	"crypto/sha256"
 	"encoding/json"
+	"strings"
 
 	"github.com/dedis/protobuf"
-	"gopkg.in/dedis/crypto.v0/abstract"
-	"gopkg.in/dedis/crypto.v0/config"
-	"gopkg.in/dedis/crypto.v0/ed25519"
-	"gopkg.in/dedis/crypto.v0/sign"
-	"gopkg.in/dedis/crypto.v0/random"
-	"gopkg.in/dedis/onet.v1/log"
-	"gopkg.in/dedis/onet.v1/network"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/kyber.v2/sign/schnorr"
+	"gopkg.in/dedis/kyber.v2/util/key"
+	"gopkg.in/dedis/kyber.v2/util/random"
+	"gopkg.in/dedis/onet.v2/log"
 )
 
 // NewDarc initialises a darc-structure
@@ -35,9 +34,9 @@ func NewDarc(rules *[]*Rule) *Darc {
 	ru = append(ru, *rules...)
 	id := CreateID()
 	return &Darc{
-		ID: id,
+		ID:      id,
 		Version: 0,
-		Rules: &ru,
+		Rules:   &ru,
 	}
 }
 
@@ -45,8 +44,8 @@ func NewRule(action string, subjects *[]*Subject, expression string) *Rule {
 	var subs []*Subject
 	subs = append(subs, *subjects...)
 	return &Rule{
-		Action: action,
-		Subjects: &subs,
+		Action:     action,
+		Subjects:   &subs,
 		Expression: expression,
 	}
 }
@@ -63,7 +62,7 @@ func NewSubject(darc *SubjectDarc, pk *SubjectPK) (*Subject, error) {
 	}
 	return &Subject{
 		Darc: darc,
-		PK: pk,
+		PK:   pk,
 	}, nil
 }
 
@@ -75,7 +74,7 @@ func NewSubjectDarc(id ID) *SubjectDarc {
 }
 
 // NewSubjectPK creates a new ed25519 identity given a public-key point
-func NewSubjectPK(point abstract.Point) *SubjectPK {
+func NewSubjectPK(point kyber.Point) *SubjectPK {
 	return &SubjectPK{
 		Point: point,
 	}
@@ -84,7 +83,7 @@ func NewSubjectPK(point abstract.Point) *SubjectPK {
 // Copy all the fields of a Darc
 func (d *Darc) Copy() *Darc {
 	dCopy := &Darc{
-		ID: d.ID,
+		ID:      d.ID,
 		Version: d.Version,
 	}
 	if d.Rules != nil {
@@ -121,7 +120,8 @@ func NewDarcFromProto(protoDarc []byte) *Darc {
 
 func CreateID() ID {
 	idsize := 32
-	id := random.Bytes(idsize, random.Stream)
+	id := make([]byte, idsize)
+	random.Bytes(id, random.New())
 	return id
 }
 
@@ -268,63 +268,63 @@ func EvaluateExpression(expression string, indexMap map[int]*Signature) (bool, e
 	return result, err
 }
 
-//For now, we just take a JSON expression and convert it into 
+//For now, we just take a JSON expression and convert it into
 // a string showing evaluation. This will be replaced by actual
 //evaluation when we introduce signatures
 func ProcessJson(raw interface{}, indexMap map[int]*Signature, evaluation bool) (bool, error) {
 	m := raw.(map[string]interface{})
-	for k, v := range(m) {
+	for k, v := range m {
 		switch vv := v.(type) {
-			case []interface{}:
-				for i, u := range vv {
-					switch x := u.(type) {
-						case map[string]interface {}:
-							if i == 0 {
-								y, err := ProcessJson(x, indexMap, evaluation)
-								if err != nil {
-									return false, err
-								}
-								if i == len(vv)-1 {
-										z, err := operation(k, y, false)
-										if err != nil {
-											return false, err
-										}
-										evaluation = z
-									} else {
-										evaluation = y
-									}
-							} else {
-								y, err := ProcessJson(x, indexMap, evaluation)
-								if err != nil {
-									return false, err
-								}
-								evaluation, err = operation(k, evaluation, y)
-								if err != nil {
-									return false, err
-								}
+		case []interface{}:
+			for i, u := range vv {
+				switch x := u.(type) {
+				case map[string]interface{}:
+					if i == 0 {
+						y, err := ProcessJson(x, indexMap, evaluation)
+						if err != nil {
+							return false, err
+						}
+						if i == len(vv)-1 {
+							z, err := operation(k, y, false)
+							if err != nil {
+								return false, err
 							}
-						case float64: 
-						 	if i == 0 {
-						 		if i == len(vv)-1 {
-						 				z, err := operation(k, checkMap(indexMap, int(x)), false)
-						 				if err != nil {
-											return false, err
-										}
-										evaluation = z
-						 			} else {
-						 				evaluation = checkMap(indexMap, int(x)) 
-						 			}
-							} else {
-								y, err := operation(k, evaluation, checkMap(indexMap, int(x)))
-								if err != nil {
-									return false, err
-								}
-								evaluation = y 
+							evaluation = z
+						} else {
+							evaluation = y
+						}
+					} else {
+						y, err := ProcessJson(x, indexMap, evaluation)
+						if err != nil {
+							return false, err
+						}
+						evaluation, err = operation(k, evaluation, y)
+						if err != nil {
+							return false, err
+						}
+					}
+				case float64:
+					if i == 0 {
+						if i == len(vv)-1 {
+							z, err := operation(k, checkMap(indexMap, int(x)), false)
+							if err != nil {
+								return false, err
 							}
+							evaluation = z
+						} else {
+							evaluation = checkMap(indexMap, int(x))
+						}
+					} else {
+						y, err := operation(k, evaluation, checkMap(indexMap, int(x)))
+						if err != nil {
+							return false, err
+						}
+						evaluation = y
 					}
 				}
-			default:
-				return false, errors.New("Unknown type in expression interface.")
+			}
+		default:
+			return false, errors.New("Unknown type in expression interface.")
 		}
 	}
 	return evaluation, nil
@@ -350,16 +350,16 @@ func operation(operand string, op1 bool, op2 bool) (bool, error) {
 // NewDarc initialises a darc-structure
 func NewRequest(darcid ID, ruleid int, message []byte) *Request {
 	return &Request{
-		DarcID: darcid,
-		RuleID: ruleid,
+		DarcID:  darcid,
+		RuleID:  ruleid,
 		Message: message,
 	}
 }
 
 func (r *Request) CopyReq() *Request {
 	rCopy := &Request{
-		DarcID: r.DarcID,
-		RuleID: r.RuleID,
+		DarcID:  r.DarcID,
+		RuleID:  r.RuleID,
 		Message: r.Message,
 	}
 	return rCopy
@@ -383,7 +383,7 @@ func (s *Signer) Sign(req *Request) (*Signature, error) {
 		if err != nil {
 			return nil, errors.New("could not retrieve a public key")
 		}
-		signature, _ := sign.Schnorr(ed25519.NewAES128SHA256Ed25519(false), key, b)
+		signature, _ := schnorr.Sign(cothority.Suite, key, b)
 		signer := &SubjectPK{Point: pub}
 		return &Signature{Signature: signature, Signer: *signer}, nil
 	}
@@ -408,7 +408,7 @@ func (s *Signer) SignWithPath(req *Request, path []int) (*SignaturePath, error) 
 		if err != nil {
 			return nil, errors.New("could not retrieve a public key")
 		}
-		signature, _ := sign.Schnorr(ed25519.NewAES128SHA256Ed25519(false), key, b)
+		signature, _ := schnorr.Sign(cothority.Suite, key, b)
 		signer := &SubjectPK{Point: pub}
 		return &SignaturePath{Signature: signature, Signer: *signer, Path: path}, nil
 	}
@@ -453,14 +453,14 @@ func (s *Signer) SignWithPathCheck(req *Request, darcs map[string]*Darc) (*Signa
 		if len(paths) > 1 {
 			return nil, paths, errors.New("Multiple paths present. Sign with specific path.")
 		}
-		signature, _ := sign.Schnorr(ed25519.NewAES128SHA256Ed25519(false), key, b)
+		signature, _ := schnorr.Sign(cothority.Suite, key, b)
 		signer := &SubjectPK{Point: pub}
 		return &Signature{Signature: signature, Signer: *signer}, nil, nil
 	}
 	return nil, nil, errors.New("signer is of unknown type")
 }
 
-func (s *Signer) GetPublic() (abstract.Point, error) {
+func (s *Signer) GetPublic() (kyber.Point, error) {
 	if s.Ed25519 != nil {
 		if s.Ed25519.Point != nil {
 			return s.Ed25519.Point, nil
@@ -470,7 +470,7 @@ func (s *Signer) GetPublic() (abstract.Point, error) {
 	return nil, errors.New("signer is of unknown type")
 }
 
-func (s *Signer) GetPrivate() (abstract.Scalar, error) {
+func (s *Signer) GetPrivate() (kyber.Scalar, error) {
 	if s.Ed25519 != nil {
 		if s.Ed25519.Secret != nil {
 			return s.Ed25519.Secret, nil
@@ -507,7 +507,7 @@ func VerifyMultiSig(req *Request, sigs []*Signature, darcs map[string]*Darc) err
 			return errors.New("Nothing to verify, message is empty.")
 		}
 		pub := sig.Signer.Point
-		err = sign.VerifySchnorr(network.Suite, pub, b, sig.Signature)
+		err = schnorr.Verify(cothority.Suite, pub, b, sig.Signature)
 		if err != nil {
 			return err
 		}
@@ -521,7 +521,7 @@ func VerifyMultiSig(req *Request, sigs []*Signature, darcs map[string]*Darc) err
 		indexMap[pa[0]] = sig
 	}
 	//Evaluate expression
-	expression := targetRule.Expression 
+	expression := targetRule.Expression
 	evaluation, err := EvaluateExpression(expression, indexMap)
 	if err != nil {
 		return err
@@ -547,7 +547,7 @@ func Verify(req *Request, sig *Signature, darcs map[string]*Darc) error {
 		return errors.New("nothing to verify, message is empty")
 	}
 	pub := sig.Signer.Point
-	err = sign.VerifySchnorr(network.Suite, pub, b, sig.Signature)
+	err = schnorr.Verify(cothority.Suite, pub, b, sig.Signature)
 	if err != nil {
 		return err
 	}
@@ -573,7 +573,7 @@ func VerifySigWithPath(req *Request, sig *SignaturePath, darcs map[string]*Darc)
 		return errors.New("nothing to verify, message is empty")
 	}
 	pub := sig.Signer.Point
-	err = sign.VerifySchnorr(network.Suite, pub, b, sig.Signature)
+	err = schnorr.Verify(cothority.Suite, pub, b, sig.Signature)
 	if err != nil {
 		return err
 	}
@@ -593,7 +593,7 @@ func VerifyPath(darcs map[string]*Darc, req *Request, sig *SignaturePath) error 
 		return err
 	}
 	for i := 0; i < len(path); i++ {
-		if i == len(path) - 1 {
+		if i == len(path)-1 {
 			ruleind, err := FindUserRuleIndex(*current_darc.Rules)
 			if err != nil {
 				return err
@@ -615,7 +615,7 @@ func VerifyPath(darcs map[string]*Darc, req *Request, sig *SignaturePath) error 
 		}
 		target := subs[path[i]]
 		target_darc := *target.Darc
-		target_id := target_darc.ID 
+		target_id := target_darc.ID
 		current_darc, err = FindDarc(darcs, target_id)
 		if err != nil {
 			return err
@@ -649,7 +649,7 @@ func CompareSubjects(s1 *Subject, s2 *Subject) bool {
 			return true
 		}
 	} else if s1.Darc != nil && s2.Darc != nil {
-			return s1.Darc.ID.Equal(s2.Darc.ID)
+		return s1.Darc.ID.Equal(s2.Darc.ID)
 	}
 	return false
 }
@@ -737,7 +737,7 @@ func FindAllPaths(subjects []*Subject, requester *Subject, darcs map[string]*Dar
 				pathIndex = pathIndex[:len(pathIndex)-1]
 			} else {
 				allpaths = pa
-				pathIndex  = pathIndex[:0]
+				pathIndex = pathIndex[:0]
 			}
 		}
 	}
@@ -748,14 +748,14 @@ func FindAllPaths(subjects []*Subject, requester *Subject, darcs map[string]*Dar
 	}
 }
 
-// NewEd25519Signer initializes a new Ed25519Signer given a public and private 
+// NewEd25519Signer initializes a new Ed25519Signer given a public and private
 // keys.
-// If any of the given values is nil or both are nil, then a new key pair is 
+// If any of the given values is nil or both are nil, then a new key pair is
 // generated.
-func NewEd25519Signer(point abstract.Point, secret abstract.Scalar) *Ed25519Signer {
+func NewEd25519Signer(point kyber.Point, secret kyber.Scalar) *Ed25519Signer {
 	if point == nil || secret == nil {
-		kp := config.NewKeyPair(network.Suite)
-		point, secret = kp.Public, kp.Secret
+		kp := key.NewKeyPair(cothority.Suite)
+		point, secret = kp.Public, kp.Private
 	}
 	return &Ed25519Signer{
 		Point:  point,

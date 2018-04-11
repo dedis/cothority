@@ -3,7 +3,7 @@ package main
 import (
 	"testing"
 
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v2/log"
 )
 
 // You may put normal Go tests in this file. For more information
@@ -20,7 +20,7 @@ func TestAddition(t *testing.T) {
 //
 // See:
 //   - https://godoc.org/testing#hdr-Main
-//   - https://godoc.org/github.com/dedis/onet/log#MainTest
+//   - https://godoc.org/gopkg.in/dedis/onet.v2/log#MainTest
 func TestMain(m *testing.M) {
 	log.MainTest(m)
 }

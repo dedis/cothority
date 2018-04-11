@@ -1,7 +1,7 @@
-package lleap
+package service
 
 /*
-* The Sicpa service uses a CISC (https://github.com/dedis/cothority/cisc) to store
+* The Sicpa service uses a CISC (https://gopkg.in/dedis/cothority.v2/cisc) to store
 * key/value pairs on a skipchain.
  */
 
@@ -12,9 +12,9 @@ import (
 	"crypto/sha256"
 	"errors"
 
-	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/cothority.v2/skipchain"
+	"gopkg.in/dedis/onet.v2"
 )
 
 // ServiceName is used for registration on the onet.

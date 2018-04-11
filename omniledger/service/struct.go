@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/student_18_omniledger/lleap/collection"
+	"github.com/dedis/student_18_omniledger/omniledger/collection"
 )
 
 type collectionDB struct {

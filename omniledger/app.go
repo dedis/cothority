@@ -11,9 +11,9 @@ import (
 	"strings"
 
 	"github.com/dedis/lleap"
-	"github.com/dedis/onet/app"
+	"gopkg.in/dedis/onet.v2/app"
 
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/onet.v2/log"
 	"gopkg.in/urfave/cli.v1"
 )
 

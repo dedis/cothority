@@ -3,11 +3,10 @@ package service
 import (
 	"testing"
 
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/kyber/suites"
-	"github.com/dedis/lleap"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/cothority.v2/skipchain"
+	"gopkg.in/dedis/kyber.v2/suites"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -21,18 +20,18 @@ func TestMain(m *testing.M) {
 func TestService_CreateSkipchain(t *testing.T) {
 	s := newSer(t, 0)
 	defer s.local.CloseAll()
-	resp, err := s.service.CreateSkipchain(&lleap.CreateSkipchain{
+	resp, err := s.service.CreateSkipchain(&CreateSkipchain{
 		Version: 0,
 		Roster:  *s.roster,
 	})
 	require.NotNil(t, err)
 
-	resp, err = s.service.CreateSkipchain(&lleap.CreateSkipchain{
-		Version: lleap.CurrentVersion,
+	resp, err = s.service.CreateSkipchain(&CreateSkipchain{
+		Version: CurrentVersion,
 		Roster:  *s.roster,
 	})
 	require.Nil(t, err)
-	assert.Equal(t, lleap.CurrentVersion, resp.Version)
+	assert.Equal(t, CurrentVersion, resp.Version)
 	assert.NotNil(t, resp.Skipblock)
 }
 
@@ -40,19 +39,19 @@ func TestService_AddKeyValue(t *testing.T) {
 	s := newSer(t, 1)
 	defer s.local.CloseAll()
 
-	akvresp, err := s.service.SetKeyValue(&lleap.SetKeyValue{
+	akvresp, err := s.service.SetKeyValue(&SetKeyValue{
 		Version: 0,
 	})
 	require.NotNil(t, err)
-	akvresp, err = s.service.SetKeyValue(&lleap.SetKeyValue{
-		Version:     lleap.CurrentVersion,
+	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
+		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 		Key:         s.key,
 		Value:       s.value,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
-	require.Equal(t, lleap.CurrentVersion, akvresp.Version)
+	require.Equal(t, CurrentVersion, akvresp.Version)
 	require.NotNil(t, akvresp.Timestamp)
 	require.NotNil(t, akvresp.SkipblockID)
 }
@@ -61,8 +60,8 @@ func TestService_GetValue(t *testing.T) {
 	s := newSer(t, 2)
 	defer s.local.CloseAll()
 
-	rep, err := s.service.GetValue(&lleap.GetValue{
-		Version:     lleap.CurrentVersion,
+	rep, err := s.service.GetValue(&GetValue{
+		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 		Key:         s.key,
 	})
@@ -92,15 +91,15 @@ func newSer(t *testing.T, step int) *ser {
 	for i := 0; i < step; i++ {
 		switch i {
 		case 0:
-			resp, err := s.service.CreateSkipchain(&lleap.CreateSkipchain{
-				Version: lleap.CurrentVersion,
+			resp, err := s.service.CreateSkipchain(&CreateSkipchain{
+				Version: CurrentVersion,
 				Roster:  *s.roster,
 			})
 			assert.Nil(t, err)
 			s.sb = resp.Skipblock
 		case 1:
-			_, err := s.service.SetKeyValue(&lleap.SetKeyValue{
-				Version:     lleap.CurrentVersion,
+			_, err := s.service.SetKeyValue(&SetKeyValue{
+				Version:     CurrentVersion,
 				SkipchainID: s.sb.SkipChainID(),
 				Key:         s.key,
 				Value:       s.value,

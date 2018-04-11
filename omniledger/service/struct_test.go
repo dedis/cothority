@@ -8,10 +8,9 @@ import (
 	"testing"
 
 	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/cothority"
-	"github.com/dedis/lleap"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -87,8 +86,8 @@ func TestService_Store(t *testing.T) {
 	service := genService.(*Service)
 
 	// Create a new skipchain
-	resp, err := service.CreateSkipchain(&lleap.CreateSkipchain{
-		Version: lleap.CurrentVersion,
+	resp, err := service.CreateSkipchain(&CreateSkipchain{
+		Version: CurrentVersion,
 		Roster:  *roster,
 	})
 	require.Nil(t, err)
@@ -99,8 +98,8 @@ func TestService_Store(t *testing.T) {
 		key := []byte(fmt.Sprintf("Key%d", i))
 		value := []byte(fmt.Sprintf("value%d", i))
 		pairs[string(key)] = value
-		_, err := service.SetKeyValue(&lleap.SetKeyValue{
-			Version:     lleap.CurrentVersion,
+		_, err := service.SetKeyValue(&SetKeyValue{
+			Version:     CurrentVersion,
 			SkipchainID: genesis.Hash,
 			Key:         key,
 			Value:       value,
@@ -110,8 +109,8 @@ func TestService_Store(t *testing.T) {
 
 	// Retrieve the keypairs
 	for key, value := range pairs {
-		gvResp, err := service.GetValue(&lleap.GetValue{
-			Version:     lleap.CurrentVersion,
+		gvResp, err := service.GetValue(&GetValue{
+			Version:     CurrentVersion,
 			SkipchainID: genesis.Hash,
 			Key:         []byte(key),
 		})
@@ -126,8 +125,8 @@ func TestService_Store(t *testing.T) {
 
 	// Retrieve the keypairs
 	for key, value := range pairs {
-		gvResp, err := service.GetValue(&lleap.GetValue{
-			Version:     lleap.CurrentVersion,
+		gvResp, err := service.GetValue(&GetValue{
+			Version:     CurrentVersion,
 			SkipchainID: genesis.Hash,
 			Key:         []byte(key),
 		})

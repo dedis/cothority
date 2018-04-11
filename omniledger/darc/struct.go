@@ -1,13 +1,11 @@
 package darc
 
-import (
-	"gopkg.in/dedis/crypto.v0/abstract"
-)
+import "gopkg.in/dedis/kyber.v2"
 
 // ID is the identity of a Darc - which is the sha256 of its protobuf representation
 type ID []byte
 
-// Darc is the basic structure representing an access control. 
+// Darc is the basic structure representing an access control.
 type Darc struct {
 	//DarcID
 	ID []byte
@@ -40,7 +38,7 @@ type Subject struct {
 
 //SubjectEd25519 holds a Ed25519 public key (Point)
 type SubjectPK struct {
-	Point abstract.Point
+	Point kyber.Point
 }
 
 //SubjectDarc is a structure that points to a Darc with a given ID on a skipchain
@@ -53,19 +51,19 @@ type Request struct {
 	DarcID ID
 	//ID showing allowed rule
 	RuleID int
-	//Message - Can be a string or a marshalled JSON 
+	//Message - Can be a string or a marshalled JSON
 	Message []byte
 }
 
 type Signature struct {
 	Signature []byte
-	Signer SubjectPK
+	Signer    SubjectPK
 }
 
 type SignaturePath struct {
 	Signature []byte
-	Signer SubjectPK
-	Path []int
+	Signer    SubjectPK
+	Path      []int
 }
 
 // Signer is a generic structure that can hold different types of signers
@@ -76,6 +74,6 @@ type Signer struct {
 
 // Ed25519Signer holds a public and private keys necessary to sign Darcs
 type Ed25519Signer struct {
-	Point  abstract.Point
-	Secret abstract.Scalar
+	Point  kyber.Point
+	Secret kyber.Scalar
 }

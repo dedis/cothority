@@ -1,13 +1,13 @@
-package lleap
+package service
 
 /*
 This holds the messages used to communicate with the service over the network.
 */
 
 import (
-	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/onet"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/cothority.v2/skipchain"
+	"gopkg.in/dedis/onet.v2"
+	"gopkg.in/dedis/onet.v2/network"
 )
 
 // We need to register all messages so the network knows how to handle them.
