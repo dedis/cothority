@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/stretchr/testify/require"
 	"gopkg.in/dedis/cothority.v2"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/log"
-	"github.com/stretchr/testify/require"
 )
 
 func TestCollectionDBStrange(t *testing.T) {
