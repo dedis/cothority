@@ -21,11 +21,15 @@ type shuffleService struct {
 	user      uint32
 	signature []byte
 	election  *lib.Election
+	skipchain *skipchain.Service
 }
 
 func init() {
 	new := func(ctx *onet.Context) (onet.Service, error) {
-		return &shuffleService{ServiceProcessor: onet.NewServiceProcessor(ctx)}, nil
+		return &shuffleService{
+			ServiceProcessor: onet.NewServiceProcessor(ctx),
+			skipchain:        ctx.Service(skipchain.ServiceName).(*skipchain.Service),
+		}, nil
 	}
 	shuffleServiceID, _ = onet.RegisterNewService(NameShuffle, new)
 }
@@ -63,7 +67,7 @@ func runShuffle(t *testing.T, n int) {
 	shared, _ := lib.NewSharedSecret(dkgs[0])
 	key := shared.X
 
-	chain, _ := lib.NewSkipchain(roster, skipchain.VerificationStandard, nil)
+	chain, _ := lib.NewSkipchain(services[0].(*shuffleService).skipchain, roster, skipchain.VerificationStandard)
 	election := &lib.Election{
 		ID:      chain.Hash,
 		Roster:  roster,
@@ -78,13 +82,13 @@ func runShuffle(t *testing.T, n int) {
 	}
 
 	tx := lib.NewTransaction(election, election.Creator, []byte{})
-	lib.Store(election.ID, election.Roster, tx)
+	lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 
 	for i := 0; i < 3; i++ {
 		a, b := lib.Encrypt(key, []byte{byte(i)})
 		ballot := &lib.Ballot{User: uint32(i), Alpha: a, Beta: b}
 		tx = lib.NewTransaction(ballot, election.Creator, []byte{})
-		lib.Store(election.ID, election.Roster, tx)
+		lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 	}
 
 	instance, _ := services[0].(*shuffleService).CreateProtocol(NameShuffle, tree)

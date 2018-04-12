@@ -82,7 +82,7 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 	flag := Verify(d.Election.Key, box, mixes)
 	partial := &lib.Partial{Points: points, Flag: flag, Node: d.Name()}
 	transaction := lib.NewTransaction(partial, d.User, d.Signature)
-	if err = lib.Store(d.Election.ID, d.Election.Roster, transaction); err != nil {
+	if err = lib.StoreUsingWebsocket(d.Election.ID, d.Election.Roster, transaction); err != nil {
 		return err
 	}
 

@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/dedis/kyber/sign/schnorr"
-	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 
@@ -78,12 +77,12 @@ func NewTransaction(data interface{}, user uint32, signature []byte) *Transactio
 }
 
 // Digest appends the digits of sciper to master genesis skipblock ID
-func (t *Transaction) Digest(roster *onet.Roster, genesis skipchain.SkipBlockID) []byte {
+func (t *Transaction) Digest(s *skipchain.Service, genesis skipchain.SkipBlockID) []byte {
 	var election *Election
 	if t.Election != nil {
 		election = t.Election
 	} else {
-		election, _ = GetElection(roster, genesis)
+		election, _ = GetElection(s, genesis)
 	}
 	// Master or Link transaction
 	if election == nil {
@@ -98,12 +97,13 @@ func (t *Transaction) Digest(roster *onet.Roster, genesis skipchain.SkipBlockID)
 }
 
 // Verify checks that the corresponding transaction is valid before storing it.
-func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster) error {
-	digest := t.Digest(roster, genesis)
+func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service) error {
+	digest := t.Digest(s, genesis)
+	db := s.GetDB()
 	if t.Master != nil {
 		return nil
 	} else if t.Link != nil {
-		master, err := GetMaster(roster, genesis)
+		master, err := GetMaster(s, genesis)
 		if err != nil {
 			return err
 		}
@@ -122,7 +122,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster)
 			return errors.New("open error: invalid end date")
 		}
 
-		master, err := GetMaster(roster, election.Master)
+		master, err := GetMaster(s, election.Master)
 		if err != nil {
 			return err
 		}
@@ -131,7 +131,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster)
 		}
 		return nil
 	} else if t.Ballot != nil {
-		election, err := GetElection(roster, genesis)
+		election, err := GetElection(s, genesis)
 		if err != nil {
 			return err
 		}
@@ -146,17 +146,20 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster)
 			return errors.New("ballot user-id differs from transaction user-id")
 		}
 
-		mixes, err := election.Mixes()
+		latest, err := db.GetLatest(db.GetByID(election.ID))
+		transaction := UnmarshalTransaction(latest.Data)
 		if err != nil {
 			return err
-		} else if len(mixes) > 0 {
+		}
+		if transaction.Mix != nil || transaction.Partial != nil {
 			return errors.New("cast error: election not in running stage")
 		} else if !election.IsUser(t.User) {
 			return errors.New("cast error: user not part")
 		}
 		return nil
 	} else if t.Mix != nil {
-		election, err := GetElection(roster, genesis)
+		election, err := GetElection(s, genesis)
+		roster := election.Roster
 		if err != nil {
 			return err
 		}
@@ -175,7 +178,8 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, roster *onet.Roster)
 		}
 		return nil
 	} else if t.Partial != nil {
-		election, err := GetElection(roster, genesis)
+		election, err := GetElection(s, genesis)
+		roster := election.Roster
 		if err != nil {
 			return err
 		}

@@ -33,10 +33,10 @@ type Link struct {
 }
 
 // GetMaster retrieves the master object from its skipchain.
-func GetMaster(roster *onet.Roster, id skipchain.SkipBlockID) (*Master, error) {
-	client := skipchain.NewClient()
-
-	block, err := client.GetSingleBlockByIndex(roster, id, 1)
+func GetMaster(s *skipchain.Service, id skipchain.SkipBlockID) (*Master, error) {
+	block, err := s.GetSingleBlockByIndex(
+		&skipchain.GetSingleBlockByIndex{Genesis: id, Index: 1},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -49,10 +49,10 @@ func GetMaster(roster *onet.Roster, id skipchain.SkipBlockID) (*Master, error) {
 }
 
 // Links returns all the links appended to the master skipchain.
-func (m *Master) Links() ([]*Link, error) {
-	client := skipchain.NewClient()
-
-	block, err := client.GetSingleBlockByIndex(m.Roster, m.ID, 0)
+func (m *Master) Links(s *skipchain.Service) ([]*Link, error) {
+	block, err := s.GetSingleBlockByIndex(
+		&skipchain.GetSingleBlockByIndex{Genesis: m.ID, Index: 0},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,9 @@ func (m *Master) Links() ([]*Link, error) {
 		if len(block.ForwardLink) <= 0 {
 			break
 		}
-		block, _ = client.GetSingleBlock(m.Roster, block.ForwardLink[0].To)
+		block, _ = s.GetSingleBlock(
+			&skipchain.GetSingleBlock{ID: block.ForwardLink[0].To},
+		)
 	}
 	return links, nil
 }

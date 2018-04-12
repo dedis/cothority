@@ -49,6 +49,8 @@ var storageKey = []byte("storage")
 type Service struct {
 	*onet.ServiceProcessor
 
+	skipchain *skipchain.Service
+
 	mutex   sync.Mutex
 	storage *storage
 
@@ -80,7 +82,7 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 		return nil, errors.New("link error: invalid pin")
 	}
 
-	genesis, err := lib.NewSkipchain(req.Roster, lib.TransactionVerifiers, nil)
+	genesis, err := lib.NewSkipchain(s.skipchain, req.Roster, lib.TransactionVerifiers)
 	if err != nil {
 		return nil, err
 	}
@@ -92,7 +94,8 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 		Key:    req.Key,
 	}
 	transaction := lib.NewTransaction(master, 0, []byte{})
-	if err := lib.Store(master.ID, master.Roster, transaction); err != nil {
+
+	if err := lib.Store(s.skipchain, master.ID, transaction); err != nil {
 		return nil, err
 	}
 
@@ -107,7 +110,7 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 
 // Open message hander. Create a new election with accompanying skipchain.
 func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
-	master, err := lib.GetMaster(s.roster(), req.ID)
+	master, err := lib.GetMaster(s.skipchain, req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +119,7 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		return nil, errOnlyLeader
 	}
 
-	genesis, err := lib.NewSkipchain(master.Roster, lib.TransactionVerifiers, nil)
+	genesis, err := lib.NewSkipchain(s.skipchain, master.Roster, lib.TransactionVerifiers)
 	if err != nil {
 		return nil, err
 	}
@@ -153,13 +156,13 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		req.Election.Creator = req.User
 
 		transaction := lib.NewTransaction(req.Election, req.User, req.Signature)
-		if err = lib.Store(req.Election.ID, master.Roster, transaction); err != nil {
+		if err := lib.Store(s.skipchain, req.Election.ID, transaction); err != nil {
 			return nil, err
 		}
 
 		link := &lib.Link{ID: genesis.Hash}
 		transaction = lib.NewTransaction(link, req.User, req.Signature)
-		if err = lib.Store(master.ID, master.Roster, transaction); err != nil {
+		if err := lib.Store(s.skipchain, master.ID, transaction); err != nil {
 			return nil, err
 		}
 
@@ -242,7 +245,7 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 		return nil, errOnlyLeader
 	}
 	transaction := lib.NewTransaction(req.Ballot, req.User, req.Signature)
-	if err := lib.Store(req.ID, s.roster(), transaction); err != nil {
+	if err := lib.Store(s.skipchain, req.ID, transaction); err != nil {
 		return nil, err
 	}
 	return &evoting.CastReply{}, nil
@@ -250,12 +253,12 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 
 // GetElections message handler. Return all elections in which the given user participates.
 func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElectionsReply, error) {
-	master, err := lib.GetMaster(s.roster(), req.Master)
+	master, err := lib.GetMaster(s.skipchain, req.Master)
 	if err != nil {
 		return nil, err
 	}
 
-	links, err := master.Links()
+	links, err := master.Links(s.skipchain)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +281,7 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 
 	elections := make([]*lib.Election, 0)
 	for _, l := range links {
-		election, err := lib.GetElection(s.roster(), l.ID)
+		election, err := lib.GetElection(s.skipchain, l.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -295,7 +298,7 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 
 // GetBox message handler to retrieve the casted ballot in an election.
 func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
-	election, err := lib.GetElection(s.roster(), req.ID)
+	election, err := lib.GetElection(s.skipchain, req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -309,7 +312,7 @@ func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
 
 // GetMixes message handler. Vet all created mixes.
 func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error) {
-	election, err := lib.GetElection(s.roster(), req.ID)
+	election, err := lib.GetElection(s.skipchain, req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -323,7 +326,7 @@ func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error
 
 // GetPartials message handler. Vet all created partial decryptions.
 func (s *Service) GetPartials(req *evoting.GetPartials) (*evoting.GetPartialsReply, error) {
-	election, err := lib.GetElection(s.roster(), req.ID)
+	election, err := lib.GetElection(s.skipchain, req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -341,7 +344,7 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 		return nil, errOnlyLeader
 	}
 
-	election, err := lib.GetElection(s.roster(), req.ID)
+	election, err := lib.GetElection(s.skipchain, req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -381,7 +384,7 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 		return nil, errOnlyLeader
 	}
 
-	election, err := lib.GetElection(s.roster(), req.ID)
+	election, err := lib.GetElection(s.skipchain, req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -421,7 +424,7 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 		return nil, errOnlyLeader
 	}
 
-	election, err := lib.GetElection(s.roster(), req.ID)
+	election, err := lib.GetElection(s.skipchain, req.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -470,7 +473,7 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 		}()
 		return protocol, nil
 	case protocol.NameShuffle:
-		election, err := lib.GetElection(s.roster(), sync.ID)
+		election, err := lib.GetElection(s.skipchain, sync.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -490,7 +493,7 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 
 		return protocol, nil
 	case protocol.NameDecrypt:
-		election, err := lib.GetElection(s.roster(), sync.ID)
+		election, err := lib.GetElection(s.skipchain, sync.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -521,7 +524,7 @@ func (s *Service) verify(id []byte, skipblock *skipchain.SkipBlock) bool {
 		return false
 	}
 
-	err := transaction.Verify(skipblock.GenesisID, skipblock.Roster)
+	err := transaction.Verify(skipblock.GenesisID, s.skipchain)
 	if err != nil {
 		log.Lvl2("verify failed:", err)
 		return false
@@ -587,6 +590,10 @@ func (s *Service) load() error {
 	return nil
 }
 
+func (s *Service) db() *skipchain.SkipBlockDB {
+	return s.skipchain.GetDB()
+}
+
 // new initializes the service and registers all the message handlers.
 func new(context *onet.Context) (onet.Service, error) {
 	service := &Service{
@@ -594,6 +601,7 @@ func new(context *onet.Context) (onet.Service, error) {
 		storage: &storage{
 			Secrets: make(map[string]*lib.SharedSecret),
 		},
+		skipchain: context.Service(skipchain.ServiceName).(*skipchain.Service),
 	}
 
 	service.RegisterHandlers(
