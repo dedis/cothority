@@ -290,13 +290,21 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		pointer := prev
 		for h := range prop.BackLinkIDs {
 			for pointer.Height < h+1 {
-				pointer = s.db.GetByID(pointer.BackLinkIDs[0])
-				if pointer == nil {
-					return nil, errors.New(
-						"Didn't find convenient SkipBlock for height " +
-							strconv.Itoa(h))
-
+				prevPointer := s.db.GetByID(pointer.BackLinkIDs[0])
+				if prevPointer == nil {
+					pp, err := s.getBlocks(pointer.Roster, pointer.BackLinkIDs[0], 1)
+					if err != nil {
+						return nil, errors.New("couldn't fetch missing block: " + err.Error())
+					}
+					if len(pp) == 0 {
+						return nil, errors.New(
+							"Didn't find convenient SkipBlock for height " +
+								strconv.Itoa(h))
+					}
+					s.db.Store(pp[0])
+					prevPointer = pp[0]
 				}
+				pointer = prevPointer
 			}
 			prop.BackLinkIDs[h] = pointer.Hash
 		}
@@ -1114,9 +1122,6 @@ func (s *Service) verifyBlock(sb *SkipBlock) error {
 	}
 	if sb.BaseHeight <= 0 {
 		return errors.New("Set a baseHeight > 0")
-	}
-	if sb.MaximumHeight > sb.BaseHeight {
-		return errors.New("maximumHeight must be smaller or equal baseHeight")
 	}
 	if sb.Index < 0 {
 		return errors.New("Can't have an index < 0")
