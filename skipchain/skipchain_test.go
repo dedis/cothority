@@ -44,6 +44,8 @@ func TestService_StoreSkipBlock(t *testing.T) {
 }
 
 func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
+	defaultPropagateTimeout = time.Second
+
 	// First create a roster to attach the data to it
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
@@ -81,7 +83,7 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 
 	// kill one node and it should still work
 	if fail {
-		log.Lvl3("Pausing server", deadServer.Address())
+		log.Lvl2("Pausing server", deadServer.Address())
 		deadServer.Pause()
 	}
 
