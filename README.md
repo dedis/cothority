@@ -295,4 +295,4 @@ have listed here, please contact us at [dedis@epfl.ch](mailto:dedis@epfl.ch).
 - [Medco](https://github.com/lca1/medco) - Privacy preserving medical data sharing
 - [ByzGen](http://byzgen.com/) - Tracking and secure storage of digital and hard assets
 - [PDCi2b2](https://github.com/JLRgithub/PDCi2b2) - Private Data Characterization for
-[i2b2](https://www.i2b2.org/)
+- [i2b2](https://www.i2b2.org/)
