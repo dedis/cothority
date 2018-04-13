@@ -72,9 +72,8 @@ type Data struct {
 
 // storage is used to save our data locally.
 type storage struct {
-	// IDBlock stores one identity together with the latest and the currently
-	// proposed skipblock.
-	Identities map[string]*identity.IDBlock
+    // DarcBlock stores one skipchain together with the latest skipblock.
+    DarcBlocks map[string]*DarcBlock
 	// PL: Is used to sign the votes
 	Private map[string]kyber.Scalar
 	// PL: Entities allowed to modify the data(-structure)?
