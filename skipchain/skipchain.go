@@ -174,7 +174,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 	// If TargetSkipChainID is not given, it is a genesis block.
 	if psbd.TargetSkipChainID.IsNull() {
 		// A new chain is created
-		log.Lvl3("Creating new skipchain with roster", psbd.NewBlock.Roster.List)
+		log.Lvl2("Creating new skipchain with roster", psbd.NewBlock.Roster.List)
 		prop.Height = prop.MaximumHeight
 		prop.ForwardLink = make([]*ForwardLink, 0)
 		// genesis block has a random back-link, so that two
@@ -203,7 +203,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 	} else {
 
 		// We're appending a block to an existing chain.
-		log.Lvlf3("Adding block with roster %+v to %x",
+		log.Lvlf2("Adding block with roster %+v to %x",
 			psbd.NewBlock.Roster.List, psbd.TargetSkipChainID)
 
 		// At this point the TargetSkipChainID must have something in
@@ -365,7 +365,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 // SkipBlock we know. The last block in the returned slice of blocks is
 // not guaranteed to have no forward links. It is up to the caller
 // to continue following forward links with the new roster if necessary.
-func (s *Service) GetUpdateChain(guc *GetUpdateChain) (network.Message, error) {
+func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, error) {
 	block := s.db.GetByID(guc.LatestID)
 	if block == nil {
 		return nil, errors.New("Couldn't find latest skipblock")
