@@ -76,8 +76,6 @@ type storage struct {
     DarcBlocks map[string]*DarcBlock
 	// PL: Is used to sign the votes
 	Private map[string]kyber.Scalar
-	// PL: Entities allowed to modify the data(-structure)?
-	Writers map[string][]byte
 	sync.Mutex
 }
 
@@ -101,10 +99,6 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainRespons
         Timestamp: 0,
 	}
 
-	if req.Writers != nil && len(*req.Writers) == 1 {
-		data.Storage = map[string]string{"writer": string((*req.Writers)[0])}
-	}
-
 	// replace this by something interacting with skipchain directly
 	cir, err := s.idService().CreateIdentityInternal(&identity.CreateIdentity{
 		Data: data,
@@ -120,7 +114,6 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainRespons
 		LatestSkipblock: cir.Genesis,
 	}
 	s.storage.Private[gid] = kp.Private
-	// s.storage.Writers[gid] = []byte(data.Storage["writer"])
 	s.save()
 	return &CreateSkipchainResponse{
 		Version:   CurrentVersion,
@@ -141,24 +134,17 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 	if idb == nil || priv == nil {
 		return nil, errors.New("don't have this identity stored")
 	}
-	// PL: Does this check make sense? What if pub == nil?
-	if pub := s.storage.Writers[gid]; pub != nil {
-		log.Lvl1("Verifying signature")
-		public, err := x509.ParsePKIXPublicKey(pub)
-		if err != nil || public == nil {
-			return nil, err
-		}
-		hash := sha256.New()
-		hash.Write(req.Key)
-		hash.Write(req.Value)
-		hashed := hash.Sum(nil)[:]
-		err = rsa.VerifyPKCS1v15(public.(*rsa.PublicKey), crypto.SHA256, hashed, req.Signature)
-		if err != nil {
-			log.Lvl1("signature verification failed")
-			return nil, errors.New("couldn't verify signature")
-		}
-		log.Lvl1("signature verification succeeded")
-	}
+
+    // Verify darc
+    // Note: The verify function needs the collection to be up to date.
+    // TODO: Make sure that is the case.
+	log.Lvl1("Verifying signature")
+    err := s.getCollection(req.SkipchainID).verify(&req.Transaction)
+    if err != nil {
+		log.Lvl1("signature verification failed")
+        return nil, err
+    }
+	log.Lvl1("signature verification succeeded")
 
 	// Store the pair in the collection
 	coll := s.getCollection(req.SkipchainID)
@@ -280,9 +266,6 @@ func (s *Service) tryLoad() error {
 	}
 	if s.storage.Private == nil {
 		s.storage.Private = map[string]kyber.Scalar{}
-	}
-	if s.storage.Writers == nil {
-		s.storage.Writers = map[string][]byte{}
 	}
 	s.collectionDB = map[string]*collectionDB{}
 	for _, ch := range s.storage.DarcBlocks {
