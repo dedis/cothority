@@ -105,6 +105,12 @@ func getCommands() cli.Commands {
 					Usage:     "print out the qrcode of the identity-skipchain and a node for contact",
 					ArgsUsage: "[skipchain-id]",
 					Action:    scQrcode,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "e, explicit",
+							Usage: "Display the explicit IP address of the device",
+						},
+					},
 				},
 				{
 					Name:      "roster",

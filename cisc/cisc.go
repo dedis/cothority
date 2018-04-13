@@ -360,7 +360,7 @@ func scQrcode(c *cli.Context) error {
 	scid := []byte(id.ID)
 	address := strings.Split(id.Data.Roster.RandomServerIdentity().Address.NetworkAddress(), ":")
 
-	if address[0] == "localhost" {
+	if address[0] == "localhost" && c.Bool("e") {
 		conn, err := net.Dial("udp", "8.8.8.8:80")
 		if err != nil {
 			return err
@@ -1158,13 +1158,13 @@ func certRetrieve(c *cli.Context) error {
 			os.MkdirAll(c.String("d"), 0777)
 		}
 	}
-	log.Info("Retrieve the domain certificate to: " + c.String("d") + "/" + k + ".pem")
+	log.Info("Retrieves the domain certificate to: " + path.Join(c.String("directory"), k+".pem"))
 	err = ioutil.WriteFile(path.Join(c.String("d"), k+".pem"), []byte(public), 0644)
 	if err != nil {
 		return err
 	}
 	if chain != "" {
-		log.Info("Retrieve the fullchain certificate to: " + c.String("d") + "/" + k + "_fullchain.pem")
+		log.Info("Retrieve the fullchain certificate to: " + path.Join(c.String("d"), k+"_fullchain.pem"))
 		err = ioutil.WriteFile(path.Join(c.String("d"), k+"_fullchain.pem"), cert, 0644)
 		if err != nil {
 			return err
