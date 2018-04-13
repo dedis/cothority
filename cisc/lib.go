@@ -241,18 +241,27 @@ func getKeyConfig(c *cli.Context) string {
 	return configDir + "/admin_key.bin"
 }
 
-// Reads the group-file and returns it
 func getGroup(c *cli.Context) *app.Group {
-	gfile := c.Args().Get(0)
-	gr, err := os.Open(gfile)
+	g, err := getGroupString(c.Args().Get(0))
 	log.ErrFatal(err)
+	return g
+}
+
+// Reads the group-file and returns it
+func getGroupString(gfile string) (*app.Group, error) {
+	gr, err := os.Open(gfile)
+	if err != nil {
+		return nil, err
+	}
 	defer gr.Close()
 	groups, err := app.ReadGroupDescToml(gr)
-	log.ErrFatal(err)
-	if groups == nil || groups.Roster == nil || len(groups.Roster.List) == 0 {
-		log.Fatal("No servers found in roster from", gfile)
+	if err != nil {
+		return nil, err
 	}
-	return groups
+	if groups == nil || groups.Roster == nil || len(groups.Roster.List) == 0 {
+		return nil, errors.New("No servers found in roster from: " + gfile)
+	}
+	return groups, nil
 }
 
 // retrieves ssh-directory and ssh-config-name.
