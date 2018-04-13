@@ -165,6 +165,29 @@ describe("leader socket", () => {
         throw err;
       });
   });
+
+  it("retries 3 times in case of an error", done => {
+    const n = 5;
+    // create the addresses
+    const identities = [];
+    for (let i = 0; i < n; i++) {
+      identities[i] = new identity.ServerIdentity(
+        ed25519,
+        ed25519.point().pick(),
+        "tcp://127.0.0.1:600" + i
+      );
+      if (i == 0) {
+        wsAddr = identities[i].websocketAddr + "/test/identity";
+      }
+    }
+    const roster = new identity.Roster(ed25519, identities);
+    // create the socket and see if we have any messages back
+    const socket = new network.LeaderSocket(roster, "test");
+    socket.send("Request", "ServerIdentity", {}).catch(e => {
+      expect(e.message).to.equal("couldn't send request after 3 attempts");
+      done();
+    });
+  });
 });
 
 describe("real server status", () => {

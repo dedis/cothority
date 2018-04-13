@@ -173,11 +173,27 @@ class LeaderSocket {
    * @returns {Promise} with response message on success and error on failure.
    */
   send(request, response, data) {
-    const socket = new Socket(
-      this.roster.identities[0].websocketAddr,
-      this.service
-    );
-    return socket.send(request, response, data);
+    // fn is a generator that tries the sending the request to the leader
+    // maximum 3 times and returns on the first successful attempt
+    const that = this;
+    const fn = co.wrap(function*() {
+      for (let i = 0; i < 3; i++) {
+        try {
+          const socket = new Socket(
+            that.roster.identities[0].websocketAddr,
+            that.service
+          );
+          const reply = yield socket.send(request, response, data);
+          return Promise.resolve(reply);
+        } catch (e) {
+          console.error("error sending request: ", e.message);
+        }
+      }
+      return Promise.reject(
+        new Error("couldn't send request after 3 attempts")
+      );
+    });
+    return fn();
   }
 }
 
