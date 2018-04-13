@@ -63,7 +63,12 @@ type DarcBlock struct {
 }
 
 type Data struct {
-	Darc   *darc.Darc
+    // Root of the merkle tree after applying the transactions to the
+    // kv store
+    MerkleRoot []byte
+    // The transactions applied to the kv store with this block
+    Transactions []*lleap.Transaction
+    Timestamp int64
 	Roster *onet.Roster
 }
 
