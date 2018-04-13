@@ -92,15 +92,13 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainRespons
 	}
 
 	kp := key.NewKeyPair(cothority.Suite)
-	// get rid of identity here by using a struct which contains a DARC and
-	// some sort of kv store.
-	// Also adjust the structure of req *CreateSkipchain.
-	// And what is writer? The device allowed to modify the kv-store (as well
-	// the set of Devices)?
-	data := &identity.Data{
-		Threshold: 2,
-		Device:    map[string]*identity.Device{"service": &identity.Device{Point: kp.Public}},
-		Roster:    &req.Roster,
+    // Dummy assignments to make compiler happy.
+    // TODO: Fix after "Transaction" has been added as a field to
+    // CreateSkipchain.
+	data := Data{
+        MerkleRoot: nil,
+        Transactions: []*Transaction{},
+        Timestamp: 0,
 	}
 
 	if req.Writers != nil && len(*req.Writers) == 1 {
@@ -117,7 +115,7 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainRespons
 	gid := string(cir.Genesis.SkipChainID())
 	// if we modify data as described above, we can just use it here.
 	// we can still use the genesisblock, but the one from skipchain
-	s.storage.Identities[gid] = &identity.IDBlock{
+	s.storage.DarcBlocks[gid] = &DarcBlock{
 		Latest:          data,
 		LatestSkipblock: cir.Genesis,
 	}
@@ -138,7 +136,7 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 		return nil, errors.New("version mismatch")
 	}
 	gid := string(req.SkipchainID)
-	idb := s.storage.Identities[gid]
+	idb := s.storage.DarcBlocks[gid]
 	priv := s.storage.Private[gid]
 	if idb == nil || priv == nil {
 		return nil, errors.New("don't have this identity stored")
@@ -277,8 +275,8 @@ func (s *Service) tryLoad() error {
 	if s.storage == nil {
 		s.storage = &storage{}
 	}
-	if s.storage.Identities == nil {
-		s.storage.Identities = map[string]*identity.IDBlock{}
+	if s.storage.DarcBlocks == nil {
+		s.storage.DarcBlocks = map[string]*DarcBlock{}
 	}
 	if s.storage.Private == nil {
 		s.storage.Private = map[string]kyber.Scalar{}
@@ -287,8 +285,8 @@ func (s *Service) tryLoad() error {
 		s.storage.Writers = map[string][]byte{}
 	}
 	s.collectionDB = map[string]*collectionDB{}
-	for _, id := range s.storage.Identities {
-		s.getCollection(id.LatestSkipblock.SkipChainID())
+	for _, ch := range s.storage.DarcBlocks {
+		s.getCollection(ch.LatestSkipblock.SkipChainID())
 	}
 	return nil
 }
