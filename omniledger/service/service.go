@@ -57,7 +57,6 @@ const storageID = "main"
 type DarcBlock struct {
 	sync.Mutex
 	Latest          *Data
-	Proposed        *Data
 	LatestSkipblock *skipchain.SkipBlock
 }
 
