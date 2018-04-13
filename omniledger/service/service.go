@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	"gopkg.in/dedis/cothority.v2"
 	"gopkg.in/dedis/cothority.v2/identity"
 	"gopkg.in/dedis/cothority.v2/skipchain"
@@ -67,7 +66,7 @@ type Data struct {
     // kv store
     MerkleRoot []byte
     // The transactions applied to the kv store with this block
-    Transactions []*lleap.Transaction
+    Transactions []*Transaction
     Timestamp int64
 	Roster *onet.Roster
 }

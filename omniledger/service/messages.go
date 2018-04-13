@@ -8,6 +8,8 @@ import (
 	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/network"
+
+	"github.com/dedis/student_18_omniledger/omniledger/darc"
 )
 
 // We need to register all messages so the network knows how to handle them.
