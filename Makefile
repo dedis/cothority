@@ -9,9 +9,9 @@ EXCLUDE_LINT = "should be.*UI|_test.go"
 # for more than once in Travis. Change `make test` in .travis.yml
 # to `make test_playground`.
 test_playground:
-	cd skipchain; \
+	cd ocs/service; \
 	for a in $$( seq 100 ); do \
-	  go test -race -short || exit 1 ; \
+	  go test -race -short -run TestService_proof || exit 1 ; \
 	done;
 
 # Other targets are:
