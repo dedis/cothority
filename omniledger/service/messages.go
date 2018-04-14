@@ -51,10 +51,9 @@ type CreateSkipchain struct {
 	Version Version
 	// Roster defines which nodes participate in the skipchain.
 	Roster onet.Roster
-	// Writers represent keys that are allowed to add new key/value pairs to the skipchain.
-	Writers *[][]byte
-	// Signature, if available, will have to include the nonce sent by cisc.
-	Signature *[]byte
+	// Transaction contains the master darc which defines who is allowed to
+	// write to this skipchain. we will only store its hash.
+	Transaction Transaction
 }
 
 // CreateSkipchainResponse holds the genesis-block of the new skipchain.
