@@ -93,31 +93,49 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainRespons
     // Dummy assignments to make compiler happy.
     // TODO: Fix after "Transaction" has been added as a field to
     // CreateSkipchain.
-	data := Data{
+	data := &Data{
         MerkleRoot: nil,
         Transactions: []*Transaction{},
         Timestamp: 0,
 	}
 
 	// replace this by something interacting with skipchain directly
+    var genesisBlock = skipchain.NewSkipBlock()
+    // begin copy from code in StoreSkipBlockSignature in skipchain
+	buf, err := network.Marshal(data)
+	if err != nil {
+		return nil, errors.New(
+			"Couldn't marshal data: " + err.Error())
+
+	}
+	genesisBlock.Data = buf
+    // end copy
+    var ssb = skipchain.StoreSkipBlock{NewBlock: genesisBlock} // TODO: Signature?
+    ssbReply, err := s.skService().StoreSkipBlock(&ssb)
+    // identity: use skipchain instead
+    /*
+    // type CreateIdentityReply struct {
+    //     Genesis *skipchain.SkipBlock
+    // }
 	cir, err := s.idService().CreateIdentityInternal(&identity.CreateIdentity{
 		Data: data,
 	}, "", "")
+    */
 	if err != nil {
 		return nil, err
 	}
-	gid := string(cir.Genesis.SkipChainID())
+	gid := string(ssbReply.Latest.SkipChainID())
 	// if we modify data as described above, we can just use it here.
 	// we can still use the genesisblock, but the one from skipchain
 	s.storage.DarcBlocks[gid] = &DarcBlock{
 		Latest:          data,
-		LatestSkipblock: cir.Genesis,
+		LatestSkipblock: ssbReply.Latest,
 	}
 	s.storage.Private[gid] = kp.Private
 	s.save()
 	return &CreateSkipchainResponse{
 		Version:   CurrentVersion,
-		Skipblock: cir.Genesis,
+		Skipblock: ssbReply.Latest,
 	}, nil
 }
 
@@ -231,6 +249,10 @@ func (s *Service) getCollection(id skipchain.SkipBlockID) *collectionDB {
 // interface to identity.Service
 func (s *Service) idService() *identity.Service {
 	return s.Service(identity.ServiceName).(*identity.Service)
+}
+
+func (s *Service) skService() *skipchain.Service {
+    return s.Service(skipchain.ServiceName).(*skipchain.Service)
 }
 
 // saves all skipblocks.
