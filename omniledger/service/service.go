@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+    "time"
 
 	"gopkg.in/dedis/cothority.v2"
 	"gopkg.in/dedis/cothority.v2/identity"
@@ -22,6 +23,8 @@ import (
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/log"
 	"gopkg.in/dedis/onet.v2/network"
+
+    "github.com/dedis/student_18_omniledger/omniledger/collection"
 )
 
 // Used for tests
@@ -90,47 +93,41 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainRespons
 	}
 
 	kp := key.NewKeyPair(cothority.Suite)
-    // Dummy assignments to make compiler happy.
-    // TODO: Fix after "Transaction" has been added as a field to
-    // CreateSkipchain.
+
+    tmpColl := collection.New(collection.Data{}, collection.Data{})
+    key := getKey(&req.Transaction)
+    tmpColl.Add(key, req.Transaction.Value)
+
+    mr := tmpColl.GetRoot()
 	data := &Data{
-        MerkleRoot: nil,
-        Transactions: []*Transaction{},
-        Timestamp: 0,
+        MerkleRoot: mr,
+        Transactions: []*Transaction{&req.Transaction},
+        Timestamp: time.Now().Unix(),
 	}
 
-	// replace this by something interacting with skipchain directly
-    var genesisBlock = skipchain.NewSkipBlock()
-    // begin copy from code in StoreSkipBlockSignature in skipchain
 	buf, err := network.Marshal(data)
 	if err != nil {
 		return nil, errors.New(
 			"Couldn't marshal data: " + err.Error())
 
 	}
+
+    var genesisBlock = skipchain.NewSkipBlock()
 	genesisBlock.Data = buf
-    // end copy
+
     var ssb = skipchain.StoreSkipBlock{NewBlock: genesisBlock} // TODO: Signature?
     ssbReply, err := s.skService().StoreSkipBlock(&ssb)
-    // identity: use skipchain instead
-    /*
-    // type CreateIdentityReply struct {
-    //     Genesis *skipchain.SkipBlock
-    // }
-	cir, err := s.idService().CreateIdentityInternal(&identity.CreateIdentity{
-		Data: data,
-	}, "", "")
-    */
 	if err != nil {
 		return nil, err
 	}
+
 	gid := string(ssbReply.Latest.SkipChainID())
-	// if we modify data as described above, we can just use it here.
-	// we can still use the genesisblock, but the one from skipchain
+
 	s.storage.DarcBlocks[gid] = &DarcBlock{
 		Latest:          data,
 		LatestSkipblock: ssbReply.Latest,
 	}
+    s.getCollection(ssbReply.Latest.SkipChainID()).coll = tmpColl
 	s.storage.Private[gid] = kp.Private
 	s.save()
 	return &CreateSkipchainResponse{
@@ -233,6 +230,10 @@ func (s *Service) GetValue(req *GetValue) (*GetValueResponse, error) {
 		Value:     &value,
 		Signature: &sig,
 	}, nil
+}
+
+func getKey(tx *lleap.Transaction) []byte {
+    return append(append(tx.Kind, []byte(":")...), tx.Key...)
 }
 
 func (s *Service) getCollection(id skipchain.SkipBlockID) *collectionDB {
