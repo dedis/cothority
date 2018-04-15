@@ -284,3 +284,15 @@ We are always happy to hear about your experiences with the cothority project.
 Feel free to contact us on our
 [mailing list](https://groups.google.com/forum/#!forum/cothority) or by
 [email](mailto:dedis@epfl.ch).
+
+# Who is using our code?
+
+This is a list of people outside of DEDIS who is using our codebase for research
+or applied projects. If you have an interesting project that you would like to
+have listed here, please contact us at [dedis@epfl.ch](mailto:dedis@epfl.ch).
+
+- [Unlynx](https://github.com/lca1/unlynx) - A decentralized privacy-preserving data sharing tool
+- [Medco](https://github.com/lca1/medco) - Privacy preserving medical data sharing
+- [ByzGen](http://byzgen.com/) - Tracking and secure storage of digital and hard assets
+- [PDCi2b2](https://github.com/JLRgithub/PDCi2b2) - Private Data Characterization for
+- [i2b2](https://www.i2b2.org/)
