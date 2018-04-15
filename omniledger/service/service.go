@@ -232,7 +232,7 @@ func (s *Service) GetValue(req *GetValue) (*GetValueResponse, error) {
 	}, nil
 }
 
-func getKey(tx *lleap.Transaction) []byte {
+func getKey(tx *Transaction) []byte {
     return append(append(tx.Kind, []byte(":")...), tx.Key...)
 }
 
