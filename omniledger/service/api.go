@@ -6,11 +6,11 @@ package service
  */
 
 import (
-	"crypto"
-	"crypto/rand"
-	"crypto/rsa"
-	"crypto/sha256"
-	"errors"
+	_ "crypto"
+	_ "crypto/rand"
+	_ "crypto/rsa"
+	_ "crypto/sha256"
+	_ "errors"
 
 	"gopkg.in/dedis/cothority.v2"
 	"gopkg.in/dedis/cothority.v2/skipchain"
@@ -33,12 +33,12 @@ func NewClient() *Client {
 
 // CreateSkipchain sets up a new skipchain to hold the key/value pairs. If
 // a key is given, it is used to authenticate towards the cothority.
-func (c *Client) CreateSkipchain(r *onet.Roster, key []byte) (*CreateSkipchainResponse, error) {
+func (c *Client) CreateSkipchain(r *onet.Roster, tx Transaction) (*CreateSkipchainResponse, error) {
 	reply := &CreateSkipchainResponse{}
 	err := c.SendProtobuf(r.List[0], &CreateSkipchain{
 		Version: CurrentVersion,
 		Roster:  *r,
-		Writers: &[][]byte{key},
+        Transaction: tx,
 	}, reply)
 	if err != nil {
 		return nil, err
@@ -47,23 +47,13 @@ func (c *Client) CreateSkipchain(r *onet.Roster, key []byte) (*CreateSkipchainRe
 }
 
 // SetKeyValue sets a key/value pair and returns the created skipblock.
-func (c *Client) SetKeyValue(r *onet.Roster, id skipchain.SkipBlockID, priv *rsa.PrivateKey,
-	key, value []byte) (*SetKeyValueResponse, error) {
+func (c *Client) SetKeyValue(r *onet.Roster, id skipchain.SkipBlockID,
+                                tx Transaction) (*SetKeyValueResponse, error) {
 	reply := &SetKeyValueResponse{}
-	hash := sha256.New()
-	hash.Write(key)
-	hash.Write(value)
-	hashed := hash.Sum(nil)[:]
-	sig, err := rsa.SignPKCS1v15(rand.Reader, priv, crypto.SHA256, hashed)
-	if err != nil {
-		return nil, errors.New("couldn't sign: " + err.Error())
-	}
-	err = c.SendProtobuf(r.List[0], &SetKeyValue{
+    err := c.SendProtobuf(r.List[0], &SetKeyValue{
 		Version:     CurrentVersion,
 		SkipchainID: id,
-		Key:         key,
-		Value:       value,
-		Signature:   sig,
+        Transaction: tx,
 	}, reply)
 	if err != nil {
 		return nil, err
