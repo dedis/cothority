@@ -107,9 +107,7 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainRespons
 
 	buf, err := network.Marshal(data)
 	if err != nil {
-		return nil, errors.New(
-			"Couldn't marshal data: " + err.Error())
-
+		return nil, errors.New("Couldn't marshal data: " + err.Error())
 	}
 
     var genesisBlock = skipchain.NewSkipBlock()
@@ -120,14 +118,14 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainRespons
 	if err != nil {
 		return nil, err
 	}
-
-	gid := string(ssbReply.Latest.SkipChainID())
+    skID := ssbReply.Latest.SkipChainID()
+	gid := string(skID)
 
 	s.storage.DarcBlocks[gid] = &DarcBlock{
 		Latest:          data,
 		LatestSkipblock: ssbReply.Latest,
 	}
-    s.getCollection(ssbReply.Latest.SkipChainID()).coll = tmpColl
+    s.getCollection(skID).coll = tmpColl
 	s.storage.Private[gid] = kp.Private
 	s.save()
 	return &CreateSkipchainResponse{
@@ -163,10 +161,11 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 
 	// Store the pair in the collection
 	coll := s.getCollection(req.SkipchainID)
-	if _, _, err := coll.GetValue(req.Key); err == nil {
+    key := getKey(&req.Transaction)
+	if _, _, err := coll.GetValue(key); err == nil {
 		return nil, errors.New("cannot overwrite existing value")
 	}
-	err := coll.Store(req.Key, req.Value, req.Signature)
+	err := coll.Store(key, req.Transaction.Value, req.Transaction.Signature)
 	if err != nil {
 		return nil, errors.New("error while storing in collection: " + err.Error())
 	}
