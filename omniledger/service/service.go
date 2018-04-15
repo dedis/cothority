@@ -159,6 +159,7 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
     // Verify darc
     // Note: The verify function needs the collection to be up to date.
     // TODO: Make sure that is the case.
+    /*
 	log.Lvl1("Verifying signature")
     err := s.getCollection(req.SkipchainID).verify(&req.Transaction)
     if err != nil {
@@ -166,6 +167,7 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
         return nil, err
     }
 	log.Lvl1("signature verification succeeded")
+    */
 
 	// Store the pair in a copy of the collection to get the root hash.
     // Once the block is accepted by the cothority, we store it in the real
