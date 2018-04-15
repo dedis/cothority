@@ -1,7 +1,7 @@
 // Package service implements the lleap service using the collection library to
 // handle the merkle-tree. Each call to SetKeyValue updates the Merkle-tree and
-// creates a new block containing the root of the Merkle-tree plus the new value
-// that has been stored last in the Merkle-tree.
+// creates a new block containing the root of the Merkle-tree plus the new 
+// value that has been stored last in the Merkle-tree.
 package service
 
 import (
@@ -82,12 +82,13 @@ type storage struct {
 	sync.Mutex
 }
 
-// CreateSkipchain asks the cisc-service to create a new skipchain ready to store
-// key/value pairs. If it is given exactly one writer, this writer will be stored
-// in the skipchain.
+// CreateSkipchain asks the cisc-service to create a new skipchain ready to 
+// store key/value pairs. If it is given exactly one writer, this writer will 
+// be stored in the skipchain.
 // For faster access, all data is also stored locally in the Service.storage
 // structure.
-func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainResponse, error) {
+func (s *Service) CreateSkipchain(req *CreateSkipchain) (
+                        *CreateSkipchainResponse, error) {
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
@@ -117,7 +118,8 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainRespons
     var genesisBlock = skipchain.NewSkipBlock()
 	genesisBlock.Data = buf
 
-    var ssb = skipchain.StoreSkipBlock{NewBlock: genesisBlock} // TODO: Signature?
+    // TODO: Signature?
+    var ssb = skipchain.StoreSkipBlock{NewBlock: genesisBlock}
     ssbReply, err := s.skService().StoreSkipBlock(&ssb)
 	if err != nil {
 		return nil, err
@@ -132,7 +134,8 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainRespons
 
     err = s.getCollection(skID).Store(key, req.Transaction.Value, sigBuf)
 	if err != nil {
-		return nil, errors.New("error while storing in collection: " + err.Error())
+		return nil, errors.New(
+                        "error while storing in collection: " + err.Error())
 	}
     s.storage.Private[gid] = kp.Private
 	s.save()
@@ -213,7 +216,8 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
     // to our collectionDB.
     err = coll.Store(key, req.Transaction.Value, sigBuf)
 	if err != nil {
-		return nil, errors.New("error while storing in collection: " + err.Error())
+		return nil, errors.New(
+                        "error while storing in collection: " + err.Error())
 	}
 
     s.storage.DarcBlocks[gid] = &DarcBlock{
@@ -229,7 +233,8 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 	}, nil
 }
 
-// GetValue looks up the key in the given skipchain and returns the corresponding value.
+// GetValue looks up the key in the given skipchain and returns the 
+// corresponding value.
 func (s *Service) GetValue(req *GetValue) (*GetValueResponse, error) {
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
@@ -313,7 +318,8 @@ func (s *Service) tryLoad() error {
 
 // newService receives the context that holds information about the node it's
 // running on. Saving and loading can be done using the context. The data will
-// be stored in memory for tests and simulations, and on disk for real deployments.
+// be stored in memory for tests and simulations, and on disk for real
+// deployments.
 func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
