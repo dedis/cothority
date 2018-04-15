@@ -176,7 +176,7 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 	if err != nil {
 		return nil, errors.New("Couldn't marshal Signature: " + err.Error())
 	}
-	err := coll.Store(key, req.Transaction.Value, sigBuf)
+	err = coll.Store(key, req.Transaction.Value, sigBuf)
 	if err != nil {
 		return nil, errors.New("error while storing in collection: " + err.Error())
 	}
