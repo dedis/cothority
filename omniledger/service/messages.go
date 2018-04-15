@@ -71,13 +71,8 @@ type SetKeyValue struct {
 	Version Version
 	// SkipchainID is the hash of the first skipblock
 	SkipchainID skipchain.SkipBlockID
-	// Key where the value is stored
-	Key []byte
-	// Value, if Writers were present in CreateSkipchain, the value should be
-	// signed by one of the keys.
-	Value []byte
-	// Signature is an RSA-sha384 signature on the key/value pair concatenated
-	Signature []byte
+    // Transaction to be apllied to the kv-store
+    Transaction Transaction
 }
 
 // SetKeyValueResponse gives the timestamp and the skipblock-id
