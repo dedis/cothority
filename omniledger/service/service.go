@@ -18,7 +18,7 @@ import (
 	"gopkg.in/dedis/cothority.v2/identity"
 	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/kyber.v2"
-	"gopkg.in/dedis/kyber.v2/sign/schnorr"
+	_ "gopkg.in/dedis/kyber.v2/sign/schnorr"
 	"gopkg.in/dedis/kyber.v2/util/key"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/log"
@@ -169,9 +169,6 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 	log.Lvl1("signature verification succeeded")
     */
 
-	// Store the pair in a copy of the collection to get the root hash.
-    // Once the block is accepted by the cothority, we store it in the real
-    // collectionBD.
     coll := s.getCollection(req.SkipchainID)
     key := getKey(&req.Transaction)
 	if _, _, err := coll.GetValue(key); err == nil {
@@ -181,59 +178,54 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 	if err != nil {
 		return nil, errors.New("Couldn't marshal Signature: " + err.Error())
 	}
-    /* TODO: Do this later, once it is clear the block is accepted
-	err = coll.Store(key, req.Transaction.Value, sigBuf)
-	if err != nil {
-		return nil, errors.New("error while storing in collection: " + err.Error())
-	}
-    */
 
+	// Store the pair in a copy of the collection to get the root hash.
+    // Once the block is accepted by the cothority, we store it in the real
+    // collectionBD.
     var collCopy collection.Collection
 	collCopy = s.getCollection(req.SkipchainID).coll
     collCopy.Add(key, req.Transaction.Value, sigBuf)
     mr := collCopy.GetRoot()
-
-	// Update the identity
-	prop := idb.Latest.Copy()
-	prop.Storage[keyMerkleRoot] = string(coll.RootHash())
-	prop.Storage[keyNewKey] = string(req.Key)
-	prop.Storage[keyNewValue] = string(req.Value)
-	// TODO: Should also store the signature.
-	// PL: What does this function do? What is the equivalent function to
-	// interface directly with skipchain?
-	_, err = s.idService().ProposeSend(&identity.ProposeSend{
-		ID:      identity.ID(req.SkipchainID),
-		Propose: prop,
-	})
-	if err != nil {
-		return nil, err
+	data := &Data{
+        MerkleRoot: mr,
+        Transactions: []*Transaction{&req.Transaction},
+        Timestamp: time.Now().Unix(),
 	}
 
-	hash, err := prop.Hash(cothority.Suite)
+	buf, err := network.Marshal(data)
 	if err != nil {
+		return nil, errors.New("Couldn't marshal data: " + err.Error())
+	}
+
+    newBlock := s.storage.DarcBlocks[gid].LatestSkipblock.Copy()
+	newBlock.Data = buf
+
+    var ssb = skipchain.StoreSkipBlock{
+                            NewBlock: newBlock,
+                            TargetSkipChainID: req.SkipchainID,
+                        } // TODO: Signature?
+    ssbReply, err := s.skService().StoreSkipBlock(&ssb)
+    if err != nil {
 		return nil, err
 	}
-	sig, err := schnorr.Sign(cothority.Suite, priv, hash)
+
+    // Now we know the block is accepted, so we can apply the the Transaction
+    // to our collectionDB.
+    err = coll.Store(key, req.Transaction.Value, sigBuf)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("error while storing in collection: " + err.Error())
 	}
-	// See the PL above
-	resp, err := s.idService().ProposeVote(&identity.ProposeVote{
-		ID:        identity.ID(req.SkipchainID),
-		Signer:    "service",
-		Signature: sig,
-	})
-	if err != nil {
-		return nil, err
+
+    s.storage.DarcBlocks[gid] = &DarcBlock{
+		Latest:          data,
+		LatestSkipblock: ssbReply.Latest,
 	}
-	if resp.Data == nil {
-		return nil, errors.New("couldn't store new skipblock")
-	}
-	timestamp := int64(resp.Data.Index)
+
+    hash := ssbReply.Latest.CalculateHash()
 	return &SetKeyValueResponse{
 		Version:     CurrentVersion,
-		Timestamp:   &timestamp,
-		SkipblockID: &resp.Data.Hash,
+		Timestamp:   &data.Timestamp,
+		SkipblockID: &hash,
 	}, nil
 }
 
