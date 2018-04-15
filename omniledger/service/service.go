@@ -96,7 +96,11 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainRespons
 
     tmpColl := collection.New(collection.Data{}, collection.Data{})
     key := getKey(&req.Transaction)
-    tmpColl.Add(key, req.Transaction.Value, req.Transaction.Signature)
+    sigBuf, err := network.Marshal(req.Transaction.Signature)
+	if err != nil {
+		return nil, errors.New("Couldn't marshal Signature: " + err.Error())
+	}
+    tmpColl.Add(key, req.Transaction.Value, sigBuf)
 
     mr := tmpColl.GetRoot()
 	data := &Data{
@@ -125,10 +129,7 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (*CreateSkipchainRespons
 		Latest:          data,
 		LatestSkipblock: ssbReply.Latest,
 	}
-    sigBuf, err := network.Marshal(req.Transaction.Signature)
-	if err != nil {
-		return nil, errors.New("Couldn't marshal Signature: " + err.Error())
-	}
+
     err = s.getCollection(skID).Store(key, req.Transaction.Value, sigBuf)
 	if err != nil {
 		return nil, errors.New("error while storing in collection: " + err.Error())
@@ -166,8 +167,10 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
     }
 	log.Lvl1("signature verification succeeded")
 
-	// Store the pair in the collection
-	coll := s.getCollection(req.SkipchainID)
+	// Store the pair in a copy of the collection to get the root hash.
+    // Once the block is accepted by the cothority, we store it in the real
+    // collectionBD.
+    coll := s.getCollection(req.SkipchainID)
     key := getKey(&req.Transaction)
 	if _, _, err := coll.GetValue(key); err == nil {
 		return nil, errors.New("cannot overwrite existing value")
@@ -176,10 +179,17 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 	if err != nil {
 		return nil, errors.New("Couldn't marshal Signature: " + err.Error())
 	}
+    /* TODO: Do this later, once it is clear the block is accepted
 	err = coll.Store(key, req.Transaction.Value, sigBuf)
 	if err != nil {
 		return nil, errors.New("error while storing in collection: " + err.Error())
 	}
+    */
+
+    var collCopy collection.Collection
+	collCopy = s.getCollection(req.SkipchainID).coll
+    collCopy.Add(key, req.Transaction.Value, sigBuf)
+    mr := collCopy.GetRoot()
 
 	// Update the identity
 	prop := idb.Latest.Copy()
