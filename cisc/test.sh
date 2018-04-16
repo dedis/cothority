@@ -29,29 +29,50 @@ main(){
   createFinal 2 > /dev/null
   createToken 2
 
-  test Build
-  test Link
-  test Final
-  test ClientSetup
-  test ScCreate
-  test ScCreate2
-  test ScCreate3
-  test DataList
-  test DataVote
-  test DataRoster
-  test IdConnect
-  test IdLeave
-  test KeyAdd
-  test KeyFile
-  test KeyAdd2
-  test KeyAddWeb
-  test KeyDel
-  test SSHAdd
-  test SSHDel
-  test Follow
-  test SymLink
-  test Revoke
+  # test Build
+  # test Link
+  # test Final
+  # test ClientSetup
+  # test ScCreate
+  # test ScCreate2
+  # test ScCreate3
+  # test DataList
+  # test DataVote
+  # test DataRoster
+  # test IdConnect
+  # test IdLeave
+  # test KeyAdd
+  # test KeyFile
+  # test KeyAdd2
+  # test KeyAddWeb
+  # test KeyDel
+  # test SSHAdd
+  # test SSHDel
+  # test Follow
+  # test SymLink
+  # test Revoke
+  test RosterEdit
   stopTest
+}
+
+testRosterEdit(){
+  runCoBG `seq 3`
+  runAddToken 3
+  runDbgCl 0 1 skipchain create -name client1 co1/public.toml
+  runGrepSed ID "s/.* //" runDbgCl 2 1 data list
+  ID=$SED
+  dbgOut "ID is" $ID
+  testGrep ${addr[1]} runDbgCl 1 1 skipchain roster show
+  testNGrep ${addr[2]} runDbgCl 1 1 skipchain roster show
+  testOK runCl 1 skipchain roster add --addr ${addr[2]}
+  testGrep ${addr[2]} runDbgCl 1 1 skipchain roster show
+  testFail runCl 1 skipchain roster remove --addr ${addr[3]}
+  testOK runCl 1 skipchain roster remove --addr ${addr[2]}
+  testNGrep ${addr[2]} runDbgCl 1 1 skipchain roster show
+  testOK runCl 1 skipchain roster add --toml co2/public.toml
+  testGrep ${addr[2]} runDbgCl 1 1 skipchain roster show
+  testOK runCl 1 skipchain roster set public.toml
+  testGrep ${addr[3]} runDbgCl 1 1 skipchain roster show
 }
 
 testRevoke(){
@@ -304,7 +325,7 @@ testDataRoster(){
   runAddPublic 3 $pub1
   testOK runCl 1 skipchain create co1/public.toml
   testNGrep 2004 runCl 1 data list
-  testOK runCl 1 skipchain roster public.toml
+  testOK runCl 1 skipchain roster set public.toml
   testGrep 2004 runCl 1 data list
   testOK runCl 1 kv add one two
 }
