@@ -374,6 +374,7 @@ func TestVerificationFunction(t *testing.T) {
 	// Hack: create own data-structure with twice our signature
 	// and send it directly to the skipblock. Without a proper
 	// verification-function, this would pass.
+	log.Lvl1("hack data in conode")
 	data2 := c1.Data.Copy()
 	kp2 := key.NewKeyPair(tSuite)
 	data2.Device["two2"] = &Device{kp2.Public}
@@ -386,24 +387,32 @@ func TestVerificationFunction(t *testing.T) {
 	data2.Votes["two2"] = sig
 	id := s0.getIdentityStorage(c1.ID)
 	require.NotNil(t, id, "Didn't find identity")
-	_, err = s0.skipchain.StoreSkipBlock(id.LatestSkipblock, nil, data2)
+	sb := id.LatestSkipblock.Copy()
+	sb.GenesisID = sb.SkipChainID()
+	_, err = s0.storeSkipBlock(sb, data2)
 	require.NotNil(t, err, "Skipchain accepted our fake block!")
 
+	log.Lvl1("Trying wrong signature")
 	// Gibberish signature
 	sig, err = schnorr.Sign(tSuite, c1.Private, hash)
 	log.ErrFatal(err)
 	// Change one bit in the signature
 	sig[len(sig)-1] ^= 1
 	data2.Votes["one1"] = sig
-	_, err = s0.skipchain.StoreSkipBlock(id.LatestSkipblock, nil, data2)
+	sb = id.LatestSkipblock.Copy()
+	sb.GenesisID = sb.SkipChainID()
+	_, err = s0.storeSkipBlock(sb, data2)
 	require.NotNil(t, err, "Skipchain accepted our fake signature!")
 
 	// Unhack: verify that the correct way of doing it works, even if
 	// we bypass the identity.
+	log.Lvl1("Using all correct now")
 	sig, err = schnorr.Sign(tSuite, c1.Private, hash)
 	log.ErrFatal(err)
 	data2.Votes["one1"] = sig
-	_, err = s0.skipchain.StoreSkipBlock(id.LatestSkipblock, nil, data2)
+	sb = id.LatestSkipblock.Copy()
+	sb.GenesisID = sb.SkipChainID()
+	_, err = s0.storeSkipBlock(sb, data2)
 	log.ErrFatal(err)
 	log.ErrFatal(c1.DataUpdate())
 
@@ -432,8 +441,8 @@ func createIdentity(l *onet.LocalTest, services []onet.Service, roster *onet.Ros
 	}
 
 	c := NewTestIdentity(roster, 50, name, l, kp1)
-	log.Error("popauth", PoPAuth)
-	log.Error("set", set)
+	log.Lvl2("popauth", PoPAuth)
+	log.Lvl2("set", set)
 	log.ErrFatal(c.CreateIdentity(PoPAuth, set, kp1.Private))
 	return c
 }
