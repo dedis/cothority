@@ -40,7 +40,11 @@ to work with. You can manage the connections with `cisc skipchain` followed by:
 	   * Public keys - no privacy, but no pop-party visit is required
   * Join - will ask the devices of the remote skipwchain to vote on the inclusion of this device in the skipchain
   * Leave - remove this device from an identity
-  * Roster - change the roster of an identity
+  * Roster - modify the roster of an identity
+    * Show - shows the current roster
+    * Set - sets the roster to a new roster
+    * Add - adds a new node to the roster
+    * Remove - removes a node from the roster
   * List - show all stored skipchains
   * QRCode - prints a QRCode on the terminal so a remote device can contact
 

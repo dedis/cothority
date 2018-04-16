@@ -153,9 +153,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for i, h := range hosts {
 		log.Lvlf2("%x", skipchainSID)
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
-		m, err := s.GetUpdateChain(&GetUpdateChain{LatestID: sbRoot.Hash})
+		sb, err := s.GetUpdateChain(&GetUpdateChain{LatestID: sbRoot.Hash})
 		log.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
-		sb := m.(*GetUpdateChainReply)
 		log.Lvl2(s.Context)
 		if len(sb.Update) != 1 {
 			// we expect only the first block
@@ -177,8 +176,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for _, h := range hosts {
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
 
-		m, err := s.GetUpdateChain(&GetUpdateChain{LatestID: sbInter.Hash})
-		sb := m.(*GetUpdateChainReply)
+		sb, err := s.GetUpdateChain(&GetUpdateChain{LatestID: sbInter.Hash})
 
 		log.ErrFatal(err)
 		if len(sb.Update) != 1 {
@@ -889,7 +887,7 @@ func checkMLUpdate(service *Service, root, latest *SkipBlock, base, height int) 
 	if err != nil {
 		return err
 	}
-	updates := chain.(*GetUpdateChainReply).Update
+	updates := chain.Update
 	genesis := updates[0]
 	if len(genesis.ForwardLink) != height {
 		return errors.New("genesis-block doesn't have height " + strconv.Itoa(height))

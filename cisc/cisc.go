@@ -17,9 +17,11 @@ import (
 	"path"
 	"strings"
 
+	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/identity"
 	"github.com/dedis/cothority/pop/service"
+	status "github.com/dedis/cothority/status/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/encoding"
@@ -366,7 +368,28 @@ func scQrcode(c *cli.Context) error {
 	return nil
 }
 
-func scRoster(c *cli.Context) error {
+func scRosterShow(c *cli.Context) error {
+	cfg := loadConfigOrFail(c)
+	id, err := cfg.findSC(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
+	if id == nil {
+		scList(c)
+		return errors.New("Please chose one of the existing skipchain-ids")
+	}
+	log.Infof("Roster for %x:", id.ID)
+	var buf bytes.Buffer
+	err = toml.NewEncoder(&buf).Encode(id.Roster().Toml(cothority.Suite))
+	if err != nil {
+		log.Error(err)
+	} else {
+		log.Info(buf.String())
+	}
+	return nil
+}
+
+func scRosterSet(c *cli.Context) error {
 	cfg := loadConfigOrFail(c)
 	id, err := cfg.findSC(c.Args().Get(1))
 	if err != nil {
@@ -383,6 +406,88 @@ func scRoster(c *cli.Context) error {
 	log.Info("Proposed new roster for skipchain")
 	if id.Proposed == nil {
 		log.Info("New roster has been accepted")
+	}
+	return nil
+}
+
+func scRosterAdd(c *cli.Context) error {
+	si := getServerIdentity(c)
+	if si == nil {
+		return errors.New("Please give either --toml or --addr as argument")
+	}
+
+	cfg := loadConfigOrFail(c)
+	id, err := cfg.findSC(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
+	if id == nil {
+		scList(c)
+		return errors.New("Please chose one of the existing skipchain-ids")
+	}
+
+	prop := id.GetProposed()
+	prop.Roster = onet.NewRoster(append(id.Roster().List, si))
+	cfg.proposeSendVoteUpdate(id, prop)
+	log.Info("Proposed new roster for skipchain")
+	if id.Proposed == nil {
+		log.Info("New roster has been accepted")
+	}
+	return nil
+}
+
+func scRosterRemove(c *cli.Context) error {
+	si := getServerIdentity(c)
+	if si == nil {
+		return errors.New("Please give either --toml or --addr as argument")
+	}
+	cfg := loadConfigOrFail(c)
+	id, err := cfg.findSC(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
+	if id == nil {
+		scList(c)
+		return errors.New("Please chose one of the existing skipchain-ids")
+	}
+
+	prop := id.GetProposed()
+	roster := onet.NewRoster(id.Roster().List)
+	index := -1
+	for i, s := range roster.List {
+		if s.Equal(si) {
+			index = i
+		}
+	}
+	if index == -1 {
+		return errors.New("Couldn't find this node in the roster")
+	}
+	roster.List = append(roster.List[0:index], roster.List[index+1:]...)
+	prop.Roster = roster
+	cfg.proposeSendVoteUpdate(id, prop)
+	log.Info("Proposed new roster for skipchain")
+	if id.Proposed == nil {
+		log.Info("New roster has been accepted")
+	}
+	return nil
+}
+
+func getServerIdentity(c *cli.Context) *network.ServerIdentity {
+	if file := c.String("toml"); file != "" {
+		// Suppose it's a roster file
+		g, err := getGroupString(file)
+		log.ErrFatal(err)
+		return g.Roster.List[0]
+	}
+	if addr := c.String("addr"); addr != "" {
+		// Go and get this conode's public key
+		if !strings.Contains(addr, "://") {
+			addr = "tls://" + addr
+		}
+		si := network.NewServerIdentity(nil, network.Address(addr))
+		resp, err := status.NewClient().Request(si)
+		log.ErrFatal(err)
+		return resp.ServerIdentity
 	}
 	return nil
 }
