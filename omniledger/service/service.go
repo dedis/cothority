@@ -38,7 +38,7 @@ func init() {
 	var err error
 	lleapID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
-	network.RegisterMessage(&storage{})
+	network.RegisterMessages(&storage{}, &Data{},)
 }
 
 // Service is our lleap-service
@@ -97,7 +97,7 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (
 
     tmpColl := collection.New(collection.Data{}, collection.Data{})
     key := getKey(&req.Transaction)
-    sigBuf, err := network.Marshal(req.Transaction.Signature)
+    sigBuf, err := network.Marshal(&req.Transaction.Signature)
 	if err != nil {
 		return nil, errors.New("Couldn't marshal Signature: " + err.Error())
 	}
@@ -117,6 +117,9 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (
 
     var genesisBlock = skipchain.NewSkipBlock()
 	genesisBlock.Data = buf
+	genesisBlock.Roster = &req.Roster
+	genesisBlock.MaximumHeight = 1
+	genesisBlock.BaseHeight = 1
 
     // TODO: Signature?
     var ssb = skipchain.StoreSkipBlock{NewBlock: genesisBlock}
@@ -177,7 +180,7 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 	if _, _, err := coll.GetValue(key); err == nil {
 		return nil, errors.New("cannot overwrite existing value")
 	}
-    sigBuf, err := network.Marshal(req.Transaction.Signature)
+    sigBuf, err := network.Marshal(&req.Transaction.Signature)
 	if err != nil {
 		return nil, errors.New("Couldn't marshal Signature: " + err.Error())
 	}
@@ -240,7 +243,8 @@ func (s *Service) GetValue(req *GetValue) (*GetValueResponse, error) {
 		return nil, errors.New("version mismatch")
 	}
 
-	value, sig, err := s.getCollection(req.SkipchainID).GetValue(req.Key)
+    key := append(append(req.Kind, []byte(":")...), req.Key...)
+	value, sig, err := s.getCollection(req.SkipchainID).GetValue(key)
 	if err != nil {
 		return nil, errors.New("couldn't get value for key: " + err.Error())
 	}

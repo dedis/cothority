@@ -101,8 +101,11 @@ func TestService_Store(t *testing.T) {
 		_, err := service.SetKeyValue(&SetKeyValue{
 			Version:     CurrentVersion,
 			SkipchainID: genesis.Hash,
-			Key:         key,
-			Value:       value,
+            Transaction: Transaction{
+		            Key:         key,
+                    Kind: []byte("testKind"),
+		            Value:       value,
+                },
 		})
 		require.Nil(t, err)
 	}
@@ -112,6 +115,7 @@ func TestService_Store(t *testing.T) {
 		gvResp, err := service.GetValue(&GetValue{
 			Version:     CurrentVersion,
 			SkipchainID: genesis.Hash,
+            Kind: []byte("testKind"),
 			Key:         []byte(key),
 		})
 		require.Nil(t, err)
@@ -129,6 +133,7 @@ func TestService_Store(t *testing.T) {
 			Version:     CurrentVersion,
 			SkipchainID: genesis.Hash,
 			Key:         []byte(key),
+            Kind: []byte("testKind"),
 		})
 		require.Nil(t, err)
 		require.Equal(t, 0, bytes.Compare(value, *gvResp.Value))

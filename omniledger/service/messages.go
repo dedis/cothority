@@ -18,6 +18,7 @@ func init() {
 		&CreateSkipchain{}, &CreateSkipchainResponse{},
 		&SetKeyValue{}, &SetKeyValueResponse{},
 		&GetValue{}, &GetValueResponse{},
+        &Transaction{}, &darc.Signature{},
 	)
 }
 
@@ -94,6 +95,7 @@ type GetValue struct {
 	SkipchainID skipchain.SkipBlockID
 	// Key to retrieve
 	Key []byte
+	Kind []byte
 }
 
 // GetValueResponse returns the value or an error if the key hasn't been found.
