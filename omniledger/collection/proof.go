@@ -1,26 +1,28 @@
 package collection
 
-import "errors"
-import csha256 "crypto/sha256"
-import "github.com/dedis/protobuf"
+import (
+	"crypto/sha256"
+	"errors"
+	"github.com/dedis/protobuf"
+)
 
 // dump
 
 type dump struct {
-	Label [csha256.Size]byte
-
 	Key    []byte   `protobuf:"opt"`
 	Values [][]byte `protobuf:"opt"`
 
 	Children struct {
-		Left  [csha256.Size]byte
-		Right [csha256.Size]byte
+		Left  [sha256.Size]byte
+		Right [sha256.Size]byte
 	}
+
+	Label [sha256.Size]byte
 }
 
 // Constructors
 
-func dumpnode(node *node) (dump dump) {
+func dumpNode(node *node) (dump dump) {
 	dump.Label = node.label
 	dump.Values = node.values
 
@@ -36,37 +38,40 @@ func dumpnode(node *node) (dump dump) {
 
 // Getters
 
-func (this *dump) leaf() bool {
-	var empty [csha256.Size]byte
-	return (this.Children.Left == empty) && (this.Children.Right == empty)
+func (d *dump) leaf() bool {
+	var empty [sha256.Size]byte
+	return (d.Children.Left == empty) && (d.Children.Right == empty)
 }
 
 // Methods
 
-func (this *dump) consistent() bool {
-	if this.leaf() {
-		return this.Label == sha256(true, this.Key[:], this.Values)
+func (d *dump) consistent() bool {
+	var toEncode toHash
+	if d.leaf() {
+		toEncode = toHash{true, d.Key, d.Values, [sha256.Size]byte{}, [sha256.Size]byte{}}
 	} else {
-		return this.Label == sha256(false, this.Values, this.Children.Left[:], this.Children.Right[:])
+		toEncode = toHash{false, []byte{}, d.Values, d.Children.Left, d.Children.Right}
 	}
+
+	return d.Label == toEncode.hash()
 }
 
-func (this *dump) to(node *node) {
-	if !(node.known) && (node.label == this.Label) {
+func (d *dump) to(node *node) {
+	if !(node.known) && (node.label == d.Label) {
 		node.known = true
-		node.label = this.Label
-		node.values = this.Values
+		node.label = d.Label
+		node.values = d.Values
 
-		if this.leaf() {
-			node.key = this.Key
+		if d.leaf() {
+			node.key = d.Key
 		} else {
 			node.branch()
 
 			node.children.left.known = false
 			node.children.right.known = false
 
-			node.children.left.label = this.Children.Left
-			node.children.right.label = this.Children.Right
+			node.children.left.label = d.Children.Left
+			node.children.right.label = d.Children.Right
 		}
 	}
 }
@@ -80,6 +85,7 @@ type step struct {
 
 // Proof
 
+// Proof is an object representing the proof of presence or absence of a given key in a collection.
 type Proof struct {
 	collection *Collection
 	key        []byte
@@ -90,62 +96,66 @@ type Proof struct {
 
 // Getters
 
-func (this Proof) Key() []byte {
-	return this.key
+// Key returns the key the proof proves the presence or absence.
+func (p Proof) Key() []byte {
+	return p.key
 }
 
 // Methods
 
-func (this Proof) Match() bool {
-	if len(this.steps) == 0 {
+//Match returns true if the Proof asserts the presence of the key in the collection
+// and false if it asserts its absence..
+func (p Proof) Match() bool {
+	if len(p.steps) == 0 {
 		return false
 	}
 
-	path := sha256(this.key)
-	depth := len(this.steps) - 1
+	path := sha256.Sum256(p.key)
+	depth := len(p.steps) - 1
 
 	if bit(path[:], depth) {
-		return equal(this.key, this.steps[depth].Right.Key)
-	} else {
-		return equal(this.key, this.steps[depth].Left.Key)
+		return equal(p.key, p.steps[depth].Right.Key)
 	}
+	return equal(p.key, p.steps[depth].Left.Key)
 }
 
-func (this Proof) Values() ([]interface{}, error) {
-	if len(this.steps) == 0 {
-		return []interface{}{}, errors.New("Proof has no steps.")
+// Values returns a copy of the values of the key which presence is proved by the Proof.
+// It returns an error if the Proof proves the absence of the key.
+func (p Proof) Values() ([]interface{}, error) {
+	if len(p.steps) == 0 {
+		return []interface{}{}, errors.New("proof has no steps")
 	}
 
-	path := sha256(this.key)
-	depth := len(this.steps) - 1
+	path := sha256.Sum256(p.key)
+	depth := len(p.steps) - 1
 
 	match := false
 	var rawvalues [][]byte
 
 	if bit(path[:], depth) {
-		if equal(this.key, this.steps[depth].Right.Key) {
+		if equal(p.key, p.steps[depth].Right.Key) {
 			match = true
-			rawvalues = this.steps[depth].Right.Values
+			rawvalues = p.steps[depth].Right.Values
 		}
 	} else {
-		if equal(this.key, this.steps[depth].Left.Key) {
+		if equal(p.key, p.steps[depth].Left.Key) {
 			match = true
-			rawvalues = this.steps[depth].Left.Values
+			rawvalues = p.steps[depth].Left.Values
 		}
 	}
 
 	if !match {
-		return []interface{}{}, errors.New("No match found.")
+		return []interface{}{}, errors.New("no match found")
 	}
 
-	if len(rawvalues) != len(this.collection.fields) {
-		return []interface{}{}, errors.New("Wrong number of values.")
+	if len(rawvalues) != len(p.collection.fields) {
+		return []interface{}{}, errors.New("wrong number of values")
 	}
 
 	var values []interface{}
 
 	for index := 0; index < len(rawvalues); index++ {
-		value, err := this.collection.fields[index].Decode(rawvalues[index])
+		value, err := p.collection.fields[index].Decode(rawvalues[index])
 
 		if err != nil {
 			return []interface{}{}, err
@@ -159,31 +169,31 @@ func (this Proof) Values() ([]interface{}, error) {
 
 // Private methods
 
-func (this Proof) consistent() bool {
-	if len(this.steps) == 0 {
+func (p Proof) consistent() bool {
+	if len(p.steps) == 0 {
 		return false
 	}
 
-	if !(this.root.consistent()) {
+	if !(p.root.consistent()) {
 		return false
 	}
 
-	cursor := &(this.root)
-	path := sha256(this.key)
+	cursor := &(p.root)
+	path := sha256.Sum256(p.key)
 
-	for depth := 0; depth < len(this.steps); depth++ {
-		if (cursor.Children.Left != this.steps[depth].Left.Label) || (cursor.Children.Right != this.steps[depth].Right.Label) {
+	for depth := 0; depth < len(p.steps); depth++ {
+		if (cursor.Children.Left != p.steps[depth].Left.Label) || (cursor.Children.Right != p.steps[depth].Right.Label) {
 			return false
 		}
 
-		if !(this.steps[depth].Left.consistent()) || !(this.steps[depth].Right.consistent()) {
+		if !(p.steps[depth].Left.consistent()) || !(p.steps[depth].Right.consistent()) {
 			return false
 		}
 
 		if bit(path[:], depth) {
-			cursor = &(this.steps[depth].Right)
+			cursor = &(p.steps[depth].Right)
 		} else {
-			cursor = &(this.steps[depth].Left)
+			cursor = &(p.steps[depth].Left)
 		}
 	}
 
@@ -194,7 +204,9 @@ func (this Proof) consistent() bool {
 
 // Methods (collection) (serialization)
 
-func (this *Collection) Serialize(proof Proof) []byte {
+// Serialize serialize a proof.
+// It transforms a given Proof into an array of byte, to allow easy exchange of proof, for example on a network.
+func (c *Collection) Serialize(proof Proof) []byte {
 	serializable := struct {
 		Key   []byte
 		Root  dump
@@ -205,18 +217,21 @@ func (this *Collection) Serialize(proof Proof) []byte {
 	return buffer
 }
 
-func (this *Collection) Deserialize(buffer []byte) (Proof, error) {
+// Deserialize is the inverse of serialize.
+// It tansforms back a byte representation of a proof to a Proof object.
+// It will generate an error if the given byte array doesn't represent a Proof.
+func (c *Collection) Deserialize(buffer []byte) (Proof, error) {
 	deserializable := struct {
 		Key   []byte
 		Root  dump
 		Steps []step
 	}{}
 
-	error := protobuf.Decode(buffer, &deserializable)
+	err := protobuf.Decode(buffer, &deserializable)
 
-	if error != nil {
-		return Proof{}, error
+	if err != nil {
+		return Proof{}, err
 	}
 
-	return Proof{this, deserializable.Key, deserializable.Root, deserializable.Steps}, nil
+	return Proof{c, deserializable.Key, deserializable.Root, deserializable.Steps}, nil
 }

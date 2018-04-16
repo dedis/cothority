@@ -6,10 +6,10 @@ type flag struct {
 
 // Methods
 
-func (this *flag) Enable() {
-	this.value = true
+func (f *flag) Enable() {
+	f.value = true
 }
 
-func (this *flag) Disable() {
-	this.value = false
+func (f *flag) Disable() {
+	f.value = false
 }

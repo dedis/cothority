@@ -1,6 +1,8 @@
 package collection
 
-import csha256 "crypto/sha256"
+import "crypto/sha256"
+
+// utility functions for slices of bytes
 
 func equal(lho []byte, rho []byte) bool {
 	if len(lho) != len(rho) {
@@ -17,23 +19,24 @@ func equal(lho []byte, rho []byte) bool {
 }
 
 func bit(buffer []byte, index int) bool {
-	byteidx := uint(index) / 8
-	bitidx := 7 - (uint(index) % 8)
+	byteIdx := uint(index) / 8
+	bitIdx := 7 - (uint(index) % 8)
 
-	return ((buffer[byteidx] & (uint8(1) << bitidx)) != 0)
+	return ((buffer[byteIdx] & (uint8(1) << bitIdx)) != 0)
 }
 
-func setbit(buffer []byte, index int, value bool) {
-	byteidx := uint(index) / 8
-	bitidx := 7 - (uint(index) % 8)
+func setBit(buffer []byte, index int, value bool) {
+	byteIdx := uint(index) / 8
+	bitIdx := 7 - (uint(index) % 8)
 
 	if value {
-		buffer[byteidx] |= (uint8(1) << bitidx)
+		buffer[byteIdx] |= (uint8(1) << bitIdx)
 	} else {
-		buffer[byteidx] &^= (uint8(1) << bitidx)
+		buffer[byteIdx] &^= (uint8(1) << bitIdx)
 	}
 }
 
+// identical up to some bits
 func match(lho []byte, rho []byte, bits int) bool {
 	for index := 0; index < bits; {
 		if index < bits-8 {
@@ -54,14 +57,14 @@ func match(lho []byte, rho []byte, bits int) bool {
 	return true
 }
 
-func digest(buffer []byte) [csha256.Size]byte {
-	if len(buffer) != csha256.Size {
+func digest(buffer []byte) [sha256.Size]byte {
+	if len(buffer) != sha256.Size {
 		panic("Wrong slice length.")
 	}
 
-	var digest [csha256.Size]byte
+	var digest [sha256.Size]byte
 
-	for index := 0; index < csha256.Size; index++ {
+	for index := 0; index < sha256.Size; index++ {
 		digest[index] = buffer[index]
 	}
 

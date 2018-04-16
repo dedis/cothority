@@ -2,12 +2,14 @@ package collection
 
 import "errors"
 
+// Record holds the result of a search query.
+// It has getters to see the query, if the search was successful, the key and the value.
 type Record struct {
 	collection *Collection
 
 	field int
 	query []byte
-	match bool
+	match bool //if matched the query
 
 	key    []byte
 	values [][]byte
@@ -29,16 +31,18 @@ func recordkeymismatch(collection *Collection, key []byte) Record {
 
 // Getters
 
-func (this Record) Query() (interface{}, error) {
-	if len(this.query) == 0 {
-		return nil, errors.New("No query specified.")
+// Query returns the original query, decoded, that generated the record.
+// It returns an error if the record was generated from a getter (key search).
+func (r Record) Query() (interface{}, error) {
+	if len(r.query) == 0 {
+		return nil, errors.New("no query specified")
 	}
 
-	if len(this.values) <= this.field {
-		return nil, errors.New("Field out of range.")
+	if len(r.values) <= r.field {
+		return nil, errors.New("field out of range")
 	}
 
-	value, err := this.collection.fields[this.field].Decode(this.query)
+	value, err := r.collection.fields[r.field].Decode(r.query)
 
 	if err != nil {
 		return nil, err
@@ -47,27 +51,31 @@ func (this Record) Query() (interface{}, error) {
 	return value, nil
 }
 
-func (this Record) Match() bool {
-	return this.match
+// Match returns true if the record match the query that generated it, and false otherwise.
+func (r Record) Match() bool {
+	return r.match
 }
 
-func (this Record) Key() []byte {
-	return this.key
+// Key returns the key of the record
+func (r Record) Key() []byte {
+	return r.key
 }
 
-func (this Record) Values() ([]interface{}, error) {
-	if !(this.match) {
-		return []interface{}{}, errors.New("No match found.")
+// Values returns a copy of the values of a record.
+// If the record didn't match the query, an error will be returned.
+func (r Record) Values() ([]interface{}, error) {
+	if !(r.match) {
+		return []interface{}{}, errors.New("no match found")
 	}
 
-	if len(this.values) != len(this.collection.fields) {
-		return []interface{}{}, errors.New("Wrong number of values.")
+	if len(r.values) != len(r.collection.fields) {
+		return []interface{}{}, errors.New("wrong number of values")
 	}
 
 	var values []interface{}
 
-	for index := 0; index < len(this.values); index++ {
-		value, err := this.collection.fields[index].Decode(this.values[index])
+	for index := 0; index < len(r.values); index++ {
+		value, err := r.collection.fields[index].Decode(r.values[index])
 
 		if err != nil {
 			return []interface{}{}, err

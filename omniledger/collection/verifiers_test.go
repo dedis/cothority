@@ -4,7 +4,7 @@ import "testing"
 import "encoding/binary"
 
 func TestVerifiersVerify(test *testing.T) {
-	ctx := testctx("[verifiers.go]", test)
+	ctx := testCtx("[verifiers.go]", test)
 
 	stake64 := Stake64{}
 	data := Data{}
@@ -62,7 +62,7 @@ func TestVerifiersVerify(test *testing.T) {
 	}
 
 	collection.root.transaction.inconsistent = true
-	ctx.should_panic("[verify]", func() {
+	ctx.shouldPanic("[verify]", func() {
 		collection.Verify(proof)
 	})
 }

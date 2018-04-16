@@ -1,141 +1,143 @@
 package collection
 
-import "testing"
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"testing"
+)
 
 func TestCollectionEmptyCollection(test *testing.T) {
-	ctx := testctx("[collection.go]", test)
+	ctx := testCtx("[collection.go]", test)
 
-	basecollection := New()
+	baseCollection := New()
 
-	if !(basecollection.autoCollect.value) {
+	if !(baseCollection.autoCollect.value) {
 		test.Error("[collection.go]", "[autocollect]", "AutoCollect does not have true as default value.")
 	}
 
-	if !(basecollection.root.known) || !(basecollection.root.children.left.known) || !(basecollection.root.children.right.known) {
+	if !(baseCollection.root.known) || !(baseCollection.root.children.left.known) || !(baseCollection.root.children.right.known) {
 		test.Error("[collection.go]", "[known]", "New collection has unknown nodes.")
 	}
 
-	if !(basecollection.root.root()) {
+	if !(baseCollection.root.root()) {
 		test.Error("[collection.go]", "[root]", "Collection root is not a root.")
 	}
 
-	if basecollection.root.leaf() {
+	if baseCollection.root.leaf() {
 		test.Error("[collection.go]", "[root]", "Collection root doesn't have children.")
 	}
 
-	if !(basecollection.root.children.left.placeholder()) || !(basecollection.root.children.right.placeholder()) {
+	if !(baseCollection.root.children.left.placeholder()) || !(baseCollection.root.children.right.placeholder()) {
 		test.Error("[collection.go]", "[leaves]", "Collection leaves are not placeholder leaves.")
 	}
 
-	if len(basecollection.root.values) != 0 || len(basecollection.root.children.left.values) != 0 || len(basecollection.root.children.right.values) != 0 {
+	if len(baseCollection.root.values) != 0 || len(baseCollection.root.children.left.values) != 0 || len(baseCollection.root.children.right.values) != 0 {
 		test.Error("[collection.go]", "[values]", "Nodes of a collection without fields have values.")
 	}
 
-	ctx.verify.tree("[basecollection]", &basecollection)
+	ctx.verify.tree("[baseCollection]", &baseCollection)
 
 	stake64 := Stake64{}
-	stakecollection := New(stake64)
+	stakeCollection := New(stake64)
 
-	if len(stakecollection.root.values) != 1 || len(stakecollection.root.children.left.values) != 1 || len(stakecollection.root.children.right.values) != 1 {
+	if len(stakeCollection.root.values) != 1 || len(stakeCollection.root.children.left.values) != 1 || len(stakeCollection.root.children.right.values) != 1 {
 		test.Error("[collection.go]", "[values]", "Nodes of a stake collection don't have exactly one value.")
 	}
 
-	rootstake, rooterror := stake64.Decode(stakecollection.root.values[0])
+	rootStake, rootError := stake64.Decode(stakeCollection.root.values[0])
 
-	if rooterror != nil {
+	if rootError != nil {
 		test.Error("[collection.go]", "[stake]", "Malformed stake root value.")
 	}
 
-	leftstake, lefterror := stake64.Decode(stakecollection.root.children.left.values[0])
+	leftStake, leftError := stake64.Decode(stakeCollection.root.children.left.values[0])
 
-	if lefterror != nil {
+	if leftError != nil {
 		test.Error("[collection.go]", "[stake]", "Malformed stake left child value.")
 	}
 
-	rightstake, righterror := stake64.Decode(stakecollection.root.children.right.values[0])
+	rightStake, rightError := stake64.Decode(stakeCollection.root.children.right.values[0])
 
-	if righterror != nil {
+	if rightError != nil {
 		test.Error("[collection.go]", "[stake]", "Malformed stake right child value")
 	}
 
-	if rootstake.(uint64) != 0 || leftstake.(uint64) != 0 || rightstake.(uint64) != 0 {
+	if rootStake.(uint64) != 0 || leftStake.(uint64) != 0 || rightStake.(uint64) != 0 {
 		test.Error("[collection.go]", "[stake]", "Nodes of an empty stake collection don't have zero stake.")
 	}
 
-	ctx.verify.tree("[stakecollection]", &stakecollection)
+	ctx.verify.tree("[stakeCollection]", &stakeCollection)
 
 	data := Data{}
-	stakedatacollection := New(stake64, data)
+	stakeDataCollection := New(stake64, data)
 
-	if len(stakedatacollection.root.values) != 2 || len(stakedatacollection.root.children.left.values) != 2 || len(stakedatacollection.root.children.right.values) != 2 {
+	if len(stakeDataCollection.root.values) != 2 || len(stakeDataCollection.root.children.left.values) != 2 || len(stakeDataCollection.root.children.right.values) != 2 {
 		test.Error("[collection.go]", "[values]", "Nodes of a data and stake collection don't have exactly one value.")
 	}
 
-	if len(stakedatacollection.root.values[1]) != 0 || len(stakedatacollection.root.children.left.values[1]) != 0 || len(stakedatacollection.root.children.right.values[1]) != 0 {
+	if len(stakeDataCollection.root.values[1]) != 0 || len(stakeDataCollection.root.children.left.values[1]) != 0 || len(stakeDataCollection.root.children.right.values[1]) != 0 {
 		test.Error("[collection.go]", "[values]", "Nodes of a data and stake collection don't have empty data value.")
 	}
 
-	ctx.verify.tree("[stakedatacollection]", &stakedatacollection)
+	ctx.verify.tree("[stakeDataCollection]", &stakeDataCollection)
 }
 
 func TestCollectionEmptyVerifier(test *testing.T) {
-	basecollection := New()
-	baseverifier := NewVerifier()
+	baseCollection := New()
+	baseVerifier := NewVerifier()
 
-	if !(baseverifier.autoCollect.value) {
+	if !(baseVerifier.autoCollect.value) {
 		test.Error("[collection.go]", "[autocollect]", "AutoCollect does not have true as default value.")
 	}
 
-	if baseverifier.root.known {
+	if baseVerifier.root.known {
 		test.Error("[collection.go]", "[known]", "Empty verifier has known root.")
 	}
 
-	if (baseverifier.root.children.left != nil) || (baseverifier.root.children.right != nil) {
+	if (baseVerifier.root.children.left != nil) || (baseVerifier.root.children.right != nil) {
 		test.Error("[collection.go]", "[root]", "Empty verifier root has children.")
 	}
 
-	if baseverifier.root.label != basecollection.root.label {
-		test.Error("[collection.go]", "[label]", "Wrong verifier label.")
+	if baseVerifier.root.label != baseCollection.root.label {
+		test.Error("[collection.go]", "[Label]", "Wrong verifier label.")
 	}
 
 	stake64 := Stake64{}
 
-	stakecollection := New(stake64)
-	stakeverifier := NewVerifier(stake64)
+	stakeCollection := New(stake64)
+	stakeVerifier := NewVerifier(stake64)
 
-	if stakeverifier.root.known {
+	if stakeVerifier.root.known {
 		test.Error("[collection.go]", "[known]", "Empty stake verifier has known root.")
 	}
 
-	if (stakeverifier.root.children.left != nil) || (stakeverifier.root.children.right != nil) {
+	if (stakeVerifier.root.children.left != nil) || (stakeVerifier.root.children.right != nil) {
 		test.Error("[collection.go]", "[root]", "Empty stake verifier root has children.")
 	}
 
-	if stakeverifier.root.label != stakecollection.root.label {
-		test.Error("[collection.go]", "[label]", "Wrong stake verifier label.")
+	if stakeVerifier.root.label != stakeCollection.root.label {
+		test.Error("[collection.go]", "[Label]", "Wrong stake verifier label.")
 	}
 
 	data := Data{}
 
-	stakedatacollection := New(stake64, data)
-	stakedataverifier := NewVerifier(stake64, data)
+	stakeDataCollection := New(stake64, data)
+	stakeDataVerifier := NewVerifier(stake64, data)
 
-	if stakedataverifier.root.known {
+	if stakeDataVerifier.root.known {
 		test.Error("[collection.go]", "[known]", "Empty stake and data verifier has known root.")
 	}
 
-	if (stakedataverifier.root.children.left != nil) || (stakedataverifier.root.children.right != nil) {
+	if (stakeDataVerifier.root.children.left != nil) || (stakeDataVerifier.root.children.right != nil) {
 		test.Error("[collection.go]", "[root]", "Empty stake and data verifier root has children.")
 	}
 
-	if stakedataverifier.root.label != stakedatacollection.root.label {
-		test.Error("[collection.go]", "[label]", "Wrong stake and data verifier label.")
+	if stakeDataVerifier.root.label != stakeDataCollection.root.label {
+		test.Error("[collection.go]", "[Label]", "Wrong stake and data verifier label.")
 	}
 }
 
 func TestCollectionClone(test *testing.T) {
-	ctx := testctx("[collection.go]", test)
+	ctx := testCtx("[collection.go]", test)
 
 	stake64 := Stake64{}
 	data := Data{}
@@ -160,7 +162,7 @@ func TestCollectionClone(test *testing.T) {
 		ctx.verify.values("[clone]", &clone, key, uint64(index), key)
 	}
 
-	ctx.should_panic("[clone]", func() {
+	ctx.shouldPanic("[clone]", func() {
 		collection.Begin()
 		collection.Clone()
 		collection.End()

@@ -85,8 +85,8 @@ That's all. You are ready to go. Remember, from now on, we will use `collections
 The simplest way to get a `collection` and a `verifier` is:
 
 ```go
-my_collection := collections.EmptyCollection()
-my_verifier := collections.EmptyVerifier()
+my_collection := collections.New()
+my_verifier := collections.NewVerifier()
 ```
 
 This will give you an empty `collection` with no fields (i.e., just a set, as we have seen in [Basic use example](#basic-use-example)), and an empty `verifier`, also with no fields. By empty, here, we mean that the states of `my_collection` and `my_verifier` are the same, and that no record whatsoever can be proved from them.
@@ -96,8 +96,8 @@ If you wish to specify one or more value types that you want to be associated to
 For example, we could create an empty `collection` (and an empty `verifier`) that to each key associate a 64-bit amount of stake and some raw binary data by
 
 ```go
-my_collection_with_fields := collections.EmptyCollection(collections.Stake64{}, collections.Data{})
-my_verifier_with_fields := collections.EmptyVerifier(collections.Stake64{}, collections.Data{})
+my_collection_with_fields := collections.New(collections.Stake64{}, collections.Data{})
+my_verifier_with_fields := collections.NewVerifier(collections.Stake64{}, collections.Data{})
 ```
 
 #### Manipulators

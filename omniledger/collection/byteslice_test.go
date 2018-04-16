@@ -1,30 +1,32 @@
 package collection
 
-import "testing"
-import csha256 "crypto/sha256"
-import "encoding/hex"
-import "math/rand"
+import (
+	"crypto/sha256"
+	"encoding/hex"
+	"math/rand"
+	"testing"
+)
 
 func TestBytesliceEqual(test *testing.T) {
 	lho, _ := hex.DecodeString("85f46bd1ba19d1014b1179edd451ece95296e4a8c765ba8bba86c16893906398")
 	rho, _ := hex.DecodeString("85f46bd1ba19d1014b1179edd451ece95296e4a8c765ba8bba86c16893906398")
-	cutrho, _ := hex.DecodeString("85f46bd1ba19d1014b1179edd451ece95296e4a8c765ba8bba86c168939063")
-	alterrho, _ := hex.DecodeString("85f46bd1ba19d1014b1179edd452ece95296e4a8c765ba8bba86c16893906398")
+	cutRho, _ := hex.DecodeString("85f46bd1ba19d1014b1179edd451ece95296e4a8c765ba8bba86c168939063")
+	alterRho, _ := hex.DecodeString("85f46bd1ba19d1014b1179edd452ece95296e4a8c765ba8bba86c16893906398")
 
 	if !(equal(lho, rho)) {
 		test.Error("[byteslice.go]", "[equal]", "equal() returns false on two equal buffers.")
 	}
 
-	if equal(lho, cutrho) {
+	if equal(lho, cutRho) {
 		test.Error("[byteslice.go]", "[equal]", "equal() returns true on two buffers of different length.")
 	}
 
-	if equal(lho, alterrho) {
+	if equal(lho, alterRho) {
 		test.Error("[byteslice.go]", "[equal]", "equal() returns true on two different buffers.")
 	}
 }
 
-func TestBytesliceBit(test *testing.T) {
+func TestByteSliceBit(test *testing.T) {
 	buffer, _ := hex.DecodeString("85f46bd1ba19d1014b1179edd451ece95296e4a8c765ba8bba86c16893906398")
 	reference := "1000010111110100011010111101000110111010000110011101000100000001010010110001000101111001111011011101010001010001111011001110100101010010100101101110010010101000110001110110010110111010100010111011101010000110110000010110100010010011100100000110001110011000"
 
@@ -38,16 +40,16 @@ func TestBytesliceBit(test *testing.T) {
 	}
 }
 
-func TestBytesliceSetBit(test *testing.T) {
+func TestByteSliceSetBit(test *testing.T) {
 	source, _ := hex.DecodeString("85f46bd1ba19d1014b1179edd451ece95296e4a8c765ba8bba86c16893906398")
 	destination := make([]byte, len(source))
 
 	for index := 0; index < 8*len(destination); index++ {
-		setbit(destination, index, bit(source, index))
+		setBit(destination, index, bit(source, index))
 	}
 
 	if !(equal(source, destination)) {
-		test.Error("[byteslice.go]", "[setbit]", "Wrong bit set by setbit.")
+		test.Error("[byteslice.go]", "[setBit]", "Wrong bit set by setBit.")
 	}
 
 	for index := 0; index < len(destination); index++ {
@@ -55,21 +57,20 @@ func TestBytesliceSetBit(test *testing.T) {
 	}
 
 	for index := 0; index < 8*len(destination); index++ {
-		setbit(destination, index, bit(source, index))
+		setBit(destination, index, bit(source, index))
 	}
 
 	if !(equal(source, destination)) {
-		test.Error("[byteslice.go]", "[setbit]", "Wrong bit set by setbit.")
+		test.Error("[byteslice.go]", "[setBit]", "Wrong bit set by setBit.")
 	}
 }
 
-func TestBytesliceMatch(test *testing.T) {
+func TestByteSliceMatch(test *testing.T) {
 	min := func(lho, rho int) int {
 		if lho < rho {
 			return lho
-		} else {
-			return rho
 		}
+		return rho
 	}
 
 	type round struct {
@@ -98,33 +99,33 @@ func TestBytesliceMatch(test *testing.T) {
 	}
 }
 
-func TestBytesliceDigest(test *testing.T) {
-	ctx := testctx("[byteslice.go]", test)
+func TestByteSliceDigest(test *testing.T) {
+	ctx := testCtx("[byteslice.go]", test)
 
 	for round := 0; round < 16; round++ {
-		slice := make([]byte, csha256.Size)
-		for index := 0; index < csha256.Size; index++ {
+		slice := make([]byte, sha256.Size)
+		for index := 0; index < sha256.Size; index++ {
 			slice[index] = byte(rand.Uint32())
 		}
 
 		digest := digest(slice)
 
-		for index := 0; index < csha256.Size; index++ {
+		for index := 0; index < sha256.Size; index++ {
 			if digest[index] != slice[index] {
 				test.Error("[byteslice.go]", "[digest]", "digest() does not provide correct copy of the slice provided.")
 			}
 		}
 	}
 
-	ctx.should_panic("[wrongsize]", func() {
+	ctx.shouldPanic("[wrongsize]", func() {
 		digest(make([]byte, 0))
 	})
 
-	ctx.should_panic("[wrongsize]", func() {
+	ctx.shouldPanic("[wrongsize]", func() {
 		digest(make([]byte, 1))
 	})
 
-	ctx.should_panic("[wrongsize]", func() {
-		digest(make([]byte, csha256.Size-1))
+	ctx.shouldPanic("[wrongsize]", func() {
+		digest(make([]byte, sha256.Size-1))
 	})
 }

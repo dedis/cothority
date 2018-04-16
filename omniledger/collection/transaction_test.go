@@ -1,10 +1,13 @@
 package collection
 
-import "testing"
-import "encoding/binary"
+import (
+	"crypto/sha256"
+	"encoding/binary"
+	"testing"
+)
 
 func TestTransactionBegin(test *testing.T) {
-	ctx := testctx("[transaction.go]", test)
+	ctx := testCtx("[transaction.go]", test)
 
 	collection := New()
 	collection.Begin()
@@ -13,13 +16,13 @@ func TestTransactionBegin(test *testing.T) {
 		test.Error("[transaction.go]", "[begin]", "Begin() does not set the transaction flag.")
 	}
 
-	ctx.should_panic("[begin]", func() {
+	ctx.shouldPanic("[begin]", func() {
 		collection.Begin()
 	})
 }
 
 func TestTransactionRollback(test *testing.T) {
-	ctx := testctx("[transaction.go]", test)
+	ctx := testCtx("[transaction.go]", test)
 
 	stake64 := Stake64{}
 
@@ -60,11 +63,11 @@ func TestTransactionRollback(test *testing.T) {
 		collection.Remove(key)
 	}
 
-	idbefore := collection.transaction.id
+	idBefore := collection.transaction.id
 	collection.Rollback()
-	idafter := collection.transaction.id
+	idAfter := collection.transaction.id
 
-	if idafter != idbefore+1 {
+	if idAfter != idBefore+1 {
 		test.Error("[transaction.go]", "[rollback]", "Rollback() does not increment the transaction id.")
 	}
 
@@ -80,38 +83,38 @@ func TestTransactionRollback(test *testing.T) {
 		test.Error("[transaction.go]", "[rollback]", "Fixing after Rollback() has a non-null effect.")
 	}
 
-	noautocollect := New()
-	noautocollect.autoCollect.Disable()
-	noautocollect.scope.None()
+	noAutoCollect := New()
+	noAutoCollect.autoCollect.Disable()
+	noAutoCollect.scope.None()
 
-	noautocollect.Begin()
+	noAutoCollect.Begin()
 
 	for index := 0; index < 512; index++ {
 		key := make([]byte, 8)
 		binary.BigEndian.PutUint64(key, uint64(index))
 
-		noautocollect.Add(key)
+		noAutoCollect.Add(key)
 	}
 
-	noautocollect.End()
+	noAutoCollect.End()
 
-	if !(noautocollect.root.known) {
-		test.Error("[transaction.go]", "[noautocollect]", "AutoCollect.Disable() seems to have no effect in preventing the collection of nodes after End().")
+	if !(noAutoCollect.root.known) {
+		test.Error("[transaction.go]", "[noAutoCollect]", "AutoCollect.Disable() seems to have no effect in preventing the collection of nodes after End().")
 	}
 
-	noautocollect.Collect()
+	noAutoCollect.Collect()
 
-	if noautocollect.root.known {
-		test.Error("[transaction.go]", "[noautocollect]", "Collect() has no effect when AutoCollect is disabled.")
+	if noAutoCollect.root.known {
+		test.Error("[transaction.go]", "[noAutoCollect]", "Collect() has no effect when AutoCollect is disabled.")
 	}
 
-	ctx.should_panic("[rollbackagain]", func() {
+	ctx.shouldPanic("[rollbackagain]", func() {
 		collection.Rollback()
 	})
 }
 
 func TestTransactionEnd(test *testing.T) {
-	ctx := testctx("[transaction.go]", test)
+	ctx := testCtx("[transaction.go]", test)
 
 	stake64 := Stake64{}
 	collection := New(stake64)
@@ -156,7 +159,7 @@ func TestTransactionEnd(test *testing.T) {
 		if (index % 3) == 0 {
 			ctx.verify.values("[end]", &collection, key, uint64(3*index))
 		} else if (index % 3) == 1 {
-			ctx.verify.nokey("[end]", &collection, key)
+			ctx.verify.noKey("[end]", &collection, key)
 		} else {
 			ctx.verify.values("[end]", &collection, key, uint64(index))
 		}
@@ -171,29 +174,29 @@ func TestTransactionEnd(test *testing.T) {
 
 	ctx.verify.scope("[scope]", &collection)
 
-	ctx.should_panic("[endagain]", func() {
+	ctx.shouldPanic("[endagain]", func() {
 		collection.End()
 	})
 }
 
 func TestTransactionCollect(test *testing.T) {
-	ctx := testctx("[transaction.go]", test)
+	ctx := testCtx("[transaction.go]", test)
 
-	nonecollection := New()
-	nonecollection.scope.None()
+	noneCollection := New()
+	noneCollection.scope.None()
 
-	nonecollection.root.children.left.branch()
-	nonecollection.root.children.right.branch()
-	nonecollection.root.children.right.children.left.branch()
-	nonecollection.root.children.right.children.right.branch()
+	noneCollection.root.children.left.branch()
+	noneCollection.root.children.right.branch()
+	noneCollection.root.children.right.children.left.branch()
+	noneCollection.root.children.right.children.right.branch()
 
-	nonecollection.Collect()
+	noneCollection.Collect()
 
-	if nonecollection.root.known {
+	if noneCollection.root.known {
 		test.Error("[transaction.go]", "[root]", "Root is known after collecting collection with empty scope.")
 	}
 
-	if (nonecollection.root.children.left) != nil || (nonecollection.root.children.right) != nil {
+	if (noneCollection.root.children.left) != nil || (noneCollection.root.children.right) != nil {
 		test.Error("[transaction.go]", "[children]", "Children of root are not pruned after collecting collection with empty scope.")
 	}
 
@@ -217,12 +220,12 @@ func TestTransactionCollect(test *testing.T) {
 
 	ctx.verify.scope("[collect]", &collection)
 
-	unknownroot := New()
-	unknownroot.root.known = false
-	unknownroot.Collect()
+	unknownRoot := New()
+	unknownRoot.root.known = false
+	unknownRoot.Collect()
 
-	if (unknownroot.root.children.left == nil) || (unknownroot.root.children.right == nil) {
-		test.Error("[transaction.go]", "[unknownroot]", "Collect() removes children of unknown root.")
+	if (unknownRoot.root.children.left == nil) || (unknownRoot.root.children.right == nil) {
+		test.Error("[transaction.go]", "[unknownRoot]", "Collect() removes children of unknown root.")
 	}
 
 	collection.scope.None()
@@ -255,16 +258,14 @@ func TestTransactionConfirm(test *testing.T) {
 		if node.leaf() {
 			if node.transaction.backup != nil {
 				return 1
-			} else {
-				return 0
 			}
-		} else {
-			if node.transaction.backup != nil {
-				return 1 + explore(node.children.left) + explore(node.children.right)
-			} else {
-				return explore(node.children.left) + explore(node.children.right)
-			}
+			return 0
 		}
+		offset := 0
+		if node.transaction.backup != nil {
+			offset = 1
+		}
+		return offset + explore(node.children.left) + explore(node.children.right)
 	}
 
 	count := explore(collection.root)
@@ -288,32 +289,50 @@ func TestTransactionConfirm(test *testing.T) {
 }
 
 func TestTransactionFix(test *testing.T) {
-	ctx := testctx("[transaction.go]", test)
+	ctx := testCtx("[transaction.go]", test)
 
 	collection := New()
 
-	collection.root.children.left.key = []byte("leftkey")
+	// generate key with hash with Left direction as first bit
+	collection.root.children.left.key = []byte{0x00}
+	for {
+		collection.root.children.left.key[0]++
+		hash := sha256.Sum256(collection.root.children.left.key[:])
+		if bit(hash[:], 0) == Left {
+			break
+		}
+	}
+
 	collection.root.children.left.transaction.inconsistent = true
 	collection.root.transaction.inconsistent = true
 
 	collection.fix()
 	ctx.verify.tree("[fix]", &collection)
 
-	oldrootlabel := collection.root.label
+	oldRootLabel := collection.root.label
 
-	collection.root.children.right.key = []byte("rightkey")
+	// generate key with hash with Right direction as first bit
+	collection.root.children.right.key = []byte{0x00}
+	for {
+		collection.root.children.right.key[0]++
+		hash := sha256.Sum256(collection.root.children.right.key[:])
+		if bit(hash[:], 0) == Right {
+			break
+		}
+	}
+
 	collection.root.children.right.transaction.inconsistent = true
 
 	collection.fix()
 
-	if collection.root.label != oldrootlabel {
+	if collection.root.label != oldRootLabel {
 		test.Error("[transaction.go]", "[fix]", "Fix should not visit nodes that are not marked as inconsistent.")
 	}
 
 	collection.root.transaction.inconsistent = true
 	collection.fix()
 
-	if collection.root.label == oldrootlabel {
+	if collection.root.label == oldRootLabel {
 		test.Error("[transaction.go]", "[fix]", "Fix should alter the label of the root of a collection tree.")
 	}
 

@@ -1,8 +1,10 @@
 package collection
 
-import "testing"
-import csha256 "crypto/sha256"
-import "encoding/binary"
+import (
+	"crypto/sha256"
+	"encoding/binary"
+	"testing"
+)
 
 func TestProofDumpNode(test *testing.T) {
 	stake64 := Stake64{}
@@ -11,26 +13,26 @@ func TestProofDumpNode(test *testing.T) {
 	collection := New(stake64, data)
 	collection.Add([]byte("mykey"), uint64(66), []byte("myvalue"))
 
-	rootdump := dumpnode(collection.root)
+	rootdump := dumpNode(collection.root)
 
 	if rootdump.Label != collection.root.label {
-		test.Error("[proof.go]", "[dumpnode]", "dumpnode() sets wrong label on dump of internal node.")
+		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets wrong label on dump of internal node.")
 	}
 
 	if len(rootdump.Key) != 0 {
-		test.Error("[proof.go]", "[dumpnode]", "dumpnode() sets key on internal node.")
+		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets key on internal node.")
 	}
 
 	if len(rootdump.Values) != 2 {
-		test.Error("[proof.go]", "[dumpnode]", "dumpnode() sets the wrong number of values on internal node.")
+		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong number of values on internal node.")
 	}
 
 	if !equal(rootdump.Values[0], collection.root.values[0]) || !equal(rootdump.Values[1], collection.root.values[1]) {
-		test.Error("[proof.go]", "[dumpnode]", "dumpnode() sets the wrong values on internal node.")
+		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong values on internal node.")
 	}
 
 	if (rootdump.Children.Left != collection.root.children.left.label) || (rootdump.Children.Right != collection.root.children.right.label) {
-		test.Error("[proof.go]", "[dumpnode]", "dumpnode() sets the wrong children labels on internal node.")
+		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong children labels on internal node.")
 	}
 
 	var leaf *node
@@ -41,28 +43,28 @@ func TestProofDumpNode(test *testing.T) {
 		leaf = collection.root.children.left
 	}
 
-	leafdump := dumpnode(leaf)
+	leafdump := dumpNode(leaf)
 
 	if leafdump.Label != leaf.label {
-		test.Error("[proof.go]", "[dumpnode]", "dumpnode() sets wrong label on dump of leaf.")
+		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets wrong label on dump of leaf.")
 	}
 
 	if !equal(leafdump.Key, leaf.key) {
-		test.Error("[proof.go]", "[dumpnode]", "dumpnode() sets wrong key on leaf.")
+		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets wrong key on leaf.")
 	}
 
 	if len(leafdump.Values) != 2 {
-		test.Error("[proof.go]", "[dumpnode]", "dumpnode() sets the wrong number of values on leaf.")
+		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong number of values on leaf.")
 	}
 
 	if !equal(leafdump.Values[0], leaf.values[0]) || !equal(leafdump.Values[1], leaf.values[1]) {
-		test.Error("[proof.go]", "[dumpnode]", "dumpnode() sets the wrong values on leaf.")
+		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong values on leaf.")
 	}
 
-	var empty [csha256.Size]byte
+	var empty [sha256.Size]byte
 
 	if (leafdump.Children.Left != empty) || (leafdump.Children.Right != empty) {
-		test.Error("[proof.go]", "[dumpnode]", "dumpnode() sets non-null children labels on leaf.")
+		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets non-null children labels on leaf.")
 	}
 }
 
@@ -73,7 +75,7 @@ func TestProofDumpGetters(test *testing.T) {
 	collection := New(stake64, data)
 	collection.Add([]byte("mykey"), uint64(66), []byte("myvalue"))
 
-	rootdump := dumpnode(collection.root)
+	rootDump := dumpNode(collection.root)
 
 	var leaf *node
 
@@ -83,13 +85,13 @@ func TestProofDumpGetters(test *testing.T) {
 		leaf = collection.root.children.left
 	}
 
-	leafdump := dumpnode(leaf)
+	leafDump := dumpNode(leaf)
 
-	if rootdump.leaf() {
+	if rootDump.leaf() {
 		test.Error("[proof.go]", "[dumpgetters]", "leaf() returns true on internal node.")
 	}
 
-	if !(leafdump.leaf()) {
+	if !(leafDump.leaf()) {
 		test.Error("[proof.go]", "[dumpgetters]", "leaf() returns false on leaf node.")
 	}
 }
@@ -101,7 +103,7 @@ func TestProofDumpConsistent(test *testing.T) {
 	collection := New(stake64, data)
 	collection.Add([]byte("mykey"), uint64(66), []byte("myvalue"))
 
-	rootdump := dumpnode(collection.root)
+	rootDump := dumpNode(collection.root)
 
 	var leaf *node
 
@@ -111,31 +113,31 @@ func TestProofDumpConsistent(test *testing.T) {
 		leaf = collection.root.children.left
 	}
 
-	leafdump := dumpnode(leaf)
+	leafDump := dumpNode(leaf)
 
-	if !(rootdump.consistent()) {
+	if !(rootDump.consistent()) {
 		test.Error("[proof.go]", "[consistent]", "consistent() returns false on valid internal node.")
 	}
 
-	rootdump.Label[0]++
+	rootDump.Label[0]++
 
-	if rootdump.consistent() {
+	if rootDump.consistent() {
 		test.Error("[proof.go]", "[consistent]", "consistent() returns true on invalid internal node.")
 	}
 
-	if !(leafdump.consistent()) {
+	if !(leafDump.consistent()) {
 		test.Error("[proof.go]", "[consistent]", "consistent() returns false on valid leaf.")
 	}
 
-	leafdump.Label[0]++
+	leafDump.Label[0]++
 
-	if leafdump.consistent() {
+	if leafDump.consistent() {
 		test.Error("[proof.go]", "[consistent]", "consistent() returns true on invalid leaf.")
 	}
 }
 
 func TestProofDumpTo(test *testing.T) {
-	ctx := testctx("[proof.go]", test)
+	ctx := testCtx("[proof.go]", test)
 
 	stake64 := Stake64{}
 	data := Data{}
@@ -143,9 +145,9 @@ func TestProofDumpTo(test *testing.T) {
 	collection := New(stake64, data)
 	collection.Add([]byte("mykey"), uint64(66), []byte("myvalue"))
 
-	rootdump := dumpnode(collection.root)
-	leftdump := dumpnode(collection.root.children.left)
-	rightdump := dumpnode(collection.root.children.right)
+	rootdump := dumpNode(collection.root)
+	leftdump := dumpNode(collection.root.children.left)
+	rightdump := dumpNode(collection.root.children.right)
 
 	unknown := New(stake64, data)
 	unknown.scope.None()
@@ -207,12 +209,12 @@ func TestProofGetters(test *testing.T) {
 
 func TestProofMatchValues(test *testing.T) {
 	collision := func(key []byte, bits int) []byte {
-		target := sha256(key)
+		target := sha256.Sum256(key)
 		sample := make([]byte, 8)
 
 		for index := 0; ; index++ {
 			binary.BigEndian.PutUint64(sample, uint64(index))
-			hash := sha256(sample)
+			hash := sha256.Sum256(sample)
 			if match(hash[:], target[:], bits) && !match(hash[:], target[:], bits+1) {
 				return sample
 			}
@@ -232,13 +234,13 @@ func TestProofMatchValues(test *testing.T) {
 	proof := Proof{}
 	proof.collection = &collection
 	proof.key = firstkey
-	proof.root = dumpnode(collection.root)
+	proof.root = dumpNode(collection.root)
 
-	path := sha256(firstkey)
+	path := sha256.Sum256(firstkey)
 	cursor := collection.root
 
 	for depth := 0; depth < 6; depth++ {
-		proof.steps = append(proof.steps, step{dumpnode(cursor.children.left), dumpnode(cursor.children.right)})
+		proof.steps = append(proof.steps, step{dumpNode(cursor.children.left), dumpNode(cursor.children.right)})
 
 		if bit(path[:], depth) {
 			cursor = cursor.children.right
@@ -494,24 +496,24 @@ func TestProofSerialization(test *testing.T) {
 		proof, _ := collection.Get(key).Proof()
 		buffer := collection.Serialize(proof)
 
-		otherproof, error := collection.Deserialize(buffer)
+		otherProof, err := collection.Deserialize(buffer)
 
-		if error != nil {
+		if err != nil {
 			test.Error("[proof.go]", "[serialization]", "Serialize() / Deserialize() yields an error on a valid proof.")
 		}
 
-		if otherproof.collection != &collection {
+		if otherProof.collection != &collection {
 			test.Error("[proof.go]", "[serialization]", "Deserialize() does not properly set the collection pointer.")
 		}
 
-		if !(collection.Verify(otherproof)) {
+		if !(collection.Verify(otherProof)) {
 			test.Error("[proof.go]", "[serialization]", "Serialize() / Deserialize() yields an invalid proof on a valid proof.")
 		}
 	}
 
-	_, error := collection.Deserialize([]byte("definitelynotaproof"))
+	_, err := collection.Deserialize([]byte("definitelynotaproof"))
 
-	if error == nil {
+	if err == nil {
 		test.Error("[proof.go]", "[serialization]", "Deserialize() does not yield an error when provided with an invalid byte slice.")
 	}
 }

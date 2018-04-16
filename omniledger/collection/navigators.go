@@ -2,7 +2,9 @@ package collection
 
 import "errors"
 
-type navigator struct {
+// Navigator is an object representing a search of a field's value on the collection.
+// It allows to get the record associated with a given value, as searched by the Navigate function of the field.
+type Navigator struct {
 	collection *Collection
 	field      int
 	query      []byte
@@ -10,41 +12,43 @@ type navigator struct {
 
 // Constructors
 
-func (this *Collection) Navigate(field int, value interface{}) navigator {
-	if (field < 0) || (field >= len(this.fields)) {
+// Navigate creates a Navigator associated with a given field and value.
+func (c *Collection) Navigate(field int, value interface{}) Navigator {
+	if (field < 0) || (field >= len(c.fields)) {
 		panic("Field unknown.")
 	}
 
-	return navigator{this, field, this.fields[field].Encode(value)}
+	return Navigator{c, field, c.fields[field].Encode(value)}
 }
 
 // Methods
 
-func (this navigator) Record() (Record, error) {
-	cursor := this.collection.root
+// Record returns the Record obtained by navigating the tree to the searched field's value.
+// It returns an error if the value in question is in an unknown subtree or if the Navigate function of the field returns an error.
+func (n Navigator) Record() (Record, error) {
+	cursor := n.collection.root
 
 	for {
 		if !(cursor.known) {
-			return Record{}, errors.New("Record lies in an unknown subtree.")
+			return Record{}, errors.New("record lies in an unknown subtree")
 		}
 
 		if cursor.leaf() {
-			return recordquerymatch(this.collection, this.field, this.query, cursor), nil
+			return recordquerymatch(n.collection, n.field, n.query, cursor), nil
+		}
+		if !(cursor.children.left.known) || !(cursor.children.right.known) {
+			return Record{}, errors.New("record lies in an unknown subtree")
+		}
+
+		navigation, err := n.collection.fields[n.field].Navigate(n.query, cursor.values[n.field], cursor.children.left.values[n.field], cursor.children.right.values[n.field])
+		if err != nil {
+			return Record{}, err
+		}
+
+		if navigation == Right {
+			cursor = cursor.children.right
 		} else {
-			if !(cursor.children.left.known) || !(cursor.children.right.known) {
-				return Record{}, errors.New("Record lies in an unknown subtree.")
-			}
-
-			navigation, error := this.collection.fields[this.field].Navigate(this.query, cursor.values[this.field], cursor.children.left.values[this.field], cursor.children.right.values[this.field])
-			if error != nil {
-				return Record{}, error
-			}
-
-			if navigation == Right {
-				cursor = cursor.children.right
-			} else {
-				cursor = cursor.children.left
-			}
+			cursor = cursor.children.left
 		}
 	}
 }

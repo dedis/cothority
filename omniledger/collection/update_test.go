@@ -1,6 +1,9 @@
 package collection
 
-import "testing"
+import (
+	"crypto/sha256"
+	"testing"
+)
 
 func TestUpdateProxy(test *testing.T) {
 	collection := New()
@@ -15,13 +18,16 @@ func TestUpdateProxy(test *testing.T) {
 		test.Error("[update.go]", "[proxy]", "proxy() method sets the wrong number of paths.")
 	}
 
-	if !(proxy.paths[sha256([]byte("firstkey"))]) || !(proxy.paths[sha256([]byte("secondkey"))]) || !(proxy.paths[sha256([]byte("thirdkey"))]) {
+	if !(proxy.paths[sha256.Sum256([]byte("firstkey"))]) ||
+		!(proxy.paths[sha256.Sum256([]byte("secondkey"))]) ||
+		!(proxy.paths[sha256.Sum256([]byte("thirdkey"))]) {
+
 		test.Error("[update.go]", "[proxy]", "proxy() method does not set the paths provided.")
 	}
 }
 
 func TestUpdateProxyMethods(test *testing.T) {
-	ctx := testctx("[update.go]", test)
+	ctx := testCtx("[update.go]", test)
 
 	stake64 := Stake64{}
 	collection := New(stake64)
@@ -40,13 +46,13 @@ func TestUpdateProxyMethods(test *testing.T) {
 		test.Error("[update.go]", "[get]", "Proxy method get() returns wrong values.")
 	}
 
-	error := proxy.Add([]byte("secondkey"), uint64(33))
-	if error != nil {
+	err := proxy.Add([]byte("secondkey"), uint64(33))
+	if err != nil {
 		test.Error("[update.go]", "[add]", "Proxy method add() yields an error on valid key.")
 	}
 
-	error = proxy.Add([]byte("secondkey"), uint64(22))
-	if error == nil {
+	err = proxy.Add([]byte("secondkey"), uint64(22))
+	if err == nil {
 		test.Error("[update.go]", "[add]", "Proxy method add() does not yield an error when adding an existing key.")
 	}
 
@@ -61,8 +67,8 @@ func TestUpdateProxyMethods(test *testing.T) {
 		test.Error("[update.go]", "[add]", "Proxy method add() adds wrong values.")
 	}
 
-	error = proxy.Set([]byte("secondkey"), uint64(22))
-	if error != nil {
+	err = proxy.Set([]byte("secondkey"), uint64(22))
+	if err != nil {
 		test.Error("[update.go]", "[set]", "Proxy method set() yields an error when setting on an existing key.")
 	}
 
@@ -73,13 +79,13 @@ func TestUpdateProxyMethods(test *testing.T) {
 		test.Error("[update.go]", "[set]", "Proxy method set() does not set the correct values.")
 	}
 
-	error = proxy.Set([]byte("thirdkey"), uint64(11))
-	if error == nil {
+	err = proxy.Set([]byte("thirdkey"), uint64(11))
+	if err == nil {
 		test.Error("[update.go]", "[set]", "Proxy method set() does not yield an error when setting on a non-existing key.")
 	}
 
-	error = proxy.SetField([]byte("firstkey"), 0, uint64(11))
-	if error != nil {
+	err = proxy.SetField([]byte("firstkey"), 0, uint64(11))
+	if err != nil {
 		test.Error("[update.go]", "[setfield]", "Proxy method setfield() does yields an error when setting on an existing key.")
 	}
 
@@ -90,13 +96,13 @@ func TestUpdateProxyMethods(test *testing.T) {
 		test.Error("[update.go]", "[setfield]", "Proxy method setfield() does not set the correct values.")
 	}
 
-	error = proxy.SetField([]byte("thirdkey"), 0, uint64(99))
-	if error == nil {
+	err = proxy.SetField([]byte("thirdkey"), 0, uint64(99))
+	if err == nil {
 		test.Error("[update.go]", "[setfield]", "Proxy method setfield() does not yield an error when setting on a non-existing key.")
 	}
 
-	error = proxy.Remove([]byte("secondkey"))
-	if error != nil {
+	err = proxy.Remove([]byte("secondkey"))
+	if err != nil {
 		test.Error("[update.go]", "[remove]", "Proxy method remove() yields an error when removing an existing key.")
 	}
 
@@ -105,28 +111,28 @@ func TestUpdateProxyMethods(test *testing.T) {
 		test.Error("[update.go]", "[remove]", "Proxy method remove() does not remove an existing key.")
 	}
 
-	error = proxy.Remove([]byte("secondkey"))
-	if error == nil {
+	err = proxy.Remove([]byte("secondkey"))
+	if err == nil {
 		test.Error("[update.go]", "[remove]", "Proxy method remove() does not yield an error when removing a non-existing key.")
 	}
 
-	ctx.should_panic("[get]", func() {
+	ctx.shouldPanic("[get]", func() {
 		proxy.Get([]byte("otherkey"))
 	})
 
-	ctx.should_panic("[add]", func() {
+	ctx.shouldPanic("[add]", func() {
 		proxy.Add([]byte("otherkey"), uint64(12))
 	})
 
-	ctx.should_panic("[set]", func() {
+	ctx.shouldPanic("[set]", func() {
 		proxy.Set([]byte("otherkey"), uint64(12))
 	})
 
-	ctx.should_panic("[setfield]", func() {
+	ctx.shouldPanic("[setfield]", func() {
 		proxy.SetField([]byte("otherkey"), 0, uint64(12))
 	})
 
-	ctx.should_panic("[remove]", func() {
+	ctx.shouldPanic("[remove]", func() {
 		proxy.Remove([]byte("otherkey"))
 	})
 }
@@ -148,19 +154,19 @@ type TestUpdateSingleRecordUpdate struct {
 	record Proof
 }
 
-func (this TestUpdateSingleRecordUpdate) Records() []Proof {
-	return []Proof{this.record}
+func (t TestUpdateSingleRecordUpdate) Records() []Proof {
+	return []Proof{t.record}
 }
 
-func (this TestUpdateSingleRecordUpdate) Check(collection ReadOnly) bool {
-	return collection.Get(this.record.Key()).Match()
+func (t TestUpdateSingleRecordUpdate) Check(collection ReadOnly) bool {
+	return collection.Get(t.record.Key()).Match()
 }
 
-func (this TestUpdateSingleRecordUpdate) Apply(collection ReadWrite) {
-	values, _ := collection.Get(this.record.Key()).Values()
+func (t TestUpdateSingleRecordUpdate) Apply(collection ReadWrite) {
+	values, _ := collection.Get(t.record.Key()).Values()
 	value := values[0].(uint64)
 
-	collection.Set(this.record.Key(), value+1)
+	collection.Set(t.record.Key(), value+1)
 }
 
 type TestUpdateDoubleRecordUpdate struct {
@@ -168,34 +174,34 @@ type TestUpdateDoubleRecordUpdate struct {
 	to   Proof
 }
 
-func (this TestUpdateDoubleRecordUpdate) Records() []Proof {
-	return []Proof{this.from, this.to}
+func (t TestUpdateDoubleRecordUpdate) Records() []Proof {
+	return []Proof{t.from, t.to}
 }
 
-func (this TestUpdateDoubleRecordUpdate) Check(collection ReadOnly) bool {
-	if !(collection.Get(this.from.Key()).Match()) || !(collection.Get(this.to.Key()).Match()) {
+func (t TestUpdateDoubleRecordUpdate) Check(collection ReadOnly) bool {
+	if !(collection.Get(t.from.Key()).Match()) || !(collection.Get(t.to.Key()).Match()) {
 		return false
 	}
 
-	values, _ := collection.Get(this.from.Key()).Values()
+	values, _ := collection.Get(t.from.Key()).Values()
 	value := values[0].(uint64)
 
 	return value > 0
 }
 
-func (this TestUpdateDoubleRecordUpdate) Apply(collection ReadWrite) {
-	values, _ := collection.Get(this.from.Key()).Values()
+func (t TestUpdateDoubleRecordUpdate) Apply(collection ReadWrite) {
+	values, _ := collection.Get(t.from.Key()).Values()
 	from := values[0].(uint64)
 
-	values, _ = collection.Get(this.to.Key()).Values()
+	values, _ = collection.Get(t.to.Key()).Values()
 	to := values[0].(uint64)
 
-	collection.Set(this.from.Key(), from-1)
-	collection.Set(this.to.Key(), to+1)
+	collection.Set(t.from.Key(), from-1)
+	collection.Set(t.to.Key(), to+1)
 }
 
 func TestUpdatePrepare(test *testing.T) {
-	ctx := testctx("[update.go]", test)
+	ctx := testCtx("[update.go]", test)
 
 	stake64 := Stake64{}
 	collection := New(stake64)
@@ -206,10 +212,10 @@ func TestUpdatePrepare(test *testing.T) {
 
 	proof, _ := collection.Get([]byte("mykey")).Proof()
 
-	singlerecord := TestUpdateSingleRecordUpdate{proof}
-	update, error := collection.Prepare(singlerecord)
+	singleRecord := TestUpdateSingleRecordUpdate{proof}
+	update, err := collection.Prepare(singleRecord)
 
-	if error != nil {
+	if err != nil {
 		test.Error("[update.go]", "[prepare]", "Prepare() yields an error on a valid update.")
 	}
 
@@ -225,14 +231,14 @@ func TestUpdatePrepare(test *testing.T) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets the wrong number of proxy paths.")
 	}
 
-	if !(update.proxy.paths[sha256([]byte("mykey"))]) {
+	if !(update.proxy.paths[sha256.Sum256([]byte("mykey"))]) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets wrong proxy paths.")
 	}
 
-	singlerecord.record.steps[0].Left.Label[0]++
-	_, error = collection.Prepare(singlerecord)
+	singleRecord.record.steps[0].Left.Label[0]++
+	_, err = collection.Prepare(singleRecord)
 
-	if error == nil {
+	if err == nil {
 		test.Error("[update.go]", "[prepare]", "Prepare() does not yield an error on an invalid proof.")
 	}
 
@@ -244,9 +250,9 @@ func TestUpdatePrepare(test *testing.T) {
 	to, _ := collection.Get([]byte("myotherkey")).Proof()
 
 	doublerecord := TestUpdateDoubleRecordUpdate{from, to}
-	update, error = collection.Prepare(doublerecord)
+	update, err = collection.Prepare(doublerecord)
 
-	if error != nil {
+	if err != nil {
 		test.Error("[update.go]", "[prepare]", "Prepare() yields an error on a valid update:")
 	}
 
@@ -262,35 +268,35 @@ func TestUpdatePrepare(test *testing.T) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets the wrong number of proxy paths.")
 	}
 
-	if !(update.proxy.paths[sha256([]byte("mykey"))]) || !(update.proxy.paths[sha256([]byte("myotherkey"))]) {
+	if !(update.proxy.paths[sha256.Sum256([]byte("mykey"))]) || !(update.proxy.paths[sha256.Sum256([]byte("myotherkey"))]) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets wrong proxy paths.")
 	}
 
 	doublerecord.from.steps[0].Left.Label[0]++
-	_, error = collection.Prepare(doublerecord)
+	_, err = collection.Prepare(doublerecord)
 
-	if error == nil {
+	if err == nil {
 		test.Error("[update.go]", "[prepare]", "Prepare() does not yield an error on an invalid proof.")
 	}
 
 	collection.root.transaction.inconsistent = true
 
-	ctx.should_panic("[prepare]", func() {
-		collection.Prepare(singlerecord)
+	ctx.shouldPanic("[prepare]", func() {
+		collection.Prepare(singleRecord)
 	})
 }
 
 func TestUpdateApply(test *testing.T) {
-	ctx := testctx("[update.go]", test)
+	ctx := testCtx("[update.go]", test)
 
 	collection := New()
-	ctx.should_panic("[apply]", func() {
+	ctx.shouldPanic("[apply]", func() {
 		collection.Apply(33)
 	})
 }
 
 func TestUpdateApplyUpdate(test *testing.T) {
-	ctx := testctx("[update.go]", test)
+	ctx := testCtx("[update.go]", test)
 
 	stake64 := Stake64{}
 	collection := New(stake64)
@@ -298,13 +304,13 @@ func TestUpdateApplyUpdate(test *testing.T) {
 	collection.Add([]byte("alice"), uint64(4))
 	collection.Add([]byte("bob"), uint64(0))
 
-	aliceproof, _ := collection.Get([]byte("alice")).Proof()
-	aliceupdate, _ := collection.Prepare(TestUpdateSingleRecordUpdate{aliceproof})
+	aliceProof, _ := collection.Get([]byte("alice")).Proof()
+	aliceUpdate, _ := collection.Prepare(TestUpdateSingleRecordUpdate{aliceProof})
 
-	error := collection.Apply(aliceupdate)
+	err := collection.Apply(aliceUpdate)
 
-	if error != nil {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate() yields an error when applying a valid update.")
+	if err != nil {
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate() yields an error when applying a valid update.")
 	}
 
 	alice, _ := collection.Get([]byte("alice")).Record()
@@ -312,22 +318,22 @@ func TestUpdateApplyUpdate(test *testing.T) {
 	alicevalue := alicevalues[0].(uint64)
 
 	if alicevalue != 5 {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate() does not apply the update.")
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate() does not apply the update.")
 	}
 
 	collection.Begin()
 
-	aliceproof, _ = collection.Get([]byte("alice")).Proof()
-	aliceupdate, _ = collection.Prepare(TestUpdateSingleRecordUpdate{aliceproof})
+	aliceProof, _ = collection.Get([]byte("alice")).Proof()
+	aliceUpdate, _ = collection.Prepare(TestUpdateSingleRecordUpdate{aliceProof})
 
-	error = collection.Apply(aliceupdate)
-	if error != nil {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate() yields an error when applying a valid update.")
+	err = collection.Apply(aliceUpdate)
+	if err != nil {
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate() yields an error when applying a valid update.")
 	}
 
-	error = collection.Apply(aliceupdate)
-	if error != nil {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate() yields an error when applying a valid update.")
+	err = collection.Apply(aliceUpdate)
+	if err != nil {
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate() yields an error when applying a valid update.")
 	}
 
 	collection.End()
@@ -337,26 +343,26 @@ func TestUpdateApplyUpdate(test *testing.T) {
 	alicevalue = alicevalues[0].(uint64)
 
 	if alicevalue != 7 {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate() does not apply the update.")
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate() does not apply the update.")
 	}
 
 	johnproof, _ := collection.Get([]byte("john")).Proof()
 	johnupdate, _ := collection.Prepare(TestUpdateSingleRecordUpdate{johnproof})
 
-	error = collection.Apply(johnupdate)
+	err = collection.Apply(johnupdate)
 
-	if error == nil {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate() does not yield an error on an invalid update.")
+	if err == nil {
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate() does not yield an error on an invalid update.")
 	}
 
-	aliceproof, _ = collection.Get([]byte("alice")).Proof()
+	aliceProof, _ = collection.Get([]byte("alice")).Proof()
 	bobproof, _ := collection.Get([]byte("bob")).Proof()
 
-	alicetobobupdate, _ := collection.Prepare(TestUpdateDoubleRecordUpdate{aliceproof, bobproof})
+	alicetobobupdate, _ := collection.Prepare(TestUpdateDoubleRecordUpdate{aliceProof, bobproof})
 
-	error = collection.Apply(alicetobobupdate)
-	if error != nil {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate() yields an error when applying a valid update.")
+	err = collection.Apply(alicetobobupdate)
+	if err != nil {
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate() yields an error when applying a valid update.")
 	}
 
 	alice, _ = collection.Get([]byte("alice")).Record()
@@ -368,30 +374,30 @@ func TestUpdateApplyUpdate(test *testing.T) {
 	bobvalue := bobvalues[0].(uint64)
 
 	if (alicevalue != 6) || (bobvalue != 1) {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate does not apply the proper update.")
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate does not apply the proper update.")
 	}
 
 	collection.Begin()
 
-	aliceproof, _ = collection.Get([]byte("alice")).Proof()
+	aliceProof, _ = collection.Get([]byte("alice")).Proof()
 	bobproof, _ = collection.Get([]byte("bob")).Proof()
 
-	alicetobobupdate, _ = collection.Prepare(TestUpdateDoubleRecordUpdate{aliceproof, bobproof})
-	bobtoaliceupdate, _ := collection.Prepare(TestUpdateDoubleRecordUpdate{bobproof, aliceproof})
+	alicetobobupdate, _ = collection.Prepare(TestUpdateDoubleRecordUpdate{aliceProof, bobproof})
+	bobtoaliceupdate, _ := collection.Prepare(TestUpdateDoubleRecordUpdate{bobproof, aliceProof})
 
-	error = collection.Apply(alicetobobupdate)
-	if error != nil {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate() yields an error when applying a valid update.")
+	err = collection.Apply(alicetobobupdate)
+	if err != nil {
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate() yields an error when applying a valid update.")
 	}
 
-	error = collection.Apply(bobtoaliceupdate)
-	if error != nil {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate() yields an error when applying a valid update.")
+	err = collection.Apply(bobtoaliceupdate)
+	if err != nil {
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate() yields an error when applying a valid update.")
 	}
 
-	error = collection.Apply(bobtoaliceupdate)
-	if error != nil {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate() yields an error when applying a valid update.")
+	err = collection.Apply(bobtoaliceupdate)
+	if err != nil {
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate() yields an error when applying a valid update.")
 	}
 
 	collection.End()
@@ -405,26 +411,26 @@ func TestUpdateApplyUpdate(test *testing.T) {
 	bobvalue = bobvalues[0].(uint64)
 
 	if (alicevalue != 7) || (bobvalue != 0) {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate does not apply the proper update.")
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate does not apply the proper update.")
 	}
 
-	aliceproof, _ = collection.Get([]byte("alice")).Proof()
+	aliceProof, _ = collection.Get([]byte("alice")).Proof()
 	bobproof, _ = collection.Get([]byte("bob")).Proof()
 
-	bobtoaliceupdate, _ = collection.Prepare(TestUpdateDoubleRecordUpdate{bobproof, aliceproof})
+	bobtoaliceupdate, _ = collection.Prepare(TestUpdateDoubleRecordUpdate{bobproof, aliceProof})
 
-	error = collection.Apply(bobtoaliceupdate)
-	if error == nil {
-		test.Error("[update.go]", "[applyupdate]", "applyupdate() does not yield an error when applying an invalid update.")
+	err = collection.Apply(bobtoaliceupdate)
+	if err == nil {
+		test.Error("[update.go]", "[applyUpdate]", "applyUpdate() does not yield an error when applying an invalid update.")
 	}
 
-	ctx.should_panic("[applyupdate]", func() {
+	ctx.shouldPanic("[applyUpdate]", func() {
 		collection.Apply(alicetobobupdate)
 	})
 }
 
 func TestUpdateApplyUserUpdate(test *testing.T) {
-	ctx := testctx("[update.go]", test)
+	ctx := testCtx("[update.go]", test)
 
 	stake64 := Stake64{}
 	collection := New(stake64)
@@ -433,10 +439,10 @@ func TestUpdateApplyUserUpdate(test *testing.T) {
 	collection.Add([]byte("bob"), uint64(0))
 
 	aliceproof, _ := collection.Get([]byte("alice")).Proof()
-	error := collection.Apply(TestUpdateSingleRecordUpdate{aliceproof})
+	err := collection.Apply(TestUpdateSingleRecordUpdate{aliceproof})
 
-	if error != nil {
-		test.Error("[update.go]", "[applyuserupdate]", "applyuserupdate() yields an error when applying a valid user update.")
+	if err != nil {
+		test.Error("[update.go]", "[applyUserUpdate]", "applyUserUpdate() yields an error when applying a valid user update.")
 	}
 
 	alice, _ := collection.Get([]byte("alice")).Record()
@@ -444,26 +450,26 @@ func TestUpdateApplyUserUpdate(test *testing.T) {
 	alicevalue := alicevalues[0].(uint64)
 
 	if alicevalue != 5 {
-		test.Error("[update.go]", "[applyuserupdate]", "applyuserupdate() does not apply the update.")
+		test.Error("[update.go]", "[applyUserUpdate]", "applyUserUpdate() does not apply the update.")
 	}
 
 	aliceproof, _ = collection.Get([]byte("alice")).Proof()
 	aliceproof.steps[0].Left.Label[0]++
 
-	error = collection.Apply(TestUpdateSingleRecordUpdate{aliceproof})
+	err = collection.Apply(TestUpdateSingleRecordUpdate{aliceproof})
 
-	if error == nil {
-		test.Error("[update.go]", "[applyuserupdate]", "applyuserupdate() does not yield an error when applying an invalid user update.")
+	if err == nil {
+		test.Error("[update.go]", "[applyUserUpdate]", "applyUserUpdate() does not yield an error when applying an invalid user update.")
 	}
 
 	johnproof, _ := collection.Get([]byte("john")).Proof()
-	error = collection.Apply(TestUpdateSingleRecordUpdate{johnproof})
+	err = collection.Apply(TestUpdateSingleRecordUpdate{johnproof})
 
-	if error == nil {
-		test.Error("[update.go]", "[applyuserupdate]", "applyuserupdate() does not yield an error when applying an invalid user update.")
+	if err == nil {
+		test.Error("[update.go]", "[applyUserUpdate]", "applyUserUpdate() does not yield an error when applying an invalid user update.")
 	}
 
-	ctx.should_panic("[applyuserupdate]", func() {
+	ctx.shouldPanic("[applyUserUpdate]", func() {
 		collection.Begin()
 
 		aliceproof, _ := collection.Get([]byte("alice")).Proof()

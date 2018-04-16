@@ -1,85 +1,89 @@
 package collection
 
-import "testing"
-import csha256 "crypto/sha256"
+import (
+	"crypto/sha256"
+	"testing"
+)
 
-// testctxstruct
-
-type testctxstruct struct {
+type testCtxStructure struct {
 	file string
 	test *testing.T
 
-	verify testctxverifier
+	verify testCtxVerifier
 }
 
 // Constructors
 
-func testctx(file string, test *testing.T) testctxstruct {
-	return testctxstruct{file, test, testctxverifier{file, test}}
+func testCtx(file string, test *testing.T) testCtxStructure {
+	return testCtxStructure{file, test, testCtxVerifier{file, test}}
 }
 
 // Methods
 
-func (this testctxstruct) should_panic(prefix string, function func()) {
+func (t testCtxStructure) shouldPanic(prefix string, function func()) {
 	defer func() {
 		if recover() == nil {
-			this.test.Error(this.file, prefix, "Function provided did not panic.")
+			t.test.Error(t.file, prefix, "function provided did not panic")
 		}
 	}()
 
 	function()
 }
 
-// testctxverifier
+// testCtxVerifier
 
-type testctxverifier struct {
+type testCtxVerifier struct {
 	file string
 	test *testing.T
 }
 
 // Methods
 
-func (this testctxverifier) node(prefix string, collection *Collection, node *node) {
+func (t testCtxVerifier) node(prefix string, collection *Collection, node *node) {
 	if !(node.known) {
 		return
 	}
 
 	if node.leaf() {
 		if (node.children.left != nil) || (node.children.right != nil) {
-			this.test.Error(this.file, prefix, "Leaf node has one or more children.")
+			t.test.Error(t.file, prefix, "leaf node has one or more children")
 			return
 		}
 
-		if node.label != sha256(true, node.key, node.values) {
-			this.test.Error(this.file, prefix, "Wrong leaf node label.")
+		expectedLabel := node.generateHash()
+
+		if node.label != expectedLabel {
+			t.test.Error(t.file, prefix, "wrong leaf node label")
 			return
 		}
 	} else {
 		if (node.children.left == nil) || (node.children.right == nil) {
-			this.test.Error(this.file, prefix, "Internal node is missing one or more children.")
+			t.test.Error(t.file, prefix, "internal node is missing one or more children")
 			return
 		}
 
 		if (node.children.left.parent != node) || (node.children.right.parent != node) {
-			this.test.Error(this.file, prefix, "Children of internal node don't have its parent correctly set.")
+			t.test.Error(t.file, prefix, "children of internal node don't have its parent correctly set")
 			return
 		}
 
-		if node.label != sha256(false, node.values, node.children.left.label[:], node.children.right.label[:]) {
-			this.test.Error(this.file, prefix, "Wrong internal node label.")
+		expectedLabel := node.generateHash()
+
+		if node.label != expectedLabel {
+			t.test.Error(t.file, prefix, "wrong internal node label")
 			return
 		}
 
 		if node.children.left.known && node.children.right.known {
 			for index := 0; index < len(collection.fields); index++ {
-				parentvalue, parenterror := collection.fields[index].Parent(node.children.left.values[index], node.children.right.values[index])
+				parentValue, parentError := collection.fields[index].Parent(node.children.left.values[index], node.children.right.values[index])
 
-				if parenterror != nil {
-					this.test.Error(this.file, prefix, "Malformed children values.")
+				if parentError != nil {
+					t.test.Error(t.file, prefix, "malformed children values")
 				}
 
-				if !equal(parentvalue, node.values[index]) {
-					this.test.Error(this.file, prefix, "One or more internal node values conflict with the corresponding children values.")
+				if !equal(parentValue, node.values[index]) {
+					t.test.Error(t.file, prefix, "one or more internal node values conflict with the corresponding children values")
 					return
 				}
 			}
@@ -87,135 +91,132 @@ func (this testctxverifier) node(prefix string, collection *Collection, node *no
 	}
 }
 
-func (this testctxverifier) treerecursion(prefix string, collection *Collection, node *node, path []bool) {
-	this.node(prefix, collection, node)
+func (t testCtxVerifier) treeRecursion(prefix string, collection *Collection, node *node, path []bool) {
+	t.node(prefix, collection, node)
 
 	if node.leaf() {
 		if !(node.placeholder()) {
 			for index := 0; index < len(path); index++ {
-				keyhash := sha256(node.key)
-				if path[index] != bit(keyhash[:], index) {
-					this.test.Error(this.file, prefix, "Leaf node on wrong path.")
+				keyHash := sha256.Sum256(node.key)
+				if path[index] != bit(keyHash[:], index) {
+					t.test.Error(t.file, prefix, "leaf node on wrong path")
 				}
 			}
 		}
 	} else {
-		leftpath := make([]bool, len(path))
-		rightpath := make([]bool, len(path))
+		leftPath := make([]bool, len(path))
+		rightPath := make([]bool, len(path))
 
-		copy(leftpath, path)
-		copy(rightpath, path)
+		copy(leftPath, path)
+		copy(rightPath, path)
 
-		leftpath = append(leftpath, false)
-		rightpath = append(rightpath, true)
+		leftPath = append(leftPath, Left)
+		rightPath = append(rightPath, Right)
 
-		this.treerecursion(prefix, collection, node.children.left, leftpath)
-		this.treerecursion(prefix, collection, node.children.right, rightpath)
+		t.treeRecursion(prefix, collection, node.children.left, leftPath)
+		t.treeRecursion(prefix, collection, node.children.right, rightPath)
 	}
 }
 
-func (this testctxverifier) tree(prefix string, collection *Collection) {
-	this.treerecursion(prefix, collection, collection.root, []bool{})
+func (t testCtxVerifier) tree(prefix string, collection *Collection) {
+	t.treeRecursion(prefix, collection, collection.root, []bool{})
 }
 
-func (this testctxverifier) scoperecursion(prefix string, collection *Collection, node *node, path []bool) {
+func (t testCtxVerifier) scopeRecursion(prefix string, collection *Collection, node *node, path []bool) {
 	if !(node.known) {
 		return
 	}
 
-	var pathbuf [csha256.Size]byte
+	var pathBuf [sha256.Size]byte
 
 	for index := 0; index < len(path); index++ {
-		setbit(pathbuf[:], index, path[index])
+		setBit(pathBuf[:], index, path[index])
 	}
 
-	if node.known && len(path) > 1 && !(collection.scope.match(pathbuf, len(path)-2)) {
-		this.test.Error(this.file, prefix, "Out-of-scope node was not pruned from tree.")
+	if node.known && len(path) > 1 && !(collection.scope.match(pathBuf, len(path)-2)) {
+		t.test.Error(t.file, prefix, "out-of-scope node was not pruned from tree")
 	} else {
 		if !(node.leaf()) {
-			leftpath := make([]bool, len(path))
-			rightpath := make([]bool, len(path))
+			leftPath := make([]bool, len(path))
+			rightPath := make([]bool, len(path))
 
-			copy(leftpath, path)
-			copy(rightpath, path)
+			copy(leftPath, path)
+			copy(rightPath, path)
 
-			leftpath = append(leftpath, false)
-			rightpath = append(rightpath, true)
+			leftPath = append(leftPath, Left)
+			rightPath = append(rightPath, Right)
 
-			this.scoperecursion(prefix, collection, node.children.left, leftpath)
-			this.scoperecursion(prefix, collection, node.children.right, rightpath)
+			t.scopeRecursion(prefix, collection, node.children.left, leftPath)
+			t.scopeRecursion(prefix, collection, node.children.right, rightPath)
 		}
 	}
 }
 
-func (this testctxverifier) scope(prefix string, collection *Collection) {
-	var pathbuf [csha256.Size]byte
+func (t testCtxVerifier) scope(prefix string, collection *Collection) {
+	var pathBuf [sha256.Size]byte
 	none := true
 
-	setbit(pathbuf[:], 0, false)
-	if collection.scope.match(pathbuf, 0) {
+	setBit(pathBuf[:], 0, false)
+	if collection.scope.match(pathBuf, 0) {
 		none = false
 	}
 
-	setbit(pathbuf[:], 0, true)
-	if collection.scope.match(pathbuf, 0) {
+	setBit(pathBuf[:], 0, true)
+	if collection.scope.match(pathBuf, 0) {
 		none = false
 	}
 
 	if none {
 		if collection.root.known {
-			this.test.Error(this.file, prefix, "None-scope collection has known root.")
+			t.test.Error(t.file, prefix, "none-scope collection has known root")
 		}
 	} else {
 		if collection.root.known {
-			this.scoperecursion(prefix, collection, collection.root.children.left, []bool{false})
-			this.scoperecursion(prefix, collection, collection.root.children.right, []bool{true})
+			t.scopeRecursion(prefix, collection, collection.root.children.left, []bool{false})
+			t.scopeRecursion(prefix, collection, collection.root.children.right, []bool{true})
 		}
 	}
 }
 
-func (this testctxverifier) keyrecursion(key []byte, node *node) *node {
+func (t testCtxVerifier) keyRecursion(key []byte, node *node) *node {
 	if node.leaf() {
 		if equal(node.key, key) {
 			return node
-		} else {
-			return nil
 		}
-	} else {
-		left := this.keyrecursion(key, node.children.left)
-		right := this.keyrecursion(key, node.children.right)
+		return nil
+	}
+	left := t.keyRecursion(key, node.children.left)
+	right := t.keyRecursion(key, node.children.right)
 
-		if left != nil {
-			return left
-		} else {
-			return right
-		}
+	if left != nil {
+		return left
+	}
+	return right
+}
+
+func (t testCtxVerifier) key(prefix string, collection *Collection, key []byte) {
+	if t.keyRecursion(key, collection.root) == nil {
+		t.test.Error(t.file, prefix, "node not found")
 	}
 }
 
-func (this testctxverifier) key(prefix string, collection *Collection, key []byte) {
-	if this.keyrecursion(key, collection.root) == nil {
-		this.test.Error(this.file, prefix, "Node not found.")
+func (t testCtxVerifier) noKey(prefix string, collection *Collection, key []byte) {
+	if t.keyRecursion(key, collection.root) != nil {
+		t.test.Error(t.file, prefix, "unexpected node found")
 	}
 }
 
-func (this testctxverifier) nokey(prefix string, collection *Collection, key []byte) {
-	if this.keyrecursion(key, collection.root) != nil {
-		this.test.Error(this.file, prefix, "Unexpected node found.")
-	}
-}
-
-func (this testctxverifier) values(prefix string, collection *Collection, key []byte, values ...interface{}) {
-	node := this.keyrecursion(key, collection.root)
+func (t testCtxVerifier) values(prefix string, collection *Collection, key []byte, values ...interface{}) {
+	node := t.keyRecursion(key, collection.root)
 
 	if node == nil {
-		this.test.Error(this.file, prefix, "Node not found.")
+		t.test.Error(t.file, prefix, "node not found")
 	}
 
 	for index := 0; index < len(collection.fields); index++ {
-		rawvalue := collection.fields[index].Encode(values[index])
-		if !(equal(rawvalue, node.values[index])) {
-			this.test.Error(this.file, prefix, "Wrong values.")
+		rawValue := collection.fields[index].Encode(values[index])
+		if !(equal(rawValue, node.values[index])) {
+			t.test.Error(t.file, prefix, "wrong values")
 		}
 	}
 }

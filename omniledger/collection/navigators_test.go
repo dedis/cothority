@@ -1,12 +1,14 @@
 package collection
 
-import "testing"
-import "sort"
-import csha256 "crypto/sha256"
-import "encoding/binary"
+import (
+	"crypto/sha256"
+	"encoding/binary"
+	"sort"
+	"testing"
+)
 
 func TestNavigatorsConstructors(test *testing.T) {
-	ctx := testctx("[navigators.go]", test)
+	ctx := testCtx("[navigators.go]", test)
 
 	stake64 := Stake64{}
 	data := Data{}
@@ -26,15 +28,15 @@ func TestNavigatorsConstructors(test *testing.T) {
 		test.Error("[navigators.go]", "[constructors]", "Navigator constructor sets wrong field value.")
 	}
 
-	ctx.should_panic("[constructors]", func() {
+	ctx.shouldPanic("[constructors]", func() {
 		collection.Navigate(3, uint64(14))
 	})
 
-	ctx.should_panic("[constructors]", func() {
+	ctx.shouldPanic("[constructors]", func() {
 		collection.Navigate(-1, uint64(14))
 	})
 
-	ctx.should_panic("[constructors]", func() {
+	ctx.shouldPanic("[constructors]", func() {
 		collection.Navigate(1, "wrongtype")
 	})
 }
@@ -59,10 +61,10 @@ func TestNavigatorsRecord(test *testing.T) {
 		binary.BigEndian.PutUint64(keyi, uint64(entries[i]))
 		binary.BigEndian.PutUint64(keyj, uint64(entries[j]))
 
-		pathi := sha256(keyi)
-		pathj := sha256(keyj)
+		pathi := sha256.Sum256(keyi)
+		pathj := sha256.Sum256(keyj)
 
-		for index := 0; index < csha256.Size; index++ {
+		for index := 0; index < sha256.Size; index++ {
 			if pathi[index] < pathj[index] {
 				return true
 			} else if pathi[index] > pathj[index] {
@@ -93,26 +95,26 @@ func TestNavigatorsRecord(test *testing.T) {
 	}
 
 	rootvalue, _ := stake64.Decode(collection.root.values[0])
-	_, error := collection.Navigate(0, rootvalue.(uint64)+1).Record()
+	_, err := collection.Navigate(0, rootvalue.(uint64)+1).Record()
 
-	if error == nil {
+	if err == nil {
 		test.Error("[navigators.go]", "[record]", "Navigation does not yield an error on invalid query.")
 	}
 
 	collection.root.children.left.known = false
 
-	_, error = collection.Navigate(0, uint64(0)).Record()
+	_, err = collection.Navigate(0, uint64(0)).Record()
 
-	if error == nil {
+	if err == nil {
 		test.Error("[navigators.go]", "[record]", "Navigation does not yield an error on unknown subtree.")
 	}
 
 	collection.scope.None()
 	collection.Collect()
 
-	_, error = collection.Navigate(0, uint64(0)).Record()
+	_, err = collection.Navigate(0, uint64(0)).Record()
 
-	if error == nil {
+	if err == nil {
 		test.Error("[navigators.go]", "[record]", "Navigation does not yield an error on unknown tree.")
 	}
 }

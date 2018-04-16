@@ -1,9 +1,10 @@
 package collection
 
-import csha256 "crypto/sha256"
+import "crypto/sha256"
 
+//A node represents one element of the Merkle tree like data-structure.
 type node struct {
-	label [csha256.Size]byte
+	label [sha256.Size]byte
 
 	known bool
 
@@ -24,63 +25,55 @@ type node struct {
 
 // Getters
 
-func (this *node) root() bool {
-	if this.parent == nil {
-		return true
-	} else {
-		return false
-	}
+func (n *node) root() bool {
+	return n.parent == nil
 }
 
-func (this *node) leaf() bool {
-	if this.children.left == nil {
-		return true
-	} else {
-		return false
-	}
+func (n *node) leaf() bool {
+	return n.children.left == nil
 }
 
-func (this *node) placeholder() bool {
-	return this.leaf() && (len(this.key) == 0)
+func (n *node) placeholder() bool {
+	return n.leaf() && (len(n.key) == 0)
 }
 
 // Methods
 
-func (this *node) backup() {
-	if this.transaction.backup == nil {
-		this.transaction.backup = new(node)
+func (n *node) backup() {
+	if n.transaction.backup == nil {
+		n.transaction.backup = new(node)
 
-		this.transaction.backup.label = this.label
-		this.transaction.backup.known = this.known
-		this.transaction.backup.transaction.inconsistent = this.transaction.inconsistent
+		n.transaction.backup.label = n.label
+		n.transaction.backup.known = n.known
+		n.transaction.backup.transaction.inconsistent = n.transaction.inconsistent
 
-		this.transaction.backup.key = this.key
-		this.transaction.backup.values = make([][]byte, len(this.values))
-		copy(this.transaction.backup.values, this.values)
+		n.transaction.backup.key = n.key
+		n.transaction.backup.values = make([][]byte, len(n.values))
+		copy(n.transaction.backup.values, n.values)
 
-		this.transaction.backup.parent = this.parent
-		this.transaction.backup.children.left = this.children.left
-		this.transaction.backup.children.right = this.children.right
+		n.transaction.backup.parent = n.parent
+		n.transaction.backup.children.left = n.children.left
+		n.transaction.backup.children.right = n.children.right
 	}
 }
 
-func (this *node) restore() {
-	if this.transaction.backup != nil {
-		backup := this.transaction.backup
-		(*this) = (*backup)
-		this.transaction.backup = nil
+func (n *node) restore() {
+	if n.transaction.backup != nil {
+		backup := n.transaction.backup
+		(*n) = (*backup)
+		n.transaction.backup = nil
 	}
 }
 
-func (this *node) branch() {
-	this.children.left = new(node)
-	this.children.right = new(node)
+func (n *node) branch() {
+	n.children.left = new(node)
+	n.children.right = new(node)
 
-	this.children.left.parent = this
-	this.children.right.parent = this
+	n.children.left.parent = n
+	n.children.right.parent = n
 }
 
-func (this *node) prune() {
-	this.children.left = nil
-	this.children.right = nil
+func (n *node) prune() {
+	n.children.left = nil
+	n.children.right = nil
 }
