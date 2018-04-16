@@ -277,12 +277,12 @@ func (s *Service) FetchFinal(req *FetchRequest) (network.Message,
 			"No config found")
 
 	}
-	if len(fs.Signature) <= 0 {
-		return nil, errors.New(
-			"Not all other conodes finalized yet")
-
+	if (req.ReturnUncomplete != nil && *req.ReturnUncomplete) ||
+		len(fs.Signature) > 0 {
+		return &FinalizeResponse{fs}, nil
 	}
-	return &FinalizeResponse{fs}, nil
+	return nil, errors.New(
+		"Not all other conodes finalized yet")
 }
 
 // MergeRequest starts Merge process and returns FinalStatement after

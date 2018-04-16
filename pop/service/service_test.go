@@ -249,6 +249,16 @@ func TestService_FetchFinal(t *testing.T) {
 
 		_, err = services[0].FinalizeRequest(fr)
 		require.NotNil(t, err)
+		_, err = services[0].FetchFinal(&FetchRequest{
+			ID: fr.DescID,
+		})
+		require.NotNil(t, err)
+		tr := true
+		_, err = services[0].FetchFinal(&FetchRequest{
+			ID:               fr.DescID,
+			ReturnUncomplete: &tr,
+		})
+		require.Nil(t, err)
 
 		sg, err = schnorr.Sign(tSuite, priv[1], hash)
 		log.ErrFatal(err)
@@ -264,7 +274,7 @@ func TestService_FetchFinal(t *testing.T) {
 		// Fetch final
 		descHash := desc.Hash()
 		for _, s := range services {
-			msg, err := s.FetchFinal(&FetchRequest{descHash})
+			msg, err := s.FetchFinal(&FetchRequest{ID: descHash})
 			require.Nil(t, err)
 			require.NotNil(t, msg)
 			resp, ok := msg.(*FinalizeResponse)

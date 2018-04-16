@@ -73,7 +73,7 @@ func (c *Client) FetchFinal(dst network.Address, hash []byte) (
 	*FinalStatement, error) {
 	si := &network.ServerIdentity{Address: dst}
 	res := &FinalizeResponse{}
-	err := c.SendProtobuf(si, &FetchRequest{hash}, res)
+	err := c.SendProtobuf(si, &FetchRequest{ID: hash}, res)
 	if err != nil {
 		return nil, err
 	}
