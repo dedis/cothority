@@ -160,7 +160,8 @@ type FinalizeResponse struct {
 
 // FetchRequest asks to get FinalStatement
 type FetchRequest struct {
-	ID []byte
+	ID               []byte
+	ReturnUncomplete *bool
 }
 
 // MergeRequest asks to start merging process for given Party

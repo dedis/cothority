@@ -17,6 +17,7 @@ message FinalizeResponse {
 
 message FetchRequest {
     required bytes id = 1;
+    optional bool returnUncomplete = 2;
 }
 
 message MergeRequest {
