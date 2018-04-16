@@ -1,12 +1,22 @@
 package main
 
-import "gopkg.in/urfave/cli.v1"
+import cli "gopkg.in/urfave/cli.v1"
 
 /*
 This holds the cli-commands so the main-file is less cluttered.
 */
 
 func getCommands() cli.Commands {
+	tomlORIP := []cli.Flag{
+		cli.StringFlag{
+			Name:  "toml, t",
+			Usage: "give a toml file with the node to add",
+		},
+		cli.StringFlag{
+			Name:  "addr, a",
+			Usage: "give an ip:port pair to add to the roster",
+		},
+	}
 	return cli.Commands{
 		{
 			Name:    "link",
@@ -107,11 +117,40 @@ func getCommands() cli.Commands {
 					Action:    scQrcode,
 				},
 				{
-					Name:      "roster",
-					Aliases:   []string{"r"},
-					Usage:     "define a new roster for the skipchain",
-					ArgsUsage: "group.toml [skipchain-id]",
-					Action:    scRoster,
+					Name:    "roster",
+					Aliases: []string{"r"},
+					Usage:   "change the roster for the skipchain",
+					Subcommands: cli.Commands{
+						cli.Command{
+							Name:      "show",
+							Aliases:   []string{"s"},
+							Usage:     "shows the current roster of the skipchain",
+							ArgsUsage: "[skipchain-id]",
+							Action:    scRosterShow,
+						},
+						cli.Command{
+							Name:      "set",
+							Usage:     "set the current roster of the skipchain",
+							ArgsUsage: "group.toml [skipchain-id]",
+							Action:    scRosterSet,
+						},
+						cli.Command{
+							Name:      "add",
+							Aliases:   []string{"a"},
+							Usage:     "adds a node to the current roster of the skipchain",
+							ArgsUsage: "[skipchain-id]",
+							Action:    scRosterAdd,
+							Flags:     tomlORIP,
+						},
+						cli.Command{
+							Name:      "remove",
+							Aliases:   []string{"rm"},
+							Usage:     "removes a node from the current roster of the skipchain",
+							ArgsUsage: "[skipchain-id]",
+							Action:    scRosterRemove,
+							Flags:     tomlORIP,
+						},
+					},
 				},
 			},
 		},
