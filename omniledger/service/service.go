@@ -298,12 +298,18 @@ func (s *Service) tryLoad() error {
 		s.storage.Private = map[string]kyber.Scalar{}
 	}
 	s.collectionDB = map[string]*collectionDB{}
-	// TODO: Do we need this? Could we replace this?
-	/*
-		for _, ch := range s.storage.DarcBlocks {
-			s.getCollection(ch.LatestSkipblock.SkipChainID())
-		}
-	*/
+
+	gas := &skipchain.GetAllSkipchains{}
+	gasr, err := s.skService().GetAllSkipchains(gas)
+	if err != nil {
+		return err
+	}
+
+	allSkipchains := gasr.SkipChains
+	for _, sb := range allSkipchains {
+		s.getCollection(sb.SkipChainID())
+	}
+
 	return nil
 }
 
