@@ -1,0 +1,11 @@
+language: go
+
+install:
+  - go get -t ./...
+  - go get github.com/dedis/Coding || true
+
+before_install:
+  - cd $TRAVIS_BUILD_DIR
+
+script:
+  - make test_fmt test_goveralls
