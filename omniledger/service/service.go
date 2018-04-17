@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"gopkg.in/dedis/cothority.v2"
-	"gopkg.in/dedis/cothority.v2/identity"
 	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/kyber.v2"
 	"gopkg.in/dedis/kyber.v2/util/key"
@@ -252,11 +251,7 @@ func (s *Service) getCollection(id skipchain.SkipBlockID) *collectionDB {
 	return col
 }
 
-// interface to identity.Service
-func (s *Service) idService() *identity.Service {
-	return s.Service(identity.ServiceName).(*identity.Service)
-}
-
+// interface to skipchain.Service
 func (s *Service) skService() *skipchain.Service {
 	return s.Service(skipchain.ServiceName).(*skipchain.Service)
 }
