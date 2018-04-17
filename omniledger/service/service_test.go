@@ -29,11 +29,11 @@ func TestService_CreateSkipchain(t *testing.T) {
 	resp, err = s.service.CreateSkipchain(&CreateSkipchain{
 		Version: CurrentVersion,
 		Roster:  *s.roster,
-        Transaction: Transaction{
-            Key: []byte("someKey"),
-            Kind: []byte("someKind"),
-            Value: []byte("someValue"),
-        },
+		Transaction: Transaction{
+			Key:   []byte("someKey"),
+			Kind:  []byte("someKind"),
+			Value: []byte("someValue"),
+		},
 	})
 	require.Nil(t, err)
 	assert.Equal(t, CurrentVersion, resp.Version)
@@ -51,11 +51,11 @@ func TestService_AddKeyValue(t *testing.T) {
 	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
-        Transaction: Transaction{
-		    Key:         s.key,
-            Kind: []byte("testKind"),
-		    Value:       s.value,
-        },
+		Transaction: Transaction{
+			Key:   s.key,
+			Kind:  []byte("testKind"),
+			Value: s.value,
+		},
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
@@ -72,7 +72,7 @@ func TestService_GetValue(t *testing.T) {
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 		Key:         s.key,
-        Kind: []byte("testKind"),
+		Kind:        []byte("testKind"),
 	})
 	require.Nil(t, err)
 	require.Equal(t, s.value, *rep.Value)
@@ -110,11 +110,11 @@ func newSer(t *testing.T, step int) *ser {
 			_, err := s.service.SetKeyValue(&SetKeyValue{
 				Version:     CurrentVersion,
 				SkipchainID: s.sb.SkipChainID(),
-                Transaction: Transaction{
-		            Key:         s.key,
-                    Kind: []byte("testKind"),
-		            Value:       s.value,
-                },
+				Transaction: Transaction{
+					Key:   s.key,
+					Kind:  []byte("testKind"),
+					Value: s.value,
+				},
 			})
 			assert.Nil(t, err)
 		}

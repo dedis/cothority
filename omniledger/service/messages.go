@@ -18,7 +18,7 @@ func init() {
 		&CreateSkipchain{}, &CreateSkipchainResponse{},
 		&SetKeyValue{}, &SetKeyValueResponse{},
 		&GetValue{}, &GetValueResponse{},
-        &Transaction{}, &darc.Signature{},
+		&Transaction{}, &darc.Signature{},
 	)
 }
 
@@ -72,8 +72,8 @@ type SetKeyValue struct {
 	Version Version
 	// SkipchainID is the hash of the first skipblock
 	SkipchainID skipchain.SkipBlockID
-    // Transaction to be apllied to the kv-store
-    Transaction Transaction
+	// Transaction to be apllied to the kv-store
+	Transaction Transaction
 }
 
 // SetKeyValueResponse gives the timestamp and the skipblock-id
@@ -94,7 +94,7 @@ type GetValue struct {
 	// SkipchainID represents the skipchain where the value is stored
 	SkipchainID skipchain.SkipBlockID
 	// Key to retrieve
-	Key []byte
+	Key  []byte
 	Kind []byte
 }
 
