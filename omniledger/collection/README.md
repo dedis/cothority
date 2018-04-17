@@ -60,6 +60,8 @@ Our users can therefore make use of the untrusted server as follows:
 
 ![collection](assets/images/collection.gif "Example use scenario")
 
+You can also analyze the example [one frame at a time](example.md).
+
 ### Hands on
 
 If you are already familiar with the basic notions behind a `collection`, and just need to get started, this section is what you are looking for. If you need a better understanding of how a `collection` works, you might want to skip this section for now, and dive in [Design](#design), where you will find all the information you need to bootstrap yourself in the world of `collection`s.
