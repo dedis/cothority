@@ -52,13 +52,6 @@ type Service struct {
 // than one structure.
 const storageID = "main"
 
-// DarcBlock will be removed
-type DarcBlock struct {
-	sync.Mutex
-	Latest          *Data
-	LatestSkipblock *skipchain.SkipBlock
-}
-
 // Data is the data passed to the Skipchain
 type Data struct {
 	// Root of the merkle tree after applying the transactions to the
