@@ -276,6 +276,11 @@ func (s *Service) skService() *skipchain.Service {
 	return s.Service(skipchain.ServiceName).(*skipchain.Service)
 }
 
+// gives us access to the skipchain's database, so we can get blocks by ID
+func (s *Service) db() *skipchain.SkipBlockDB {
+	return s.skService().GetDB()
+}
+
 // saves all skipblocks.
 func (s *Service) save() {
 	s.storage.Lock()
