@@ -5,10 +5,6 @@
 package service
 
 import (
-	_ "crypto"
-	_ "crypto/rsa"
-	_ "crypto/sha256"
-	_ "crypto/x509"
 	"errors"
 	"fmt"
 	"sync"
@@ -18,7 +14,6 @@ import (
 	"gopkg.in/dedis/cothority.v2/identity"
 	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/kyber.v2"
-	_ "gopkg.in/dedis/kyber.v2/sign/schnorr"
 	"gopkg.in/dedis/kyber.v2/util/key"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/log"
@@ -57,12 +52,14 @@ type Service struct {
 // than one structure.
 const storageID = "main"
 
+// DarcBlock will be removed
 type DarcBlock struct {
 	sync.Mutex
 	Latest          *Data
 	LatestSkipblock *skipchain.SkipBlock
 }
 
+// Data is the data passed to the Skipchain
 type Data struct {
 	// Root of the merkle tree after applying the transactions to the
 	// kv store
