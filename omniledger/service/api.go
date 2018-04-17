@@ -36,9 +36,9 @@ func NewClient() *Client {
 func (c *Client) CreateSkipchain(r *onet.Roster, tx Transaction) (*CreateSkipchainResponse, error) {
 	reply := &CreateSkipchainResponse{}
 	err := c.SendProtobuf(r.List[0], &CreateSkipchain{
-		Version: CurrentVersion,
-		Roster:  *r,
-        Transaction: tx,
+		Version:     CurrentVersion,
+		Roster:      *r,
+		Transaction: tx,
 	}, reply)
 	if err != nil {
 		return nil, err
@@ -48,12 +48,12 @@ func (c *Client) CreateSkipchain(r *onet.Roster, tx Transaction) (*CreateSkipcha
 
 // SetKeyValue sets a key/value pair and returns the created skipblock.
 func (c *Client) SetKeyValue(r *onet.Roster, id skipchain.SkipBlockID,
-                                tx Transaction) (*SetKeyValueResponse, error) {
+	tx Transaction) (*SetKeyValueResponse, error) {
 	reply := &SetKeyValueResponse{}
-    err := c.SendProtobuf(r.List[0], &SetKeyValue{
+	err := c.SendProtobuf(r.List[0], &SetKeyValue{
 		Version:     CurrentVersion,
 		SkipchainID: id,
-        Transaction: tx,
+		Transaction: tx,
 	}, reply)
 	if err != nil {
 		return nil, err
