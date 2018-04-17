@@ -3,12 +3,11 @@
 package main
 
 import (
-	"crypto/x509"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"io/ioutil"
 	"os"
-	"strings"
 
 	"github.com/dedis/student_18_omniledger/omniledger/service"
 	"gopkg.in/dedis/onet.v2/app"
@@ -66,15 +65,16 @@ func create(c *cli.Context) error {
 	}
 	group := readGroup(c)
 	client := service.NewClient()
-	keyStr, err := ioutil.ReadFile(c.Args().Get(1))
+	txStr, err := ioutil.ReadFile(c.Args().Get(1))
 	if err != nil {
-		return errors.New("couldn't read key-file: " + err.Error())
+		return errors.New("couldn't read transaction-file: " + err.Error())
 	}
-	key, err := hex.DecodeString(strings.TrimSpace(string(keyStr)))
+	tx := &service.Transaction{}
+	err = json.Unmarshal([]byte(txStr), tx)
 	if err != nil {
-		return errors.New("couldn't decode key-file: " + err.Error())
+		return errors.New("couldn't decode transaction-file: " + err.Error())
 	}
-	resp, err := client.CreateSkipchain(group.Roster, key)
+	resp, err := client.CreateSkipchain(group.Roster, *tx)
 	if err != nil {
 		return errors.New("during creation of skipchain: " + err.Error())
 	}
@@ -85,32 +85,26 @@ func create(c *cli.Context) error {
 // set stores a key/value pair on the given skipchain.
 func set(c *cli.Context) error {
 	log.Error("Not tested! Will not work!")
-	if c.NArg() != 5 {
-		return errors.New("please give: group.toml skipchain-ID private.key key value")
+	if c.NArg() != 6 {
+		return errors.New("please give: group.toml skipchain-ID darc" +
+			" kind key value")
 	}
 	group := readGroup(c)
 	scid, err := hex.DecodeString(c.Args().Get(1))
 	if err != nil {
 		return err
 	}
-	privStr, err := ioutil.ReadFile(c.Args().Get(2))
-	if err != nil {
-		return errors.New("couldn't read file of private key: " + err.Error())
-	}
-	privTrimmed := strings.TrimSpace(string(privStr))
-	privByte, err := hex.DecodeString(privTrimmed)
-	if err != nil {
-		return errors.New("couldn't decode private key: " + err.Error())
-	}
-	priv, err := x509.ParsePKCS1PrivateKey(privByte)
-	if err != nil {
-		return errors.New("couldn't parse private key: " + err.Error())
-	}
+	// TODO: parse darc from c.Args().Get(2) and sign tx with it
 
-	key := c.Args().Get(3)
-	value := c.Args().Get(4)
-	resp, err := service.NewClient().SetKeyValue(group.Roster, scid, priv,
-		[]byte(key), []byte(value))
+	kind := c.Args().Get(3)
+	key := c.Args().Get(4)
+	value := c.Args().Get(5)
+	tx := service.Transaction{
+		Kind:  []byte(kind),
+		Key:   []byte(key),
+		Value: []byte(value),
+	}
+	resp, err := service.NewClient().SetKeyValue(group.Roster, scid, tx)
 	if err != nil {
 		return errors.New("couldn't set new key/value pair: " + err.Error())
 	}
