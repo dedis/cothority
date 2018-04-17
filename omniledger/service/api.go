@@ -6,12 +6,6 @@ package service
  */
 
 import (
-	_ "crypto"
-	_ "crypto/rand"
-	_ "crypto/rsa"
-	_ "crypto/sha256"
-	_ "errors"
-
 	"gopkg.in/dedis/cothority.v2"
 	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/onet.v2"
