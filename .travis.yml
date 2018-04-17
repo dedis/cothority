@@ -9,3 +9,7 @@ before_install:
 
 script:
   - make test_fmt test_goveralls
+
+notifications:
+  email: false
+
