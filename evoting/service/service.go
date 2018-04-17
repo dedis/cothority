@@ -76,15 +76,26 @@ func (s *Service) Ping(req *evoting.Ping) (*evoting.Ping, error) {
 	return &evoting.Ping{Nonce: req.Nonce + 1}, nil
 }
 
-// Link message handler. Generates a new master skipchain.
+// Link message handler. Generates a new master skipchain, or updates an existing one.
 func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 	if req.Pin != s.pin {
 		return nil, errors.New("link error: invalid pin")
 	}
 
-	genesis, err := lib.NewSkipchain(s.skipchain, req.Roster, lib.TransactionVerifiers)
-	if err != nil {
-		return nil, err
+	var genesis *skipchain.SkipBlock
+	if req.ID != nil {
+		// Update an existing master chain
+		id := *req.ID
+		genesis = s.db().GetByID(id)
+		if genesis == nil {
+			return nil, errors.New("cannot find master chain to update")
+		}
+	} else {
+		var err error
+		genesis, err = lib.NewSkipchain(s.skipchain, req.Roster, lib.TransactionVerifiers)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	master := &lib.Master{
@@ -252,6 +263,7 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 }
 
 // GetElections message handler. Return all elections in which the given user participates.
+// If signature does not match the username, then only the Master structure is returned.
 func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElectionsReply, error) {
 	master, err := lib.GetMaster(s.skipchain, req.Master)
 	if err != nil {
@@ -274,26 +286,33 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 		d, _ := strconv.Atoi(string(c))
 		digest = append(digest, byte(d))
 	}
+	userValid := true
 	err = schnorr.Verify(cothority.Suite, master.Key, digest, req.Signature)
 	if err != nil {
-		return nil, fmt.Errorf("user-id signature not valid: %v", err)
+		userValid = false
 	}
 
 	elections := make([]*lib.Election, 0)
-	for _, l := range links {
-		election, err := lib.GetElection(s.skipchain, l.ID)
-		if err != nil {
-			return nil, err
-		}
-		// Check if user is a voter or election creator.
-		if election.IsUser(req.User) || election.IsCreator(req.User) {
-			// Filter the election by Stage. 0 denotes no filtering.
-			if req.Stage == 0 || req.Stage == election.Stage {
-				elections = append(elections, election)
+	if userValid {
+		for _, l := range links {
+			election, err := lib.GetElection(s.skipchain, l.ID)
+			if err != nil {
+				return nil, err
+			}
+			// Check if user is a voter or election creator.
+			if election.IsUser(req.User) || election.IsCreator(req.User) {
+				// Filter the election by Stage. 0 denotes no filtering.
+				if req.Stage == 0 || req.Stage == election.Stage {
+					elections = append(elections, election)
+				}
 			}
 		}
 	}
-	return &evoting.GetElectionsReply{Elections: elections, IsAdmin: master.IsAdmin(req.User)}, nil
+	out := &evoting.GetElectionsReply{Elections: elections, Master: *master}
+	if userValid {
+		out.IsAdmin = master.IsAdmin(req.User)
+	}
+	return out, nil
 }
 
 // GetBox message handler to retrieve the casted ballot in an election.

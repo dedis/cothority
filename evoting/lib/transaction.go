@@ -99,8 +99,40 @@ func (t *Transaction) Digest(s *skipchain.Service, genesis skipchain.SkipBlockID
 // Verify checks that the corresponding transaction is valid before storing it.
 func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service) error {
 	digest := t.Digest(s, genesis)
-	db := s.GetDB()
 	if t.Master != nil {
+		// Find the current master in order to compare against it.
+		m, err := GetMaster(s, genesis)
+		if err != nil {
+			// This chain does not exist, yet. Allow it to be created.
+			return nil
+		}
+
+		// It seems like we should be checking t.Signature here, and then checking that
+		// t.Master.User is an admin on the last block. But that would require that we can
+		// get frontend signatures into the ../app/app.go, which is not practical.
+		// Instead, we rely on the PIN check in the top of service.go's Link handler.
+		// If they have the PIN, then they have admin control over the leader, and so
+		// they can update the master chain.
+
+		// Changing this would not make any sense.
+		if !t.Master.ID.Equal(m.ID) {
+			return errors.New("mismatched ID in master update")
+		}
+
+		// All the other fields (admin list, roster, and front end key) may change, but
+		// let's apply some sanity checks to them.
+
+		if len(t.Master.Admins) == 0 {
+			return errors.New("empty admin list in master update")
+		}
+		if len(t.Master.Roster.List) == 0 {
+			return errors.New("empty roster in master update")
+		}
+		null := t.Master.Key.Clone().Null()
+		if t.Master.Key.Equal(null) {
+			return errors.New("null key in master update")
+		}
+
 		return nil
 	} else if t.Link != nil {
 		master, err := GetMaster(s, genesis)
@@ -146,7 +178,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 			return errors.New("ballot user-id differs from transaction user-id")
 		}
 
-		latest, err := db.GetLatest(db.GetByID(election.ID))
+		latest, err := s.GetDB().GetLatest(s.GetDB().GetByID(election.ID))
 		transaction := UnmarshalTransaction(latest.Data)
 		if err != nil {
 			return err

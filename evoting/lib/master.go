@@ -1,7 +1,7 @@
 package lib
 
 import (
-	"fmt"
+	"errors"
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
@@ -34,18 +34,29 @@ type Link struct {
 
 // GetMaster retrieves the master object from its skipchain.
 func GetMaster(s *skipchain.Service, id skipchain.SkipBlockID) (*Master, error) {
+	// Search backwards from the end of the chain, unmarshalling each block until
+	// we find the first Master transaction. (There are Link transactions mixed in
+	// with the Masters.)
+
 	block, err := s.GetSingleBlockByIndex(
-		&skipchain.GetSingleBlockByIndex{Genesis: id, Index: 1},
+		&skipchain.GetSingleBlockByIndex{Genesis: id, Index: -1},
 	)
+	// Cannot even find this chain?
 	if err != nil {
 		return nil, err
 	}
 
-	transaction := UnmarshalTransaction(block.Data)
-	if transaction == nil && transaction.Master == nil {
-		return nil, fmt.Errorf("no master structure in %s", id.Short())
+	for block != nil && len(block.BackLinkIDs) != 0 {
+		transaction := UnmarshalTransaction(block.Data)
+		if transaction == nil {
+			continue
+		}
+		if transaction.Master != nil {
+			return transaction.Master, nil
+		}
+		block = s.GetDB().GetByID(block.BackLinkIDs[0])
 	}
-	return transaction.Master, nil
+	return nil, errors.New("could not find master")
 }
 
 // Links returns all the links appended to the master skipchain.

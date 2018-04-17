@@ -260,14 +260,23 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	log.ErrFatal(err)
 	reply2, err := c.StoreSkipBlock(sb1, roster, nil)
 	log.ErrFatal(err)
-	_, err = c.GetSingleBlockByIndex(roster, sb1.Hash, -1)
-	require.NotNil(t, err)
-	search, err := c.GetSingleBlockByIndex(roster, sb1.Hash, 0)
+
+	// look for latest via id == -1
+	search, err := c.GetSingleBlockByIndex(roster, sb1.Hash, -1)
+	log.ErrFatal(err)
+	require.True(t, reply2.Latest.Equal(search))
+
+	// 0
+	search, err = c.GetSingleBlockByIndex(roster, sb1.Hash, 0)
 	log.ErrFatal(err)
 	require.True(t, sb1.Equal(search))
+
+	// 1
 	search, err = c.GetSingleBlockByIndex(roster, sb1.Hash, 1)
 	log.ErrFatal(err)
 	require.True(t, reply2.Latest.Equal(search))
+
+	// non existing
 	_, err = c.GetSingleBlockByIndex(roster, sb1.Hash, 2)
 	require.NotNil(t, err)
 }

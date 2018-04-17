@@ -501,21 +501,22 @@ func (s *Service) getLastBlock(roster *onet.Roster, latest SkipBlockID) (*SkipBl
 func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, error) {
 	sb := s.db.GetByID(id.ID)
 	if sb == nil {
-		return nil, errors.New(
-			"No such block")
+		return nil, errors.New("No such block")
 
 	}
 	return sb, nil
 }
 
 // GetSingleBlockByIndex searches for the given block and returns it. If no such block is
-// found, a nil is returned.
+// found, a nil is returned. An index of -1 means "the latest block on the skipchain".
 func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, error) {
 	sb := s.db.GetByID(id.Genesis)
 	if sb == nil {
-		return nil, errors.New(
-			"No such genesis-block")
+		return nil, errors.New("No such genesis-block")
 
+	}
+	if id.Index == -1 {
+		return s.GetDB().GetLatest(sb)
 	}
 	if sb.Index == id.Index {
 		return sb, nil
@@ -529,9 +530,7 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, 
 			return sb, nil
 		}
 	}
-	return nil, errors.New(
-		"No block with this index found")
-
+	return nil, errors.New("No block with this index found")
 }
 
 // GetAllSkipchains returns a list of all known skipchains

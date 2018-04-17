@@ -34,6 +34,13 @@ message Election {
     required Footer footer = 17;
 }
 
+message Master {
+    required bytes id = 1;
+    required Roster roster = 2;
+    repeated uint32 admins = 3 [packed=true];
+    required bytes key = 4;
+}
+
 message Footer {
   required string text = 1;
   required string contactTitle = 2;
@@ -45,7 +52,6 @@ message Ballot {
     required uint32 user = 1;
     required bytes alpha = 2;
     required bytes beta = 3;
-    // optional bytes text = 4;
 }
 
 message Ping {
@@ -57,6 +63,7 @@ message Link {
     required Roster roster = 2;
     required bytes key = 3;
     repeated uint32 admins = 4;
+    optional bytes id = 5;
 }
 
 message LinkReply {
@@ -73,6 +80,7 @@ message GetElections {
 message GetElectionsReply {
     repeated Election elections = 1;
     required bool isAdmin = 2;
+    required Master master = 3;
 }
 
 message Open{

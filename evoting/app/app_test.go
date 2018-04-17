@@ -3,12 +3,10 @@ package main
 import (
 	"testing"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet/log"
-
 	"github.com/stretchr/testify/assert"
-
-	"github.com/dedis/cothority"
 )
 
 func TestMain(m *testing.M) {
