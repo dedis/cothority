@@ -8,7 +8,7 @@ before_install:
   - cd $TRAVIS_BUILD_DIR
 
 script:
-  - make test_fmt test_goveralls
+  - make test
 
 notifications:
   email: false
