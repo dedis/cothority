@@ -31,9 +31,9 @@ func init() {
 // in the second skipblock right after the (empty) genesis block. A reference
 // to the election skipchain is appended to the master skipchain upon opening.
 type Election struct {
-	Name    string   // Name of the election.
-	Creator uint32   // Creator is the election responsible.
-	Users   []uint32 // Users is the list of registered voters.
+	Name    map[string]string // Name of the election. lang-code, value pair
+	Creator uint32            // Creator is the election responsible.
+	Users   []uint32          // Users is the list of registered voters.
 
 	ID        skipchain.SkipBlockID // ID is the hash of the genesis block.
 	Master    skipchain.SkipBlockID // Master is the hash of the master skipchain.
@@ -42,12 +42,12 @@ type Election struct {
 	MasterKey kyber.Point           // MasterKey is the front-end public key.
 	Stage     ElectionState         // Stage indicates the phase of election and is used for filtering in frontend
 
-	Candidates []uint32 // Candidates is the list of candidate scipers.
-	MaxChoices int      // MaxChoices is the max votes in allowed in a ballot.
-	Subtitle   string   // Description in string format.
-	MoreInfo   string   // MoreInfo is the url to AE Website for the given election.
-	Start      int64    // Start denotes the election start unix timestamp
-	End        int64    // End (termination) datetime as unix timestamp.
+	Candidates []uint32          // Candidates is the list of candidate scipers.
+	MaxChoices int               // MaxChoices is the max votes in allowed in a ballot.
+	Subtitle   map[string]string // Description in string format. lang-code, value pair
+	MoreInfo   string            // MoreInfo is the url to AE Website for the given election.
+	Start      int64             // Start denotes the election start unix timestamp
+	End        int64             // End (termination) datetime as unix timestamp.
 
 	Theme  string // Theme denotes the CSS class for selecting background color of card title.
 	Footer footer // Footer denotes the Election footer
