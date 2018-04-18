@@ -78,17 +78,19 @@ func NewTransaction(data interface{}, user uint32, signature []byte) *Transactio
 
 // Digest appends the digits of sciper to master genesis skipblock ID
 func (t *Transaction) Digest(s *skipchain.Service, genesis skipchain.SkipBlockID) []byte {
-	var election *Election
-	if t.Election != nil {
-		election = t.Election
-	} else {
-		election, _ = GetElection(s, genesis)
+	var message []byte
+	switch {
+	case t.Master != nil:
+		message = t.Master.ID
+	case t.Election != nil:
+		message = t.Election.Master
+	default:
+		election, _ := GetElection(s, genesis)
+		if election == nil {
+			return nil
+		}
+		message = election.Master
 	}
-	// Master or Link transaction
-	if election == nil {
-		return nil
-	}
-	message := election.Master
 	for _, c := range strconv.Itoa(int(t.User)) {
 		d, _ := strconv.Atoi(string(c))
 		message = append(message, byte(d))
@@ -107,12 +109,13 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 			return nil
 		}
 
-		// It seems like we should be checking t.Signature here, and then checking that
-		// t.Master.User is an admin on the last block. But that would require that we can
-		// get frontend signatures into the ../app/app.go, which is not practical.
-		// Instead, we rely on the PIN check in the top of service.go's Link handler.
-		// If they have the PIN, then they have admin control over the leader, and so
-		// they can update the master chain.
+		err = schnorr.Verify(cothority.Suite, m.Key, digest, t.Signature)
+		if err != nil {
+			return err
+		}
+		if !m.IsAdmin(t.User) {
+			return errors.New("current user was not in previous admin list")
+		}
 
 		// Changing this would not make any sense.
 		if !t.Master.ID.Equal(m.ID) {

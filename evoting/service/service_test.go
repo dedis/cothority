@@ -266,7 +266,6 @@ func TestEvolveRoster(t *testing.T) {
 	defer local.CloseAll()
 
 	nodeKP := key.NewKeyPair(cothority.Suite)
-
 	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
 
@@ -283,39 +282,38 @@ func TestEvolveRoster(t *testing.T) {
 
 	runAnElection(t, s0, rl, nodeKP, idAdmin)
 
+	// Try to change master as idAdmin2: it should not be allowed.
+	idAdmin2Sig := generateSignature(nodeKP.Private, rl.ID, idAdmin2)
+	_, err = s0.Link(&evoting.Link{
+		ID:        &rl.ID,
+		User:      &idAdmin2,
+		Signature: &idAdmin2Sig,
+		Pin:       s0.pin,
+		Roster:    ro1,
+		Key:       nodeKP.Public,
+		Admins:    []uint32{idAdmin2},
+	})
+	require.NotNil(t, err)
+
 	// Change roster to all 7 nodes. Set new nodeKP. Change admin user.
+	idAdminSig := generateSignature(nodeKP.Private, rl.ID, idAdmin)
 	nodeKP = key.NewKeyPair(cothority.Suite)
 	rl, err = s0.Link(&evoting.Link{
-		ID:     &rl.ID,
-		Pin:    s0.pin,
-		Roster: roster,
-		Key:    nodeKP.Public,
-		Admins: []uint32{idAdmin, idAdmin2},
+		ID:        &rl.ID,
+		User:      &idAdmin,
+		Signature: &idAdminSig,
+		Pin:       s0.pin,
+		Roster:    roster,
+		Key:       nodeKP.Public,
+		Admins:    []uint32{idAdmin, idAdmin2},
 	})
 	require.Nil(t, err)
 	log.Lvl2("Wrote 2nd roster")
 
-	// Run an election on the new set of conodes, the new nodeKP, and a different
+	// Run an election on the new set of conodes, the new nodeKP, and the new
 	// election admin.
 	runAnElection(t, s0, rl, nodeKP, idAdmin2)
 
-	// Change roster to the last 5 nodes: this implies that s0 no longer
-	// the leader, and does not work right now for some reason.
-	// The error is that transaction.Verify for the Election
-	// transaction fails in GetMaster.
-
-	// s2 := local.GetServices(nodes, serviceID)[2].(*Service)
-	// ro2 := onet.NewRoster(roster.List[2:])
-	// rl, err = s0.Link(&evoting.Link{
-	// 	ID:     &rl.ID,
-	// 	Pin:    s0.pin,
-	// 	Roster: ro2,
-	// 	Key:    nodeKP.Public,
-	// 	Admins: []uint32{idAdmin, idAdmin2},
-	// })
-	// require.Nil(t, err)
-	// log.Lvl2("Wrote 3rd roster", rl.ID)
-
-	// log.Lvl2("Run election with 3rd roster")
-	// runAnElection(t, s2, rl, nodeKP, idAdmin2)
+	// There was a test here before to try to replace the leader.
+	// It didn't work. For the time being, that is not supported.
 }

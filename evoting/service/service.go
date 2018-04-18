@@ -83,6 +83,9 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 	}
 
 	var genesis *skipchain.SkipBlock
+	var user uint32
+	sig := []byte{}
+
 	if req.ID != nil {
 		// Update an existing master chain
 		id := *req.ID
@@ -90,6 +93,11 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 		if genesis == nil {
 			return nil, errors.New("cannot find master chain to update")
 		}
+		if req.User == nil || req.Signature == nil {
+			return nil, errors.New("missing user or sig")
+		}
+		user = *req.User
+		sig = *req.Signature
 	} else {
 		var err error
 		genesis, err = lib.NewSkipchain(s.skipchain, req.Roster, lib.TransactionVerifiers)
@@ -104,7 +112,7 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 		Admins: req.Admins,
 		Key:    req.Key,
 	}
-	transaction := lib.NewTransaction(master, 0, []byte{})
+	transaction := lib.NewTransaction(master, user, sig)
 
 	if err := lib.Store(s.skipchain, master.ID, transaction); err != nil {
 		return nil, err

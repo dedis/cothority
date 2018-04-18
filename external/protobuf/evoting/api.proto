@@ -64,6 +64,8 @@ message Link {
     required bytes key = 3;
     repeated uint32 admins = 4;
     optional bytes id = 5;
+    optional uint32 user = 6;
+    optional bytes sig = 7;
 }
 
 message LinkReply {

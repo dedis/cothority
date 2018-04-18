@@ -24,6 +24,8 @@ var (
 	argAdmins = flag.String("admins", "", "list of admin users")
 	argPin    = flag.String("pin", "", "service pin")
 	argID     = flag.String("id", "", "ID of the master chain to modify (optional)")
+	argUser   = flag.Int("user", 0, "The SCIPER of an existing admin of this chain")
+	argSig    = flag.String("sig", "", "A signature proving that you can login to Tequila with the given SCIPER.")
 	argShow   = flag.Bool("show", false, "Show the current Master config")
 )
 
@@ -69,8 +71,19 @@ func main() {
 		if err != nil {
 			log.Fatal("id decode", err)
 		}
+
+		if *argSig == "" {
+			log.Fatal("-sig required when updating")
+		}
+		sig, err := hex.DecodeString(*argSig)
+		if err != nil {
+			log.Fatal("sig decode", err)
+		}
 		var sbid skipchain.SkipBlockID = id
 		request.ID = &sbid
+		var u uint32 = uint32(*argUser)
+		request.User = &u
+		request.Signature = &sig
 	}
 	reply := &evoting.LinkReply{}
 
