@@ -82,7 +82,7 @@ func (t *Transaction) Digest(s *skipchain.Service, genesis skipchain.SkipBlockID
 	if t.Election != nil {
 		election = t.Election
 	} else {
-		election, _ = GetElection(s, genesis)
+		election, _ = GetElection(s, genesis, false, t.User)
 	}
 	// Master or Link transaction
 	if election == nil {
@@ -131,7 +131,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 		return nil
 	} else if t.Ballot != nil {
-		election, err := GetElection(s, genesis)
+		election, err := GetElection(s, genesis, false, t.User)
 		if err != nil {
 			return err
 		}
@@ -158,7 +158,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 		return nil
 	} else if t.Mix != nil {
-		election, err := GetElection(s, genesis)
+		election, err := GetElection(s, genesis, false, t.User)
 		roster := election.Roster
 		if err != nil {
 			return err
@@ -178,7 +178,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 		return nil
 	} else if t.Partial != nil {
-		election, err := GetElection(s, genesis)
+		election, err := GetElection(s, genesis, false, t.User)
 		roster := election.Roster
 		if err != nil {
 			return err

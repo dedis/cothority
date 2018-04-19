@@ -95,7 +95,7 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 	}
 	transaction := lib.NewTransaction(master, 0, []byte{})
 
-	if err := lib.Store(s.skipchain, master.ID, transaction); err != nil {
+	if _, err := lib.Store(s.skipchain, master.ID, transaction); err != nil {
 		return nil, err
 	}
 
@@ -156,13 +156,13 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		req.Election.Creator = req.User
 
 		transaction := lib.NewTransaction(req.Election, req.User, req.Signature)
-		if err := lib.Store(s.skipchain, req.Election.ID, transaction); err != nil {
+		if _, err := lib.Store(s.skipchain, req.Election.ID, transaction); err != nil {
 			return nil, err
 		}
 
 		link := &lib.Link{ID: genesis.Hash}
 		transaction = lib.NewTransaction(link, req.User, req.Signature)
-		if err := lib.Store(s.skipchain, master.ID, transaction); err != nil {
+		if _, err := lib.Store(s.skipchain, master.ID, transaction); err != nil {
 			return nil, err
 		}
 
@@ -245,10 +245,11 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 		return nil, errOnlyLeader
 	}
 	transaction := lib.NewTransaction(req.Ballot, req.User, req.Signature)
-	if err := lib.Store(s.skipchain, req.ID, transaction); err != nil {
+	skipblockID, err := lib.Store(s.skipchain, req.ID, transaction)
+	if err != nil {
 		return nil, err
 	}
-	return &evoting.CastReply{}, nil
+	return &evoting.CastReply{ID: skipblockID}, nil
 }
 
 // GetElections message handler. Return all elections in which the given user participates.
@@ -281,7 +282,7 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 
 	elections := make([]*lib.Election, 0)
 	for _, l := range links {
-		election, err := lib.GetElection(s.skipchain, l.ID)
+		election, err := lib.GetElection(s.skipchain, l.ID, req.CheckVoted, req.User)
 		if err != nil {
 			return nil, err
 		}
@@ -298,7 +299,7 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 
 // GetBox message handler to retrieve the casted ballot in an election.
 func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
-	election, err := lib.GetElection(s.skipchain, req.ID)
+	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +313,7 @@ func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
 
 // GetMixes message handler. Vet all created mixes.
 func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error) {
-	election, err := lib.GetElection(s.skipchain, req.ID)
+	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -326,7 +327,7 @@ func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error
 
 // GetPartials message handler. Vet all created partial decryptions.
 func (s *Service) GetPartials(req *evoting.GetPartials) (*evoting.GetPartialsReply, error) {
-	election, err := lib.GetElection(s.skipchain, req.ID)
+	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -344,7 +345,7 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 		return nil, errOnlyLeader
 	}
 
-	election, err := lib.GetElection(s.skipchain, req.ID)
+	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -384,7 +385,7 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 		return nil, errOnlyLeader
 	}
 
-	election, err := lib.GetElection(s.skipchain, req.ID)
+	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -424,7 +425,7 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 		return nil, errOnlyLeader
 	}
 
-	election, err := lib.GetElection(s.skipchain, req.ID)
+	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -473,7 +474,7 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 		}()
 		return protocol, nil
 	case protocol.NameShuffle:
-		election, err := lib.GetElection(s.skipchain, sync.ID)
+		election, err := lib.GetElection(s.skipchain, sync.ID, false, 0)
 		if err != nil {
 			return nil, err
 		}
@@ -493,7 +494,7 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 
 		return protocol, nil
 	case protocol.NameDecrypt:
-		election, err := lib.GetElection(s.skipchain, sync.ID)
+		election, err := lib.GetElection(s.skipchain, sync.ID, false, 0)
 		if err != nil {
 			return nil, err
 		}
