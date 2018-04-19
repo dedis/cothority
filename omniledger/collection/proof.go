@@ -104,7 +104,7 @@ func (p Proof) Key() []byte {
 // Methods
 
 //Match returns true if the Proof asserts the presence of the key in the collection
-// and false if it asserts its absence..
+// and false if it asserts its absence.
 func (p Proof) Match() bool {
 	if len(p.steps) == 0 {
 		return false
@@ -130,17 +130,17 @@ func (p Proof) Values() ([]interface{}, error) {
 	depth := len(p.steps) - 1
 
 	match := false
-	var rawvalues [][]byte
+	var rawValues [][]byte
 
 	if bit(path[:], depth) {
 		if equal(p.key, p.steps[depth].Right.Key) {
 			match = true
-			rawvalues = p.steps[depth].Right.Values
+			rawValues = p.steps[depth].Right.Values
 		}
 	} else {
 		if equal(p.key, p.steps[depth].Left.Key) {
 			match = true
-			rawvalues = p.steps[depth].Left.Values
+			rawValues = p.steps[depth].Left.Values
 		}
 	}
 
@@ -148,14 +148,14 @@ func (p Proof) Values() ([]interface{}, error) {
 		return []interface{}{}, errors.New("no match found")
 	}
 
-	if len(rawvalues) != len(p.collection.fields) {
+	if len(rawValues) != len(p.collection.fields) {
 		return []interface{}{}, errors.New("wrong number of values")
 	}
 
 	var values []interface{}
 
-	for index := 0; index < len(rawvalues); index++ {
-		value, err := p.collection.fields[index].Decode(rawvalues[index])
+	for index := 0; index < len(rawValues); index++ {
+		value, err := p.collection.fields[index].Decode(rawValues[index])
 
 		if err != nil {
 			return []interface{}{}, err

@@ -34,7 +34,7 @@ func (n Navigator) Record() (Record, error) {
 		}
 
 		if cursor.leaf() {
-			return recordquerymatch(n.collection, n.field, n.query, cursor), nil
+			return recordQueryMatch(n.collection, n.field, n.query, cursor), nil
 		}
 		if !(cursor.children.left.known) || !(cursor.children.right.known) {
 			return Record{}, errors.New("record lies in an unknown subtree")

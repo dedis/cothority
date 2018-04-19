@@ -17,9 +17,9 @@ func TestRecord(test *testing.T) {
 		leaf = collection.root.children.left
 	}
 
-	keymatch := recordkeymatch(&collection, leaf)
-	querymatch := recordquerymatch(&collection, 0, stake64.Encode(uint64(99)), leaf)
-	keymismatch := recordkeymismatch(&collection, []byte("wrongkey"))
+	keymatch := recordKeyMatch(&collection, leaf)
+	querymatch := recordQueryMatch(&collection, 0, stake64.Encode(uint64(99)), leaf)
+	keymismatch := recordKeyMismatch(&collection, []byte("wrongkey"))
 
 	if (keymatch.collection != &collection) || (querymatch.collection != &collection) || (keymismatch.collection != &collection) {
 		test.Error("[record.go]", "[constructors]", "Constructors don't set collection appropriately.")

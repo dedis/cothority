@@ -16,6 +16,10 @@ type Same struct {
 // instead use set to modify an already existing key/value pair.
 // The key location must also be in the known tree, otherwise an error is thrown.
 func (c *Collection) Add(key []byte, values ...interface{}) error {
+
+	if len(key) == 0 {
+		return errors.New("cannot add empty key to collection")
+	}
 	if len(values) != len(c.fields) {
 		panic("wrong number of values provided")
 	}
