@@ -3,9 +3,9 @@ package collection
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"github.com/stretchr/testify/require"
 	"math/rand"
 	"testing"
-	"github.com/stretchr/testify/require"
 )
 
 func TestManipulatorsAdd(test *testing.T) {
