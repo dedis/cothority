@@ -334,12 +334,11 @@ func TestProofMatchValues(test *testing.T) {
 	}
 }
 
-func TestProofMatchEmpty(test *testing.T) {
+func TestProofEmpty(test *testing.T) {
 	collection := New(Data{})
 
-	proof, err := collection.Get([]byte{}).Proof()
-	require.Nil(test, err)
-	require.False(test, proof.Match())
+	_, err := collection.Get([]byte{}).Proof()
+	require.NotNil(test, err)
 }
 
 func TestProofConsistent(test *testing.T) {
