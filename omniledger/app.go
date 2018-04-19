@@ -126,11 +126,15 @@ func get(c *cli.Context) error {
 		return err
 	}
 	key := c.Args().Get(2)
-	resp, err := service.NewClient().GetValue(group.Roster, scid, []byte(key))
+	resp, err := service.NewClient().GetProof(group.Roster, scid, []byte(key))
 	if err != nil {
 		return errors.New("couldn't get value: " + err.Error())
 	}
-	log.Infof("Read value: %x = %x", key, *resp.Value)
+	_, vs, err := resp.Proof.KeyValue()
+	if err != nil {
+		return err
+	}
+	log.Infof("Read value: %x = %x", key, vs[0])
 	return nil
 }
 

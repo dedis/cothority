@@ -83,12 +83,14 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (
 	kp := key.NewKeyPair(cothority.Suite)
 
 	tmpColl := collection.New(collection.Data{}, collection.Data{})
-	key := getKey(&req.Transaction)
 	sigBuf, err := network.Marshal(&req.Transaction.Signature)
 	if err != nil {
 		return nil, errors.New("Couldn't marshal Signature: " + err.Error())
 	}
-	tmpColl.Add(key, req.Transaction.Value, sigBuf)
+	err = tmpColl.Add(req.Transaction.Key, req.Transaction.Value, sigBuf)
+	if err != nil {
+		return nil, errors.New("error while storing in collection: " + err.Error())
+	}
 
 	mr := tmpColl.GetRoot()
 	data := &Data{
@@ -117,7 +119,7 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (
 	skID := ssbReply.Latest.SkipChainID()
 	gid := string(skID)
 
-	err = s.getCollection(skID).Store(key, req.Transaction.Value, sigBuf)
+	err = s.getCollection(skID).Store(req.Transaction.Key, req.Transaction.Value, sigBuf)
 	if err != nil {
 		return nil, errors.New(
 			"error while storing in collection: " + err.Error())
@@ -162,8 +164,7 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 	*/
 
 	coll := s.getCollection(req.SkipchainID)
-	key := getKey(&req.Transaction)
-	if _, _, err := coll.GetValue(key); err == nil {
+	if _, _, err := coll.GetValue(req.Transaction.Key); err == nil {
 		return nil, errors.New("cannot overwrite existing value")
 	}
 	sigBuf, err := network.Marshal(&req.Transaction.Signature)
@@ -176,7 +177,7 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 	// collectionBD.
 	var collCopy collection.Collection
 	collCopy = s.getCollection(req.SkipchainID).coll
-	collCopy.Add(key, req.Transaction.Value, sigBuf)
+	collCopy.Add(req.Transaction.Key, req.Transaction.Value, sigBuf)
 	mr := collCopy.GetRoot()
 	data := &Data{
 		MerkleRoot:   mr,
@@ -203,7 +204,7 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 
 	// Now we know the block is accepted, so we can apply the the Transaction
 	// to our collectionDB.
-	err = coll.Store(key, req.Transaction.Value, sigBuf)
+	err = coll.Store(req.Transaction.Key, req.Transaction.Value, sigBuf)
 	if err != nil {
 		return nil, errors.New(
 			"error while storing in collection: " + err.Error())
@@ -217,27 +218,25 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 	}, nil
 }
 
-// GetValue looks up the key in the given skipchain and returns the
-// corresponding value.
-func (s *Service) GetValue(req *GetValue) (*GetValueResponse, error) {
+// GetProof searches for a key and returns a proof of the
+// presence or the absence of this key.
+func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
-
-	key := append(append(req.Kind, []byte(":")...), req.Key...)
-	value, sig, err := s.getCollection(req.SkipchainID).GetValue(key)
+	latest, err := s.db().GetLatest(s.db().GetByID(req.ID))
 	if err != nil {
-		return nil, errors.New("couldn't get value for key: " + err.Error())
+		return
 	}
-	return &GetValueResponse{
-		Version:   CurrentVersion,
-		Value:     &value,
-		Signature: &sig,
-	}, nil
-}
-
-func getKey(tx *Transaction) []byte {
-	return append(append(tx.Kind, []byte(":")...), tx.Key...)
+	proof, err := NewProof(s.getCollection(req.ID), s.db(), latest.Hash, req.Key)
+	if err != nil {
+		return
+	}
+	resp = &GetProofResponse{
+		Version: CurrentVersion,
+		Proof:   *proof,
+	}
+	return
 }
 
 func (s *Service) getCollection(id skipchain.SkipBlockID) *collectionDB {
@@ -245,7 +244,7 @@ func (s *Service) getCollection(id skipchain.SkipBlockID) *collectionDB {
 	col := s.collectionDB[idStr]
 	if col == nil {
 		db, name := s.GetAdditionalBucket([]byte(idStr))
-		s.collectionDB[idStr] = newCollectionDB(db, string(name))
+		s.collectionDB[idStr] = newCollectionDB(db, name)
 		return s.collectionDB[idStr]
 	}
 	return col
@@ -317,7 +316,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
 	if err := s.RegisterHandlers(s.CreateSkipchain, s.SetKeyValue,
-		s.GetValue); err != nil {
+		s.GetProof); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 	if err := s.tryLoad(); err != nil {
