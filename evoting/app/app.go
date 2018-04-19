@@ -81,7 +81,7 @@ func main() {
 		}
 		var sbid skipchain.SkipBlockID = id
 		request.ID = &sbid
-		var u uint32 = uint32(*argUser)
+		var u = uint32(*argUser)
 		request.User = &u
 		request.Signature = &sig
 	}
