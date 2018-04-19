@@ -15,12 +15,15 @@ const misc = require("./misc");
 class ServerIdentity {
   /*
      * Returns a new ServerIdentity from the public key and address.
+     * Defaults to using Websocket Secure (wss) if the address has
+     * tls as the protocol and Websocket (ws) otherwise
      * @param {Uint8Array} public key in bytes format
      * @param {string} address tcp address of the cothority node
      * @param {string} description of the conode. Can be null.
+     * @param {boolean} wss to connect using WebSocket Secure (port 443)
      * @return a ServerIdentity
      * */
-  constructor(group, publicKey, address, description) {
+  constructor(group, publicKey, address, description, wss) {
     if (!(publicKey instanceof kyber.Point)) throw new TypeError();
     if (!(group instanceof kyber.Group)) throw new TypeError();
     this.group = group;
@@ -39,21 +42,27 @@ class ServerIdentity {
     // XXX Does not support IPv6 yet
     let fullAddress = parts[1].split(":");
     fullAddress[1] = parseInt(fullAddress[1]) + 1;
-    this.wsAddr = "ws://" + fullAddress.join(":");
+    if (wss) {
+      this.wsAddr = `wss://${fullAddress[0]}`;
+    } else {
+      this.wsAddr = `ws://${fullAddress[0]}:${fullAddress[1]}`;
+    }
   }
 
-  /*
-     * Returns a new ServerIdentity from the public key in hexadecimal format
-     * and address
-     * @param {string} hex-encoded public key
-     * @param {string} address
-     * @return a ServerIdentity
-     * */
-  static fromHexPublic(group, hexPublic, address, description) {
+  /**
+   * Returns a new ServerIdentity from the public key in hexadecimal format
+   * and address
+   * @param {string} hexPublic public key
+   * @param {string} address
+   * @param {string} description
+   * @param {boolean} wss to connect using WebSocket Secure (port 443)
+   * @return a ServerIdentity
+   * */
+  static fromHexPublic(group, hexPublic, address, description, wss) {
     var pubBuff = misc.hexToUint8Array(hexPublic);
     var pub = group.point();
     pub.unmarshalBinary(pubBuff);
-    return new ServerIdentity(group, pub, address, description);
+    return new ServerIdentity(group, pub, address, description, wss);
   }
   /*
      * @return the public key as a Uint8Array buffer
@@ -181,11 +190,12 @@ class Roster {
    *
    * @param {kyber.Group} group to construct the identities
    * @param {string} toml of the above format.
+   * @param {boolean} wss to connect using WebSocket Secure (port 443)
    *
    * @throws {TypeError} when toml is not a string
    * @return {Roster} roster
    */
-  static fromTOML(toml) {
+  static fromTOML(toml, wss) {
     if (typeof toml !== "string") throw new TypeError();
 
     const roster = topl.parse(toml);
@@ -196,7 +206,8 @@ class Roster {
         group,
         server.Public,
         server.Address,
-        server.description
+        server.description,
+        wss
       )
     );
     return new Roster(group, identities);
@@ -207,16 +218,17 @@ class Roster {
    *
    * @static
    * @param {Object} protoRoster the litteral JS object returned by protobuf
+   * @param {boolean} wss to connect using WebSocket Secure (port 443)
    * @returns {Roster} the Roster object
    */
-  static fromProtobuf(protoRoster) {
+  static fromProtobuf(protoRoster, wss) {
     var group =
       protoRoster.Suite === undefined ? "edwards25519" : protoRoster.Suite;
     group = kyber.curve.newCurve(group);
     const identities = protoRoster.list.map(id => {
       var pub = group.point();
       pub.unmarshalBinary(new Uint8Array(id.public));
-      return new ServerIdentity(group, pub, id.address, id.description);
+      return new ServerIdentity(group, pub, id.address, id.description, wss);
     });
     return new Roster(group, identities);
   }
