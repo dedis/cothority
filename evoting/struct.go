@@ -81,7 +81,9 @@ type Cast struct {
 }
 
 // CastReply message.
-type CastReply struct{}
+type CastReply struct {
+	ID skipchain.SkipBlockID // Hash of the block storing the transaction
+}
 
 // Shuffle message.
 type Shuffle struct {
@@ -107,10 +109,11 @@ type DecryptReply struct{}
 
 // GetElections message.
 type GetElections struct {
-	User      uint32                // User identifier.
-	Master    skipchain.SkipBlockID // Master skipchain ID.
-	Stage     lib.ElectionState     // Election Stage filter. 0 for all elections.
-	Signature []byte                // Signature authenticating the message.
+	User       uint32                // User identifier.
+	Master     skipchain.SkipBlockID // Master skipchain ID.
+	Stage      lib.ElectionState     // Election Stage filter. 0 for all elections.
+	Signature  []byte                // Signature authenticating the message.
+	CheckVoted bool                  // Check if user has voted in the elections.
 }
 
 // GetElectionsReply message.

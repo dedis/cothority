@@ -51,6 +51,8 @@ type Election struct {
 
 	Theme  string // Theme denotes the CSS class for selecting background color of card title.
 	Footer footer // Footer denotes the Election footer
+
+	Voted skipchain.SkipBlockID // Voted denotes if a user has already cast a ballot for this election.
 }
 
 // footer denotes the fields for the election footer
@@ -62,7 +64,8 @@ type footer struct {
 }
 
 // GetElection fetches the election structure from its skipchain and sets the stage.
-func GetElection(s *skipchain.Service, id skipchain.SkipBlockID) (*Election, error) {
+func GetElection(s *skipchain.Service, id skipchain.SkipBlockID,
+	checkVoted bool, user uint32) (*Election, error) {
 
 	block, err := s.GetSingleBlockByIndex(
 		&skipchain.GetSingleBlockByIndex{Genesis: id, Index: 1},
@@ -81,7 +84,37 @@ func GetElection(s *skipchain.Service, id skipchain.SkipBlockID) (*Election, err
 	if err != nil {
 		return nil, err
 	}
+	// check for voted only if required. We cache things in localStorage
+	// on the frontend
+	if checkVoted {
+		err = election.setVoted(s, user)
+	}
 	return election, nil
+}
+
+// setVoted sets the Voted field of the election to the skipblock id
+// of the last ballot cast by the user
+func (e *Election) setVoted(s *skipchain.Service, user uint32) error {
+	db := s.GetDB()
+	block := db.GetByID(e.ID)
+	if block == nil {
+		return errors.New("Election skipchain empty")
+	}
+
+	for {
+		transaction := UnmarshalTransaction(block.Data)
+		if transaction.Ballot != nil && transaction.User == user {
+			e.Voted = block.Hash
+		}
+		if transaction.Mix != nil || transaction.Partial != nil {
+			break
+		}
+		if len(block.ForwardLink) == 0 {
+			break
+		}
+		block = db.GetByID(block.ForwardLink[0].To)
+	}
+	return nil
 }
 
 func (e *Election) setStage(s *skipchain.Service) error {

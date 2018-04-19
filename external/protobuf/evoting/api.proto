@@ -32,6 +32,7 @@ message Election {
     required sint64 end = 15;
     required string theme = 16;
     required Footer footer = 17;
+    optional bytes voted = 18;
 }
 
 message Master {
@@ -77,6 +78,7 @@ message GetElections {
     required bytes master = 2;
     optional uint32 stage = 3;
     required bytes signature = 4;
+    optional bool checkVoted = 5;
 }
 
 message GetElectionsReply {
@@ -105,6 +107,7 @@ message Cast {
 }
 
 message CastReply {
+    required bytes id = 1;
 }
 
 message Shuffle {
