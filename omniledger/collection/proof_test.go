@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestProofDumpNode(test *testing.T) {
@@ -330,6 +332,14 @@ func TestProofMatchValues(test *testing.T) {
 	if err == nil {
 		test.Error("[proof.go]", "[values]", "Proof Values() does not yield an error on a proof with no steps.")
 	}
+}
+
+func TestProofMatchEmpty(test *testing.T) {
+	collection := New(Data{})
+
+	proof, err := collection.Get([]byte{}).Proof()
+	require.Nil(test, err)
+	require.False(test, proof.Match())
 }
 
 func TestProofConsistent(test *testing.T) {
