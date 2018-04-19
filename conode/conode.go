@@ -139,6 +139,9 @@ func checkConfig(c *cli.Context) error {
 	if c.NArg() > 0 {
 		tomlFileName = c.Args().First()
 	}
+	if tomlFileName == "" {
+		log.Fatal("[-] Must give the roster file to check.")
+	}
 	return check.Config(tomlFileName, c.Bool("detail"))
 }
 
