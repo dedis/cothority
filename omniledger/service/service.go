@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"gopkg.in/dedis/cothority.v2"
-	"gopkg.in/dedis/cothority.v2/identity"
 	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/kyber.v2"
 	"gopkg.in/dedis/kyber.v2/util/key"
@@ -52,13 +51,6 @@ type Service struct {
 // than one structure.
 const storageID = "main"
 
-// DarcBlock will be removed
-type DarcBlock struct {
-	sync.Mutex
-	Latest          *Data
-	LatestSkipblock *skipchain.SkipBlock
-}
-
 // Data is the data passed to the Skipchain
 type Data struct {
 	// Root of the merkle tree after applying the transactions to the
@@ -72,8 +64,6 @@ type Data struct {
 
 // storage is used to save our data locally.
 type storage struct {
-	// DarcBlock stores one skipchain together with the latest skipblock.
-	DarcBlocks map[string]*DarcBlock
 	// PL: Is used to sign the votes
 	Private map[string]kyber.Scalar
 	sync.Mutex
@@ -127,11 +117,6 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (
 	skID := ssbReply.Latest.SkipChainID()
 	gid := string(skID)
 
-	s.storage.DarcBlocks[gid] = &DarcBlock{
-		Latest:          data,
-		LatestSkipblock: ssbReply.Latest,
-	}
-
 	err = s.getCollection(skID).Store(key, req.Transaction.Value, sigBuf)
 	if err != nil {
 		return nil, errors.New(
@@ -153,9 +138,13 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 		return nil, errors.New("version mismatch")
 	}
 	gid := string(req.SkipchainID)
-	idb := s.storage.DarcBlocks[gid]
+	latest, err := s.db().GetLatest(s.db().GetByID(req.SkipchainID))
+	if err != nil {
+		return nil, errors.New(
+			"Could not get latest block from the skipchain: " + err.Error())
+	}
 	priv := s.storage.Private[gid]
-	if idb == nil || priv == nil {
+	if priv == nil {
 		return nil, errors.New("don't have this identity stored")
 	}
 
@@ -200,7 +189,7 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 		return nil, errors.New("Couldn't marshal data: " + err.Error())
 	}
 
-	newBlock := s.storage.DarcBlocks[gid].LatestSkipblock.Copy()
+	newBlock := latest.Copy()
 	newBlock.Data = buf
 
 	var ssb = skipchain.StoreSkipBlock{
@@ -218,11 +207,6 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 	if err != nil {
 		return nil, errors.New(
 			"error while storing in collection: " + err.Error())
-	}
-
-	s.storage.DarcBlocks[gid] = &DarcBlock{
-		Latest:          data,
-		LatestSkipblock: ssbReply.Latest,
 	}
 
 	hash := ssbReply.Latest.CalculateHash()
@@ -267,13 +251,14 @@ func (s *Service) getCollection(id skipchain.SkipBlockID) *collectionDB {
 	return col
 }
 
-// interface to identity.Service
-func (s *Service) idService() *identity.Service {
-	return s.Service(identity.ServiceName).(*identity.Service)
-}
-
+// interface to skipchain.Service
 func (s *Service) skService() *skipchain.Service {
 	return s.Service(skipchain.ServiceName).(*skipchain.Service)
+}
+
+// gives us access to the skipchain's database, so we can get blocks by ID
+func (s *Service) db() *skipchain.SkipBlockDB {
+	return s.skService().GetDB()
 }
 
 // saves all skipblocks.
@@ -304,16 +289,22 @@ func (s *Service) tryLoad() error {
 	if s.storage == nil {
 		s.storage = &storage{}
 	}
-	if s.storage.DarcBlocks == nil {
-		s.storage.DarcBlocks = map[string]*DarcBlock{}
-	}
 	if s.storage.Private == nil {
 		s.storage.Private = map[string]kyber.Scalar{}
 	}
 	s.collectionDB = map[string]*collectionDB{}
-	for _, ch := range s.storage.DarcBlocks {
-		s.getCollection(ch.LatestSkipblock.SkipChainID())
+
+	gas := &skipchain.GetAllSkipchains{}
+	gasr, err := s.skService().GetAllSkipchains(gas)
+	if err != nil {
+		return err
 	}
+
+	allSkipchains := gasr.SkipChains
+	for _, sb := range allSkipchains {
+		s.getCollection(sb.SkipChainID())
+	}
+
 	return nil
 }
 
