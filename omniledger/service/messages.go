@@ -8,8 +8,6 @@ import (
 	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/network"
-
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
 )
 
 // We need to register all messages so the network knows how to handle them.
@@ -18,7 +16,6 @@ func init() {
 		&CreateSkipchain{}, &CreateSkipchainResponse{},
 		&SetKeyValue{}, &SetKeyValueResponse{},
 		&GetValue{}, &GetValueResponse{},
-		&Transaction{}, &darc.Signature{},
 	)
 }
 
@@ -108,23 +105,4 @@ type GetValueResponse struct {
 	Signature *[]byte
 	// Proof the value is correct
 	Proof *[]byte
-}
-
-// Transaction is the struct specifying the modifications to the skipchain.
-// Key is the key chosen by the user, Kind is the kind of value to store
-// (e.g. a drac...). The key used in the conode's collection will be
-// Kind ':' Key, in order to maintain key uniqueness across different kinds
-// of values.
-// For a Transaction to be valid, there must exist a path from the master-darc
-// in the genesis block to the SubjectPK in Signature.
-type Transaction struct {
-	Key   []byte
-	Kind  []byte
-	Value []byte
-	// type Signature struct {
-	//     Signature []byte
-	//     Signer SubjectPK
-	// }
-	// The signature is performed on the concatenation of the []bytes
-	Signature darc.Signature
 }

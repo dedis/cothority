@@ -346,37 +346,37 @@ func TestProofConsistent(test *testing.T) {
 	key := make([]byte, 8)
 	proof, _ := collection.Get(key).Proof()
 
-	if !(proof.consistent()) {
+	if !(proof.Consistent()) {
 		test.Error("[proof.go]", "[consistent]", "Proof produced by collection is not consistent.")
 	}
 
 	proof.root.Label[0]++
-	if proof.consistent() {
+	if proof.Consistent() {
 		test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering label of root node.")
 	}
 	proof.root.Label[0]--
 
 	proof.root.Values[0][0]++
-	if proof.consistent() {
+	if proof.Consistent() {
 		test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering values of root node.")
 	}
 	proof.root.Values[0][0]--
 
 	proof.root.Children.Left[0]++
-	if proof.consistent() {
+	if proof.Consistent() {
 		test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering label of left child of root node.")
 	}
 	proof.root.Children.Left[0]--
 
 	proof.root.Children.Right[0]++
-	if proof.consistent() {
+	if proof.Consistent() {
 		test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering label of root node.")
 	}
 	proof.root.Children.Right[0]--
 
 	stepsbackup := proof.steps
 	proof.steps = []step{}
-	if proof.consistent() {
+	if proof.Consistent() {
 		test.Error("[proof.go]", "[consistent]", "Proof with no steps is still consisetent.")
 	}
 	proof.steps = stepsbackup
@@ -385,25 +385,25 @@ func TestProofConsistent(test *testing.T) {
 		step := &(proof.steps[index])
 
 		step.Left.Label[0]++
-		if proof.consistent() {
+		if proof.Consistent() {
 			test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering label of one of left steps.")
 		}
 		step.Left.Label[0]--
 
 		step.Right.Label[0]++
-		if proof.consistent() {
+		if proof.Consistent() {
 			test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering label of one of right steps.")
 		}
 		step.Right.Label[0]--
 
 		step.Left.Values[0][0]++
-		if proof.consistent() {
+		if proof.Consistent() {
 			test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering value of one of left steps.")
 		}
 		step.Left.Values[0][0]--
 
 		step.Right.Values[0][0]++
-		if proof.consistent() {
+		if proof.Consistent() {
 			test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering value of one of right steps.")
 		}
 		step.Right.Values[0][0]--
@@ -416,7 +416,7 @@ func TestProofConsistent(test *testing.T) {
 				step.Left.Key = []byte("x")
 			}
 
-			if proof.consistent() {
+			if proof.Consistent() {
 				test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering key of one of left leaf steps.")
 			}
 
@@ -427,13 +427,13 @@ func TestProofConsistent(test *testing.T) {
 			}
 		} else {
 			step.Left.Children.Left[0]++
-			if proof.consistent() {
+			if proof.Consistent() {
 				test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering left child of one of left internal node steps.")
 			}
 			step.Left.Children.Left[0]--
 
 			step.Left.Children.Right[0]++
-			if proof.consistent() {
+			if proof.Consistent() {
 				test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering right child of one of left internal node steps.")
 			}
 			step.Left.Children.Right[0]--
@@ -447,7 +447,7 @@ func TestProofConsistent(test *testing.T) {
 				step.Right.Key = []byte("x")
 			}
 
-			if proof.consistent() {
+			if proof.Consistent() {
 				test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering key of one of right leaf steps.")
 			}
 
@@ -458,20 +458,20 @@ func TestProofConsistent(test *testing.T) {
 			}
 		} else {
 			step.Right.Children.Left[0]++
-			if proof.consistent() {
+			if proof.Consistent() {
 				test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering left child of one of right internal node steps.")
 			}
 			step.Right.Children.Left[0]--
 
 			step.Right.Children.Right[0]++
-			if proof.consistent() {
+			if proof.Consistent() {
 				test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering right child of one of right internal node steps.")
 			}
 			step.Right.Children.Right[0]--
 		}
 	}
 
-	if !(proof.consistent()) {
+	if !(proof.Consistent()) {
 		test.Error("[proof.go]", "[consistent]", "Proof is not consistent after reversing all the updates, check test.")
 	}
 }
