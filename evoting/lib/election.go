@@ -214,7 +214,7 @@ func (e *Election) Partials() ([]*Partial, error) {
 	}
 
 	partials := make([]*Partial, 0)
-	for {
+	for block != nil {
 		transaction := UnmarshalTransaction(block.Data)
 		if transaction != nil && transaction.Partial != nil {
 			partials = append(partials, transaction.Partial)
@@ -223,7 +223,11 @@ func (e *Election) Partials() ([]*Partial, error) {
 		if len(block.ForwardLink) <= 0 {
 			break
 		}
-		block, _ = client.GetSingleBlock(e.Roster, block.ForwardLink[0].To)
+		var err error
+		block, err = client.GetSingleBlock(e.Roster, block.ForwardLink[0].To)
+		if err != nil {
+			break
+		}
 	}
 	return partials, nil
 }

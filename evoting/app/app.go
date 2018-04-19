@@ -4,12 +4,14 @@ package main
 import (
 	"encoding/hex"
 	"flag"
+	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting"
+	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
@@ -21,6 +23,10 @@ var (
 	argKey    = flag.String("key", "", "client-side public key")
 	argAdmins = flag.String("admins", "", "list of admin users")
 	argPin    = flag.String("pin", "", "service pin")
+	argID     = flag.String("id", "", "ID of the master chain to modify (optional)")
+	argUser   = flag.Int("user", 0, "The SCIPER of an existing admin of this chain")
+	argSig    = flag.String("sig", "", "A signature proving that you can login to Tequila with the given SCIPER.")
+	argShow   = flag.Bool("show", false, "Show the current Master config")
 )
 
 func main() {
@@ -28,32 +34,69 @@ func main() {
 
 	roster, err := parseRoster(*argRoster)
 	if err != nil {
-		panic(err)
+		log.Fatal("cannot parse roster: ", err)
+	}
+
+	if *argShow {
+		id, err := hex.DecodeString(*argID)
+		if err != nil {
+			log.Fatal("id decode", err)
+		}
+		request := &evoting.GetElections{Master: id}
+		reply := &evoting.GetElectionsReply{}
+		client := onet.NewClient(cothority.Suite, evoting.ServiceName)
+		if err = client.SendProtobuf(roster.List[0], request, reply); err != nil {
+			log.Fatal("get elections request: ", err)
+		}
+		m := reply.Master
+		fmt.Printf(" Admins: %v\n", m.Admins)
+		fmt.Printf(" Roster: %v\n", m.Roster.List)
+		fmt.Printf("    Key: %v\n", m.Key)
+		return
 	}
 
 	key, err := parseKey(*argKey)
 	if err != nil {
-		panic(err)
+		log.Fatal("cannot parse key: ", err)
 	}
 
 	admins, err := parseAdmins(*argAdmins)
 	if err != nil {
-		panic(err)
-	}
-
-	var client struct {
-		*onet.Client
+		log.Fatal("cannot parse admins: ", err)
 	}
 
 	request := &evoting.Link{Pin: *argPin, Roster: roster, Key: key, Admins: admins}
+	if *argID != "" {
+		id, err := hex.DecodeString(*argID)
+		if err != nil {
+			log.Fatal("id decode", err)
+		}
+
+		if *argSig == "" {
+			log.Fatal("-sig required when updating")
+		}
+		sig, err := hex.DecodeString(*argSig)
+		if err != nil {
+			log.Fatal("sig decode", err)
+		}
+		var sbid skipchain.SkipBlockID = id
+		request.ID = &sbid
+		var u = uint32(*argUser)
+		request.User = &u
+		request.Signature = &sig
+	}
 	reply := &evoting.LinkReply{}
 
-	client.Client = onet.NewClient(cothority.Suite, evoting.ServiceName)
+	client := onet.NewClient(cothority.Suite, evoting.ServiceName)
 	if err = client.SendProtobuf(roster.List[0], request, reply); err != nil {
-		panic(err)
+		log.Fatal("link request: ", err)
 	}
 
+	// Do not change this: the load-testing system counts on it.
 	log.Info("Master ID:", reply.ID)
+
+	// This is more useful for putting back into the -id argument to evolve master.
+	log.Infof("Master ID in hex: %x", reply.ID)
 }
 
 // parseRoster reads a Dedis group toml file a converts it to a cothority roster.

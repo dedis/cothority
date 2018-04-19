@@ -78,17 +78,19 @@ func NewTransaction(data interface{}, user uint32, signature []byte) *Transactio
 
 // Digest appends the digits of sciper to master genesis skipblock ID
 func (t *Transaction) Digest(s *skipchain.Service, genesis skipchain.SkipBlockID) []byte {
-	var election *Election
-	if t.Election != nil {
-		election = t.Election
-	} else {
-		election, _ = GetElection(s, genesis, false, t.User)
+	var message []byte
+	switch {
+	case t.Master != nil:
+		message = t.Master.ID
+	case t.Election != nil:
+		message = t.Election.Master
+	default:
+		election, _ := GetElection(s, genesis, false, t.User)
+		if election == nil {
+			return nil
+		}
+		message = election.Master
 	}
-	// Master or Link transaction
-	if election == nil {
-		return nil
-	}
-	message := election.Master
 	for _, c := range strconv.Itoa(int(t.User)) {
 		d, _ := strconv.Atoi(string(c))
 		message = append(message, byte(d))
@@ -99,8 +101,41 @@ func (t *Transaction) Digest(s *skipchain.Service, genesis skipchain.SkipBlockID
 // Verify checks that the corresponding transaction is valid before storing it.
 func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service) error {
 	digest := t.Digest(s, genesis)
-	db := s.GetDB()
 	if t.Master != nil {
+		// Find the current master in order to compare against it.
+		m, err := GetMaster(s, genesis)
+		if err != nil {
+			// This chain does not exist, yet. Allow it to be created.
+			return nil
+		}
+
+		err = schnorr.Verify(cothority.Suite, m.Key, digest, t.Signature)
+		if err != nil {
+			return err
+		}
+		if !m.IsAdmin(t.User) {
+			return errors.New("current user was not in previous admin list")
+		}
+
+		// Changing this would not make any sense.
+		if !t.Master.ID.Equal(m.ID) {
+			return errors.New("mismatched ID in master update")
+		}
+
+		// All the other fields (admin list, roster, and front end key) may change, but
+		// let's apply some sanity checks to them.
+
+		if len(t.Master.Admins) == 0 {
+			return errors.New("empty admin list in master update")
+		}
+		if len(t.Master.Roster.List) == 0 {
+			return errors.New("empty roster in master update")
+		}
+		null := t.Master.Key.Clone().Null()
+		if t.Master.Key.Equal(null) {
+			return errors.New("null key in master update")
+		}
+
 		return nil
 	} else if t.Link != nil {
 		master, err := GetMaster(s, genesis)
@@ -146,7 +181,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 			return errors.New("ballot user-id differs from transaction user-id")
 		}
 
-		latest, err := db.GetLatest(db.GetByID(election.ID))
+		latest, err := s.GetDB().GetLatest(s.GetDB().GetByID(election.ID))
 		transaction := UnmarshalTransaction(latest.Data)
 		if err != nil {
 			return err

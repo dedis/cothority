@@ -42,10 +42,13 @@ type LookupSciperReply struct {
 
 // Link message.
 type Link struct {
-	Pin    string       // Pin of the running service.
-	Roster *onet.Roster // Roster that handles elections.
-	Key    kyber.Point  // Key is a front-end public key.
-	Admins []uint32     // Admins is a list of election administrators.
+	Pin       string                 // Pin of the running service.
+	Roster    *onet.Roster           // Roster that handles elections.
+	Key       kyber.Point            // Key is a front-end public key.
+	Admins    []uint32               // Admins is a list of election administrators.
+	ID        *skipchain.SkipBlockID // ID of the master skipchain to update; optional.
+	User      *uint32                // User identifier; optional (required with ID).
+	Signature *[]byte                // Signature authenticating the message; optional (required with ID).
 }
 
 // LinkReply message.
@@ -117,6 +120,7 @@ type GetElections struct {
 type GetElectionsReply struct {
 	Elections []*lib.Election // Elections is the retrieved list of elections.
 	IsAdmin   bool            // Is the user in the list of admins in the master?
+	Master    lib.Master
 }
 
 // GetBox message.
