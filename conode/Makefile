@@ -36,3 +36,26 @@ docker_stop:
 docker_clean:
 	docker kill $(CONTAINER) || echo nothing to stop
 	docker image ls $(IMAGE_NAME) -q | xargs docker rmi -f || echo done
+
+TAG=$(shell git describe --tags)
+DIR=conode-$(TAG)
+# -s -w are for smaller binaries
+# -X compiles the git tag into the binary
+flags=-ldflags="-s -w -X main.gitTag=$(TAG) -X github.com/dedis/onet.gitTag=$(TAG)"
+
+# The suffix on conode exe is the result from: echo `uname -s`.`uname -m`
+# so that we can find the right one in the wrapper script.
+bindist:
+	rm -rf $(DIR)
+	mkdir $(DIR)
+	GOOS=linux GOARCH=amd64 vgo build $(flags) -o $(DIR)/conode.Linux.x86_64
+	GOOS=linux  GOARCH=arm vgo build $(flags) -o $(DIR)/conode.Linux.armv7l
+	GOOS=freebsd GOARCH=amd64 vgo build $(flags) -o $(DIR)/conode.FreeBSD.amd64
+	echo "#!/bin/sh" > $(DIR)/conode
+	echo "./conode.\`uname -s\`.\`uname -m\` \$$*" >> $(DIR)/conode
+	chmod +x $(DIR)/conode	
+	LANG=C tar zcf $(DIR).tar.gz $(DIR)
+	rm -rf $(DIR)
+
+gitTag:
+	go build $(flags)

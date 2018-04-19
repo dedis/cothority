@@ -46,12 +46,18 @@ const (
 	Version = "2.0"
 )
 
+var gitTag = ""
+
 func main() {
 
 	cliApp := cli.NewApp()
 	cliApp.Name = DefaultName
 	cliApp.Usage = "run a cothority server"
-	cliApp.Version = Version
+	if gitTag == "" {
+		cliApp.Version = Version
+	} else {
+		cliApp.Version = Version + "-" + gitTag
+	}
 
 	cliApp.Commands = []cli.Command{
 		{
