@@ -203,7 +203,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 			return err
 		}
 
-		mixes, err := election.Mixes()
+		mixes, err := election.Mixes(s)
 		if err != nil {
 			return err
 		} else if len(mixes) == len(roster.List) {
@@ -223,14 +223,14 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 			return err
 		}
 
-		mixes, err := election.Mixes()
+		mixes, err := election.Mixes(s)
 		if err != nil {
 			return err
 		} else if len(mixes) != len(roster.List) {
 			return errors.New("decrypt error, election not shuffled yet")
 		}
 
-		partials, err := election.Partials()
+		partials, err := election.Partials(s)
 		if err != nil {
 			return err
 		} else if len(partials) == len(roster.List) {

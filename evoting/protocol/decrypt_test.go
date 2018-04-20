@@ -52,6 +52,7 @@ func (s *decryptService) NewProtocol(node *onet.TreeNodeInstance, conf *onet.Gen
 		decrypt.Signature = s.signature
 		decrypt.Secret = s.secret
 		decrypt.Election = s.election
+		decrypt.Skipchain = s.skipchain
 		return decrypt, nil
 	default:
 		return nil, errors.New("Unknown protocol")
@@ -118,11 +119,13 @@ func runDecrypt(t *testing.T, n int) {
 	decrypt.User = 0
 	decrypt.Signature = []byte{}
 	decrypt.Election = election
+	decrypt.Skipchain = services[0].(*decryptService).skipchain
 	decrypt.Start()
 
 	select {
 	case <-decrypt.Finished:
-		partials, _ := election.Partials()
+		partials, _ := election.Partials(services[0].(*decryptService).skipchain)
+		require.Equal(t, n, len(partials))
 		for _, partial := range partials {
 			require.True(t, partial.Flag)
 		}
