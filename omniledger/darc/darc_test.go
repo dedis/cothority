@@ -9,15 +9,15 @@ import (
 
 func TestRules(t *testing.T) {
 	// one owner
-	owners := []*Identity{createIdentity()}
-	rules := InitRules(owners)
+	owner := createIdentity()
+	rules := InitEvolutionRule(owner)
 	expr, ok := rules[evolve]
 	require.True(t, ok)
-	require.Equal(t, string(expr), owners[0].String())
+	require.Equal(t, string(expr), owner.String())
 
 	// two owners
-	owners = append(owners, createIdentity())
-	rules = InitRules(owners)
+	owners := []*Identity{owner, createIdentity()}
+	rules = InitEvolutionRule(owners...)
 	expr, ok = rules[evolve]
 	require.True(t, ok)
 	require.Equal(t, string(expr), owners[0].String()+" | "+owners[1].String())
@@ -25,11 +25,11 @@ func TestRules(t *testing.T) {
 
 func TestNewDarc(t *testing.T) {
 	desc := []byte("mydarc")
-	owners := []*Identity{createIdentity()}
+	owner := createIdentity()
 
-	d := NewDarc(InitRules(owners), desc)
+	d := NewDarc(InitEvolutionRule(owner), desc)
 	require.Equal(t, desc, d.Description)
-	require.Equal(t, string(d.Rules.GetEvolutionExpr()), owners[0].String())
+	require.Equal(t, string(d.Rules.GetEvolutionExpr()), owner.String())
 }
 
 func TestDarc_Copy(t *testing.T) {
@@ -255,7 +255,7 @@ func createDarc(nbrOwners int, desc string) *testDarc {
 		td.owners = append(td.owners, s)
 		td.ids = append(td.ids, id)
 	}
-	rules := InitRules(td.ids)
+	rules := InitEvolutionRule(td.ids...)
 	td.darc = NewDarc(rules, []byte(desc))
 	return td
 }
