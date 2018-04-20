@@ -104,11 +104,11 @@ func set(c *cli.Context) error {
 		Key:   []byte(key),
 		Value: []byte(value),
 	}
-	resp, err := service.NewClient().SetKeyValue(group.Roster, scid, tx)
+	_, err = service.NewClient().SetKeyValue(group.Roster, scid, tx)
 	if err != nil {
 		return errors.New("couldn't set new key/value pair: " + err.Error())
 	}
-	log.Infof("Successfully set new key/value pair in block: %x", resp.SkipblockID)
+	log.Info("Submitted new key/value")
 	return nil
 }
 

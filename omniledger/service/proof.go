@@ -7,12 +7,13 @@ import (
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 	"gopkg.in/dedis/cothority.v2"
 	"gopkg.in/dedis/cothority.v2/skipchain"
+	"gopkg.in/dedis/kyber.v2"
 	"gopkg.in/dedis/onet.v2/network"
 )
 
 // Proof represents everything necessary to verify a given
 // key/value pair is stored in a skipchain. The proof is in three parts:
-//   1. Collection proofs the presence or absence of the key. In case of
+//   1. InclusionProof proofs the presence or absence of the key. In case of
 //   the key being present, the value is included in the proof
 //   2. Latest is used to verify the merkle tree root used in the collection-proof
 //   is stored in the latest skipblock
@@ -24,7 +25,9 @@ type Proof struct {
 	InclusionProof collection.Proof
 	// Providing the latest skipblock to retrieve the Merkle tree root.
 	Latest skipchain.SkipBlock
-	// Proving the path to the latest skipblock.
+	// Proving the path to the latest skipblock. The first ForwardLink has an
+	// empty-sliced `From` and the genesis-block in `To`, together with the
+	// roster of the genesis-block in the `NewRoster`.
 	Links []skipchain.ForwardLink
 }
 
@@ -42,6 +45,11 @@ func NewProof(c *collectionDB, s *skipchain.SkipBlockDB, id skipchain.SkipBlockI
 	if sb == nil {
 		return nil, errors.New("didn't find skipchain")
 	}
+	p.Links = []skipchain.ForwardLink{{
+		From:      []byte{},
+		To:        id,
+		NewRoster: sb.Roster,
+	}}
 	for len(sb.ForwardLink) > 0 {
 		link := sb.ForwardLink[len(sb.ForwardLink)-1]
 		p.Links = append(p.Links, *link)
@@ -71,7 +79,7 @@ var ErrorVerifySkipchain = errors.New("stored skipblock is not properly evolved 
 // It verifies the collection-proof, that the merkle-root is stored in the skipblock
 // of the proof and the fact that the skipblock is indeed part of the skipchain.
 // If all verifications are correct, the error will be nil.
-func (p Proof) Verify(genesis *skipchain.SkipBlock) error {
+func (p Proof) Verify(scID skipchain.SkipBlockID) error {
 	if !p.InclusionProof.Consistent() {
 		return ErrorVerifyCollection
 	}
@@ -82,16 +90,23 @@ func (p Proof) Verify(genesis *skipchain.SkipBlock) error {
 	if !bytes.Equal(p.InclusionProof.TreeRootHash(), d.(*Data).MerkleRoot) {
 		return ErrorVerifyMerkleRoot
 	}
-	sbid := genesis.SkipChainID()
-	publics := genesis.Roster.Publics()
-	for _, l := range p.Links {
+	var sbID skipchain.SkipBlockID
+	var publics []kyber.Point
+	for i, l := range p.Links {
+		if i == 0 {
+			// The first forward link is a pointer from []byte{} to the genesis
+			// block and holds the roster of the genesis block.
+			sbID = scID
+			publics = l.NewRoster.Publics()
+			continue
+		}
 		if err = l.Verify(cothority.Suite, publics); err != nil {
 			return ErrorVerifySkipchain
 		}
-		if !l.From.Equal(sbid) {
+		if !l.From.Equal(sbID) {
 			return ErrorVerifySkipchain
 		}
-		sbid = l.To
+		sbID = l.To
 		if l.NewRoster != nil {
 			publics = l.NewRoster.Publics()
 		}

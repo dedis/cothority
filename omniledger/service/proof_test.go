@@ -35,19 +35,19 @@ func TestVerify(t *testing.T) {
 	p, err := NewProof(s.c, s.s, s.genesis.Hash, s.key)
 	require.Nil(t, err)
 	require.True(t, p.InclusionProof.Match())
-	require.Nil(t, p.Verify(s.genesis))
+	require.Nil(t, p.Verify(s.genesis.SkipChainID()))
 	key, values, err := p.KeyValue()
 	require.Nil(t, err)
 	require.Equal(t, s.key, key)
 	require.Equal(t, s.value, values[0])
 
-	require.Equal(t, ErrorVerifySkipchain, p.Verify(s.genesis2))
+	require.Equal(t, ErrorVerifySkipchain, p.Verify(s.genesis2.SkipChainID()))
 
 	p.Latest.Data, err = network.Marshal(&Data{
 		MerkleRoot: getSBID("123"),
 	})
 	require.Nil(t, err)
-	require.Equal(t, ErrorVerifyMerkleRoot, p.Verify(s.genesis))
+	require.Equal(t, ErrorVerifyMerkleRoot, p.Verify(s.genesis.SkipChainID()))
 }
 
 type sc struct {
@@ -91,7 +91,7 @@ func createSC(t *testing.T) (s sc) {
 
 	s.key = []byte("key")
 	s.value = []byte("value")
-	s.c.Store(s.key, s.value, nil)
+	s.c.Store(&Transaction{Key: s.key, Value: s.value})
 
 	s.genesis = skipchain.NewSkipBlock()
 	s.genesis.Roster, s.genesisPrivs = genRoster(1)

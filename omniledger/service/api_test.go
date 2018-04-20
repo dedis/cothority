@@ -1,39 +1,47 @@
-package service_test
+package service
 
 import (
 	"testing"
+	"time"
 
-	"gopkg.in/dedis/kyber.v2/suites"
-
-	// We need to include the service so it is started.
-	"github.com/dedis/student_18_omniledger/omniledger/service"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/dedis/cothority.v2"
 	"gopkg.in/dedis/onet.v2"
 )
 
-var tSuite = suites.MustFind("Ed25519")
-
 func TestClient_GetProof(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
-	c := service.NewClient()
-	csr, err := c.CreateSkipchain(roster, service.Transaction{Key: []byte{1}})
+	defer closeQueues(l)
+	c := NewClient()
+	csr, err := c.CreateSkipchain(roster, Transaction{Key: []byte{1}})
 	require.Nil(t, err)
 
 	key := []byte{1, 2, 3, 4}
 	value := []byte{5, 6, 7, 8}
 	_, err = c.SetKeyValue(roster, csr.Skipblock.SkipChainID(),
-		service.Transaction{
+		Transaction{
 			Key:   key,
 			Value: value,
 		})
 	require.Nil(t, err)
 
-	p, err := c.GetProof(roster, csr.Skipblock.SkipChainID(), key)
-	require.Nil(t, err)
-	require.Nil(t, p.Proof.Verify(csr.Skipblock))
+	var p *GetProofResponse
+	var i int
+	for i = 0; i < 10; i++ {
+		time.Sleep(4 * waitQueueing)
+		var err error
+		p, err = c.GetProof(roster, csr.Skipblock.SkipChainID(), key)
+		if err != nil {
+			continue
+		}
+		if p.Proof.InclusionProof.Match() {
+			break
+		}
+	}
+	require.NotEqual(t, 10, i, "didn't get proof in time")
+	require.Nil(t, p.Proof.Verify(csr.Skipblock.SkipChainID()))
 	k, vs, err := p.Proof.KeyValue()
 	require.Nil(t, err)
 	require.Equal(t, k, key)

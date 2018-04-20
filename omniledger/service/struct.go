@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/dedis/onet"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	"gopkg.in/dedis/onet.v2/network"
@@ -56,17 +57,17 @@ func (c *collectionDB) loadAll() {
 	})
 }
 
-func (c *collectionDB) Store(key, value, sig []byte) error {
-	c.coll.Add(key, value, sig)
+func (c *collectionDB) Store(t *Transaction) error {
+	c.coll.Add(t.Key, t.Value, t.Kind)
 	err := c.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(c.bucketName))
-		if err := bucket.Put(key, value); err != nil {
+		if err := bucket.Put(t.Key, t.Value); err != nil {
 			return err
 		}
-		keysig := make([]byte, len(key)+3)
-		copy(keysig, key)
-		keysig = append(keysig, []byte("sig")...)
-		if err := bucket.Put(keysig, sig); err != nil {
+		keykind := make([]byte, len(t.Key)+4)
+		copy(keykind, t.Key)
+		keykind = append(keykind, []byte("kind")...)
+		if err := bucket.Put(keykind, t.Kind); err != nil {
 			return err
 		}
 		return nil
@@ -74,16 +75,7 @@ func (c *collectionDB) Store(key, value, sig []byte) error {
 	return err
 }
 
-func (c *collectionDB) GetValue(key []byte) (value, sig []byte, err error) {
-	// err = c.db.Update(func(tx *bolt.Tx) error {
-	// 	bucket := tx.Bucket([]byte(c.bucketName))
-	// 	value = bucket.Get(key)
-	// 	sig = bucket.Get(append(key, []byte("sig")...))
-	// 	return nil
-	// })
-	// return
-
-	// TODO: make it so that the collection only stores the hashes, not the values
+func (c *collectionDB) GetValueKind(key []byte) (value, kind []byte, err error) {
 	proof, err := c.coll.Get(key).Record()
 	if err != nil {
 		return
@@ -101,7 +93,7 @@ func (c *collectionDB) GetValue(key []byte) (value, sig []byte, err error) {
 		err = errors.New("the value is not of type []byte")
 		return
 	}
-	sig, ok = hashes[1].([]byte)
+	kind, ok = hashes[1].([]byte)
 	if !ok {
 		err = errors.New("the signature is not of type []byte")
 		return
@@ -125,10 +117,17 @@ type Transaction struct {
 	Key   []byte
 	Kind  []byte
 	Value []byte
-	// type Signature struct {
-	//     Signature []byte
-	//     Signer SubjectPK
-	// }
 	// The signature is performed on the concatenation of the []bytes
 	Signature darc.Signature
+}
+
+// Data is the data passed to the Skipchain
+type Data struct {
+	// Root of the merkle tree after applying the transactions to the
+	// kv store
+	MerkleRoot []byte
+	// The transactions applied to the kv store with this block
+	Transactions []Transaction
+	Timestamp    int64
+	Roster       *onet.Roster
 }

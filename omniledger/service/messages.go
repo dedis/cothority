@@ -76,10 +76,6 @@ type SetKeyValue struct {
 type SetKeyValueResponse struct {
 	// Version of the protocol
 	Version Version
-	// Timestamp is milliseconds since the unix epoch (1/1/1970, 12am UTC)
-	Timestamp *int64
-	// Skipblock ID is the hash of the block where the value is stored
-	SkipblockID *skipchain.SkipBlockID
 }
 
 // GetProof returns the proof that the given key is in the collection.
