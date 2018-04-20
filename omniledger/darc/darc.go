@@ -53,10 +53,10 @@ import (
 
 const evolve = "_evolve"
 
-// InitRules initialise a set of rules with only the default action.
+// InitEvolutionRule initialise a set of rules with only the default action.
 // TODO we need to support multi-signature sign-offs, i.e. we initialise a
 // custom expression where multiple signatures are required to evolve the darc.
-func InitRules(owners []*Identity) Rules {
+func InitEvolutionRule(owners ...*Identity) Rules {
 	ids := make([]string, len(owners))
 	for i, o := range owners {
 		ids[i] = o.String()
