@@ -82,7 +82,7 @@ func TestParsing_Or(t *testing.T) {
 
 func TestParsing_InvalidID_1(t *testing.T) {
 	expr := []byte("x")
-	_, err := ParseExpr(InitParser(trueFn), expr)
+	_, err := Evaluate(InitParser(trueFn), expr)
 	if err == nil {
 		t.Fatal("expect an error")
 	}
@@ -93,7 +93,7 @@ func TestParsing_InvalidID_1(t *testing.T) {
 
 func TestParsing_InvalidID_2(t *testing.T) {
 	expr := []byte("a: b")
-	_, err := ParseExpr(InitParser(trueFn), expr)
+	_, err := Evaluate(InitParser(trueFn), expr)
 	if err == nil {
 		t.Fatal("expect an error")
 	}
@@ -101,7 +101,7 @@ func TestParsing_InvalidID_2(t *testing.T) {
 
 func TestParsing_InvalidOp(t *testing.T) {
 	expr := []byte("a:abc / b:abc")
-	_, err := ParseExpr(InitParser(trueFn), expr)
+	_, err := Evaluate(InitParser(trueFn), expr)
 	if err == nil {
 		t.Fatal("expect an error")
 	}
@@ -112,7 +112,7 @@ func TestParsing_InvalidOp(t *testing.T) {
 
 func TestParsing_Paran(t *testing.T) {
 	expr := []byte("(a:b)")
-	x, err := ParseExpr(InitParser(trueFn), expr)
+	x, err := Evaluate(InitParser(trueFn), expr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -123,7 +123,7 @@ func TestParsing_Paran(t *testing.T) {
 
 func TestParsing_Nesting(t *testing.T) {
 	expr := []byte("(a:b | (b:c & c:d))")
-	x, err := ParseExpr(InitParser(func(s string) bool {
+	x, err := Evaluate(InitParser(func(s string) bool {
 		if s == "b:c" || s == "c:d" {
 			return true
 		}
@@ -139,7 +139,7 @@ func TestParsing_Nesting(t *testing.T) {
 
 func TestParsing_Imbalance(t *testing.T) {
 	expr := []byte("(a:b | b:c & c:d))")
-	_, err := ParseExpr(InitParser(trueFn), expr)
+	_, err := Evaluate(InitParser(trueFn), expr)
 	if err == nil {
 		t.Fatal("error is expected")
 	}
@@ -147,7 +147,7 @@ func TestParsing_Imbalance(t *testing.T) {
 
 func TestParsing_LeftSpace(t *testing.T) {
 	expr := []byte(" a:b")
-	_, err := ParseExpr(InitParser(trueFn), expr)
+	_, err := Evaluate(InitParser(trueFn), expr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -155,7 +155,7 @@ func TestParsing_LeftSpace(t *testing.T) {
 
 func TestParsing_RightSpace(t *testing.T) {
 	expr := []byte("a:b ")
-	_, err := ParseExpr(InitParser(trueFn), expr)
+	_, err := Evaluate(InitParser(trueFn), expr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -163,7 +163,7 @@ func TestParsing_RightSpace(t *testing.T) {
 
 func TestParsing_NoSpace(t *testing.T) {
 	expr := []byte("a:b|a:c&b:b")
-	_, err := ParseExpr(InitParser(trueFn), expr)
+	_, err := Evaluate(InitParser(trueFn), expr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -171,7 +171,7 @@ func TestParsing_NoSpace(t *testing.T) {
 
 func TestParsing_RealIDs(t *testing.T) {
 	expr := []byte("ed25519:5764e85642c3bda8748c5cf3d7f14c6d5c18e193228d70f4c58dd80ed4582748 | ed25519:bf58ca4b1ddb07a7a9bbf57fe9b856f214a38dd872b6ec07efbeb0a01003fae9")
-	_, err := ParseExpr(InitParser(trueFn), expr)
+	_, err := Evaluate(InitParser(trueFn), expr)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -179,7 +179,7 @@ func TestParsing_RealIDs(t *testing.T) {
 
 func TestParsing_Empty(t *testing.T) {
 	expr := []byte{}
-	_, err := ParseExpr(InitParser(trueFn), expr)
+	_, err := Evaluate(InitParser(trueFn), expr)
 	if err == nil {
 		t.Fatal("empty expr should fail")
 	}

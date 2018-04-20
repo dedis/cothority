@@ -1,3 +1,30 @@
+/*
+Package expression contains the definition and implementation of a simple DSL
+for defining complex policies. We define the language in extended-BNF notation,
+the syntax we use is from -
+https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
+
+	expr = term, [ '&', term ]*
+	term = factor, [ '|', factor ]*
+	factor = '(', expr, ')' | id
+	id = [0-9a-z]+, ':', [0-9a-f]+
+
+Examples:
+
+        ed25519:deadbeef // every id evaluates to a boolean
+	(a:a & b:b) | (c:c & d:d)
+
+In the simplest case, the evaluation of an expression is performed against a
+set of valid ids.  Suppose we have the expression (a:a & b:b) | (c:c & d:d),
+and the set of valid ids is [a:a, b:b], then the expression will evaluate to
+true.  If the set of valid ids is [a:a, c:c], then the expression will evaluate
+to false. However, the user is able to provide a ValueCheckFn to customise how
+the expressions are evaluated.
+
+EXTENSION - NOT YET IMPLEMENTED:
+To support threshold signatures, we extend the syntax to include the following.
+	thexpr = '[', id, [ ',', id ]*, ']', '/', digit
+*/
 package expression
 
 import (
@@ -7,71 +34,14 @@ import (
 	parsec "github.com/prataprc/goparsec"
 )
 
-/*
-We define an expression language for defining complex policies. First, we
-clarify a few definitions.  A _policy_ is represented by the Darc structure.
-Unlike the darc in the current implementation, we remove owners and users and
-use a general technique to specify the policy calles _rules_.
-
-There are many _rules_ for each policy, each rules defines an action. The
-actions can be, for example, 'READ', 'WRITE', DELETE' and so on, they are
-specified by the application. Examples of the data structures are shown below.
-
-	type Darc struct {
-		Version int
-		Description *[]byte
-		BaseID *ID // ID of the first Darc
-		Rules map[string]Expr // key is the action, one rule per action, should we include a resource in Rules?
-		Signature *Signature // signature over the fields above
-	}
-
-	type Expr {
-		AST
-	}
-
-Finally, an expression is a DSL that defines, we define the DSL in extended-BNF.
-Notation used are from https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
-
-	expr = term, [ '&', term ]*
-	term = factor, [ '|', factor ]*
-	factor = '(' expr ')' | id
-	id = hex-string
-
-Examples:
-
-	id1 // every identifier evaluates to a boolean
-	(id1 & id2) | (id3 & id4)
-
-The evaluation of expressions is performed against requests. The rule referring
-to the action in the request is used to check expression. In brief, the service
-(who is responsible for checking the request) evaluates the expression by first
-checking whether the action exists, otherwise the evaluation fails.  Otherwise,
-the service looks at the signatures in the request, and sets the unevaluated
-identities to true if the signature is valid and the signer matches the ID in
-the expression.
-
-	type Request struct {
-		DarcID         Identity // for identifying the darc
-		Signatures [][]byte // we need multi signatures because expression
-		Action     string   // do we need this, also specific to the application?
-		Msg        []byte   // what the request wants to do, application specific
-		Darcs      *[]*Darc // for offline verification
-	}
-
-	// should we define the message like this? then Action won't be needed anymore
-	type MsgWithAction interface {
-		func GetActions() []string
-		func GetMsg() [] []byte
-	}
-*/
-
 const scannerNotEmpty = "parsing failed - scanner is not empty"
 const failedToCast = "evauluation failed - result is not bool"
 
-// ValueCheckFn TODO
+// ValueCheckFn is a function that will be called when the parser is
+// parsing/evaluating an expression.
 type ValueCheckFn func(string) bool
 
-// Expr TODO
+// Expr represents the unprocess expression of our DSL.
 type Expr []byte
 
 // InitParser creates the root parser
@@ -83,21 +53,21 @@ func InitParser(fn ValueCheckFn) parsec.Parser {
 	// Terminal rats
 	var openparan = parsec.Token(`\(`, "OPENPARAN")
 	var closeparan = parsec.Token(`\)`, "CLOSEPARAN")
-	var addop = parsec.Token(`&`, "AND")
-	var subop = parsec.Token(`\|`, "OR")
+	var andop = parsec.Token(`&`, "AND")
+	var orop = parsec.Token(`\|`, "OR")
 
 	// NonTerminal rats
-	// addop -> "&" |  "|"
-	var sumOp = parsec.OrdChoice(one2one, addop, subop)
+	// andop -> "&" |  "|"
+	var sumOp = parsec.OrdChoice(one2one, andop, orop)
 
 	// value -> "(" expr ")"
 	var groupExpr = parsec.And(exprNode, openparan, &sum, closeparan)
 
-	// (addop prod)*
+	// (andop prod)*
 	var prodK = parsec.Kleene(nil, parsec.And(many2many, sumOp, &value), nil)
 
 	// Circular rats come to life
-	// sum -> prod (addop prod)*
+	// sum -> prod (andop prod)*
 	sum = parsec.And(sumNode(fn), &value, prodK)
 	// value -> id | "(" expr ")"
 	value = parsec.OrdChoice(exprValueNode(fn), id(), groupExpr)
@@ -106,8 +76,10 @@ func InitParser(fn ValueCheckFn) parsec.Parser {
 	return Y
 }
 
-// ParseExpr TODO
-func ParseExpr(parser parsec.Parser, expr Expr) (bool, error) {
+// Evaluate uses the input parser to evaluate the expression expr. It returns
+// the result of the evaluate (a boolean), but the result is only valid if
+// there are no errors.
+func Evaluate(parser parsec.Parser, expr Expr) (bool, error) {
 	v, s := parser(parsec.NewScanner(expr))
 	_, s = s.SkipWS()
 	if !s.Endof() {
@@ -123,7 +95,7 @@ func ParseExpr(parser parsec.Parser, expr Expr) (bool, error) {
 // DefaultParser creates a parser and evaluates the expression expr, every id
 // in pks will evaluate to true.
 func DefaultParser(expr Expr, ids ...string) (bool, error) {
-	return ParseExpr(InitParser(func(s string) bool {
+	return Evaluate(InitParser(func(s string) bool {
 		for _, k := range ids {
 			if k == s {
 				return true
