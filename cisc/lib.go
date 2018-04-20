@@ -41,7 +41,7 @@ type ciscConfig struct {
 	KeyPairs map[string]*key.Pair
 	// Key-Path pairs used to store the path of the directory where the cerificates/keys
 	// are stored
-	KeyPath map[string]string
+	CertPath map[string]string
 }
 
 func newCiscConfig(i *identity.Identity) *ciscConfig {
@@ -53,7 +53,7 @@ func newCiscConfig(i *identity.Identity) *ciscConfig {
 // not valid. If the config-file is missing altogether, loaded will be false and
 // an empty config-file will be returned.
 func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
-	cfg = &ciscConfig{KeyPairs: make(map[string]*key.Pair), KeyPath: make(map[string]string)}
+	cfg = &ciscConfig{KeyPairs: make(map[string]*key.Pair), CertPath: make(map[string]string)}
 	loaded = true
 
 	configFile := getConfig(c)
@@ -80,8 +80,8 @@ func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
 	if len(cfg.KeyPairs) == 0 {
 		cfg.KeyPairs = map[string]*key.Pair{}
 	}
-	if len(cfg.KeyPath) == 0 {
-		cfg.KeyPath = map[string]string{}
+	if len(cfg.CertPath) == 0 {
+		cfg.CertPath = map[string]string{}
 	}
 	return
 }

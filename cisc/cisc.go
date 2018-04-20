@@ -932,7 +932,7 @@ func certRequest(c *cli.Context) error {
 	prop := id.GetProposed()
 	log.Info("Valid Certificate, added to proposal storage")
 	prop.Storage[domain] = string(cert)
-	cfg.KeyPath[domain] = certPath
+	cfg.CertPath[domain] = certPath
 
 	// Send the certificate to proposal
 	cfg.proposeSendVoteUpdate(id, prop)
@@ -958,7 +958,7 @@ func certList(c *cli.Context) error {
 			if err != nil {
 				return errors.New("Error in conversion to x509 certificate: " + err.Error())
 			}
-			certPath := cfg.KeyPath[k]
+			certPath := cfg.CertPath[k]
 			if certPath == "" {
 				certPath = "Not defined"
 			}
@@ -1073,7 +1073,7 @@ func certRenew(c *cli.Context) error {
 		return errors.New("Error while renewing certificate: " + err.Error())
 	}
 
-	err = ioutil.WriteFile(path.Join(cfg.KeyPath[domain], "fullchain.pem"), newcert, 0644)
+	err = ioutil.WriteFile(path.Join(cfg.CertPath[domain], "fullchain.pem"), newcert, 0644)
 	if err != nil {
 		return errors.New("Can't create fullchain.pem" + err.Error())
 	}
