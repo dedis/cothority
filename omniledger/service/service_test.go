@@ -3,6 +3,8 @@ package service
 import (
 	"testing"
 
+	"github.com/dedis/cothority/ocs/darc"
+	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/dedis/cothority.v2/skipchain"
@@ -64,18 +66,31 @@ func TestService_AddKeyValue(t *testing.T) {
 	require.NotNil(t, akvresp.SkipblockID)
 }
 
-func TestService_GetValue(t *testing.T) {
+func TestService_GetProof(t *testing.T) {
 	s := newSer(t, 2)
 	defer s.local.CloseAll()
 
-	rep, err := s.service.GetValue(&GetValue{
-		Version:     CurrentVersion,
-		SkipchainID: s.sb.SkipChainID(),
-		Key:         s.key,
-		Kind:        []byte("testKind"),
+	rep, err := s.service.GetProof(&GetProof{
+		Version: CurrentVersion,
+		ID:      s.sb.SkipChainID(),
+		Key:     s.key,
 	})
 	require.Nil(t, err)
-	require.Equal(t, s.value, *rep.Value)
+	key, values, err := rep.Proof.KeyValue()
+	require.Nil(t, err)
+	require.Nil(t, rep.Proof.Verify(s.sb))
+	require.Equal(t, s.key, key)
+	require.Equal(t, s.value, values[0])
+
+	rep, err = s.service.GetProof(&GetProof{
+		Version: CurrentVersion,
+		ID:      s.sb.SkipChainID(),
+		Key:     append(s.key, byte(0)),
+	})
+	require.Nil(t, err)
+	require.Nil(t, rep.Proof.Verify(s.sb))
+	key, values, err = rep.Proof.KeyValue()
+	require.NotNil(t, err)
 }
 
 type ser struct {
@@ -86,6 +101,7 @@ type ser struct {
 	sb      *skipchain.SkipBlock
 	key     []byte
 	value   []byte
+	darc    *darc.Darc
 }
 
 func newSer(t *testing.T, step int) *ser {
@@ -96,15 +112,23 @@ func newSer(t *testing.T, step int) *ser {
 	}
 	s.hosts, s.roster, _ = s.local.GenTree(5, true)
 	s.service = s.local.GetServices(s.hosts, lleapID)[0].(*Service)
+	s.darc = &darc.Darc{}
 
 	for i := 0; i < step; i++ {
 		switch i {
 		case 0:
+			d, err := network.Marshal(s.darc)
+			require.Nil(t, err)
 			resp, err := s.service.CreateSkipchain(&CreateSkipchain{
 				Version: CurrentVersion,
 				Roster:  *s.roster,
+				Transaction: Transaction{
+					Key:   s.darc.GetID(),
+					Kind:  []byte("darc"),
+					Value: d,
+				},
 			})
-			assert.Nil(t, err)
+			require.Nil(t, err)
 			s.sb = resp.Skipblock
 		case 1:
 			_, err := s.service.SetKeyValue(&SetKeyValue{
@@ -116,7 +140,7 @@ func newSer(t *testing.T, step int) *ser {
 					Value: s.value,
 				},
 			})
-			assert.Nil(t, err)
+			require.Nil(t, err)
 		}
 	}
 	return s

@@ -15,7 +15,6 @@ func init() {
 	network.RegisterMessages(
 		&CreateSkipchain{}, &CreateSkipchainResponse{},
 		&SetKeyValue{}, &SetKeyValueResponse{},
-		&GetValue{}, &GetValueResponse{},
 	)
 }
 
@@ -83,26 +82,23 @@ type SetKeyValueResponse struct {
 	SkipblockID *skipchain.SkipBlockID
 }
 
-// GetValue looks up the value in the given skipchain and returns the
-// stored value, or an error if either the skipchain or the key doesn't exist.
-type GetValue struct {
+// GetProof returns the proof that the given key is in the collection.
+type GetProof struct {
 	// Version of the protocol
 	Version Version
-	// SkipchainID represents the skipchain where the value is stored
-	SkipchainID skipchain.SkipBlockID
-	// Key to retrieve
-	Key  []byte
-	Kind []byte
+	// Key is the key we want to look up
+	Key []byte
+	// ID is any block that is know to us in the skipchain, can be the genesis
+	// block or any later block. The proof returned will be starting at this block.
+	ID skipchain.SkipBlockID
 }
 
-// GetValueResponse returns the value or an error if the key hasn't been found.
-type GetValueResponse struct {
-	//Version of the protocol
+// GetProofResponse can be used together with the Genesis block to proof that
+// the returned key/value pair is in the collection.
+type GetProofResponse struct {
+	// Version of the protocol
 	Version Version
-	// Value of the key
-	Value *[]byte
-	// Signature as sent when the value was stored
-	Signature *[]byte
-	// Proof the value is correct
-	Proof *[]byte
+	// Proof contains everything necessary to prove the inclusion
+	// of the included key/value pair given a genesis skipblock.
+	Proof Proof
 }
