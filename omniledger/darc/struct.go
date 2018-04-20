@@ -1,9 +1,10 @@
 package darc
 
 import (
-	"github.com/dedis/cothority/ocs/darc/expression"
-	"github.com/dedis/kyber"
-	"github.com/dedis/onet/network"
+	"gopkg.in/dedis/kyber.v2"
+	"gopkg.in/dedis/onet.v2/network"
+
+	"github.com/dedis/student_18_omniledger/omniledger/darc/expression"
 )
 
 func init() {
