@@ -14,6 +14,8 @@ import (
 	"gopkg.in/dedis/onet.v2/log"
 )
 
+var testName = []byte("coll1")
+
 func TestCollectionDBStrange(t *testing.T) {
 	tmpDB, err := ioutil.TempFile("", "tmpDB")
 	require.Nil(t, err)
@@ -23,7 +25,7 @@ func TestCollectionDBStrange(t *testing.T) {
 	db, err := bolt.Open(tmpDB.Name(), 0600, nil)
 	require.Nil(t, err)
 
-	cdb := newCollectionDB(db, "coll1")
+	cdb := newCollectionDB(db, testName)
 	err = cdb.Store([]byte("first"), []byte("value"), []byte("mysig"))
 	require.Nil(t, err)
 	value, sig, err := cdb.GetValue([]byte("first"))
@@ -43,7 +45,7 @@ func TestCollectionDB(t *testing.T) {
 	db, err := bolt.Open(tmpDB.Name(), 0600, nil)
 	require.Nil(t, err)
 
-	cdb := newCollectionDB(db, "coll1")
+	cdb := newCollectionDB(db, testName)
 	pairs := map[string]string{}
 	mysig := []byte("mysignature")
 	for i := 0; i < kvPairs; i++ {
@@ -64,7 +66,7 @@ func TestCollectionDB(t *testing.T) {
 	}
 
 	// Get a new db handler
-	cdb2 := newCollectionDB(db, "coll1")
+	cdb2 := newCollectionDB(db, testName)
 
 	// Verify it's all there
 	for k, v := range pairs {
@@ -89,6 +91,9 @@ func TestService_Store(t *testing.T) {
 	resp, err := service.CreateSkipchain(&CreateSkipchain{
 		Version: CurrentVersion,
 		Roster:  *roster,
+		Transaction: Transaction{
+			Key: []byte("123"),
+		},
 	})
 	require.Nil(t, err)
 	genesis := resp.Skipblock
@@ -112,14 +117,15 @@ func TestService_Store(t *testing.T) {
 
 	// Retrieve the keypairs
 	for key, value := range pairs {
-		gvResp, err := service.GetValue(&GetValue{
-			Version:     CurrentVersion,
-			SkipchainID: genesis.Hash,
-			Kind:        []byte("testKind"),
-			Key:         []byte(key),
+		gvResp, err := service.GetProof(&GetProof{
+			Version: CurrentVersion,
+			ID:      genesis.Hash,
+			Key:     []byte(key),
 		})
 		require.Nil(t, err)
-		require.Equal(t, 0, bytes.Compare(value, *gvResp.Value))
+		_, vs, err := gvResp.Proof.KeyValue()
+		require.Nil(t, err)
+		require.Equal(t, 0, bytes.Compare(value, vs[0]))
 	}
 
 	// Now read the key/values from a new service
@@ -129,13 +135,14 @@ func TestService_Store(t *testing.T) {
 
 	// Retrieve the keypairs
 	for key, value := range pairs {
-		gvResp, err := service.GetValue(&GetValue{
-			Version:     CurrentVersion,
-			SkipchainID: genesis.Hash,
-			Key:         []byte(key),
-			Kind:        []byte("testKind"),
+		gvResp, err := service.GetProof(&GetProof{
+			Version: CurrentVersion,
+			ID:      genesis.Hash,
+			Key:     []byte(key),
 		})
 		require.Nil(t, err)
-		require.Equal(t, 0, bytes.Compare(value, *gvResp.Value))
+		_, vs, err := gvResp.Proof.KeyValue()
+		require.Nil(t, err)
+		require.Equal(t, 0, bytes.Compare(value, vs[0]))
 	}
 }

@@ -129,7 +129,7 @@ func (c *Collection) Prepare(update userUpdate) (Update, error) {
 			return Update{}, errors.New("invalid update: proof invalid")
 		}
 
-		keys[index] = proofs[index].Key()
+		keys[index] = proofs[index].Key
 	}
 
 	return Update{c.transaction.id, update, c.proxy(keys)}, nil

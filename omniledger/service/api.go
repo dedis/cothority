@@ -55,13 +55,15 @@ func (c *Client) SetKeyValue(r *onet.Roster, id skipchain.SkipBlockID,
 	return reply, nil
 }
 
-// GetValue returns the value of a key or nil if it doesn't exist.
-func (c *Client) GetValue(r *onet.Roster, id skipchain.SkipBlockID, key []byte) (*GetValueResponse, error) {
-	reply := &GetValueResponse{}
-	err := c.SendProtobuf(r.List[0], &GetValue{
-		Version:     CurrentVersion,
-		SkipchainID: id,
-		Key:         key,
+// GetProof returns a proof for the key stored in the skipchain.
+// The proof can be verified with the genesis skipblock and
+// can proof the existence or the absence of the key.
+func (c *Client) GetProof(r *onet.Roster, id skipchain.SkipBlockID, key []byte) (*GetProofResponse, error) {
+	reply := &GetProofResponse{}
+	err := c.SendProtobuf(r.List[0], &GetProof{
+		Version: CurrentVersion,
+		ID:      id,
+		Key:     key,
 	}, reply)
 	if err != nil {
 		return nil, err

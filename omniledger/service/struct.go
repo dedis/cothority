@@ -17,20 +17,20 @@ func init() {
 
 type collectionDB struct {
 	db         *bolt.DB
-	bucketName string
+	bucketName []byte
 	coll       collection.Collection
 }
 
 // newCollectionDB initialises a structure and reads all key/value pairs to store
 // it in the collection.
-func newCollectionDB(db *bolt.DB, name string) *collectionDB {
+func newCollectionDB(db *bolt.DB, name []byte) *collectionDB {
 	c := &collectionDB{
 		db:         db,
 		bucketName: name,
 		coll:       collection.New(collection.Data{}, collection.Data{}),
 	}
 	c.db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucket([]byte(name))
+		_, err := tx.CreateBucket(name)
 		if err != nil {
 			return fmt.Errorf("create bucket: %s", err)
 		}
