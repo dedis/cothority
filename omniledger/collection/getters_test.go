@@ -82,7 +82,7 @@ func TestGettersProof(test *testing.T) {
 			test.Error("[getters.go]", "[proof]", "Proof() yields an error on valid key query.")
 		}
 
-		if !equal(proof.Key(), key) {
+		if !equal(proof.Key, key) {
 			test.Error("[getters.go]", "[proof]", "Proof() returns a record with wrong key.")
 		}
 
@@ -98,41 +98,41 @@ func TestGettersProof(test *testing.T) {
 			test.Error("[getters.go]", "[proof]", "Proof() returns proof with wrong collection pointer.")
 		}
 
-		if proof.root.Label != collection.root.label {
+		if proof.Root.Label != collection.root.label {
 			test.Error("[getters.go]", "[proof]", "Proof() returns a proof with wrong root.")
 		}
 
-		if !(proof.root.consistent()) {
+		if !(proof.Root.consistent()) {
 			test.Error("[getters.go]", "[proof]", "Proof() returns a proof with inconsistent root.")
 		}
 
-		if len(proof.steps) == 0 {
+		if len(proof.Steps) == 0 {
 			test.Error("[getters.go]", "[proof]", "Proof() returns a proof with no steps.")
 		}
 
-		if (proof.steps[0].Left.Label != proof.root.Children.Left) || (proof.steps[0].Right.Label != proof.root.Children.Right) {
+		if (proof.Steps[0].Left.Label != proof.Root.Children.Left) || (proof.Steps[0].Right.Label != proof.Root.Children.Right) {
 			test.Error("[getters.go]", "[proof]", "Label mismatch between root children and first step.")
 		}
 
 		path := sha256.Sum256(key)
 
-		for depth := 0; depth < len(proof.steps)-1; depth++ {
-			if !(proof.steps[depth].Left.consistent()) || !(proof.steps[depth].Right.consistent()) {
+		for depth := 0; depth < len(proof.Steps)-1; depth++ {
+			if !(proof.Steps[depth].Left.consistent()) || !(proof.Steps[depth].Right.consistent()) {
 				test.Error("[getters.go]", "[proof]", "Inconsistent step.")
 			}
 
 			if bit(path[:], depth) {
-				if (proof.steps[depth].Right.Children.Left != proof.steps[depth+1].Left.Label) || (proof.steps[depth].Right.Children.Right != proof.steps[depth+1].Right.Label) {
+				if (proof.Steps[depth].Right.Children.Left != proof.Steps[depth+1].Left.Label) || (proof.Steps[depth].Right.Children.Right != proof.Steps[depth+1].Right.Label) {
 					test.Error("[getters.go]", "[proof]", "Step label mismatch given path.")
 				}
 			} else {
-				if (proof.steps[depth].Left.Children.Left != proof.steps[depth+1].Left.Label) || (proof.steps[depth].Left.Children.Right != proof.steps[depth+1].Right.Label) {
+				if (proof.Steps[depth].Left.Children.Left != proof.Steps[depth+1].Left.Label) || (proof.Steps[depth].Left.Children.Right != proof.Steps[depth+1].Right.Label) {
 					test.Error("[getters.go]", "[proof]", "Step label mismatch given path.")
 				}
 			}
 		}
 
-		if !(proof.steps[len(proof.steps)-1].Left.consistent()) || !(proof.steps[len(proof.steps)-1].Right.consistent()) {
+		if !(proof.Steps[len(proof.Steps)-1].Left.consistent()) || !(proof.Steps[len(proof.Steps)-1].Right.consistent()) {
 			test.Error("[getters.go]", "[proof]", "Last inconsistent step.")
 		}
 	}

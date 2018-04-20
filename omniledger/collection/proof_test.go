@@ -200,9 +200,9 @@ func TestProofDumpTo(test *testing.T) {
 
 func TestProofGetters(test *testing.T) {
 	proof := Proof{}
-	proof.key = []byte("mykey")
+	proof.Key = []byte("mykey")
 
-	if !equal(proof.Key(), []byte("mykey")) {
+	if !equal(proof.Key, []byte("mykey")) {
 		test.Error("[proof.go]", "[proofgetters]", "Key() returns wrong key.")
 	}
 }
@@ -233,14 +233,14 @@ func TestProofMatchValues(test *testing.T) {
 
 	proof := Proof{}
 	proof.collection = &collection
-	proof.key = firstkey
-	proof.root = dumpNode(collection.root)
+	proof.Key = firstkey
+	proof.Root = dumpNode(collection.root)
 
 	path := sha256.Sum256(firstkey)
 	cursor := collection.root
 
 	for depth := 0; depth < 6; depth++ {
-		proof.steps = append(proof.steps, step{dumpNode(cursor.children.left), dumpNode(cursor.children.right)})
+		proof.Steps = append(proof.Steps, step{dumpNode(cursor.children.left), dumpNode(cursor.children.right)})
 
 		if bit(path[:], depth) {
 			cursor = cursor.children.right
@@ -267,7 +267,7 @@ func TestProofMatchValues(test *testing.T) {
 		test.Error("[proof.go]", "[values]", "Proof Values() returns wrong values.")
 	}
 
-	proof.key = secondkey
+	proof.Key = secondkey
 
 	if !(proof.Match()) {
 		test.Error("[proof.go]", "[match]", "Proof Match() returns false on matching key.")
@@ -287,7 +287,7 @@ func TestProofMatchValues(test *testing.T) {
 		test.Error("[proof.go]", "[values]", "Proof Values() returns wrong values.")
 	}
 
-	proof.key = []byte("wrongkey")
+	proof.Key = []byte("wrongkey")
 
 	if proof.Match() {
 		test.Error("[proof.go]", "[match]", "Proof Match() returns true on non-matching key.")
@@ -299,10 +299,10 @@ func TestProofMatchValues(test *testing.T) {
 		test.Error("[proof.go]", "[values]", "Proof Values() does not yield an error on non-matching key.")
 	}
 
-	proof.key = firstkey
+	proof.Key = firstkey
 
-	proof.steps[5].Left.Values[0] = make([]byte, 7)
-	proof.steps[5].Right.Values[0] = make([]byte, 7)
+	proof.Steps[5].Left.Values[0] = make([]byte, 7)
+	proof.Steps[5].Right.Values[0] = make([]byte, 7)
 
 	_, err = proof.Values()
 
@@ -310,8 +310,8 @@ func TestProofMatchValues(test *testing.T) {
 		test.Error("[proof.go]", "[values]", "Proof Values() does not yield an error on a record with ill-formed values.")
 	}
 
-	proof.steps[5].Left.Values = [][]byte{make([]byte, 8)}
-	proof.steps[5].Left.Values = [][]byte{make([]byte, 8)}
+	proof.Steps[5].Left.Values = [][]byte{make([]byte, 8)}
+	proof.Steps[5].Left.Values = [][]byte{make([]byte, 8)}
 
 	_, err = proof.Values()
 
@@ -319,7 +319,7 @@ func TestProofMatchValues(test *testing.T) {
 		test.Error("[proof.go]", "[values]", "Proof Values() does not yield an error on a record with wrong number of values.")
 	}
 
-	proof.steps = []step{}
+	proof.Steps = []step{}
 
 	if proof.Match() {
 		test.Error("[proof.go]", "[match]", "Proof Match() returns true on a proof with no steps.")
@@ -350,39 +350,39 @@ func TestProofConsistent(test *testing.T) {
 		test.Error("[proof.go]", "[consistent]", "Proof produced by collection is not consistent.")
 	}
 
-	proof.root.Label[0]++
+	proof.Root.Label[0]++
 	if proof.Consistent() {
 		test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering label of root node.")
 	}
-	proof.root.Label[0]--
+	proof.Root.Label[0]--
 
-	proof.root.Values[0][0]++
+	proof.Root.Values[0][0]++
 	if proof.Consistent() {
 		test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering values of root node.")
 	}
-	proof.root.Values[0][0]--
+	proof.Root.Values[0][0]--
 
-	proof.root.Children.Left[0]++
+	proof.Root.Children.Left[0]++
 	if proof.Consistent() {
 		test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering label of left child of root node.")
 	}
-	proof.root.Children.Left[0]--
+	proof.Root.Children.Left[0]--
 
-	proof.root.Children.Right[0]++
+	proof.Root.Children.Right[0]++
 	if proof.Consistent() {
 		test.Error("[proof.go]", "[consistent]", "Proof is still consistent after altering label of root node.")
 	}
-	proof.root.Children.Right[0]--
+	proof.Root.Children.Right[0]--
 
-	stepsbackup := proof.steps
-	proof.steps = []step{}
+	stepsbackup := proof.Steps
+	proof.Steps = []step{}
 	if proof.Consistent() {
 		test.Error("[proof.go]", "[consistent]", "Proof with no steps is still consisetent.")
 	}
-	proof.steps = stepsbackup
+	proof.Steps = stepsbackup
 
-	for index := 0; index < len(proof.steps); index++ {
-		step := &(proof.steps[index])
+	for index := 0; index < len(proof.Steps); index++ {
+		step := &(proof.Steps[index])
 
 		step.Left.Label[0]++
 		if proof.Consistent() {

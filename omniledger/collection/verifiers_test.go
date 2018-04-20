@@ -47,7 +47,7 @@ func TestVerifiersVerify(test *testing.T) {
 	}
 
 	proof, _ := collection.Get(make([]byte, 8)).Proof()
-	proof.steps[0].Left.Label[0]++
+	proof.Steps[0].Left.Label[0]++
 
 	if unknown.Verify(proof) {
 		test.Error("[verifiers.go]", "[verify]", "Verify() accepts an inconsistent proof.")
