@@ -46,6 +46,7 @@ flags=-ldflags="-s -w -X main.gitTag=$(TAG) -X github.com/dedis/onet.gitTag=$(TA
 # The suffix on conode exe is the result from: echo `uname -s`.`uname -m`
 # so that we can find the right one in the wrapper script.
 bindist:
+	vgo verify
 	rm -rf $(OUTPUT_DIR)
 	mkdir $(OUTPUT_DIR)
 	GOOS=linux GOARCH=amd64 vgo build $(flags) -o $(OUTPUT_DIR)/conode.Linux.x86_64
