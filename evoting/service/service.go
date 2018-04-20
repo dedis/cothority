@@ -333,7 +333,7 @@ func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
 		return nil, err
 	}
 
-	box, err := election.Box()
+	box, err := election.Box(s.skipchain)
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +347,7 @@ func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error
 		return nil, err
 	}
 
-	mixes, err := election.Mixes()
+	mixes, err := election.Mixes(s.skipchain)
 	if err != nil {
 		return nil, err
 	}
@@ -361,7 +361,7 @@ func (s *Service) GetPartials(req *evoting.GetPartials) (*evoting.GetPartialsRep
 		return nil, err
 	}
 
-	partials, err := election.Partials()
+	partials, err := election.Partials(s.skipchain)
 	if err != nil {
 		return nil, err
 	}
@@ -390,6 +390,7 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 	protocol.User = req.User
 	protocol.Signature = req.Signature
 	protocol.Election = election
+	protocol.Skipchain = s.skipchain
 
 	config, _ := network.Marshal(&synchronizer{
 		ID:        req.ID,
@@ -430,6 +431,7 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 	protocol.Signature = req.Signature
 	protocol.Secret = s.secret(election.ID)
 	protocol.Election = election
+	protocol.Skipchain = s.skipchain
 
 	config, _ := network.Marshal(&synchronizer{
 		ID:        req.ID,
@@ -459,7 +461,7 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 		return nil, err
 	}
 
-	partials, err := election.Partials()
+	partials, err := election.Partials(s.skipchain)
 	if err != nil {
 		return nil, err
 	} else if len(partials) != len(s.roster().List) {
@@ -513,6 +515,7 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 		protocol.User = sync.User
 		protocol.Signature = sync.Signature
 		protocol.Election = election
+		protocol.Skipchain = s.skipchain
 
 		config, _ := network.Marshal(&synchronizer{
 			ID:        sync.ID,
@@ -534,6 +537,7 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 		protocol.User = sync.User
 		protocol.Signature = sync.Signature
 		protocol.Election = election
+		protocol.Skipchain = s.skipchain
 
 		config, _ := network.Marshal(&synchronizer{
 			ID:        sync.ID,

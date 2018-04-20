@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/onet/network"
 
 	"github.com/dedis/cothority/evoting/lib"
+	"github.com/dedis/cothority/skipchain"
 )
 
 /*
@@ -42,6 +43,8 @@ type Shuffle struct {
 	Election  *lib.Election // Election to be shuffled.
 
 	Finished chan bool // Flag to signal protocol termination.
+
+	Skipchain *skipchain.Service
 }
 
 func init() {
@@ -65,13 +68,13 @@ func (s *Shuffle) Start() error {
 func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 	var ballots []*lib.Ballot
 	if s.IsRoot() {
-		box, err := s.Election.Box()
+		box, err := s.Election.Box(s.Skipchain)
 		if err != nil {
 			return err
 		}
 		ballots = box.Ballots
 	} else {
-		mixes, err := s.Election.Mixes()
+		mixes, err := s.Election.Mixes(s.Skipchain)
 		if err != nil {
 			return err
 		}

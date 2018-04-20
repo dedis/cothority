@@ -36,12 +36,10 @@ func StoreUsingWebsocket(id skipchain.SkipBlockID, roster *onet.Roster, transact
 	if err != nil {
 		return err
 	}
-
 	enc, err := protobuf.Encode(transaction)
 	if err != nil {
 		return err
 	}
-
 	_, err = client.StoreSkipBlock(reply.Update[len(reply.Update)-1], nil, enc)
 	if err != nil {
 		return err

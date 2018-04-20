@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/onet/network"
 
 	"github.com/dedis/cothority/evoting/lib"
+	"github.com/dedis/cothority/skipchain"
 )
 
 /*
@@ -38,6 +39,8 @@ type Decrypt struct {
 	Election *lib.Election     // Election to be decrypted.
 
 	Finished chan bool // Flag to signal protocol termination.
+
+	Skipchain *skipchain.Service
 }
 
 func init() {
@@ -64,11 +67,11 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 		defer d.finish()
 	}
 
-	box, err := d.Election.Box()
+	box, err := d.Election.Box(d.Skipchain)
 	if err != nil {
 		return err
 	}
-	mixes, err := d.Election.Mixes()
+	mixes, err := d.Election.Mixes(d.Skipchain)
 	if err != nil {
 		return err
 	}

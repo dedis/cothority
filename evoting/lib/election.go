@@ -136,10 +136,12 @@ func (e *Election) setStage(s *skipchain.Service) error {
 }
 
 // Box accumulates all the ballots while only keeping the last ballot for each user.
-func (e *Election) Box() (*Box, error) {
-	client := skipchain.NewClient()
-
-	block, err := client.GetSingleBlockByIndex(e.Roster, e.ID, 0)
+func (e *Election) Box(s *skipchain.Service) (*Box, error) {
+	block, err := s.GetSingleBlockByIndex(
+		&skipchain.GetSingleBlockByIndex{
+			Genesis: e.ID,
+			Index:   0,
+		})
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +157,10 @@ func (e *Election) Box() (*Box, error) {
 		if len(block.ForwardLink) <= 0 {
 			break
 		}
-		block, _ = client.GetSingleBlock(e.Roster, block.ForwardLink[0].To)
+		block, _ = s.GetSingleBlock(
+			&skipchain.GetSingleBlock{
+				ID: block.ForwardLink[0].To,
+			})
 	}
 
 	// Reverse ballot list
@@ -181,34 +186,47 @@ func (e *Election) Box() (*Box, error) {
 }
 
 // Mixes returns all mixes created by the roster conodes.
-func (e *Election) Mixes() ([]*Mix, error) {
-	client := skipchain.NewClient()
+func (e *Election) Mixes(s *skipchain.Service) ([]*Mix, error) {
 
-	block, err := client.GetSingleBlockByIndex(e.Roster, e.ID, 0)
+	// Traversing forward one by one might be expensive in a large
+	// election. It's better to search for the Mix transactions
+	// from the end of the skipchain
+	block, err := s.GetDB().GetLatest(s.GetDB().GetByID(e.ID))
 	if err != nil {
 		return nil, err
 	}
 
 	mixes := make([]*Mix, 0)
-	for {
+	for block != nil {
 		transaction := UnmarshalTransaction(block.Data)
-		if transaction != nil && transaction.Mix != nil {
+		if transaction != nil && transaction.Mix == nil && transaction.Partial == nil {
+			// we're done
+			break
+		}
+
+		if transaction.Mix != nil {
+			// append to the mixes array
 			mixes = append(mixes, transaction.Mix)
 		}
 
-		if len(block.ForwardLink) <= 0 {
-			break
-		}
-		block, _ = client.GetSingleBlock(e.Roster, block.ForwardLink[0].To)
+		// keep iterating back
+		block = s.GetDB().GetByID(block.BackLinkIDs[0])
+	}
+	// reverse the slice since we iterated in reverse before
+	for i := len(mixes)/2 - 1; i >= 0; i-- {
+		opp := len(mixes) - 1 - i
+		mixes[i], mixes[opp] = mixes[opp], mixes[i]
 	}
 	return mixes, nil
 }
 
 // Partials returns the partial decryption for each roster conode.
-func (e *Election) Partials() ([]*Partial, error) {
-	client := skipchain.NewClient()
+func (e *Election) Partials(s *skipchain.Service) ([]*Partial, error) {
 
-	block, err := client.GetSingleBlockByIndex(e.Roster, e.ID, 0)
+	// Traversing forward one by one might be expensive in a large
+	// election. It's better to search for the Partial transactions
+	// from the end of the skipchain
+	block, err := s.GetDB().GetLatest(s.GetDB().GetByID(e.ID))
 	if err != nil {
 		return nil, err
 	}
@@ -216,18 +234,22 @@ func (e *Election) Partials() ([]*Partial, error) {
 	partials := make([]*Partial, 0)
 	for block != nil {
 		transaction := UnmarshalTransaction(block.Data)
-		if transaction != nil && transaction.Partial != nil {
+		if transaction != nil && transaction.Partial == nil {
+			// we're done
+			break
+		}
+
+		if transaction.Partial != nil {
 			partials = append(partials, transaction.Partial)
 		}
 
-		if len(block.ForwardLink) <= 0 {
-			break
-		}
-		var err error
-		block, err = client.GetSingleBlock(e.Roster, block.ForwardLink[0].To)
-		if err != nil {
-			break
-		}
+		// keep iterating back
+		block = s.GetDB().GetByID(block.BackLinkIDs[0])
+	}
+	// reverse the slice since we iterated in reverse before
+	for i := len(partials)/2 - 1; i >= 0; i-- {
+		opp := len(partials) - 1 - i
+		partials[i], partials[opp] = partials[opp], partials[i]
 	}
 	return partials, nil
 }
