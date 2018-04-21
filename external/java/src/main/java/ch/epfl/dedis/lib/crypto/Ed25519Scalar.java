@@ -49,11 +49,11 @@ public class Ed25519Scalar implements Scalar {
         return reduce().getLittleEndian();
     }
 
-    public Ed25519Scalar reduce() {
+    public Scalar reduce() {
         return new Ed25519Scalar(Ed25519.ed25519.getScalarOps().reduce(getLittleEndianFull()));
     }
 
-    public Ed25519Scalar copy() {
+    public Scalar copy() {
         return new Ed25519Scalar(getLittleEndian());
     }
 
@@ -62,7 +62,7 @@ public class Ed25519Scalar implements Scalar {
         return Arrays.equals(fieldElement.toByteArray(), s.fieldElement.toByteArray());
     }
 
-    public Ed25519Scalar addOne() {
+    public Scalar addOne() {
         return new Ed25519Scalar(fieldElement.addOne());
     }
 
@@ -78,26 +78,26 @@ public class Ed25519Scalar implements Scalar {
         return Arrays.copyOfRange(getLittleEndian(), 0, 64);
     }
 
-    public Ed25519Scalar add(Scalar b) {
+    public Scalar add(Scalar b) {
         Ed25519Scalar other = convert(b);
         return new Ed25519Scalar(fieldElement.add(other.fieldElement));
     }
 
-    public Ed25519Scalar sub(Scalar b) {
+    public Scalar sub(Scalar b) {
         Ed25519Scalar other = convert(b);
         return new Ed25519Scalar(fieldElement.subtract(other.fieldElement));
     }
 
-    public Ed25519Scalar invert() {
+    public Scalar invert() {
         return new Ed25519Scalar(fieldElement.invert());
     }
 
-    public Ed25519Scalar negate() {
+    public Scalar negate() {
         return convert(Ed25519.prime_order).sub(this.reduce()).reduce();
     }
 
     public boolean isZero() {
-        return !reduce().fieldElement.isNonZero();
+        return !convert(reduce()).fieldElement.isNonZero();
     }
 
     public Point scalarMult(Point p) {
@@ -107,7 +107,7 @@ public class Ed25519Scalar implements Scalar {
         return p.scalarMult(this);
     }
 
-    public Ed25519Scalar mul(Scalar s) {
+    public Scalar mul(Scalar s) {
         Ed25519Scalar other = convert(s);
         return new Ed25519Scalar(Ed25519.ed25519.getScalarOps().multiplyAndAdd(fieldElement.toByteArray(), other.fieldElement.toByteArray(),
                 Ed25519.field.ZERO.toByteArray()));
@@ -118,7 +118,7 @@ public class Ed25519Scalar implements Scalar {
         return new EdDSAPrivateKey(spec);
     }
 
-    private Ed25519Scalar convert(Scalar s) {
+    private static Ed25519Scalar convert(Scalar s) {
         if (!(s instanceof Ed25519Scalar)) {
             throw new IllegalArgumentException(String.format("Error thrown because you are trying to operate an Ed25519Scalar with a Scalar implementing class %s", s.getClass().getName()));
         }

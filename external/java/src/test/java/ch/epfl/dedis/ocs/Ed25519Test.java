@@ -21,13 +21,13 @@ class Ed25519Test {
     @Test
     void point() {
         String point = "3B6A27BCCEB6A42D62A3A8D02A6F0D73653215771DE243A63AC048A18B59DA29";
-        Point point2 = new Point(point);
-        assertEquals(point, point2.toString());
-        assertEquals(32, point2.toBytes().length);
-        assertTrue(new Point(point2.toBytes()).equals(point2));
+        Point ed25519Point2 = new Ed25519Point(point);
+        assertEquals(point, ed25519Point2.toString());
+        assertEquals(32, ed25519Point2.toBytes().length);
+        assertTrue(new Ed25519Point(ed25519Point2.toBytes()).equals(ed25519Point2));
 
         byte[] point_bytes = DatatypeConverter.parseHexBinary("3B6A27BCCEB6A42D62A3A8D02A6F0D73653215771DE243A63AC048A18B59DA29");
-        assertTrue(new Point(point_bytes).equals(point2));
+        assertTrue(new Ed25519Point(point_bytes).equals(ed25519Point2));
     }
 
     @Test
@@ -35,12 +35,12 @@ class Ed25519Test {
         String short_str = "short2";
         String long_str = "this is a string too long to be embedded";
 
-        Point pub = Point.pubStore(short_str.getBytes());
+        Point pub = Ed25519Point.pubStore(short_str.getBytes());
         byte[] ret = pub.pubLoad();
         assertEquals(short_str, new String(ret));
 
         try {
-            Point.pubStore(long_str.getBytes());
+            Ed25519Point.pubStore(long_str.getBytes());
             throw new CothorityCryptoException("this should not pass");
         } catch (CothorityCryptoException e) {
         }
@@ -51,7 +51,7 @@ class Ed25519Test {
         KeyPair kp = new KeyPair();
 
         Point pub = kp.scalar.scalarMult(null);
-        assertTrue(pub.equals(kp.Point));
+        assertTrue(pub.equals(kp.point));
 
         Scalar onep = kp.scalar.addOne();
         assertEquals(onep.getLittleEndian()[0], kp.scalar.getLittleEndian()[0] + 1);
@@ -129,7 +129,7 @@ class Ed25519Test {
         Point S = s.scalarMult(null);
 
         Scalar sprime = new Ed25519Scalar(s.toBytes());
-        Point Sprime = new Point(S.toBytes());
+        Point Sprime = new Ed25519Point(S.toBytes());
         assertTrue(s.equals(sprime));
         assertTrue(S.equals(Sprime));
     }
@@ -140,7 +140,7 @@ class Ed25519Test {
         byte[] sigBuf = DatatypeConverter.parseHexBinary("b95fc52a5fd2e18aa7ace5b2250c2a25e368f75c148ea3403c8f32b5f100781b" +
                 "362c668aab4cf50eafdc2fcf45214c0dfbe86fce72e4632158c02c571e977306");
         SchnorrSig sig = new SchnorrSig(sigBuf);
-        Point pub = new Point("59d7fd947fc88e47d3f878e82e26629dea7a28e8d4233f11068a6b464e195bfd");
+        Point pub = new Ed25519Point("59d7fd947fc88e47d3f878e82e26629dea7a28e8d4233f11068a6b464e195bfd");
         Scalar s = new Ed25519Scalar(new byte[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1});
         assertTrue(sig.verify(msg, pub));
         assertFalse(sig.verify(msg, pub.add(pub)));
@@ -152,12 +152,12 @@ class Ed25519Test {
         byte[] msg = "Hello Schnorr".getBytes();
         KeyPair kp1 = new KeyPair();
         kp1.scalar = new Ed25519Scalar("379ccd218573e8ac7c9184de1bdce3398cf37bd2d66460275d11d0517f0f6700");
-        kp1.Point = kp1.scalar.scalarMult(null);
+        kp1.point = kp1.scalar.scalarMult(null);
         KeyPair kp2 = new KeyPair();
         SchnorrSig sig = new SchnorrSig(msg, kp1.scalar);
 
-        assertTrue(sig.verify(msg, kp1.Point));
-        assertFalse(sig.verify(msg, kp2.Point));
+        assertTrue(sig.verify(msg, kp1.point));
+        assertFalse(sig.verify(msg, kp2.point));
     }
 
     @Test

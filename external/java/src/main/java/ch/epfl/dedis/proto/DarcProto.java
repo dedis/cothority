@@ -3280,7 +3280,7 @@ public final class DarcProto {
   }
   /**
    * <pre>
-   * IdentityEd25519 holds a Ed25519 public key (Point)
+   * IdentityEd25519 holds a Ed25519 public key (Ed25519Point)
    * </pre>
    *
    * Protobuf type {@code IdentityEd25519}
@@ -3533,7 +3533,7 @@ public final class DarcProto {
     }
     /**
      * <pre>
-     * IdentityEd25519 holds a Ed25519 public key (Point)
+     * IdentityEd25519 holds a Ed25519 public key (Ed25519Point)
      * </pre>
      *
      * Protobuf type {@code IdentityEd25519}
@@ -8950,7 +8950,7 @@ public final class DarcProto {
     internal_static_IdentityEd25519_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_IdentityEd25519_descriptor,
-        new java.lang.String[] { "Point", });
+        new java.lang.String[] { "Ed25519Point", });
     internal_static_IdentityX509EC_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_IdentityX509EC_fieldAccessorTable = new
@@ -8986,13 +8986,13 @@ public final class DarcProto {
     internal_static_SignerEd25519_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_SignerEd25519_descriptor,
-        new java.lang.String[] { "Point", "Secret", });
+        new java.lang.String[] { "Ed25519Point", "Secret", });
     internal_static_SignerX509EC_descriptor =
       getDescriptor().getMessageTypes().get(9);
     internal_static_SignerX509EC_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_SignerX509EC_descriptor,
-        new java.lang.String[] { "Point", "Secret", });
+        new java.lang.String[] { "Ed25519Point", "Secret", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

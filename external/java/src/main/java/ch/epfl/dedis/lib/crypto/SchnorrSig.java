@@ -12,7 +12,7 @@ public class SchnorrSig {
 
     public SchnorrSig(byte[] msg, Scalar priv) {
         KeyPair kp = new KeyPair();
-        challenge = kp.Point;
+        challenge = kp.point;
 
         Point pub = priv.scalarMult(null);
         Scalar xh = priv.mul(toHash(challenge, pub, msg));
@@ -20,7 +20,7 @@ public class SchnorrSig {
     }
 
     public SchnorrSig(byte[] data) {
-        challenge = new Point(Arrays.copyOfRange(data, 0, 32));
+        challenge = new Ed25519Point(Arrays.copyOfRange(data, 0, 32));
         response = new Ed25519Scalar(Arrays.copyOfRange(data, 32, 64));
     }
 
