@@ -134,8 +134,8 @@ class OnchainSecretsTest {
 
         KeyPair kp = new KeyPair();
         Signer reader2 = new SignerEd25519();
-        DarcSignature sig = new DarcSignature(kp.Ed25519Point.toBytes(), readerDarc, reader2, SignaturePath.USER);
-        assertThrows(CothorityCommunicationException.class,()->{ocs.getDecryptionKeyEphemeral(rrId, sig, kp.Ed25519Point);});
+        DarcSignature sig = new DarcSignature(kp.point.toBytes(), readerDarc, reader2, SignaturePath.USER);
+        assertThrows(CothorityCommunicationException.class,()->{ocs.getDecryptionKeyEphemeral(rrId, sig, kp.point);});
     }
 
     @Test
