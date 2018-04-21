@@ -49,7 +49,7 @@ public class Point {
         return Arrays.equals(element.toByteArray(), other.element.toByteArray());
     }
 
-    public Point scalarMult(Ed25519Scalar s) {
+    public Point scalarMult(Scalar s) {
         element = element.toP3();
         element.precompute(true);
         return new Point(element.scalarMultiply(s.getLittleEndian()));

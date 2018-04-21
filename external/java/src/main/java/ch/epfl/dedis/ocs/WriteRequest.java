@@ -130,7 +130,7 @@ public class WriteRequest {
             write.setData(ByteString.copyFrom(dataEnc));
 
             KeyPair randkp = new KeyPair();
-            Ed25519Scalar r = randkp.Ed25519Scalar;
+            Scalar r = randkp.scalar;
             Point U = randkp.Point;
             write.setU(U.toProto());
 
@@ -151,7 +151,7 @@ public class WriteRequest {
             Point Ubar = r.scalarMult(gBar);
             write.setUbar(Ubar.toProto());
             KeyPair skp = new KeyPair();
-            Ed25519Scalar s = skp.Ed25519Scalar;
+            Scalar s = skp.scalar;
             Point w = skp.Point;
             Point wBar = s.scalarMult(gBar);
 
@@ -164,9 +164,9 @@ public class WriteRequest {
             hash.update(w.toBytes());
             hash.update(wBar.toBytes());
             hash.update(owner.getId().getId());
-            Ed25519Scalar E = new Ed25519Scalar(hash.digest());
+            Scalar E = new Ed25519Scalar(hash.digest());
             write.setE(E.toProto());
-            Ed25519Scalar F = s.add(E.mul(r));
+            Scalar F = s.add(E.mul(r));
             write.setF(F.toProto());
 
             return write.build();

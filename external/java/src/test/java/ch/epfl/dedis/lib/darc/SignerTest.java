@@ -1,6 +1,6 @@
 package ch.epfl.dedis.lib.darc;
 
-import ch.epfl.dedis.lib.crypto.Ed25519Scalar;
+import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.Test;
@@ -16,7 +16,7 @@ public class SignerTest {
     void instantiateSigner() throws IOException, Exception {
         SignerEd25519 signer = new SignerEd25519();
         Point pub = signer.getPublic();
-        Ed25519Scalar priv = signer.getPrivate();
+        Scalar priv = signer.getPrivate();
 
         assertTrue(priv.scalarMult(null).equals(pub));
         assertTrue(pub.equals(SignerFactory.New(signer.serialize()).getPublic()));
