@@ -15,7 +15,7 @@ public class IdentityEd25519 implements Identity {
      * @param proto
      */
     public IdentityEd25519(DarcProto.IdentityEd25519 proto){
-        pub = new Ed25519Point(proto.getPoint());
+        pub = new Ed25519Point(proto.getEd25519Point());
     }
 
     /**
@@ -50,7 +50,7 @@ public class IdentityEd25519 implements Identity {
     public DarcProto.Identity toProto(){
         DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();
         DarcProto.IdentityEd25519.Builder bed = DarcProto.IdentityEd25519.newBuilder();
-        bed.setPoint(ByteString.copyFrom(pub.toBytes()));
+        bed.setEd25519Point(ByteString.copyFrom(pub.toBytes()));
         bid.setEd25519(bed);
         return bid.build();
     }

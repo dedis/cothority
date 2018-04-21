@@ -3272,11 +3272,11 @@ public final class DarcProto {
     /**
      * <code>required bytes point = 1;</code>
      */
-    boolean hasPoint();
+    boolean hasEd25519Point();
     /**
      * <code>required bytes point = 1;</code>
      */
-    com.google.protobuf.ByteString getPoint();
+    com.google.protobuf.ByteString getEd25519Point();
   }
   /**
    * <pre>
@@ -3361,13 +3361,13 @@ public final class DarcProto {
     /**
      * <code>required bytes point = 1;</code>
      */
-    public boolean hasPoint() {
+    public boolean hasEd25519Point() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
      * <code>required bytes point = 1;</code>
      */
-    public com.google.protobuf.ByteString getPoint() {
+    public com.google.protobuf.ByteString getEd25519Point() {
       return point_;
     }
 
@@ -3377,7 +3377,7 @@ public final class DarcProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasPoint()) {
+      if (!hasEd25519Point()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -3418,10 +3418,10 @@ public final class DarcProto {
       ch.epfl.dedis.proto.DarcProto.IdentityEd25519 other = (ch.epfl.dedis.proto.DarcProto.IdentityEd25519) obj;
 
       boolean result = true;
-      result = result && (hasPoint() == other.hasPoint());
-      if (hasPoint()) {
-        result = result && getPoint()
-            .equals(other.getPoint());
+      result = result && (hasEd25519Point() == other.hasEd25519Point());
+      if (hasEd25519Point()) {
+        result = result && getEd25519Point()
+            .equals(other.getEd25519Point());
       }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
@@ -3434,9 +3434,9 @@ public final class DarcProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasPoint()) {
+      if (hasEd25519Point()) {
         hash = (37 * hash) + POINT_FIELD_NUMBER;
-        hash = (53 * hash) + getPoint().hashCode();
+        hash = (53 * hash) + getEd25519Point().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -3643,8 +3643,8 @@ public final class DarcProto {
 
       public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.IdentityEd25519 other) {
         if (other == ch.epfl.dedis.proto.DarcProto.IdentityEd25519.getDefaultInstance()) return this;
-        if (other.hasPoint()) {
-          setPoint(other.getPoint());
+        if (other.hasEd25519Point()) {
+          setEd25519Point(other.getEd25519Point());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -3652,7 +3652,7 @@ public final class DarcProto {
       }
 
       public final boolean isInitialized() {
-        if (!hasPoint()) {
+        if (!hasEd25519Point()) {
           return false;
         }
         return true;
@@ -3681,19 +3681,19 @@ public final class DarcProto {
       /**
        * <code>required bytes point = 1;</code>
        */
-      public boolean hasPoint() {
+      public boolean hasEd25519Point() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
        * <code>required bytes point = 1;</code>
        */
-      public com.google.protobuf.ByteString getPoint() {
+      public com.google.protobuf.ByteString getEd25519Point() {
         return point_;
       }
       /**
        * <code>required bytes point = 1;</code>
        */
-      public Builder setPoint(com.google.protobuf.ByteString value) {
+      public Builder setEd25519Point(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -3705,9 +3705,9 @@ public final class DarcProto {
       /**
        * <code>required bytes point = 1;</code>
        */
-      public Builder clearPoint() {
+      public Builder clearEd25519Point() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        point_ = getDefaultInstance().getPoint();
+        point_ = getDefaultInstance().getEd25519Point();
         onChanged();
         return this;
       }
