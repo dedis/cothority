@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.darc;
 
+import ch.epfl.dedis.lib.crypto.Ed25519Scalar;
 import ch.epfl.dedis.lib.crypto.Point;
-import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +32,7 @@ public abstract class SignerX509EC implements Signer {
      *
      * @return
      */
-    public Scalar getPrivate() throws CothorityCryptoException {
+    public Ed25519Scalar getPrivate() throws CothorityCryptoException {
         throw new CothorityCryptoException("cannot reveal private key");
     }
 

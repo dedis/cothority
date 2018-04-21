@@ -2,7 +2,6 @@ package ch.epfl.dedis.ocs;
 
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.Scalar;
-import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.OCSProto;
 

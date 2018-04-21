@@ -2,7 +2,7 @@ package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.crypto.KeyPair;
 import ch.epfl.dedis.lib.crypto.Point;
-import ch.epfl.dedis.lib.crypto.Scalar;
+import ch.epfl.dedis.lib.crypto.Ed25519Scalar;
 import ch.epfl.dedis.lib.crypto.SchnorrSig;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.slf4j.Logger;
@@ -12,7 +12,7 @@ import java.io.IOException;
 
 public class SignerEd25519 implements Signer {
     private Point pub;
-    private Scalar priv;
+    private Ed25519Scalar priv;
 
     private final Logger logger = LoggerFactory.getLogger(SignerEd25519.class);
 
@@ -22,16 +22,16 @@ public class SignerEd25519 implements Signer {
     public SignerEd25519() {
         KeyPair kp = new KeyPair();
         pub = kp.Point;
-        priv = kp.Scalar;
+        priv = kp.Ed25519Scalar;
     }
 
     /**
      * Creates a new signer from a slice of bytes. This must correspond to
-     * what Ed25519.Scalar.toBytes() returns.
+     * what Ed25519.Ed25519Scalar.toBytes() returns.
      * @param data
      */
     public SignerEd25519(byte[] data){
-        priv = new Scalar(data);
+        priv = new Ed25519Scalar(data);
         pub = priv.scalarMult(null);
     }
 
@@ -53,7 +53,7 @@ public class SignerEd25519 implements Signer {
      *
      * @return
      */
-    public Scalar getPrivate() {
+    public Ed25519Scalar getPrivate() {
         return priv;
     }
 

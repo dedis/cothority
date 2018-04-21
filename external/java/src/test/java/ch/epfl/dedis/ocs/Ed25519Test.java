@@ -50,11 +50,11 @@ class Ed25519Test {
     void toPrivate() {
         KeyPair kp = new KeyPair();
 
-        Point pub = kp.Scalar.scalarMult(null);
+        Point pub = kp.Ed25519Scalar.scalarMult(null);
         assertTrue(pub.equals(kp.Point));
 
-        Scalar onep = kp.Scalar.addOne();
-        assertEquals(onep.getLittleEndian()[0], kp.Scalar.getLittleEndian()[0] + 1);
+        Ed25519Scalar onep = kp.Ed25519Scalar.addOne();
+        assertEquals(onep.getLittleEndian()[0], kp.Ed25519Scalar.getLittleEndian()[0] + 1);
     }
 
     @Test
@@ -62,14 +62,14 @@ class Ed25519Test {
         String priv_str = "66F1874A926079F5907A26B57079B5583E42C3D0FDBB2B7B8638A8DBC1AD4622";
         String priv_str_reduced = "8C499C905D9A5445E440376FB385F72E3E42C3D0FDBB2B7B8638A8DBC1AD4602";
         String pub_str = "6ECFEB30C65BA92D16521DB20BA21C64F86E4CE294A733C66B38B691311078E6";
-        Scalar priv = new Scalar(priv_str);
+        Ed25519Scalar priv = new Ed25519Scalar(priv_str);
         Point pub = priv.scalarMult(null);
         assertEquals(pub_str, pub.toString());
 
-        Scalar priv_reduced = new Scalar(priv_str_reduced);
+        Ed25519Scalar priv_reduced = new Ed25519Scalar(priv_str_reduced);
         assertEquals(pub_str, priv_reduced.reduce().scalarMult(null).toString());
 
-        Scalar priv1 = priv.addOne();
+        Ed25519Scalar priv1 = priv.addOne();
         Point base = Ed25519.base;
         Point pub1 = pub.add(base);
         assertTrue(pub1.equals(priv1.scalarMult(null)));
@@ -83,14 +83,14 @@ class Ed25519Test {
         String pub_str = "6ECFEB30C65BA92D16521DB20BA21C64F86E4CE294A733C66B38B691311078E6";
         String pub1_str = "FBDAFDA7941D5088990B8DAEAE35B2D7F3E3342B427ABFCF94664374A93C0719";
 
-        Scalar priv = new Scalar(priv_str, false);
+        Ed25519Scalar priv = new Ed25519Scalar(priv_str, false);
         assertEquals(priv_str, priv.toString());
         assertEquals(priv_reduced_str, priv.reduce().toString());
 
         Point pub = priv.scalarMult(null);
         assertEquals(pub_str, pub.toString());
 
-        Scalar priv_next = priv.reduce().addOne();
+        Ed25519Scalar priv_next = priv.reduce().addOne();
         assertEquals(priv1_reduced_str, priv_next.toString());
         assertEquals(pub1_str, priv_next.scalarMult(null).toString());
     }
@@ -99,14 +99,14 @@ class Ed25519Test {
     void reduce() {
         String priv_str = "66F1874A926079F5907A26B57079B5583E42C3D0FDBB2B7B8638A8DBC1AD4622";
         String priv_reduced_str = "8C499C905D9A5445E440376FB385F72E3E42C3D0FDBB2B7B8638A8DBC1AD4602";
-        Scalar priv = new Scalar(priv_str, false);
+        Ed25519Scalar priv = new Ed25519Scalar(priv_str, false);
         assertEquals(priv_str, priv.toString());
         assertEquals(priv_reduced_str, priv.reduce().toString());
 
-        Scalar reduced = new Scalar(priv_reduced_str);
+        Ed25519Scalar reduced = new Ed25519Scalar(priv_reduced_str);
         assertEquals(priv_reduced_str, reduced.toString());
 
-        Scalar reduced2 = reduced.reduce();
+        Ed25519Scalar reduced2 = reduced.reduce();
         assertTrue(reduced2.equals(reduced));
         assertTrue(reduced2.reduce().equals(reduced));
         assertTrue(reduced2.reduce().reduce().equals(reduced));
@@ -114,21 +114,21 @@ class Ed25519Test {
 
     @Test
     void negate() {
-        Scalar e = new Scalar("762755eb09f5a1b3927d89625a90ac93351eba404aa0d0a62315985cc94ba304");
-        Scalar neg = e.negate();
-        Scalar sum = e.add(neg);
+        Ed25519Scalar e = new Ed25519Scalar("762755eb09f5a1b3927d89625a90ac93351eba404aa0d0a62315985cc94ba304");
+        Ed25519Scalar neg = e.negate();
+        Ed25519Scalar sum = e.add(neg);
         assertTrue(sum.isZero());
 
-        Scalar f = new Scalar("77aca071106e70a4431f6e4084693281cae145bfb55f2f59dcea67a336b45c0b");
+        Ed25519Scalar f = new Ed25519Scalar("77aca071106e70a4431f6e4084693281cae145bfb55f2f59dcea67a336b45c0b");
         assertArrayEquals(neg.reduce().getLittleEndian(), f.getLittleEndian());
     }
 
     @Test
     void storeLoad() {
-        Scalar s = new Scalar("762755eb09f5a1b3927d89625a90ac93351eba404aa0d0a62315985cc94ba304").reduce();
+        Ed25519Scalar s = new Ed25519Scalar("762755eb09f5a1b3927d89625a90ac93351eba404aa0d0a62315985cc94ba304").reduce();
         Point S = s.scalarMult(null);
 
-        Scalar sprime = new Scalar(s.toBytes());
+        Ed25519Scalar sprime = new Ed25519Scalar(s.toBytes());
         Point Sprime = new Point(S.toBytes());
         assertTrue(s.equals(sprime));
         assertTrue(S.equals(Sprime));
@@ -141,7 +141,7 @@ class Ed25519Test {
                 "362c668aab4cf50eafdc2fcf45214c0dfbe86fce72e4632158c02c571e977306");
         SchnorrSig sig = new SchnorrSig(sigBuf);
         Point pub = new Point("59d7fd947fc88e47d3f878e82e26629dea7a28e8d4233f11068a6b464e195bfd");
-        Scalar s = new Scalar(new byte[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1});
+        Ed25519Scalar s = new Ed25519Scalar(new byte[]{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-1});
         assertTrue(sig.verify(msg, pub));
         assertFalse(sig.verify(msg, pub.add(pub)));
         assertFalse(sig.verify("Hi Schnorr".getBytes(), pub));
@@ -151,10 +151,10 @@ class Ed25519Test {
     void schnorrSig() {
         byte[] msg = "Hello Schnorr".getBytes();
         KeyPair kp1 = new KeyPair();
-        kp1.Scalar = new Scalar("379ccd218573e8ac7c9184de1bdce3398cf37bd2d66460275d11d0517f0f6700");
-        kp1.Point = kp1.Scalar.scalarMult(null);
+        kp1.Ed25519Scalar = new Ed25519Scalar("379ccd218573e8ac7c9184de1bdce3398cf37bd2d66460275d11d0517f0f6700");
+        kp1.Point = kp1.Ed25519Scalar.scalarMult(null);
         KeyPair kp2 = new KeyPair();
-        SchnorrSig sig = new SchnorrSig(msg, kp1.Scalar);
+        SchnorrSig sig = new SchnorrSig(msg, kp1.Ed25519Scalar);
 
         assertTrue(sig.verify(msg, kp1.Point));
         assertFalse(sig.verify(msg, kp2.Point));
@@ -162,9 +162,9 @@ class Ed25519Test {
 
     @Test
     void scalarMult(){
-        Scalar s1 = new Scalar("67e6be35d39af08420fedc3d7911fc4f59b011228df409bc90db25605c85d60d");
-        Scalar s2 = new Scalar("1afde431894a4cd4a54c2bad4fa38b94d53c9749914f70743adb86dd7cb05c0d");
-        Scalar res = new Scalar("57e990d0d54655e38be2278fc109902ad5a24fdfc7de72c9d8216e4179474205");
+        Ed25519Scalar s1 = new Ed25519Scalar("67e6be35d39af08420fedc3d7911fc4f59b011228df409bc90db25605c85d60d");
+        Ed25519Scalar s2 = new Ed25519Scalar("1afde431894a4cd4a54c2bad4fa38b94d53c9749914f70743adb86dd7cb05c0d");
+        Ed25519Scalar res = new Ed25519Scalar("57e990d0d54655e38be2278fc109902ad5a24fdfc7de72c9d8216e4179474205");
 
         assertTrue(res.equals(s1.mul(s2)));
     }

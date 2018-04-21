@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.darc;
 
+import ch.epfl.dedis.lib.crypto.Ed25519Scalar;
 import ch.epfl.dedis.lib.crypto.Point;
-import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ public interface Signer {
      *
      * @return
      */
-    Scalar getPrivate() throws CothorityCryptoException;
+    Ed25519Scalar getPrivate() throws CothorityCryptoException;
 
     /**
      * Returns the public key of the signer or throws a NoPublicKey exception.
