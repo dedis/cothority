@@ -39,6 +39,12 @@ docker_clean:
 
 TAG=$(shell git describe --tags)
 OUTPUT_DIR=conode-$(TAG)
+# dev is the master branch, which will get automatic date tagging for
+# distribution files.
+ifeq ($(TAG),dev)
+	TAG := $(TAG)-$(shell date +%y%m%d)
+endif
+
 # -s -w are for smaller binaries
 # -X compiles the git tag into the binary
 flags=-ldflags="-s -w -X main.gitTag=$(TAG) -X github.com/dedis/onet.gitTag=$(TAG)"
@@ -55,7 +61,7 @@ bindist:
 	GOOS=windows GOARCH=386 vgo build $(flags) -o $(OUTPUT_DIR)/conode.exe
 	echo "#!/bin/sh" > $(OUTPUT_DIR)/conode
 	echo "./conode.\`uname -s\`.\`uname -m\` \$$*" >> $(OUTPUT_DIR)/conode
-	chmod +x $(OUTPUT_DIR)/conode	
+	chmod +x $(OUTPUT_DIR)/conode
 	LANG=C tar zcf $(OUTPUT_DIR).tar.gz $(OUTPUT_DIR)
 	rm -rf $(OUTPUT_DIR)
 
