@@ -7,6 +7,7 @@ import (
 
 	"github.com/dedis/kyber/proof"
 	"github.com/dedis/kyber/shuffle"
+	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 
@@ -107,7 +108,10 @@ func runDecrypt(t *testing.T, n int) {
 	for i := range mixes {
 		v, w, prover := shuffle.Shuffle(cothority.Suite, nil, key, x, y, random.New())
 		proof, _ := proof.HashProve(cothority.Suite, "", prover)
-		mix := &lib.Mix{Ballots: lib.Combine(v, w), Proof: proof, Node: string(i)}
+		public := roster.Get(i).Public
+		data, _ := public.MarshalBinary()
+		sig, _ := schnorr.Sign(cothority.Suite, local.GetPrivate(nodes[i]), data)
+		mix := &lib.Mix{Ballots: lib.Combine(v, w), Proof: proof, Node: string(i), PublicKey: public, Signature: sig}
 		tx = lib.NewTransaction(mix, election.Creator, []byte{})
 		lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 		x, y = v, w

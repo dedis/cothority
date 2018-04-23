@@ -789,6 +789,11 @@ func (s *Service) SetBFTTimeout(t time.Duration) {
 	s.bftTimeout = t
 }
 
+// SetPropTimeout is used to set the propagation timeout
+func (s *Service) SetPropTimeout(t time.Duration) {
+	s.propTimeout = t
+}
+
 func (s *Service) verifySigs(msg, sig []byte) bool {
 	// If there are no clients, all signatures verify.
 	if len(s.Storage.Clients) == 0 {

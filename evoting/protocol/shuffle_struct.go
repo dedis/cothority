@@ -16,7 +16,9 @@ type MessagePrompt struct {
 
 // TerminateShuffle is sent by the leaf node to the root node upon completion of
 // the last shuffle, which terminates the protocol.
-type TerminateShuffle struct{}
+type TerminateShuffle struct {
+	Error string // Protobuf doesn't support error type
+}
 
 // MessageTerminate is a wrapper around TerminateShuffle.
 type MessageTerminate struct {
