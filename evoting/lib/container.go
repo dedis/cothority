@@ -43,7 +43,9 @@ type Mix struct {
 	Ballots []*Ballot // Ballots are permuted and re-encrypted.
 	Proof   []byte    // Proof of the shuffle.
 
-	Node string // Node signifies the creator of the mix.
+	Node      string      // Node signifies the creator of the mix.
+	PublicKey kyber.Point // Public key of the node generating the mix
+	Signature []byte      // Signature of the public key
 }
 
 // Partial contains the partially decrypted ballots.
