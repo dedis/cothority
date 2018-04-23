@@ -1,9 +1,9 @@
 FROM golang:1.10 as builder
+ARG BUILDFLAG="-s -w -X main.gitTag=unknown github.com/dedis/onet.gitTag=unknown"
 RUN apt-get update && apt-get install -y clang
-RUN go get golang.org/x/vgo
 RUN go get github.com/dedis/cothority
-COPY .netrc /root
-RUN cd /go/src/github.com/dedis/cothority/conode && GOOS=linux vgo install
+RUN cd /go/src/github.com/dedis/cothority/conode && go get -u ./...
+RUN cd /go/src/github.com/dedis/cothority/conode && go install -ldflags="$BUILDFLAG" .
 
 FROM debian:stretch-slim
 WORKDIR /root/
