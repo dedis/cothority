@@ -615,6 +615,11 @@ func (s *Service) load() error {
 		return errors.New("service error: could not unmarshal storage")
 	}
 
+	// Don't know how this can get left to nil, but if it happens, we
+	// panic in Open, so don't let it happen.
+	if s.storage.Secrets == nil {
+		s.storage.Secrets = make(map[string]*lib.SharedSecret)
+	}
 	return nil
 }
 
