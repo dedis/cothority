@@ -145,6 +145,71 @@ func TestDarc_EvolveMore(t *testing.T) {
 	require.NotNil(t, darcs[len(darcs)-2].Verify())
 }
 
+func TestDarc_EvolveMoreOnline(t *testing.T) {
+	d := createDarc(1, "testdarc").darc
+	require.Nil(t, d.Verify())
+	prevOwner := NewSignerEd25519(nil, nil)
+	require.Nil(t, d.Rules.UpdateEvolution(
+		expression.InitOrExpr(prevOwner.Identity().String())))
+
+	darcs := []*Darc{d}
+	for i := 0; i < 10; i++ {
+		dNew := darcs[len(darcs)-1].Copy()
+		dNew.IncrementVersion()
+		newOwner := NewSignerEd25519(nil, nil)
+		require.Nil(t, dNew.Rules.UpdateEvolution([]byte(newOwner.Identity().String())))
+		require.Nil(t, dNew.Evolve(darcs, prevOwner))
+		// require.Nil(t, dNew.Verify())
+		darcs = append(darcs, dNew)
+		prevOwner = newOwner
+	}
+	require.Nil(t, darcs[len(darcs)-1].Verify())
+
+	// create some call backs
+	getDarc := func(id string) *Darc {
+		for _, d := range darcs {
+			if d.GetIdentityString() == id {
+				return darcs[len(darcs)-1]
+			}
+		}
+		return nil
+	}
+	getDarcWrong0 := func(id string) *Darc {
+		return darcs[0]
+	}
+	getDarcWrong1 := func(id string) *Darc {
+		return darcs[1]
+	}
+
+	// create darcs that do not have the full path
+	lightDarc1 := darcs[len(darcs)-1].Copy()
+	lightDarc1.Signature = &Signature{
+		Signature:  copyBytes(darcs[len(darcs)-1].Signature.Signature),
+		Signer:     darcs[len(darcs)-1].Signature.Signer,
+		PathDigest: darcs[len(darcs)-1].Signature.PathDigest,
+	}
+	lightDarc2 := darcs[len(darcs)-2].Copy()
+	lightDarc2.Signature = &Signature{
+		Signature:  copyBytes(darcs[len(darcs)-2].Signature.Signature),
+		Signer:     darcs[len(darcs)-2].Signature.Signer,
+		PathDigest: darcs[len(darcs)-2].Signature.PathDigest,
+	}
+
+	// verification should fail if the callback is not set
+	require.NotNil(t, lightDarc1.Verify())
+	require.NotNil(t, lightDarc2.Verify())
+
+	// verification should fail if callback is wrong
+	require.NotNil(t, lightDarc1.VerifyWithCB(getDarcWrong0))
+	require.NotNil(t, lightDarc2.VerifyWithCB(getDarcWrong0))
+	require.NotNil(t, lightDarc1.VerifyWithCB(getDarcWrong1))
+	require.NotNil(t, lightDarc2.VerifyWithCB(getDarcWrong1))
+
+	// verification should pass with the correct callback
+	require.Nil(t, lightDarc1.VerifyWithCB(getDarc))
+	require.Nil(t, lightDarc2.VerifyWithCB(getDarc))
+}
+
 // TestDarc_Rules is, other than the test, is an example of how one would use
 // the Darc with a user-defined rule.
 func TestDarc_Rules(t *testing.T) {
@@ -239,8 +304,9 @@ func TestDarc_Delegation(t *testing.T) {
 	require.Nil(t, td5.darc.VerifyWithCB(getDarc))
 }
 
-// TODO test X509 identity
-// TODO test online verification
+func TestDarc_X509(t *testing.T) {
+	// TODO
+}
 
 type testDarc struct {
 	darc   *Darc
