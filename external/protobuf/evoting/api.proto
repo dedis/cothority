@@ -146,13 +146,13 @@ message Mix {
 
 message Partial {
 	repeated bytes points = 1;
-	required boolean flag = 2;
+	required bool flag = 2;
 	required string node = 3;	
 }
 
 message Transaction {
 	optional Master master = 1;
-	optional Link link = 2;
+	optional LinkReply link = 2;
 	optional Election election = 3;
 	optional Ballot ballot = 4;
 	optional Mix mix = 5;
