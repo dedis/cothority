@@ -3,6 +3,7 @@ package collection
 import (
 	"crypto/sha256"
 	"errors"
+
 	"github.com/dedis/protobuf"
 )
 
@@ -167,9 +168,8 @@ func (p Proof) Values() ([]interface{}, error) {
 	return values, nil
 }
 
-// Private methods
-
-func (p Proof) consistent() bool {
+// Consistent returns true if the proof given is correctly set up.
+func (p Proof) Consistent() bool {
 	if len(p.steps) == 0 {
 		return false
 	}

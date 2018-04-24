@@ -11,7 +11,7 @@ func (c *Collection) Verify(proof Proof) bool {
 		panic("Verify() called on inconsistent root.")
 	}
 
-	if (proof.root.Label != c.root.label) || !(proof.consistent()) {
+	if (proof.root.Label != c.root.label) || !(proof.Consistent()) {
 		return false
 	}
 
