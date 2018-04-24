@@ -3272,15 +3272,15 @@ public final class DarcProto {
     /**
      * <code>required bytes point = 1;</code>
      */
-    boolean hasEd25519Point();
+    boolean hasPoint();
     /**
      * <code>required bytes point = 1;</code>
      */
-    com.google.protobuf.ByteString getEd25519Point();
+    com.google.protobuf.ByteString getPoint();
   }
   /**
    * <pre>
-   * IdentityEd25519 holds a Ed25519 public key (Ed25519Point)
+   * IdentityEd25519 holds a Ed25519 public key (Point)
    * </pre>
    *
    * Protobuf type {@code IdentityEd25519}
@@ -3361,13 +3361,13 @@ public final class DarcProto {
     /**
      * <code>required bytes point = 1;</code>
      */
-    public boolean hasEd25519Point() {
+    public boolean hasPoint() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
      * <code>required bytes point = 1;</code>
      */
-    public com.google.protobuf.ByteString getEd25519Point() {
+    public com.google.protobuf.ByteString getPoint() {
       return point_;
     }
 
@@ -3377,7 +3377,7 @@ public final class DarcProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasEd25519Point()) {
+      if (!hasPoint()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -3418,10 +3418,10 @@ public final class DarcProto {
       ch.epfl.dedis.proto.DarcProto.IdentityEd25519 other = (ch.epfl.dedis.proto.DarcProto.IdentityEd25519) obj;
 
       boolean result = true;
-      result = result && (hasEd25519Point() == other.hasEd25519Point());
-      if (hasEd25519Point()) {
-        result = result && getEd25519Point()
-            .equals(other.getEd25519Point());
+      result = result && (hasPoint() == other.hasPoint());
+      if (hasPoint()) {
+        result = result && getPoint()
+            .equals(other.getPoint());
       }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
@@ -3434,9 +3434,9 @@ public final class DarcProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasEd25519Point()) {
+      if (hasPoint()) {
         hash = (37 * hash) + POINT_FIELD_NUMBER;
-        hash = (53 * hash) + getEd25519Point().hashCode();
+        hash = (53 * hash) + getPoint().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -3533,7 +3533,7 @@ public final class DarcProto {
     }
     /**
      * <pre>
-     * IdentityEd25519 holds a Ed25519 public key (Ed25519Point)
+     * IdentityEd25519 holds a Ed25519 public key (Point)
      * </pre>
      *
      * Protobuf type {@code IdentityEd25519}
@@ -3643,8 +3643,8 @@ public final class DarcProto {
 
       public Builder mergeFrom(ch.epfl.dedis.proto.DarcProto.IdentityEd25519 other) {
         if (other == ch.epfl.dedis.proto.DarcProto.IdentityEd25519.getDefaultInstance()) return this;
-        if (other.hasEd25519Point()) {
-          setEd25519Point(other.getEd25519Point());
+        if (other.hasPoint()) {
+          setPoint(other.getPoint());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -3652,7 +3652,7 @@ public final class DarcProto {
       }
 
       public final boolean isInitialized() {
-        if (!hasEd25519Point()) {
+        if (!hasPoint()) {
           return false;
         }
         return true;
@@ -3681,19 +3681,19 @@ public final class DarcProto {
       /**
        * <code>required bytes point = 1;</code>
        */
-      public boolean hasEd25519Point() {
+      public boolean hasPoint() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
        * <code>required bytes point = 1;</code>
        */
-      public com.google.protobuf.ByteString getEd25519Point() {
+      public com.google.protobuf.ByteString getPoint() {
         return point_;
       }
       /**
        * <code>required bytes point = 1;</code>
        */
-      public Builder setEd25519Point(com.google.protobuf.ByteString value) {
+      public Builder setPoint(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
@@ -3705,9 +3705,9 @@ public final class DarcProto {
       /**
        * <code>required bytes point = 1;</code>
        */
-      public Builder clearEd25519Point() {
+      public Builder clearPoint() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        point_ = getDefaultInstance().getEd25519Point();
+        point_ = getDefaultInstance().getPoint();
         onChanged();
         return this;
       }
@@ -8950,7 +8950,7 @@ public final class DarcProto {
     internal_static_IdentityEd25519_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_IdentityEd25519_descriptor,
-        new java.lang.String[] { "Ed25519Point", });
+        new java.lang.String[] { "Point", });
     internal_static_IdentityX509EC_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_IdentityX509EC_fieldAccessorTable = new
@@ -8986,13 +8986,13 @@ public final class DarcProto {
     internal_static_SignerEd25519_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_SignerEd25519_descriptor,
-        new java.lang.String[] { "Ed25519Point", "Secret", });
+        new java.lang.String[] { "Point", "Secret", });
     internal_static_SignerX509EC_descriptor =
       getDescriptor().getMessageTypes().get(9);
     internal_static_SignerX509EC_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_SignerX509EC_descriptor,
-        new java.lang.String[] { "Ed25519Point", "Secret", });
+        new java.lang.String[] { "Point", "Secret", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)
