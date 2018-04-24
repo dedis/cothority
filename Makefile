@@ -11,7 +11,7 @@ EXCLUDE_LINT = "should be.*UI|_test.go"
 test_playground:
 	cd ocs/service; \
 	for a in $$( seq 100 ); do \
-	  go test -race -short -run TestService_proof || exit 1 ; \
+	  go test -v -race -short -run TestService_proof || exit 1 ; \
 	done;
 
 # Other targets are:
