@@ -20,7 +20,7 @@ import (
 var tSuite = suites.MustFind("Ed25519")
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	log.MainTest(m, 3)
 }
 
 func TestService_proof(t *testing.T) {
