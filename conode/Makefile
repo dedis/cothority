@@ -53,7 +53,6 @@ docker_clean:
 # The suffix on conode exe is the result from: echo `uname -s`.`uname -m`
 # so that we can find the right one in the wrapper script.
 bindist:
-	vgo verify
 	rm -rf $(OUTPUT_DIR)
 	mkdir $(OUTPUT_DIR)
 	GOOS=linux GOARCH=amd64 go build $(flags) -o $(OUTPUT_DIR)/conode.Linux.x86_64
