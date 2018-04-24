@@ -17,15 +17,15 @@ type Record struct {
 
 // Constructors
 
-func recordkeymatch(collection *Collection, node *node) Record {
+func recordKeyMatch(collection *Collection, node *node) Record {
 	return Record{collection, 0, []byte{}, true, node.key, node.values}
 }
 
-func recordquerymatch(collection *Collection, field int, query []byte, node *node) Record {
+func recordQueryMatch(collection *Collection, field int, query []byte, node *node) Record {
 	return Record{collection, field, query, true, node.key, node.values}
 }
 
-func recordkeymismatch(collection *Collection, key []byte) Record {
+func recordKeyMismatch(collection *Collection, key []byte) Record {
 	return Record{collection, 0, []byte{}, false, key, [][]byte{}}
 }
 

@@ -3,6 +3,7 @@ package collection
 import (
 	"crypto/sha256"
 	"encoding/binary"
+	"github.com/stretchr/testify/require"
 	"math/rand"
 	"testing"
 )
@@ -28,29 +29,29 @@ func TestManipulatorsAdd(test *testing.T) {
 		ctx.verify.key("[stakecollection]", &collection, key)
 	}
 
-	unknownroot := New()
-	unknownroot.root.known = false
+	unknownRoot := New()
+	unknownRoot.root.known = false
 
-	err := unknownroot.Add([]byte("key"))
+	err := unknownRoot.Add([]byte("key"))
 	if err == nil {
-		test.Error("[manipulators.go]", "[unknownroot]", "Add should yield an error on a collection with unknown root.")
+		test.Error("[manipulators.go]", "[unknownRoot]", "Add should yield an error on a collection with unknown root.")
 	}
 
-	unknownrootchildren := New()
-	unknownrootchildren.root.children.left.known = false
-	unknownrootchildren.root.children.right.known = false
+	unknownRootChildren := New()
+	unknownRootChildren.root.children.left.known = false
+	unknownRootChildren.root.children.right.known = false
 
-	err = unknownrootchildren.Add([]byte("key"))
+	err = unknownRootChildren.Add([]byte("key"))
 	if err == nil {
-		test.Error("[manipulators.go]", "[unknownrootchildren]", "Add should yield an error on a collection with unknown root children.")
+		test.Error("[manipulators.go]", "[unknownRootChildren]", "Add should yield an error on a collection with unknown root children.")
 	}
 
-	keycollision := New()
-	keycollision.Add([]byte("key"))
+	keyCollision := New()
+	keyCollision.Add([]byte("key"))
 
-	err = keycollision.Add([]byte("key"))
+	err = keyCollision.Add([]byte("key"))
 	if err == nil {
-		test.Error("[manipulators.go]", "[keycollision]", "Add should yield an error on key collision.")
+		test.Error("[manipulators.go]", "[keyCollision]", "Add should yield an error on key collision.")
 	}
 
 	transaction := New(stake64)
@@ -74,8 +75,15 @@ func TestManipulatorsAdd(test *testing.T) {
 	})
 
 	ctx.shouldPanic("[wrongvalues]", func() {
-		keycollision.Add([]byte("panickey"), uint64(13))
+		keyCollision.Add([]byte("panickey"), uint64(13))
 	})
+}
+
+func TestManipulatorsAddEmpty(test *testing.T) {
+	collection := New(Data{})
+
+	err := collection.Add([]byte{})
+	require.NotNil(test, err)
 }
 
 func TestManipulatorsSet(test *testing.T) {
@@ -106,21 +114,21 @@ func TestManipulatorsSet(test *testing.T) {
 		ctx.verify.values("[set]", &collection, key, uint64(index*2))
 	}
 
-	unknownroot := New(stake64)
-	unknownroot.root.known = false
+	unknownRoot := New(stake64)
+	unknownRoot.root.known = false
 
-	err := unknownroot.Set([]byte("key"), uint64(0))
+	err := unknownRoot.Set([]byte("key"), uint64(0))
 	if err == nil {
-		test.Error("[manipulators.go]", "[unknownroot]", "Set should yield an error on a collection with unknown root.")
+		test.Error("[manipulators.go]", "[unknownRoot]", "Set should yield an error on a collection with unknown root.")
 	}
 
-	unknownrootchildren := New(stake64)
-	unknownrootchildren.root.children.left.known = false
-	unknownrootchildren.root.children.right.known = false
+	unknownRootChildren := New(stake64)
+	unknownRootChildren.root.children.left.known = false
+	unknownRootChildren.root.children.right.known = false
 
-	err = unknownrootchildren.Set([]byte("key"), uint64(0))
+	err = unknownRootChildren.Set([]byte("key"), uint64(0))
 	if err == nil {
-		test.Error("[manipulators.go]", "[unknownrootchildren]", "Set should yield an error on a collection with unknown root children.")
+		test.Error("[manipulators.go]", "[unknownRootChildren]", "Set should yield an error on a collection with unknown root children.")
 	}
 
 	err = collection.Set([]byte("key"), uint64(13))
@@ -224,21 +232,21 @@ func TestManipulatorsRemove(test *testing.T) {
 		test.Error("[manipulators.go]", "[remove]", "Label is not path-independent.")
 	}
 
-	unknownroot := New()
-	unknownroot.root.known = false
+	unknownRoot := New()
+	unknownRoot.root.known = false
 
-	err := unknownroot.Remove([]byte("key"))
+	err := unknownRoot.Remove([]byte("key"))
 	if err == nil {
-		test.Error("[manipulators.go]", "[unknownroot]", "Remove should yield an error on a collection with unknown root.")
+		test.Error("[manipulators.go]", "[unknownRoot]", "Remove should yield an error on a collection with unknown root.")
 	}
 
-	unknownrootchildren := New()
-	unknownrootchildren.root.children.left.known = false
-	unknownrootchildren.root.children.right.known = false
+	unknownRootChildren := New()
+	unknownRootChildren.root.children.left.known = false
+	unknownRootChildren.root.children.right.known = false
 
-	err = unknownrootchildren.Remove([]byte("key"))
+	err = unknownRootChildren.Remove([]byte("key"))
 	if err == nil {
-		test.Error("[manipulators.go]", "[unknownrootchildren]", "Remove should yield an error on a collection with unknown root children.")
+		test.Error("[manipulators.go]", "[unknownRootChildren]", "Remove should yield an error on a collection with unknown root children.")
 	}
 
 	err = collection.Remove([]byte("wrongkey"))
@@ -295,14 +303,14 @@ func TestManipulatorsRemove(test *testing.T) {
 		}
 	}
 
-	collisionkey := []byte("mykey")
-	collidingkey := collision(collisionkey, 8)
+	collisionKey := []byte("mykey")
+	collidingKey := collision(collisionKey, 8)
 
-	transaction.Add(collisionkey)
-	transaction.Add(collidingkey)
+	transaction.Add(collisionKey)
+	transaction.Add(collidingKey)
 
-	transaction.Remove(collisionkey)
-	transaction.Remove(collidingkey)
+	transaction.Remove(collisionKey)
+	transaction.Remove(collidingKey)
 
 	transaction.fix()
 	transaction.Collect()

@@ -4,6 +4,8 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestProofDumpNode(test *testing.T) {
@@ -13,25 +15,25 @@ func TestProofDumpNode(test *testing.T) {
 	collection := New(stake64, data)
 	collection.Add([]byte("mykey"), uint64(66), []byte("myvalue"))
 
-	rootdump := dumpNode(collection.root)
+	rootDump := dumpNode(collection.root)
 
-	if rootdump.Label != collection.root.label {
+	if rootDump.Label != collection.root.label {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets wrong label on dump of internal node.")
 	}
 
-	if len(rootdump.Key) != 0 {
+	if len(rootDump.Key) != 0 {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets key on internal node.")
 	}
 
-	if len(rootdump.Values) != 2 {
+	if len(rootDump.Values) != 2 {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong number of values on internal node.")
 	}
 
-	if !equal(rootdump.Values[0], collection.root.values[0]) || !equal(rootdump.Values[1], collection.root.values[1]) {
+	if !equal(rootDump.Values[0], collection.root.values[0]) || !equal(rootDump.Values[1], collection.root.values[1]) {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong values on internal node.")
 	}
 
-	if (rootdump.Children.Left != collection.root.children.left.label) || (rootdump.Children.Right != collection.root.children.right.label) {
+	if (rootDump.Children.Left != collection.root.children.left.label) || (rootDump.Children.Right != collection.root.children.right.label) {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong children labels on internal node.")
 	}
 
@@ -43,27 +45,27 @@ func TestProofDumpNode(test *testing.T) {
 		leaf = collection.root.children.left
 	}
 
-	leafdump := dumpNode(leaf)
+	leafDump := dumpNode(leaf)
 
-	if leafdump.Label != leaf.label {
+	if leafDump.Label != leaf.label {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets wrong label on dump of leaf.")
 	}
 
-	if !equal(leafdump.Key, leaf.key) {
+	if !equal(leafDump.Key, leaf.key) {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets wrong key on leaf.")
 	}
 
-	if len(leafdump.Values) != 2 {
+	if len(leafDump.Values) != 2 {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong number of values on leaf.")
 	}
 
-	if !equal(leafdump.Values[0], leaf.values[0]) || !equal(leafdump.Values[1], leaf.values[1]) {
+	if !equal(leafDump.Values[0], leaf.values[0]) || !equal(leafDump.Values[1], leaf.values[1]) {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong values on leaf.")
 	}
 
 	var empty [sha256.Size]byte
 
-	if (leafdump.Children.Left != empty) || (leafdump.Children.Right != empty) {
+	if (leafDump.Children.Left != empty) || (leafDump.Children.Right != empty) {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets non-null children labels on leaf.")
 	}
 }
@@ -145,9 +147,9 @@ func TestProofDumpTo(test *testing.T) {
 	collection := New(stake64, data)
 	collection.Add([]byte("mykey"), uint64(66), []byte("myvalue"))
 
-	rootdump := dumpNode(collection.root)
-	leftdump := dumpNode(collection.root.children.left)
-	rightdump := dumpNode(collection.root.children.right)
+	rootDump := dumpNode(collection.root)
+	leftDump := dumpNode(collection.root.children.left)
+	rightDump := dumpNode(collection.root.children.right)
 
 	unknown := New(stake64, data)
 	unknown.scope.None()
@@ -156,7 +158,7 @@ func TestProofDumpTo(test *testing.T) {
 	unknown.Add([]byte("mykey"), uint64(66), []byte("myvalue"))
 	unknown.End()
 
-	rootdump.to(unknown.root)
+	rootDump.to(unknown.root)
 
 	if !(unknown.root.known) {
 		test.Error("[proof.go]", "[to]", "Method to() does not set known to true.")
@@ -166,8 +168,8 @@ func TestProofDumpTo(test *testing.T) {
 		test.Error("[proof.go]", "[to]", "Method to() does not branch internal nodes.")
 	}
 
-	leftdump.to(unknown.root.children.left)
-	rightdump.to(unknown.root.children.right)
+	leftDump.to(unknown.root.children.left)
+	rightDump.to(unknown.root.children.right)
 
 	if !(unknown.root.children.left.known) {
 		test.Error("[proof.go]", "[to]", "Method to() does not set known to true.")
@@ -189,7 +191,7 @@ func TestProofDumpTo(test *testing.T) {
 
 	ctx.verify.tree("[to]", &unknown)
 
-	leftdump.to(unknown.root.children.right)
+	leftDump.to(unknown.root.children.right)
 	unknown.fix()
 	ctx.verify.tree("[to]", &unknown)
 
@@ -224,19 +226,19 @@ func TestProofMatchValues(test *testing.T) {
 	stake64 := Stake64{}
 	data := Data{}
 
-	firstkey := []byte("mykey")
-	secondkey := collision(firstkey, 5)
+	firstKey := []byte("mykey")
+	secondKey := collision(firstKey, 5)
 
 	collection := New(stake64, data)
-	collection.Add(firstkey, uint64(66), []byte("firstvalue"))
-	collection.Add(secondkey, uint64(99), []byte("secondvalue"))
+	collection.Add(firstKey, uint64(66), []byte("firstvalue"))
+	collection.Add(secondKey, uint64(99), []byte("secondvalue"))
 
 	proof := Proof{}
 	proof.collection = &collection
-	proof.Key = firstkey
+	proof.Key = firstKey
 	proof.Root = dumpNode(collection.root)
 
-	path := sha256.Sum256(firstkey)
+	path := sha256.Sum256(firstKey)
 	cursor := collection.root
 
 	for depth := 0; depth < 6; depth++ {
@@ -253,37 +255,37 @@ func TestProofMatchValues(test *testing.T) {
 		test.Error("[proof.go]", "[match]", "Proof Match() returns false on matching key.")
 	}
 
-	firstvalues, err := proof.Values()
+	firstValues, err := proof.Values()
 
 	if err != nil {
 		test.Error("[proof.go]", "[values]", "Proof Values() returns error on matching key.")
 	}
 
-	if len(firstvalues) != 2 {
+	if len(firstValues) != 2 {
 		test.Error("[proof.go]", "[values]", "Proof Values() returns wrong number of values.")
 	}
 
-	if (firstvalues[0].(uint64) != 66) || !equal(firstvalues[1].([]byte), []byte("firstvalue")) {
+	if (firstValues[0].(uint64) != 66) || !equal(firstValues[1].([]byte), []byte("firstvalue")) {
 		test.Error("[proof.go]", "[values]", "Proof Values() returns wrong values.")
 	}
 
-	proof.Key = secondkey
+	proof.Key = secondKey
 
 	if !(proof.Match()) {
 		test.Error("[proof.go]", "[match]", "Proof Match() returns false on matching key.")
 	}
 
-	secondvalues, err := proof.Values()
+	secondValues, err := proof.Values()
 
 	if err != nil {
 		test.Error("[proof.go]", "[values]", "Proof Values() returns error on matching key.")
 	}
 
-	if len(secondvalues) != 2 {
+	if len(secondValues) != 2 {
 		test.Error("[proof.go]", "[values]", "Proof Values() returns wrong number of values.")
 	}
 
-	if (secondvalues[0].(uint64) != 99) || !equal(secondvalues[1].([]byte), []byte("secondvalue")) {
+	if (secondValues[0].(uint64) != 99) || !equal(secondValues[1].([]byte), []byte("secondvalue")) {
 		test.Error("[proof.go]", "[values]", "Proof Values() returns wrong values.")
 	}
 
@@ -299,7 +301,7 @@ func TestProofMatchValues(test *testing.T) {
 		test.Error("[proof.go]", "[values]", "Proof Values() does not yield an error on non-matching key.")
 	}
 
-	proof.Key = firstkey
+	proof.Key = firstKey
 
 	proof.Steps[5].Left.Values[0] = make([]byte, 7)
 	proof.Steps[5].Right.Values[0] = make([]byte, 7)
@@ -330,6 +332,13 @@ func TestProofMatchValues(test *testing.T) {
 	if err == nil {
 		test.Error("[proof.go]", "[values]", "Proof Values() does not yield an error on a proof with no steps.")
 	}
+}
+
+func TestProofEmpty(test *testing.T) {
+	collection := New(Data{})
+
+	_, err := collection.Get([]byte{}).Proof()
+	require.NotNil(test, err)
 }
 
 func TestProofConsistent(test *testing.T) {
@@ -374,12 +383,12 @@ func TestProofConsistent(test *testing.T) {
 	}
 	proof.Root.Children.Right[0]--
 
-	stepsbackup := proof.Steps
+	stepsBackup := proof.Steps
 	proof.Steps = []step{}
 	if proof.Consistent() {
 		test.Error("[proof.go]", "[consistent]", "Proof with no steps is still consisetent.")
 	}
-	proof.Steps = stepsbackup
+	proof.Steps = stepsBackup
 
 	for index := 0; index < len(proof.Steps); index++ {
 		step := &(proof.Steps[index])

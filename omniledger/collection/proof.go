@@ -105,7 +105,7 @@ func (p Proof) TreeRootHash() []byte {
 // Methods
 
 //Match returns true if the Proof asserts the presence of the key in the collection
-// and false if it asserts its absence..
+// and false if it asserts its absence.
 func (p Proof) Match() bool {
 	if len(p.Steps) == 0 {
 		return false
@@ -131,17 +131,17 @@ func (p Proof) RawValues() ([][]byte, error) {
 	depth := len(p.Steps) - 1
 
 	match := false
-	var rawvalues [][]byte
+	var rawValues [][]byte
 
 	if bit(path[:], depth) {
 		if equal(p.Key, p.Steps[depth].Right.Key) {
 			match = true
-			rawvalues = p.Steps[depth].Right.Values
+			rawValues = p.Steps[depth].Right.Values
 		}
 	} else {
 		if equal(p.Key, p.Steps[depth].Left.Key) {
 			match = true
-			rawvalues = p.Steps[depth].Left.Values
+			rawValues = p.Steps[depth].Left.Values
 		}
 	}
 
@@ -149,24 +149,24 @@ func (p Proof) RawValues() ([][]byte, error) {
 		return [][]byte{}, errors.New("no match found")
 	}
 
-	return rawvalues, nil
+	return rawValues, nil
 }
 
 // Values returns a copy of the values of the key which presence is proved by the Proof.
 // It returns an error if the Proof proves the absence of the key.
 func (p Proof) Values() ([]interface{}, error) {
-	rawvalues, err := p.RawValues()
+	rawValues, err := p.RawValues()
 	if err != nil {
 		return []interface{}{}, err
 	}
-	if len(rawvalues) != len(p.collection.fields) {
+	if len(rawValues) != len(p.collection.fields) {
 		return []interface{}{}, errors.New("wrong number of values")
 	}
 
 	var values []interface{}
 
-	for index := 0; index < len(rawvalues); index++ {
-		value, err := p.collection.fields[index].Decode(rawvalues[index])
+	for index := 0; index < len(rawValues); index++ {
+		value, err := p.collection.fields[index].Decode(rawValues[index])
 
 		if err != nil {
 			return []interface{}{}, err

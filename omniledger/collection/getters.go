@@ -26,6 +26,9 @@ func (c *Collection) Get(key []byte) Getter {
 // Record returns a Record object that correspond to the result of the key search.
 // The Record will contain a boolean "match" that is true if the search was successful and false otherwise.
 func (g Getter) Record() (Record, error) {
+	if len(g.key) == 0 {
+		return Record{}, errors.New("cannot create a record with no key")
+	}
 	path := sha256.Sum256(g.key)
 
 	depth := 0
@@ -38,9 +41,9 @@ func (g Getter) Record() (Record, error) {
 
 		if cursor.leaf() {
 			if equal(cursor.key, g.key) {
-				return recordkeymatch(g.collection, cursor), nil
+				return recordKeyMatch(g.collection, cursor), nil
 			}
-			return recordkeymismatch(g.collection, g.key), nil
+			return recordKeyMismatch(g.collection, g.key), nil
 		}
 		if bit(path[:], depth) {
 			cursor = cursor.children.right
@@ -53,9 +56,12 @@ func (g Getter) Record() (Record, error) {
 }
 
 // Proof returns a Proof of the presence or absence of a given key in the collection.
-// The location the proof points to can either contains the actual key
-// or another key, effectively proving that the key is absent from the collection.
+// The location the proof points to can contains the actual key.
+// It can also contain another key, effectively proving that the key is absent from the collection.
 func (g Getter) Proof() (Proof, error) {
+	if len(g.key) == 0 {
+		return Proof{}, errors.New("cannot create a proof with no key")
+	}
 	var proof Proof
 
 	proof.collection = g.collection
@@ -64,7 +70,6 @@ func (g Getter) Proof() (Proof, error) {
 	proof.Root = dumpNode(g.collection.root)
 
 	path := sha256.Sum256(g.key)
-	// old: path := sha256(g.key)
 
 	depth := 0
 	cursor := g.collection.root
@@ -78,7 +83,9 @@ func (g Getter) Proof() (Proof, error) {
 			return proof, errors.New("record lies in unknown subtree")
 		}
 
-		proof.Steps = append(proof.Steps, step{dumpNode(cursor.children.left), dumpNode(cursor.children.right)})
+		proof.Steps = append(proof.Steps,
+			step{dumpNode(cursor.children.left),
+				dumpNode(cursor.children.right)})
 
 		if bit(path[:], depth) {
 			cursor = cursor.children.right
