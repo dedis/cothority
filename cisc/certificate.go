@@ -49,8 +49,6 @@ KOqkqm57TH2H3eDJAkSnh6/DNFu0Qg==
 // LetsEncryptURL is the URL needed to create a new client
 const LetsEncryptURL = "https://acme-v01.api.letsencrypt.org/directory"
 
-//const LetsEncryptURL = "https://acme-staging-v02.api.letsencrypt.org/directory"
-
 // Convert a certificate of type string into certificate of type x509.Certificate
 func pemToCertificate(certPem []byte) (*x509.Certificate, error) {
 	block, _ := pem.Decode(certPem)
@@ -223,7 +221,7 @@ func getCert(wwwDir string, certDir string, domain string) ([]byte, error) {
 	}
 
 	// Copy the resource for the challenge
-	if os.MkdirAll(path.Join(wwwDir, ".well-known/acme-challenge/"), 0711) != nil {
+	if os.MkdirAll(path.Join(wwwDir, ".well-known", "acme-challenge"), 0711) != nil {
 		return nil, errors.New("Problem creating new dir for challenge : " + err.Error())
 	}
 	if err := ioutil.WriteFile(path.Join(wwwDir, pathChallenge), []byte(resource), 0644); err != nil {

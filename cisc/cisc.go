@@ -360,14 +360,17 @@ func scQrcode(c *cli.Context) error {
 	scid := []byte(id.ID)
 	address := strings.Split(id.Data.Roster.RandomServerIdentity().Address.NetworkAddress(), ":")
 
+	// Get our local IP address - this can be different from the public IP
+	// address returned by a service like `whatsmyip`, because we're behind
+	// a router.
 	if address[0] == "localhost" && c.Bool("e") {
 		conn, err := net.Dial("udp", "8.8.8.8:80")
 		if err != nil {
 			return err
 		}
-		defer conn.Close()
 
 		localAddr := conn.LocalAddr().(*net.UDPAddr)
+		conn.Close()
 		address[0] = localAddr.IP.String()
 	}
 
