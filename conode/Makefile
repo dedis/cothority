@@ -54,7 +54,7 @@ verify:
 
 # The suffix on conode exe is the result from: echo `uname -s`.`uname -m`
 # so that we can find the right one in the wrapper script.
-# This is in it's own rule because 
+# This is in it's own rule because the Docker build needs it also.
 exe/conode.Linux.x86_64: verify
 	GOOS=linux GOARCH=amd64 vgo build $(flags) -o $@
 
