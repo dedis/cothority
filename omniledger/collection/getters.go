@@ -65,9 +65,9 @@ func (g Getter) Proof() (Proof, error) {
 	var proof Proof
 
 	proof.collection = g.collection
-	proof.key = g.key
+	proof.Key = g.key
 
-	proof.root = dumpNode(g.collection.root)
+	proof.Root = dumpNode(g.collection.root)
 
 	path := sha256.Sum256(g.key)
 
@@ -83,7 +83,7 @@ func (g Getter) Proof() (Proof, error) {
 			return proof, errors.New("record lies in unknown subtree")
 		}
 
-		proof.steps = append(proof.steps,
+		proof.Steps = append(proof.Steps,
 			step{dumpNode(cursor.children.left),
 				dumpNode(cursor.children.right)})
 

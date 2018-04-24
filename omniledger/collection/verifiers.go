@@ -11,24 +11,24 @@ func (c *Collection) Verify(proof Proof) bool {
 		panic("Verify() called on inconsistent root.")
 	}
 
-	if (proof.root.Label != c.root.label) || !(proof.Consistent()) {
+	if (proof.Root.Label != c.root.label) || !(proof.Consistent()) {
 		return false
 	}
 
 	if !(c.root.known) {
-		proof.root.to(c.root)
+		proof.Root.to(c.root)
 	}
 
-	path := sha256.Sum256(proof.key)
+	path := sha256.Sum256(proof.Key)
 	cursor := c.root
 
-	for depth := 0; depth < len(proof.steps); depth++ {
+	for depth := 0; depth < len(proof.Steps); depth++ {
 		if !(cursor.children.left.known) {
-			proof.steps[depth].Left.to(cursor.children.left)
+			proof.Steps[depth].Left.to(cursor.children.left)
 		}
 
 		if !(cursor.children.right.known) {
-			proof.steps[depth].Right.to(cursor.children.right)
+			proof.Steps[depth].Right.to(cursor.children.right)
 		}
 
 		if bit(path[:], depth) {

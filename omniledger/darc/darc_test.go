@@ -1,593 +1,276 @@
 package darc
 
 import (
-	"encoding/json"
-	"fmt"
 	"testing"
-	//	"github.com/stretchr/testify/assert"
+
+	"github.com/dedis/student_18_omniledger/omniledger/darc/expression"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/onet.v2/log"
 )
 
-func TestDarc(t *testing.T) {
-	var rules []*Rule
-	for i := 0; i < 2; i++ {
-		rules = append(rules, createRule().rule)
-	}
-	d := NewDarc(&rules)
-	for i, rule := range rules {
-		require.Equal(t, *rule, *(*d.Rules)[i])
-	}
+func TestRules(t *testing.T) {
+	// one owner
+	owner := createIdentity()
+	rules := InitEvolutionRule(owner)
+	expr, ok := rules[evolve]
+	require.True(t, ok)
+	require.Equal(t, string(expr), owner.String())
+
+	// two owners
+	owners := []*Identity{owner, createIdentity()}
+	rules = InitEvolutionRule(owners...)
+	expr, ok = rules[evolve]
+	require.True(t, ok)
+	require.Equal(t, string(expr), owners[0].String()+" | "+owners[1].String())
+}
+
+func TestNewDarc(t *testing.T) {
+	desc := []byte("mydarc")
+	owner := createIdentity()
+
+	d := NewDarc(InitEvolutionRule(owner), desc)
+	require.Equal(t, desc, d.Description)
+	require.Equal(t, string(d.Rules.GetEvolutionExpr()), owner.String())
 }
 
 func TestDarc_Copy(t *testing.T) {
-	d1 := createDarc().darc
+	// create two darcs
+	d1 := createDarc(1, "testdarc1").darc
+	err := d1.Rules.AddRule("ocs:write", d1.Rules.GetEvolutionExpr())
+	require.Nil(t, err)
 	d2 := d1.Copy()
-	d1.Version = 3
-	d1.AddRule(createRule().rule)
-	require.NotEqual(t, len(*d1.Rules), len(*d2.Rules))
+
+	// modify the first one
+	d1.IncrementVersion()
+	desc := []byte("testdarc2")
+	d1.Description = desc
+	err = d1.Rules.UpdateRule("ocs:write", []byte(createIdentity().String()))
+	require.Nil(t, err)
+
+	// the two darcs should be different
 	require.NotEqual(t, d1.Version, d2.Version)
-	d2 = d1.Copy()
+	require.NotEqual(t, d1.Description, d2.Description)
+	require.NotEqual(t, d1.Rules["ocs:write"], d2.Rules["ocs:write"])
+
+	// ID should not change if values are the same
+	d2.Description = nil
+	d1 = d2.Copy()
 	require.Equal(t, d1.GetID(), d2.GetID())
-	require.Equal(t, len(*d1.Rules), len(*d2.Rules))
 }
 
-func TestDarc_AddRule(t *testing.T) {
-	d := createDarc().darc
-	rule := createRule().rule
-	d.AddRule(rule)
-	require.Equal(t, rule, (*d.Rules)[len(*d.Rules)-1])
+func TestAddRule(t *testing.T) {
+	// TODO
 }
 
-func TestDarc_RemoveRule(t *testing.T) {
-	d1 := createDarc().darc
-	d2 := d1.Copy()
-	rule := createRule().rule
-	d2.AddRule(rule)
-	require.NotEqual(t, len(*d1.Rules), len(*d2.Rules))
-	d2.RemoveRule(len(*d2.Rules) - 1)
-	require.Equal(t, len(*d1.Rules), len(*d2.Rules))
+func TestUpdateRule(t *testing.T) {
+	// TODO
 }
 
-func TestDarc_RuleUpdateAction(t *testing.T) {
-	d1 := createDarc().darc
-	rule := createRule().rule
-	d1.AddRule(rule)
-	d2 := d1.Copy()
-	ind1 := len(*d1.Rules) - 1
-	ind2 := len(*d2.Rules) - 1
-	require.Equal(t, (*d1.Rules)[ind1].Action, (*d2.Rules)[ind2].Action)
-	action := string("TestUpdate")
-	d2.RuleUpdateAction(ind2, action)
-	require.NotEqual(t, (*d1.Rules)[ind1].Action, (*d2.Rules)[ind2].Action)
-}
-
-func TestDarc_RuleAddSubject(t *testing.T) {
-	d := createDarc().darc
-	s := createSubject_PK()
-	d.RuleAddSubject(0, s)
-	ind := len(*(*d.Rules)[0].Subjects) - 1
-	r1 := (*d.Rules)[0]
-	s1 := (*r1.Subjects)[ind]
-	require.Equal(t, s, s1)
-}
-
-func TestDarc_RuleRemoveSubject(t *testing.T) {
-	d1 := createDarc().darc
-	d2 := d1.Copy()
-	s := createSubject_PK()
-	d2.RuleAddSubject(0, s)
-	require.NotEqual(t, len(*(*d1.Rules)[0].Subjects), len(*(*d2.Rules)[0].Subjects))
-	d2.RuleRemoveSubject(0, s)
-	require.Equal(t, len(*(*d1.Rules)[0].Subjects), len(*(*d2.Rules)[0].Subjects))
-}
-
-func TestDarc_RuleUpdateExpression(t *testing.T) {
-	d1 := createDarc().darc
-	rule := createRule().rule
-	d1.AddRule(rule)
-	d2 := d1.Copy()
-	ind := len(*d2.Rules) - 1
-	require.Equal(t, (*d1.Rules)[ind].Expression, (*d2.Rules)[ind].Expression)
-	d2.RuleUpdateExpression(ind, `{"or" : [0,1]}`)
-	require.NotEqual(t, (*d1.Rules)[ind].Expression, (*d2.Rules)[ind].Expression)
-}
-
-func TestRequest_Copy(t *testing.T) {
-	req, _ := createRequest()
-	req1 := req.request
-	req2 := req1.CopyReq()
-	req1.RuleID = 1000
-	require.NotEqual(t, req1.RuleID, req2.RuleID)
-	require.Equal(t, req1.DarcID, req2.DarcID)
-	req2 = req1.CopyReq()
-	require.Equal(t, req1.RuleID, req2.RuleID)
-}
-
-func TestRequest_Sign(t *testing.T) {
-	r, signer := createRequest()
-	req := r.request
-	_, err := signer.Sign(req)
-	if err != nil {
-		fmt.Println(err)
-	}
-	//fmt.Println("Signature:", sig.Signature)
-}
-
-func TestRequest_SignWithPathCheck(t *testing.T) {
-	r, signer := createRequestMultiPath()
-	req := r.request
-	_, pa, err := signer.SignWithPathCheck(req, darcMap)
-	if err != nil {
-		fmt.Println(err)
-		if pa != nil {
-			fmt.Println(pa)
-		}
-	}
-}
-
-func TestRequest_Verify(t *testing.T) {
-	req, signer := createRequest2()
-	sig, err := signer.Sign(req.request)
-	if err != nil {
-		log.ErrFatal(err)
-	}
-	err = Verify(req.request, sig, darcMap)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		var raw interface{}
-		json.Unmarshal(req.request.Message, &raw)
-		fmt.Println("Single-sig Verification works")
-	}
-}
-
-func TestRequest_VerifySigWithPath(t *testing.T) {
-	r, signer := createRequestMultiPath()
-	req := r.request
-	_, pa, err := signer.SignWithPathCheck(req, darcMap)
-	if err != nil {
-		fmt.Println(err)
-		if pa != nil {
-			//fmt.Println(pa[0])
-			sig, err := signer.SignWithPath(req, pa[0])
-			if err != nil {
-				fmt.Println(err)
-			}
-			err = VerifySigWithPath(req, sig, darcMap)
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				var raw interface{}
-				json.Unmarshal(req.Message, &raw)
-				fmt.Println("Single-sig Verification with path works")
-			}
-		}
-	}
-}
-
-func TestRequestMultiSig_Verify(t *testing.T) {
-	req, signers := createRequestMultiSig()
-	var signatures []*Signature
-	for _, signer := range signers {
-		sig, err := signer.Sign(req.request)
-		if err != nil {
-			log.ErrFatal(err)
-		}
-		signatures = append(signatures, sig)
-	}
-	err := VerifyMultiSig(req.request, signatures, darcMap)
-	if err != nil {
-		fmt.Println(err)
-	} else {
-		var raw interface{}
-		json.Unmarshal(req.request.Message, &raw)
-		fmt.Println("Multi-sig Verification works")
-	}
+func TestDeleteRule(t *testing.T) {
+	// TODO
 }
 
 func TestDarc_IncrementVersion(t *testing.T) {
-	d := createDarc().darc
+	d := createDarc(1, "testdarc").darc
 	previousVersion := d.Version
 	d.IncrementVersion()
 	require.NotEqual(t, previousVersion, d.Version)
 }
 
-func benchmarkRequest_SignWithPathCheck(total int, depth int, b *testing.B) {
-	req, signer := createRequestMultiPathAtDepth(total, depth)
-	multipaths := 0
-	for n := 0; n < b.N; n++ {
-		_, pa, err := signer.SignWithPathCheck(req.request, darcMap)
-		if err != nil {
-			//fmt.Println(err)
-			if pa != nil {
-				//fmt.Println(pa)
-				multipaths += 1
-			}
+// TestDarc_EvolveOne creates two darcs, the first has two owners and the
+// second has one. The first darc is to be evolved into the second one.
+func TestDarc_EvolveOne(t *testing.T) {
+	d := createDarc(2, "testdarc").darc
+	require.Nil(t, d.Verify())
+	owner1 := NewSignerEd25519(nil, nil)
+	owner2 := NewSignerEd25519(nil, nil)
+	id1 := *owner1.Identity()
+	id2 := *owner2.Identity()
+	require.Nil(t, d.Rules.UpdateEvolution(expression.InitOrExpr(id1.String(), id2.String())))
+
+	dNew := d.Copy()
+	dNew.IncrementVersion()
+	require.Nil(t, dNew.Rules.UpdateEvolution([]byte(id1.String())))
+	// verification should fail because the signature path is not present
+	require.NotNil(t, dNew.Verify())
+
+	darcs := []*Darc{d}
+	// the identity of the signer cannot be id3, it does not have the
+	// evolve permission
+	owner3 := NewSignerEd25519(nil, nil)
+	require.Nil(t, dNew.Evolve(darcs, owner3))
+	require.NotNil(t, dNew.Verify())
+	// it should be possible to sign with owner2 and owner1 because they
+	// are in the first darc and have the evolve permission
+	require.Nil(t, dNew.Evolve(darcs, owner2))
+	require.Nil(t, dNew.Verify())
+	require.Nil(t, dNew.Evolve(darcs, owner1))
+	require.Nil(t, dNew.Verify())
+}
+
+// TestDarc_EvolveMore is similar to TestDarc_EvolveOne but testing for
+// multiple evolutions.
+func TestDarc_EvolveMore(t *testing.T) {
+	d := createDarc(1, "testdarc").darc
+	require.Nil(t, d.Verify())
+	prevOwner := NewSignerEd25519(nil, nil)
+	require.Nil(t, d.Rules.UpdateEvolution(
+		expression.InitOrExpr(prevOwner.Identity().String())))
+
+	darcs := []*Darc{d}
+	for i := 0; i < 10; i++ {
+		dNew := darcs[len(darcs)-1].Copy()
+		dNew.IncrementVersion()
+		newOwner := NewSignerEd25519(nil, nil)
+		require.Nil(t, dNew.Rules.UpdateEvolution([]byte(newOwner.Identity().String())))
+		require.Nil(t, dNew.Evolve(darcs, prevOwner))
+		// require.Nil(t, dNew.Verify())
+		darcs = append(darcs, dNew)
+		prevOwner = newOwner
+	}
+	require.Nil(t, darcs[len(darcs)-1].Verify())
+
+	// verification should fail if the Rules is tampered (ID is changed)
+	darcs[len(darcs)-1].Rules.UpdateEvolution([]byte{})
+	require.NotNil(t, darcs[len(darcs)-1].Verify())
+
+	// but it should not affect an older darc
+	require.Nil(t, darcs[len(darcs)-2].Verify())
+
+	// test more failures
+	darcs[1].Version = 0
+	require.NotNil(t, darcs[len(darcs)-2].Verify())
+	darcs[1].Version = 1
+	require.Nil(t, darcs[len(darcs)-2].Verify())
+	darcs[0].Rules.UpdateEvolution([]byte{})
+	require.NotNil(t, darcs[len(darcs)-2].Verify())
+}
+
+// TestDarc_Rules is, other than the test, is an example of how one would use
+// the Darc with a user-defined rule.
+func TestDarc_Rules(t *testing.T) {
+	d := createDarc(1, "testdarc").darc
+	require.Nil(t, d.Verify())
+	user1 := NewSignerEd25519(nil, nil)
+	user2 := NewSignerEd25519(nil, nil)
+	err := d.Rules.AddRule("use", expression.InitOrExpr(user1.Identity().String(), user2.Identity().String()))
+	require.Nil(t, err)
+
+	var r *Request
+
+	// happy case with signer 1
+	r, err = NewRequest(d.GetID(), "use", []byte("secrets are lies"), user1)
+	require.Nil(t, err)
+	require.Nil(t, d.CheckRequest(r))
+
+	// happy case with signer 2
+	r, err = NewRequest(d.GetID(), "use", []byte("sharing is caring"), user2)
+	require.Nil(t, err)
+	require.Nil(t, d.CheckRequest(r))
+
+	// happy case with both signers
+	r, err = NewRequest(d.GetID(), "use", []byte("privacy is theft"), user1, user2)
+	require.Nil(t, err)
+	require.Nil(t, d.CheckRequest(r))
+
+	// wrong ID
+	d2 := createDarc(1, "testdarc2").darc
+	r, err = NewRequest(d2.GetID(), "use", []byte("all animals are equal"), user1)
+	require.Nil(t, err)
+	require.NotNil(t, d.CheckRequest(r))
+
+	// wrong action
+	r, err = NewRequest(d.GetID(), "go", []byte("four legs good"), user1)
+	require.Nil(t, err)
+	require.NotNil(t, d.CheckRequest(r))
+
+	// wrong signer 1
+	user3 := NewSignerEd25519(nil, nil)
+	r, err = NewRequest(d.GetID(), "use", []byte("two legs bad"), user3)
+	require.Nil(t, err)
+	require.NotNil(t, d.CheckRequest(r))
+
+	// happy case where at least one signer is valid
+	r, err = NewRequest(d.GetID(), "use", []byte("four legs good"), user1, user3)
+	require.Nil(t, err)
+	require.Nil(t, d.CheckRequest(r))
+
+	// tampered signature
+	r, err = NewRequest(d.GetID(), "use", []byte("two legs better"), user1, user3)
+	r.Signatures[0] = copyBytes(r.Signatures[1])
+	require.Nil(t, err)
+	require.NotNil(t, d.CheckRequest(r))
+}
+
+// TestDarc_Delegation in this test we test delegation. We start with two
+// darcs, each has one evolution, i.e. d1 -> d2, d3 -> d4. Then, d2 adds d3 as
+// one of the identities with the evolve permission. Then, d4 should have the
+// permission to evolve d2 further.
+func TestDarc_Delegation(t *testing.T) {
+	td1 := createDarc(2, "testdarc1")
+	td2 := createDarc(2, "testdarc2")
+	td3 := createDarc(2, "testdarc3")
+	td4 := createDarc(2, "testdarc4")
+
+	require.Nil(t, td2.darc.Evolve([]*Darc{td1.darc}, td1.owners[0]))
+	require.Nil(t, td2.darc.Verify())
+
+	require.Nil(t, td4.darc.Evolve([]*Darc{td3.darc}, td3.owners[0]))
+	require.Nil(t, td4.darc.Verify())
+
+	id3 := NewIdentityDarc(td3.darc.GetID())
+	d2Expr := []byte(id3.String())
+	require.Nil(t, td2.darc.Rules.UpdateEvolution(d2Expr))
+	require.NotNil(t, td2.darc.Verify())
+	require.Nil(t, td2.darc.Evolve([]*Darc{td1.darc}, td1.owners[0]))
+	require.Nil(t, td2.darc.Verify())
+
+	td5 := createDarc(2, "testdarc5")
+	require.Nil(t, td5.darc.Evolve([]*Darc{td1.darc, td2.darc}, td3.owners[0]))
+	require.NotNil(t, td5.darc.Verify())
+	getDarc := func(id string) *Darc {
+		if id == td3.darc.GetIdentityString() {
+			return td4.darc
 		}
-	}
-	//fmt.Println(multipaths)
-}
-
-//func BenchmarkRequest_SignWithPathCheck2_2(b *testing.B)  { benchmarkRequest_SignWithPathCheck(2, 2, b) }
-// func BenchmarkRequest_SignWithPathCheck5_2(b *testing.B)  { benchmarkRequest_SignWithPathCheck(5, 2, b) }
-// func BenchmarkRequest_SignWithPathCheck10_2(b *testing.B)  { benchmarkRequest_SignWithPathCheck(10, 2, b) }
-// func BenchmarkRequest_SignWithPathCheck20_2(b *testing.B)  { benchmarkRequest_SignWithPathCheck(20, 2, b) }
-// func BenchmarkRequest_SignWithPathCheck50_2(b *testing.B)  { benchmarkRequest_SignWithPathCheck(50, 2, b) }
-// func BenchmarkRequest_SignWithPathCheck100_2(b *testing.B)  { benchmarkRequest_SignWithPathCheck(100, 2, b) }
-
-// func BenchmarkRequest_SignWithPathCheck2_10(b *testing.B)  { benchmarkRequest_SignWithPathCheck(2, 10, b) }
-// func BenchmarkRequest_SignWithPathCheck5_10(b *testing.B)  { benchmarkRequest_SignWithPathCheck(5, 10, b) }
-// func BenchmarkRequest_SignWithPathCheck10_10(b *testing.B)  { benchmarkRequest_SignWithPathCheck(10, 10, b) }
-// func BenchmarkRequest_SignWithPathCheck20_10(b *testing.B)  { benchmarkRequest_SignWithPathCheck(20, 10, b) }
-// func BenchmarkRequest_SignWithPathCheck50_10(b *testing.B)  { benchmarkRequest_SignWithPathCheck(50, 10, b) }
-// func BenchmarkRequest_SignWithPathCheck100_10(b *testing.B)  { benchmarkRequest_SignWithPathCheck(100, 10, b) }
-
-func benchmarkRequest_Verify(depth int, b *testing.B) {
-	req, signer := createRequestAtDepth(depth)
-	sig, err := signer.Sign(req.request)
-	if err != nil {
-		log.ErrFatal(err)
-	}
-	failed := 0
-	for n := 0; n < b.N; n++ {
-		err = Verify(req.request, sig, darcMap)
-		if err != nil {
-			failed += 1
+		if id == td4.darc.GetIdentityString() {
+			return td4.darc
 		}
+		return nil
 	}
+	require.Nil(t, td5.darc.VerifyWithCB(getDarc))
 }
 
-// func BenchmarkRequest_Verify1(b *testing.B)  { benchmarkRequest_Verify(1, b) }
-// func BenchmarkRequest_Verify2(b *testing.B)  { benchmarkRequest_Verify(2, b) }
-// func BenchmarkRequest_Verify5(b *testing.B)  { benchmarkRequest_Verify(5, b) }
-// func BenchmarkRequest_Verify10(b *testing.B)  { benchmarkRequest_Verify(10, b) }
-// func BenchmarkRequest_Verify20(b *testing.B)  { benchmarkRequest_Verify(20, b) }
-// func BenchmarkRequest_Verify50(b *testing.B)  { benchmarkRequest_Verify(50, b) }
-// func BenchmarkRequest_Verify100(b *testing.B)  { benchmarkRequest_Verify(100, b) }
-
-// func TestRequestMultiSig_VerifyAtDepth(t *testing.T) {
-// 	req, signers  := createRequestMultiSigAtDepthNum(2, 1)
-// 	var signatures []*Signature
-// 	for _, signer := range signers {
-// 		sig, err := signer.Sign(req.request)
-// 		if err != nil {
-// 			log.ErrFatal(err)
-// 		}
-// 		signatures = append(signatures, sig)
-// 	}
-// 	err := VerifyMultiSig(req.request, signatures, darcMap)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	} else {
-// 		var raw interface{}
-//     	json.Unmarshal(req.request.Message, &raw)
-// 		fmt.Println("Multi-sig Verification works")
-// 	}
-// }
-
-func benchmarkRequest_VerifySigWithPath(total int, depth int, b *testing.B) {
-	req, signer := createRequestMultiPathAtDepth(total, depth)
-	_, pa, err := signer.SignWithPathCheck(req.request, darcMap)
-	fail := 0
-	if err != nil {
-		//fmt.Println(err)
-		if pa != nil {
-			//fmt.Println(pa[0])
-			sig, err := signer.SignWithPath(req.request, pa[0])
-			if err != nil {
-				fmt.Println(err)
-			}
-			for n := 0; n < b.N; n++ {
-				err = VerifySigWithPath(req.request, sig, darcMap)
-				if err != nil {
-					fail += 1
-					//fmt.Println(err)
-				}
-			}
-		}
-	}
-	//fmt.Println("Fail", fail)
-}
-
-// func BenchmarkRequest_VerifySigWithPath2_2(b *testing.B)  { benchmarkRequest_VerifySigWithPath(2, 2, b) }
-// func BenchmarkRequest_VerifySigWithPath5_2(b *testing.B)  { benchmarkRequest_VerifySigWithPath(5, 2, b) }
-// func BenchmarkRequest_VerifySigWithPath10_2(b *testing.B)  { benchmarkRequest_VerifySigWithPath(10, 2, b) }
-// func BenchmarkRequest_VerifySigWithPath20_2(b *testing.B)  { benchmarkRequest_VerifySigWithPath(20, 2, b) }
-// func BenchmarkRequest_VerifySigWithPath50_2(b *testing.B)  { benchmarkRequest_VerifySigWithPath(50, 2, b) }
-// func BenchmarkRequest_VerifySigWithPath100_2(b *testing.B)  { benchmarkRequest_VerifySigWithPath(100, 2, b) }
-
-func BenchmarkRequest_VerifySigWithPath2_10(b *testing.B) {
-	benchmarkRequest_VerifySigWithPath(2, 10, b)
-}
-func BenchmarkRequest_VerifySigWithPath5_10(b *testing.B) {
-	benchmarkRequest_VerifySigWithPath(5, 10, b)
-}
-func BenchmarkRequest_VerifySigWithPath10_10(b *testing.B) {
-	benchmarkRequest_VerifySigWithPath(10, 10, b)
-}
-func BenchmarkRequest_VerifySigWithPath20_10(b *testing.B) {
-	benchmarkRequest_VerifySigWithPath(20, 10, b)
-}
-func BenchmarkRequest_VerifySigWithPath50_10(b *testing.B) {
-	benchmarkRequest_VerifySigWithPath(50, 10, b)
-}
-func BenchmarkRequest_VerifySigWithPath100_10(b *testing.B) {
-	benchmarkRequest_VerifySigWithPath(100, 10, b)
-}
-
-func benchmarkRequestMultiSig_Verify(numsigs int, depth int, b *testing.B) {
-	req, signers := createRequestMultiSigAtDepthNum(numsigs, depth)
-	var signatures []*Signature
-	for _, signer := range signers {
-		sig, err := signer.Sign(req.request)
-		if err != nil {
-			log.ErrFatal(err)
-		}
-		signatures = append(signatures, sig)
-	}
-	//failed := 0
-	for n := 0; n < b.N; n++ {
-		_ = VerifyMultiSig(req.request, signatures, darcMap)
-		// if err != nil {
-		// 	failed += 1
-		// }
-	}
-	//fmt.Println(failed)
-}
-
-// func BenchmarkRequestMultiSig_Verify2_2(b *testing.B)  { benchmarkRequestMultiSig_Verify(2, 2, b) }
-// func BenchmarkRequestMultiSig_Verify5_2(b *testing.B)  { benchmarkRequestMultiSig_Verify(5, 2, b) }
-// func BenchmarkRequestMultiSig_Verify10_2(b *testing.B)  { benchmarkRequestMultiSig_Verify(10, 2, b) }
-// func BenchmarkRequestMultiSig_Verify20_2(b *testing.B)  { benchmarkRequestMultiSig_Verify(20, 2, b) }
-// func BenchmarkRequestMultiSig_Verify50_2(b *testing.B)  { benchmarkRequestMultiSig_Verify(50, 2, b) }
-// func BenchmarkRequestMultiSig_Verify100_2(b *testing.B)  { benchmarkRequestMultiSig_Verify(100, 2, b) }
-
-// func BenchmarkRequestMultiSig_Verify2_10(b *testing.B)  { benchmarkRequestMultiSig_Verify(2, 10, b) }
-// func BenchmarkRequestMultiSig_Verify5_10(b *testing.B)  { benchmarkRequestMultiSig_Verify(5, 10, b) }
-// func BenchmarkRequestMultiSig_Verify10_10(b *testing.B)  { benchmarkRequestMultiSig_Verify(10, 10, b) }
-// func BenchmarkRequestMultiSig_Verify20_10(b *testing.B)  { benchmarkRequestMultiSig_Verify(20, 10, b) }
-// func BenchmarkRequestMultiSig_Verify50_10(b *testing.B)  { benchmarkRequestMultiSig_Verify(50, 10, b) }
-// func BenchmarkRequestMultiSig_Verify100_10(b *testing.B)  { benchmarkRequestMultiSig_Verify(100, 10, b) }
-
-var darcMap = make(map[string]*Darc)
+// TODO test X509 identity
+// TODO test online verification
 
 type testDarc struct {
-	darc  *Darc
-	rules []*Rule
+	darc   *Darc
+	owners []*Signer
+	ids    []*Identity
 }
 
-type testRule struct {
-	rule     *Rule
-	subjects []*Subject
-}
-
-type testRequest struct {
-	request *Request
-}
-
-func createDarc() *testDarc {
+func createDarc(nbrOwners int, desc string) *testDarc {
 	td := &testDarc{}
-	r := createAdminRule()
-	td.rules = append(td.rules, r.rule)
-	r = createUserRule()
-	td.rules = append(td.rules, r.rule)
-	td.darc = NewDarc(&td.rules)
-	darcMap[string(td.darc.GetID())] = td.darc
+	for i := 0; i < nbrOwners; i++ {
+		s, id := createSignerIdentity()
+		td.owners = append(td.owners, s)
+		td.ids = append(td.ids, id)
+	}
+	rules := InitEvolutionRule(td.ids...)
+	td.darc = NewDarc(rules, []byte(desc))
 	return td
 }
 
-func createAdminRule() *testRule {
-	tr := &testRule{}
-	action := "Admin"
-	expression := `{"and" : [0, 1]}`
-	for i := 0; i < 3; i++ {
-		s := createSubject_PK()
-		tr.subjects = append(tr.subjects, s)
-	}
-	tr.rule = &Rule{Action: action, Subjects: &tr.subjects, Expression: expression}
-	return tr
-}
-
-func createUserRule() *testRule {
-	tr := &testRule{}
-	action := "User"
-	expression := `{"and" : [0, 1]}`
-	for i := 0; i < 2; i++ {
-		s := createSubject_PK()
-		tr.subjects = append(tr.subjects, s)
-	}
-	tr.rule = &Rule{Action: action, Subjects: &tr.subjects, Expression: expression}
-	return tr
-}
-
-func createRule() *testRule {
-	tr := &testRule{}
-	action := "Read"
-	expression := `{}`
-	s1 := createSubject_PK()
-	s2 := createSubject_Darc()
-	tr.subjects = append(tr.subjects, s1)
-	tr.subjects = append(tr.subjects, s2)
-	tr.rule = &Rule{Action: action, Subjects: &tr.subjects, Expression: expression}
-	return tr
-}
-
-func createSubject_Darc() *Subject {
-	rule := createAdminRule().rule
-	var rules []*Rule
-	rules = append(rules, rule)
-	rule = createUserRule().rule
-	rules = append(rules, rule)
-	darc := NewDarc(&rules)
-	id := darc.GetID()
-	darcMap[string(id)] = darc
-	subjectdarc := NewSubjectDarc(id)
-	subject, _ := NewSubject(subjectdarc, nil)
-	return subject
-}
-
-func createSubject_PK() *Subject {
-	_, subject := createSignerSubject()
-	return subject
-}
-
 func createSigner() *Signer {
-	signer, _ := createSignerSubject()
-	return signer
+	s, _ := createSignerIdentity()
+	return s
 }
 
-func createSignerSubject() (*Signer, *Subject) {
-	edSigner := NewEd25519Signer(nil, nil)
-	signer := &Signer{Ed25519: edSigner}
-	subjectpk := NewSubjectPK(signer.Ed25519.Point)
-	subject, err := NewSubject(nil, subjectpk)
-	log.ErrFatal(err)
-	return signer, subject
+func createIdentity() *Identity {
+	_, id := createSignerIdentity()
+	return id
 }
 
-func createRequest() (*testRequest, *Signer) {
-	tr := &testRequest{}
-	dr := createDarc().darc
-	dr_id := dr.GetID()
-	sig, sub := createSignerSubject()
-	dr.RuleAddSubject(1, sub)
-	msg, _ := json.Marshal("Document1")
-	request := NewRequest(dr_id, 0, msg)
-	tr.request = request
-	return tr, sig
-}
-
-func createRequest2() (*testRequest, *Signer) {
-	tr := &testRequest{}
-	dr := createDarc().darc
-	dr_id := dr.GetID()
-	sub1 := createSubject_Darc()
-	dr.RuleAddSubject(0, sub1)
-	dr2 := darcMap[string(sub1.Darc.ID)]
-	sig, sub := createSignerSubject()
-	dr2.RuleAddSubject(1, sub)
-	msg, _ := json.Marshal("Document1")
-	request := NewRequest(dr_id, 0, msg)
-	tr.request = request
-	return tr, sig
-}
-
-func createRequestAtDepth(depth int) (*testRequest, *Signer) {
-	tr := &testRequest{}
-	dr := createDarc().darc
-	cur_darc := dr
-	dr_id := dr.GetID()
-	for i := 0; i < depth; i++ {
-		sub1 := createSubject_Darc()
-		cur_darc.RuleAddSubject(1, sub1)
-		cur_darc = darcMap[string(sub1.Darc.ID)]
-	}
-	sig, sub := createSignerSubject()
-	cur_darc.RuleAddSubject(1, sub)
-	msg, _ := json.Marshal("Document1")
-	request := NewRequest(dr_id, 1, msg)
-	tr.request = request
-	return tr, sig
-}
-
-func createRequestMultiPathAtDepth(total int, depth int) (*testRequest, *Signer) {
-	tr := &testRequest{}
-	dr := createDarc().darc
-	dr_id := dr.GetID()
-	cur_darc := dr
-	for i := 0; i < total*2; i++ {
-		sub := createSubject_Darc()
-		cur_darc.RuleAddSubject(1, sub)
-	}
-	rule := (*dr.Rules)[1]
-	subs := *rule.Subjects
-	sig, subject := createSignerSubject()
-	for i := 2; i < total*2; i += 2 {
-		sub2 := subs[i]
-		sub_darc := *sub2.Darc
-		cur_darc := darcMap[string(sub_darc.ID)]
-		for j := 0; j < depth; j++ {
-			sub1 := createSubject_Darc()
-			cur_darc.RuleAddSubject(1, sub1)
-			cur_darc = darcMap[string(sub1.Darc.ID)]
-		}
-		cur_darc.RuleAddSubject(1, subject)
-	}
-	msg, _ := json.Marshal("Document1")
-	request := NewRequest(dr_id, 1, msg)
-	tr.request = request
-	return tr, sig
-}
-
-func createRequestMultiSigAtDepthNum(numsigs int, depth int) (*testRequest, []*Signer) {
-	tr := &testRequest{}
-	dr := createDarc().darc
-	dr_id := dr.GetID()
-	var signers []*Signer
-	for i := 0; i < numsigs; i++ {
-		cur_darc := dr
-		for j := 0; j < depth; j++ {
-			sub1 := createSubject_Darc()
-			cur_darc.RuleAddSubject(1, sub1)
-			cur_darc = darcMap[string(sub1.Darc.ID)]
-		}
-		sig, sub := createSignerSubject()
-		cur_darc.RuleAddSubject(1, sub)
-		signers = append(signers, sig)
-	}
-	dr.RuleUpdateExpression(1, `{"and" : [2, 3]}`)
-	msg, _ := json.Marshal("Document1")
-	request := NewRequest(dr_id, 1, msg)
-	tr.request = request
-	return tr, signers
-}
-
-func createRequestMultiSig() (*testRequest, []*Signer) {
-	tr := &testRequest{}
-	dr := createDarc().darc
-	dr_id := dr.GetID()
-	var signers []*Signer
-	for i := 0; i < 2; i++ {
-		sig, sub := createSignerSubject()
-		dr.RuleAddSubject(0, sub)
-		signers = append(signers, sig)
-	}
-	dr.RuleUpdateExpression(0, `{"and" : [3, 4]}`)
-	msg, _ := json.Marshal(createDarc().darc)
-	request := NewRequest(dr_id, 0, msg)
-	tr.request = request
-	return tr, signers
-}
-
-func createRequestMultiPath() (*testRequest, *Signer) {
-	tr := &testRequest{}
-	dr_id, sig := createMultiPathSubject()
-	msg, _ := json.Marshal(createDarc().darc)
-	request := NewRequest(dr_id, 1, msg)
-	tr.request = request
-	return tr, sig
-}
-
-func createMultiPathSubject() ([]byte, *Signer) {
-	dedis := createDarc().darc
-	dr_id := dedis.GetID()
-	research := createSubject_Darc()
-	software := createSubject_Darc()
-	engineering := createSubject_Darc()
-	sandra := createSubject_Darc()
-	sig, linus := createSignerSubject()
-	dedis.RuleAddSubject(1, research)
-	dedis.RuleAddSubject(1, software)
-	dedis.RuleAddSubject(1, engineering)
-	dedis.RuleAddSubject(1, linus)
-	rsub := darcMap[string(research.Darc.ID)]
-	rsub.RuleAddSubject(1, sandra)
-	sandrasub := darcMap[string(sandra.Darc.ID)]
-	sandrasub.RuleAddSubject(1, linus)
-	swsub := darcMap[string(software.Darc.ID)]
-	swsub.RuleAddSubject(1, linus)
-	engsub := darcMap[string(engineering.Darc.ID)]
-	engsub.RuleAddSubject(1, linus)
-	return dr_id, sig
+func createSignerIdentity() (*Signer, *Identity) {
+	signer := NewSignerEd25519(nil, nil)
+	return signer, signer.Identity()
 }

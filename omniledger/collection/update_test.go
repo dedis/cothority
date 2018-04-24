@@ -159,14 +159,14 @@ func (t TestUpdateSingleRecordUpdate) Records() []Proof {
 }
 
 func (t TestUpdateSingleRecordUpdate) Check(collection ReadOnly) bool {
-	return collection.Get(t.record.Key()).Match()
+	return collection.Get(t.record.Key).Match()
 }
 
 func (t TestUpdateSingleRecordUpdate) Apply(collection ReadWrite) {
-	values, _ := collection.Get(t.record.Key()).Values()
+	values, _ := collection.Get(t.record.Key).Values()
 	value := values[0].(uint64)
 
-	collection.Set(t.record.Key(), value+1)
+	collection.Set(t.record.Key, value+1)
 }
 
 type TestUpdateDoubleRecordUpdate struct {
@@ -179,25 +179,25 @@ func (t TestUpdateDoubleRecordUpdate) Records() []Proof {
 }
 
 func (t TestUpdateDoubleRecordUpdate) Check(collection ReadOnly) bool {
-	if !(collection.Get(t.from.Key()).Match()) || !(collection.Get(t.to.Key()).Match()) {
+	if !(collection.Get(t.from.Key).Match()) || !(collection.Get(t.to.Key).Match()) {
 		return false
 	}
 
-	values, _ := collection.Get(t.from.Key()).Values()
+	values, _ := collection.Get(t.from.Key).Values()
 	value := values[0].(uint64)
 
 	return value > 0
 }
 
 func (t TestUpdateDoubleRecordUpdate) Apply(collection ReadWrite) {
-	values, _ := collection.Get(t.from.Key()).Values()
+	values, _ := collection.Get(t.from.Key).Values()
 	from := values[0].(uint64)
 
-	values, _ = collection.Get(t.to.Key()).Values()
+	values, _ = collection.Get(t.to.Key).Values()
 	to := values[0].(uint64)
 
-	collection.Set(t.from.Key(), from-1)
-	collection.Set(t.to.Key(), to+1)
+	collection.Set(t.from.Key, from-1)
+	collection.Set(t.to.Key, to+1)
 }
 
 func TestUpdatePrepare(test *testing.T) {
@@ -223,7 +223,7 @@ func TestUpdatePrepare(test *testing.T) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets wrong transaction id.")
 	}
 
-	if !equal(update.update.Records()[0].Key(), []byte("mykey")) {
+	if !equal(update.update.Records()[0].Key, []byte("mykey")) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets wrong user update.")
 	}
 
@@ -235,7 +235,7 @@ func TestUpdatePrepare(test *testing.T) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets wrong proxy paths.")
 	}
 
-	singleRecord.record.steps[0].Left.Label[0]++
+	singleRecord.record.Steps[0].Left.Label[0]++
 	_, err = collection.Prepare(singleRecord)
 
 	if err == nil {
@@ -260,7 +260,7 @@ func TestUpdatePrepare(test *testing.T) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets wrong transaction id.")
 	}
 
-	if !equal(update.update.Records()[0].Key(), []byte("mykey")) || !equal(update.update.Records()[1].Key(), []byte("myotherkey")) {
+	if !equal(update.update.Records()[0].Key, []byte("mykey")) || !equal(update.update.Records()[1].Key, []byte("myotherkey")) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets wrong user update.")
 	}
 
@@ -272,7 +272,7 @@ func TestUpdatePrepare(test *testing.T) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets wrong proxy paths.")
 	}
 
-	doublerecord.from.steps[0].Left.Label[0]++
+	doublerecord.from.Steps[0].Left.Label[0]++
 	_, err = collection.Prepare(doublerecord)
 
 	if err == nil {
@@ -454,7 +454,7 @@ func TestUpdateApplyUserUpdate(test *testing.T) {
 	}
 
 	aliceproof, _ = collection.Get([]byte("alice")).Proof()
-	aliceproof.steps[0].Left.Label[0]++
+	aliceproof.Steps[0].Left.Label[0]++
 
 	err = collection.Apply(TestUpdateSingleRecordUpdate{aliceproof})
 

@@ -88,18 +88,18 @@ type step struct {
 
 // Proof is an object representing the proof of presence or absence of a given key in a collection.
 type Proof struct {
-	collection *Collection
-	key        []byte
+	Key   []byte // Key is the key that this proof is representing
+	Root  dump   // Root is the root node
+	Steps []step // Steps are the steps to go from root to key
 
-	root  dump
-	steps []step
+	collection *Collection
 }
 
 // Getters
 
-// Key returns the key the proof proves the presence or absence.
-func (p Proof) Key() []byte {
-	return p.key
+// TreeRootHash returns the hash of the merkle tree root.
+func (p Proof) TreeRootHash() []byte {
+	return p.Root.Key
 }
 
 // Methods
@@ -107,48 +107,58 @@ func (p Proof) Key() []byte {
 //Match returns true if the Proof asserts the presence of the key in the collection
 // and false if it asserts its absence.
 func (p Proof) Match() bool {
-	if len(p.steps) == 0 {
+	if len(p.Steps) == 0 {
 		return false
 	}
 
-	path := sha256.Sum256(p.key)
-	depth := len(p.steps) - 1
+	path := sha256.Sum256(p.Key)
+	depth := len(p.Steps) - 1
 
 	if bit(path[:], depth) {
-		return equal(p.key, p.steps[depth].Right.Key)
+		return equal(p.Key, p.Steps[depth].Right.Key)
 	}
-	return equal(p.key, p.steps[depth].Left.Key)
+	return equal(p.Key, p.Steps[depth].Left.Key)
 }
 
-// Values returns a copy of the values of the key which presence is proved by the Proof.
-// It returns an error if the Proof proves the absence of the key.
-func (p Proof) Values() ([]interface{}, error) {
-	if len(p.steps) == 0 {
-		return []interface{}{}, errors.New("proof has no steps")
+// RawValues returns the raw values stored in the proof. This can be used if
+// not the whole collection is present in the proof.
+func (p Proof) RawValues() ([][]byte, error) {
+	if len(p.Steps) == 0 {
+		return [][]byte{}, errors.New("proof has no steps")
 	}
 
-	path := sha256.Sum256(p.key)
-	depth := len(p.steps) - 1
+	path := sha256.Sum256(p.Key)
+	depth := len(p.Steps) - 1
 
 	match := false
 	var rawValues [][]byte
 
 	if bit(path[:], depth) {
-		if equal(p.key, p.steps[depth].Right.Key) {
+		if equal(p.Key, p.Steps[depth].Right.Key) {
 			match = true
-			rawValues = p.steps[depth].Right.Values
+			rawValues = p.Steps[depth].Right.Values
 		}
 	} else {
-		if equal(p.key, p.steps[depth].Left.Key) {
+		if equal(p.Key, p.Steps[depth].Left.Key) {
 			match = true
-			rawValues = p.steps[depth].Left.Values
+			rawValues = p.Steps[depth].Left.Values
 		}
 	}
 
 	if !match {
-		return []interface{}{}, errors.New("no match found")
+		return [][]byte{}, errors.New("no match found")
 	}
 
+	return rawValues, nil
+}
+
+// Values returns a copy of the values of the key which presence is proved by the Proof.
+// It returns an error if the Proof proves the absence of the key.
+func (p Proof) Values() ([]interface{}, error) {
+	rawValues, err := p.RawValues()
+	if err != nil {
+		return []interface{}{}, err
+	}
 	if len(rawValues) != len(p.collection.fields) {
 		return []interface{}{}, errors.New("wrong number of values")
 	}
@@ -168,32 +178,33 @@ func (p Proof) Values() ([]interface{}, error) {
 	return values, nil
 }
 
-// Consistent returns true if the proof given is correctly set up.
+// Consistent returns true if the given proof is correct, that is, if it is
+// a valid representation and all steps are valid.
 func (p Proof) Consistent() bool {
-	if len(p.steps) == 0 {
+	if len(p.Steps) == 0 {
 		return false
 	}
 
-	if !(p.root.consistent()) {
+	if !(p.Root.consistent()) {
 		return false
 	}
 
-	cursor := &(p.root)
-	path := sha256.Sum256(p.key)
+	cursor := &(p.Root)
+	path := sha256.Sum256(p.Key)
 
-	for depth := 0; depth < len(p.steps); depth++ {
-		if (cursor.Children.Left != p.steps[depth].Left.Label) || (cursor.Children.Right != p.steps[depth].Right.Label) {
+	for depth := 0; depth < len(p.Steps); depth++ {
+		if (cursor.Children.Left != p.Steps[depth].Left.Label) || (cursor.Children.Right != p.Steps[depth].Right.Label) {
 			return false
 		}
 
-		if !(p.steps[depth].Left.consistent()) || !(p.steps[depth].Right.consistent()) {
+		if !(p.Steps[depth].Left.consistent()) || !(p.Steps[depth].Right.consistent()) {
 			return false
 		}
 
 		if bit(path[:], depth) {
-			cursor = &(p.steps[depth].Right)
+			cursor = &(p.Steps[depth].Right)
 		} else {
-			cursor = &(p.steps[depth].Left)
+			cursor = &(p.Steps[depth].Left)
 		}
 	}
 
@@ -211,7 +222,7 @@ func (c *Collection) Serialize(proof Proof) []byte {
 		Key   []byte
 		Root  dump
 		Steps []step
-	}{proof.key, proof.root, proof.steps}
+	}{proof.Key, proof.Root, proof.Steps}
 
 	buffer, _ := protobuf.Encode(&serializable)
 	return buffer
@@ -233,5 +244,5 @@ func (c *Collection) Deserialize(buffer []byte) (Proof, error) {
 		return Proof{}, err
 	}
 
-	return Proof{c, deserializable.Key, deserializable.Root, deserializable.Steps}, nil
+	return Proof{deserializable.Key, deserializable.Root, deserializable.Steps, c}, nil
 }
