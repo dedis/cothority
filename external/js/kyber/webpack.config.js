@@ -17,7 +17,8 @@ const nodeConfig = {
         use: {
           loader: "babel-loader",
           options: {
-            presets: ["stage-3"]
+            presets: ["env"],
+	    plugins: [ require("babel-plugin-transform-object-rest-spread") ],
           }
         }
       }
@@ -42,7 +43,8 @@ const browserConfig = {
         use: {
           loader: "babel-loader",
           options: {
-            presets: ["stage-3"]
+            presets: ["env"],
+	    plugins: [ require("babel-plugin-transform-object-rest-spread") ],
           }
         }
       }
