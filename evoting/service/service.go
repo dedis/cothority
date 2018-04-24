@@ -34,6 +34,8 @@ var errOnlyLeader = errors.New("operation only allowed on the leader node")
 func init() {
 	network.RegisterMessages(synchronizer{}, storage{})
 	serviceID, _ = onet.RegisterNewService(evoting.ServiceName, new)
+
+	raiseFdLimit()
 }
 
 // timeout for protocol termination.
