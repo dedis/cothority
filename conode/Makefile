@@ -21,9 +21,8 @@ flags=-ldflags="$(ldflags)"
 
 all: docker
 
-docker: Dockerfile
-	BUILDFLAG=$(flags)
-	docker build -t $(IMAGE_NAME):$(VERSION) --build-arg BUILDFLAG="$(ldflags)" .
+docker: Dockerfile exe/conode.Linux.x86_64
+	docker build -t $(IMAGE_NAME):$(VERSION) .
 
 docker_push: docker
 	@[ -n "$(GITUNTRACKEDCHANGES)" ] && echo "Pushing dirty images not allowed." && exit 1 || true
@@ -50,21 +49,24 @@ docker_clean:
 	docker kill $(CONTAINER) || echo nothing to stop
 	docker image ls $(IMAGE_NAME) -q | xargs docker rmi -f || echo done
 
+verify:
+	vgo verify
+
 # The suffix on conode exe is the result from: echo `uname -s`.`uname -m`
 # so that we can find the right one in the wrapper script.
-bindist:
-	vgo verify
+# This is in it's own rule because 
+exe/conode.Linux.x86_64: verify
+	GOOS=linux GOARCH=amd64 vgo build $(flags) -o $@
+
+bindist: verify exe/conode.Linux.x86_64
 	rm -rf $(OUTPUT_DIR)
 	mkdir $(OUTPUT_DIR)
-	GOOS=linux GOARCH=amd64 go build $(flags) -o $(OUTPUT_DIR)/conode.Linux.x86_64
-	GOOS=linux  GOARCH=arm go build $(flags) -o $(OUTPUT_DIR)/conode.Linux.armv7l
-	GOOS=freebsd GOARCH=amd64 go build $(flags) -o $(OUTPUT_DIR)/conode.FreeBSD.amd64
-	GOOS=windows GOARCH=386 go build $(flags) -o $(OUTPUT_DIR)/conode.exe
+	cp exe/conode.Linux.x86_64 $(OUTPUT_DIR)
+	GOOS=linux  GOARCH=arm vgo build $(flags) -o $(OUTPUT_DIR)/conode.Linux.armv7l
+	GOOS=freebsd GOARCH=amd64 vgo build $(flags) -o $(OUTPUT_DIR)/conode.FreeBSD.amd64
+	GOOS=windows GOARCH=386 vgo build $(flags) -o $(OUTPUT_DIR)/conode.exe
 	echo "#!/bin/sh" > $(OUTPUT_DIR)/conode
 	echo "./conode.\`uname -s\`.\`uname -m\` \$$*" >> $(OUTPUT_DIR)/conode
 	chmod +x $(OUTPUT_DIR)/conode
 	LANG=C tar zcf $(OUTPUT_DIR).tar.gz $(OUTPUT_DIR)
 	rm -rf $(OUTPUT_DIR)
-
-gitTag:
-	go build $(flags)
