@@ -5,9 +5,9 @@ skipchains to a new level of performance and functionality. Broadly speaking,
 Omniledger will implement:
 
 1. multiple transactions per block
-2. allow for verification functions that apply to different kinds of data
-3. queuing of transactions at each node and periodical creation of a new
+2. queuing of transactions at each node and periodical creation of a new
 block by the leader
+3. allow for verification functions that apply to different kinds of data
 4. view-change in case the leader fails
 5. sharding of the nodes
 6. inter-shard transactions
@@ -25,31 +25,29 @@ Once we reach point 3 or 4, we'll start porting services over to the new
 omniledger blockchain. As we still want to keep downwards-compatibility, we
 probably will need to create new services.
 
-Currently work on 1. is ongoing
+Work on 1. is finished, work on 2. has been started.
+
+To find the current state of omniledger, use the [README](omniledger/README.md).
 
 ## Sub-tasks
 
-For 1. to work, there are two libraries that need to be done correctly:
-- Darc - to define the access control
-- Collections - to handle the Merkle tree holding all the data
+For 2. to work, we go in steps:
+- implement queueing at the leader
+- implement queues at the followers
+- leader regularly asks followers for new transactions
 
 In addition to this, the ByzCoinX protocol needs to be improved.
 
-### Darc
+### Queueing at the leader
 
-Kelong is looking into Darc and is working on rewriting the policy mechanism
-that allows for AND, OR, NOT and THRESHOLD keywords, to combine signatures from:
-- DarcIdentity - a link to another darc that is allowed to sign
-- Ed25519 - our cryptographic work-horse
-- X509 EC - a more general place holder for cryptographic signatures
+Whenever a leader gets a new transaction request, he puts it in a queue and
+waits for further transactions to come in. After a timeout, the leader collects
+all transactions and proposes them in a new block to the followers who will sign
+the new block by creating a forward-link.
 
-### Collections
+### Queueing at the followers
 
-Raphael did a big cleanup of the collections library to be understandable (putting
-the documentation in the functions) and to follow the go-standard.
-
-Sooner or later we'll need to think of how to hold the tree in a database instead
-of keeping it in memory.
+The followers hold a queue
 
 ### ByzCoinX
 

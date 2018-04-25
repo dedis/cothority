@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -9,9 +8,6 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/cothority.v2"
-	"gopkg.in/dedis/onet.v2"
-	"gopkg.in/dedis/onet.v2/log"
 )
 
 var testName = []byte("coll1")
@@ -26,12 +22,19 @@ func TestCollectionDBStrange(t *testing.T) {
 	require.Nil(t, err)
 
 	cdb := newCollectionDB(db, testName)
-	err = cdb.Store([]byte("first"), []byte("value"), []byte("mysig"))
+	key := []byte("first")
+	value := []byte("value")
+	kind := []byte("mykind")
+	err = cdb.Store(&Transaction{
+		Key:   key,
+		Value: value,
+		Kind:  kind,
+	})
 	require.Nil(t, err)
-	value, sig, err := cdb.GetValue([]byte("first"))
+	v, k, err := cdb.GetValueKind([]byte("first"))
 	require.Nil(t, err)
-	require.Equal(t, []byte("value"), value)
-	require.Equal(t, []byte("mysig"), sig)
+	require.Equal(t, value, v)
+	require.Equal(t, kind, k)
 }
 
 func TestCollectionDB(t *testing.T) {
@@ -47,22 +50,27 @@ func TestCollectionDB(t *testing.T) {
 
 	cdb := newCollectionDB(db, testName)
 	pairs := map[string]string{}
-	mysig := []byte("mysignature")
+	mykind := []byte("mykind")
 	for i := 0; i < kvPairs; i++ {
 		pairs[fmt.Sprintf("Key%d", i)] = fmt.Sprintf("value%d", i)
 	}
 
 	// Store all key/value pairs
 	for k, v := range pairs {
-		require.Nil(t, cdb.Store([]byte(k), []byte(v), mysig))
+		tr := &Transaction{
+			Key:   []byte(k),
+			Value: []byte(v),
+			Kind:  mykind,
+		}
+		require.Nil(t, cdb.Store(tr))
 	}
 
 	// Verify it's all there
 	for k, v := range pairs {
-		stored, sig, err := cdb.GetValue([]byte(k))
+		stored, kind, err := cdb.GetValueKind([]byte(k))
 		require.Nil(t, err)
 		require.Equal(t, v, string(stored))
-		require.Equal(t, mysig, sig)
+		require.Equal(t, mykind, kind)
 	}
 
 	// Get a new db handler
@@ -70,79 +78,8 @@ func TestCollectionDB(t *testing.T) {
 
 	// Verify it's all there
 	for k, v := range pairs {
-		stored, _, err := cdb2.GetValue([]byte(k))
+		stored, _, err := cdb2.GetValueKind([]byte(k))
 		require.Nil(t, err)
 		require.Equal(t, v, string(stored))
-	}
-}
-
-func TestService_Store(t *testing.T) {
-	kvPairs := 2
-	pairs := map[string][]byte{}
-
-	// First create a roster to attach the data to it
-	local := onet.NewLocalTest(cothority.Suite)
-	defer local.CloseAll()
-	var genService onet.Service
-	_, roster, genService := local.MakeSRS(cothority.Suite, 4, lleapID)
-	service := genService.(*Service)
-
-	// Create a new skipchain
-	resp, err := service.CreateSkipchain(&CreateSkipchain{
-		Version: CurrentVersion,
-		Roster:  *roster,
-		Transaction: Transaction{
-			Key: []byte("123"),
-		},
-	})
-	require.Nil(t, err)
-	genesis := resp.Skipblock
-
-	// Store some keypairs
-	for i := 0; i < kvPairs; i++ {
-		key := []byte(fmt.Sprintf("Key%d", i))
-		value := []byte(fmt.Sprintf("value%d", i))
-		pairs[string(key)] = value
-		_, err := service.SetKeyValue(&SetKeyValue{
-			Version:     CurrentVersion,
-			SkipchainID: genesis.Hash,
-			Transaction: Transaction{
-				Key:   key,
-				Kind:  []byte("testKind"),
-				Value: value,
-			},
-		})
-		require.Nil(t, err)
-	}
-
-	// Retrieve the keypairs
-	for key, value := range pairs {
-		gvResp, err := service.GetProof(&GetProof{
-			Version: CurrentVersion,
-			ID:      genesis.Hash,
-			Key:     []byte(key),
-		})
-		require.Nil(t, err)
-		_, vs, err := gvResp.Proof.KeyValue()
-		require.Nil(t, err)
-		require.Equal(t, 0, bytes.Compare(value, vs[0]))
-	}
-
-	// Now read the key/values from a new service
-	// First create a roster to attach the data to it
-	log.Lvl1("Recreate services and fetch keys again")
-	service.tryLoad()
-
-	// Retrieve the keypairs
-	for key, value := range pairs {
-		gvResp, err := service.GetProof(&GetProof{
-			Version: CurrentVersion,
-			ID:      genesis.Hash,
-			Key:     []byte(key),
-		})
-		require.Nil(t, err)
-		_, vs, err := gvResp.Proof.KeyValue()
-		require.Nil(t, err)
-		require.Equal(t, 0, bytes.Compare(value, vs[0]))
 	}
 }

@@ -5,15 +5,15 @@
 package service
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"sync"
 	"time"
 
 	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/cothority.v2/messaging"
 	"gopkg.in/dedis/cothority.v2/skipchain"
-	"gopkg.in/dedis/kyber.v2"
-	"gopkg.in/dedis/kyber.v2/util/key"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/log"
 	"gopkg.in/dedis/onet.v2/network"
@@ -22,7 +22,7 @@ import (
 )
 
 // Used for tests
-var lleapID onet.ServiceID
+var omniledgerID onet.ServiceID
 
 const keyMerkleRoot = "merkleroot"
 const keyNewKey = "newkey"
@@ -30,9 +30,9 @@ const keyNewValue = "newvalue"
 
 func init() {
 	var err error
-	lleapID, err = onet.RegisterNewService(ServiceName, newService)
+	omniledgerID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
-	network.RegisterMessages(&storage{}, &Data{})
+	network.RegisterMessages(&storage{}, &Data{}, &updateCollection{})
 }
 
 // Service is our lleap-service
@@ -44,29 +44,40 @@ type Service struct {
 	// service reloads.
 	collectionDB map[string]*collectionDB
 
+	// queueWorkers is a map that points to channels that handle queueing and
+	// starting of new blocks.
+	queueWorkers map[string]chan Transaction
+	// CloseQueues is closed when the queues should stop - this is mostly for
+	// testing and there should be a better way to clean up services for testing...
+	CloseQueues chan bool
+
+	// propagate the new transactions
+	propagateTransactions messaging.PropagationFunc
+
 	storage *storage
+}
+
+type queue struct {
+	transactions []Transaction
 }
 
 // storageID reflects the data we're storing - we could store more
 // than one structure.
 const storageID = "main"
 
-// Data is the data passed to the Skipchain
-type Data struct {
-	// Root of the merkle tree after applying the transactions to the
-	// kv store
-	MerkleRoot []byte
-	// The transactions applied to the kv store with this block
-	Transactions []*Transaction
-	Timestamp    int64
-	Roster       *onet.Roster
-}
+// TODO: this should go into the genesis-configuration
+var waitQueueing = 5 * time.Second
 
 // storage is used to save our data locally.
 type storage struct {
-	// PL: Is used to sign the votes
-	Private map[string]kyber.Scalar
 	sync.Mutex
+	// PropTimeout is used when sending the request to integrate a new block
+	// to all nodes.
+	PropTimeout time.Duration
+}
+
+type updateCollection struct {
+	ID skipchain.SkipBlockID
 }
 
 // CreateSkipchain asks the cisc-service to create a new skipchain ready to
@@ -80,141 +91,35 @@ func (s *Service) CreateSkipchain(req *CreateSkipchain) (
 		return nil, errors.New("version mismatch")
 	}
 
-	kp := key.NewKeyPair(cothority.Suite)
-
-	tmpColl := collection.New(collection.Data{}, collection.Data{})
-	sigBuf, err := network.Marshal(&req.Transaction.Signature)
-	if err != nil {
-		return nil, errors.New("Couldn't marshal Signature: " + err.Error())
-	}
-	err = tmpColl.Add(req.Transaction.Key, req.Transaction.Value, sigBuf)
-	if err != nil {
-		return nil, errors.New("error while storing in collection: " + err.Error())
-	}
-
-	mr := tmpColl.GetRoot()
-	data := &Data{
-		MerkleRoot:   mr,
-		Transactions: []*Transaction{&req.Transaction},
-		Timestamp:    time.Now().Unix(),
-	}
-
-	buf, err := network.Marshal(data)
-	if err != nil {
-		return nil, errors.New("Couldn't marshal data: " + err.Error())
-	}
-
-	var genesisBlock = skipchain.NewSkipBlock()
-	genesisBlock.Data = buf
-	genesisBlock.Roster = &req.Roster
-	genesisBlock.MaximumHeight = 1
-	genesisBlock.BaseHeight = 1
-
-	// TODO: Signature?
-	var ssb = skipchain.StoreSkipBlock{NewBlock: genesisBlock}
-	ssbReply, err := s.skService().StoreSkipBlock(&ssb)
+	sb, err := s.createNewBlock(nil, &req.Roster, []Transaction{req.Transaction})
 	if err != nil {
 		return nil, err
 	}
-	skID := ssbReply.Latest.SkipChainID()
-	gid := string(skID)
-
-	err = s.getCollection(skID).Store(req.Transaction.Key, req.Transaction.Value, sigBuf)
-	if err != nil {
-		return nil, errors.New(
-			"error while storing in collection: " + err.Error())
-	}
-	s.storage.Private[gid] = kp.Private
 	s.save()
+	s.queueWorkers[string(sb.SkipChainID())], err = s.createQueueWorker(sb.SkipChainID())
+	if err != nil {
+		return nil, err
+	}
 	return &CreateSkipchainResponse{
 		Version:   CurrentVersion,
-		Skipblock: ssbReply.Latest,
+		Skipblock: sb,
 	}, nil
 }
 
 // SetKeyValue asks cisc to add a new key/value pair.
 func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
-	// Check the input arguments
-	// TODO: verify the signature on the key/value pair
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
-	gid := string(req.SkipchainID)
-	latest, err := s.db().GetLatest(s.db().GetByID(req.SkipchainID))
-	if err != nil {
-		return nil, errors.New(
-			"Could not get latest block from the skipchain: " + err.Error())
-	}
-	priv := s.storage.Private[gid]
-	if priv == nil {
-		return nil, errors.New("don't have this identity stored")
-	}
 
-	// Verify darc
-	// Note: The verify function needs the collection to be up to date.
-	// TODO: Make sure that is the case.
-	/*
-			log.Lvl1("Verifying signature")
-		    err := s.getCollection(req.SkipchainID).verify(&req.Transaction)
-		    if err != nil {
-				log.Lvl1("signature verification failed")
-		        return nil, err
-		    }
-			log.Lvl1("signature verification succeeded")
-	*/
-
-	coll := s.getCollection(req.SkipchainID)
-	if _, _, err := coll.GetValue(req.Transaction.Key); err == nil {
-		return nil, errors.New("cannot overwrite existing value")
+	c, ok := s.queueWorkers[string(req.SkipchainID)]
+	if !ok {
+		return nil, errors.New("Don't know this skipchain")
 	}
-	sigBuf, err := network.Marshal(&req.Transaction.Signature)
-	if err != nil {
-		return nil, errors.New("Couldn't marshal Signature: " + err.Error())
-	}
+	c <- req.Transaction
 
-	// Store the pair in a copy of the collection to get the root hash.
-	// Once the block is accepted by the cothority, we store it in the real
-	// collectionBD.
-	var collCopy collection.Collection
-	collCopy = s.getCollection(req.SkipchainID).coll
-	collCopy.Add(req.Transaction.Key, req.Transaction.Value, sigBuf)
-	mr := collCopy.GetRoot()
-	data := &Data{
-		MerkleRoot:   mr,
-		Transactions: []*Transaction{&req.Transaction},
-		Timestamp:    time.Now().Unix(),
-	}
-
-	buf, err := network.Marshal(data)
-	if err != nil {
-		return nil, errors.New("Couldn't marshal data: " + err.Error())
-	}
-
-	newBlock := latest.Copy()
-	newBlock.Data = buf
-
-	var ssb = skipchain.StoreSkipBlock{
-		NewBlock:          newBlock,
-		TargetSkipChainID: req.SkipchainID,
-	} // TODO: Signature?
-	ssbReply, err := s.skService().StoreSkipBlock(&ssb)
-	if err != nil {
-		return nil, err
-	}
-
-	// Now we know the block is accepted, so we can apply the the Transaction
-	// to our collectionDB.
-	err = coll.Store(req.Transaction.Key, req.Transaction.Value, sigBuf)
-	if err != nil {
-		return nil, errors.New(
-			"error while storing in collection: " + err.Error())
-	}
-
-	hash := ssbReply.Latest.CalculateHash()
 	return &SetKeyValueResponse{
-		Version:     CurrentVersion,
-		Timestamp:   &data.Timestamp,
-		SkipblockID: &hash,
+		Version: CurrentVersion,
 	}, nil
 }
 
@@ -224,6 +129,7 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
+	log.Lvlf2("%s: Getting proof for key %x on sc %x", s.ServerIdentity(), req.Key, req.ID)
 	latest, err := s.db().GetLatest(s.db().GetByID(req.ID))
 	if err != nil {
 		return
@@ -237,6 +143,125 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		Proof:   *proof,
 	}
 	return
+}
+
+// SetPropagationTimeout overrides the default propagation timeout that is used
+// when a new block is announced to the nodes.
+func (s *Service) SetPropagationTimeout(p time.Duration) {
+	s.storage.Lock()
+	s.storage.PropTimeout = p
+	s.storage.Unlock()
+}
+
+// createNewBlock creates a new block and proposes it to the
+// skipchain-service. Once the block has been created, we
+// inform all nodes to update their internal collections
+// to include the new transactions.
+func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, ts []Transaction) (*skipchain.SkipBlock, error) {
+	var sb *skipchain.SkipBlock
+	var c collection.Collection
+
+	if scID.IsNull() {
+		// For a genesis block, we create a throwaway collection.
+		c = collection.New(&collection.Data{}, &collection.Data{})
+
+		sb = skipchain.NewSkipBlock()
+		sb.Roster = r
+		sb.MaximumHeight = 10
+		sb.BaseHeight = 10
+	} else {
+		// For further blocks, we create a clone of the collection - this is
+		// TODO: not very memory-friendly - we need to use some kind of transactions.
+		c = s.getCollection(scID).coll.Clone()
+
+		sbLatest, err := s.db().GetLatest(s.db().GetByID(scID))
+		if err != nil {
+			return nil, errors.New(
+				"Could not get latest block from the skipchain: " + err.Error())
+		}
+		sb = sbLatest.Copy()
+		if r != nil {
+			sb.Roster = r
+		}
+	}
+
+	for _, t := range ts {
+		err := c.Add(t.Key, t.Value, t.Kind)
+		if err != nil {
+			return nil, errors.New("error while storing in collection: " + err.Error())
+		}
+	}
+	mr := c.GetRoot()
+	data := &Data{
+		MerkleRoot:   mr,
+		Transactions: ts,
+		Timestamp:    time.Now().Unix(),
+	}
+
+	var err error
+	sb.Data, err = network.Marshal(data)
+	if err != nil {
+		return nil, errors.New("Couldn't marshal data: " + err.Error())
+	}
+
+	var ssb = skipchain.StoreSkipBlock{
+		NewBlock:          sb,
+		TargetSkipChainID: scID,
+	}
+	ssbReply, err := s.skService().StoreSkipBlock(&ssb)
+	if err != nil {
+		return nil, err
+	}
+
+	s.storage.Lock()
+	pto := s.storage.PropTimeout
+	s.storage.Unlock()
+	// TODO: replace this with some kind of callback from the skipchain-service
+	replies, err := s.propagateTransactions(sb.Roster, &updateCollection{sb.Hash}, pto)
+	if err != nil {
+		log.Lvl1("Propagation-error:", err.Error())
+	}
+	if replies != len(sb.Roster.List) {
+		log.Lvl1(s.ServerIdentity(), "Only got", replies, "out of", len(sb.Roster.List))
+	}
+
+	return ssbReply.Latest, nil
+}
+
+// updateCollection is called once a skipblock has been stored.
+// It is called by the leader, and every node will add the
+// transactions in the block to its collection.
+func (s *Service) updateCollection(msg network.Message) {
+	uc, ok := msg.(*updateCollection)
+	if !ok {
+		return
+	}
+
+	sb, err := s.db().GetLatest(s.db().GetByID(uc.ID))
+	if err != nil {
+		log.Errorf("didn't find latest block for %x", uc.ID)
+		return
+	}
+	_, dataI, err := network.Unmarshal(sb.Data, cothority.Suite)
+	data, ok := dataI.(*Data)
+	if err != nil || !ok {
+		log.Errorf("couldn't unmarshal data")
+		return
+	}
+	// TODO: wrap this in a transaction
+	log.Lvlf2("%s: Updating transactions for %x", s.ServerIdentity(), sb.SkipChainID())
+	cdb := s.getCollection(sb.SkipChainID())
+	for _, t := range data.Transactions {
+		log.Lvlf2("Storing transaction key/kind/value: %x / %x / %x", t.Key, t.Kind, t.Value)
+		err = cdb.Store(&t)
+		if err != nil {
+			log.Error(
+				"error while storing in collection: " + err.Error())
+		}
+	}
+	if !bytes.Equal(cdb.RootHash(), data.MerkleRoot) {
+		log.Error("hash of collection doesn't correspond to root hash")
+	}
 }
 
 func (s *Service) getCollection(id skipchain.SkipBlockID) *collectionDB {
@@ -270,10 +295,48 @@ func (s *Service) save() {
 	}
 }
 
+// createQueueWorker sets up a worker that will listen on a channel for
+// incoming requests and then create a new block every epoch.
+func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) (chan Transaction, error) {
+	c := make(chan Transaction)
+	go func() {
+		ts := []Transaction{}
+		to := time.After(waitQueueing)
+		for {
+			select {
+			case t := <-c:
+				ts = append(ts, t)
+				log.Lvlf2("%x: Stored transaction - length is %d", scID, len(ts))
+			case <-to:
+				log.Lvlf2("%x: New epoch and transaction-length: %d", scID, len(ts))
+				if len(ts) > 0 {
+					sb, err := s.db().GetLatest(s.db().GetByID(scID))
+					if err != nil {
+						panic("DB is in bad state and cannot find skipchain anymore: " + err.Error())
+					}
+					log.Lvlf2("Creating block with transactions %+v", ts)
+					_, err = s.createNewBlock(scID, sb.Roster, ts)
+					if err != nil {
+						log.Error("couldn't create new block: " + err.Error())
+						continue
+					}
+					ts = []Transaction{}
+				}
+				to = time.After(waitQueueing)
+			case <-s.CloseQueues:
+				return
+			}
+		}
+	}()
+	return c, nil
+}
+
 // Tries to load the configuration and updates the data in the service
 // if it finds a valid config-file.
 func (s *Service) tryLoad() error {
-	s.storage = &storage{}
+	s.storage = &storage{
+		PropTimeout: 10 * time.Second,
+	}
 	msg, err := s.Load([]byte(storageID))
 	if err != nil {
 		return err
@@ -288,20 +351,28 @@ func (s *Service) tryLoad() error {
 	if s.storage == nil {
 		s.storage = &storage{}
 	}
-	if s.storage.Private == nil {
-		s.storage.Private = map[string]kyber.Scalar{}
-	}
 	s.collectionDB = map[string]*collectionDB{}
+	s.queueWorkers = map[string]chan Transaction{}
 
 	gas := &skipchain.GetAllSkipchains{}
 	gasr, err := s.skService().GetAllSkipchains(gas)
 	if err != nil {
 		return err
 	}
+	// GetAllSkipchains erronously returns all skipBLOCKS, so we need
+	// to filter out the skipchainIDs.
+	scIDs := map[string]bool{}
+	for _, sb := range gasr.SkipChains {
+		scIDs[string(sb.SkipChainID())] = true
+	}
 
-	allSkipchains := gasr.SkipChains
-	for _, sb := range allSkipchains {
-		s.getCollection(sb.SkipChainID())
+	for scID := range scIDs {
+		sbID := skipchain.SkipBlockID(scID)
+		s.getCollection(sbID)
+		s.queueWorkers[scID], err = s.createQueueWorker(sbID)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -314,6 +385,7 @@ func (s *Service) tryLoad() error {
 func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
+		CloseQueues:      make(chan bool),
 	}
 	if err := s.RegisterHandlers(s.CreateSkipchain, s.SetKeyValue,
 		s.GetProof); err != nil {
@@ -321,6 +393,12 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
+		return nil, err
+	}
+
+	var err error
+	s.propagateTransactions, err = messaging.NewPropagationFunc(c, "OmniledgerPropagate", s.updateCollection, -1)
+	if err != nil {
 		return nil, err
 	}
 	return s, nil

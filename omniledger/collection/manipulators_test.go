@@ -9,6 +9,9 @@ import (
 )
 
 func TestManipulatorsAdd(test *testing.T) {
+	if testing.Short() {
+		test.Skip("using race this takes a long time")
+	}
 	ctx := testCtx("[manipulators.go]", test)
 
 	stake64 := Stake64{}
@@ -87,6 +90,9 @@ func TestManipulatorsAddEmpty(test *testing.T) {
 }
 
 func TestManipulatorsSet(test *testing.T) {
+	if testing.Short() {
+		test.Skip("using race this takes a long time")
+	}
 	ctx := testCtx("[manipulators.go]", test)
 
 	stake64 := Stake64{}
@@ -205,6 +211,9 @@ func TestManipulatorsSetField(test *testing.T) {
 }
 
 func TestManipulatorsRemove(test *testing.T) {
+	if testing.Short() {
+		test.Skip("using race this takes a long time")
+	}
 	ctx := testCtx("[manipulators.go]", test)
 
 	collection := New()
