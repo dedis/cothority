@@ -91,7 +91,7 @@ func action(c *cli.Context) error {
 		}
 	}
 	if format == "json" {
-		printJson(all)
+		printJSON(all)
 	}
 	return nil
 }
@@ -131,7 +131,7 @@ func printTxt(e *status.Response) {
 	log.Print(strings.Join(a, "\n"))
 }
 
-func printJson(all []se) {
+func printJSON(all []se) {
 	b1 := new(bytes.Buffer)
 	e := json.NewEncoder(b1)
 	e.Encode(all)
