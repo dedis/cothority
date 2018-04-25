@@ -52,7 +52,7 @@ type Darc struct {
 	Rules Rules
 	// Signature is calculated over the protobuf representation of [Rules, Version, Description]
 	// and needs to be created by an Owner from the previous valid Darc.
-	Signature *Signature
+	Signatures []*Signature
 }
 
 // Action is TODO

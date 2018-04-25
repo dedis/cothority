@@ -10,14 +10,14 @@ import (
 func TestRules(t *testing.T) {
 	// one owner
 	owner := createIdentity()
-	rules := InitEvolutionRule(owner)
+	rules := InitRules([]*Identity{owner}, []*Identity{})
 	expr, ok := rules[evolve]
 	require.True(t, ok)
 	require.Equal(t, string(expr), owner.String())
 
 	// two owners
 	owners := []*Identity{owner, createIdentity()}
-	rules = InitEvolutionRule(owners...)
+	rules = InitRules(owners, []*Identity{})
 	expr, ok = rules[evolve]
 	require.True(t, ok)
 	require.Equal(t, string(expr), owners[0].String()+" | "+owners[1].String())
@@ -27,7 +27,7 @@ func TestNewDarc(t *testing.T) {
 	desc := []byte("mydarc")
 	owner := createIdentity()
 
-	d := NewDarc(InitEvolutionRule(owner), desc)
+	d := NewDarc(InitRules([]*Identity{owner}, []*Identity{}), desc)
 	require.Equal(t, desc, d.Description)
 	require.Equal(t, string(d.Rules.GetEvolutionExpr()), owner.String())
 }
@@ -183,17 +183,17 @@ func TestDarc_EvolveMoreOnline(t *testing.T) {
 
 	// create darcs that do not have the full path
 	lightDarc1 := darcs[len(darcs)-1].Copy()
-	lightDarc1.Signature = &Signature{
-		Signature:  copyBytes(darcs[len(darcs)-1].Signature.Signature),
-		Signer:     darcs[len(darcs)-1].Signature.Signer,
-		PathDigest: darcs[len(darcs)-1].Signature.PathDigest,
-	}
+	lightDarc1.Signatures = []*Signature{&Signature{
+		Signature:  copyBytes(darcs[len(darcs)-1].Signatures[0].Signature),
+		Signer:     darcs[len(darcs)-1].Signatures[0].Signer,
+		PathDigest: darcs[len(darcs)-1].Signatures[0].PathDigest,
+	}}
 	lightDarc2 := darcs[len(darcs)-2].Copy()
-	lightDarc2.Signature = &Signature{
-		Signature:  copyBytes(darcs[len(darcs)-2].Signature.Signature),
-		Signer:     darcs[len(darcs)-2].Signature.Signer,
-		PathDigest: darcs[len(darcs)-2].Signature.PathDigest,
-	}
+	lightDarc2.Signatures = []*Signature{&Signature{
+		Signature:  copyBytes(darcs[len(darcs)-2].Signatures[0].Signature),
+		Signer:     darcs[len(darcs)-2].Signatures[0].Signer,
+		PathDigest: darcs[len(darcs)-2].Signatures[0].PathDigest,
+	}}
 
 	// verification should fail if the callback is not set
 	require.NotNil(t, lightDarc1.Verify())
@@ -321,7 +321,7 @@ func createDarc(nbrOwners int, desc string) *testDarc {
 		td.owners = append(td.owners, s)
 		td.ids = append(td.ids, id)
 	}
-	rules := InitEvolutionRule(td.ids...)
+	rules := InitRules(td.ids, []*Identity{})
 	td.darc = NewDarc(rules, []byte(desc))
 	return td
 }

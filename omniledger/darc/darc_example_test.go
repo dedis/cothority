@@ -10,14 +10,14 @@ import (
 func Example() {
 	// We can create a new darc like so.
 	owner1 := darc.NewSignerEd25519(nil, nil)
-	rules1 := darc.InitEvolutionRule(owner1.Identity())
+	rules1 := darc.InitRules([]*darc.Identity{owner1.Identity()}, []*darc.Identity{})
 	d1 := darc.NewDarc(rules1, []byte("example darc"))
 	fmt.Println(d1.Verify())
 
 	// Create another one and set the first to evolve to the second. The
 	// second darc will have a different evolution rule.
 	owner2 := darc.NewSignerEd25519(nil, nil)
-	rules2 := darc.InitEvolutionRule(owner2.Identity())
+	rules2 := darc.InitRules([]*darc.Identity{owner2.Identity()}, []*darc.Identity{})
 	d2 := darc.NewDarc(rules2, []byte("example darc 2"))
 	fmt.Println(d2.Verify())
 	d2.Evolve([]*darc.Darc{d1}, owner1)
