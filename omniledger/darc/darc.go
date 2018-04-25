@@ -243,33 +243,6 @@ func (d *Darc) Evolve(path []*Darc, prevOwner *Signer) error {
 	return nil
 }
 
-// EvolveOnline works like Evolve, but doesn't inlcude all the necessary data
-// to verify the update in an offline setting. This is enough for the use case
-// where the ocs stores all darcs in its internal database.  The service
-// verifying the signature will have to verify if there is a valid path from
-// the previous darc to the signer.
-func (d *Darc) EvolveOnline(prevd *Darc, prevOwner *Signer) error {
-	/*
-		d.Signature = nil
-		d.Version = prevd.Version + 1
-		if prevd.BaseID == nil {
-			id := prevd.GetID()
-			d.BaseID = &id
-		}
-		path := &SignaturePath{Signer: *prevOwner.Identity()}
-		sig, err := NewDarcSignature(d.GetID(), path, prevOwner)
-		if err != nil {
-			return errors.New("error creating a darc signature for evolution: " + err.Error())
-		}
-		if sig != nil {
-			d.Signature = sig
-		} else {
-			return errors.New("the resulting signature is nil")
-		}
-	*/
-	return nil
-}
-
 // IncrementVersion updates the version number of the Darc
 func (d *Darc) IncrementVersion() {
 	d.Version++
@@ -296,20 +269,49 @@ func (d *Darc) VerifyWithCB(getDarc func(string) *Darc) error {
 		return nil // nothing to verify on the genesis Darc
 	}
 
-	if d.Signature == nil || len(d.Signature.Path) == 0 {
+	if d.Signature == nil {
 		return errors.New("signature missing")
 	}
 
+	if len(d.Signature.Path) == 0 {
+		baseID := NewIdentityDarc(d.GetBaseID())
+		latest := getDarc(baseID.String())
+		if latest == nil || latest.Signature == nil {
+			return errors.New("couldn't find base darc")
+		}
+		var path []*Darc
+		for _, p := range latest.Signature.Path {
+			if d.Version > p.Version {
+				path = append(path, p)
+			} else {
+				break
+			}
+		}
+		pathDigest, err := hashAll(darcsMsg(path))
+		if err != nil {
+			return err
+		}
+		if !bytes.Equal(pathDigest, d.Signature.PathDigest) {
+			return fmt.Errorf("recomputed digest is not equal to the original, got %x but need %x",
+				pathDigest, d.Signature.PathDigest)
+		}
+		d.Signature.Path = path
+	}
+
+	if len(d.Signature.Path) == 0 {
+		return errors.New("empty path")
+	}
+
 	var prev *Darc
-	for i, dPath := range d.Signature.Path {
-		if prev == nil && dPath.Version == 0 {
-			prev = dPath
+	for i, curr := range d.Signature.Path {
+		if prev == nil && curr.Version == 0 {
+			prev = curr
 			continue
 		}
-		if err := verifyOneEvolution(dPath, prev, getDarc); err != nil {
+		if err := verifyOneEvolution(curr, prev, getDarc); err != nil {
 			return fmt.Errorf("verification failed on index %d with error: %v", i, err)
 		}
-		prev = dPath
+		prev = curr
 	}
 
 	signer, err := d.GetSignerDarc()
@@ -414,20 +416,37 @@ func NewDarcSignature(signer *Signer, id ID, path []*Darc) (*Signature, error) {
 		return nil, errors.New("path missing")
 	}
 
-	hash, err := hashAll(id, darcsMsg(path))
+	// Create the message and then sign it, make sure the message is
+	// re-created the same way for the verification.
+	pathDigest, err := hashAll(darcsMsg(path))
 	if err != nil {
 		return nil, err
 	}
-	sig, err := signer.Sign(hash)
+	digest, err := hashAll(id, pathDigest)
 	if err != nil {
 		return nil, err
 	}
-	return &Signature{Signature: sig, Signer: *signer.Identity(), Path: path}, nil
+	sig, err := signer.Sign(digest)
+	if err != nil {
+		return nil, err
+	}
+	s := Signature{Signature: sig, Signer: *signer.Identity(), Path: path}
+	s.PathDigest, err = s.GetPathDigest()
+	if err != nil {
+		return nil, err
+	}
+	return &s, nil
 }
 
-// GetPathMsg returns the concatenated Darc-IDs of the path.
-func (s *Signature) GetPathMsg() []byte {
-	return darcsMsg(s.Path)
+// GetPathDigest returns the sha256 digest concatenated Darc-IDs of the path.
+func (s *Signature) GetPathDigest() ([]byte, error) {
+	if s == nil {
+		return []byte{}, nil
+	}
+	if len(s.Path) == 0 {
+		return s.PathDigest, nil
+	}
+	return hashAll(darcsMsg(s.Path))
 }
 
 // PathContains checks whether the path contains the ID.
@@ -453,11 +472,15 @@ func (s *Signature) verify(msg []byte, base ID) error {
 	if !sigBase.Equal(base) {
 		return errors.New("Base-darc is not at root of path")
 	}
-	hash, err := hashAll(msg, s.GetPathMsg())
+	pathDigest, err := s.GetPathDigest()
 	if err != nil {
 		return err
 	}
-	return s.Signer.Verify(hash, s.Signature)
+	digest, err := hashAll(msg, pathDigest)
+	if err != nil {
+		return err
+	}
+	return s.Signer.Verify(digest, s.Signature)
 }
 
 func hashAll(msgs ...[]byte) ([]byte, error) {
@@ -763,13 +786,13 @@ func (idkc *IdentityX509EC) Verify(msg, s []byte) error {
 	if err != nil {
 		return err
 	}
-	hash := sha512.Sum384(msg)
+	digest := sha512.Sum384(msg)
 	sig := &sigRS{}
 	_, err = asn1.Unmarshal(s, sig)
 	if err != nil {
 		return err
 	}
-	if ecdsa.Verify(public.(*ecdsa.PublicKey), hash[:], sig.R, sig.S) {
+	if ecdsa.Verify(public.(*ecdsa.PublicKey), digest[:], sig.R, sig.S) {
 		return nil
 	}
 	return errors.New("Wrong signature")
@@ -837,6 +860,7 @@ func NewRequest(darcID ID, action Action, msg []byte, signers ...*Signer) (*Requ
 	r.Identities = make([]*Identity, len(signers))
 	for i, signer := range signers {
 		r.Identities[i] = signer.Identity()
+		// TODO the signer might be delegated
 		r.Signatures[i], err = signer.Sign(digest)
 		if err != nil {
 			return nil, err
