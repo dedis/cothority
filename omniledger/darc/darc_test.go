@@ -159,7 +159,7 @@ func TestDarc_EvolveMoreOnline(t *testing.T) {
 		newOwner := NewSignerEd25519(nil, nil)
 		require.Nil(t, dNew.Rules.UpdateEvolution([]byte(newOwner.Identity().String())))
 		require.Nil(t, dNew.Evolve(darcs, prevOwner))
-		// require.Nil(t, dNew.Verify())
+		require.Nil(t, dNew.Verify())
 		darcs = append(darcs, dNew)
 		prevOwner = newOwner
 	}

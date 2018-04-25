@@ -416,7 +416,7 @@ func NewDarcSignature(signer *Signer, id ID, path []*Darc) (*Signature, error) {
 		return nil, errors.New("path missing")
 	}
 
-	// We create the message and then sign it, make sure the message is
+	// Create the message and then sign it, make sure the message is
 	// re-created the same way for the verification.
 	pathDigest, err := hashAll(darcsMsg(path))
 	if err != nil {
