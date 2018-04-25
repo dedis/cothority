@@ -508,15 +508,11 @@ func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, error) {
 }
 
 // GetSingleBlockByIndex searches for the given block and returns it. If no such block is
-// found, a nil is returned. An index of -1 means "the latest block on the skipchain".
+// found, a nil is returned.
 func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, error) {
 	sb := s.db.GetByID(id.Genesis)
 	if sb == nil {
 		return nil, errors.New("No such genesis-block")
-
-	}
-	if id.Index == -1 {
-		return s.GetDB().GetLatest(sb)
 	}
 	if sb.Index == id.Index {
 		return sb, nil
