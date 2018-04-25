@@ -4,7 +4,11 @@
 package main
 
 import (
+	"bufio"
+	"bytes"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"sort"
 	"strings"
@@ -13,6 +17,7 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -27,6 +32,11 @@ func main() {
 			Value: "group.toml",
 			Usage: "Cothority group definition in `FILE.toml`",
 		},
+		cli.StringFlag{
+			Name:  "format, f",
+			Value: "txt",
+			Usage: "Output format: \"txt\" (default) or \"json\".",
+		},
 		cli.IntFlag{
 			Name:  "debug, d",
 			Value: 0,
@@ -36,28 +46,52 @@ func main() {
 	app.Action = func(c *cli.Context) error {
 		log.SetUseColors(false)
 		log.SetDebugVisible(c.GlobalInt("debug"))
-		return network(c)
+		return action(c)
 	}
 	app.Run(os.Args)
 }
 
-// network will contact all cothorities in the group-file and print
+type se struct {
+	Server *network.ServerIdentity
+	Status *status.Response
+	Err    string
+}
+
+// will contact all cothorities in the group-file and print
 // the status-report of each one.
-func network(c *cli.Context) error {
+func action(c *cli.Context) error {
 	groupToml := c.GlobalString("g")
+	format := c.String("format")
+
 	el, err := readGroup(groupToml)
 	log.ErrFatal(err, "Couldn't Read File")
 	log.Lvl3(el)
 	cl := status.NewClient()
-	for i := 0; i < len(el.List); i++ {
-		log.Lvl3(el.List[i])
-		sr, err := cl.Request(el.List[i])
+
+	var all []se
+	for _, server := range el.List {
+		sr, err := cl.Request(server)
 		if err != nil {
-			log.Print("error on server", el.List[i], err)
-			continue
+			err = fmt.Errorf("could not get status from %v: %v", server, err)
 		}
-		printConn(sr)
-		log.Lvl3(cl)
+
+		if format == "txt" {
+			if err != nil {
+				log.Print(err)
+			} else {
+				printTxt(sr)
+			}
+		} else {
+			// JSON
+			errStr := "ok"
+			if err != nil {
+				errStr = err.Error()
+			}
+			all = append(all, se{Server: server, Status: sr, Err: errStr})
+		}
+	}
+	if format == "json" {
+		printJson(all)
 	}
 	return nil
 }
@@ -80,8 +114,8 @@ func readGroup(tomlFileName string) (*onet.Roster, error) {
 	return g.Roster, err
 }
 
-// printConn prints the status response that is returned from the server
-func printConn(e *status.Response) {
+// prints the status response that is returned from the server
+func printTxt(e *status.Response) {
 	var a []string
 	if e.Status == nil {
 		log.Print("no status from ", e.ServerIdentity)
@@ -95,4 +129,17 @@ func printConn(e *status.Response) {
 	}
 	sort.Strings(a)
 	log.Print(strings.Join(a, "\n"))
+}
+
+func printJson(all []se) {
+	b1 := new(bytes.Buffer)
+	e := json.NewEncoder(b1)
+	e.Encode(all)
+
+	b2 := new(bytes.Buffer)
+	json.Indent(b2, b1.Bytes(), "", "  ")
+
+	out := bufio.NewWriter(os.Stdout)
+	out.Write(b2.Bytes())
+	out.Flush()
 }
