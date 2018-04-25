@@ -37,11 +37,11 @@ func GetMaster(s *skipchain.Service, id skipchain.SkipBlockID) (*Master, error) 
 	// Search backwards from the end of the chain, unmarshalling each block until
 	// we find the first Master transaction. (There are Link transactions mixed in
 	// with the Masters.)
-
-	block, err := s.GetSingleBlockByIndex(
-		&skipchain.GetSingleBlockByIndex{Genesis: id, Index: -1},
-	)
-	// Cannot even find this chain?
+	gb := s.GetDB().GetByID(id)
+	if gb == nil {
+		return nil, errors.New("No such genesis-block")
+	}
+	block, err := s.GetDB().GetLatest(gb)
 	if err != nil {
 		return nil, err
 	}
