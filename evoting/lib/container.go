@@ -52,8 +52,9 @@ type Mix struct {
 type Partial struct {
 	Points []kyber.Point // Points are the partially decrypted plaintexts.
 
-	Flag bool   // Flag signals if the mixes could not be verified.
-	Node string // Node signifies the creator of this partial decryption.
+	Node      string      // Node signifies the creator of this partial decryption.
+	PublicKey kyber.Point // Public key of the node generating a partial decryption
+	Signature []byte      // Signature of the public key
 }
 
 // genPartials generates partial decryptions for a given list of shared secrets.

@@ -87,8 +87,9 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 	// base condition
 	target := 2 * len(s.Election.Roster.List) / 3
 
+	added := 0
 	continueProtocol := func() error {
-		if len(s.Children()) > 0 && len(mixes)+1 <= target {
+		if len(s.Children()) > 0 && len(mixes)+added <= target {
 			child := s.Children()[0]
 			for {
 				// err here only checks for network errors while trying to
@@ -152,6 +153,7 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 	if err != nil {
 		return err
 	}
+	added = 1
 	return nil
 }
 

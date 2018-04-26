@@ -254,7 +254,6 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		return nil
 	} else if t.Partial != nil {
 		election, err := GetElection(s, genesis, false, t.User)
-		roster := election.Roster
 		if err != nil {
 			return err
 		}
@@ -267,16 +266,22 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 
 		mixes, err := election.Mixes(s)
+		target := 2 * len(election.Roster.List) / 3
 		if err != nil {
 			return err
-		} else if len(mixes) <= 2*len(election.Roster.List)/3 {
+		} else if len(mixes) <= target {
 			return errors.New("decrypt error: election not shuffled yet")
 		}
 		partials, err := election.Partials(s)
-		if err != nil {
-			return err
-		} else if len(partials) == len(roster.List) {
+
+		if len(partials) > target {
 			return errors.New("decrypt error: election already decrypted")
+		}
+
+		for _, partial := range partials {
+			if partial.PublicKey.Equal(t.Partial.PublicKey) {
+				return fmt.Errorf("%s has already proposed a partial", t.Partial.Node)
+			}
 		}
 		return nil
 	}

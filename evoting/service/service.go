@@ -443,6 +443,8 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 
 // Decrypt message handler. Initiate decryption protocol.
 func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
+	s.finalizeMutex.Lock()
+	defer s.finalizeMutex.Unlock()
 	if !s.leader() {
 		return nil, errOnlyLeader
 	}
@@ -452,7 +454,40 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 		return nil, err
 	}
 
-	rooted := election.Roster.NewRosterWithRoot(s.ServerIdentity())
+	mixes, err := election.Mixes(s.skipchain)
+	if err != nil {
+		return nil, err
+	}
+	if len(mixes) < 2*len(election.Roster.List)/3+1 {
+		return nil, errors.New("decrypt error: election not shuffled")
+	}
+
+	partials, err := election.Partials(s.skipchain)
+	if err != nil {
+		return nil, err
+	}
+
+	participated := make(map[string]bool)
+	for _, partial := range partials {
+		participated[partial.PublicKey.String()] = true
+	}
+	filtered := []*network.ServerIdentity{}
+	for _, node := range election.Roster.List[1:] {
+		if _, ok := participated[node.Public.String()]; !ok {
+			filtered = append(filtered, node)
+		}
+	}
+
+	// shuffle the filtered list using Fischer-Yates
+	// rand.Shuffle is introduced in Go 1.10
+	for i := len(filtered) - 1; i > 0; i-- {
+		j := rand.Intn(i)
+		filtered[i], filtered[j] = filtered[j], filtered[i]
+	}
+
+	// add the leader to the front of the list
+	filtered = append([]*network.ServerIdentity{election.Roster.List[0]}, filtered...)
+	rooted := onet.NewRoster(filtered)
 	tree := rooted.GenerateNaryTree(1)
 	if tree == nil {
 		return nil, errors.New("error while generating tree")
@@ -464,6 +499,7 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 	protocol.Secret = s.secret(election.ID)
 	protocol.Election = election
 	protocol.Skipchain = s.skipchain
+	protocol.LeaderParticipates = !participated[s.ServerIdentity().Public.String()]
 
 	config, _ := network.Marshal(&synchronizer{
 		ID:        req.ID,
@@ -496,7 +532,7 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 	partials, err := election.Partials(s.skipchain)
 	if err != nil {
 		return nil, err
-	} else if len(partials) != len(s.roster().List) {
+	} else if len(partials) <= 2*len(s.roster().List)/3 {
 		return nil, errors.New("reconstruct error, election not closed yet")
 	}
 
@@ -509,7 +545,7 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 			shares[j] = &share.PubShare{I: j, V: partial.Points[i]}
 		}
 
-		message, _ := share.RecoverCommit(cothority.Suite, shares, n, n)
+		message, _ := share.RecoverCommit(cothority.Suite, shares, 2*n/3+1, n)
 		points = append(points, message)
 	}
 
