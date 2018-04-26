@@ -105,6 +105,19 @@ func TestDarc_EvolveOne(t *testing.T) {
 	require.Nil(t, dNew.Verify())
 	require.Nil(t, dNew.Evolve(darcs, owner1))
 	require.Nil(t, dNew.Verify())
+	// use logical-and in the evolve expression
+	// verification should if only one owner signs the darc
+	require.Nil(t, dNew.Rules.UpdateEvolution(expression.InitAndExpr(owner2.Identity().String(), owner1.Identity().String())))
+	require.Nil(t, dNew.Evolve(darcs, owner2))
+	require.Nil(t, dNew.Verify())
+	darcs = append(darcs, dNew)
+	dNew2 := dNew.Copy()
+	require.Nil(t, dNew2.Evolve(darcs, owner2))
+	require.NotNil(t, dNew2.Verify())
+	require.Nil(t, dNew2.Evolve(darcs, owner1))
+	require.NotNil(t, dNew2.Verify())
+	require.Nil(t, dNew2.Evolve(darcs, owner2, owner1))
+	require.Nil(t, dNew2.Verify())
 }
 
 // TestDarc_EvolveMore is similar to TestDarc_EvolveOne but testing for
