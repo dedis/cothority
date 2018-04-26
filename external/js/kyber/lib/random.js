@@ -42,7 +42,7 @@ function int(mod, callback) {
   let bitlength = mod.bitLength();
   let i;
   while (true) {
-    bytes = bits(bitlength, false, callback);
+    const bytes = bits(bitlength, false, callback);
     i = new BN(bytes);
     if (i.cmp(constants.zeroBN) > 0 && i.cmp(mod) < 0) {
       return bytes;

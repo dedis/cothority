@@ -187,7 +187,7 @@ class Scalar extends group.Scalar {
    */
   pick(callback) {
     callback = callback || crypto.randomBytes;
-    bytes = random.int(this.ref.curve.curve.n, callback);
+    const bytes = random.int(this.ref.curve.curve.n, callback);
     this.ref.arr = new BN(bytes, 16).toRed(this.ref.red);
     return this;
   }
