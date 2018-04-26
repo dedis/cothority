@@ -55,7 +55,8 @@ const evolve = "_evolve"
 const sign = "_sign"
 
 // InitRules initialise a set of rules with the default actions "_evolve" and
-// "_sign".
+// "_sign". Signers are joined with logical-Or, owners are also joined with
+// logical-OR. If other expressions are needed, please set the rules manually.
 func InitRules(owners []*Identity, signers []*Identity) Rules {
 	rs := make(Rules)
 
