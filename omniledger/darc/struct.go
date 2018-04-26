@@ -60,10 +60,13 @@ type Darc struct {
 	Signatures []*Signature
 }
 
-// Action is TODO
+// Action is a string that should be associated with an expression. The
+// application typically will define the action but there are two actions that
+// are in all the darcs, "_evolve" and "_sign". The application can modify
+// these actions but should not change the semantics of these actions.
 type Action string
 
-// Rules are..
+// Rules are action-expression associations.
 type Rules map[Action]expression.Expr
 
 // Identity is a generic structure can be either an Ed25519 public key or a Darc

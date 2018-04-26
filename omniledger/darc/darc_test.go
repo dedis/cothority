@@ -289,6 +289,9 @@ func TestDarc_Delegation(t *testing.T) {
 	td3 := createDarc(2, "testdarc3")
 	td4 := createDarc(2, "testdarc4")
 
+	require.Nil(t, td3.darc.Rules.UpdateSign(td3.darc.Rules.GetEvolutionExpr()))
+	require.Nil(t, td4.darc.Rules.UpdateSign(td4.darc.Rules.GetEvolutionExpr()))
+
 	require.Nil(t, td2.darc.Evolve([]*Darc{td1.darc}, td1.owners[0]))
 	require.Nil(t, td2.darc.Verify())
 
@@ -314,7 +317,61 @@ func TestDarc_Delegation(t *testing.T) {
 		}
 		return nil
 	}
+	// Evolution is not allowed because the evolution is signed by
+	// td3.owners which is out of date.
+	require.NotNil(t, td5.darc.VerifyWithCB(getDarc))
+	// If the evolution is signed by the latest darc, then it's ok.
+	require.Nil(t, td5.darc.Evolve([]*Darc{td1.darc, td2.darc}, td4.owners[0]))
 	require.Nil(t, td5.darc.VerifyWithCB(getDarc))
+}
+
+// TestDarc_DelegationChain creates a chain of delegation and we will try to
+// evolve the first darc using the signature of the last darc in the chain.
+func TestDarc_DelegationChain(t *testing.T) {
+	n := 10
+	darcs := make([]*Darc, n)
+	owners := make([]*Signer, n)
+	for i := 0; i < n; i++ {
+		td := createDarc(1, "test")
+		// set sign expr to the same as evolution expr, which is a
+		// single ed25519 signer
+		td.darc.Rules.UpdateEvolution([]byte{})
+		darcs[i] = td.darc
+		owners[i] = td.owners[0]
+	}
+	// the darc with the sign rules should have a ed25519 key
+	darcs[n-1].Rules.UpdateSign([]byte(owners[n-1].Identity().String()))
+	// create the chain of delegation, we have to do it backwards because
+	// changing the evolution rule will change the darcID
+	for i := n - 2; i >= 0; i-- {
+		require.Nil(t, darcs[i].Rules.UpdateSign(
+			[]byte([]byte(darcs[i+1].GetIdentityString()))))
+	}
+	// delegate evolution permission to the first darc
+	darcs[0].Rules.UpdateEvolution([]byte(darcs[1].GetIdentityString()))
+	darcs[0].Rules.UpdateSign([]byte{})
+
+	getDarc := func(s string) *Darc {
+		for _, d := range darcs {
+			if d.GetIdentityString() == s {
+				return d
+			}
+		}
+		return nil
+	}
+	td := createDarc(1, "new")
+	// cannot do evolution because owner is not in the evolve rule
+	require.Nil(t, td.darc.Evolve([]*Darc{darcs[0]}, owners[0]))
+	require.NotNil(t, td.darc.VerifyWithCB(getDarc))
+	// fail because only the key in the latest darc can sign
+	for _, o := range owners[:n-1] {
+		require.Nil(t, td.darc.Evolve([]*Darc{darcs[0]}, o))
+		require.NotNil(t, td.darc.VerifyWithCB(getDarc))
+	}
+	// only the last one, containing the actual key that is in the signer
+	// expression, should evaluate to true.
+	require.Nil(t, td.darc.Evolve([]*Darc{darcs[0]}, owners[n-1]))
+	require.Nil(t, td.darc.VerifyWithCB(getDarc))
 }
 
 func TestDarc_X509(t *testing.T) {
