@@ -50,6 +50,11 @@ type Darc struct {
 	BaseID ID
 	// Rules map an action to an expression.
 	Rules Rules
+	// Represents the path to get up to information to be able to verify
+	// this signature.  These justify the right of the signer to push a new
+	// Darc.  These are ordered from the oldest to the newest, i.e.
+	// Darcs[0] should be the base Darc.
+	Path []*Darc
 	// Signature is calculated over the protobuf representation of [Rules, Version, Description]
 	// and needs to be created by an Owner from the previous valid Darc.
 	Signatures []*Signature
@@ -96,11 +101,6 @@ type Signature struct {
 	Signature []byte
 	// Signer is the Idenity (public key or another Darc) of the signer
 	Signer Identity
-	// Represents the path to get up to information to be able to verify
-	// this signature.  These justify the right of the signer to push a new
-	// Darc.  These are ordered from the oldest to the newest, i.e.
-	// Darcs[0] should be the base Darc.
-	Path []*Darc
 	// PathDigest should be set when Path has length 0. It should be the
 	// same as the return value of GetPathMsg.
 	PathDigest []byte
