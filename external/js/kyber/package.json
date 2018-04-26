@@ -1,6 +1,6 @@
 {
   "name": "@dedis/kyber-js",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "A javascript implementation of Kyber interfaces",
   "main": "dist/bundle.node.min.js",
   "browser": "dist/bundle.min.js",
