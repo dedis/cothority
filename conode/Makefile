@@ -70,3 +70,13 @@ bindist: verify exe/conode.Linux.x86_64
 	chmod +x $(OUTPUT_DIR)/conode
 	LANG=C tar zcf $(OUTPUT_DIR).tar.gz $(OUTPUT_DIR)
 	rm -rf $(OUTPUT_DIR)
+
+admin=conode-admin-$(TAG)
+bindist-admin: verify
+	rm -rf $(admin)
+	mkdir $(admin)
+	GOOS=linux  GOARCH=arm vgo build $(flags) -o $(admin)/status ../status
+	GOOS=linux  GOARCH=arm vgo build $(flags) -o $(admin)/evoting-admin ../evoting/app
+	LANG=C tar zcf $(admin).tar.gz $(admin)
+	rm -rf $(admin)
+
