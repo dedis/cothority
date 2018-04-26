@@ -44,6 +44,7 @@ func (s *shuffleService) NewProtocol(n *onet.TreeNodeInstance, c *onet.GenericCo
 		shuffle.User = s.user
 		shuffle.Signature = s.signature
 		shuffle.Election = s.election
+		shuffle.Skipchain = s.skipchain
 		return shuffle, nil
 	default:
 		return nil, errors.New("Unknown protocol")
@@ -96,13 +97,15 @@ func runShuffle(t *testing.T, n int) {
 	shuffle.User = 0
 	shuffle.Signature = []byte{}
 	shuffle.Election = election
+	shuffle.Skipchain = services[0].(*shuffleService).skipchain
 	shuffle.Start()
 
 	select {
 	case <-shuffle.Finished:
-		box, _ := election.Box()
-		mixes, _ := election.Mixes()
+		box, _ := election.Box(services[0].(*shuffleService).skipchain)
+		mixes, _ := election.Mixes(services[0].(*shuffleService).skipchain)
 
+		require.Equal(t, n, len(mixes))
 		in1, in2 := lib.Split(box.Ballots)
 		for i := range mixes {
 			out1, out2 := lib.Split(mixes[i].Ballots)
