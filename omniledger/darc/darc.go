@@ -380,19 +380,13 @@ func (d Darc) String() string {
 	for k, v := range d.Rules {
 		s += fmt.Sprintf("\n\t%s - \"%s\"", k, v)
 	}
-	s += fmt.Sprintf("\nSignature count: %d", len(d.Signatures))
-	/*
-		signer, err := d.GetSignerDarc()
-		var signerStr string
-		if err != nil {
-			signerStr = "<" + err.Error() + ">"
-		} else if signer == nil {
-			signerStr = "<nil>"
+	for i, sig := range d.Signatures {
+		if sig == nil {
+			s += fmt.Sprintf("\n\t%d - <nil signature>", i)
 		} else {
-			signerStr = fmt.Sprintf("%x", signer.GetID())
+			s += fmt.Sprintf("\n\t%d - id: %s, sig: %x", i, sig.Signer.String(), sig.Signature)
 		}
-		s += fmt.Sprintf("\nSignerDarc: %s", signerStr)
-	*/
+	}
 	return s
 }
 
