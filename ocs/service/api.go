@@ -30,7 +30,7 @@ type Client struct {
 	sbc *skipchain.Client
 }
 
-// NewClient instantiates a new ocs.Client
+// NewClient instantiates a new Client
 func NewClient() *Client {
 	return &Client{
 		Client: onet.NewClient(cothority.Suite, ServiceName),

@@ -36,9 +36,10 @@ const propagationTimeout = 10 * time.Second
 const timestampRange = 60
 
 var storageKey = []byte("storage")
+var darcsKey = []byte("darcs")
 
 func init() {
-	network.RegisterMessages(Storage{}, Darcs{}, vData{})
+	network.RegisterMessages(Storage{}, vData{})
 	var err error
 	templateID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
@@ -58,6 +59,8 @@ type Service struct {
 	Storage   *Storage
 	// big bad global lock
 	process sync.Mutex
+	// storing darcs in database
+	darcs *DarcDB
 }
 
 // pubPoly is a serializaable version of share.PubPoly
@@ -68,15 +71,9 @@ type pubPoly struct {
 
 // Storage holds the skipblock-bunches for the OCS-skipchain.
 type Storage struct {
-	Accounts map[string]*Darcs
-	Shared   map[string]*protocol.SharedSecret
-	Polys    map[string]*pubPoly
-	Admins   map[string]*darc.Darc
-}
-
-// Darcs holds a series of darcs in increasing, succeeding version numbers.
-type Darcs struct {
-	Darcs []*darc.Darc
+	Shared map[string]*protocol.SharedSecret
+	Polys  map[string]*pubPoly
+	Admins map[string]*darc.Darc
 }
 
 // vData is sent to all nodes when re-encryption takes place. If Ephemeral
@@ -91,7 +88,6 @@ type vData struct {
 // CreateSkipchains sets up a new OCS-skipchain.
 func (s *Service) CreateSkipchains(req *CreateSkipchainsRequest) (reply *CreateSkipchainsReply,
 	err error) {
-
 	// Create OCS-skipchian
 	reply = &CreateSkipchainsReply{}
 
@@ -106,8 +102,8 @@ func (s *Service) CreateSkipchains(req *CreateSkipchainsRequest) (reply *CreateS
 	}
 	block := skipchain.NewSkipBlock()
 	block.Roster = &req.Roster
-	block.BaseHeight = 1
-	block.MaximumHeight = 1
+	block.BaseHeight = 10
+	block.MaximumHeight = 10
 	block.VerifierIDs = VerificationOCS
 	block.Data = genesisBuf
 	// This is for creating the skipchain, so we cannot use s.storeSkipBlock.
@@ -123,7 +119,7 @@ func (s *Service) CreateSkipchains(req *CreateSkipchainsRequest) (reply *CreateS
 		return nil, err
 	}
 	if replies != len(req.Roster.List) {
-		log.Warn("Got only", replies, "replies for ocs-propagation")
+		log.Lvl1("Got only", replies, "replies for ocs-propagation")
 	}
 
 	// Do DKG on the nodes
@@ -132,7 +128,7 @@ func (s *Service) CreateSkipchains(req *CreateSkipchainsRequest) (reply *CreateS
 	setupDKG := pi.(*protocol.SetupDKG)
 	setupDKG.Wait = true
 	setupDKG.SetConfig(&onet.GenericConfig{Data: reply.OCS.Hash})
-	//log.Lvl2(s.ServerIdentity(), reply.OCS.Hash)
+	log.Lvl3(s.ServerIdentity(), reply.OCS.Hash)
 	if err := pi.Start(); err != nil {
 		return nil, err
 	}
@@ -158,14 +154,16 @@ func (s *Service) CreateSkipchains(req *CreateSkipchainsRequest) (reply *CreateS
 	}
 
 	s.save()
+	log.Lvl3("Done creating new skipchain")
 	return
 }
 
 // UpdateDarc adds a new account or modifies an existing one.
-func (s *Service) UpdateDarc(req *UpdateDarc) (reply *UpdateDarcReply,
-	err error) {
+func (s *Service) UpdateDarc(req *UpdateDarc) (*UpdateDarcReply,
+	error) {
 	s.process.Lock()
 	defer s.process.Unlock()
+	log.Lvlf2("Starting to update darc %x", req.Darc.GetID())
 	dataOCS := &Transaction{
 		Darc:      &req.Darc,
 		Timestamp: time.Now().Unix(),
@@ -181,21 +179,24 @@ func (s *Service) UpdateDarc(req *UpdateDarc) (reply *UpdateDarcReply,
 	if err != nil {
 		return nil, err
 	}
+	log.Lvl3("Requesting creation of new skip block")
 	latestSB, err = s.storeSkipBlock(latestSB, data)
 	if err != nil {
 		return nil, err
 	}
 	log.Lvl3("New darc is:", req.Darc.String())
 	log.Lvlf2("Added darc %x to %x:", req.Darc.GetID(), req.Darc.GetBaseID())
-	log.Lvlf2("New darc version is %d", req.Darc.Version)
 
+	log.Lvl3("Propagating darcs to other nodes")
 	replies, err := s.propagateOCS(latestSB.Roster, latestSB, propagationTimeout)
 	if err != nil {
-		return
+		return nil, err
 	}
 	if replies != len(latestSB.Roster.List) {
-		log.Warn("Got only", replies, "replies for write-propagation")
+		log.Lvl1("Got only", replies, "replies for write-propagation")
 	}
+
+	log.Lvl3("Done propagating darc to other nodes")
 	return &UpdateDarcReply{SB: latestSB}, nil
 }
 
@@ -204,8 +205,14 @@ func (s *Service) WriteRequest(req *WriteRequest) (reply *WriteReply,
 	err error) {
 	s.process.Lock()
 	defer s.process.Unlock()
-	log.Lvlf2("Write request on skipchain %x", req.OCS)
+
 	reply = &WriteReply{}
+	s.saveMutex.Lock()
+	_, hasKey := s.Storage.Shared[string(req.OCS)]
+	s.saveMutex.Unlock()
+	if !hasKey {
+		return nil, errors.New("don't have a key shard for this skipchain")
+	}
 	latestSB, err := s.db().GetLatest(s.db().GetByID(req.OCS))
 	if err != nil {
 		return nil, errors.New("didn't find latest block: " + err.Error())
@@ -218,35 +225,33 @@ func (s *Service) WriteRequest(req *WriteRequest) (reply *WriteReply,
 		Write:     &req.Write,
 		Timestamp: time.Now().Unix(),
 	}
-	if s.getDarc(req.Write.Reader.GetID()) == nil {
+	if s.darcs.GetByID(req.Write.Reader.GetID()) == nil {
 		// Only set up the reader darc for storage if it is not already known.
 		dataOCS.Darc = &req.Write.Reader
 	}
-	if err := s.verifyWrite(req.OCS, &req.Write); err != nil {
+	if err = s.verifyWrite(req.OCS, &req.Write); err != nil {
 		return nil, errors.New("write-verification failed: " + err.Error())
 	}
 	data, err := protobuf.Encode(dataOCS)
 	if err != nil {
-		return nil, err
+		return
 	}
+	log.Lvl3("Asking skipchain to store new block including write request")
 	reply.SB, err = s.storeSkipBlock(latestSB, data)
 	if err != nil {
-		return nil, err
-	}
-
-	log.Lvl2("Writing a key to the skipchain")
-	if err != nil {
-		log.Error(err)
 		return
 	}
 
+	log.Lvl3("Propagating new block to other nodes")
 	replies, err := s.propagateOCS(reply.SB.Roster, reply.SB, propagationTimeout)
 	if err != nil {
 		return
 	}
 	if replies != len(reply.SB.Roster.List) {
-		log.Warn("Got only", replies, "replies for write-propagation")
+		log.Lvl1("Got only", replies, "replies for write-propagation")
 	}
+
+	log.Lvl3("Successfully wrote new block and propagated")
 	return
 }
 
@@ -255,36 +260,39 @@ func (s *Service) ReadRequest(req *ReadRequest) (reply *ReadReply,
 	err error) {
 	s.process.Lock()
 	defer s.process.Unlock()
-	log.Lvl2("Requesting a file. Reader:", req.Read.Signature.SignaturePath.Signer)
+	log.Lvlf2("Requesting a file. Reader: %+v", req.Read.Signature.SignaturePath.Signer)
 	reply = &ReadReply{}
 	writeSB := s.db().GetByID(req.Read.DataID)
 	dataOCS := &Transaction{
 		Read:      &req.Read,
 		Timestamp: time.Now().Unix(),
 	}
-	if err := s.verifyRead(&req.Read); err != nil {
+	if err = s.verifyRead(&req.Read); err != nil {
 		return nil, errors.New("verification of read-request failed: " + err.Error())
 	}
 	data, err := protobuf.Encode(dataOCS)
 	if err != nil {
-		return nil, err
+		return
 	}
 
 	latestSB, err := s.db().GetLatest(writeSB)
 	if err != nil {
 		return nil, errors.New("didn't find latest block: " + err.Error())
 	}
+
+	log.Lvl3("Going to store read request in skipchain")
 	reply.SB, err = s.storeSkipBlock(latestSB, data)
 	if err != nil {
-		return nil, err
+		return
 	}
 
+	log.Lvl3("Propagating block to other nodes")
 	replies, err := s.propagateOCS(reply.SB.Roster, reply.SB, propagationTimeout)
 	if err != nil {
 		return
 	}
 	if replies != len(reply.SB.Roster.List) {
-		log.Warn("Got only", replies, "replies for write-propagation")
+		log.Lvl1("Got only", replies, "replies for write-propagation")
 	}
 
 	log.Lvl3("Done storing read request and propagating")
@@ -299,7 +307,7 @@ func (s *Service) GetDarcPath(req *GetDarcPath) (reply *GetDarcPathReply,
 	err error) {
 	log.Lvlf2("Searching %d/%s, starting from %x", req.Role, req.Identity.String(),
 		req.BaseDarcID)
-	d := s.getDarc(req.BaseDarcID)
+	d := s.darcs.GetByID(req.BaseDarcID)
 	if d == nil {
 		return nil, errors.New("this Darc doesn't exist")
 	}
@@ -315,18 +323,15 @@ func (s *Service) GetDarcPath(req *GetDarcPath) (reply *GetDarcPathReply,
 // whole path for the requester to verify.
 func (s *Service) GetLatestDarc(req *GetLatestDarc) (reply *GetLatestDarcReply, err error) {
 	log.Lvlf2("Getting latest darc for %x", req.DarcID)
-	start := s.getDarc(req.DarcID)
+	start := s.darcs.GetByID(req.DarcID)
 	if start == nil {
 		return nil, errors.New("this Darc doesn't exist")
 	}
-	path := []*darc.Darc{start}
 	s.saveMutex.Lock()
 	defer s.saveMutex.Unlock()
-	darcs := s.Storage.Accounts[string(start.GetBaseID())]
-	for v, d := range darcs.Darcs {
-		if v > start.Version {
-			path = append(path, d)
-		}
+	path, err := s.darcs.GetPathToLatest(start)
+	if err != nil {
+		return
 	}
 	log.Lvl3("Returning path to latest darc")
 	reply = &GetLatestDarcReply{Darcs: &path}
@@ -335,9 +340,9 @@ func (s *Service) GetLatestDarc(req *GetLatestDarc) (reply *GetLatestDarcReply, 
 
 // GetReadRequests returns up to a maximum number of read-requests.
 func (s *Service) GetReadRequests(req *GetReadRequests) (reply *GetReadRequestsReply, err error) {
+	log.Lvlf2("Asking read-requests on writeID: %x", req.Start)
 	reply = &GetReadRequestsReply{}
 	current := s.db().GetByID(req.Start)
-	log.Lvlf2("Asking read-requests on writeID: %x", req.Start)
 
 	if current == nil {
 		return nil, errors.New("didn't find starting skipblock")
@@ -351,7 +356,7 @@ func (s *Service) GetReadRequests(req *GetReadRequests) (reply *GetReadRequestsR
 				"id is not a writer-block")
 
 		}
-		log.Lvl2("Got first block")
+		log.Lvl3("Got first block")
 		doc = current.Hash
 	}
 	for req.Count == 0 || len(reply.Documents) < req.Count {
@@ -369,7 +374,7 @@ func (s *Service) GetReadRequests(req *GetReadRequests) (reply *GetReadRequestsR
 						ReadID: current.Hash,
 						DataID: dataOCS.Read.DataID,
 					}
-					log.Lvl2("Found read-request from", doc.Reader)
+					log.Lvl3("Found read-request from", doc.Reader)
 					reply.Documents = append(reply.Documents, doc)
 				}
 			}
@@ -377,14 +382,14 @@ func (s *Service) GetReadRequests(req *GetReadRequests) (reply *GetReadRequestsR
 		if len(current.ForwardLink) > 0 {
 			current = s.db().GetByID(current.ForwardLink[0].To)
 			if current == nil {
-				return nil, errors.New("didn't find block for this forward-link")
+				return nil, errors.New("didn't find next block")
 			}
 		} else {
 			log.Lvl3("No forward-links, stopping")
 			break
 		}
 	}
-	log.Lvlf2("WriteID %x: found %d out of a maximum of %d documents", req.Start, len(reply.Documents), req.Count)
+	log.Lvlf3("WriteID %x: found %d out of a maximum of %d documents", req.Start, len(reply.Documents), req.Count)
 	return
 }
 
@@ -472,45 +477,29 @@ func (s *Service) DecryptKeyRequest(req *DecryptKeyRequest) (reply *DecryptKeyRe
 	ocsProto.Poly = share.NewPubPoly(s.Suite(), pp.B.Clone(), commits)
 	s.saveMutex.Unlock()
 
+	log.Lvl3("Starting reencryption protocol")
 	ocsProto.SetConfig(&onet.GenericConfig{Data: fileSB.SkipChainID()})
 	err = ocsProto.Start()
 	if err != nil {
 		return nil, err
 	}
-	log.Lvl3("Waiting for end of ocs-protocol")
 	if !<-ocsProto.Reencrypted {
 		return nil, errors.New("reencryption got refused")
 	}
+	log.Lvl3("Reencryption protocol is done.")
 	reply.XhatEnc, err = share.RecoverCommit(cothority.Suite, ocsProto.Uis,
 		threshold, nodes)
 	if err != nil {
 		return nil, err
 	}
 	reply.Cs = file.Write.Cs
+	log.Lvl3("Successfully reencrypted the key")
 	return
-}
-
-// storeSkipBlock calls directly the method of the service.
-func (s *Service) storeSkipBlock(latest *skipchain.SkipBlock, d []byte) (sb *skipchain.SkipBlock, err error) {
-	block := latest.Copy()
-	block.Data = d
-	block.GenesisID = block.SkipChainID()
-	block.Index++
-	// Using an unset LatestID with block.GenesisID set is to ensure concurrent
-	// append.
-	reply, err := s.skipchain.StoreSkipBlock(&skipchain.StoreSkipBlock{
-		NewBlock:          block,
-		TargetSkipChainID: latest.SkipChainID(),
-	})
-	if err != nil {
-		return nil, err
-	}
-	return reply.Latest, nil
 }
 
 // NewProtocol intercepts the DKG and OCS protocols to retrieve the values
 func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
-	//log.Lvl2(s.ServerIdentity(), tn.ProtocolName(), conf)
+	log.Lvl3(s.ServerIdentity(), tn.ProtocolName(), conf)
 	switch tn.ProtocolName() {
 	case protocol.NameDKG:
 		pi, err := protocol.NewSetupDKG(tn)
@@ -526,10 +515,10 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 				return
 			}
 			log.Lvl3(s.ServerIdentity(), "Got shared", shared)
-			//log.Lvl2(conf)
 			s.saveMutex.Lock()
 			s.Storage.Shared[string(conf.Data)] = shared
 			s.saveMutex.Unlock()
+			s.save()
 		}(conf)
 		return pi, nil
 	case protocol.NameOCS:
@@ -549,6 +538,24 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 		return ocs, nil
 	}
 	return nil, nil
+}
+
+// storeSkipBlock calls directly the method of the service.
+func (s *Service) storeSkipBlock(latest *skipchain.SkipBlock, d []byte) (sb *skipchain.SkipBlock, err error) {
+	block := latest.Copy()
+	block.Data = d
+	block.GenesisID = block.SkipChainID()
+	block.Index++
+	// Using an unset LatestID with block.GenesisID set is to ensure concurrent
+	// append.
+	reply, err := s.skipchain.StoreSkipBlock(&skipchain.StoreSkipBlock{
+		NewBlock:          block,
+		TargetSkipChainID: latest.SkipChainID(),
+	})
+	if err != nil {
+		return nil, err
+	}
+	return reply.Latest, nil
 }
 
 func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
@@ -649,7 +656,7 @@ func (s *Service) verifyOCS(newID []byte, sb *skipchain.SkipBlock) bool {
 // request.
 func (s *Service) verifyRead(read *Read) error {
 	// Read has to check that it's a valid reader
-	log.Lvl2("It's a read")
+	log.Lvl3("Verify read request")
 
 	// Search write request
 	sbWrite := s.db().GetByID(read.DataID)
@@ -661,7 +668,7 @@ func (s *Service) verifyRead(read *Read) error {
 		return errors.New("block was not a write-block")
 	}
 	readers := wd.Write.Reader
-	if s.getDarc(readers.GetID()) == nil {
+	if s.darcs.GetByID(readers.GetID()) == nil {
 		return errors.New("couldn't find reader-darc in database")
 	}
 	return s.verifySignature(read.DataID, read.Signature, readers, darc.User)
@@ -717,10 +724,13 @@ func (s *Service) verifyWrite(ocs skipchain.SkipBlockID, write *Write) error {
 // darc if it has a Version > 0.
 func (s *Service) verifyDarc(newDarc *darc.Darc) error {
 	log.Lvl3("Verifying new darc")
-	if s.getDarc(newDarc.GetID()) != nil {
+	if s.darcs.GetByID(newDarc.GetID()) != nil {
 		return errors.New("cannot store darc again")
 	}
-	latest := s.getLatestDarc(newDarc.GetBaseID())
+	latest, err := s.darcs.GetLatestDarc(newDarc.GetBaseID())
+	if err != nil {
+		return err
+	}
 	if latest != nil && latest.Version >= newDarc.Version {
 		return errors.New("cannot store darc with lower or equal version")
 	}
@@ -731,41 +741,6 @@ func (s *Service) verifyDarc(newDarc *darc.Darc) error {
 		return nil
 	}
 	return s.verifySignature(newDarc.GetID(), *newDarc.Signature, *latest, darc.Owner)
-}
-
-func (s *Service) addDarc(d *darc.Darc) {
-	key := string(d.GetBaseID())
-	s.saveMutex.Lock()
-	defer s.saveMutex.Unlock()
-	darcs := s.Storage.Accounts[key]
-	if darcs == nil {
-		darcs = &Darcs{}
-	}
-	darcs.Darcs = append(darcs.Darcs, d)
-	s.Storage.Accounts[key] = darcs
-}
-
-func (s *Service) getDarc(id darc.ID) *darc.Darc {
-	s.saveMutex.Lock()
-	defer s.saveMutex.Unlock()
-	for _, darcs := range s.Storage.Accounts {
-		for _, d := range darcs.Darcs {
-			if d.GetID().Equal(id) {
-				return d
-			}
-		}
-	}
-	return nil
-}
-
-func (s *Service) getLatestDarc(genesisID darc.ID) *darc.Darc {
-	s.saveMutex.Lock()
-	defer s.saveMutex.Unlock()
-	darcs := s.Storage.Accounts[string(genesisID)]
-	if darcs == nil || len(darcs.Darcs) == 0 {
-		return nil
-	}
-	return darcs.Darcs[len(darcs.Darcs)-1]
 }
 
 // printPath is a debugging function to print the
@@ -791,20 +766,23 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 	d := &path[len(path)-1]
 
 	// First get latest version
-	s.saveMutex.Lock()
-	for _, di := range s.Storage.Accounts[string(d.GetBaseID())].Darcs {
+	p, err := s.darcs.GetPathToLatest(d)
+	if err != nil {
+		log.Error(err)
+		return nil
+	}
+	for _, di := range p {
 		if di.Version > d.Version {
 			log.Lvl4("Adding new version", di.Version)
 			newpath = append(newpath, *di)
 			d = di
 		}
 	}
-	s.saveMutex.Unlock()
 	log.Lvl3("role is:", role)
 	for i, p := range newpath {
 		log.Lvlf4("newpath[%d] = %x", i, p.GetID())
 	}
-	log.Lvl3("This darc is:", newpath[len(newpath)-1].String())
+	log.Lvl3("Searching in darc:", newpath[len(newpath)-1].String())
 
 	// Then search for identity
 	ids := d.Users
@@ -821,7 +799,7 @@ func (s *Service) searchPath(path []darc.Darc, identity darc.Identity, role darc
 		// Then search sub-darcs
 		for _, id := range *ids {
 			if id.Darc != nil {
-				d := s.getDarc(id.Darc.ID)
+				d := s.darcs.GetByID(id.Darc.ID)
 				if d == nil {
 					log.Lvlf1("Got unknown darc-id in path - ignoring: %x", id.Darc.ID)
 					continue
@@ -848,17 +826,16 @@ func (s *Service) propagateOCSFunc(sbI network.Message) {
 	}
 	if r := dataOCS.Darc; r != nil {
 		log.Lvlf3("Storing new darc %x - %x", r.GetID(), r.GetBaseID())
-		s.addDarc(r)
+		s.darcs.Store(r)
 	}
 	defer s.save()
 	if sb.Index == 0 {
 		s.saveMutex.Lock()
-		defer s.saveMutex.Unlock()
 		if dataOCS.Darc == nil {
-			log.Lvl1(s.ServerIdentity(), "Genesis-block of an onchain-secret needs to have a Darc for access-control")
-			return
+			log.Fatal("Should not be nil!")
 		}
 		s.Storage.Admins[string(sb.Hash)] = dataOCS.Darc
+		s.saveMutex.Unlock()
 		return
 	}
 }
@@ -888,9 +865,6 @@ func (s *Service) tryLoad() error {
 		if len(s.Storage.Polys) == 0 {
 			s.Storage.Polys = map[string]*pubPoly{}
 		}
-		if len(s.Storage.Accounts) == 0 {
-			s.Storage.Accounts = map[string]*Darcs{}
-		}
 		if len(s.Storage.Admins) == 0 {
 			s.Storage.Admins = map[string]*darc.Darc{}
 		}
@@ -909,7 +883,6 @@ func (s *Service) tryLoad() error {
 	if !ok {
 		return errors.New("Data of wrong type")
 	}
-	log.Lvl2("Successfully loaded:", len(s.Storage.Accounts))
 	return nil
 }
 
@@ -917,12 +890,14 @@ func (s *Service) tryLoad() error {
 // configuration, if desired. As we don't know when the service will exit,
 // we need to save the configuration on our own from time to time.
 func newService(c *onet.Context) (onet.Service, error) {
+	db, bucket := c.GetAdditionalBucket(darcsKey)
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		Storage: &Storage{
 			Admins: make(map[string]*darc.Darc),
 		},
 		skipchain: c.Service(skipchain.ServiceName).(*skipchain.Service),
+		darcs:     NewDarcDB(db, []byte(bucket)),
 	}
 	if err := s.RegisterHandlers(s.CreateSkipchains,
 		s.WriteRequest, s.ReadRequest, s.GetReadRequests,
