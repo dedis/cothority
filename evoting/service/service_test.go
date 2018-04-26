@@ -313,7 +313,6 @@ func TestEvolveRoster(t *testing.T) {
 		Admins:    []uint32{idAdmin, idAdmin2},
 	})
 	require.Nil(t, err)
-	log.Lvl2("Wrote 2nd roster")
 
 	// Run an election on the new set of conodes, the new nodeKP, and the new
 	// election admin.
@@ -321,6 +320,13 @@ func TestEvolveRoster(t *testing.T) {
 
 	// There was a test here before to try to replace the leader.
 	// It didn't work. For the time being, that is not supported.
+
+	// The decrypt protocol tries to stop early as soon as 2n/3 + 1 nodes store a partial.
+	// However, since the leader sends a broadcast to all the n nodes initially we
+	// want the servers to be up until the goroutines terminate or the test framework complains
+	// about zombie goroutines. The call to time.Sleep ensures we dont end up with
+	// zombie goroutines
+	time.Sleep(5 * time.Second)
 }
 
 func setupElection(t *testing.T, s0 *Service, rl *evoting.LinkReply, nodeKP *key.Pair) skipchain.SkipBlockID {
@@ -484,4 +490,119 @@ func TestShuffleCatastrophicNodeFailure(t *testing.T) {
 		Signature: adminSig,
 	})
 	require.Nil(t, err)
+}
+
+func TestDecryptBenignNodeFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping", t.Name(), " in short mode")
+	}
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodeKP := key.NewKeyPair(cothority.Suite)
+	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+
+	// Create the master skipchain
+	ro := onet.NewRoster(roster.List)
+	rl, err := s0.Link(&evoting.Link{
+		Pin:    s0.pin,
+		Roster: ro,
+		Key:    nodeKP.Public,
+		Admins: []uint32{idAdmin},
+	})
+	require.Nil(t, err)
+	log.Lvl2("Wrote the roster")
+
+	electionID := setupElection(t, s0, rl, nodeKP)
+	adminSig := generateSignature(nodeKP.Private, rl.ID, idAdmin)
+
+	// Shuffle all votes
+	_, err = s0.Shuffle(&evoting.Shuffle{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+
+	// Close 2 Nodes
+	nodes[2].Close()
+	nodes[5].Close()
+
+	// Try to decrypt
+	_, err = s0.Decrypt(&evoting.Decrypt{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+}
+
+func TestDecryptCatastrophicNodeFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping", t.Name(), " in short mode")
+	}
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodeKP := key.NewKeyPair(cothority.Suite)
+	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+
+	// Create the master skipchain
+	ro := onet.NewRoster(roster.List)
+	rl, err := s0.Link(&evoting.Link{
+		Pin:    s0.pin,
+		Roster: ro,
+		Key:    nodeKP.Public,
+		Admins: []uint32{idAdmin},
+	})
+	require.Nil(t, err)
+	log.Lvl2("Wrote the roster")
+
+	electionID := setupElection(t, s0, rl, nodeKP)
+	adminSig := generateSignature(nodeKP.Private, rl.ID, idAdmin)
+
+	// Shuffle all votes
+	_, err = s0.Shuffle(&evoting.Shuffle{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+
+	// Fail 3 nodes
+	nodes[2].Pause()
+	nodes[4].Pause()
+	nodes[5].Pause()
+
+	// Try a decrypt now. It should timeout because no blocks can be stored
+	_, err = s0.Decrypt(&evoting.Decrypt{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.NotNil(t, err)
+
+	log.Lvl2("Decrypt timed out on 3 nodes failing")
+
+	// Unpause the nodes
+	nodes[2].Unpause()
+	nodes[4].Unpause()
+	nodes[5].Unpause()
+
+	// Try a decrypt now. It should succeed
+	_, err = s0.Decrypt(&evoting.Decrypt{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+
+	// The decrypt protocol tries to stop early as soon as 2n/3 + 1 nodes store a partial.
+	// However, since the leader sends a broadcast to all the n nodes initially we
+	// want the servers to be up until the goroutines terminate or the test framework complains
+	// about zombie goroutines. The call to time.Sleep ensures we dont end up with
+	// zombie goroutines
+	time.Sleep(5 * time.Second)
 }
