@@ -27,6 +27,21 @@ const (
 	User
 )
 
+// Copy creates a deep copy of the IdentityDarc.
+func (id *Identity) Copy() *Identity {
+	c := &Identity{}
+	if id.Darc != nil {
+		c.Darc = &IdentityDarc{make([]byte, len(id.Darc.ID))}
+		copy(c.Darc.ID, id.Darc.ID)
+	} else if id.Ed25519 != nil {
+		c.Ed25519 = &IdentityEd25519{id.Ed25519.Point.Clone()}
+	} else if id.X509EC != nil {
+		c.X509EC = &IdentityX509EC{make([]byte, len(id.X509EC.Public))}
+		copy(c.X509EC.Public, id.X509EC.Public)
+	}
+	return c
+}
+
 // PROTOSTART
 //
 // option java_package = "ch.epfl.dedis.proto";

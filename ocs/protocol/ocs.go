@@ -8,6 +8,8 @@ paper-draft about onchain-secrets (called BlockMage).
 import (
 	"crypto/sha256"
 	"errors"
+	"sync"
+	"time"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
@@ -41,7 +43,9 @@ type OCS struct {
 	Reencrypted chan bool
 	Uis         []*share.PubShare // re-encrypted shares
 	// private fields
-	replies []ReencryptReply
+	replies  []ReencryptReply
+	timeout  *time.Timer
+	doneOnce sync.Once
 }
 
 // NewOCS initialises the structure for use in one round
@@ -63,9 +67,11 @@ func NewOCS(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 func (o *OCS) Start() error {
 	log.Lvl3("Starting Protocol")
 	if o.Shared == nil {
+		o.finish(false)
 		return errors.New("please initialize Shared first")
 	}
 	if o.U == nil {
+		o.finish(false)
 		return errors.New("please initialize U first")
 	}
 	rc := &Reencrypt{
@@ -77,11 +83,14 @@ func (o *OCS) Start() error {
 	}
 	if o.Verify != nil {
 		if !o.Verify(rc) {
-			o.Reencrypted <- false
-			o.Done()
+			o.finish(false)
 			return errors.New("refused to reencrypt")
 		}
 	}
+	o.timeout = time.AfterFunc(1*time.Minute, func() {
+		log.Lvl1("OCS protocol timeout")
+		o.finish(false)
+	})
 	errs := o.Broadcast(rc)
 	if len(errs) > (len(o.Roster().List)-1)/3 {
 		log.Errorf("Some nodes failed with error(s) %v", errs)
@@ -93,8 +102,9 @@ func (o *OCS) Start() error {
 // Reencrypt is received by every node to give his part of
 // the share
 func (o *OCS) reencrypt(r structReencrypt) error {
-	defer o.Done()
 	log.Lvl3(o.Name() + ": starting reencrypt")
+	defer o.Done()
+
 	ui, err := o.getUI(r.U, r.Xc)
 	if err != nil {
 		return nil
@@ -124,16 +134,15 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 	})
 }
 
-// ReencryptReply is the root-node waiting for all replies and generating
+// reencryptReply is the root-node waiting for all replies and generating
 // the reencryption key.
 func (o *OCS) reencryptReply(rr structReencryptReply) error {
 	if rr.ReencryptReply.Ui == nil {
 		log.Lvl2("Node", rr.ServerIdentity, "refused to reply")
 		o.Failures++
-		if o.Failures >= len(o.Children())-o.Threshold {
+		if o.Failures > len(o.Roster().List)-o.Threshold {
 			log.Lvl2(rr.ServerIdentity, "couldn't get enough shares")
-			o.Reencrypted <- false
-			o.Done()
+			o.finish(false)
 		}
 		return nil
 	}
@@ -169,9 +178,16 @@ func (o *OCS) reencryptReply(rr structReencryptReply) error {
 				log.Lvl1("Received invalid share from node", r.Ui.I)
 			}
 		}
-		o.Reencrypted <- true
-		o.Done()
+		o.finish(true)
 	}
+
+	// If we are leaving by here it means that we do not have
+	// enough replies yet. We must eventually trigger a finish()
+	// somehow. It will either happen because we get another
+	// reply, and now we have enough, or because we get enough
+	// failures and know to give up, or because o.timeout triggers
+	// and calls finish(false) in it's callback function.
+
 	return nil
 }
 
@@ -182,4 +198,16 @@ func (o *OCS) getUI(U, Xc kyber.Point) (*share.PubShare, error) {
 		I: o.Shared.Index,
 		V: v,
 	}, nil
+}
+
+func (o *OCS) finish(result bool) {
+	o.timeout.Stop()
+	select {
+	case o.Reencrypted <- result:
+		// suceeded
+	default:
+		// would have blocked because some other call to finish()
+		// beat us.
+	}
+	o.doneOnce.Do(func() { o.Done() })
 }

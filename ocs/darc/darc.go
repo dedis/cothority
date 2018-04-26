@@ -52,18 +52,29 @@ func NewDarc(owners *[]*Identity, users *[]*Identity, desc []byte) *Darc {
 func (d *Darc) Copy() *Darc {
 	dCopy := &Darc{
 		Version: d.Version,
-		BaseID:  d.BaseID,
+	}
+	if d.BaseID != nil {
+		bid := ID(make([]byte, len(*d.BaseID)))
+		copy(bid, *d.BaseID)
+		dCopy.BaseID = &bid
 	}
 	if d.Owners != nil {
-		owners := append([]*Identity{}, *d.Owners...)
+		owners := []*Identity{}
+		for _, o := range *d.Owners {
+			owners = append(owners, o.Copy())
+		}
 		dCopy.Owners = &owners
 	}
 	if d.Users != nil {
-		users := append([]*Identity{}, *d.Users...)
+		users := []*Identity{}
+		for _, u := range *d.Users {
+			users = append(users, u.Copy())
+		}
 		dCopy.Users = &users
 	}
 	if d.Description != nil {
-		desc := *(d.Description)
+		desc := make([]byte, len(*d.Description))
+		copy(desc, *d.Description)
 		dCopy.Description = &desc
 	}
 	return dCopy
