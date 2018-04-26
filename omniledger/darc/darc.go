@@ -52,17 +52,25 @@ import (
 )
 
 const evolve = "_evolve"
+const sign = "_sign"
 
-// InitEvolutionRule initialise a set of rules with only the default action.
-// TODO we need to support multi-signature sign-offs, i.e. we initialise a
-// custom expression where multiple signatures are required to evolve the darc.
-func InitEvolutionRule(owners ...*Identity) Rules {
-	ids := make([]string, len(owners))
-	for i, o := range owners {
-		ids[i] = o.String()
-	}
+// InitRules initialise a set of rules with the default actions "_evolve" and
+// "_sign". Signers are joined with logical-Or, owners are also joined with
+// logical-OR. If other expressions are needed, please set the rules manually.
+func InitRules(owners []*Identity, signers []*Identity) Rules {
 	rs := make(Rules)
-	rs[evolve] = expression.InitOrExpr(ids...)
+
+	ownerIDs := make([]string, len(owners))
+	for i, o := range owners {
+		ownerIDs[i] = o.String()
+	}
+	rs[evolve] = expression.InitOrExpr(ownerIDs...)
+
+	signerIDs := make([]string, len(signers))
+	for i, s := range signers {
+		signerIDs[i] = s.String()
+	}
+	rs[sign] = expression.InitOrExpr(signerIDs...)
 	return rs
 }
 
@@ -73,7 +81,7 @@ func NewDarc(rules Rules, desc []byte) *Darc {
 	return &Darc{
 		Version:     0,
 		Description: desc,
-		Signature:   nil,
+		Signatures:  []*Signature{},
 		Rules:       rules,
 	}
 }
@@ -119,7 +127,8 @@ func NewDarcFromProto(protoDarc []byte) *Darc {
 }
 
 // GetID returns the Darc ID, which is a digest of the values in the Darc.
-// The digest does not include the signature.
+// The digest does not include the signature or the path, only the version,
+// description, base ID and the rules .
 func (d Darc) GetID() ID {
 	h := sha256.New()
 	verBytes := make([]byte, 8)
@@ -224,22 +233,29 @@ func isEvolution(action Action) bool {
 // valid and accepted to sign on behalf of the old darc. The path can be nil
 // unless if the previousOwner is an SignerEd25519 and found directly in the
 // previous darc.
-func (d *Darc) Evolve(path []*Darc, prevOwner *Signer) error {
-	d.Signature = nil
+func (d *Darc) Evolve(path []*Darc, prevOwners ...*Signer) error {
+	// We need to set Version and BaseID first because these will affect
+	// the result of d.GetID().
 	prevDarc := path[len(path)-1]
 	d.Version = prevDarc.Version + 1
 	if len(path) == 0 {
 		return errors.New("path should not be empty")
 	}
 	d.BaseID = prevDarc.GetBaseID()
-	sig, err := NewDarcSignature(prevOwner, d.GetID(), path)
-	if err != nil {
-		return errors.New("error creating a darc signature for evolution: " + err.Error())
+
+	tmpSigs := make([]*Signature, len(prevOwners))
+	for i, prevOwner := range prevOwners {
+		sig, err := NewDarcSignature(prevOwner, d.GetID(), path)
+		if err != nil {
+			return errors.New("error creating a darc signature for evolution: " + err.Error())
+		}
+		if sig == nil {
+			return errors.New("the resulting signature is nil")
+		}
+		tmpSigs[i] = sig
 	}
-	if sig == nil {
-		return errors.New("the resulting signature is nil")
-	}
-	d.Signature = sig
+	d.Path = path
+	d.Signatures = tmpSigs
 	return nil
 }
 
@@ -269,41 +285,16 @@ func (d *Darc) VerifyWithCB(getDarc func(string) *Darc) error {
 		return nil // nothing to verify on the genesis Darc
 	}
 
-	if d.Signature == nil {
-		return errors.New("signature missing")
+	if len(d.Signatures) == 0 {
+		return errors.New("no signatures")
 	}
 
-	if len(d.Signature.Path) == 0 {
-		baseID := NewIdentityDarc(d.GetBaseID())
-		latest := getDarc(baseID.String())
-		if latest == nil || latest.Signature == nil {
-			return errors.New("couldn't find base darc")
-		}
-		var path []*Darc
-		for _, p := range latest.Signature.Path {
-			if d.Version > p.Version {
-				path = append(path, p)
-			} else {
-				break
-			}
-		}
-		pathDigest, err := hashAll(darcsMsg(path))
-		if err != nil {
-			return err
-		}
-		if !bytes.Equal(pathDigest, d.Signature.PathDigest) {
-			return fmt.Errorf("recomputed digest is not equal to the original, got %x but need %x",
-				pathDigest, d.Signature.PathDigest)
-		}
-		d.Signature.Path = path
-	}
-
-	if len(d.Signature.Path) == 0 {
-		return errors.New("empty path")
+	if err := d.findPath(getDarc); err != nil {
+		return err
 	}
 
 	var prev *Darc
-	for i, curr := range d.Signature.Path {
+	for i, curr := range d.Path {
 		if prev == nil && curr.Version == 0 {
 			prev = curr
 			continue
@@ -314,29 +305,44 @@ func (d *Darc) VerifyWithCB(getDarc func(string) *Darc) error {
 		prev = curr
 	}
 
-	signer, err := d.GetSignerDarc()
-	if err != nil {
-		return err
-	}
+	signer := d.Path[len(d.Path)-1]
 	return verifyOneEvolution(d, signer, getDarc)
 }
 
-// GetSignerDarc returns the darc that signed this darc, which is the last
-// element in the signature path.
-func (d Darc) GetSignerDarc() (*Darc, error) {
-	if d.Signature == nil {
-		// signature is nil if there are no evolution - nothing to sign
-		return nil, nil
+// findPath will check if whether d.Path is unset, if it is, it'll try to
+// populate it by looking up darcs using the getDarc callback.
+func (d *Darc) findPath(getDarc func(string) *Darc) error {
+	if len(d.Path) == 0 {
+		baseID := NewIdentityDarc(d.GetBaseID())
+		latest := getDarc(baseID.String())
+		if latest == nil {
+			return errors.New("couldn't find base darc")
+		}
+		var path []*Darc
+		for _, p := range latest.Path {
+			if d.Version > p.Version {
+				path = append(path, p)
+			} else {
+				break
+			}
+		}
+		pathDigest, err := hashAll(darcsMsg(path))
+		if err != nil {
+			return err
+		}
+		// Check that the path are equal to the digests in the
+		// signatures.
+		for _, sig := range d.Signatures {
+			if !bytes.Equal(pathDigest, sig.PathDigest) {
+				return fmt.Errorf("recomputed digest is not equal to the original")
+			}
+		}
+		d.Path = path
 	}
-	if len(d.Signature.Path) == 0 {
-		return nil, errors.New("signature but no darcs")
+	if len(d.Path) == 0 {
+		return errors.New("empty path")
 	}
-	n := len(d.Signature.Path)
-	prev := (d.Signature.Path)[n-1]
-	if prev.Version+1 != d.Version {
-		return nil, errors.New("not clean evolution - version mismatch")
-	}
-	return prev, nil
+	return nil
 }
 
 // CheckRequest checks the given request and returns an error if it cannot be
@@ -369,26 +375,19 @@ func (d Darc) CheckRequest(r *Request) error {
 	return nil
 }
 
+// String returns a human-readable string representation of the darc.
 func (d Darc) String() string {
 	s := fmt.Sprintf("ID:\t%x\nBase:\t%x\nVer:\t%d\nRules:", d.GetID(), d.GetBaseID(), d.Version)
 	for k, v := range d.Rules {
 		s += fmt.Sprintf("\n\t%s - \"%s\"", k, v)
 	}
-	sigStr := "<nil>"
-	if d.Signature != nil {
-		sigStr = fmt.Sprintf("%x", d.Signature.Signature)
+	for i, sig := range d.Signatures {
+		if sig == nil {
+			s += fmt.Sprintf("\n\t%d - <nil signature>", i)
+		} else {
+			s += fmt.Sprintf("\n\t%d - id: %s, sig: %x", i, sig.Signer.String(), sig.Signature)
+		}
 	}
-	s += fmt.Sprintf("\nSignature: %s", sigStr)
-	signer, err := d.GetSignerDarc()
-	var signerStr string
-	if err != nil {
-		signerStr = "<" + err.Error() + ">"
-	} else if signer == nil {
-		signerStr = "<nil>"
-	} else {
-		signerStr = fmt.Sprintf("%x", signer.GetID())
-	}
-	s += fmt.Sprintf("\nSignerDarc: %s", signerStr)
 	return s
 }
 
@@ -430,29 +429,14 @@ func NewDarcSignature(signer *Signer, id ID, path []*Darc) (*Signature, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := Signature{Signature: sig, Signer: *signer.Identity(), Path: path}
-	s.PathDigest, err = s.GetPathDigest()
-	if err != nil {
-		return nil, err
-	}
+	s := Signature{Signature: sig, Signer: *signer.Identity(), PathDigest: pathDigest}
 	return &s, nil
 }
 
-// GetPathDigest returns the sha256 digest concatenated Darc-IDs of the path.
-func (s *Signature) GetPathDigest() ([]byte, error) {
-	if s == nil {
-		return []byte{}, nil
-	}
-	if len(s.Path) == 0 {
-		return s.PathDigest, nil
-	}
-	return hashAll(darcsMsg(s.Path))
-}
-
-// PathContains checks whether the path contains the ID.
-func (s *Signature) PathContains(cb func(*Darc) bool) bool {
-	for _, d := range s.Path {
-		if cb(d) {
+// pathContains checks whether the path contains the ID.
+func (d *Darc) pathContains(cb func(*Darc) bool) bool {
+	for _, p := range d.Path {
+		if cb(p) {
 			return true
 		}
 	}
@@ -461,22 +445,18 @@ func (s *Signature) PathContains(cb func(*Darc) bool) bool {
 
 // Verify returns nil if the signature is correct, or an error
 // if something is wrong.
-func (s *Signature) verify(msg []byte, base ID) error {
+func (s *Signature) verify(path []*Darc, msg []byte, base ID) error {
 	if base == nil {
 		return errors.New("base-darc is missing")
 	}
-	if len(s.Path) == 0 {
+	if len(path) == 0 {
 		return errors.New("no path stored in signaturepath")
 	}
-	sigBase := (s.Path)[0].GetID()
+	sigBase := path[0].GetID()
 	if !sigBase.Equal(base) {
 		return errors.New("Base-darc is not at root of path")
 	}
-	pathDigest, err := s.GetPathDigest()
-	if err != nil {
-		return err
-	}
-	digest, err := hashAll(msg, pathDigest)
+	digest, err := hashAll(msg, s.PathDigest)
 	if err != nil {
 		return err
 	}
@@ -508,7 +488,6 @@ func darcsMsg(darcs []*Darc) []byte {
 // is, there should exist a signature in the newDarc that is signed by one of
 // the identities with the evolve permission in the oldDarc. The message is the
 // signature path specified in the newDarc, its ID and the base ID of the darc.
-// TODO we need to support multi-signature sign-offs.
 func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string) *Darc) error {
 	// check base ID
 	if newDarc.BaseID == nil {
@@ -524,14 +503,33 @@ func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string) *Darc) err
 			prevDarc.Version+1, newDarc.Version)
 	}
 
-	// check that signer has the permission
-	signer := newDarc.Signature.Signer.String()
-	if err := checkEvolutionPermission(prevDarc.Rules.GetEvolutionExpr(), getDarc, signer); err != nil {
+	// check that signers have the permission
+	if err := checkEvolutionPermissionWithSigs(
+		prevDarc.Rules.GetEvolutionExpr(),
+		getDarc,
+		newDarc.Signatures...); err != nil {
 		return err
 	}
 
 	// perform the verification
-	return newDarc.Signature.verify(newDarc.GetID(), prevDarc.GetBaseID())
+	for _, sig := range newDarc.Signatures {
+		if err := sig.verify(newDarc.Path, newDarc.GetID(), prevDarc.GetBaseID()); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// checkEvolutionPermissionWithSigs is a simple wrapper around
+func checkEvolutionPermissionWithSigs(expr expression.Expr, getDarc func(string) *Darc, sigs ...*Signature) error {
+	signers := make([]string, len(sigs))
+	for i, sig := range sigs {
+		signers[i] = sig.Signer.String()
+	}
+	if err := checkEvolutionPermission(expr, getDarc, signers...); err != nil {
+		return err
+	}
+	return nil
 }
 
 // checkEvolutionPermission checks whether the expression evaluates to true
@@ -545,7 +543,7 @@ func checkEvolutionPermission(expr expression.Expr, getDarc func(string) *Darc, 
 			if d.Verify() != nil {
 				return false
 			}
-			if !d.Signature.PathContains(func(d *Darc) bool {
+			if !d.pathContains(func(d *Darc) bool {
 				return d.GetIdentityString() == s
 			}) {
 				return false
@@ -565,7 +563,7 @@ func checkEvolutionPermission(expr expression.Expr, getDarc func(string) *Darc, 
 			// so we skip all the Darcs before the ID (s) that we
 			// are trying to evaluate.
 			var pathSearchStart bool
-			ok = d.Signature.PathContains(func(d *Darc) bool {
+			ok = d.pathContains(func(d *Darc) bool {
 				if d.GetIdentityString() == s {
 					pathSearchStart = true
 				}
