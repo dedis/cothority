@@ -83,3 +83,38 @@ func TestCollectionDB(t *testing.T) {
 		require.Equal(t, v, string(stored))
 	}
 }
+
+// TODO: Test good case, bad add case, bad remove case
+func TestCollectionDBtryHash(t *testing.T) {
+	tmpDB, err := ioutil.TempFile("", "tmpDB")
+	require.Nil(t, err)
+	tmpDB.Close()
+	defer os.Remove(tmpDB.Name())
+
+	db, err := bolt.Open(tmpDB.Name(), 0600, nil)
+	require.Nil(t, err)
+
+	cdb := newCollectionDB(db, testName)
+	ts := []Transaction{
+		Transaction{
+			Key:   []byte("key1"),
+			Kind:  []byte("kind1"),
+			Value: []byte("value1"),
+		},
+		Transaction{
+			Key:   []byte("key2"),
+			Kind:  []byte("kind2"),
+			Value: []byte("value2"),
+		},
+	}
+	mrTrial, err := cdb.tryHash(ts)
+	require.Nil(t, err)
+	_, _, err = cdb.GetValueKind([]byte("key1"))
+	require.EqualError(t, err, "no match found")
+	_, _, err = cdb.GetValueKind([]byte("key2"))
+	require.EqualError(t, err, "no match found")
+	cdb.Store(&ts[0])
+	cdb.Store(&ts[1])
+	mrReal := cdb.RootHash()
+	require.Equal(t, mrTrial, mrReal)
+}
