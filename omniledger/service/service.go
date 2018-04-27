@@ -405,3 +405,10 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	return s, nil
 }
+
+// We use the omniledger as a receiver (as is done in the identity service),
+// so we can access e.g. the collectionDBs of the service.
+func (s *service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
+	// Dummy implementation, always returns true for the moment.
+	return true
+}
