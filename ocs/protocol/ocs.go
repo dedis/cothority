@@ -116,7 +116,7 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 			log.Lvl2(o.ServerIdentity(), "refused to reencrypt")
 			return o.SendToParent(&ReencryptReply{})
 		}
-		log.Lvl1("Verification failed")
+		log.Lvl1(o.Name() + ": Verification succeeded")
 	} else {
 		log.Lvl2(o.Name() + ": NOT verifying")
 	}

@@ -81,12 +81,14 @@ func TestService_proof(t *testing.T) {
 			return tx.Bucket([]byte(bucket)).Put(rr.SB.Hash, val)
 		}))
 	}
+	log.Print("Starting decryption request that should fail")
 	symEnc, err = o.service.DecryptKeyRequest(&DecryptKeyRequest{
 		Read: rr.SB.Hash,
 	})
 	require.NotNil(t, err)
 
 	// GetReadRequests
+	log.Print("Starting decryption request that should work")
 	requests, err := o.service.GetReadRequests(&GetReadRequests{
 		Start: wr.SB.Hash,
 		Count: 0,

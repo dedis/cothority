@@ -579,7 +579,9 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 		if o.Read == nil {
 			return errors.New("not an OCS-read block")
 		}
+
 		if verificationData.Ephemeral != nil {
+			log.Print("Not using ephemeral")
 			buf, err := verificationData.Ephemeral.MarshalBinary()
 			if err != nil {
 				return errors.New("couldn't marshal ephemeral key: " + err.Error())
@@ -594,6 +596,7 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 				return errors.New("wrong signature on ephemeral key: " + err.Error())
 			}
 		} else {
+			log.Print("Using ephemeral")
 			if o.Read.Signature.SignaturePath.Signer.Ed25519 == nil {
 				return errors.New("use ephemeral keys for non-ed25519 keys")
 			}
@@ -604,7 +607,7 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 		return nil
 	}()
 	if err != nil {
-		log.Lvl2(s.ServerIdentity(), "wrong reencryption:", err)
+		log.Lvl1(s.ServerIdentity(), "wrong reencryption:", err)
 		return false
 	}
 	return true
