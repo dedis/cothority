@@ -989,7 +989,7 @@ func TestService_LeaderCatchup(t *testing.T) {
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 
-	hosts := local.GenServers(2)
+	hosts := local.GenServers(3)
 	roster := local.GenRosterFromHost(hosts...)
 	leader := local.Services[hosts[0].ServerIdentity.ID][skipchainSID].(*Service)
 	follower := local.Services[hosts[1].ServerIdentity.ID][skipchainSID].(*Service)
@@ -1004,15 +1004,13 @@ func TestService_LeaderCatchup(t *testing.T) {
 		},
 	}
 	ssbrep, err := leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: []byte{}, NewBlock: sbRoot})
-	log.ErrFatal(err)
+	require.Nil(t, err)
 
 	var third SkipBlockID
 	for i := 0; i < 10; i++ {
 		ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbrep.Latest.Hash,
 			NewBlock: sbRoot})
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.Nil(t, err)
 		if i == 3 {
 			third = ssbrep.Latest.Hash
 		}
@@ -1027,9 +1025,7 @@ func TestService_LeaderCatchup(t *testing.T) {
 	// to handle this write.
 	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbrep.Latest.Hash,
 		NewBlock: sbRoot})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 
 	sb11 := leader.db.GetByID(ssbrep.Latest.Hash)
 	require.Equal(t, sb11.Index, 11)
@@ -1040,9 +1036,7 @@ func TestService_LeaderCatchup(t *testing.T) {
 	// Write onto leader; the follower will need to sync to be able to sign this.
 	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbrep.Latest.Hash,
 		NewBlock: sbRoot})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 }
 
 func nukeBlocksFrom(t *testing.T, db *SkipBlockDB, where SkipBlockID) {
