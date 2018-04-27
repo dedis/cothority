@@ -17,12 +17,14 @@ import (
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/log"
 	"gopkg.in/dedis/onet.v2/network"
+	"gopkg.in/satori/go.uuid.v1"
 
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 )
 
 // Used for tests
 var omniledgerID onet.ServiceID
+var VerifyOmni = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Omni"))
 
 const keyMerkleRoot = "merkleroot"
 const keyNewKey = "newkey"
@@ -403,12 +405,14 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	skipchain.RegisterVerification(c, VerifyOmni, s.verifySkipBlock)
 	return s, nil
 }
 
 // We use the omniledger as a receiver (as is done in the identity service),
 // so we can access e.g. the collectionDBs of the service.
-func (s *service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
+func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
 	// Dummy implementation, always returns true for the moment.
 	return true
 }
