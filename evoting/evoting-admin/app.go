@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -13,16 +14,16 @@ import (
 	"github.com/dedis/cothority/evoting"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
-	"github.com/dedis/onet/log"
 )
 
 var (
 	argRoster = flag.String("roster", "", "path to roster toml file")
-	argKey    = flag.String("key", "", "client-side public key")
 	argAdmins = flag.String("admins", "", "list of admin users")
 	argPin    = flag.String("pin", "", "service pin")
+	argKey    = flag.String("key", "", "public key of authentication server")
 	argID     = flag.String("id", "", "ID of the master chain to modify (optional)")
 	argUser   = flag.Int("user", 0, "The SCIPER of an existing admin of this chain")
 	argSig    = flag.String("sig", "", "A signature proving that you can login to Tequila with the given SCIPER.")
@@ -32,6 +33,9 @@ var (
 func main() {
 	flag.Parse()
 
+	if *argRoster == "" {
+		log.Fatal("Roster argument (-roster) is required for create, update, or show.")
+	}
 	roster, err := parseRoster(*argRoster)
 	if err != nil {
 		log.Fatal("cannot parse roster: ", err)
@@ -55,9 +59,8 @@ func main() {
 		return
 	}
 
-	key, err := parseKey(*argKey)
-	if err != nil {
-		log.Fatal("cannot parse key: ", err)
+	if *argAdmins == "" {
+		log.Fatal("Admin list (-admins) must have at least one id.")
 	}
 
 	admins, err := parseAdmins(*argAdmins)
@@ -65,7 +68,23 @@ func main() {
 		log.Fatal("cannot parse admins: ", err)
 	}
 
-	request := &evoting.Link{Pin: *argPin, Roster: roster, Key: key, Admins: admins}
+	if *argPin == "" {
+		log.Fatal("pin must be set for create and update operations.")
+	}
+
+	var pub kyber.Point
+	if *argKey != "" {
+		pub, err = parseKey(*argKey)
+		if err != nil {
+			log.Fatal("cannot parse key: ", err)
+		}
+	} else {
+		kp := key.NewKeyPair(cothority.Suite)
+		log.Printf("Auth-server private key: %v", kp.Private)
+		pub = kp.Public
+	}
+
+	request := &evoting.Link{Pin: *argPin, Roster: roster, Key: pub, Admins: admins}
 	if *argID != "" {
 		id, err := hex.DecodeString(*argID)
 		if err != nil {
@@ -92,11 +111,8 @@ func main() {
 		log.Fatal("link request: ", err)
 	}
 
-	// Do not change this: the load-testing system counts on it.
-	log.Info("Master ID:", reply.ID)
-
-	// This is more useful for putting back into the -id argument to evolve master.
-	log.Infof("Master ID in hex: %x", reply.ID)
+	log.Printf("Auth-server public  key: %v", pub)
+	log.Printf("Master ID: %x", reply.ID)
 }
 
 // parseRoster reads a Dedis group toml file a converts it to a cothority roster.
@@ -111,20 +127,6 @@ func parseRoster(path string) (*onet.Roster, error) {
 		return nil, err
 	}
 	return group.Roster, nil
-}
-
-// parseKey unmarshals a Ed25519 point given in hexadecimal form.
-func parseKey(key string) (kyber.Point, error) {
-	b, err := hex.DecodeString(key)
-	if err != nil {
-		return nil, err
-	}
-
-	point := cothority.Suite.Point()
-	if err = point.UnmarshalBinary(b); err != nil {
-		return nil, err
-	}
-	return point, nil
 }
 
 // parseAdmins converts a string of comma-separated sciper numbers in
@@ -143,4 +145,18 @@ func parseAdmins(scipers string) ([]uint32, error) {
 		admins = append(admins, uint32(sciper))
 	}
 	return admins, nil
+}
+
+// parseKey unmarshals a Ed25519 point given in hexadecimal form.
+func parseKey(key string) (kyber.Point, error) {
+	b, err := hex.DecodeString(key)
+	if err != nil {
+		return nil, err
+	}
+
+	point := cothority.Suite.Point()
+	if err = point.UnmarshalBinary(b); err != nil {
+		return nil, err
+	}
+	return point, nil
 }
