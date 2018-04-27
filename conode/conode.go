@@ -16,10 +16,12 @@ import (
 	"bufio"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"net"
 	"os"
 	"path"
+	"reflect"
 	"strings"
 
 	"github.com/dedis/cothority"
@@ -49,7 +51,6 @@ const (
 var gitTag = ""
 
 func main() {
-
 	cliApp := cli.NewApp()
 	cliApp.Name = DefaultName
 	cliApp.Usage = "run a cothority server"
@@ -125,6 +126,16 @@ func main() {
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
 		return nil
+	}
+
+	// Do not allow conode to run when built in 32-bit mode.
+	// The dedis/protobuf package is the origin of this limit.
+	// Instead of getting the error later from protobuf and being
+	// confused, just make it totally clear up-front.
+	var i int
+	iType := reflect.TypeOf(i)
+	if iType.Size() < 8 {
+		log.ErrFatal(errors.New("conode cannot run when built in 32-bit mode"))
 	}
 
 	err := cliApp.Run(os.Args)
