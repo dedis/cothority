@@ -217,8 +217,10 @@ func TestDecryptNodeFailure(t *testing.T) {
 			Points:    points,
 			Node:      "",
 			PublicKey: nodes[i].ServerIdentity.Public,
+			Index:     i,
 		}
 		data, _ := partial.PublicKey.MarshalBinary()
+		data = append(data, byte(partial.Index))
 		sig, _ := schnorr.Sign(cothority.Suite, local.GetPrivate(nodes[i]), data)
 		partial.Signature = sig
 		transaction := lib.NewTransaction(partial, election.Creator, []byte{})

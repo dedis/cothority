@@ -102,13 +102,25 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 	for i := range points {
 		points[i] = lib.Decrypt(d.Secret.V, mix.Ballots[i].Alpha, mix.Ballots[i].Beta)
 	}
+	index := -1
+	for i, node := range d.Election.Roster.List {
+		if node.Public.Equal(d.Public()) {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return d.SendTo(d.Root(), &TerminateDecrypt{Error: "couldn't find index in Roster"})
+	}
 
 	partial := &lib.Partial{
 		Points:    points,
 		Node:      d.Name(),
 		PublicKey: d.Public(),
+		Index:     index,
 	}
 	data, err := partial.PublicKey.MarshalBinary()
+	data = append(data, byte(partial.Index))
 	if err != nil {
 		return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})
 	}
