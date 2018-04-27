@@ -331,10 +331,9 @@ func TestDarc_DelegationChain(t *testing.T) {
 	n := 10
 	darcs := make([]*Darc, n)
 	owners := make([]*Signer, n)
+	// create n darcs with an empty evolve action, we'll set it later
 	for i := 0; i < n; i++ {
 		td := createDarc(1, "test")
-		// set sign expr to the same as evolution expr, which is a
-		// single ed25519 signer
 		td.darc.Rules.UpdateEvolution([]byte{})
 		darcs[i] = td.darc
 		owners[i] = td.owners[0]

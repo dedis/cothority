@@ -175,21 +175,21 @@ func (r Rules) AddRule(a Action, expr expression.Expr) error {
 }
 
 // UpdateRule updates an existing action-expression pair, it cannot be the
-// evolve action.
+// evolve or sign action.
 func (r Rules) UpdateRule(a Action, expr expression.Expr) error {
 	if isDefault(a) {
-		return errors.New("cannot update evolution")
+		return fmt.Errorf("cannot update action %s", a)
 	}
 	return r.updateRule(a, expr)
 }
 
-// DeleteRules deletes an action, it cannot delete the evolve action.
+// DeleteRules deletes an action, it cannot delete the evolve or sign action.
 func (r Rules) DeleteRules(a Action) error {
 	if isDefault(a) {
-		return errors.New("cannot delete evolution")
+		return fmt.Errorf("cannot delete action %s", a)
 	}
 	if _, ok := r[a]; !ok {
-		return errors.New("action does not exist")
+		return fmt.Errorf("action %s does not exist", a)
 	}
 	delete(r, a)
 	return nil
