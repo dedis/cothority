@@ -24,7 +24,7 @@ import (
 
 // Used for tests
 var omniledgerID onet.ServiceID
-var VerifyOmni = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Omni"))
+var verifyOmniledger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Omniledger"))
 
 const keyMerkleRoot = "merkleroot"
 const keyNewKey = "newkey"
@@ -171,6 +171,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, ts 
 		sb.Roster = r
 		sb.MaximumHeight = 10
 		sb.BaseHeight = 10
+		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, verifyOmniledger}
 		for _, t := range ts {
 			log.Printf("Adding transaction %+v", t)
 			err := c.Add(t.Key, t.Value, t.Kind)
@@ -406,13 +407,14 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
-	skipchain.RegisterVerification(c, VerifyOmni, s.verifySkipBlock)
+	skipchain.RegisterVerification(c, verifyOmniledger, s.verifySkipBlock)
 	return s, nil
 }
 
 // We use the omniledger as a receiver (as is done in the identity service),
 // so we can access e.g. the collectionDBs of the service.
 func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
+	log.Lvlf4("calling verifySkipBlock")
 	// Dummy implementation, always returns true for the moment.
 	return true
 }
