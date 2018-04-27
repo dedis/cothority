@@ -39,6 +39,7 @@ const failedToCast = "evauluation failed - result is not bool"
 
 // ValueCheckFn is a function that will be called when the parser is
 // parsing/evaluating an expression.
+// TODO it is useful if we can return (bool, error).
 type ValueCheckFn func(string) bool
 
 // Expr represents the unprocess expression of our DSL.

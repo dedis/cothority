@@ -175,21 +175,21 @@ func (r Rules) AddRule(a Action, expr expression.Expr) error {
 }
 
 // UpdateRule updates an existing action-expression pair, it cannot be the
-// evolve action.
+// evolve or sign action.
 func (r Rules) UpdateRule(a Action, expr expression.Expr) error {
-	if isEvolution(a) {
-		return errors.New("cannot update evolution")
+	if isDefault(a) {
+		return fmt.Errorf("cannot update action %s", a)
 	}
 	return r.updateRule(a, expr)
 }
 
-// DeleteRules deletes an action, it cannot delete the evolve action.
+// DeleteRules deletes an action, it cannot delete the evolve or sign action.
 func (r Rules) DeleteRules(a Action) error {
-	if isEvolution(a) {
-		return errors.New("cannot delete evolution")
+	if isDefault(a) {
+		return fmt.Errorf("cannot delete action %s", a)
 	}
 	if _, ok := r[a]; !ok {
-		return errors.New("action does not exist")
+		return fmt.Errorf("action %s does not exist", a)
 	}
 	delete(r, a)
 	return nil
@@ -206,11 +206,22 @@ func (r Rules) GetEvolutionExpr() expression.Expr {
 	return r[evolve]
 }
 
-// UpdateEvolution will update the "evolve" action, which allows identities
+// GetSignExpr returns the expression that describes the sign action.
+func (r Rules) GetSignExpr() expression.Expr {
+	return r[sign]
+}
+
+// UpdateEvolution will update the "_evolve" action, which allows identities
 // that satisfies the expression to evolve the Darc. Take extreme care when
 // using this function.
 func (r Rules) UpdateEvolution(expr expression.Expr) error {
 	return r.updateRule(evolve, expr)
+}
+
+// UpdateSign will update the "_sign" action, which allows identities that
+// satisfies the expression to sign on behalf of another darc.
+func (r Rules) UpdateSign(expr expression.Expr) error {
+	return r.updateRule(sign, expr)
 }
 
 func (r Rules) updateRule(a Action, expr expression.Expr) error {
@@ -221,8 +232,8 @@ func (r Rules) updateRule(a Action, expr expression.Expr) error {
 	return nil
 }
 
-func isEvolution(action Action) bool {
-	if action == evolve {
+func isDefault(action Action) bool {
+	if action == evolve || action == sign {
 		return true
 	}
 	return false
@@ -504,7 +515,7 @@ func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string) *Darc) err
 	}
 
 	// check that signers have the permission
-	if err := checkEvolutionPermissionWithSigs(
+	if err := evalExprWithSigs(
 		prevDarc.Rules.GetEvolutionExpr(),
 		getDarc,
 		newDarc.Signatures...); err != nil {
@@ -520,21 +531,21 @@ func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string) *Darc) err
 	return nil
 }
 
-// checkEvolutionPermissionWithSigs is a simple wrapper around
-func checkEvolutionPermissionWithSigs(expr expression.Expr, getDarc func(string) *Darc, sigs ...*Signature) error {
+// evalExprWithSigs is a simple wrapper around
+func evalExprWithSigs(expr expression.Expr, getDarc func(string) *Darc, sigs ...*Signature) error {
 	signers := make([]string, len(sigs))
 	for i, sig := range sigs {
 		signers[i] = sig.Signer.String()
 	}
-	if err := checkEvolutionPermission(expr, getDarc, signers...); err != nil {
+	if err := evalExpr(expr, getDarc, signers...); err != nil {
 		return err
 	}
 	return nil
 }
 
-// checkEvolutionPermission checks whether the expression evaluates to true
+// evalExpr checks whether the expression evaluates to true
 // given a list of identities.
-func checkEvolutionPermission(expr expression.Expr, getDarc func(string) *Darc, ids ...string) error {
+func evalExpr(expr expression.Expr, getDarc func(string) *Darc, ids ...string) error {
 	Y := expression.InitParser(func(s string) bool {
 		if strings.HasPrefix(s, "darc") {
 			// getDarc is responsible for returning the latest Darc
@@ -543,40 +554,19 @@ func checkEvolutionPermission(expr expression.Expr, getDarc func(string) *Darc, 
 			if d.Verify() != nil {
 				return false
 			}
-			if !d.pathContains(func(d *Darc) bool {
-				return d.GetIdentityString() == s
-			}) {
+			// Evaluate the "sign" action only in the latest darc
+			// because it may have revoked some rules in earlier
+			// darcs. We do this recursively because there may be
+			// further delegations.
+			if !d.Rules.Contains(sign) {
 				return false
 			}
-
-			// Try to evaluate the latest darc, it might not
-			// evaluate to true because the signer could be an
-			// older darc.
-			ok, err := expression.DefaultParser(d.Rules.GetEvolutionExpr(), ids...)
-			if err == nil && ok {
-				return true
+			// Recursively evaluate the sign expression until we
+			// find the final signer with a ed25519 key.
+			if err := evalExpr(d.Rules[sign], getDarc, ids...); err != nil {
+				return false
 			}
-
-			// If the signer is not on the latest darc, then we
-			// look for older darcs in the Path of the latest darc.
-			// The searching mechanism starts from the base Darc,
-			// so we skip all the Darcs before the ID (s) that we
-			// are trying to evaluate.
-			var pathSearchStart bool
-			ok = d.pathContains(func(d *Darc) bool {
-				if d.GetIdentityString() == s {
-					pathSearchStart = true
-				}
-				if !pathSearchStart {
-					return false
-				}
-				ok, err := expression.DefaultParser(d.Rules.GetEvolutionExpr(), ids...)
-				if err != nil {
-					return false
-				}
-				return ok
-			})
-			return ok
+			return true
 		}
 		for _, id := range ids {
 			if id == s {
@@ -858,7 +848,6 @@ func NewRequest(darcID ID, action Action, msg []byte, signers ...*Signer) (*Requ
 	r.Identities = make([]*Identity, len(signers))
 	for i, signer := range signers {
 		r.Identities[i] = signer.Identity()
-		// TODO the signer might be delegated
 		r.Signatures[i], err = signer.Sign(digest)
 		if err != nil {
 			return nil, err
