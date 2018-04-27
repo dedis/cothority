@@ -64,7 +64,7 @@ bindist: verify exe/conode.Linux.x86_64
 	cp exe/conode.Linux.x86_64 $(OUTPUT_DIR)
 	GOOS=linux GOARCH=arm vgo build $(flags) -o $(OUTPUT_DIR)/conode.Linux.armv7l
 	GOOS=freebsd GOARCH=amd64 vgo build $(flags) -o $(OUTPUT_DIR)/conode.FreeBSD.amd64
-	GOOS=windows GOARCH=386 vgo build $(flags) -o $(OUTPUT_DIR)/conode.exe
+	GOOS=windows GOARCH=amd64 vgo build $(flags) -o $(OUTPUT_DIR)/conode.exe
 	echo "#!/bin/sh" > $(OUTPUT_DIR)/conode
 	echo "./conode.\`uname -s\`.\`uname -m\` \$$*" >> $(OUTPUT_DIR)/conode
 	chmod +x $(OUTPUT_DIR)/conode
