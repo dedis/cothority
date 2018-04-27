@@ -10,13 +10,13 @@ EXCLUDE_LINT = "should be.*UI|_test.go"
 # to `make test_playground`.
 test_playground:
 	cd ocs/service; \
-	for a in $$( seq 100 ); do \
+	for a in $$( seq 200 ); do \
 	  echo OCS $$a - $$( date ); \
 	  go test -v -race -short -run TestService_proof > test_log || break ; \
 	done; \
 	cat test_log; \
 	cd ../../skipchain; \
-	for a in $$( seq 100 ); do \
+	for a in $$( seq 200 ); do \
 	  echo Skipchain $$a - $$( date ); \
 	  go test -v -race -short -timeout 5m > test_log || break ; \
 	done; \

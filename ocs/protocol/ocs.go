@@ -111,10 +111,14 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 	}
 
 	if o.Verify != nil {
+		log.Lvl2(o.Name() + ": verifying")
 		if !o.Verify(&r.Reencrypt) {
 			log.Lvl2(o.ServerIdentity(), "refused to reencrypt")
 			return o.SendToParent(&ReencryptReply{})
 		}
+		log.Lvl1("Verification failed")
+	} else {
+		log.Lvl2(o.Name() + ": NOT verifying")
 	}
 
 	// Calculating proofs
