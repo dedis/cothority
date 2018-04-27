@@ -11,10 +11,17 @@ EXCLUDE_LINT = "should be.*UI|_test.go"
 test_playground:
 	cd ocs/service; \
 	for a in $$( seq 100 ); do \
-	  echo $$a - $$( date ); \
+	  echo OCS $$a - $$( date ); \
 	  go test -v -race -short -run TestService_proof > test_log || break ; \
 	done; \
-	cat test_log
+	cat test_log; \
+	cd ../../skipchain; \
+	for a in $$( seq 100 ); do \
+	  echo Skipchain $$a - $$( date ); \
+	  go test -v -race -short -timeout 5m > test_log || break ; \
+	done; \
+	cat test_log; \
+	exit 1
 
 # Other targets are:
 # make create_stable
