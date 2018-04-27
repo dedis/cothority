@@ -21,9 +21,14 @@ flags=-ldflags="$(ldflags)"
 
 all: docker
 
+# Use this target to build from only published sources.
 docker: Dockerfile
 	BUILDFLAG=$(flags)
 	docker build -t $(IMAGE_NAME):$(VERSION) --build-arg BUILDFLAG="$(ldflags)" .
+
+# Use this target to build from local source instead of from publish sources.
+docker_dev: Dockerfile-dev exe/conode.Linux.x86_64
+	docker build -t $(IMAGE_NAME):$(VERSION) -f Dockerfile-dev .
 
 docker_push: docker
 	@[ -n "$(GITUNTRACKEDCHANGES)" ] && echo "Pushing dirty images not allowed." && exit 1 || true
@@ -52,10 +57,14 @@ docker_clean:
 
 # The suffix on conode exe is the result from: echo `uname -s`.`uname -m`
 # so that we can find the right one in the wrapper script.
-bindist:
+# This is in it's own rule because the Docker build needs it also.
+exe/conode.Linux.x86_64:
+	GOOS=linux GOARCH=amd64 go build $(flags) -o $@
+
+bindist: exe/conode.Linux.x86_64
 	rm -rf $(OUTPUT_DIR)
 	mkdir $(OUTPUT_DIR)
-	GOOS=linux GOARCH=amd64 go build $(flags) -o $(OUTPUT_DIR)/conode.Linux.x86_64
+	cp exe/conode.Linux.x86_64 $(OUTPUT_DIR)
 	GOOS=linux  GOARCH=arm go build $(flags) -o $(OUTPUT_DIR)/conode.Linux.armv7l
 	GOOS=freebsd GOARCH=amd64 go build $(flags) -o $(OUTPUT_DIR)/conode.FreeBSD.amd64
 	GOOS=windows GOARCH=386 go build $(flags) -o $(OUTPUT_DIR)/conode.exe
@@ -64,6 +73,3 @@ bindist:
 	chmod +x $(OUTPUT_DIR)/conode
 	LANG=C tar zcf $(OUTPUT_DIR).tar.gz $(OUTPUT_DIR)
 	rm -rf $(OUTPUT_DIR)
-
-gitTag:
-	go build $(flags)
