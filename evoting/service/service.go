@@ -38,7 +38,7 @@ func init() {
 }
 
 // timeout for protocol termination.
-const timeout = 90 * time.Second
+const timeout = 120 * time.Second
 
 // serviceID is the onet identifier.
 var serviceID onet.ServiceID
@@ -541,11 +541,15 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 	n := len(election.Roster.List)
 	for i := 0; i < len(partials[0].Points); i++ {
 		shares := make([]*share.PubShare, n)
-		for j, partial := range partials {
+		for _, partial := range partials {
+			j := partial.Index
 			shares[j] = &share.PubShare{I: j, V: partial.Points[i]}
 		}
 
-		message, _ := share.RecoverCommit(cothority.Suite, shares, 2*n/3+1, n)
+		message, err := share.RecoverCommit(cothority.Suite, shares, 2*n/3+1, n)
+		if err != nil {
+			return nil, err
+		}
 		points = append(points, message)
 	}
 
@@ -714,8 +718,6 @@ func new(context *onet.Context) (onet.Service, error) {
 		},
 		skipchain: context.Service(skipchain.ServiceName).(*skipchain.Service),
 	}
-	log.Lvl1("Setting skipchain propagation timeout to 5s")
-	service.skipchain.SetPropTimeout(5 * time.Second)
 
 	service.RegisterHandlers(
 		service.Ping,

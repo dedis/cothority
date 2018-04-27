@@ -124,6 +124,9 @@ func (e *Election) setStage(s *skipchain.Service) error {
 		return errors.New("error getting latest skipblock")
 	}
 	transaction := UnmarshalTransaction(latest.Data)
+	if transaction == nil {
+		return errors.New("invalid transaction")
+	}
 
 	if transaction.Partial != nil {
 		e.Stage = Decrypted

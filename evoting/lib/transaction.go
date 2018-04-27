@@ -283,6 +283,27 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 				return fmt.Errorf("%s has already proposed a partial", t.Partial.Node)
 			}
 		}
+
+		// verify proposer
+		data, err := t.Partial.PublicKey.MarshalBinary()
+		if err != nil {
+			return err
+		}
+		index := -1
+		for i, node := range election.Roster.List {
+			if node.Public.Equal(t.Partial.PublicKey) {
+				index = i
+				break
+			}
+		}
+		if index == -1 {
+			return errors.New("couldn't find node's index in Roster")
+		}
+		data = append(data, byte(index))
+		err = schnorr.Verify(cothority.Suite, t.Partial.PublicKey, data, t.Partial.Signature)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 	return errors.New("transaction error: empty transaction")

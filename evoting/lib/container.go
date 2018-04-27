@@ -55,6 +55,7 @@ type Partial struct {
 	Node      string      // Node signifies the creator of this partial decryption.
 	PublicKey kyber.Point // Public key of the node generating a partial decryption
 	Signature []byte      // Signature of the public key
+	Index     int         // Index of the node in the roster
 }
 
 // genPartials generates partial decryptions for a given list of shared secrets.
