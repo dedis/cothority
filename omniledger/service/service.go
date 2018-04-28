@@ -415,6 +415,23 @@ func newService(c *onet.Context) (onet.Service, error) {
 // We use the omniledger as a receiver (as is done in the identity service),
 // so we can access e.g. the collectionDBs of the service.
 func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
+	_, dataI, err := network.Unmarshal(newSB.Data, cothority.Suite)
+	data, ok := dataI.(*Data)
+	if err != nil || !ok {
+		log.Errorf("couldn't unmarshal data")
+		return false
+	}
+	txs := data.Transactions
+	cdb := s.getCollection(newSB.Hash)
+	for _, tx := range txs {
+		switch kind := string(tx.Kind); kind {
+		case "dummy":
+			return cdb.verifyDummyKind(&tx)
+		default:
+			return true
+		}
+
+	}
 	// Dummy implementation, always returns true for the moment.
 	return true
 }
