@@ -128,6 +128,18 @@ func (c *collectionDB) tryHash(ts []Transaction) (mr []byte, rerr error) {
 	return
 }
 
+// Action describes how the collectionDB will be modified.
+type Action int
+
+const (
+	// Create allows to insert a new key-value association.
+	Create Action = iota
+	// Update allows to change the value of an existing key.
+	Update
+	// Remove allows to delete an existing key-value association.
+	Remove
+)
+
 // Transaction is the struct specifying the modifications to the skipchain.
 // Key is the key chosen by the user, Kind is the kind of value to store
 // (e.g. a drac...). The key used in the conode's collection will be
@@ -136,9 +148,10 @@ func (c *collectionDB) tryHash(ts []Transaction) (mr []byte, rerr error) {
 // For a Transaction to be valid, there must exist a path from the master-darc
 // in the genesis block to the SubjectPK in Signature.
 type Transaction struct {
-	Key   []byte
-	Kind  []byte
-	Value []byte
+	Action Action
+	Key    []byte
+	Kind   []byte
+	Value  []byte
 	// The signature is performed on the concatenation of the []bytes
 	Signature darc.Signature
 }
