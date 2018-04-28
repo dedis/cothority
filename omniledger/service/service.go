@@ -418,3 +418,18 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	// Dummy implementation, always returns true for the moment.
 	return true
 }
+
+// Since the outcome of the verification depends on the state of the collection
+// whihc is to be modified, we use it as a receiver here.
+func (cdb *collectionDB) verifyDummyKind(tx *Transaction) bool {
+	switch a := tx.Action; a {
+	case Create:
+		return true
+	case Update:
+		return true
+	case Remove:
+		return false
+	default:
+		return false
+	}
+}
