@@ -133,7 +133,7 @@ type Action int
 
 const (
 	// Create allows to insert a new key-value association.
-	Create Action = iota
+	Create Action = iota + 1
 	// Update allows to change the value of an existing key.
 	Update
 	// Remove allows to delete an existing key-value association.

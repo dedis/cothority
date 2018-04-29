@@ -414,7 +414,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 
 // We use the omniledger as a receiver (as is done in the identity service),
 // so we can access e.g. the collectionDBs of the service.
-func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
+func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) (validSB bool) {
+	validSB = true
 	_, dataI, err := network.Unmarshal(newSB.Data, cothority.Suite)
 	data, ok := dataI.(*Data)
 	if err != nil || !ok {
@@ -424,26 +425,23 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	txs := data.Transactions
 	cdb := s.getCollection(newSB.Hash)
 	for _, tx := range txs {
-		switch kind := string(tx.Kind); kind {
-		case "dummy":
-			return cdb.verifyDummyKind(&tx)
-		default:
-			return true
+		if string(tx.Kind) == "dummy" {
+			validSB = cdb.verifyDummyKind(&tx)
 		}
-
 	}
-	// Dummy implementation, always returns true for the moment.
-	return true
+
+	return
 }
 
 // Since the outcome of the verification depends on the state of the collection
-// whihc is to be modified, we use it as a receiver here.
+// which is to be modified, we use it as a receiver here.
 func (cdb *collectionDB) verifyDummyKind(tx *Transaction) bool {
 	switch a := tx.Action; a {
 	case Create:
 		return true
 	case Update:
 		return true
+	// removing and unknown actions are forbidden
 	case Remove:
 		return false
 	default:
