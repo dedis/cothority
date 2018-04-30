@@ -488,6 +488,10 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericConfig) (
 	onet.ProtocolInstance, error) {
 
+	if conf == nil {
+		return nil, errors.New("evoting/service.NewProtocol: missing config")
+	}
+
 	_, blob, _ := network.Unmarshal(conf.Data, cothority.Suite)
 	sync := blob.(*synchronizer)
 
