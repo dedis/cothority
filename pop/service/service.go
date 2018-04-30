@@ -158,6 +158,16 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 	return nil, nil
 }
 
+// VerifyLink returns whether a given public key is stored and allowed
+// to store pop-configurations.
+func (s *Service) VerifyLink(req *VerifyLink) (*VerifyLinkReply, error) {
+	exists := false
+	if req.Public != nil && s.data.Public != nil {
+		exists = req.Public.Equal(s.data.Public)
+	}
+	return &VerifyLinkReply{Exists: exists}, nil
+}
+
 // StoreConfig saves the pop-config locally
 func (s *Service) StoreConfig(req *StoreConfig) (network.Message, error) {
 	log.Lvlf2("StoreConfig: %s %v %x", s.Context.ServerIdentity(), req.Desc, req.Desc.Hash())

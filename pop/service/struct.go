@@ -17,7 +17,8 @@ func init() {
 	network.RegisterMessages(CheckConfig{}, CheckConfigReply{},
 		PinRequest{}, FetchRequest{}, MergeRequest{},
 		StoreConfig{}, StoreConfigReply{},
-		GetProposals{}, GetProposalsReply{})
+		GetProposals{}, GetProposalsReply{},
+		VerifyLink{}, VerifyLinkReply{})
 }
 
 func newMerge() *merge {
@@ -179,4 +180,14 @@ type GetProposals struct {
 // GetProposalsReply returns the list of all waiting proposals on that node.
 type GetProposalsReply struct {
 	Proposals []PopDesc
+}
+
+// VerifyLink returns if a given public key is linked.
+type VerifyLink struct {
+	Public kyber.Point
+}
+
+// VerifyLinkReply returns true if the public key is in the admin-list.
+type VerifyLinkReply struct {
+	Exists bool
 }

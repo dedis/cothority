@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/suites"
@@ -358,6 +359,23 @@ func suiteSkip(t *testing.T) {
 		t.Skip("current suite is not compatible with this test, skipping it")
 		return
 	}
+}
+func TestService_VerifyLink(t *testing.T) {
+	suiteSkip(t)
+	local := onet.NewTCPTest(tSuite)
+	defer local.CloseAll()
+	nodes, _, _ := local.GenTree(1, true)
+	services := local.GetServices(nodes, serviceID)
+	s := services[0].(*Service)
+	kp := key.NewKeyPair(cothority.Suite)
+	rep, err := s.VerifyLink(&VerifyLink{Public: kp.Public})
+	require.Nil(t, err)
+	require.False(t, rep.Exists)
+
+	s.data.Public = kp.Public
+	rep, err = s.VerifyLink(&VerifyLink{Public: kp.Public})
+	require.Nil(t, err)
+	require.True(t, rep.Exists)
 }
 
 func TestService_MergeRequest(t *testing.T) {
