@@ -334,7 +334,7 @@ func (sbf *SkipBlockFix) CalculateHash() SkipBlockID {
 // be hashed (yet).
 type SkipBlock struct {
 	*SkipBlockFix
-	// Hash is our Block-hash
+	// Hash is our Block-hash of the SkipBlockFix part.
 	Hash SkipBlockID
 
 	// ForwardLink will be calculated once future SkipBlocks are
@@ -343,6 +343,13 @@ type SkipBlock struct {
 	// SkipLists that depend on us, given as the first SkipBlock - can
 	// be a Data or a Roster SkipBlock
 	ChildSL []SkipBlockID
+
+	// Payload is additional data that needs to be hashed by the application
+	// itself into SkipBlockFix.Data. A normal usecase is to set
+	// SkipBlockFix.Data to the sha256 of this payload. Then the proofs
+	// using the skipblocks can return simply the SkipBlockFix, as long as they
+	// don't need the payload.
+	Payload []byte `protobuf:"opt"`
 }
 
 // NewSkipBlock pre-initialises the block so it can be sent over

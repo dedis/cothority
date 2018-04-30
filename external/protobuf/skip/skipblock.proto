@@ -19,6 +19,7 @@ message SkipBlock {
     required bytes hash = 11;
     repeated ForwardLink forward = 12;
     repeated bytes children = 13;
+    optional bytes payload = 14;
 }
 
 message SkipBlockMap {
