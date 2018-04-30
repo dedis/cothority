@@ -6,3 +6,4 @@ stable branch.
 */
 
 import _ "github.com/dedis/cothority/evoting/service"
+import _ "github.com/dedis/cothority/ocs/service"

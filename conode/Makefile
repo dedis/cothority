@@ -3,12 +3,14 @@ IMAGE_NAME = dedis/$(CONTAINER)
 DATA_DIR = $(shell pwd)/conode_data
 TAG=$(shell git describe --tags)
 OUTPUT_DIR=conode-$(TAG)
+VERSION := $(TAG)
 # dev is the master branch, which will get automatic date tagging for
 # distribution files.
-ifeq ($(TAG),dev)
-	TAG := $(TAG)-$(shell date +%y%m%d)
+ifeq ($(findstring dev,$(TAG)),dev)
+	TAG := dev-$(shell date +%y%m%d)
+	VERSION = dev
 endif
-VERSION := $(TAG)
+# TODO: should we keep this dirty tag?
 GITUNTRACKEDCHANGES := $(shell git status --porcelain --untracked-files=no)
 ifneq ($(GITUNTRACKEDCHANGES),)
 	VERSION := $(VERSION)-dirty

@@ -19,6 +19,8 @@ install:
 
 script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
 
+java: - (cd external/java; mvn test)
+
 after_success:
   - npm run coveralls
 
@@ -38,3 +40,4 @@ matrix:
 
       script:
         - make test
+
