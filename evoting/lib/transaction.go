@@ -2,9 +2,11 @@ package lib
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"time"
 
+	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
@@ -194,7 +196,6 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		return nil
 	} else if t.Mix != nil {
 		election, err := GetElection(s, genesis, false, t.User)
-		roster := election.Roster
 		if err != nil {
 			return err
 		}
@@ -202,19 +203,57 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		if err != nil {
 			return err
 		}
+		if !election.IsCreator(t.User) {
+			return errors.New("shuffle error: user is not election creator")
+		}
+
+		// verify proposer
+		data, err := t.Mix.PublicKey.MarshalBinary()
+		if err != nil {
+			return err
+		}
+		err = schnorr.Verify(cothority.Suite, t.Mix.PublicKey, data, t.Mix.Signature)
+		if err != nil {
+			return err
+		}
 
 		mixes, err := election.Mixes(s)
 		if err != nil {
 			return err
-		} else if len(mixes) == len(roster.List) {
-			return errors.New("shuffle error: election already shuffled")
-		} else if !election.IsCreator(t.User) {
-			return errors.New("shuffle error: user is not election creator")
 		}
+
+		if len(mixes) > 2*len(election.Roster.List)/3 {
+			return errors.New("shuffle error: election already shuffled")
+		}
+
+		for _, mix := range mixes {
+			if mix.PublicKey.Equal(t.Mix.PublicKey) {
+				return fmt.Errorf("%s has already proposed a shuffle", t.Mix.Node)
+			}
+		}
+
+		// check if Mix is valid
+		var x, y []kyber.Point
+		if len(mixes) == 0 {
+			// verify against Boxes
+			boxes, err := election.Box(s)
+			if err != nil {
+				return err
+			}
+			x, y = Split(boxes.Ballots)
+		} else {
+			// verify against the last mix
+			x, y = Split(mixes[len(mixes)-1].Ballots)
+		}
+		v, w := Split(t.Mix.Ballots)
+		err = Verify(t.Mix.Proof, election.Key, x, y, v, w)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	} else if t.Partial != nil {
 		election, err := GetElection(s, genesis, false, t.User)
-		roster := election.Roster
 		if err != nil {
 			return err
 		}
@@ -222,21 +261,48 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		if err != nil {
 			return err
 		}
-
-		mixes, err := election.Mixes(s)
-		if err != nil {
-			return err
-		} else if len(mixes) != len(roster.List) {
-			return errors.New("decrypt error, election not shuffled yet")
+		if !election.IsCreator(t.User) {
+			return errors.New("decrypt error: user is not election creator")
 		}
 
-		partials, err := election.Partials(s)
+		mixes, err := election.Mixes(s)
+		target := 2 * len(election.Roster.List) / 3
 		if err != nil {
 			return err
-		} else if len(partials) == len(roster.List) {
+		} else if len(mixes) <= target {
+			return errors.New("decrypt error: election not shuffled yet")
+		}
+		partials, err := election.Partials(s)
+
+		if len(partials) > target {
 			return errors.New("decrypt error: election already decrypted")
-		} else if !election.IsCreator(t.User) {
-			return errors.New("decrypt error: user is not election creator")
+		}
+
+		for _, partial := range partials {
+			if partial.PublicKey.Equal(t.Partial.PublicKey) {
+				return fmt.Errorf("%s has already proposed a partial", t.Partial.Node)
+			}
+		}
+
+		// verify proposer
+		data, err := t.Partial.PublicKey.MarshalBinary()
+		if err != nil {
+			return err
+		}
+		index := -1
+		for i, node := range election.Roster.List {
+			if node.Public.Equal(t.Partial.PublicKey) {
+				index = i
+				break
+			}
+		}
+		if index == -1 {
+			return errors.New("couldn't find node's index in Roster")
+		}
+		data = append(data, byte(index))
+		err = schnorr.Verify(cothority.Suite, t.Partial.PublicKey, data, t.Partial.Signature)
+		if err != nil {
+			return err
 		}
 		return nil
 	}

@@ -43,15 +43,19 @@ type Mix struct {
 	Ballots []*Ballot // Ballots are permuted and re-encrypted.
 	Proof   []byte    // Proof of the shuffle.
 
-	Node string // Node signifies the creator of the mix.
+	Node      string      // Node signifies the creator of the mix.
+	PublicKey kyber.Point // Public key of the node generating the mix
+	Signature []byte      // Signature of the public key
 }
 
 // Partial contains the partially decrypted ballots.
 type Partial struct {
 	Points []kyber.Point // Points are the partially decrypted plaintexts.
 
-	Flag bool   // Flag signals if the mixes could not be verified.
-	Node string // Node signifies the creator of this partial decryption.
+	Node      string      // Node signifies the creator of this partial decryption.
+	PublicKey kyber.Point // Public key of the node generating a partial decryption
+	Signature []byte      // Signature of the public key
+	Index     int         // Index of the node in the roster
 }
 
 // genPartials generates partial decryptions for a given list of shared secrets.

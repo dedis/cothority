@@ -7,15 +7,20 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/proof"
+	"github.com/dedis/kyber/shuffle"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/key"
+	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 
 	"github.com/stretchr/testify/require"
 
 	"github.com/dedis/cothority/evoting"
 	"github.com/dedis/cothority/evoting/lib"
+	"github.com/dedis/cothority/skipchain"
 )
 
 func TestMain(m *testing.M) {
@@ -308,7 +313,6 @@ func TestEvolveRoster(t *testing.T) {
 		Admins:    []uint32{idAdmin, idAdmin2},
 	})
 	require.Nil(t, err)
-	log.Lvl2("Wrote 2nd roster")
 
 	// Run an election on the new set of conodes, the new nodeKP, and the new
 	// election admin.
@@ -316,4 +320,289 @@ func TestEvolveRoster(t *testing.T) {
 
 	// There was a test here before to try to replace the leader.
 	// It didn't work. For the time being, that is not supported.
+
+	// The decrypt protocol tries to stop early as soon as 2n/3 + 1 nodes store a partial.
+	// However, since the leader sends a broadcast to all the n nodes initially we
+	// want the servers to be up until the goroutines terminate or the test framework complains
+	// about zombie goroutines. The call to time.Sleep ensures we dont end up with
+	// zombie goroutines
+	time.Sleep(5 * time.Second)
+}
+
+func setupElection(t *testing.T, s0 *Service, rl *evoting.LinkReply, nodeKP *key.Pair) skipchain.SkipBlockID {
+	adminSig := generateSignature(nodeKP.Private, rl.ID, idAdmin)
+
+	replyOpen, err := s0.Open(&evoting.Open{
+		ID: rl.ID,
+		Election: &lib.Election{
+			Creator: idAdmin,
+			Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
+			End:     time.Now().Unix() + 86400,
+		},
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+
+	// Prepare a helper for testing voting.
+	vote := func(user uint32, bufCand []byte) *evoting.CastReply {
+		k, c := lib.Encrypt(replyOpen.Key, bufCand)
+		ballot := &lib.Ballot{
+			User:  user,
+			Alpha: k,
+			Beta:  c,
+		}
+		cast, err := s0.Cast(&evoting.Cast{
+			ID:        replyOpen.ID,
+			Ballot:    ballot,
+			User:      user,
+			Signature: generateSignature(nodeKP.Private, rl.ID, user),
+		})
+		require.Nil(t, err)
+		return cast
+	}
+
+	// User votes
+	vote(idUser1, bufCand1)
+	vote(idUser2, bufCand1)
+	vote(idUser3, bufCand2)
+
+	return replyOpen.ID
+}
+
+func TestShuffleBenignNodeFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping", t.Name(), " in short mode")
+	}
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodeKP := key.NewKeyPair(cothority.Suite)
+	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+
+	// Create the master skipchain
+	ro := onet.NewRoster(roster.List)
+	rl, err := s0.Link(&evoting.Link{
+		Pin:    s0.pin,
+		Roster: ro,
+		Key:    nodeKP.Public,
+		Admins: []uint32{idAdmin},
+	})
+	require.Nil(t, err)
+	log.Lvl2("Wrote the roster")
+
+	electionID := setupElection(t, s0, rl, nodeKP)
+	adminSig := generateSignature(nodeKP.Private, rl.ID, idAdmin)
+
+	// Pause 2 nodes
+	nodes[5].Close()
+	nodes[6].Close()
+
+	// Shuffle all votes
+	_, err = s0.Shuffle(&evoting.Shuffle{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+}
+
+func TestShuffleCatastrophicNodeFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping", t.Name(), " in short mode")
+	}
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodeKP := key.NewKeyPair(cothority.Suite)
+	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+
+	// Create the master skipchain
+	ro := onet.NewRoster(roster.List)
+	rl, err := s0.Link(&evoting.Link{
+		Pin:    s0.pin,
+		Roster: ro,
+		Key:    nodeKP.Public,
+		Admins: []uint32{idAdmin},
+	})
+	require.Nil(t, err)
+	log.Lvl2("Wrote the roster")
+
+	electionID := setupElection(t, s0, rl, nodeKP)
+	adminSig := generateSignature(nodeKP.Private, rl.ID, idAdmin)
+
+	// Append two Mixes manually to simulate a shuffle gone bad
+	election, err := lib.GetElection(s0.skipchain, electionID, false, 0)
+	require.Nil(t, err)
+
+	genMix := func(ballots []*lib.Ballot, election *lib.Election, serverIdentity *network.ServerIdentity, private kyber.Scalar) *lib.Mix {
+		a, b := lib.Split(ballots)
+		g, d, prov := shuffle.Shuffle(cothority.Suite, nil, election.Key, a, b, random.New())
+		proof, err := proof.HashProve(cothority.Suite, "", prov)
+		require.Nil(t, err)
+		mix := &lib.Mix{
+			Ballots:   lib.Combine(g, d),
+			Proof:     proof,
+			Node:      "",
+			PublicKey: serverIdentity.Public,
+		}
+		data, err := mix.PublicKey.MarshalBinary()
+		require.Nil(t, err)
+		sig, err := schnorr.Sign(cothority.Suite, private, data)
+		require.Nil(t, err)
+		mix.Signature = sig
+		return mix
+	}
+
+	box, err := election.Box(s0.skipchain)
+	mix := genMix(box.Ballots, election, roster.Get(0), local.GetPrivate(nodes[0]))
+	tx := lib.NewTransaction(mix, idAdmin, adminSig)
+	_, err = lib.Store(s0.skipchain, election.ID, tx)
+	require.Nil(t, err)
+	mix2 := genMix(mix.Ballots, election, roster.Get(1), local.GetPrivate(nodes[1]))
+	tx = lib.NewTransaction(mix2, idAdmin, adminSig)
+	_, err = lib.Store(s0.skipchain, election.ID, tx)
+	require.Nil(t, err)
+
+	// Fail 3 nodes. New blocks cannot be added now because consensus cannot be reached.
+	nodes[2].Pause()
+	nodes[5].Pause()
+	nodes[6].Pause()
+
+	// Shuffle all votes
+	_, err = s0.Shuffle(&evoting.Shuffle{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.NotNil(t, err)
+
+	// Unpause the nodes and retry shuffling
+	nodes[2].Unpause()
+	nodes[5].Unpause()
+	nodes[6].Unpause()
+
+	_, err = s0.Shuffle(&evoting.Shuffle{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+}
+
+func TestDecryptBenignNodeFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping", t.Name(), " in short mode")
+	}
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodeKP := key.NewKeyPair(cothority.Suite)
+	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+
+	// Create the master skipchain
+	ro := onet.NewRoster(roster.List)
+	rl, err := s0.Link(&evoting.Link{
+		Pin:    s0.pin,
+		Roster: ro,
+		Key:    nodeKP.Public,
+		Admins: []uint32{idAdmin},
+	})
+	require.Nil(t, err)
+	log.Lvl2("Wrote the roster")
+
+	electionID := setupElection(t, s0, rl, nodeKP)
+	adminSig := generateSignature(nodeKP.Private, rl.ID, idAdmin)
+
+	// Shuffle all votes
+	_, err = s0.Shuffle(&evoting.Shuffle{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+
+	// Close 2 Nodes
+	nodes[2].Close()
+	nodes[5].Close()
+
+	// Try to decrypt
+	_, err = s0.Decrypt(&evoting.Decrypt{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+}
+
+func TestDecryptCatastrophicNodeFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping", t.Name(), " in short mode")
+	}
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodeKP := key.NewKeyPair(cothority.Suite)
+	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+
+	// Create the master skipchain
+	ro := onet.NewRoster(roster.List)
+	rl, err := s0.Link(&evoting.Link{
+		Pin:    s0.pin,
+		Roster: ro,
+		Key:    nodeKP.Public,
+		Admins: []uint32{idAdmin},
+	})
+	require.Nil(t, err)
+	log.Lvl2("Wrote the roster")
+
+	electionID := setupElection(t, s0, rl, nodeKP)
+	adminSig := generateSignature(nodeKP.Private, rl.ID, idAdmin)
+
+	// Shuffle all votes
+	_, err = s0.Shuffle(&evoting.Shuffle{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+
+	// Fail 3 nodes
+	nodes[2].Pause()
+	nodes[4].Pause()
+	nodes[5].Pause()
+
+	// Try a decrypt now. It should timeout because no blocks can be stored
+	_, err = s0.Decrypt(&evoting.Decrypt{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.NotNil(t, err)
+
+	log.Lvl2("Decrypt timed out on 3 nodes failing")
+
+	// Unpause the nodes
+	nodes[2].Unpause()
+	nodes[4].Unpause()
+	nodes[5].Unpause()
+
+	// Try a decrypt now. It should succeed
+	_, err = s0.Decrypt(&evoting.Decrypt{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+
+	// The decrypt protocol tries to stop early as soon as 2n/3 + 1 nodes store a partial.
+	// However, since the leader sends a broadcast to all the n nodes initially we
+	// want the servers to be up until the goroutines terminate or the test framework complains
+	// about zombie goroutines. The call to time.Sleep ensures we dont end up with
+	// zombie goroutines
+	time.Sleep(5 * time.Second)
 }

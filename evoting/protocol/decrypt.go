@@ -1,7 +1,12 @@
 package protocol
 
 import (
+	"errors"
+	"sync"
+
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 
@@ -38,7 +43,10 @@ type Decrypt struct {
 	Secret   *lib.SharedSecret // Secret is the private key share from the DKG.
 	Election *lib.Election     // Election to be decrypted.
 
-	Finished chan bool // Flag to signal protocol termination.
+	Finished           chan bool // Flag to signal protocol termination.
+	LeaderParticipates bool      // LeaderParticipates is a flag to denote if leader should calculate the partial.
+	successReplies     int
+	mutex              sync.Mutex
 
 	Skipchain *skipchain.Service
 }
@@ -63,64 +71,90 @@ func (d *Decrypt) Start() error {
 // HandlePrompt retrieves the mixes, verifies them and performs a partial decryption
 // on the last mix before appending it to the election skipchain.
 func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
-	if !d.IsRoot() {
-		defer d.finish()
-	}
-
-	box, err := d.Election.Box(d.Skipchain)
-	if err != nil {
-		return err
-	}
 	mixes, err := d.Election.Mixes(d.Skipchain)
 	if err != nil {
 		return err
 	}
-
-	last := mixes[len(mixes)-1].Ballots
-	points := make([]kyber.Point, len(box.Ballots))
-	for i := range points {
-		points[i] = lib.Decrypt(d.Secret.V, last[i].Alpha, last[i].Beta)
+	target := 2 * len(d.Election.Roster.List) / 3
+	if len(mixes) <= target {
+		return errors.New("Not enough mixes")
 	}
-
-	flag := Verify(d.Election.Key, box, mixes)
-	partial := &lib.Partial{Points: points, Flag: flag, Node: d.Name()}
-	transaction := lib.NewTransaction(partial, d.User, d.Signature)
-	if err = lib.StoreUsingWebsocket(d.Election.ID, d.Election.Roster, transaction); err != nil {
-		return err
-	}
-
-	if d.IsLeaf() {
+	partials, err := d.Election.Partials(d.Skipchain)
+	delegate := func() error {
+		if d.IsRoot() {
+			d.successReplies = len(partials)
+			if d.LeaderParticipates {
+				d.successReplies++
+			}
+			d.Broadcast(&PromptDecrypt{})
+			return nil
+		}
+		// report to root
+		defer d.Done()
 		return d.SendTo(d.Root(), &TerminateDecrypt{})
 	}
-	return d.SendToChildren(&PromptDecrypt{})
+	if d.IsRoot() && !d.LeaderParticipates {
+		return delegate()
+	}
+
+	mix := mixes[len(mixes)-1]
+	points := make([]kyber.Point, len(mix.Ballots))
+	for i := range points {
+		points[i] = lib.Decrypt(d.Secret.V, mix.Ballots[i].Alpha, mix.Ballots[i].Beta)
+	}
+	index := -1
+	for i, node := range d.Election.Roster.List {
+		if node.Public.Equal(d.Public()) {
+			index = i
+			break
+		}
+	}
+	if index == -1 {
+		return d.SendTo(d.Root(), &TerminateDecrypt{Error: "couldn't find index in Roster"})
+	}
+
+	partial := &lib.Partial{
+		Points:    points,
+		Node:      d.Name(),
+		PublicKey: d.Public(),
+		Index:     index,
+	}
+	data, err := partial.PublicKey.MarshalBinary()
+	data = append(data, byte(partial.Index))
+	if err != nil {
+		return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})
+	}
+	sig, err := schnorr.Sign(cothority.Suite, d.Private(), data)
+	if err != nil {
+		return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})
+	}
+	partial.Signature = sig
+	transaction := lib.NewTransaction(partial, d.User, d.Signature)
+	if err = lib.StoreUsingWebsocket(d.Election.ID, d.Election.Roster, transaction); err != nil {
+		return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})
+	}
+	return delegate()
 }
 
 // finish terminates the protocol within onet.
-func (d *Decrypt) finish() {
-	d.Done()
-	d.Finished <- true
+func (d *Decrypt) finish(err error) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	if err == nil {
+		d.successReplies++
+	}
+	if d.successReplies > 2*len(d.Election.Roster.List)/3 {
+		d.Done()
+		d.Finished <- true
+	}
 }
 
 // HandleTerminate concludes to the protocol.
 func (d *Decrypt) HandleTerminate(terminate MessageTerminateDecrypt) error {
-	d.finish()
+	if terminate.Error != "" {
+		d.finish(errors.New(terminate.Error))
+	} else {
+		d.finish(nil)
+	}
 	return nil
-}
-
-// Verify iteratively checks the integrity of each mix.
-func Verify(key kyber.Point, box *lib.Box, mixes []*lib.Mix) bool {
-	x, y := lib.Split(box.Ballots)
-	v, w := lib.Split(mixes[0].Ballots)
-	if lib.Verify(mixes[0].Proof, key, x, y, v, w) != nil {
-		return false
-	}
-
-	for i := 0; i < len(mixes)-1; i++ {
-		x, y = lib.Split(mixes[i].Ballots)
-		v, w = lib.Split(mixes[i+1].Ballots)
-		if lib.Verify(mixes[i+1].Proof, key, x, y, v, w) != nil {
-			return false
-		}
-	}
-	return true
 }

@@ -5,10 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/proof"
 	"github.com/dedis/kyber/shuffle"
+	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -99,7 +103,8 @@ func runDecrypt(t *testing.T, n int) {
 		a, b := lib.Encrypt(key, []byte{byte(i)})
 		ballots[i] = &lib.Ballot{User: uint32(i), Alpha: a, Beta: b}
 		tx = lib.NewTransaction(ballots[i], election.Creator, []byte{})
-		lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
+		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
+		require.Nil(t, err)
 	}
 
 	mixes := make([]*lib.Mix, n)
@@ -107,9 +112,13 @@ func runDecrypt(t *testing.T, n int) {
 	for i := range mixes {
 		v, w, prover := shuffle.Shuffle(cothority.Suite, nil, key, x, y, random.New())
 		proof, _ := proof.HashProve(cothority.Suite, "", prover)
-		mix := &lib.Mix{Ballots: lib.Combine(v, w), Proof: proof, Node: string(i)}
+		public := roster.Get(i).Public
+		data, _ := public.MarshalBinary()
+		sig, _ := schnorr.Sign(cothority.Suite, local.GetPrivate(nodes[i]), data)
+		mix := &lib.Mix{Ballots: lib.Combine(v, w), Proof: proof, Node: string(i), PublicKey: public, Signature: sig}
 		tx = lib.NewTransaction(mix, election.Creator, []byte{})
-		lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
+		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
+		require.Nil(t, err)
 		x, y = v, w
 	}
 
@@ -120,16 +129,129 @@ func runDecrypt(t *testing.T, n int) {
 	decrypt.Signature = []byte{}
 	decrypt.Election = election
 	decrypt.Skipchain = services[0].(*decryptService).skipchain
+	decrypt.LeaderParticipates = true
 	decrypt.Start()
 
 	select {
 	case <-decrypt.Finished:
 		partials, _ := election.Partials(services[0].(*decryptService).skipchain)
-		require.Equal(t, n, len(partials))
-		for _, partial := range partials {
-			require.True(t, partial.Flag)
-		}
-	case <-time.After(60 * time.Second):
+		require.True(t, 2*n/3 < len(partials))
+	case <-time.After(180 * time.Second):
 		assert.True(t, false)
 	}
+
+	// The decrypt protocol tries to stop early as soon as 2n/3 + 1 nodes store a partial.
+	// However, since the leader sends a broadcast to all the n nodes initially we
+	// want the servers to be up until the goroutines terminate or the test framework complains
+	// about zombie goroutines. The call to time.Sleep ensures we dont end up with
+	// zombie goroutines
+	time.Sleep(2 * time.Second)
+}
+
+func TestDecryptNodeFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping", t.Name(), " in short mode")
+	}
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodes, roster, tree := local.GenBigTree(7, 7, 1, true)
+	services := local.GetServices(nodes, decryptServiceID)
+
+	dkgs, _ := lib.DKGSimulate(7, 6)
+	shared, _ := lib.NewSharedSecret(dkgs[0])
+	key := shared.X
+
+	chain, _ := lib.NewSkipchain(services[0].(*decryptService).skipchain, roster, skipchain.VerificationStandard)
+	election := &lib.Election{
+		ID:      chain.Hash,
+		Roster:  roster,
+		Key:     key,
+		Creator: 0,
+		Users:   []uint32{0, 1, 2},
+	}
+	for i := range services {
+		services[i].(*decryptService).secret, _ = lib.NewSharedSecret(dkgs[i])
+		services[i].(*decryptService).election = election
+		services[i].(*decryptService).user = 0
+		services[i].(*decryptService).signature = []byte{}
+	}
+
+	tx := lib.NewTransaction(election, election.Creator, []byte{})
+	lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
+
+	ballots := make([]*lib.Ballot, 3)
+	for i := 0; i < 3; i++ {
+		a, b := lib.Encrypt(key, []byte{byte(i)})
+		ballots[i] = &lib.Ballot{User: uint32(i), Alpha: a, Beta: b}
+		tx = lib.NewTransaction(ballots[i], election.Creator, []byte{})
+		lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
+	}
+
+	mixes := make([]*lib.Mix, 7)
+	x, y := lib.Split(ballots)
+	for i := range mixes {
+		v, w, prover := shuffle.Shuffle(cothority.Suite, nil, key, x, y, random.New())
+		proof, _ := proof.HashProve(cothority.Suite, "", prover)
+		public := roster.Get(i).Public
+		data, _ := public.MarshalBinary()
+		sig, _ := schnorr.Sign(cothority.Suite, local.GetPrivate(nodes[i]), data)
+		mix := &lib.Mix{Ballots: lib.Combine(v, w), Proof: proof, Node: string(i), PublicKey: public, Signature: sig}
+		mixes[i] = mix
+		tx = lib.NewTransaction(mix, election.Creator, []byte{})
+		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
+		require.Nil(t, err)
+		x, y = v, w
+	}
+
+	// we're trying to simulate a decryption that failed previously
+	for i := 0; i < 2; i++ {
+		mix := mixes[len(mixes)-1]
+		points := make([]kyber.Point, len(mix.Ballots))
+		for i := range points {
+			secret, _ := lib.NewSharedSecret(dkgs[i])
+			points[i] = lib.Decrypt(secret.V, mix.Ballots[i].Alpha, mix.Ballots[i].Beta)
+		}
+
+		partial := &lib.Partial{
+			Points:    points,
+			Node:      "",
+			PublicKey: nodes[i].ServerIdentity.Public,
+			Index:     i,
+		}
+		data, _ := partial.PublicKey.MarshalBinary()
+		data = append(data, byte(partial.Index))
+		sig, _ := schnorr.Sign(cothority.Suite, local.GetPrivate(nodes[i]), data)
+		partial.Signature = sig
+		transaction := lib.NewTransaction(partial, election.Creator, []byte{})
+		lib.StoreUsingWebsocket(election.ID, election.Roster, transaction)
+	}
+
+	rooted := onet.NewRoster(append([]*network.ServerIdentity{tree.Roster.List[0]}, tree.Roster.List[2:]...))
+	protocolTree := rooted.GenerateNaryTree(1)
+	instance, _ := services[0].(*decryptService).CreateProtocol(NameDecrypt, protocolTree)
+	decrypt := instance.(*Decrypt)
+	decrypt.Secret, _ = lib.NewSharedSecret(dkgs[0])
+	decrypt.User = 0
+	decrypt.Signature = []byte{}
+	decrypt.Election = election
+	decrypt.Skipchain = services[0].(*decryptService).skipchain
+	decrypt.LeaderParticipates = false
+	log.Lvl1("Starting the decrypt protocol")
+	decrypt.Start()
+
+	select {
+	case <-decrypt.Finished:
+		partials, _ := election.Partials(services[0].(*decryptService).skipchain)
+		require.True(t, len(partials) == 5)
+	case <-time.After(300 * time.Second):
+		assert.True(t, false)
+	}
+
+	// The decrypt protocol tries to stop early as soon as 2n/3 + 1 nodes store a partial.
+	// However, since the leader sends a broadcast to all the n nodes initially we
+	// want the servers to be up until the goroutines terminate or the test framework complains
+	// about zombie goroutines. The call to time.Sleep ensures we dont end up with
+	// zombie goroutines
+	time.Sleep(2 * time.Second)
 }
