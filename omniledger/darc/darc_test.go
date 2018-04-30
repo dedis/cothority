@@ -197,15 +197,13 @@ func TestDarc_EvolveMoreOnline(t *testing.T) {
 	// create darcs that do not have the full path
 	lightDarc1 := darcs[len(darcs)-1].Copy()
 	lightDarc1.Signatures = []*Signature{&Signature{
-		Signature:  copyBytes(darcs[len(darcs)-1].Signatures[0].Signature),
-		Signer:     darcs[len(darcs)-1].Signatures[0].Signer,
-		PathDigest: darcs[len(darcs)-1].Signatures[0].PathDigest,
+		Signature: copyBytes(darcs[len(darcs)-1].Signatures[0].Signature),
+		Signer:    darcs[len(darcs)-1].Signatures[0].Signer,
 	}}
 	lightDarc2 := darcs[len(darcs)-2].Copy()
 	lightDarc2.Signatures = []*Signature{&Signature{
-		Signature:  copyBytes(darcs[len(darcs)-2].Signatures[0].Signature),
-		Signer:     darcs[len(darcs)-2].Signatures[0].Signer,
-		PathDigest: darcs[len(darcs)-2].Signatures[0].PathDigest,
+		Signature: copyBytes(darcs[len(darcs)-2].Signatures[0].Signature),
+		Signer:    darcs[len(darcs)-2].Signatures[0].Signer,
 	}}
 
 	// verification should fail if the callback is not set

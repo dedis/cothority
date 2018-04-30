@@ -92,6 +92,7 @@ func (d *Darc) Copy() *Darc {
 		Version:     d.Version,
 		Description: copyBytes(d.Description),
 		BaseID:      copyBytes(d.BaseID),
+		PathDigest:  copyBytes(d.PathDigest),
 	}
 	newRules := make(Rules)
 	for k, v := range d.Rules {
@@ -255,8 +256,12 @@ func (d *Darc) Evolve(path []*Darc, prevOwners ...*Signer) error {
 	d.BaseID = prevDarc.GetBaseID()
 
 	tmpSigs := make([]*Signature, len(prevOwners))
+	pathDigest, err := hashAll(darcsMsg(path))
+	if err != nil {
+		return err
+	}
 	for i, prevOwner := range prevOwners {
-		sig, err := NewDarcSignature(prevOwner, d.GetID(), path)
+		sig, err := NewDarcSignature(prevOwner, d.GetID(), pathDigest)
 		if err != nil {
 			return errors.New("error creating a darc signature for evolution: " + err.Error())
 		}
@@ -267,6 +272,7 @@ func (d *Darc) Evolve(path []*Darc, prevOwners ...*Signer) error {
 	}
 	d.Path = path
 	d.Signatures = tmpSigs
+	d.PathDigest = pathDigest
 	return nil
 }
 
@@ -341,12 +347,8 @@ func (d *Darc) findPath(getDarc func(string) *Darc) error {
 		if err != nil {
 			return err
 		}
-		// Check that the path are equal to the digests in the
-		// signatures.
-		for _, sig := range d.Signatures {
-			if !bytes.Equal(pathDigest, sig.PathDigest) {
-				return fmt.Errorf("recomputed digest is not equal to the original")
-			}
+		if !bytes.Equal(pathDigest, d.PathDigest) {
+			return fmt.Errorf("recomputed digest is not equal to the original")
 		}
 		d.Path = path
 	}
@@ -415,22 +417,15 @@ func (di ID) Equal(other ID) bool {
 // NewDarcSignature creates a new darc signature by hashing (baseID + pathMsg),
 // where PathMsg is retrieved from a given signature path, and signing it
 // with a given signer.
-func NewDarcSignature(signer *Signer, id ID, path []*Darc) (*Signature, error) {
+func NewDarcSignature(signer *Signer, id ID, pathDigest []byte) (*Signature, error) {
 	if signer == nil {
 		return nil, errors.New("signer missing")
 	}
 	if len(id) == 0 {
 		return nil, errors.New("id missing")
 	}
-	if len(path) == 0 {
-		return nil, errors.New("path missing")
-	}
-
-	// Create the message and then sign it, make sure the message is
-	// re-created the same way for the verification.
-	pathDigest, err := hashAll(darcsMsg(path))
-	if err != nil {
-		return nil, err
+	if len(pathDigest) == 0 {
+		return nil, errors.New("path digest missing")
 	}
 	digest, err := hashAll(id, pathDigest)
 	if err != nil {
@@ -440,7 +435,7 @@ func NewDarcSignature(signer *Signer, id ID, path []*Darc) (*Signature, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := Signature{Signature: sig, Signer: *signer.Identity(), PathDigest: pathDigest}
+	s := Signature{Signature: sig, Signer: *signer.Identity()}
 	return &s, nil
 }
 
@@ -456,7 +451,7 @@ func (d *Darc) pathContains(cb func(*Darc) bool) bool {
 
 // Verify returns nil if the signature is correct, or an error
 // if something is wrong.
-func (s *Signature) verify(path []*Darc, msg []byte, base ID) error {
+func (s *Signature) verify(path []*Darc, pathDigest []byte, msg []byte, base ID) error {
 	if base == nil {
 		return errors.New("base-darc is missing")
 	}
@@ -465,9 +460,16 @@ func (s *Signature) verify(path []*Darc, msg []byte, base ID) error {
 	}
 	sigBase := path[0].GetID()
 	if !sigBase.Equal(base) {
-		return errors.New("Base-darc is not at root of path")
+		return errors.New("base-darc is not at root of path")
 	}
-	digest, err := hashAll(msg, s.PathDigest)
+	pathDigest2, err := hashAll(darcsMsg(path))
+	if err != nil {
+		return err
+	}
+	if !bytes.Equal(pathDigest, pathDigest2) {
+		return errors.New("path digests are not equal")
+	}
+	digest, err := hashAll(msg, pathDigest)
 	if err != nil {
 		return err
 	}
@@ -524,7 +526,11 @@ func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string) *Darc) err
 
 	// perform the verification
 	for _, sig := range newDarc.Signatures {
-		if err := sig.verify(newDarc.Path, newDarc.GetID(), prevDarc.GetBaseID()); err != nil {
+		if err := sig.verify(
+			newDarc.Path,
+			newDarc.PathDigest,
+			newDarc.GetID(),
+			prevDarc.GetBaseID()); err != nil {
 			return err
 		}
 	}

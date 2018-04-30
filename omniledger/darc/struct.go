@@ -55,6 +55,9 @@ type Darc struct {
 	// Darc.  These are ordered from the oldest to the newest, i.e.
 	// Darcs[0] should be the base Darc.
 	Path []*Darc
+	// PathDigest should be set when Path has length 0. It should be the
+	// same as the return value of GetPathMsg.
+	PathDigest []byte
 	// Signature is calculated over the protobuf representation of [Rules, Version, Description]
 	// and needs to be created by an Owner from the previous valid Darc.
 	Signatures []*Signature
@@ -104,9 +107,6 @@ type Signature struct {
 	Signature []byte
 	// Signer is the Idenity (public key or another Darc) of the signer
 	Signer Identity
-	// PathDigest should be set when Path has length 0. It should be the
-	// same as the return value of GetPathMsg.
-	PathDigest []byte
 }
 
 // Signer is a generic structure that can hold different types of signers
