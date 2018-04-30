@@ -10,6 +10,7 @@ github.com/dedis/onet v0.0.0-20180404142611-b45aa4dcfaec h1:khV/qSxXZwjzm0JO6ZD0
 github.com/dedis/onet v0.0.0-20180410144522-645e84787422 h1:3gcWLjVyjE7myP02befKxQhlqKe/5fGTGXtNs8bRH5U=
 github.com/dedis/onet v0.0.0-20180417114521-19e8f239c08f h1:lX5r7Ak4HIKG4nZd3OjLsFMfyAncOYbAxZ38a8UI6hs=
 github.com/dedis/onet v0.0.0-20180419092102-f76674afd9f1 h1:2ya2J6HSMpbg7Z2ML92WmDMN14f6rjsMUvhjyQ3HNCM=
+github.com/dedis/onet v0.0.0-20180427144139-dc10466fd622 h1:wgBJyufNbpWvyEK7d9ozyOmZ8rIbEJ0NV7nBuuBWNlg=
 github.com/dedis/protobuf v1.0.3 h1:BVMOAxlT+nR/8JfmG+e8WfYGOXJnct4213mC8g2MQIM=
 github.com/golangplus/bytes v0.0.0-20160111154220-45c989fe5450 h1:7xqw01UYS+KCI25bMrPxwNYkSns2Db1ziQPpVq99FpE=
 github.com/golangplus/fmt v0.0.0-20150411045040-2a5d6d7d2995 h1:f5gsjBiF9tRRVomCvrkGMMWI8W1f2OBFar2c5oakAP0=
