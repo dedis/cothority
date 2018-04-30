@@ -17,12 +17,14 @@ import (
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/log"
 	"gopkg.in/dedis/onet.v2/network"
+	"gopkg.in/satori/go.uuid.v1"
 
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 )
 
 // Used for tests
 var omniledgerID onet.ServiceID
+var verifyOmniledger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Omniledger"))
 
 const keyMerkleRoot = "merkleroot"
 const keyNewKey = "newkey"
@@ -169,6 +171,8 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, ts 
 		sb.Roster = r
 		sb.MaximumHeight = 10
 		sb.BaseHeight = 10
+		// We have to register the verification functions in the genesis block
+		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, verifyOmniledger}
 		for _, t := range ts {
 			log.Printf("Adding transaction %+v", t)
 			err := c.Add(t.Key, t.Value, t.Kind)
@@ -403,5 +407,14 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	skipchain.RegisterVerification(c, verifyOmniledger, s.verifySkipBlock)
 	return s, nil
+}
+
+// We use the omniledger as a receiver (as is done in the identity service),
+// so we can access e.g. the collectionDBs of the service.
+func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
+	// Dummy implementation, always returns true for the moment.
+	return true
 }
