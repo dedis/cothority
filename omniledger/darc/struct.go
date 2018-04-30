@@ -128,11 +128,16 @@ type SignerX509EC struct {
 	secret []byte
 }
 
+type innerRequest struct {
+	BaseID     ID
+	Action     Action
+	Msg        []byte
+	Identities []*Identity
+	// TODO add the darc for where the identities should come from, e.g. SignerDarcs []string
+}
+
 // Request is the structure that the client must provide to be verified
 type Request struct {
-	ID         ID          // for identifying the darc
-	Action     Action      // do we need this, also specific to the rule?
-	Msg        []byte      // what the request wants to do, application specific
-	Identities []*Identity //
-	Signatures [][]byte    // we need multi signatures because expression, for every identity
+	innerRequest
+	Signatures [][]byte
 }
