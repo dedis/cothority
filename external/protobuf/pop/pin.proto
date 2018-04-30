@@ -7,3 +7,11 @@ message PinRequest {
     required string pin = 1;
     required bytes public = 2;
 }
+
+message VerifyLink{
+  required bytes public = 1;
+}
+
+message VerifyLinkReply{
+  required bool exists = 1;
+}
