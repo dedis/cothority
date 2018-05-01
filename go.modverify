@@ -11,6 +11,7 @@ github.com/dedis/onet v0.0.0-20180410144522-645e84787422 h1:3gcWLjVyjE7myP02befK
 github.com/dedis/onet v0.0.0-20180417114521-19e8f239c08f h1:lX5r7Ak4HIKG4nZd3OjLsFMfyAncOYbAxZ38a8UI6hs=
 github.com/dedis/onet v0.0.0-20180419092102-f76674afd9f1 h1:2ya2J6HSMpbg7Z2ML92WmDMN14f6rjsMUvhjyQ3HNCM=
 github.com/dedis/onet v0.0.0-20180427144139-dc10466fd622 h1:wgBJyufNbpWvyEK7d9ozyOmZ8rIbEJ0NV7nBuuBWNlg=
+github.com/dedis/onet v0.0.0-20180501101923-0ef35eaee4bc h1:MFau6ir2mCnbKFPT7VgXKXkzYl6AVXIidVFXrQM75UM=
 github.com/dedis/protobuf v1.0.3 h1:BVMOAxlT+nR/8JfmG+e8WfYGOXJnct4213mC8g2MQIM=
 github.com/golangplus/bytes v0.0.0-20160111154220-45c989fe5450 h1:7xqw01UYS+KCI25bMrPxwNYkSns2Db1ziQPpVq99FpE=
 github.com/golangplus/fmt v0.0.0-20150411045040-2a5d6d7d2995 h1:f5gsjBiF9tRRVomCvrkGMMWI8W1f2OBFar2c5oakAP0=
@@ -20,6 +21,7 @@ github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe h1:iruDEfMl2E6f
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/qantik/qrgo v0.0.0-20160917134849-0c6b902c59f6 h1:pS1NTgMvVR/4u0xU8/L4S9xSWgyknvFSIPa5upvpdGo=
 github.com/satori/go.uuid v1.2.0 h1:0uYX9dsZ2yD7q2RtLRtPSdGDWzjeM3TbMJP9utgA0ww=
+github.com/stackimpact/stackimpact-go v1.4.4 h1:agaNvfK/wrSBpiRWJU7sWl02X4JM2QRG9L6i9iB8w0I=
 github.com/stretchr/testify v1.2.1 h1:52QO5WkIUcHGIR7EnGagH88x1bUzqGXTC5/1bDTUQ7U=
 golang.org/x/crypto v0.0.0-20180403160946-b2aa35443fbc h1:Kx1Ke+iCR1aDjbWXgmEQGFxoHtNL49aRZGV7/+jJ41Y=
 golang.org/x/crypto v0.0.0-20180409150046-beb2a9779c3b h1:8qH/iv/miaZ4q/LZz6NphuR7r+ygDQP6mzwn2r++vBQ=
