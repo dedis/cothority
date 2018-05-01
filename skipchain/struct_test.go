@@ -201,7 +201,7 @@ func TestSkipBlock_GetFuzzy(t *testing.T) {
 func TestSkipBlock_Payload(t *testing.T) {
 	sb := NewSkipBlock()
 	h := sb.CalculateHash()
-	sb.PayLoad = []byte{1, 2, 3}
+	sb.Payload = []byte{1, 2, 3}
 	require.Equal(t, h, sb.CalculateHash())
 }
 
