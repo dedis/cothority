@@ -141,13 +141,14 @@ message ReconstructReply {
 message Mix {
 	repeated Ballot ballots = 1;
 	required bytes proof = 2;
-	required string node = 3;
+	required bytes nodeid = 3;
+	required bytes signature = 4;
 }
 
 message Partial {
 	repeated bytes points = 1;
-	required bool flag = 2;
-	required string node = 3;	
+	required bytes nodeid = 2;
+	required bytes signature = 3;
 }
 
 message Transaction {
