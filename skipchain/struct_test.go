@@ -198,6 +198,13 @@ func TestSkipBlock_GetFuzzy(t *testing.T) {
 	require.Equal(t, sb.Data[0], sb0.Data[0])
 }
 
+func TestSkipBlock_Payload(t *testing.T) {
+	sb := NewSkipBlock()
+	h := sb.CalculateHash()
+	sb.PayLoad = []byte{1, 2, 3}
+	require.Equal(t, h, sb.CalculateHash())
+}
+
 // setupSkipBlockDB initialises a database with a bucket called 'skipblock-test' inside.
 // The caller is responsible to close and remove the database file after using it.
 func setupSkipBlockDB(t *testing.T) (*SkipBlockDB, string) {
