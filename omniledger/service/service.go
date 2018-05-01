@@ -313,7 +313,7 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) (chan Transactio
 			select {
 			case t := <-c:
 				ts = append(ts, t)
-				log.Lvlf2("%x: Stored transaction - length is %d", scID, len(ts))
+				log.Lvlf2("%x: Stored transaction %+v - length is %d: %+v", scID, t, len(ts), ts)
 			case <-to:
 				log.Lvlf2("%x: New epoch and transaction-length: %d", scID, len(ts))
 				if len(ts) > 0 {
@@ -325,12 +325,26 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) (chan Transactio
 					_, err = s.createNewBlock(scID, sb.Roster, ts)
 					if err != nil {
 						log.Error("couldn't create new block: " + err.Error())
+
+						// For testing purposes, I remove all the transactions from
+						// the queue if the block was not accepted by the skipchain.
+						// A better solution would be to mark them invalid and have
+						// the skipchain ignore them during the verification.
+						// TODO: Above.
+						ts = []Transaction{}
+						to = time.After(waitQueueing)
 						continue
 					}
+					// For testing purposes, I remove all the transactions from
+					// the queue if the block was not accepted by the skipchain.
+					// A better solution would be to mark them invalid and have
+					// the skipchain ignore them during the verification.
+					// TODO: Above.
 					ts = []Transaction{}
 				}
 				to = time.After(waitQueueing)
 			case <-s.CloseQueues:
+				log.Lvlf2("closing queues...")
 				return
 			}
 		}
@@ -409,6 +423,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
+	s.verifiers = make(map[string]OmniledgerVerifier)
 	skipchain.RegisterVerification(c, verifyOmniledger, s.verifySkipBlock)
 	return s, nil
 }
@@ -426,28 +441,12 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) (val
 	txs := data.Transactions
 	cdb := s.getCollection(newSB.Hash)
 	for _, tx := range txs {
-		f, ok = verifiers[string(tx.kind)]
+		f, ok := s.verifiers[string(tx.Kind)]
 		if ok {
-			validSB = validSB && f(cdb, tx)
+			validSB = validSB && f(cdb, &tx)
 		}
 	}
 	return
-}
-
-// Since the outcome of the verification depends on the state of the collection
-// which is to be modified, we use it as a receiver here.
-func verifyDummyKind(cdb *collectionDB, tx *Transaction) bool {
-	switch a := tx.Action; a {
-	case Create:
-		return true
-	case Update:
-		return true
-	// removing and unknown actions are forbidden
-	case Remove:
-		return false
-	default:
-		return false
-	}
 }
 
 // RegisterVerification stores the verification in a map and will
@@ -459,6 +458,8 @@ func (s *Service) registerVerification(kind string, f OmniledgerVerifier) error 
 
 // RegisterVerification stores the verification in a map and will
 // call it whenever a verification needs to be done.
+// GetService makes it possible to give either an `onet.Context` or
+// `onet.Server` to `RegisterVerification`.
 func RegisterVerification(s skipchain.GetService, kind string, f OmniledgerVerifier) error {
 	scs := s.Service(ServiceName)
 	if scs == nil {
