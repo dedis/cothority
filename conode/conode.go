@@ -36,6 +36,9 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
+
+	// for getting access to the stackimpact agent
+	evoting "github.com/dedis/cothority/evoting/service"
 )
 
 const (
@@ -50,6 +53,8 @@ const (
 var gitTag = ""
 
 func main() {
+	defer evoting.Agent.RecordAndRecoverPanic()
+
 	cliApp := cli.NewApp()
 	cliApp.Name = DefaultName
 	cliApp.Usage = "run a cothority server"
@@ -142,6 +147,8 @@ func main() {
 }
 
 func runServer(ctx *cli.Context) error {
+	defer evoting.Agent.RecordAndRecoverPanic()
+
 	// first check the options
 	config := ctx.GlobalString("config")
 	app.RunServer(config)

@@ -22,6 +22,7 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	stackimpact "github.com/stackimpact/stackimpact-go"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/evoting"
@@ -31,6 +32,11 @@ import (
 )
 
 var errOnlyLeader = errors.New("operation only allowed on the leader node")
+
+var Agent = stackimpact.Start(stackimpact.Options{
+	AgentKey: "d9051640e646cc74711f6226e44b6e2c2c4f78c1",
+	AppName:  "evoting-conode",
+})
 
 func init() {
 	network.RegisterMessages(synchronizer{}, storage{})
@@ -53,6 +59,7 @@ type Service struct {
 	*onet.ServiceProcessor
 
 	skipchain *skipchain.Service
+	rl        recentLog
 
 	mutex         sync.Mutex
 	finalizeMutex sync.Mutex // used for protecting shuffle and decrypt operations
@@ -82,6 +89,8 @@ func (s *Service) Ping(req *evoting.Ping) (*evoting.Ping, error) {
 
 // Link message handler. Generates a new master skipchain, or updates an existing one.
 func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
+	defer Agent.RecordAndRecoverPanic()
+
 	if req.Pin != s.pin {
 		return nil, errors.New("link error: invalid pin")
 	}
@@ -133,6 +142,8 @@ func (s *Service) Link(req *evoting.Link) (*evoting.LinkReply, error) {
 
 // Open message hander. Create a new election with accompanying skipchain.
 func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
+	defer Agent.RecordAndRecoverPanic()
+
 	master, err := lib.GetMaster(s.skipchain, req.ID)
 	if err != nil {
 		return nil, err
@@ -203,6 +214,8 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 // LookupSciper calls https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
 // to convert Sciper numbers to names.
 func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciperReply, error) {
+	defer Agent.RecordAndRecoverPanic()
+
 	if len(req.Sciper) != 6 {
 		return nil, errors.New("sciper should be 6 digits only")
 	}
@@ -264,6 +277,8 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 
 // Cast message handler. Cast a ballot in a given election.
 func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
+	defer Agent.RecordAndRecoverPanic()
+
 	if !s.leader() {
 		return nil, errOnlyLeader
 	}
@@ -278,6 +293,8 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 // GetElections message handler. Return all elections in which the given user participates.
 // If signature does not match the username, then only the Master structure is returned.
 func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElectionsReply, error) {
+	defer Agent.RecordAndRecoverPanic()
+
 	master, err := lib.GetMaster(s.skipchain, req.Master)
 	if err != nil {
 		return nil, err
@@ -330,6 +347,8 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 
 // GetBox message handler to retrieve the casted ballot in an election.
 func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
+	defer Agent.RecordAndRecoverPanic()
+
 	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
 	if err != nil {
 		return nil, err
@@ -344,6 +363,8 @@ func (s *Service) GetBox(req *evoting.GetBox) (*evoting.GetBoxReply, error) {
 
 // GetMixes message handler. Vet all created mixes.
 func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error) {
+	defer Agent.RecordAndRecoverPanic()
+
 	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
 	if err != nil {
 		return nil, err
@@ -358,6 +379,8 @@ func (s *Service) GetMixes(req *evoting.GetMixes) (*evoting.GetMixesReply, error
 
 // GetPartials message handler. Vet all created partial decryptions.
 func (s *Service) GetPartials(req *evoting.GetPartials) (*evoting.GetPartialsReply, error) {
+	defer Agent.RecordAndRecoverPanic()
+
 	election, err := lib.GetElection(s.skipchain, req.ID, false, 0)
 	if err != nil {
 		return nil, err
@@ -372,8 +395,11 @@ func (s *Service) GetPartials(req *evoting.GetPartials) (*evoting.GetPartialsRep
 
 // Shuffle message handler. Initiate shuffle protocol.
 func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
+	defer Agent.RecordAndRecoverPanic()
+
 	s.finalizeMutex.Lock()
 	defer s.finalizeMutex.Unlock()
+
 	if !s.leader() {
 		return nil, errOnlyLeader
 	}
@@ -445,8 +471,11 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 
 // Decrypt message handler. Initiate decryption protocol.
 func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
+	defer Agent.RecordAndRecoverPanic()
+
 	s.finalizeMutex.Lock()
 	defer s.finalizeMutex.Unlock()
+
 	if !s.leader() {
 		return nil, errOnlyLeader
 	}
@@ -522,6 +551,8 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 
 // Reconstruct message handler. Fully decrypt partials using Lagrange interpolation.
 func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructReply, error) {
+	defer Agent.RecordAndRecoverPanic()
+
 	if !s.leader() {
 		return nil, errOnlyLeader
 	}
@@ -562,6 +593,7 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 // NewProtocol hooks non-root nodes into created protocols.
 func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericConfig) (
 	onet.ProtocolInstance, error) {
+	defer Agent.RecordAndRecoverPanic()
 
 	if conf == nil {
 		return nil, errors.New("evoting/service.NewProtocol: missing config")
@@ -714,12 +746,15 @@ func (s *Service) db() *skipchain.SkipBlockDB {
 
 // new initializes the service and registers all the message handlers.
 func new(context *onet.Context) (onet.Service, error) {
+	defer Agent.RecordAndRecoverPanic()
+
 	service := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(context),
 		storage: &storage{
 			Secrets: make(map[string]*lib.SharedSecret),
 		},
 		skipchain: context.Service(skipchain.ServiceName).(*skipchain.Service),
+		rl:        recentLog{N: 100},
 	}
 
 	service.RegisterHandlers(
@@ -747,5 +782,45 @@ func new(context *onet.Context) (onet.Service, error) {
 	}
 
 	log.Lvl1("Pin:", service.pin)
+
+	// Register the log listener AFTER the PIN is already printed,
+	// so it does not get published.
+	log.RegisterListener(&service.rl)
+	service.RegisterStatusReporter("evoting", service)
+
 	return service, nil
+}
+
+// GetStatus is a function that returns the status report of the server.
+func (s *Service) GetStatus() *onet.Status {
+	st := &onet.Status{Field: make(map[string]string)}
+	for i, msg := range s.rl.logs {
+		k := fmt.Sprintf("log-%02v", i)
+		st.Field[k] = msg
+	}
+	return st
+}
+
+type recentLog struct {
+	N    int
+	logs []string
+}
+
+// Log implements onet/log.Listener
+func (r *recentLog) Log(lvl int, msg string) {
+	if lvl <= 3 {
+		r.push(msg)
+		if lvl <= 1 {
+			Agent.RecordError(msg)
+		}
+	}
+}
+
+// push adds a message into the log, rolling old messages off as necessary
+func (r *recentLog) push(msg string) {
+	r.logs = append(r.logs, msg)
+	if len(r.logs) > r.N {
+		from := len(r.logs) - r.N
+		r.logs = r.logs[from:]
+	}
 }
