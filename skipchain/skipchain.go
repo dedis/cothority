@@ -1066,7 +1066,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 			return nil, errors.New("couldn't sign forward-link")
 		}
 		return &sig, nil
-	case <-time.After(s.propTimeout):
+	case <-time.After(root.Timeout * 2):
 		return nil, errors.New("timed out while waiting for signature")
 	}
 }

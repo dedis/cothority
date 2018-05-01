@@ -391,11 +391,11 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 	}
 	participated := make(map[string]bool)
 	for _, mix := range mixes {
-		participated[mix.PublicKey.String()] = true
+		participated[mix.NodeID.String()] = true
 	}
 	filtered := []*network.ServerIdentity{}
 	for _, node := range election.Roster.List[1:] {
-		if _, ok := participated[node.Public.String()]; !ok {
+		if _, ok := participated[node.ID.String()]; !ok {
 			filtered = append(filtered, node)
 		}
 	}
@@ -415,7 +415,7 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 		return nil, errors.New("failed to generate tree")
 	}
 
-	hasParticipated, _ := participated[election.Roster.List[0].Public.String()]
+	hasParticipated, _ := participated[election.Roster.List[0].ID.String()]
 	instance, _ := s.CreateProtocol(protocol.NameShuffle, tree)
 	protocol := instance.(*protocol.Shuffle)
 	protocol.User = req.User
@@ -469,11 +469,11 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 
 	participated := make(map[string]bool)
 	for _, partial := range partials {
-		participated[partial.PublicKey.String()] = true
+		participated[partial.NodeID.String()] = true
 	}
 	filtered := []*network.ServerIdentity{}
 	for _, node := range election.Roster.List[1:] {
-		if _, ok := participated[node.Public.String()]; !ok {
+		if _, ok := participated[node.ID.String()]; !ok {
 			filtered = append(filtered, node)
 		}
 	}
@@ -499,7 +499,7 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 	protocol.Secret = s.secret(election.ID)
 	protocol.Election = election
 	protocol.Skipchain = s.skipchain
-	protocol.LeaderParticipates = !participated[s.ServerIdentity().Public.String()]
+	protocol.LeaderParticipates = !participated[s.ServerIdentity().ID.String()]
 
 	config, _ := network.Marshal(&synchronizer{
 		ID:        req.ID,
@@ -542,10 +542,11 @@ func (s *Service) Reconstruct(req *evoting.Reconstruct) (*evoting.ReconstructRep
 	for i := 0; i < len(partials[0].Points); i++ {
 		shares := make([]*share.PubShare, n)
 		for _, partial := range partials {
-			j := partial.Index
+			j, _ := election.Roster.Search(partial.NodeID)
 			shares[j] = &share.PubShare{I: j, V: partial.Points[i]}
 		}
 
+		log.Lvl3("Recovering commits", i)
 		message, err := share.RecoverCommit(cothority.Suite, shares, 2*n/3+1, n)
 		if err != nil {
 			return nil, err

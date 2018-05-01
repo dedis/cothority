@@ -102,6 +102,7 @@ func TestService(t *testing.T) {
 	require.Nil(t, err)
 
 	// Try to cast a vote on a non-leader, should fail.
+	log.Lvl1("Casting vote on non-leader")
 	idUser1Sig := generateSignature(nodeKP.Private, replyLink.ID, idUser1)
 
 	k, c := lib.Encrypt(replyOpen.Key, bufCand1)
@@ -119,6 +120,7 @@ func TestService(t *testing.T) {
 	require.Equal(t, err, errOnlyLeader)
 
 	// Try to cast a vote for another person. (i.e. t.User != t.Ballot.User)
+	log.Lvl1("Casting vote for another user")
 	ballot = &lib.Ballot{
 		User:  idUser2,
 		Alpha: k,
@@ -152,11 +154,13 @@ func TestService(t *testing.T) {
 	}
 
 	// User votes
+	log.Lvl1("Casting votes for correct users")
 	vote(idUser1, bufCand1)
 	vote(idUser2, bufCand1)
 	vote(idUser3, bufCand2)
 
 	// Shuffle on non-leader
+	log.Lvl1("Shuffling s1")
 	_, err = s1.Shuffle(&evoting.Shuffle{
 		ID:        replyOpen.ID,
 		User:      idAdmin,
@@ -165,6 +169,7 @@ func TestService(t *testing.T) {
 	require.Equal(t, err, errOnlyLeader)
 
 	// Shuffle all votes
+	log.Lvl1("Shuffling s0")
 	_, err = s0.Shuffle(&evoting.Shuffle{
 		ID:        replyOpen.ID,
 		User:      idAdmin,
@@ -173,6 +178,7 @@ func TestService(t *testing.T) {
 	require.Nil(t, err)
 
 	// Decrypt on non-leader
+	log.Lvl1("Decrypting")
 	_, err = s1.Decrypt(&evoting.Decrypt{
 		ID:        replyOpen.ID,
 		User:      idAdmin,
@@ -208,6 +214,7 @@ func TestService(t *testing.T) {
 func runAnElection(t *testing.T, s *Service, replyLink *evoting.LinkReply, nodeKP *key.Pair, admin uint32) {
 	adminSig := generateSignature(nodeKP.Private, replyLink.ID, admin)
 
+	log.Lvl1("Opening")
 	replyOpen, err := s.Open(&evoting.Open{
 		ID: replyLink.ID,
 		Election: &lib.Election{
@@ -239,11 +246,13 @@ func runAnElection(t *testing.T, s *Service, replyLink *evoting.LinkReply, nodeK
 	}
 
 	// User votes
+	log.Lvl1("Vote for users")
 	vote(idUser1, bufCand1)
 	vote(idUser2, bufCand1)
 	vote(idUser3, bufCand2)
 
 	// Shuffle all votes
+	log.Lvl1("Shuffle")
 	_, err = s.Shuffle(&evoting.Shuffle{
 		ID:        replyOpen.ID,
 		User:      admin,
@@ -252,6 +261,7 @@ func runAnElection(t *testing.T, s *Service, replyLink *evoting.LinkReply, nodeK
 	require.Nil(t, err)
 
 	// Decrypt all votes
+	log.Lvl1("Decrypt")
 	_, err = s.Decrypt(&evoting.Decrypt{
 		ID:        replyOpen.ID,
 		User:      admin,
@@ -260,6 +270,7 @@ func runAnElection(t *testing.T, s *Service, replyLink *evoting.LinkReply, nodeK
 	require.Nil(t, err)
 
 	// Reconstruct votes
+	log.Lvl1("Reconstruct")
 	_, err = s.Reconstruct(&evoting.Reconstruct{
 		ID: replyOpen.ID,
 	})
@@ -316,6 +327,7 @@ func TestEvolveRoster(t *testing.T) {
 
 	// Run an election on the new set of conodes, the new nodeKP, and the new
 	// election admin.
+	log.Lvl1("Running an election")
 	runAnElection(t, s0, rl, nodeKP, idAdmin2)
 
 	// There was a test here before to try to replace the leader.
@@ -380,6 +392,9 @@ func TestShuffleBenignNodeFailure(t *testing.T) {
 	nodeKP := key.NewKeyPair(cothority.Suite)
 	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
+	// Set a lower timeout for the tests
+	sc0.SetPropTimeout(5 * time.Second)
 
 	// Create the master skipchain
 	ro := onet.NewRoster(roster.List)
@@ -418,6 +433,9 @@ func TestShuffleCatastrophicNodeFailure(t *testing.T) {
 	nodeKP := key.NewKeyPair(cothority.Suite)
 	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
+	// Set a lower timeout for the tests
+	sc0.SetPropTimeout(5 * time.Second)
 
 	// Create the master skipchain
 	ro := onet.NewRoster(roster.List)
@@ -443,12 +461,11 @@ func TestShuffleCatastrophicNodeFailure(t *testing.T) {
 		proof, err := proof.HashProve(cothority.Suite, "", prov)
 		require.Nil(t, err)
 		mix := &lib.Mix{
-			Ballots:   lib.Combine(g, d),
-			Proof:     proof,
-			Node:      "",
-			PublicKey: serverIdentity.Public,
+			Ballots: lib.Combine(g, d),
+			Proof:   proof,
+			NodeID:  serverIdentity.ID,
 		}
-		data, err := mix.PublicKey.MarshalBinary()
+		data, err := serverIdentity.Public.MarshalBinary()
 		require.Nil(t, err)
 		sig, err := schnorr.Sign(cothority.Suite, private, data)
 		require.Nil(t, err)
@@ -502,6 +519,9 @@ func TestDecryptBenignNodeFailure(t *testing.T) {
 	nodeKP := key.NewKeyPair(cothority.Suite)
 	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
+	// Set a lower timeout for the tests
+	sc0.SetPropTimeout(5 * time.Second)
 
 	// Create the master skipchain
 	ro := onet.NewRoster(roster.List)
@@ -548,6 +568,9 @@ func TestDecryptCatastrophicNodeFailure(t *testing.T) {
 	nodeKP := key.NewKeyPair(cothority.Suite)
 	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
+	// Set a lower timeout for the tests
+	sc0.SetPropTimeout(5 * time.Second)
 
 	// Create the master skipchain
 	ro := onet.NewRoster(roster.List)

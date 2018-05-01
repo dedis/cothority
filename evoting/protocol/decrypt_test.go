@@ -115,7 +115,12 @@ func runDecrypt(t *testing.T, n int) {
 		public := roster.Get(i).Public
 		data, _ := public.MarshalBinary()
 		sig, _ := schnorr.Sign(cothority.Suite, local.GetPrivate(nodes[i]), data)
-		mix := &lib.Mix{Ballots: lib.Combine(v, w), Proof: proof, Node: string(i), PublicKey: public, Signature: sig}
+		mix := &lib.Mix{
+			Ballots:   lib.Combine(v, w),
+			Proof:     proof,
+			NodeID:    roster.Get(i).ID,
+			Signature: sig,
+		}
 		tx = lib.NewTransaction(mix, election.Creator, []byte{})
 		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
 		require.Nil(t, err)
@@ -196,7 +201,12 @@ func TestDecryptNodeFailure(t *testing.T) {
 		public := roster.Get(i).Public
 		data, _ := public.MarshalBinary()
 		sig, _ := schnorr.Sign(cothority.Suite, local.GetPrivate(nodes[i]), data)
-		mix := &lib.Mix{Ballots: lib.Combine(v, w), Proof: proof, Node: string(i), PublicKey: public, Signature: sig}
+		mix := &lib.Mix{
+			Ballots:   lib.Combine(v, w),
+			Proof:     proof,
+			NodeID:    roster.Get(i).ID,
+			Signature: sig,
+		}
 		mixes[i] = mix
 		tx = lib.NewTransaction(mix, election.Creator, []byte{})
 		err := lib.StoreUsingWebsocket(election.ID, election.Roster, tx)
@@ -214,13 +224,12 @@ func TestDecryptNodeFailure(t *testing.T) {
 		}
 
 		partial := &lib.Partial{
-			Points:    points,
-			Node:      "",
-			PublicKey: nodes[i].ServerIdentity.Public,
-			Index:     i,
+			Points: points,
+			NodeID: nodes[i].ServerIdentity.ID,
 		}
-		data, _ := partial.PublicKey.MarshalBinary()
-		data = append(data, byte(partial.Index))
+		data, _ := nodes[i].ServerIdentity.Public.MarshalBinary()
+		index, _ := roster.Search(partial.NodeID)
+		data = append(data, byte(index))
 		sig, _ := schnorr.Sign(cothority.Suite, local.GetPrivate(nodes[i]), data)
 		partial.Signature = sig
 		transaction := lib.NewTransaction(partial, election.Creator, []byte{})

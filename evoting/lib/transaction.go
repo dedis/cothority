@@ -208,11 +208,15 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 
 		// verify proposer
-		data, err := t.Mix.PublicKey.MarshalBinary()
+		_, proposer := election.Roster.Search(t.Mix.NodeID)
+		if proposer == nil {
+			return errors.New("didn't find signer in mix")
+		}
+		data, err := proposer.Public.MarshalBinary()
 		if err != nil {
 			return err
 		}
-		err = schnorr.Verify(cothority.Suite, t.Mix.PublicKey, data, t.Mix.Signature)
+		err = schnorr.Verify(cothority.Suite, proposer.Public, data, t.Mix.Signature)
 		if err != nil {
 			return err
 		}
@@ -227,8 +231,13 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 
 		for _, mix := range mixes {
-			if mix.PublicKey.Equal(t.Mix.PublicKey) {
-				return fmt.Errorf("%s has already proposed a shuffle", t.Mix.Node)
+			_, mixProposer := election.Roster.Search(mix.NodeID)
+			if mixProposer == nil {
+				return errors.New("didn't find signer in mix")
+			}
+
+			if mixProposer.Public.Equal(proposer.Public) {
+				return fmt.Errorf("%s has already proposed a shuffle", mixProposer)
 			}
 		}
 
@@ -274,33 +283,26 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 		partials, err := election.Partials(s)
 
-		if len(partials) > target {
+		if len(partials) >= len(election.Roster.List) {
 			return errors.New("decrypt error: election already decrypted")
 		}
 
 		for _, partial := range partials {
-			if partial.PublicKey.Equal(t.Partial.PublicKey) {
-				return fmt.Errorf("%s has already proposed a partial", t.Partial.Node)
+			if partial.NodeID.Equal(t.Partial.NodeID) {
+				return fmt.Errorf("%s has already proposed a partial", t.Partial.NodeID)
 			}
 		}
 
 		// verify proposer
-		data, err := t.Partial.PublicKey.MarshalBinary()
+		_, proposer := election.Roster.Search(t.Partial.NodeID)
+		if proposer == nil {
+			return errors.New("didn't find node who created the partial")
+		}
+		data, err := proposer.Public.MarshalBinary()
 		if err != nil {
 			return err
 		}
-		index := -1
-		for i, node := range election.Roster.List {
-			if node.Public.Equal(t.Partial.PublicKey) {
-				index = i
-				break
-			}
-		}
-		if index == -1 {
-			return errors.New("couldn't find node's index in Roster")
-		}
-		data = append(data, byte(index))
-		err = schnorr.Verify(cothority.Suite, t.Partial.PublicKey, data, t.Partial.Signature)
+		err = schnorr.Verify(cothority.Suite, proposer.Public, data, t.Partial.Signature)
 		if err != nil {
 			return err
 		}
