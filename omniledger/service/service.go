@@ -52,7 +52,8 @@ type Service struct {
 	// CloseQueues is closed when the queues should stop - this is mostly for
 	// testing and there should be a better way to clean up services for testing...
 	CloseQueues chan bool
-
+	// verifiers map kinds to kind specific verification functions
+	verifiers map[string]OmniledgerVerifier
 	// propagate the new transactions
 	propagateTransactions messaging.PropagationFunc
 
@@ -425,17 +426,17 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) (val
 	txs := data.Transactions
 	cdb := s.getCollection(newSB.Hash)
 	for _, tx := range txs {
-		if string(tx.Kind) == "dummy" {
-			validSB = cdb.verifyDummyKind(&tx)
+		f, ok = verifiers[string(tx.kind)]
+		if ok {
+			validSB = validSB && f(cdb, tx)
 		}
 	}
-
 	return
 }
 
 // Since the outcome of the verification depends on the state of the collection
 // which is to be modified, we use it as a receiver here.
-func (cdb *collectionDB) verifyDummyKind(tx *Transaction) bool {
+func verifyDummyKind(cdb *collectionDB, tx *Transaction) bool {
 	switch a := tx.Action; a {
 	case Create:
 		return true
@@ -447,4 +448,21 @@ func (cdb *collectionDB) verifyDummyKind(tx *Transaction) bool {
 	default:
 		return false
 	}
+}
+
+// RegisterVerification stores the verification in a map and will
+// call it whenever a verification needs to be done.
+func (s *Service) registerVerification(kind string, f OmniledgerVerifier) error {
+	s.verifiers[kind] = f
+	return nil
+}
+
+// RegisterVerification stores the verification in a map and will
+// call it whenever a verification needs to be done.
+func RegisterVerification(s skipchain.GetService, kind string, f OmniledgerVerifier) error {
+	scs := s.Service(ServiceName)
+	if scs == nil {
+		return errors.New("Didn't find our service: " + ServiceName)
+	}
+	return scs.(*Service).registerVerification(kind, f)
 }
