@@ -55,6 +55,9 @@ type Darc struct {
 	// Darc.  These are ordered from the oldest to the newest, i.e.
 	// Darcs[0] should be the base Darc.
 	Path []*Darc
+	// PathDigest should be set when Path has length 0. It should be the
+	// same as the return value of GetPathMsg.
+	PathDigest []byte
 	// Signature is calculated over the protobuf representation of [Rules, Version, Description]
 	// and needs to be created by an Owner from the previous valid Darc.
 	Signatures []*Signature
@@ -104,9 +107,6 @@ type Signature struct {
 	Signature []byte
 	// Signer is the Idenity (public key or another Darc) of the signer
 	Signer Identity
-	// PathDigest should be set when Path has length 0. It should be the
-	// same as the return value of GetPathMsg.
-	PathDigest []byte
 }
 
 // Signer is a generic structure that can hold different types of signers
@@ -128,11 +128,16 @@ type SignerX509EC struct {
 	secret []byte
 }
 
+type innerRequest struct {
+	BaseID     ID
+	Action     Action
+	Msg        []byte
+	Identities []*Identity
+	// TODO add the darc for where the identities should come from, e.g. SignerDarcs []string
+}
+
 // Request is the structure that the client must provide to be verified
 type Request struct {
-	ID         ID          // for identifying the darc
-	Action     Action      // do we need this, also specific to the rule?
-	Msg        []byte      // what the request wants to do, application specific
-	Identities []*Identity //
-	Signatures [][]byte    // we need multi signatures because expression, for every identity
+	innerRequest
+	Signatures [][]byte
 }
