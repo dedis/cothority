@@ -77,6 +77,8 @@ bindist-admin: verify
 	mkdir $(admin)
 	GOOS=linux GOARCH=amd64 vgo build $(flags) -o $(admin)/status ../status
 	GOOS=linux GOARCH=amd64 vgo build $(flags) -o $(admin)/evoting-admin ../evoting/evoting-admin
+	cp ../evoting/evoting-admin/README.md $(admin)
+	cp -r ../evoting/evoting-admin/scripts $(admin)
 	LANG=C tar zcf $(admin).tar.gz $(admin)
 	rm -rf $(admin)
 
