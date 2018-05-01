@@ -22,6 +22,8 @@ type collectionDB struct {
 	coll       collection.Collection
 }
 
+type OmniledgerVerifier func(cdb *collectionDB, tx *Transaction) bool
+
 // newCollectionDB initialises a structure and reads all key/value pairs to store
 // it in the collection.
 func newCollectionDB(db *bolt.DB, name []byte) *collectionDB {
