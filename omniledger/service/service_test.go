@@ -152,11 +152,13 @@ func TestService_GetProof(t *testing.T) {
 	key, values, err = rep.Proof.KeyValue()
 	require.NotNil(t, err)
 }
-func TestService_FailDummyVerification(t *testing.T) {
+
+func TestService_DummyVerification(t *testing.T) {
 	s := newSer(t, 1)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
+	RegisterVerification(s.hosts[0], "dummy", verifyDummyKind)
 	akvresp, err := s.service.SetKeyValue(&SetKeyValue{
 		Version: 0,
 	})
@@ -188,34 +190,6 @@ func TestService_FailDummyVerification(t *testing.T) {
 	match := pr.Proof.InclusionProof.Match()
 	require.False(t, match)
 
-}
-
-func TestService_SucceedDummyVerification(t *testing.T) {
-	s := newSer(t, 1)
-	defer s.local.CloseAll()
-	defer closeQueues(s.local)
-
-	akvresp, err := s.service.SetKeyValue(&SetKeyValue{
-		Version: 0,
-	})
-	require.NotNil(t, err)
-
-	key1 := []byte("a")
-	value1 := []byte("a")
-	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
-		Version:     CurrentVersion,
-		SkipchainID: s.sb.SkipChainID(),
-		Transaction: Transaction{
-			Key:    key1,
-			Kind:   []byte("dammy"),
-			Value:  value1,
-			Action: Update,
-		},
-	})
-	require.Nil(t, err)
-	require.NotNil(t, akvresp)
-	require.Equal(t, CurrentVersion, akvresp.Version)
-
 	key2 := []byte("b")
 	value2 := []byte("b")
 	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
@@ -232,17 +206,7 @@ func TestService_SucceedDummyVerification(t *testing.T) {
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
-	time.Sleep(2 * waitQueueing)
-	pr, err := s.service.GetProof(&GetProof{
-		Version: CurrentVersion,
-		ID:      s.sb.SkipChainID(),
-		Key:     key1,
-	})
-	require.Nil(t, err)
-	match := pr.Proof.InclusionProof.Match()
-	require.True(t, match)
-
-	time.Sleep(2 * waitQueueing)
+	time.Sleep(4 * waitQueueing)
 	pr, err = s.service.GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
@@ -251,6 +215,22 @@ func TestService_SucceedDummyVerification(t *testing.T) {
 	require.Nil(t, err)
 	match = pr.Proof.InclusionProof.Match()
 	require.True(t, match)
+
+	time.Sleep(4 * waitQueueing)
+}
+
+func verifyDummyKind(cdb *collectionDB, tx *Transaction) bool {
+	switch a := tx.Action; a {
+	case Create:
+		return true
+	case Update:
+		return true
+	// removing and unknown actions are forbidden
+	case Remove:
+		return false
+	default:
+		return false
+	}
 }
 
 type ser struct {
