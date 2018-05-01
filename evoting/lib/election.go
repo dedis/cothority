@@ -118,23 +118,28 @@ func (e *Election) setVoted(s *skipchain.Service, user uint32) error {
 }
 
 func (e *Election) setStage(s *skipchain.Service) error {
-	db := s.GetDB()
-	latest, err := db.GetLatest(db.GetByID(e.ID))
+	// threshold is the minimum number of blocks we need
+	// to complete a shuffle or a decryption. Following
+	// byzantine consensus it's set to floor(2*n/3) + 1
+	threshold := 2*len(e.Roster.List)/3 + 1
+	partials, err := e.Partials(s)
 	if err != nil {
-		return errors.New("error getting latest skipblock")
+		return err
 	}
-	transaction := UnmarshalTransaction(latest.Data)
-	if transaction == nil {
-		return errors.New("invalid transaction")
+	if len(partials) >= threshold {
+		e.Stage = Decrypted
+		return nil
 	}
 
-	if transaction.Partial != nil {
-		e.Stage = Decrypted
-	} else if transaction.Mix != nil {
-		e.Stage = Shuffled
-	} else {
-		e.Stage = Running
+	mixes, err := e.Mixes(s)
+	if err != nil {
+		return err
 	}
+	if len(mixes) >= threshold {
+		e.Stage = Shuffled
+		return nil
+	}
+	e.Stage = Running
 	return nil
 }
 
