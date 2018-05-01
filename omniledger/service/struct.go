@@ -22,6 +22,10 @@ type collectionDB struct {
 	coll       collection.Collection
 }
 
+// OmniledgerVerifier is the type signature of the verification functions
+// which can be registered with the omniledger service.
+// Since the outcome of the verification depends on the state of the collection
+// which is to be modified, we pass it as a pointer here.
 type OmniledgerVerifier func(cdb *collectionDB, tx *Transaction) bool
 
 // newCollectionDB initialises a structure and reads all key/value pairs to store
