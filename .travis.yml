@@ -19,7 +19,6 @@ install:
 
 script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
 
-java: - (cd external/java; mvn test)
 
 after_success:
   - npm run coveralls
@@ -40,4 +39,11 @@ matrix:
 
       script:
         - make test
+
+    - language: java
+
+      script:
+        - (cd conode/; make docker)
+        - (cd ocs/docker/; make docker-test)
+        - (cd external/java; mvn test)
 
