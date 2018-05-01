@@ -17,6 +17,3 @@ RUN ln -s /conode_data .config/conode
 EXPOSE 6879 6880
 
 CMD "./setup-then-start.sh"
-
-CMD "Hello docker!"
-ENTRYPOINT echo
