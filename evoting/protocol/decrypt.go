@@ -114,13 +114,10 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 	}
 
 	partial := &lib.Partial{
-		Points:    points,
-		Node:      d.Name(),
-		PublicKey: d.Public(),
-		Index:     index,
+		Points: points,
+		NodeID: d.ServerIdentity().ID,
 	}
-	data, err := partial.PublicKey.MarshalBinary()
-	data = append(data, byte(partial.Index))
+	data, err := d.ServerIdentity().Public.MarshalBinary()
 	if err != nil {
 		return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})
 	}

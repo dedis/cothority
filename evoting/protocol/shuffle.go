@@ -134,12 +134,11 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 		return err
 	}
 	mix := &lib.Mix{
-		Ballots:   lib.Combine(g, d),
-		Proof:     proof,
-		Node:      s.Name(),
-		PublicKey: s.ServerIdentity().Public,
+		Ballots: lib.Combine(g, d),
+		Proof:   proof,
+		NodeID:  s.ServerIdentity().ID,
 	}
-	data, err := mix.PublicKey.MarshalBinary()
+	data, err := s.ServerIdentity().Public.MarshalBinary()
 	if err != nil {
 		return err
 	}

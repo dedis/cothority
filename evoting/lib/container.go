@@ -6,6 +6,7 @@ import (
 	"github.com/dedis/kyber/share/dkg/rabin"
 	"github.com/dedis/kyber/shuffle"
 	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet/network"
 
 	"github.com/dedis/cothority"
 )
@@ -32,7 +33,10 @@ func (b *Box) genMix(key kyber.Point, n int) []*Mix {
 	for i := range mixes {
 		v, w, prover := shuffle.Shuffle(cothority.Suite, nil, key, x, y, random.New())
 		proof, _ := proof.HashProve(cothority.Suite, "", prover)
-		mixes[i] = &Mix{Ballots: Combine(v, w), Proof: proof, Node: string(i)}
+		mixes[i] = &Mix{
+			Ballots: Combine(v, w),
+			Proof:   proof,
+		}
 		x, y = v, w
 	}
 	return mixes
@@ -43,19 +47,16 @@ type Mix struct {
 	Ballots []*Ballot // Ballots are permuted and re-encrypted.
 	Proof   []byte    // Proof of the shuffle.
 
-	Node      string      // Node signifies the creator of the mix.
-	PublicKey kyber.Point // Public key of the node generating the mix
-	Signature []byte      // Signature of the public key
+	NodeID    network.ServerIdentityID // Node signifies the creator of the mix.
+	Signature []byte                   // Signature of the public key
 }
 
 // Partial contains the partially decrypted ballots.
 type Partial struct {
 	Points []kyber.Point // Points are the partially decrypted plaintexts.
 
-	Node      string      // Node signifies the creator of this partial decryption.
-	PublicKey kyber.Point // Public key of the node generating a partial decryption
-	Signature []byte      // Signature of the public key
-	Index     int         // Index of the node in the roster
+	NodeID    network.ServerIdentityID // NodeID is the node having signed the partial
+	Signature []byte                   // Signature of the public key
 }
 
 // genPartials generates partial decryptions for a given list of shared secrets.
@@ -68,7 +69,9 @@ func (m *Mix) genPartials(dkgs []*dkg.DistKeyGenerator) []*Partial {
 		for j, ballot := range m.Ballots {
 			points[j] = Decrypt(secret.V, ballot.Alpha, ballot.Beta)
 		}
-		partials[i] = &Partial{Points: points, Node: string(i)}
+		partials[i] = &Partial{
+			Points: points,
+		}
 	}
 	return partials
 }
