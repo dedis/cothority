@@ -4,22 +4,24 @@ package main
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/dedis/student_18_omniledger/omniledger/service"
-	"gopkg.in/dedis/onet.v2/app"
 
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/kyber.v2/util/encoding"
+	"gopkg.in/dedis/kyber.v2/util/key"
+	"gopkg.in/dedis/onet.v2/app"
 	"gopkg.in/dedis/onet.v2/log"
 	"gopkg.in/urfave/cli.v1"
 )
 
 func main() {
 	cliApp := cli.NewApp()
-	cliApp.Name = "LLEAP kv"
-	cliApp.Usage = "Key/value storage for LLEAP project"
+	cliApp.Name = "Omniledger app"
+	cliApp.Usage = "Key/value storage for Omniledger"
 	cliApp.Version = "0.1"
 	cliApp.Commands = []cli.Command{
 		{
@@ -41,6 +43,11 @@ func main() {
 			Aliases: []string{"g"},
 			Action:  get,
 		},
+		{
+			Name:   "keypair",
+			Usage:  "generate a key pair",
+			Action: keypair,
+		},
 	}
 	cliApp.Flags = []cli.Flag{
 		cli.IntFlag{
@@ -61,20 +68,16 @@ func create(c *cli.Context) error {
 	log.Info("Create a new skipchain")
 
 	if c.NArg() != 2 {
-		return errors.New("please give: group.toml public.key")
+		return errors.New("please give: group.toml public-key-in-hex")
 	}
 	group := readGroup(c)
+	pkReader := strings.NewReader(c.Args().Get(1))
+	pk, err := encoding.ReadHexPoint(cothority.Suite, pkReader)
+	if err != nil {
+		return err
+	}
 	client := service.NewClient()
-	txStr, err := ioutil.ReadFile(c.Args().Get(1))
-	if err != nil {
-		return errors.New("couldn't read transaction-file: " + err.Error())
-	}
-	tx := &service.Transaction{}
-	err = json.Unmarshal([]byte(txStr), tx)
-	if err != nil {
-		return errors.New("couldn't decode transaction-file: " + err.Error())
-	}
-	resp, err := client.CreateSkipchain(group.Roster, *tx)
+	resp, err := client.CreateGenesisBlock(group.Roster, pk)
 	if err != nil {
 		return errors.New("during creation of skipchain: " + err.Error())
 	}
@@ -151,4 +154,21 @@ func readGroup(c *cli.Context) *app.Group {
 			name)
 	}
 	return group
+}
+
+// keypair generates a keypair.
+// TODO we should include the option to store it in a file.
+func keypair(c *cli.Context) error {
+	kp := key.NewKeyPair(cothority.Suite)
+
+	secStr, err := encoding.ScalarToStringHex(nil, kp.Private)
+	if err != nil {
+		return err
+	}
+	pubStr, err := encoding.PointToStringHex(nil, kp.Public)
+	if err != nil {
+		return err
+	}
+	log.Infof("Private: %s\nPublic: %s", secStr, pubStr)
+	return nil
 }

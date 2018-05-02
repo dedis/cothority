@@ -5,9 +5,9 @@ import (
 	"fmt"
 
 	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/onet"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
+	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/network"
 )
 

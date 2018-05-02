@@ -55,8 +55,8 @@ const evolve = "_evolve"
 const sign = "_sign"
 
 // InitRules initialise a set of rules with the default actions "_evolve" and
-// "_sign". Signers are joined with logical-Or, owners are also joined with
-// logical-OR. If other expressions are needed, please set the rules manually.
+// "_sign". Signers are joined with logical-Or, owners are joined with
+// logical-AND. If other expressions are needed, please set the rules manually.
 func InitRules(owners []*Identity, signers []*Identity) Rules {
 	rs := make(Rules)
 
@@ -64,7 +64,7 @@ func InitRules(owners []*Identity, signers []*Identity) Rules {
 	for i, o := range owners {
 		ownerIDs[i] = o.String()
 	}
-	rs[evolve] = expression.InitOrExpr(ownerIDs...)
+	rs[evolve] = expression.InitAndExpr(ownerIDs...)
 
 	signerIDs := make([]string, len(signers))
 	for i, s := range signers {
