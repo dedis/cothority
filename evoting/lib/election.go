@@ -103,6 +103,13 @@ func (e *Election) setVoted(s *skipchain.Service, user uint32) error {
 
 	for {
 		transaction := UnmarshalTransaction(block.Data)
+		if transaction == nil {
+			if len(block.ForwardLink) == 0 {
+				break
+			}
+			block = db.GetByID(block.ForwardLink[0].To)
+			continue
+		}
 		if transaction.Ballot != nil && transaction.User == user {
 			e.Voted = block.Hash
 		}
@@ -207,7 +214,14 @@ func (e *Election) Mixes(s *skipchain.Service) ([]*Mix, error) {
 	mixes := make([]*Mix, 0)
 	for block != nil {
 		transaction := UnmarshalTransaction(block.Data)
-		if transaction != nil && transaction.Mix == nil && transaction.Partial == nil {
+		if transaction == nil {
+			if len(block.BackLinkIDs) == 0 {
+				break
+			}
+			block = s.GetDB().GetByID(block.BackLinkIDs[0])
+			continue
+		}
+		if transaction.Mix == nil && transaction.Partial == nil {
 			// we're done
 			break
 		}
@@ -215,6 +229,10 @@ func (e *Election) Mixes(s *skipchain.Service) ([]*Mix, error) {
 		if transaction.Mix != nil {
 			// append to the mixes array
 			mixes = append(mixes, transaction.Mix)
+		}
+
+		if len(block.BackLinkIDs) == 0 {
+			break
 		}
 
 		// keep iterating back
@@ -242,13 +260,24 @@ func (e *Election) Partials(s *skipchain.Service) ([]*Partial, error) {
 	partials := make([]*Partial, 0)
 	for block != nil {
 		transaction := UnmarshalTransaction(block.Data)
-		if transaction != nil && transaction.Partial == nil {
+		if transaction == nil {
+			if len(block.BackLinkIDs) == 0 {
+				break
+			}
+			block = s.GetDB().GetByID(block.BackLinkIDs[0])
+			continue
+		}
+		if transaction.Partial == nil {
 			// we're done
 			break
 		}
 
 		if transaction.Partial != nil {
 			partials = append(partials, transaction.Partial)
+		}
+
+		if len(block.BackLinkIDs) == 0 {
+			break
 		}
 
 		// keep iterating back
