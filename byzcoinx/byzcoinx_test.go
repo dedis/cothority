@@ -106,7 +106,7 @@ func ack(a, b []byte) bool {
 }
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 3)
+	log.MainTest(m)
 }
 
 func TestBftCoSi(t *testing.T) {
@@ -199,7 +199,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	if nbrFault == 0 {
 		policy = nil
 	} else {
-		policy = cosi.NewThresholdPolicy(nbrFault)
+		policy = cosi.NewThresholdPolicy(nbrHosts - nbrFault)
 	}
 	err = getAndVerifySignature(bftCosiProto.FinalSignatureChan, publics, proposal, policy)
 	require.Nil(t, err)
