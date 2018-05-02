@@ -16,3 +16,5 @@ test_playground:
 proto:
 	awk -f proto.awk struct.go > external/proto/sicpa.proto
 	cd external; make
+
+test_simple: test_fmt test_lint test_goveralls

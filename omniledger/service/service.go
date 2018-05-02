@@ -335,11 +335,6 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) (chan Transactio
 						to = time.After(waitQueueing)
 						continue
 					}
-					// For testing purposes, I remove all the transactions from
-					// the queue if the block was not accepted by the skipchain.
-					// A better solution would be to mark them invalid and have
-					// the skipchain ignore them during the verification.
-					// TODO: Above.
 					ts = []Transaction{}
 				}
 				to = time.After(waitQueueing)
