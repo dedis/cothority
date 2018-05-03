@@ -224,7 +224,7 @@ func (p *SubFtCosi) Dispatch() error {
 
 	log.Lvl3(p.ServerIdentity(), "received challenge")
 	go func() {
-		if errs := p.Multicast(&challenge.Challenge, committedChildren...); len(errs) > 0 {
+		if errs := p.multicastParallel(&challenge.Challenge, committedChildren...); len(errs) > 0 {
 			log.Lvl3(p.ServerIdentity(), errs)
 		}
 	}()
@@ -310,4 +310,26 @@ func (p *SubFtCosi) Start() error {
 	}
 	p.ChannelAnnouncement <- announcement
 	return nil
+}
+
+// multicastParallel can be moved to onet.TreeNodeInstance once it shows
+// promise.
+func (p *SubFtCosi) multicastParallel(msg interface{}, nodes ...*onet.TreeNode) []error {
+	var errs []error
+	eMut := sync.Mutex{}
+	wg := sync.WaitGroup{}
+	for _, node := range nodes {
+		name := node.Name()
+		wg.Add(1)
+		go func(n2 *onet.TreeNode) {
+			if err := p.SendTo(n2, msg); err != nil {
+				eMut.Lock()
+				errs = append(errs, errors.New(name+": "+err.Error()))
+				eMut.Unlock()
+			}
+			wg.Done()
+		}(node)
+	}
+	wg.Wait()
+	return errs
 }

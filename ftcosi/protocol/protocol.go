@@ -193,6 +193,10 @@ func (p *FtCosi) Dispatch() error {
 				responsesMut.Lock()
 				responses = append(responses, response)
 				responsesMut.Unlock()
+			case <-time.After(p.Timeout):
+				// This should never happen, as the subProto should return before that
+				// timeout, even if it didn't receive enough responses.
+				errChan <- fmt.Errorf("timeout should not happen while waiting for response: %d", i)
 			}
 		}(i, cosiSubProtocol)
 	}
@@ -345,7 +349,8 @@ func (p *FtCosi) startSubProtocol(tree *onet.Tree) (*SubFtCosi, error) {
 	cosiSubProtocol.Publics = p.publics
 	cosiSubProtocol.Msg = p.Msg
 	cosiSubProtocol.Data = p.Data
-	// The prepare and commit phase each get half of the time budget.
+	// We allow for one subleader failure during the commit phase, and thus
+	// only allocate half of the ftcosi budget to the subprotocol.
 	cosiSubProtocol.Timeout = p.Timeout / 2
 
 	err = cosiSubProtocol.Start()
