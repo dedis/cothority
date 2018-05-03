@@ -1032,7 +1032,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		data:             &saveData{},
 	}
-	err := s.RegisterHandlers(s.PinRequest, s.StoreConfig, s.FinalizeRequest,
+	err := s.RegisterHandlers(s.PinRequest, s.VerifyLink, s.StoreConfig, s.FinalizeRequest,
 		s.FetchFinal, s.MergeRequest, s.GetProposals)
 	if err != nil {
 		return nil, err
