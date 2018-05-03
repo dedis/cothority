@@ -90,7 +90,9 @@ func (bft *ByzCoinX) Start() error {
 		case tmpSig := <-prepProto.FinalSignature:
 			bft.prepSigChan <- tmpSig
 		case <-time.After(bft.Timeout):
-			log.Error(bft.ServerIdentity().Address, "timeout while waiting for signature")
+			// Waiting for bft.Timeout is too long here but used as a safeguard in
+			// case the prepProto does not return in time.
+			log.Error(bft.ServerIdentity().Address, "timeout should not happen while waiting for signature")
 			bft.prepSigChan <- nil
 		}
 	}()
@@ -166,7 +168,9 @@ func (bft *ByzCoinX) Dispatch() error {
 	case commitSig = <-commitProto.FinalSignature:
 		log.Lvl3("Finished commit phase")
 	case <-time.After(bft.Timeout):
-		log.Error(bft.ServerIdentity().Address, "timeout while waiting for signature")
+		// Waiting for bft.Timeout is too long here but used as a safeguard in
+		// case the commitProto does not return in time.
+		log.Error(bft.ServerIdentity().Address, "timeout should not happen while waiting for signature")
 	}
 
 	bft.FinalSignatureChan <- FinalSignature{bft.Msg, commitSig}
