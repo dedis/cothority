@@ -17,7 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var defaultTimeout = time.Second * 2
+var defaultTimeout = time.Second * 4
 var testSuite = cothority.Suite
 
 type Counter struct {
