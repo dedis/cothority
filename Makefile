@@ -9,10 +9,19 @@ EXCLUDE_LINT = "should be.*UI|_test.go"
 # for more than once in Travis. Change `make test` in .travis.yml
 # to `make test_playground`.
 test_playground:
-	cd skipchain; \
-	for a in $$( seq 100 ); do \
-	  go test -race -short || exit 1 ; \
-	done;
+	cd ocs/service; \
+	for a in $$( seq 200 ); do \
+	  echo OCS $$a - $$( date ); \
+	  go test -v -race -short -run TestService_proof > test_log || break ; \
+	done; \
+	cat test_log; \
+	cd ../../skipchain; \
+	for a in $$( seq 200 ); do \
+	  echo Skipchain $$a - $$( date ); \
+	  go test -v -race -short -timeout 5m > test_log || break ; \
+	done; \
+	cat test_log; \
+	exit 1
 
 # Other targets are:
 # make create_stable

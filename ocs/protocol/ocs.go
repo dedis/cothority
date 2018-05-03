@@ -111,10 +111,14 @@ func (o *OCS) reencrypt(r structReencrypt) error {
 	}
 
 	if o.Verify != nil {
+		log.Lvl2(o.Name() + ": verifying")
 		if !o.Verify(&r.Reencrypt) {
 			log.Lvl2(o.ServerIdentity(), "refused to reencrypt")
 			return o.SendToParent(&ReencryptReply{})
 		}
+		log.Lvl1(o.Name() + ": Verification succeeded")
+	} else {
+		log.Lvl2(o.Name() + ": NOT verifying")
 	}
 
 	// Calculating proofs
@@ -157,7 +161,8 @@ func (o *OCS) reencryptReply(rr structReencryptReply) error {
 			return err
 		}
 
-		for _, r := range o.replies {
+		for i, r := range o.replies {
+			log.Print("verifying", i, r.Ui.I)
 			// Verify proofs
 			ufi := cothority.Suite.Point().Mul(r.Fi, cothority.Suite.Point().Add(o.U, o.Xc))
 			uiei := cothority.Suite.Point().Mul(cothority.Suite.Scalar().Neg(r.Ei), r.Ui.V)
@@ -202,6 +207,7 @@ func (o *OCS) getUI(U, Xc kyber.Point) (*share.PubShare, error) {
 
 func (o *OCS) finish(result bool) {
 	o.timeout.Stop()
+	log.Print("finish", result)
 	select {
 	case o.Reencrypted <- result:
 		// suceeded

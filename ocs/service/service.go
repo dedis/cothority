@@ -442,6 +442,7 @@ func (s *Service) DecryptKeyRequest(req *DecryptKeyRequest) (reply *DecryptKeyRe
 		SB: readSB.Hash,
 	}
 	if req.Ephemeral != nil {
+		log.Print("preparing ephemeral")
 		var pub []byte
 		pub, err = req.Ephemeral.MarshalBinary()
 		if err != nil {
@@ -456,6 +457,7 @@ func (s *Service) DecryptKeyRequest(req *DecryptKeyRequest) (reply *DecryptKeyRe
 	} else if read.Read.Signature.SignaturePath.Signer.Ed25519 == nil {
 		return nil, errors.New("please use ephemeral keys for non-ed25519 private keys")
 	} else {
+		log.Print("using public key")
 		ocsProto.Xc = read.Read.Signature.SignaturePath.Signer.Ed25519.Point
 	}
 	log.Lvlf2("Public key is: %s", ocsProto.Xc)
@@ -579,7 +581,9 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 		if o.Read == nil {
 			return errors.New("not an OCS-read block")
 		}
+
 		if verificationData.Ephemeral != nil {
+			log.Print("Using ephemeral")
 			buf, err := verificationData.Ephemeral.MarshalBinary()
 			if err != nil {
 				return errors.New("couldn't marshal ephemeral key: " + err.Error())
@@ -594,9 +598,11 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 				return errors.New("wrong signature on ephemeral key: " + err.Error())
 			}
 		} else {
+			log.Print("Using public key")
 			if o.Read.Signature.SignaturePath.Signer.Ed25519 == nil {
 				return errors.New("use ephemeral keys for non-ed25519 keys")
 			}
+			log.Print("public key is", rc.Xc)
 			if !o.Read.Signature.SignaturePath.Signer.Ed25519.Point.Equal(rc.Xc) {
 				return errors.New("wrong reader")
 			}
@@ -604,7 +610,7 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 		return nil
 	}()
 	if err != nil {
-		log.Lvl2(s.ServerIdentity(), "wrong reencryption:", err)
+		log.Lvl1(s.ServerIdentity(), "wrong reencryption:", err)
 		return false
 	}
 	return true
