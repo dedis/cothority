@@ -350,8 +350,8 @@ func (p *FtCosi) startSubProtocol(tree *onet.Tree) (*SubFtCosi, error) {
 	cosiSubProtocol.Msg = p.Msg
 	cosiSubProtocol.Data = p.Data
 	// We allow for one subleader failure during the commit phase, and thus
-	// only allocate half of the ftcosi budget to the subprotocol.
-	cosiSubProtocol.Timeout = p.Timeout / 2
+	// only allocate one third of the ftcosi budget to the subprotocol.
+	cosiSubProtocol.Timeout = p.Timeout / 3
 
 	err = cosiSubProtocol.Start()
 	if err != nil {
