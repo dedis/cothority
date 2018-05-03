@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=2
 # Debug-level for app
 DBG_APP=2
 
@@ -8,14 +8,9 @@ DBG_APP=2
 
 main(){
     startTest
-    for n in $(seq $NBR); do
-        srv=srv$n
-        rm -rf $srv
-        mkdir $srv
-        cl=cl$n
-        rm -rf $cl
-        mkdir $cl
-    done
+    buildConode
+    rm -rf cl*
+    mkdir cl{1,2,3}
     test Build
     test ServerCfg
     test SignFile
@@ -26,15 +21,15 @@ main(){
 
 testReconnect(){
     for s in 1 2; do
-        setupServers 1
+        runCoBG 1 2
         testOut "Running first sign"
         echo "My Test Message File" > foo.txt
         testOK runCl 1 sign foo.txt
         testOut "Killing server $s"
-        pkill -9 -f "c srv$s/private"
+        pkill -9 -f "c co$s/private"
         testFail runCl 1 sign foo.txt
         testOut "Starting server $s again"
-        runSrv $s
+        runCoBG $s
         sleep 1
         testOK runCl 1 sign foo.txt
         pkill -9 -f ./cosi
@@ -42,15 +37,16 @@ testReconnect(){
 }
 
 testCheck(){
-    setupServers 1
+    runCoBG 1 2
     testOK runCl 1 check
-    runSrvCfg 3
-    cat srv3/public.toml >> cl1/servers.toml
+    cp public.toml public.toml.backup
+    cat public.toml co3/public.toml > public.toml
     testFail runCl 1 check
+    mv public.toml.backup public.toml
 }
 
 testSignFile(){
-    setupServers 1
+    runCoBG 1 2
     echo "Running first sign"
     echo "My Test Message File" > foo.txt
     echo "My Second Test Message File" > bar.txt
@@ -64,9 +60,9 @@ testSignFile(){
 }
 
 testServerCfg(){
-    runSrvCfg 1
+    runCoBG 1
     pkill -9 cosi
-    testFile srv1/private.toml
+    testFile co1/private.toml
 }
 
 testBuild(){
@@ -91,7 +87,7 @@ setupServers(){
 }
 
 runCl(){
-    local D=cl$1/servers.toml
+    local D=public.toml
     shift
     echo "Running Client with $D $@"
     dbgRun ./cosi -d $DBG_APP $@ -g $D

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=2
 # Debug-level for app
 DBG_APP=2
 # DBG_SRV=2
@@ -216,11 +216,11 @@ testFailure() {
 
 	# -n: newest, so #4 is the one that is dead now
 	pkill -n conode
-	sleep .1
+	sleep 2
 	testOK runSc skipchain block add --roster public.toml $ID
 
 	runCoBG 4
-	sleep .1
+	sleep 2
 	testOK runSc skipchain block add --roster public.toml $ID
 }
 

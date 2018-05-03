@@ -162,6 +162,7 @@ func signStatement(client *service.Client, read io.Reader, el *onet.Roster) (*se
 	case response, ok := <-pchan:
 		log.Lvl5("Response:", response)
 		if !ok || err != nil {
+			log.Info("Err:", err)
 			return nil, errors.New("received an invalid response")
 		}
 		err = crypto.VerifySignature(client.Suite(), el.Publics(), msg, response.Signature)
