@@ -24,6 +24,9 @@ func TestMain(m *testing.M) {
 }
 
 func TestService_proof(t *testing.T) {
+	if testing.Short() {
+		t.Skip("flaky test on travis - skip")
+	}
 	o := createOCS(t)
 	defer o.local.CloseAll()
 
