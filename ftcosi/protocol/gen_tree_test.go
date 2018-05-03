@@ -10,13 +10,8 @@ import (
 	"testing"
 
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 )
-
-func TestMain(m *testing.M) {
-	log.MainTest(m)
-}
 
 // tests the root of the trees
 func TestGenTreesRoot(t *testing.T) {

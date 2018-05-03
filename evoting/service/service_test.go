@@ -1,6 +1,7 @@
 package service
 
 import (
+	"flag"
 	"strconv"
 	"testing"
 	"time"
@@ -23,7 +24,13 @@ import (
 	"github.com/dedis/cothority/skipchain"
 )
 
+var defaultTimeout = 5 * time.Second
+
 func TestMain(m *testing.M) {
+	flag.Parse()
+	if testing.Short() {
+		defaultTimeout = 20 * time.Second
+	}
 	log.MainTest(m)
 }
 
@@ -394,7 +401,7 @@ func TestShuffleBenignNodeFailure(t *testing.T) {
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
 	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
 	// Set a lower timeout for the tests
-	sc0.SetPropTimeout(5 * time.Second)
+	sc0.SetPropTimeout(defaultTimeout)
 
 	// Create the master skipchain
 	ro := onet.NewRoster(roster.List)
@@ -435,7 +442,7 @@ func TestShuffleCatastrophicNodeFailure(t *testing.T) {
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
 	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
 	// Set a lower timeout for the tests
-	sc0.SetPropTimeout(5 * time.Second)
+	sc0.SetPropTimeout(defaultTimeout)
 
 	// Create the master skipchain
 	ro := onet.NewRoster(roster.List)
@@ -521,7 +528,7 @@ func TestDecryptBenignNodeFailure(t *testing.T) {
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
 	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
 	// Set a lower timeout for the tests
-	sc0.SetPropTimeout(5 * time.Second)
+	sc0.SetPropTimeout(defaultTimeout)
 
 	// Create the master skipchain
 	ro := onet.NewRoster(roster.List)
@@ -570,7 +577,7 @@ func TestDecryptCatastrophicNodeFailure(t *testing.T) {
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
 	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
 	// Set a lower timeout for the tests
-	sc0.SetPropTimeout(5 * time.Second)
+	sc0.SetPropTimeout(defaultTimeout)
 
 	// Create the master skipchain
 	ro := onet.NewRoster(roster.List)
