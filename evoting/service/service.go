@@ -56,6 +56,9 @@ type Service struct {
 	finalizeMutex sync.Mutex // used for protecting shuffle and decrypt operations
 	storage       *storage
 
+	sciperMu    sync.Mutex
+	sciperCache []cacheEntry
+
 	pin string // pin is the current service number.
 }
 
@@ -198,6 +201,53 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 	}
 }
 
+type cacheEntry struct {
+	id      int
+	reply   *evoting.LookupSciperReply
+	expires time.Time
+}
+
+const sciperCacheLen = 100
+
+func (s *Service) sciperGetNoLock(sciper int) *evoting.LookupSciperReply {
+	for _, r := range s.sciperCache {
+		if r.id == sciper && r.expires.After(time.Now()) {
+			return r.reply
+		}
+	}
+	return nil
+}
+
+// sciperGet runs through the cache looking for a match. The search is linear
+// because the cache is small, and the whole thing will fit in a couple of cache lines.
+func (s *Service) sciperGet(sciper int) (reply *evoting.LookupSciperReply) {
+	s.sciperMu.Lock()
+	reply = s.sciperGetNoLock(sciper)
+	s.sciperMu.Unlock()
+	return
+}
+
+// sciperPut puts an entry into the cache, if it is not present
+func (s *Service) sciperPut(sciper int, reply *evoting.LookupSciperReply) {
+	s.sciperMu.Lock()
+	defer s.sciperMu.Unlock()
+
+	// check that no one raced us to put their own copy in.
+	if s.sciperGetNoLock(sciper) == nil {
+		s.sciperCache = append(s.sciperCache, cacheEntry{
+			id:      sciper,
+			reply:   reply,
+			expires: time.Now().Add(1 * time.Hour),
+		})
+		if len(s.sciperCache) > sciperCacheLen {
+			from := len(s.sciperCache) - sciperCacheLen
+			s.sciperCache = s.sciperCache[from:]
+		}
+	}
+
+	return
+}
+
 // LookupSciper calls https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
 // to convert Sciper numbers to names.
 func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciperReply, error) {
@@ -207,6 +257,12 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 	sciper, err := strconv.Atoi(req.Sciper)
 	if err != nil {
 		return nil, errors.New("couldn't convert Sciper to integer")
+	}
+
+	// Try to find it in cache first
+	if res := s.sciperGet(sciper); res != nil {
+		log.Lvl3("Got vcard (cache hit): ", res)
+		return res, nil
 	}
 
 	url := "https://people.epfl.ch/cgi-bin/people/vCard"
@@ -256,7 +312,10 @@ func (s *Service) LookupSciper(req *evoting.LookupSciper) (*evoting.LookupSciper
 		}
 	}
 
-	log.Lvl3("Got vcard: %v", reply)
+	// Put it into the cache
+	s.sciperPut(sciper, reply)
+
+	log.Lvl3("Got vcard (cache miss): ", reply)
 	return reply, nil
 }
 
