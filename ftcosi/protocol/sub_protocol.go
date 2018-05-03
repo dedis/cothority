@@ -124,31 +124,21 @@ func (p *SubFtCosi) Dispatch() error {
 		}()
 	}
 
-	go func() {
-		if errs := p.SendToChildrenInParallel(&announcement.Announcement); len(errs) > 0 {
-			log.Lvl3(p.ServerIdentity(), "failed to send announcement to all children")
-		}
-	}()
+	if !p.IsLeaf() {
+		// Only send commits if it's the root node or the subleader.
+		go func() {
+			if errs := p.SendToChildrenInParallel(&announcement.Announcement); len(errs) > 0 {
+				log.Lvl3(p.ServerIdentity(), "failed to send announcement to all children")
+			}
+		}()
+	}
 
 	// ----- Commitment -----
 	commitments := make([]StructCommitment, 0)
-	if p.IsRoot() {
-		select { // one commitment expected from super-protocol
-		case commitment, channelOpen := <-p.ChannelCommitment:
-			if !channelOpen {
-				return nil
-			}
-			commitments = append(commitments, commitment)
-		case <-time.After(p.Timeout / 2):
-			// Our time budget is split between the commitment and the
-			// response phases.
-			p.subleaderNotResponding <- true
-			return nil
-		}
-	} else {
+	if !p.IsLeaf() {
+		// Only wait for commits if it's the root or the subleader.
 		t := time.After(p.Timeout / 2)
 	loop:
-		// note that this section will not execute if it's on the leaf
 		for range p.Children() {
 			select {
 			case commitment, channelOpen := <-p.ChannelCommitment:
@@ -157,6 +147,12 @@ func (p *SubFtCosi) Dispatch() error {
 				}
 				commitments = append(commitments, commitment)
 			case <-t:
+				if p.IsRoot() {
+					log.Error(p.ServerIdentity(), "timed out while waiting for subleader")
+					p.subleaderNotResponding <- true
+					return nil
+				}
+				log.Error(p.ServerIdentity(), "timed out while waiting for commits")
 				break loop
 			}
 		}
@@ -245,6 +241,7 @@ func (p *SubFtCosi) Dispatch() error {
 			}
 			responses = append(responses, response)
 		case <-timeout:
+			log.Error(p.ServerIdentity(), "timeout while waiting for responses")
 			break
 		}
 	}
