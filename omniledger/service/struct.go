@@ -22,6 +22,12 @@ type collectionDB struct {
 	coll       collection.Collection
 }
 
+// OmniledgerVerifier is the type signature of the verification functions
+// which can be registered with the omniledger service.
+// Since the outcome of the verification depends on the state of the collection
+// which is to be modified, we pass it as a pointer here.
+type OmniledgerVerifier func(cdb *collectionDB, tx *Transaction) bool
+
 // newCollectionDB initialises a structure and reads all key/value pairs to store
 // it in the collection.
 func newCollectionDB(db *bolt.DB, name []byte) *collectionDB {
@@ -128,6 +134,18 @@ func (c *collectionDB) tryHash(ts []Transaction) (mr []byte, rerr error) {
 	return
 }
 
+// Action describes how the collectionDB will be modified.
+type Action int
+
+const (
+	// Create allows to insert a new key-value association.
+	Create Action = iota + 1
+	// Update allows to change the value of an existing key.
+	Update
+	// Remove allows to delete an existing key-value association.
+	Remove
+)
+
 // Transaction is the struct specifying the modifications to the skipchain.
 // Key is the key chosen by the user, Kind is the kind of value to store
 // (e.g. a drac...). The key used in the conode's collection will be
@@ -136,9 +154,10 @@ func (c *collectionDB) tryHash(ts []Transaction) (mr []byte, rerr error) {
 // For a Transaction to be valid, there must exist a path from the master-darc
 // in the genesis block to the SubjectPK in Signature.
 type Transaction struct {
-	Key   []byte
-	Kind  []byte
-	Value []byte
+	Action Action
+	Key    []byte
+	Kind   []byte
+	Value  []byte
 	// The signature is performed on the concatenation of the []bytes
 	Signature darc.Signature
 }

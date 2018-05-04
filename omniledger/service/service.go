@@ -52,7 +52,8 @@ type Service struct {
 	// CloseQueues is closed when the queues should stop - this is mostly for
 	// testing and there should be a better way to clean up services for testing...
 	CloseQueues chan bool
-
+	// verifiers map kinds to kind specific verification functions
+	verifiers map[string]OmniledgerVerifier
 	// propagate the new transactions
 	propagateTransactions messaging.PropagationFunc
 
@@ -312,7 +313,7 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) (chan Transactio
 			select {
 			case t := <-c:
 				ts = append(ts, t)
-				log.Lvlf2("%x: Stored transaction - length is %d", scID, len(ts))
+				log.Lvlf2("%x: Stored transaction %+v - length is %d: %+v", scID, t, len(ts), ts)
 			case <-to:
 				log.Lvlf2("%x: New epoch and transaction-length: %d", scID, len(ts))
 				if len(ts) > 0 {
@@ -324,12 +325,21 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) (chan Transactio
 					_, err = s.createNewBlock(scID, sb.Roster, ts)
 					if err != nil {
 						log.Error("couldn't create new block: " + err.Error())
+
+						// For testing purposes, I remove all the transactions from
+						// the queue if the block was not accepted by the skipchain.
+						// A better solution would be to mark them invalid and have
+						// the skipchain ignore them during the verification.
+						// TODO: Above.
+						ts = []Transaction{}
+						to = time.After(waitQueueing)
 						continue
 					}
 					ts = []Transaction{}
 				}
 				to = time.After(waitQueueing)
 			case <-s.CloseQueues:
+				log.Lvlf2("closing queues...")
 				return
 			}
 		}
@@ -408,13 +418,47 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
+	s.verifiers = make(map[string]OmniledgerVerifier)
 	skipchain.RegisterVerification(c, verifyOmniledger, s.verifySkipBlock)
 	return s, nil
 }
 
 // We use the omniledger as a receiver (as is done in the identity service),
 // so we can access e.g. the collectionDBs of the service.
-func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
-	// Dummy implementation, always returns true for the moment.
-	return true
+func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) (validSB bool) {
+	validSB = true
+	_, dataI, err := network.Unmarshal(newSB.Data, cothority.Suite)
+	data, ok := dataI.(*Data)
+	if err != nil || !ok {
+		log.Errorf("couldn't unmarshal data")
+		return false
+	}
+	txs := data.Transactions
+	cdb := s.getCollection(newSB.Hash)
+	for _, tx := range txs {
+		f, ok := s.verifiers[string(tx.Kind)]
+		if ok {
+			validSB = validSB && f(cdb, &tx)
+		}
+	}
+	return
+}
+
+// RegisterVerification stores the verification in a map and will
+// call it whenever a verification needs to be done.
+func (s *Service) registerVerification(kind string, f OmniledgerVerifier) error {
+	s.verifiers[kind] = f
+	return nil
+}
+
+// RegisterVerification stores the verification in a map and will
+// call it whenever a verification needs to be done.
+// GetService makes it possible to give either an `onet.Context` or
+// `onet.Server` to `RegisterVerification`.
+func RegisterVerification(s skipchain.GetService, kind string, f OmniledgerVerifier) error {
+	scs := s.Service(ServiceName)
+	if scs == nil {
+		return errors.New("Didn't find our service: " + ServiceName)
+	}
+	return scs.(*Service).registerVerification(kind, f)
 }

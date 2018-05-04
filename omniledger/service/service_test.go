@@ -153,6 +153,86 @@ func TestService_GetProof(t *testing.T) {
 	require.NotNil(t, err)
 }
 
+func TestService_DummyVerification(t *testing.T) {
+	s := newSer(t, 1)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	RegisterVerification(s.hosts[0], "dummy", verifyDummyKind)
+	akvresp, err := s.service.SetKeyValue(&SetKeyValue{
+		Version: 0,
+	})
+	require.NotNil(t, err)
+
+	key1 := []byte("a")
+	value1 := []byte("a")
+	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
+		Version:     CurrentVersion,
+		SkipchainID: s.sb.SkipChainID(),
+		Transaction: Transaction{
+			Key:    key1,
+			Kind:   []byte("dummy"),
+			Value:  value1,
+			Action: Remove,
+		},
+	})
+	require.Nil(t, err)
+	require.NotNil(t, akvresp)
+	require.Equal(t, CurrentVersion, akvresp.Version)
+
+	time.Sleep(2 * waitQueueing)
+	pr, err := s.service.GetProof(&GetProof{
+		Version: CurrentVersion,
+		ID:      s.sb.SkipChainID(),
+		Key:     key1,
+	})
+	require.Nil(t, err)
+	match := pr.Proof.InclusionProof.Match()
+	require.False(t, match)
+
+	key2 := []byte("b")
+	value2 := []byte("b")
+	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
+		Version:     CurrentVersion,
+		SkipchainID: s.sb.SkipChainID(),
+		Transaction: Transaction{
+			Key:    key2,
+			Kind:   []byte("other"),
+			Value:  value2,
+			Action: Remove,
+		},
+	})
+	require.Nil(t, err)
+	require.NotNil(t, akvresp)
+	require.Equal(t, CurrentVersion, akvresp.Version)
+
+	time.Sleep(4 * waitQueueing)
+	pr, err = s.service.GetProof(&GetProof{
+		Version: CurrentVersion,
+		ID:      s.sb.SkipChainID(),
+		Key:     key2,
+	})
+	require.Nil(t, err)
+	match = pr.Proof.InclusionProof.Match()
+	require.True(t, match)
+
+	time.Sleep(4 * waitQueueing)
+}
+
+func verifyDummyKind(cdb *collectionDB, tx *Transaction) bool {
+	switch a := tx.Action; a {
+	case Create:
+		return true
+	case Update:
+		return true
+	// removing and unknown actions are forbidden
+	case Remove:
+		return false
+	default:
+		return false
+	}
+}
+
 type ser struct {
 	local   *onet.LocalTest
 	hosts   []*onet.Server
