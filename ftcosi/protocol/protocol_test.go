@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"flag"
 	"fmt"
 	"sync"
 	"testing"
@@ -40,7 +41,15 @@ func init() {
 }
 
 var testSuite = cothority.Suite
-var defaultTimeout = time.Second * 5
+var defaultTimeout = 5 * time.Second
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	if testing.Short() {
+		defaultTimeout = 20 * time.Second
+	}
+	log.MainTest(m)
+}
 
 // Tests various trees configurations
 func TestProtocol(t *testing.T) {

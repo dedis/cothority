@@ -194,7 +194,9 @@ func (p *FtCosi) Dispatch() error {
 				responses = append(responses, response)
 				responsesMut.Unlock()
 			case <-time.After(p.Timeout):
-				errChan <- fmt.Errorf("%v", i)
+				// This should never happen, as the subProto should return before that
+				// timeout, even if it didn't receive enough responses.
+				errChan <- fmt.Errorf("timeout should not happen while waiting for response: %d", i)
 			}
 		}(i, cosiSubProtocol)
 	}
@@ -240,6 +242,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 		wg.Add(1)
 		go func(i int, subProtocol *SubFtCosi) {
 			defer wg.Done()
+			timeout := time.After(p.Timeout / 2)
 			for {
 				select {
 				case <-subProtocol.subleaderNotResponding:
@@ -278,9 +281,8 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 					commitments = append(commitments, commitment)
 					mut.Unlock()
 					return
-				case <-time.After(p.Timeout):
-					err := fmt.Errorf("(node %v) didn't get commitment after timeout %v", i, p.Timeout)
-					errChan <- err
+				case <-timeout:
+					errChan <- fmt.Errorf("(node %v) didn't get commitment after timeout %v", i, p.Timeout)
 					return
 				}
 			}
@@ -320,7 +322,7 @@ func (p *FtCosi) Start() error {
 		close(p.startChan)
 		return fmt.Errorf("sub-protocol name cannot be empty")
 	}
-	if p.Timeout < 10 {
+	if p.Timeout < 10*time.Nanosecond {
 		close(p.startChan)
 		return fmt.Errorf("unrealistic timeout")
 	}
@@ -347,7 +349,9 @@ func (p *FtCosi) startSubProtocol(tree *onet.Tree) (*SubFtCosi, error) {
 	cosiSubProtocol.Publics = p.publics
 	cosiSubProtocol.Msg = p.Msg
 	cosiSubProtocol.Data = p.Data
-	cosiSubProtocol.Timeout = p.Timeout / 2
+	// We allow for one subleader failure during the commit phase, and thus
+	// only allocate one third of the ftcosi budget to the subprotocol.
+	cosiSubProtocol.Timeout = p.Timeout / 3
 
 	err = cosiSubProtocol.Start()
 	if err != nil {

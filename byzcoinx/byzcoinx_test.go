@@ -2,6 +2,7 @@ package byzcoinx
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"math"
 	"strconv"
@@ -17,7 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-var defaultTimeout = time.Second * 2
+var defaultTimeout = 5 * time.Second
 var testSuite = cothority.Suite
 
 type Counter struct {
@@ -106,7 +107,11 @@ func ack(a, b []byte) bool {
 }
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 3)
+	flag.Parse()
+	if testing.Short() {
+		defaultTimeout = 20 * time.Second
+	}
+	log.MainTest(m)
 }
 
 func TestBftCoSi(t *testing.T) {
@@ -199,7 +204,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	if nbrFault == 0 {
 		policy = nil
 	} else {
-		policy = cosi.NewThresholdPolicy(nbrFault)
+		policy = cosi.NewThresholdPolicy(nbrHosts - nbrFault)
 	}
 	err = getAndVerifySignature(bftCosiProto.FinalSignatureChan, publics, proposal, policy)
 	require.Nil(t, err)

@@ -426,7 +426,8 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 // in the roster, in order to find an answer, even in the case that a few
 // nodes in the network are down.
 func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*SkipBlock, error) {
-	subCount := (len(roster.List)-1)/3 + 1
+	// Only take half of the nodes to not spam the whole network.
+	subCount := len(roster.List) / 2
 	r := roster.RandomSubset(s.ServerIdentity(), subCount)
 	tr := r.GenerateStar()
 	pi, err := s.CreateProtocol(ProtocolGetBlocks, tr)
@@ -1050,7 +1051,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	root.Data = data
 	root.CreateProtocol = s.CreateProtocol
 	root.FinalSignatureChan = make(chan byzcoinx.FinalSignature, 1)
-	root.Timeout = s.propTimeout / 2
+	root.Timeout = s.propTimeout
 	if s.bftTimeout != 0 {
 		root.Timeout = s.bftTimeout
 	}
