@@ -42,6 +42,21 @@ func (c *Client) PinRequest(dst network.Address, pin string, pub kyber.Point) er
 	return c.SendProtobuf(si, &PinRequest{pin, pub}, nil)
 }
 
+// VerifyLink checks if a given public key is in the list of administrators
+// in the service. It returns a nil error if the key is present.
+func (c *Client) VerifyLink(dst network.Address, pub kyber.Point) error {
+	si := &network.ServerIdentity{Address: dst}
+	rep := &VerifyLinkReply{}
+	err := c.SendProtobuf(si, &VerifyLink{pub}, rep)
+	if err != nil {
+		return err
+	}
+	if rep.Exists {
+		return nil
+	}
+	return errors.New("this public key is not stored")
+}
+
 // StoreConfig sends the configuration to the conode for later usage.
 func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar) error {
 	si := &network.ServerIdentity{Address: dst}
