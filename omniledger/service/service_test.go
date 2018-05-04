@@ -12,7 +12,6 @@ import (
 	"gopkg.in/dedis/kyber.v2/suites"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/log"
-	"gopkg.in/dedis/onet.v2/network"
 )
 
 var tSuite = suites.MustFind("Ed25519")
@@ -26,22 +25,28 @@ func TestService_CreateSkipchain(t *testing.T) {
 	s := newSer(t, 0)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
-	resp, err := s.service.CreateSkipchain(&CreateSkipchain{
+	resp, err := s.service.CreateGenesisBlock(&CreateGenesisBlock{
 		Version: 0,
 		Roster:  *s.roster,
 	})
 	require.NotNil(t, err)
 
-	resp, err = s.service.CreateSkipchain(&CreateSkipchain{
-		Version: CurrentVersion,
-		Roster:  *s.roster,
-		Transaction: Transaction{
+	resp, err = s.service.CreateGenesisBlock(&CreateGenesisBlock{
+		Version:     CurrentVersion,
+		Roster:      *s.roster,
+		GenesisDarc: darc.Darc{},
+		GenesisTx: Transaction{
 			Key:   []byte("someKey"),
 			Kind:  []byte("someKind"),
 			Value: []byte("someValue"),
 		},
 	})
+	require.NotNil(t, err)
+
+	genesisMsg := DefaultGenesisMsg(CurrentVersion, s.roster)
+	resp, err = s.service.CreateGenesisBlock(&genesisMsg)
 	require.Nil(t, err)
+
 	assert.Equal(t, CurrentVersion, resp.Version)
 	assert.NotNil(t, resp.Skipblock)
 }
@@ -252,22 +257,13 @@ func newSer(t *testing.T, step int) *ser {
 	}
 	s.hosts, s.roster, _ = s.local.GenTree(5, true)
 	s.service = s.local.GetServices(s.hosts, omniledgerID)[0].(*Service)
-	s.darc = &darc.Darc{}
+	genesisMsg := DefaultGenesisMsg(CurrentVersion, s.roster)
+	s.darc = &genesisMsg.GenesisDarc
 
 	for i := 0; i < step; i++ {
 		switch i {
 		case 0:
-			d, err := network.Marshal(s.darc)
-			require.Nil(t, err)
-			resp, err := s.service.CreateSkipchain(&CreateSkipchain{
-				Version: CurrentVersion,
-				Roster:  *s.roster,
-				Transaction: Transaction{
-					Key:   s.darc.GetID(),
-					Kind:  []byte("darc"),
-					Value: d,
-				},
-			})
+			resp, err := s.service.CreateGenesisBlock(&genesisMsg)
 			require.Nil(t, err)
 			s.sb = resp.Skipblock
 		case 1:

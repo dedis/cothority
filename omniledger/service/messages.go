@@ -5,6 +5,7 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
+	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/network"
@@ -13,15 +14,10 @@ import (
 // We need to register all messages so the network knows how to handle them.
 func init() {
 	network.RegisterMessages(
-		&CreateSkipchain{}, &CreateSkipchainResponse{},
+		&CreateGenesisBlock{}, &CreateGenesisBlockResponse{},
 		&SetKeyValue{}, &SetKeyValueResponse{},
 	)
 }
-
-const (
-	// ErrorParse indicates an error while parsing the protobuf-file.
-	ErrorParse = iota + 4000
-)
 
 // Version indicates what version this client runs. In the first development
 // phase, each next version will break the preceeding versions. Later on,
@@ -36,25 +32,26 @@ const CurrentVersion Version = 1
 // import "roster.proto";
 //
 // option java_package = "ch.epfl.dedis.proto";
-// option java_outer_classname = "LleapProto";
+// option java_outer_classname = "OmniLedgerProto";
 
 // ***
 // These are the messages used in the API-calls
 // ***
 
-// CreateSkipchain asks the cisc-service to set up a new skipchain.
-type CreateSkipchain struct {
+// CreateGenesisBlock asks the cisc-service to set up a new skipchain.
+type CreateGenesisBlock struct {
 	// Version of the protocol
 	Version Version
 	// Roster defines which nodes participate in the skipchain.
 	Roster onet.Roster
-	// Transaction contains the master darc which defines who is allowed to
-	// write to this skipchain. we will only store its hash.
-	Transaction Transaction
+	// Genesis Tx contains the initial configuration.
+	GenesisTx Transaction
+	// GenesisDarc defines who is allowed to write to this skipchain.
+	GenesisDarc darc.Darc
 }
 
-// CreateSkipchainResponse holds the genesis-block of the new skipchain.
-type CreateSkipchainResponse struct {
+// CreateGenesisBlockResponse holds the genesis-block of the new skipchain.
+type CreateGenesisBlockResponse struct {
 	// Version of the protocol
 	Version Version
 	// Skipblock of the created skipchain or empty if there was an error.

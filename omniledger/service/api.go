@@ -6,13 +6,16 @@ package service
  */
 
 import (
+	"github.com/dedis/student_18_omniledger/omniledger/darc"
+
 	"gopkg.in/dedis/cothority.v2"
 	"gopkg.in/dedis/cothority.v2/skipchain"
+	"gopkg.in/dedis/kyber.v2"
 	"gopkg.in/dedis/onet.v2"
 )
 
 // ServiceName is used for registration on the onet.
-const ServiceName = "Lleap"
+const ServiceName = "OmniLedger"
 
 // Client is a structure to communicate with the CoSi
 // service
@@ -25,15 +28,12 @@ func NewClient() *Client {
 	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
 }
 
-// CreateSkipchain sets up a new skipchain to hold the key/value pairs. If
+// CreateGenesisBlock sets up a new skipchain to hold the key/value pairs. If
 // a key is given, it is used to authenticate towards the cothority.
-func (c *Client) CreateSkipchain(r *onet.Roster, tx Transaction) (*CreateSkipchainResponse, error) {
-	reply := &CreateSkipchainResponse{}
-	err := c.SendProtobuf(r.List[0], &CreateSkipchain{
-		Version:     CurrentVersion,
-		Roster:      *r,
-		Transaction: tx,
-	}, reply)
+func (c *Client) CreateGenesisBlock(r *onet.Roster, pks ...kyber.Point) (*CreateGenesisBlockResponse, error) {
+	reply := &CreateGenesisBlockResponse{}
+	msg := DefaultGenesisMsg(CurrentVersion, r, pks...)
+	err := c.SendProtobuf(r.List[0], &msg, reply)
 	if err != nil {
 		return nil, err
 	}
@@ -69,4 +69,28 @@ func (c *Client) GetProof(r *onet.Roster, id skipchain.SkipBlockID, key []byte) 
 		return nil, err
 	}
 	return reply, nil
+}
+
+// DefaultGenesisMsg creates the message that is used to for creating the
+// genesis darc and block.
+func DefaultGenesisMsg(v Version, r *onet.Roster, pks ...kyber.Point) CreateGenesisBlock {
+	ids := make([]*darc.Identity, len(pks))
+	for i := range ids {
+		ids[i] = darc.NewIdentityEd25519(pks[i])
+	}
+	d := darc.NewDarc(darc.InitRules(ids, ids), []byte("genesis darc"))
+	d.Rules.AddRule("add_darc", d.Rules.GetSignExpr())
+	// TODO transaction should have darc ID and signature
+	tx := Transaction{
+		Key:   append(d.GetID(), make([]byte, 64)...),
+		Kind:  []byte("genesis"),
+		Value: []byte("dummy value"),
+	}
+	m := CreateGenesisBlock{
+		Version:     v,
+		Roster:      *r,
+		GenesisDarc: *d,
+		GenesisTx:   tx,
+	}
+	return m
 }

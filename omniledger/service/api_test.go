@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/require"
 	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/kyber.v2/util/key"
 	"gopkg.in/dedis/onet.v2"
 )
 
@@ -14,8 +15,9 @@ func TestClient_GetProof(t *testing.T) {
 	_, roster, _ := l.GenTree(3, true)
 	defer l.CloseAll()
 	defer closeQueues(l)
+	pair := key.NewKeyPair(cothority.Suite)
 	c := NewClient()
-	csr, err := c.CreateSkipchain(roster, Transaction{Key: []byte{1}})
+	csr, err := c.CreateGenesisBlock(roster, pair.Public)
 	require.Nil(t, err)
 
 	key := []byte{1, 2, 3, 4}

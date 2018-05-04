@@ -20,7 +20,7 @@ func TestRules(t *testing.T) {
 	rules = InitRules(owners, []*Identity{})
 	expr, ok = rules[evolve]
 	require.True(t, ok)
-	require.Equal(t, string(expr), owners[0].String()+" | "+owners[1].String())
+	require.Equal(t, string(expr), owners[0].String()+" & "+owners[1].String())
 }
 
 func TestNewDarc(t *testing.T) {
@@ -325,17 +325,17 @@ func TestDarc_Delegation(t *testing.T) {
 	require.Nil(t, td3.darc.Rules.UpdateSign(td3.darc.Rules.GetEvolutionExpr()))
 	require.Nil(t, td4.darc.Rules.UpdateSign(td4.darc.Rules.GetEvolutionExpr()))
 
-	require.Nil(t, localEvolution(td2.darc, []*Darc{td1.darc}, td1.owners[0]))
+	require.Nil(t, localEvolution(td2.darc, []*Darc{td1.darc}, td1.owners...))
 	require.Nil(t, td2.darc.Verify())
 
-	require.Nil(t, localEvolution(td4.darc, []*Darc{td3.darc}, td3.owners[0]))
+	require.Nil(t, localEvolution(td4.darc, []*Darc{td3.darc}, td3.owners...))
 	require.Nil(t, td4.darc.Verify())
 
 	id3 := NewIdentityDarc(td3.darc.GetID())
 	d2Expr := []byte(id3.String())
 	require.Nil(t, td2.darc.Rules.UpdateEvolution(d2Expr))
 	require.NotNil(t, td2.darc.Verify())
-	require.Nil(t, localEvolution(td2.darc, []*Darc{td1.darc}, td1.owners[0]))
+	require.Nil(t, localEvolution(td2.darc, []*Darc{td1.darc}, td1.owners...))
 	require.Nil(t, td2.darc.Verify())
 
 	td5 := createDarc(2, "testdarc5")
@@ -354,7 +354,7 @@ func TestDarc_Delegation(t *testing.T) {
 	// td3.owners which is out of date.
 	require.NotNil(t, td5.darc.VerifyWithCB(getDarc))
 	// If the evolution is signed by the latest darc, then it's ok.
-	require.Nil(t, localEvolution(td5.darc, []*Darc{td1.darc, td2.darc}, td4.owners[0]))
+	require.Nil(t, localEvolution(td5.darc, []*Darc{td1.darc, td2.darc}, td4.owners...))
 	require.Nil(t, td5.darc.VerifyWithCB(getDarc))
 }
 

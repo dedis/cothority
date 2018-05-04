@@ -20,15 +20,13 @@ import (
 	"gopkg.in/satori/go.uuid.v1"
 
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
+	"github.com/dedis/student_18_omniledger/omniledger/darc"
 )
 
 // Used for tests
+// TODO move to test
 var omniledgerID onet.ServiceID
 var verifyOmniledger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Omniledger"))
-
-const keyMerkleRoot = "merkleroot"
-const keyNewKey = "newkey"
-const keyNewValue = "newvalue"
 
 func init() {
 	var err error
@@ -58,10 +56,8 @@ type Service struct {
 	propagateTransactions messaging.PropagationFunc
 
 	storage *storage
-}
 
-type queue struct {
-	transactions []Transaction
+	createSkipChainMut sync.Mutex
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -83,30 +79,72 @@ type updateCollection struct {
 	ID skipchain.SkipBlockID
 }
 
-// CreateSkipchain asks the cisc-service to create a new skipchain ready to
+// CreateGenesisBlock asks the cisc-service to create a new skipchain ready to
 // store key/value pairs. If it is given exactly one writer, this writer will
 // be stored in the skipchain.
 // For faster access, all data is also stored locally in the Service.storage
 // structure.
-func (s *Service) CreateSkipchain(req *CreateSkipchain) (
-	*CreateSkipchainResponse, error) {
+func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
+	*CreateGenesisBlockResponse, error) {
+	// We use a big mutex here because we do not want to allow concurrent
+	// creation of genesis blocks.
+	// TODO an optimisation would be to lock on the skipchainID.
+	s.createSkipChainMut.Lock()
+	defer s.createSkipChainMut.Unlock()
+
 	if req.Version != CurrentVersion {
-		return nil, errors.New("version mismatch")
+		return nil, fmt.Errorf("version mismatch - got %d but need %d", req.Version, CurrentVersion)
+	}
+	if err := checkTx(req.GenesisDarc, req.GenesisTx); err != nil {
+		return nil, err
 	}
 
-	sb, err := s.createNewBlock(nil, &req.Roster, []Transaction{req.Transaction})
+	// Create the genesis-transaction with a special key, it acts as a
+	// reference to the actual genesis transaction.
+	genesisTx := Transaction{
+		Key:   []byte("genesis"),
+		Value: req.GenesisTx.Key,
+	}
+	darcBuf, err := req.GenesisDarc.ToProto()
+	if err != nil {
+		return nil, err
+	}
+	darcTx := Transaction{
+		Key:   req.GenesisDarc.GetID(),
+		Kind:  []byte("darc"),
+		Value: darcBuf,
+	}
+
+	sb, err := s.createNewBlock(nil, &req.Roster, []Transaction{darcTx, req.GenesisTx, genesisTx})
 	if err != nil {
 		return nil, err
 	}
 	s.save()
+
 	s.queueWorkers[string(sb.SkipChainID())], err = s.createQueueWorker(sb.SkipChainID())
 	if err != nil {
 		return nil, err
 	}
-	return &CreateSkipchainResponse{
+	return &CreateGenesisBlockResponse{
 		Version:   CurrentVersion,
 		Skipblock: sb,
 	}, nil
+}
+
+func checkTx(d darc.Darc, tx Transaction) error {
+	darcLen := len(d.GetID())
+	if len(tx.Key) < darcLen {
+		return errors.New("incorrect key length")
+	}
+	if !bytes.Equal(tx.Key[0:darcLen], d.GetID()) {
+		return errors.New("key is not the same as the darc ID")
+	}
+	if !bytes.Equal(tx.Kind, []byte("genesis")) {
+		return errors.New("kind must be \"genesis\"")
+	}
+	// TODO do the actual verification, need to figure out the relationship
+	// between a darc.Request and a Transaction
+	return nil
 }
 
 // SetKeyValue asks cisc to add a new key/value pair.
@@ -117,7 +155,7 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 
 	c, ok := s.queueWorkers[string(req.SkipchainID)]
 	if !ok {
-		return nil, errors.New("Don't know this skipchain")
+		return nil, fmt.Errorf("we don't know skipchain ID %x", req.SkipchainID)
 	}
 	c <- req.Transaction
 
@@ -403,7 +441,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		CloseQueues:      make(chan bool),
 	}
-	if err := s.RegisterHandlers(s.CreateSkipchain, s.SetKeyValue,
+	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.SetKeyValue,
 		s.GetProof); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
