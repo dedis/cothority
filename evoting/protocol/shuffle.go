@@ -127,6 +127,9 @@ func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
 		return nil
 	}
 
+	if len(ballots) < 2 {
+		return errors.New("cannot shuffle less than 2 ballots")
+	}
 	a, b := lib.Split(ballots)
 	g, d, prov := shuffle.Shuffle(cothority.Suite, nil, s.Election.Key, a, b, random.New())
 	proof, err := proof.HashProve(cothority.Suite, "", prov)

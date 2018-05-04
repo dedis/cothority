@@ -633,3 +633,77 @@ func TestDecryptCatastrophicNodeFailure(t *testing.T) {
 	})
 	require.Nil(t, err)
 }
+
+func TestCastNodeFailureShuffleAllOk(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping", t.Name(), " in short mode")
+	}
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	nodeKP := key.NewKeyPair(cothority.Suite)
+	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
+	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
+	// Set a lower timeout for the tests
+	sc0.SetPropTimeout(5 * time.Second)
+
+	// Create the master skipchain
+	ro := onet.NewRoster(roster.List)
+	rl, err := s0.Link(&evoting.Link{
+		Pin:    s0.pin,
+		Roster: ro,
+		Key:    nodeKP.Public,
+		Admins: []uint32{idAdmin},
+	})
+	require.Nil(t, err)
+	log.Lvl2("Wrote the roster")
+
+	adminSig := generateSignature(nodeKP.Private, rl.ID, idAdmin)
+
+	replyOpen, err := s0.Open(&evoting.Open{
+		ID: rl.ID,
+		Election: &lib.Election{
+			Creator: idAdmin,
+			Users:   []uint32{idUser1, idUser2, idUser3, idAdmin},
+			End:     time.Now().Unix() + 86400,
+		},
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+
+	// Prepare a helper for testing voting.
+	vote := func(user uint32, bufCand []byte) *evoting.CastReply {
+		k, c := lib.Encrypt(replyOpen.Key, bufCand)
+		ballot := &lib.Ballot{
+			User:  user,
+			Alpha: k,
+			Beta:  c,
+		}
+		cast, err := s0.Cast(&evoting.Cast{
+			ID:        replyOpen.ID,
+			Ballot:    ballot,
+			User:      user,
+			Signature: generateSignature(nodeKP.Private, rl.ID, user),
+		})
+		require.Nil(t, err)
+		return cast
+	}
+
+	vote(idUser1, bufCand1)
+	nodes[5].Pause()
+	vote(idUser2, bufCand1)
+	nodes[5].Unpause()
+
+	electionID := replyOpen.ID
+
+	// Shuffle all votes
+	adminSig = generateSignature(nodeKP.Private, rl.ID, idAdmin)
+	_, err = s0.Shuffle(&evoting.Shuffle{
+		ID:        electionID,
+		User:      idAdmin,
+		Signature: adminSig,
+	})
+	require.Nil(t, err)
+}

@@ -1,6 +1,8 @@
 package lib
 
 import (
+	"errors"
+
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/proof"
 	"github.com/dedis/kyber/shuffle"
@@ -30,6 +32,9 @@ func Decrypt(private kyber.Scalar, K, C kyber.Point) kyber.Point {
 
 // Verify performs verifies the proof of a Neff shuffle.
 func Verify(tag []byte, public kyber.Point, x, y, v, w []kyber.Point) error {
+	if len(x) < 2 || len(y) < 2 || len(v) < 2 || len(w) < 2 {
+		return errors.New("cannot verify less than 2 points")
+	}
 	verifier := shuffle.Verifier(cothority.Suite, nil, public, x, y, v, w)
 	return proof.HashVerify(cothority.Suite, "", verifier, tag)
 }
