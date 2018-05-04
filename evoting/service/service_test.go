@@ -68,6 +68,9 @@ func TestService(t *testing.T) {
 	nodes, roster, _ := local.GenBigTree(3, 3, 1, true)
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
 	s1 := local.GetServices(nodes, serviceID)[1].(*Service)
+	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
+	// Set a lower timeout for the tests
+	sc0.SetPropTimeout(defaultTimeout)
 
 	// Creating master skipchain
 	replyLink, err := s0.Link(&evoting.Link{
@@ -285,12 +288,18 @@ func runAnElection(t *testing.T, s *Service, replyLink *evoting.LinkReply, nodeK
 }
 
 func TestEvolveRoster(t *testing.T) {
+	if testing.Short() {
+		t.Skip("not using evolveRoster in travis")
+	}
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
 
 	nodeKP := key.NewKeyPair(cothority.Suite)
 	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
+	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
+	// Set a lower timeout for the tests
+	sc0.SetPropTimeout(defaultTimeout)
 
 	// Creating master skipchain with the first 5 nodes
 	ro1 := onet.NewRoster(roster.List[0:5])
@@ -339,13 +348,6 @@ func TestEvolveRoster(t *testing.T) {
 
 	// There was a test here before to try to replace the leader.
 	// It didn't work. For the time being, that is not supported.
-
-	// The decrypt protocol tries to stop early as soon as 2n/3 + 1 nodes store a partial.
-	// However, since the leader sends a broadcast to all the n nodes initially we
-	// want the servers to be up until the goroutines terminate or the test framework complains
-	// about zombie goroutines. The call to time.Sleep ensures we dont end up with
-	// zombie goroutines
-	time.Sleep(5 * time.Second)
 }
 
 func setupElection(t *testing.T, s0 *Service, rl *evoting.LinkReply, nodeKP *key.Pair) skipchain.SkipBlockID {
@@ -432,10 +434,11 @@ func TestShuffleBenignNodeFailure(t *testing.T) {
 
 func TestShuffleCatastrophicNodeFailure(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping", t.Name(), " in short mode")
+		t.Skip("not using ShuffleCatastrophic in travis")
 	}
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
+	timeout = defaultTimeout
 
 	nodeKP := key.NewKeyPair(cothority.Suite)
 	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
@@ -567,10 +570,11 @@ func TestDecryptBenignNodeFailure(t *testing.T) {
 
 func TestDecryptCatastrophicNodeFailure(t *testing.T) {
 	if testing.Short() {
-		t.Skip("skipping", t.Name(), " in short mode")
+		t.Skip("not using DecryptCatastrophic in travis")
 	}
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
+	timeout = defaultTimeout
 
 	nodeKP := key.NewKeyPair(cothority.Suite)
 	nodes, roster, _ := local.GenBigTree(7, 7, 1, true)
@@ -628,11 +632,4 @@ func TestDecryptCatastrophicNodeFailure(t *testing.T) {
 		Signature: adminSig,
 	})
 	require.Nil(t, err)
-
-	// The decrypt protocol tries to stop early as soon as 2n/3 + 1 nodes store a partial.
-	// However, since the leader sends a broadcast to all the n nodes initially we
-	// want the servers to be up until the goroutines terminate or the test framework complains
-	// about zombie goroutines. The call to time.Sleep ensures we dont end up with
-	// zombie goroutines
-	time.Sleep(5 * time.Second)
 }
