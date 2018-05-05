@@ -30,16 +30,17 @@ func Example() {
 	// Client sends request r to the server, and the server must verify it.
 	// Usually the server will look in its database for the base ID of the
 	// darc in the request and find the latest one. But in this case we
-	// assume it already knows. If the check is successful, then the
+	// assume it already knows. If the verification is successful, then the
 	// server should add the darc in the request to its database.
-	fmt.Println(d1.CheckRequest(r))
+	fmt.Println(r.Verify(d1))
 	d2Server, _ := r.MsgToDarc([]*darc.Darc{d1}) // Server stores d2Server.
 	fmt.Println(bytes.Equal(d2Server.GetID(), d2.GetID()))
 
 	// If the darcs stored on the server are trustworthy, then using
-	// `CheckRequest` is enough. To do a complete verification, Darc.Verify
-	// should be used. This will traverse the chain of evolution and verify
-	// every evolution. However, the Darc.Path attribute must be set.
+	// `Request.Verify` is enough. To do a complete verification,
+	// Darc.Verify should be used. This will traverse the chain of
+	// evolution and verify every evolution. However, the Darc.Path
+	// attribute must be set.
 	fmt.Println(d2Server.Verify())
 
 	// The above illustrates the basic use of darcs, in the following
@@ -56,13 +57,13 @@ func Example() {
 	d3.Rules.AddRule(action3, expr3)
 
 	r, _ = darc.NewRequest(d3.GetID(), action3, []byte("example request"), owner3)
-	if err := d3.CheckRequest(r); err != nil {
+	if err := r.Verify(d3); err != nil {
 		// not ok because the expression is created using logical and
 		fmt.Println("not ok!")
 	}
 
 	r, _ = darc.NewRequest(d3.GetID(), action3, []byte("example request"), owner1, owner2, owner3)
-	if err := d3.CheckRequest(r); err == nil {
+	if err := r.Verify(d3); err == nil {
 		fmt.Println("ok!")
 	}
 

@@ -393,20 +393,11 @@ func (d *Darc) findPath(getDarc func(string) *Darc) error {
 	return nil
 }
 
-// CheckRequest checks the given request and returns an error if it cannot be
-// accepted. The caller is responsible for calling this function on the latest
-// darc.
-func (d Darc) CheckRequest(r *Request) error {
-	return d.CheckRequestWithCB(r, func(s string) *Darc {
-		return nil
-	})
-}
-
-// CheckRequestWithCB checks the given request using a callback which looks-up
-// missing darcs. The function returns an error if the request cannot be
-// accepted. The caller is responsible for calling this function on the latest
-// darc.
-func (d Darc) CheckRequestWithCB(r *Request, getDarc func(string) *Darc) error {
+// VerifyWithCB checks the request with the given darc using a callback which
+// looks-up missing darcs. The function returns an error if the request cannot
+// be accepted. The caller is responsible for providing the latest darc in the
+// argument.
+func (r *Request) VerifyWithCB(d *Darc, getDarc func(string) *Darc) error {
 	if !d.GetBaseID().Equal(r.BaseID) {
 		return fmt.Errorf("base id mismatch")
 	}
@@ -438,6 +429,15 @@ func (d Darc) CheckRequestWithCB(r *Request, getDarc func(string) *Darc) error {
 		return err
 	}
 	return nil
+}
+
+// Verify checks the request with the given darc and returns an error if it
+// cannot be accepted. The caller is responsible for providing  the latest
+// darc in the argument.
+func (r *Request) Verify(d *Darc) error {
+	return r.VerifyWithCB(d, func(s string) *Darc {
+		return nil
+	})
 }
 
 // String returns a human-readable string representation of the darc.
