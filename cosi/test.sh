@@ -32,7 +32,7 @@ testReconnect(){
         runCoBG $s
         sleep 1
         testOK runCl 1 sign foo.txt
-        pkill -9 -f ./cosi
+        cleanup
     done
 }
 
