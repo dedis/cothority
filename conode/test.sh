@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 
 . "$(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh"
 
@@ -17,10 +17,6 @@ testConode(){
     runCoBG 1 2
     cp co1/public.toml .
     cat co2/public.toml >> public.toml
-    echo "Debug 1"
-    cat co1/public.toml
-    echo "Debug 2"
-    cat co2/public.toml
     testOK runCo 1 check -g public.toml
     cat co3/public.toml >> public.toml
     testFail runCo 1 check -g public.toml

@@ -165,9 +165,8 @@ func signStatement(client *service.Client, read io.Reader, el *onet.Roster) (*se
 
 	select {
 	case response, ok := <-pchan:
-		log.Info("Response:", response)
+		log.Lvl5("Response:", response)
 		if !ok || err != nil {
-			log.Info("Err:", err)
 			return nil, errors.New("received an invalid response")
 		}
 		err = cosi.Verify(suite, el.Publics(), msg, response.Signature, cosi.CompletePolicy{})
