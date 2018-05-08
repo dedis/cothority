@@ -25,12 +25,15 @@ func TestService_CreateSkipchain(t *testing.T) {
 	s := newSer(t, 0)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
+
+	// invalid version, missing transaction
 	resp, err := s.service.CreateGenesisBlock(&CreateGenesisBlock{
 		Version: 0,
 		Roster:  *s.roster,
 	})
 	require.NotNil(t, err)
 
+	// invalid darc
 	resp, err = s.service.CreateGenesisBlock(&CreateGenesisBlock{
 		Version:     CurrentVersion,
 		Roster:      *s.roster,
@@ -43,10 +46,21 @@ func TestService_CreateSkipchain(t *testing.T) {
 	})
 	require.NotNil(t, err)
 
-	genesisMsg := DefaultGenesisMsg(CurrentVersion, s.roster)
-	resp, err = s.service.CreateGenesisBlock(&genesisMsg)
+	// set up two genesis messages
+	signer := darc.NewSignerEd25519(nil, nil)
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, signer)
 	require.Nil(t, err)
 
+	// tamper the message, verification should fail
+	v := genesisMsg.GenesisTx.Value
+	genesisMsg.GenesisTx.Value = []byte("bad value")
+	resp, err = s.service.CreateGenesisBlock(genesisMsg)
+	require.NotNil(t, err)
+
+	// finally passing
+	genesisMsg.GenesisTx.Value = v
+	resp, err = s.service.CreateGenesisBlock(genesisMsg)
+	require.Nil(t, err)
 	assert.Equal(t, CurrentVersion, resp.Version)
 	assert.NotNil(t, resp.Skipblock)
 }
@@ -257,13 +271,15 @@ func newSer(t *testing.T, step int) *ser {
 	}
 	s.hosts, s.roster, _ = s.local.GenTree(5, true)
 	s.service = s.local.GetServices(s.hosts, omniledgerID)[0].(*Service)
-	genesisMsg := DefaultGenesisMsg(CurrentVersion, s.roster)
+	signer := darc.NewSignerEd25519(nil, nil)
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, signer)
+	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
 	for i := 0; i < step; i++ {
 		switch i {
 		case 0:
-			resp, err := s.service.CreateGenesisBlock(&genesisMsg)
+			resp, err := s.service.CreateGenesisBlock(genesisMsg)
 			require.Nil(t, err)
 			s.sb = resp.Skipblock
 		case 1:
