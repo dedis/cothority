@@ -127,3 +127,19 @@ for browsers (http://status.dedis.ch) and for mobile devices.
 
 The only command for web is `cisc web` which takes a path to a html-file that will
 be put on the skipchain.
+
+## cisc cert
+
+Commands to request or manage certificates stored in the skipchain.
+  
+  * Request - requests a certificate and add it to the skipchain. Request takes the `domain`
+  the `cert` and the `www` path. The certificates and the private key are then saved in the cert
+  folder with the name of the domain
+  * List - returns a list of all the certificates with their expiry date and the path of the certificate. 
+  * Add - Store a certificate in the skipchain by giving the key and path to the certificate.
+  * Renew - Renew a certificate stored in the skipchain by giving the key of this latter.
+  * Verify - Verify a certificate in the skipchain.
+  * Retrieve - By giving a directory as argument, the command retrieve the certificate and save it in the
+  specified directory.
+  * Revoke - Revoke and remove the certificate from the skipchain.
+
