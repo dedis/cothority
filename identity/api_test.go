@@ -34,18 +34,18 @@ func TestIdentity_PinRequest(t *testing.T) {
 	defer local.CloseAll()
 	servers := local.GenServers(1)
 	srvc := local.GetServices(servers, identityService)[0].(*Service)
-	require.Equal(t, 0, len(srvc.Storage.Auth.pins))
+	require.Equal(t, 0, len(srvc.Storage.Auth.Pins))
 	pub := tSuite.Point().Pick(tSuite.XOF([]byte("test")))
 	_, err := srvc.PinRequest(&PinRequest{"", pub})
 	require.NotNil(t, err)
-	require.NotEqual(t, 0, len(srvc.Storage.Auth.pins))
+	require.NotEqual(t, 0, len(srvc.Storage.Auth.Pins))
 	pin := ""
-	for t := range srvc.Storage.Auth.pins {
+	for t := range srvc.Storage.Auth.Pins {
 		pin = t
 	}
 	_, err = srvc.PinRequest(&PinRequest{pin, pub})
 	log.Error(err)
-	require.Equal(t, pub, srvc.Storage.Auth.adminKeys[0])
+	require.Equal(t, pub, srvc.Storage.Auth.AdminKeys[0])
 }
 
 func suiteSkip(t *testing.T) {
@@ -106,13 +106,13 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	// here we assume the mask is 1 byte long, hence the line below turns
 	// a cosi signature into an eddsa signature
 	final.Signature = final.Signature[0 : len(final.Signature)-1]
-	srvc.Storage.Auth.adminKeys = append(srvc.Storage.Auth.adminKeys, keypairAdmin.Public)
+	srvc.Storage.Auth.AdminKeys = append(srvc.Storage.Auth.AdminKeys, keypairAdmin.Public)
 
 	sig, err := schnorr.Sign(tSuite, keypairAdmin.Private, hash)
 	require.Nil(t, err)
 	_, err = srvc.StoreKeys(&StoreKeys{PoPAuth, final, nil, sig})
 	require.Nil(t, err)
-	require.Equal(t, 1, len(srvc.Storage.Auth.sets))
+	require.Equal(t, 1, len(srvc.Storage.Auth.Sets))
 }
 
 func TestIdentity_StoreKeys2(t *testing.T) {
@@ -135,12 +135,12 @@ func TestIdentity_StoreKeys2(t *testing.T) {
 	}
 	hash := h.Sum(nil)
 
-	srvc.Storage.Auth.adminKeys = append(srvc.Storage.Auth.adminKeys, keypairAdmin.Public)
+	srvc.Storage.Auth.AdminKeys = append(srvc.Storage.Auth.AdminKeys, keypairAdmin.Public)
 	sig, err := schnorr.Sign(tSuite, keypairAdmin.Private, hash)
 	log.ErrFatal(err)
 	_, err = srvc.StoreKeys(&StoreKeys{PublicAuth, nil, pubs, sig})
 	require.Nil(t, err)
-	require.Equal(t, N, len(srvc.Storage.Auth.keys))
+	require.Equal(t, N, len(srvc.Storage.Auth.Keys))
 }
 
 func TestIdentity_DataNewCheck(t *testing.T) {
@@ -219,7 +219,7 @@ func TestIdentity_Authenticate(t *testing.T) {
 	defer l.CloseAll()
 	au := &Authenticate{[]byte{}, []byte{}}
 	s.Authenticate(au)
-	require.Equal(t, 1, len(s.Storage.Auth.nonces))
+	require.Equal(t, 1, len(s.Storage.Auth.Nonces))
 }
 
 func TestIdentity_CreateIdentity(t *testing.T) {
@@ -323,7 +323,7 @@ func TestCrashAfterRevocation(t *testing.T) {
 	for _, srvc := range services {
 		s := srvc.(*Service)
 		log.Lvl3(s.Storage.Identities)
-		s.Storage.Auth.sets = append(s.Storage.Auth.sets, set)
+		s.Storage.Auth.Sets = append(s.Storage.Auth.Sets, anonSet{Set: set})
 	}
 
 	c1 := NewIdentity(roster, 2, "one", kp1)
@@ -437,7 +437,7 @@ func createIdentity(l *onet.LocalTest, services []onet.Service, roster *onet.Ros
 	set := anon.Set([]kyber.Point{kp1.Public, kp2.Public})
 	for _, srvc := range services {
 		s := srvc.(*Service)
-		s.Storage.Auth.sets = append(s.Storage.Auth.sets, set)
+		s.Storage.Auth.Sets = append(s.Storage.Auth.Sets, anonSet{Set: set})
 	}
 
 	c := NewTestIdentity(roster, 50, name, l, kp1)

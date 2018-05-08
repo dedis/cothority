@@ -92,16 +92,20 @@ type IDBlock struct {
 }
 
 type authData struct {
-	// set of pins and keys
-	pins map[string]struct{}
-	// sets of public keys to verify linkable ring signatures
-	sets []anon.Set
-	// list of public keys to verify simple authentication with Schnorr sig
-	keys []kyber.Point
-	// list of adminKeys
-	adminKeys []kyber.Point
-	// set of nonces
-	nonces map[string]struct{}
+	// set of Pins and keys
+	Pins map[string]bool
+	// Sets of public keys to verify linkable ring signatures
+	Sets []anonSet
+	// list of public Keys to verify simple authentication with Schnorr sig
+	Keys []kyber.Point
+	// list of AdminKeys
+	AdminKeys []kyber.Point
+	// set of Nonces
+	Nonces map[string]bool
+}
+
+type anonSet struct {
+	Set anon.Set
 }
 
 /*
@@ -117,15 +121,15 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 	log.Lvl3("PinRequest", s.ServerIdentity())
 	if req.PIN == "" {
 		pin := fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
-		s.Storage.Auth.pins[pin] = struct{}{}
+		s.Storage.Auth.Pins[pin] = true
 		log.Info("PIN:", pin)
 		return nil, ErrorReadPIN
 	}
-	if _, ok := s.Storage.Auth.pins[req.PIN]; !ok {
+	if !s.Storage.Auth.Pins[req.PIN] {
 		return nil, errors.New("Wrong PIN")
 	}
-	s.Storage.Auth.adminKeys = append(s.Storage.Auth.adminKeys, req.Public)
-	s.Storage.Auth.keys = append(s.Storage.Auth.keys, req.Public)
+	s.Storage.Auth.AdminKeys = append(s.Storage.Auth.AdminKeys, req.Public)
+	s.Storage.Auth.Keys = append(s.Storage.Auth.Keys, req.Public)
 	s.save()
 	log.Lvl1("Successfully registered PIN/Public", req.PIN, req.Public)
 	return nil, nil
@@ -186,7 +190,7 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, error) {
 
 	// check Signature
 	valid := false
-	for _, key := range s.Storage.Auth.adminKeys {
+	for _, key := range s.Storage.Auth.AdminKeys {
 		if schnorr.Verify(s.Suite(), key, msg, req.Sig) == nil {
 			valid = true
 			break
@@ -200,9 +204,9 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, error) {
 	}
 	switch req.Type {
 	case PoPAuth:
-		s.Storage.Auth.sets = append(s.Storage.Auth.sets, anon.Set(req.Final.Attendees))
+		s.Storage.Auth.Sets = append(s.Storage.Auth.Sets, anonSet{Set: anon.Set(req.Final.Attendees)})
 	case PublicAuth:
-		s.Storage.Auth.keys = append(s.Storage.Auth.keys, req.Publics...)
+		s.Storage.Auth.Keys = append(s.Storage.Auth.Keys, req.Publics...)
 	}
 	return nil, nil
 }
@@ -215,7 +219,7 @@ func (s *Service) Authenticate(ap *Authenticate) (*Authenticate, error) {
 	ap.Ctx = []byte(ServiceName + s.ServerIdentity().String())
 	ap.Nonce = make([]byte, nonceSize)
 	random.Bytes(ap.Nonce, s.Suite().RandomStream())
-	s.Storage.Auth.nonces[string(ap.Nonce)] = struct{}{}
+	s.Storage.Auth.Nonces[string(ap.Nonce)] = true
 	return ap, nil
 }
 
@@ -223,7 +227,7 @@ func (s *Service) Authenticate(ap *Authenticate) (*Authenticate, error) {
 // managed identities.
 func (s *Service) CreateIdentity(ai *CreateIdentity) (*CreateIdentityReply, error) {
 	ctx := []byte(ServiceName + s.ServerIdentity().String())
-	if _, ok := s.Storage.Auth.nonces[string(ai.Nonce)]; !ok {
+	if !s.Storage.Auth.Nonces[string(ai.Nonce)] {
 		log.Error("Given nonce is not stored on ", s.ServerIdentity())
 		return nil, fmt.Errorf("Given nonce is not stored on %s", s.ServerIdentity())
 	}
@@ -232,8 +236,8 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (*CreateIdentityReply, erro
 	var pubStr string
 	switch ai.Type {
 	case PoPAuth:
-		for _, set := range s.Storage.Auth.sets {
-			t, err := anon.Verify(s.anonSuite, ai.Nonce, set, ctx, ai.Sig)
+		for _, set := range s.Storage.Auth.Sets {
+			t, err := anon.Verify(s.anonSuite, ai.Nonce, set.Set, ctx, ai.Sig)
 			if err == nil {
 				tag = string(t)
 				valid = true
@@ -248,12 +252,12 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (*CreateIdentityReply, erro
 					}
 				}
 				// authentication succeeded. we need to delete the nonce
-				delete(s.Storage.Auth.nonces, string(ai.Nonce))
+				delete(s.Storage.Auth.Nonces, string(ai.Nonce))
 				break
 			}
 		}
 	case PublicAuth:
-		for _, k := range s.Storage.Auth.keys {
+		for _, k := range s.Storage.Auth.Keys {
 			if schnorr.Verify(s.Suite(), k, ai.Nonce, *ai.SchnSig) == nil {
 				valid = true
 				pubStr = k.String()
@@ -780,17 +784,17 @@ func (s *Service) tryLoad() error {
 	if s.Storage.Auth == nil {
 		s.Storage.Auth = &authData{}
 	}
-	if len(s.Storage.Auth.pins) == 0 {
-		s.Storage.Auth.pins = map[string]struct{}{}
+	if len(s.Storage.Auth.Pins) == 0 {
+		s.Storage.Auth.Pins = map[string]bool{}
 	}
-	if len(s.Storage.Auth.nonces) == 0 {
-		s.Storage.Auth.nonces = map[string]struct{}{}
+	if len(s.Storage.Auth.Nonces) == 0 {
+		s.Storage.Auth.Nonces = map[string]bool{}
 	}
-	if s.Storage.Auth.sets == nil {
-		s.Storage.Auth.sets = []anon.Set{}
+	if s.Storage.Auth.Sets == nil {
+		s.Storage.Auth.Sets = []anonSet{}
 	}
-	if s.Storage.Auth.adminKeys == nil {
-		s.Storage.Auth.adminKeys = []kyber.Point{}
+	if s.Storage.Auth.AdminKeys == nil {
+		s.Storage.Auth.AdminKeys = []kyber.Point{}
 	}
 	log.Lvl3("Successfully loaded")
 	return nil
