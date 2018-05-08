@@ -325,15 +325,14 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 		select {
 		case thresholdReached = <-thresholdReachedChan:
 		case <-time.After(p.Timeout):
-			log.Lvl2("Threshold not reached at timeout:", len(subProtocolsCommitments))
+			log.Lvl2("Threshold", p.Threshold, "not reached at timeout, got", sharedMask.CountEnabled(), "commitments")
 		}
 	}
 
-	//ignoring errors happening after threshold is reached
 	close(closingChan)
 	closingWg.Wait()
 	close(thresholdReachedChan)
-	close(errChan) //TODO: explain that there could be things sent to closed channel
+	close(errChan)
 	var errs []error
 	for err := range errChan {
 		errs = append(errs, err)
@@ -416,8 +415,8 @@ func (p *FtCosi) startSubProtocol(tree *onet.Tree) (*SubFtCosi, error) {
 	// only allocate one third of the ftcosi budget to the subprotocol.
 	cosiSubProtocol.Timeout = p.Timeout / 3
 
-	//the Threshold per subtree is the number of nodes divided by the number of Subtrees
-	threshold := int(math.Ceil(float64(len(p.publics)-1) / float64(p.NSubtrees)))
+	//the Threshold (minus root node) is divided evenly among the subtrees
+	threshold := int(math.Ceil(float64(p.Threshold-1) / float64(p.NSubtrees)))
 	if threshold > tree.Size()-1 {
 		threshold = tree.Size() - 1
 	}

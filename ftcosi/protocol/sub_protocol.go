@@ -198,7 +198,7 @@ loop:
 				p.subCommitment <- commitment
 
 				//deactivate timeout
-				t = make(chan time.Time)
+				t = make(chan time.Time) //TODO: see if should only do that on final answer
 
 				committedChildren = []*onet.TreeNode{commitment.TreeNode}
 			} else {
@@ -223,23 +223,23 @@ loop:
 						}
 						verifyChan <- verificationOk // send back for other uses
 					}
+				}
 
-					//TODO:implement 0 threshold
-					if (!firstCommitmentSent &&
-						(len(commitments)+1 >= p.Threshold || // quick answer
-							NRefusal > ThresholdRefusal)) || // quick refusal answer
-						len(commitments)+NRefusal == len(p.Children()) { // final answer
+				//TODO:implement 0 threshold
+				if (!firstCommitmentSent &&
+					(len(commitments)+1 >= p.Threshold || // quick answer
+						NRefusal > ThresholdRefusal)) || // quick refusal answer
+					len(commitments)+NRefusal == len(p.Children()) { // final answer
 
-						secret, err = p.sendAgregatedCommitments(verificationOk, commitments, NRefusal)
-						if err != nil {
-							return err
-						}
-
-						firstCommitmentSent = true
+					secret, err = p.sendAgregatedCommitments(verificationOk, commitments, NRefusal)
+					if err != nil {
+						return err
 					}
-					if len(commitments)+NRefusal > len(p.Children()) {
-						log.Error(p.ServerIdentity(), "more commitments than number of children in non-root node")
-					}
+
+					firstCommitmentSent = true
+				}
+				if len(commitments)+NRefusal > len(p.Children()) {
+					log.Error(p.ServerIdentity(), "more commitments and refusal than number of children in subleader")
 				}
 			}
 		case challenge, channelOpen = <-p.ChannelChallenge:
@@ -261,17 +261,21 @@ loop:
 				p.subleaderNotResponding <- true
 				return nil
 			}
-			log.Error(p.ServerIdentity(), "timed out while waiting for commits")
-			break loop
+			log.Error(p.ServerIdentity(), "timed out while waiting for commits, got", len(commitments), "commitments")
+			//sending commits received
+			secret, err = p.sendAgregatedCommitments(verificationOk, commitments, NRefusal) //TODO: note that can still send final answer
+			if err != nil {
+				return err
+			}
 		}
-		log.Lvl3(p.ServerIdentity(), "finished receiving commitments, ", len(commitments), "commitment(s) received")
 	}
+	//log.Lvl3(p.ServerIdentity(), "finished receiving commitments, ", len(commitments), "commitment(s) received")
 
 	// ----- Response -----
 	responses := make([]StructResponse, 0)
 
 	// Second half of our time budget for the responses.
-	timeout := time.After(p.Timeout / 2)
+	timeout := time.After(p.Timeout / 2) //TODO: do we really need a timeout for the responses?
 	for range committedChildren {
 		select {
 		case response, channelOpen := <-p.ChannelResponse:
