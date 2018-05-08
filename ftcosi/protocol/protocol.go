@@ -418,8 +418,8 @@ func (p *FtCosi) startSubProtocol(tree *onet.Tree) (*SubFtCosi, error) {
 
 	//the Threshold per subtree is the number of nodes divided by the number of Subtrees
 	threshold := int(math.Ceil(float64(len(p.publics)-1) / float64(p.NSubtrees)))
-	if threshold > tree.Size() {
-		threshold = tree.Size()
+	if threshold > tree.Size()-1 {
+		threshold = tree.Size() - 1
 	}
 
 	cosiSubProtocol.Threshold = threshold

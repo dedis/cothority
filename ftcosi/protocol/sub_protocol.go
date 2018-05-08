@@ -115,9 +115,9 @@ func (p *SubFtCosi) Dispatch() error {
 	p.Data = announcement.Data
 	p.Threshold = announcement.Threshold
 
-	maxThreshold := p.Tree().Size()
+	maxThreshold := p.Tree().Size() - 1
 	if p.Threshold > maxThreshold {
-		return errors.New("threshold bigger than the maximum of commitments this node can gather")
+		return fmt.Errorf("threshold %d bigger than the maximum of commitments this subtree can gather (%d)", p.Threshold, maxThreshold)
 	}
 
 	var err error
@@ -162,12 +162,12 @@ func (p *SubFtCosi) Dispatch() error {
 
 	var challenge StructChallenge
 	committedChildren := make([]*onet.TreeNode, 0)
-	commitments := make([]StructCommitment, 0)     // for the subleader
+	commitments := make([]StructCommitment, 0)              // for the subleader
+	ThresholdRefusal := 1 + len(p.Children()) - p.Threshold // for the subleader
+	NRefusal := 0                                           // for the subleader
 	var secret kyber.Scalar
 	var verificationOk bool
-	NRefusal := 0
 	firstCommitmentSent := false
-	ThresholdRefusal := 1 + len(p.Children()) - p.Threshold
 	t := time.After(p.Timeout / 2)
 
 	if p.IsLeaf() {
@@ -176,7 +176,7 @@ func (p *SubFtCosi) Dispatch() error {
 			log.Lvl2(p.ServerIdentity(), "verification failed, unsetting the mask")
 		}
 
-		secret, err = p.sendAgregatedCommitments(verificationOk, commitments, NRefusal)
+		secret, err = p.sendAgregatedCommitments(verificationOk, commitments, 0)
 		if err != nil {
 			return err
 		}
@@ -193,13 +193,14 @@ loop:
 			if commitment.TreeNode.Parent != p.TreeNode() {
 				return errors.New("received a Commitment from a non-Children node") //TODO: see needed behaviour
 			}
-			committedChildren = append(committedChildren, commitment.TreeNode)
 			if p.IsRoot() {
 				// send commitment to super-protocol
 				p.subCommitment <- commitment
 
 				//deactivate timeout
 				t = make(chan time.Time)
+
+				committedChildren = []*onet.TreeNode{commitment.TreeNode}
 			} else {
 				if commitment.CoSiCommitment.Equal(p.suite.Point().Null()) { //refusal
 					NRefusal++
@@ -212,6 +213,7 @@ loop:
 						verifyChan <- verificationOk // send back for other uses
 					}
 				} else { //accepted
+					committedChildren = append(committedChildren, commitment.TreeNode)
 					commitments = append(commitments, commitment)
 
 					if len(commitments) == p.Threshold-1 {
@@ -225,7 +227,7 @@ loop:
 					//TODO:implement 0 threshold
 					if (!firstCommitmentSent &&
 						(len(commitments)+1 >= p.Threshold || // quick answer
-							NRefusal >= 1+len(p.Children())-p.Threshold)) || // quick refusal answer
+							NRefusal > ThresholdRefusal)) || // quick refusal answer
 						len(commitments)+NRefusal == len(p.Children()) { // final answer
 
 						secret, err = p.sendAgregatedCommitments(verificationOk, commitments, NRefusal)
@@ -266,9 +268,6 @@ loop:
 	}
 
 	// ----- Response -----
-	//if p.IsLeaf() {
-	//	p.ChannelResponse <- StructResponse{}
-	//}
 	responses := make([]StructResponse, 0)
 
 	// Second half of our time budget for the responses.
