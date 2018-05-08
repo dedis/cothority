@@ -80,6 +80,7 @@ func TestProtocol(t *testing.T) {
 			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
 			cosiProtocol.Timeout = defaultTimeout
+			cosiProtocol.Threshold = nNodes
 
 			err = cosiProtocol.Start()
 			if err != nil {
@@ -119,24 +120,13 @@ func TestUnresponsiveLeafs(t *testing.T) {
 				publics[i] = node.ServerIdentity.Public
 			}
 
-			// create protocol
-			pi, err := local.CreateProtocol(DefaultProtocolName, tree)
-			if err != nil {
-				local.CloseAll()
-				t.Fatal("Error in creation of protocol:", err)
-			}
-			cosiProtocol := pi.(*FtCosi)
-			cosiProtocol.CreateProtocol = local.CreateProtocol
-			cosiProtocol.Msg = proposal
-			cosiProtocol.NSubtrees = nSubtrees
-			cosiProtocol.Timeout = defaultTimeout
-
 			// find first subtree leaves servers based on GenTree function
 			leafsServerIdentities, err := GetLeafsIDs(tree, nNodes, nSubtrees)
 			if err != nil {
 				t.Fatal(err)
 			}
 			failing := (len(leafsServerIdentities) - 1) / 3 // we render unresponsive one third of leafs
+			threshold := nNodes - failing
 			failingLeafsServerIdentities := leafsServerIdentities[:failing]
 			firstLeavesServers := make([]*onet.Server, 0)
 			for _, s := range servers {
@@ -153,6 +143,19 @@ func TestUnresponsiveLeafs(t *testing.T) {
 				l.Pause()
 			}
 
+			// create protocol
+			pi, err := local.CreateProtocol(DefaultProtocolName, tree)
+			if err != nil {
+				local.CloseAll()
+				t.Fatal("Error in creation of protocol:", err)
+			}
+			cosiProtocol := pi.(*FtCosi)
+			cosiProtocol.CreateProtocol = local.CreateProtocol
+			cosiProtocol.Msg = proposal
+			cosiProtocol.NSubtrees = nSubtrees
+			cosiProtocol.Timeout = defaultTimeout
+			cosiProtocol.Threshold = threshold
+
 			// start protocol
 			err = cosiProtocol.Start()
 			if err != nil {
@@ -161,7 +164,6 @@ func TestUnresponsiveLeafs(t *testing.T) {
 			}
 
 			// get and verify signature
-			threshold := nNodes - failing
 			err = getAndVerifySignature(cosiProtocol, publics, proposal, cosi.NewThresholdPolicy(threshold))
 			if err != nil {
 				local.CloseAll()
@@ -192,18 +194,6 @@ func TestUnresponsiveSubleader(t *testing.T) {
 				publics[i] = node.ServerIdentity.Public
 			}
 
-			// create protocol
-			pi, err := local.CreateProtocol(DefaultProtocolName, tree)
-			if err != nil {
-				local.CloseAll()
-				t.Fatal("Error in creation of protocol:", err)
-			}
-			cosiProtocol := pi.(*FtCosi)
-			cosiProtocol.CreateProtocol = local.CreateProtocol
-			cosiProtocol.Msg = proposal
-			cosiProtocol.NSubtrees = nSubtrees
-			cosiProtocol.Timeout = defaultTimeout
-
 			// find first subleader server based on genTree function
 			subleaderIds, err := GetSubleaderIDs(tree, nNodes, nSubtrees)
 			if err != nil {
@@ -223,6 +213,19 @@ func TestUnresponsiveSubleader(t *testing.T) {
 
 			// pause the first sub leader to simulate failure
 			firstSubleaderServer.Pause()
+
+			// create protocol
+			pi, err := local.CreateProtocol(DefaultProtocolName, tree)
+			if err != nil {
+				local.CloseAll()
+				t.Fatal("Error in creation of protocol:", err)
+			}
+			cosiProtocol := pi.(*FtCosi)
+			cosiProtocol.CreateProtocol = local.CreateProtocol
+			cosiProtocol.Msg = proposal
+			cosiProtocol.NSubtrees = nSubtrees
+			cosiProtocol.Timeout = defaultTimeout
+			cosiProtocol.Threshold = nNodes - 1
 
 			// start protocol
 			err = cosiProtocol.Start()

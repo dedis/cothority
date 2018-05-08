@@ -48,10 +48,11 @@ var EdDSACompatibleCosiSuite = &ftCosiSuite{edwards25519.NewBlakeSHA256Ed25519()
 
 // Announcement is the announcement message, the first message in the CoSi protocol
 type Announcement struct {
-	Msg     []byte
-	Data    []byte
-	Publics []kyber.Point
-	Timeout time.Duration
+	Msg       []byte
+	Data      []byte
+	Publics   []kyber.Point
+	Timeout   time.Duration
+	Threshold int `prootobuf:opt`
 }
 
 // StructAnnouncement just contains Announcement and the data necessary to identify and
@@ -65,6 +66,7 @@ type StructAnnouncement struct {
 type Commitment struct {
 	CoSiCommitment kyber.Point
 	Mask           []byte
+	NRefusal       int `prootobuf:opt`
 }
 
 // StructCommitment just contains Commitment and the data necessary to identify and
