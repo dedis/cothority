@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	"github.com/dedis/student_18_omniledger/omniledger/service"
 
 	"gopkg.in/dedis/cothority.v2"
@@ -67,8 +68,8 @@ func main() {
 func create(c *cli.Context) error {
 	log.Info("Create a new skipchain")
 
-	if c.NArg() != 2 {
-		return errors.New("please give: group.toml public-key-in-hex")
+	if c.NArg() != 3 {
+		return errors.New("please give: group.toml public-key-in-hex private-key-in-hex")
 	}
 	group := readGroup(c)
 	pkReader := strings.NewReader(c.Args().Get(1))
@@ -76,8 +77,14 @@ func create(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	skReader := strings.NewReader(c.Args().Get(2))
+	sk, err := encoding.ReadHexScalar(cothority.Suite, skReader)
+	if err != nil {
+		return err
+	}
 	client := service.NewClient()
-	resp, err := client.CreateGenesisBlock(group.Roster, pk)
+	signer := darc.NewSignerEd25519(pk, sk)
+	resp, err := client.CreateGenesisBlock(group.Roster, signer)
 	if err != nil {
 		return errors.New("during creation of skipchain: " + err.Error())
 	}

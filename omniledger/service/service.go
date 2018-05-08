@@ -23,6 +23,8 @@ import (
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 )
 
+const darcIDLen int = 32
+
 // Used for tests
 // TODO move to test
 var omniledgerID onet.ServiceID
@@ -95,7 +97,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	if req.Version != CurrentVersion {
 		return nil, fmt.Errorf("version mismatch - got %d but need %d", req.Version, CurrentVersion)
 	}
-	if err := checkTx(req.GenesisDarc, req.GenesisTx); err != nil {
+	if err := checkTxWithDarc(req.GenesisTx, &req.GenesisDarc); err != nil {
 		return nil, err
 	}
 
@@ -131,19 +133,26 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	}, nil
 }
 
-func checkTx(d darc.Darc, tx Transaction) error {
-	darcLen := len(d.GetID())
-	if len(tx.Key) < darcLen {
+func checkTxWithDarc(tx Transaction, d *darc.Darc) error {
+	if len(tx.Key) < darcIDLen {
 		return errors.New("incorrect key length")
 	}
-	if !bytes.Equal(tx.Key[0:darcLen], d.GetID()) {
+	if !bytes.Equal(tx.Key[0:darcIDLen], d.GetID()) {
 		return errors.New("key is not the same as the darc ID")
 	}
-	if !bytes.Equal(tx.Kind, []byte("genesis")) {
-		return errors.New("kind must be \"genesis\"")
+	if !bytes.Equal(tx.Kind, []byte(ActionAddGenesis)) {
+		return fmt.Errorf("kind must be %s", ActionAddGenesis)
 	}
-	// TODO do the actual verification, need to figure out the relationship
-	// between a darc.Request and a Transaction
+	req, err := tx.ToDarcRequest()
+	if err != nil {
+		return err
+	}
+	if len(tx.Signatures) == 0 {
+		return errors.New("no signatures")
+	}
+	if err := req.Verify(d); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -499,4 +508,17 @@ func RegisterVerification(s skipchain.GetService, kind string, f OmniledgerVerif
 		return errors.New("Didn't find our service: " + ServiceName)
 	}
 	return scs.(*Service).registerVerification(kind, f)
+}
+
+func (a Action) String() string {
+	switch a {
+	case Create:
+		return "create"
+	case Update:
+		return "update"
+	case Remove:
+		return "remove"
+	default:
+		return "invalid action"
+	}
 }

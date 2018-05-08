@@ -154,12 +154,11 @@ const (
 // For a Transaction to be valid, there must exist a path from the master-darc
 // in the genesis block to the SubjectPK in Signature.
 type Transaction struct {
-	Action Action
-	Key    []byte
-	Kind   []byte
-	Value  []byte
-	// The signature is performed on the concatenation of the []bytes
-	Signature darc.Signature
+	Action     Action
+	Key        []byte
+	Kind       []byte
+	Value      []byte
+	Signatures []darc.Signature
 }
 
 // Data is the data passed to the Skipchain

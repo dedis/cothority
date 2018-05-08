@@ -269,6 +269,10 @@ func (d *Darc) EvolveFrom(path []*Darc) error {
 // the darc service (for example) to execute the evolution. This function
 // assumes that the receiver has all the correct attributes to form a valid
 // evolution.
+// TODO we need to change this function. We now consider the Msg part of the
+// request as a hash. So, if a service wants to make a evolution request, it'd
+// create a message that contains the new darc and the request, where the
+// request message is the hash of the new darc.
 func (d *Darc) MakeEvolveRequest(prevSigners ...*Signer) (*Request, error) {
 	if d == nil {
 		return nil, errors.New("darc is nil")
@@ -398,11 +402,19 @@ func (d *Darc) findPath(getDarc func(string) *Darc) error {
 // be accepted. The caller is responsible for providing the latest darc in the
 // argument.
 func (r *Request) VerifyWithCB(d *Darc, getDarc func(string) *Darc) error {
+	if len(r.Signatures) == 0 {
+		return errors.New("no signatures - nothing to verify")
+	}
+	if len(r.Signatures) != len(r.Identities) {
+		return fmt.Errorf("signatures and identities have unequal length - %d != %d",
+			len(r.Signatures), len(r.Identities))
+	}
+
 	if !d.GetBaseID().Equal(r.BaseID) {
 		return fmt.Errorf("base id mismatch")
 	}
 	if !d.Rules.Contains(r.Action) {
-		return fmt.Errorf("%v does not exist", r.Action)
+		return fmt.Errorf("action '%v' does not exist", r.Action)
 	}
 	var digest []byte
 	var err error
@@ -915,6 +927,20 @@ func (r *Request) MsgToDarc(path []*Darc) (*Darc, error) {
 	d.Path = path
 
 	return d, nil
+}
+
+// NewRequest2 TODO
+func NewRequest2(baseID ID, action Action, msg []byte, ids []*Identity, sigs [][]byte) Request {
+	inner := innerRequest{
+		BaseID:     baseID,
+		Action:     action,
+		Msg:        msg,
+		Identities: ids,
+	}
+	return Request{
+		inner,
+		sigs,
+	}
 }
 
 // NewRequest creates a new request which can be verified by a Darc.
