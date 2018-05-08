@@ -929,8 +929,10 @@ func (r *Request) MsgToDarc(path []*Darc) (*Darc, error) {
 	return d, nil
 }
 
-// NewRequest2 TODO
-func NewRequest2(baseID ID, action Action, msg []byte, ids []*Identity, sigs [][]byte) Request {
+// InitRequest initialises a request, the caller must provide all the fields of
+// the request. There is no guarantee that this request is valid, please see
+// InitAndSignRequest is a valid request needs to be created.
+func InitRequest(baseID ID, action Action, msg []byte, ids []*Identity, sigs [][]byte) Request {
 	inner := innerRequest{
 		BaseID:     baseID,
 		Action:     action,
@@ -943,8 +945,8 @@ func NewRequest2(baseID ID, action Action, msg []byte, ids []*Identity, sigs [][
 	}
 }
 
-// NewRequest creates a new request which can be verified by a Darc.
-func NewRequest(baseID ID, action Action, msg []byte, signers ...*Signer) (*Request, error) {
+// InitAndSignRequest creates a new request which can be verified by a Darc.
+func InitAndSignRequest(baseID ID, action Action, msg []byte, signers ...*Signer) (*Request, error) {
 	if len(signers) == 0 {
 		return nil, errors.New("there are no signers")
 	}

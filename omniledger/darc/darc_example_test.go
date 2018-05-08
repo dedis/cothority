@@ -56,13 +56,13 @@ func Example() {
 	d3 := d1.Copy()
 	d3.Rules.AddRule(action3, expr3)
 
-	r, _ = darc.NewRequest(d3.GetID(), action3, []byte("example request"), owner3)
+	r, _ = darc.InitAndSignRequest(d3.GetID(), action3, []byte("example request"), owner3)
 	if err := r.Verify(d3); err != nil {
 		// not ok because the expression is created using logical and
 		fmt.Println("not ok!")
 	}
 
-	r, _ = darc.NewRequest(d3.GetID(), action3, []byte("example request"), owner1, owner2, owner3)
+	r, _ = darc.InitAndSignRequest(d3.GetID(), action3, []byte("example request"), owner1, owner2, owner3)
 	if err := r.Verify(d3); err == nil {
 		fmt.Println("ok!")
 	}

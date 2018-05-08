@@ -234,44 +234,44 @@ func TestDarc_Rules(t *testing.T) {
 	var r *Request
 
 	// happy case with signer 1
-	r, err = NewRequest(d.GetID(), "use", []byte("secrets are lies"), user1)
+	r, err = InitAndSignRequest(d.GetID(), "use", []byte("secrets are lies"), user1)
 	require.Nil(t, err)
 	require.Nil(t, r.Verify(d))
 
 	// happy case with signer 2
-	r, err = NewRequest(d.GetID(), "use", []byte("sharing is caring"), user2)
+	r, err = InitAndSignRequest(d.GetID(), "use", []byte("sharing is caring"), user2)
 	require.Nil(t, err)
 	require.Nil(t, r.Verify(d))
 
 	// happy case with both signers
-	r, err = NewRequest(d.GetID(), "use", []byte("privacy is theft"), user1, user2)
+	r, err = InitAndSignRequest(d.GetID(), "use", []byte("privacy is theft"), user1, user2)
 	require.Nil(t, err)
 	require.Nil(t, r.Verify(d))
 
 	// wrong ID
 	d2 := createDarc(1, "testdarc2").darc
-	r, err = NewRequest(d2.GetID(), "use", []byte("all animals are equal"), user1)
+	r, err = InitAndSignRequest(d2.GetID(), "use", []byte("all animals are equal"), user1)
 	require.Nil(t, err)
 	require.NotNil(t, r.Verify(d))
 
 	// wrong action
-	r, err = NewRequest(d.GetID(), "go", []byte("four legs good"), user1)
+	r, err = InitAndSignRequest(d.GetID(), "go", []byte("four legs good"), user1)
 	require.Nil(t, err)
 	require.NotNil(t, r.Verify(d))
 
 	// wrong signer 1
 	user3 := NewSignerEd25519(nil, nil)
-	r, err = NewRequest(d.GetID(), "use", []byte("two legs bad"), user3)
+	r, err = InitAndSignRequest(d.GetID(), "use", []byte("two legs bad"), user3)
 	require.Nil(t, err)
 	require.NotNil(t, r.Verify(d))
 
 	// happy case where at least one signer is valid
-	r, err = NewRequest(d.GetID(), "use", []byte("four legs good"), user1, user3)
+	r, err = InitAndSignRequest(d.GetID(), "use", []byte("four legs good"), user1, user3)
 	require.Nil(t, err)
 	require.Nil(t, r.Verify(d))
 
 	// tampered signature
-	r, err = NewRequest(d.GetID(), "use", []byte("two legs better"), user1, user3)
+	r, err = InitAndSignRequest(d.GetID(), "use", []byte("two legs better"), user1, user3)
 	r.Signatures[0] = copyBytes(r.Signatures[1])
 	require.Nil(t, err)
 	require.NotNil(t, r.Verify(d))

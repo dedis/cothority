@@ -38,6 +38,6 @@ func (tx Transaction) ToDarcRequest() (*darc.Request, error) {
 		ids[i] = &sig.Signer
 		sigs[i] = sig.Signature // TODO shallow copy is ok?
 	}
-	req := darc.NewRequest2(baseID, darc.Action(action), tx.Hash(), ids, sigs)
+	req := darc.InitRequest(baseID, darc.Action(action), tx.Hash(), ids, sigs)
 	return &req, nil
 }
