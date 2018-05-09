@@ -8,6 +8,7 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/stretchr/testify/require"
+	"gopkg.in/dedis/onet.v2/network"
 )
 
 var testName = []byte("coll1")
@@ -117,4 +118,56 @@ func TestCollectionDBtryHash(t *testing.T) {
 	cdb.Store(&ts[1])
 	mrReal := cdb.RootHash()
 	require.Equal(t, mrTrial, mrReal)
+}
+
+func TestSortTransactions(t *testing.T) {
+	network.RegisterMessages(&Transaction{})
+
+	ts1 := []Transaction{
+		Transaction{
+			Key:    []byte("key1"),
+			Kind:   []byte("kind1"),
+			Value:  []byte("value1"),
+			Action: Update,
+		},
+		Transaction{
+			Key:    []byte("key2"),
+			Kind:   []byte("kind2"),
+			Value:  []byte("value2"),
+			Action: Update,
+		},
+		Transaction{
+			Key:    []byte("key3"),
+			Kind:   []byte("kind3"),
+			Value:  []byte("value3"),
+			Action: Update,
+		},
+	}
+	ts2 := []Transaction{
+		Transaction{
+			Key:    []byte("key2"),
+			Kind:   []byte("kind2"),
+			Value:  []byte("value2"),
+			Action: Update,
+		},
+		Transaction{
+			Key:    []byte("key1"),
+			Kind:   []byte("kind1"),
+			Value:  []byte("value1"),
+			Action: Update,
+		},
+		Transaction{
+			Key:    []byte("key3"),
+			Kind:   []byte("kind3"),
+			Value:  []byte("value3"),
+			Action: Update,
+		},
+	}
+	err := sortTransactions(ts1)
+	require.Nil(t, err)
+	err = sortTransactions(ts2)
+	require.Nil(t, err)
+	for i := range ts1 {
+		require.Equal(t, ts1[i], ts2[i])
+	}
 }
