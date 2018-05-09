@@ -386,6 +386,7 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 	b := &SkipBlock{
 		SkipBlockFix: sb.SkipBlockFix.Copy(),
 		Hash:         make([]byte, len(sb.Hash)),
+		Payload:      make([]byte, len(sb.Payload)),
 		ForwardLink:  make([]*ForwardLink, len(sb.ForwardLink)),
 		ChildSL:      make([]SkipBlockID, len(sb.ChildSL)),
 	}
@@ -397,6 +398,7 @@ func (sb *SkipBlock) Copy() *SkipBlock {
 		copy(b.ChildSL[i], child)
 	}
 	copy(b.Hash, sb.Hash)
+	copy(b.Payload, sb.Payload)
 	b.VerifierIDs = make([]VerifierID, len(sb.VerifierIDs))
 	copy(b.VerifierIDs, sb.VerifierIDs)
 
