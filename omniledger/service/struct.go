@@ -7,6 +7,7 @@ import (
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
+	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/network"
 )
@@ -146,6 +147,31 @@ const (
 	Remove
 )
 
+// RegisterVerification stores the verification in a map and will
+// call it whenever a verification needs to be done.
+// GetService makes it possible to give either an `onet.Context` or
+// `onet.Server` to `RegisterVerification`.
+func RegisterVerification(s skipchain.GetService, kind string, f OmniledgerVerifier) error {
+	scs := s.Service(ServiceName)
+	if scs == nil {
+		return errors.New("Didn't find our service: " + ServiceName)
+	}
+	return scs.(*Service).registerVerification(kind, f)
+}
+
+func (a Action) String() string {
+	switch a {
+	case Create:
+		return "create"
+	case Update:
+		return "update"
+	case Remove:
+		return "remove"
+	default:
+		return "invalid action"
+	}
+}
+
 // Transaction is the struct specifying the modifications to the skipchain.
 // Key is the key chosen by the user, Kind is the kind of value to store
 // (e.g. a drac...). The key used in the conode's collection will be
@@ -162,7 +188,7 @@ type Transaction struct {
 	// transaction valid
 	Valid bool
 	// The signature is performed on the concatenation of the []bytes
-	Signature darc.Signature
+	Signatures []darc.Signature
 }
 
 // Data is the data passed to the Skipchain
