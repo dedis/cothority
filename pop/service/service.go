@@ -816,7 +816,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	}
 
 	root.Data = data
-	root.Timeout = 5 * time.Second
+	root.Timeout = 15 * time.Second
 	root.CreateProtocol = s.CreateProtocol
 
 	final.Signature = []byte{}
