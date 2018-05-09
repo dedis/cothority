@@ -216,7 +216,7 @@ testFailure() {
 
 	# -n: newest, so #4 is the one that is dead now
 	pkill -n conode
-	sleep .1
+	sleep 5
 	testOK runSc skipchain block add --roster public.toml $ID
 
 	runCoBG 4
