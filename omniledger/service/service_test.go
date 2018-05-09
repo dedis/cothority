@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 )
 
 var tSuite = suites.MustFind("Ed25519")
+var dummyKind = "dummy"
 
 func TestMain(m *testing.M) {
 	waitQueueing = 100 * time.Millisecond
@@ -244,14 +246,15 @@ func verifyInvalidKind(cdb *collectionDB, tx *Transaction) bool {
 }
 
 type ser struct {
-	local   *onet.LocalTest
-	hosts   []*onet.Server
-	roster  *onet.Roster
-	service *Service
-	sb      *skipchain.SkipBlock
-	key     []byte
-	value   []byte
-	darc    *darc.Darc
+	local    *onet.LocalTest
+	hosts    []*onet.Server
+	roster   *onet.Roster
+	services []*Service
+	service  *Service
+	sb       *skipchain.SkipBlock
+	key      []byte
+	value    []byte
+	darc     *darc.Darc
 }
 
 func newSer(t *testing.T, step int) *ser {
@@ -261,7 +264,14 @@ func newSer(t *testing.T, step int) *ser {
 		value: []byte("anyvalue"),
 	}
 	s.hosts, s.roster, _ = s.local.GenTree(5, true)
-	s.service = s.local.GetServices(s.hosts, omniledgerID)[0].(*Service)
+
+	for _, sv := range s.local.GetServices(s.hosts, omniledgerID) {
+		service := sv.(*Service)
+		s.services = append(s.services, service)
+	}
+	registerDummy(s.services)
+	s.service = s.services[0]
+
 	signer := darc.NewSignerEd25519(nil, nil)
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, signer)
 	require.Nil(t, err)
@@ -294,5 +304,16 @@ func closeQueues(local *onet.LocalTest) {
 	for _, server := range local.Servers {
 		services := local.GetServices([]*onet.Server{server}, omniledgerID)
 		close(services[0].(*Service).CloseQueues)
+	}
+}
+
+func registerDummy(services interface{}) {
+	// For testing - there must be a better way to do that. But putting
+	// services []skipchain.GetService in the method signature doesn't work :(
+	for i := 0; i < reflect.ValueOf(services).Len(); i++ {
+		s := reflect.ValueOf(services).Index(i).Interface().(skipchain.GetService)
+		RegisterVerification(s.(skipchain.GetService), dummyKind, func(cdb *collectionDB, tx *Transaction) bool {
+			return true
+		})
 	}
 }

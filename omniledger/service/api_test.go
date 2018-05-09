@@ -12,7 +12,8 @@ import (
 
 func TestClient_GetProof(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
-	_, roster, _ := l.GenTree(3, true)
+	servers, roster, _ := l.GenTree(3, true)
+	registerDummy(servers)
 	defer l.CloseAll()
 	defer closeQueues(l)
 	signer := darc.NewSignerEd25519(nil, nil)
