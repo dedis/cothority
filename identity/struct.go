@@ -146,6 +146,10 @@ func (d *Data) String() string {
 	for k, v := range d.Storage {
 		data = append(data, fmt.Sprintf("Data: %s/%s", k, v))
 	}
+	for v := range d.Votes {
+		data = append(data, fmt.Sprintf("Vote from: %s", v))
+	}
+	data = append(data, fmt.Sprintf("Number of votes: %d", len(d.Votes)))
 	return fmt.Sprintf("Threshold: %d\n%s\n%s", d.Threshold,
 		strings.Join(owners, "\n"), strings.Join(data, "\n"))
 }
