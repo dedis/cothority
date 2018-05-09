@@ -39,6 +39,9 @@ type ciscConfig struct {
 	Follow []*identity.Identity
 	// admin key pairs. Key of map is address of conode
 	KeyPairs map[string]*key.Pair
+	// Key-Path pairs used to store the path of the directory where the cerificates/keys
+	// are stored
+	CertPath map[string]string
 }
 
 func newCiscConfig(i *identity.Identity) *ciscConfig {
@@ -50,7 +53,7 @@ func newCiscConfig(i *identity.Identity) *ciscConfig {
 // not valid. If the config-file is missing altogether, loaded will be false and
 // an empty config-file will be returned.
 func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
-	cfg = &ciscConfig{KeyPairs: make(map[string]*key.Pair)}
+	cfg = &ciscConfig{KeyPairs: make(map[string]*key.Pair), CertPath: make(map[string]string)}
 	loaded = true
 
 	configFile := getConfig(c)
@@ -76,6 +79,9 @@ func loadConfig(c *cli.Context) (cfg *ciscConfig, loaded bool) {
 	}
 	if len(cfg.KeyPairs) == 0 {
 		cfg.KeyPairs = map[string]*key.Pair{}
+	}
+	if len(cfg.CertPath) == 0 {
+		cfg.CertPath = map[string]string{}
 	}
 	return
 }
@@ -227,6 +233,17 @@ func (cfg *ciscConfig) findSC(idHex string) (*identity.Identity, error) {
 	return nil, nil
 }
 
+// Call findSC and check if the ID is valid if not it lists the available ID(s) and return an error
+func (cfg *ciscConfig) findSCOrList(c *cli.Context, idHex string) (*identity.Identity, error) {
+	id, err := cfg.findSC(idHex)
+	if id == nil && err == nil {
+		scList(c)
+		return nil, errors.New("Please give skipchain-id")
+	}
+
+	return id, err
+}
+
 // Returns the config-file from the configuration
 func getConfig(c *cli.Context) string {
 	configDir := app.TildeToHome(c.GlobalString("config"))
@@ -241,18 +258,27 @@ func getKeyConfig(c *cli.Context) string {
 	return configDir + "/admin_key.bin"
 }
 
-// Reads the group-file and returns it
 func getGroup(c *cli.Context) *app.Group {
-	gfile := c.Args().Get(0)
-	gr, err := os.Open(gfile)
+	g, err := getGroupString(c.Args().Get(0))
 	log.ErrFatal(err)
+	return g
+}
+
+// Reads the group-file and returns it
+func getGroupString(gfile string) (*app.Group, error) {
+	gr, err := os.Open(gfile)
+	if err != nil {
+		return nil, err
+	}
 	defer gr.Close()
 	groups, err := app.ReadGroupDescToml(gr)
-	log.ErrFatal(err)
-	if groups == nil || groups.Roster == nil || len(groups.Roster.List) == 0 {
-		log.Fatal("No servers found in roster from", gfile)
+	if err != nil {
+		return nil, err
 	}
-	return groups
+	if groups == nil || groups.Roster == nil || len(groups.Roster.List) == 0 {
+		return nil, errors.New("No servers found in roster from: " + gfile)
+	}
+	return groups, nil
 }
 
 // retrieves ssh-directory and ssh-config-name.

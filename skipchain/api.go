@@ -226,9 +226,25 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 				if len(b.BackLinkIDs) == 0 {
 					return nil, errors.New("no backlinks?")
 				}
-				lastHash := reply.Update[len(reply.Update)-1].Hash
-				if !b.BackLinkIDs[len(b.BackLinkIDs)-1].Equal(lastHash) {
-					return nil, errors.New("highest backlink does not lead to previous received update")
+				// To verify a correct backlink, there are a couple of corner cases.
+				// Let's suppose the last 4 blocks of a skipchain have the following
+				// index:heights, and n is the last block of the skipchain:
+				// n-3:2 n-2:1 n-1:3 n:1
+				// GetUpdateChain will return [n-3, n-1, n] and won't send n-2. So going
+				// from n-3 to n-1, we need to check the backlink at height 2. From
+				// n-1 to n, we need to check the backlink at height 1.
+				// Summary: we need to check the backlink of the minimal height between the
+				// two blocks.
+				prevBlock := reply.Update[len(reply.Update)-1]
+				link := prevBlock.Height
+				if link > b.Height {
+					link = b.Height
+				}
+				if !b.BackLinkIDs[link-1].Equal(prevBlock.Hash) {
+					return nil, errors.New("corresponding backlink doesn't point to previous block")
+				}
+				if !prevBlock.ForwardLink[link-1].To.Equal(b.Hash) {
+					return nil, errors.New("corresponding forwardlink doesn't point to next block")
 				}
 			}
 

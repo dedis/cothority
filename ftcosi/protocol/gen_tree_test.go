@@ -10,13 +10,8 @@ import (
 	"testing"
 
 	"gopkg.in/dedis/onet.v2"
-	"gopkg.in/dedis/onet.v2/log"
 	"gopkg.in/dedis/onet.v2/network"
 )
-
-func TestMain(m *testing.M) {
-	log.MainTest(m)
-}
 
 // tests the root of the trees
 func TestGenTreesRoot(t *testing.T) {

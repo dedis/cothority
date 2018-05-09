@@ -102,9 +102,14 @@ func (p *SubFtCosi) Dispatch() error {
 	if !channelOpen {
 		return nil
 	}
-	log.Lvl3(p.ServerIdentity().Address, "received announcement")
+	log.Lvl3(p.ServerIdentity(), "received announcement")
 	p.Publics = announcement.Publics
 	p.Timeout = announcement.Timeout
+	if !p.IsRoot() {
+		// We'll be only waiting on the root and the subleaders. The subleaders
+		// only have half of the time budget of the root.
+		p.Timeout /= 2
+	}
 	p.Msg = announcement.Msg
 	p.Data = announcement.Data
 	var err error
@@ -114,36 +119,26 @@ func (p *SubFtCosi) Dispatch() error {
 	verifyChan := make(chan bool, 1)
 	if !p.IsRoot() {
 		go func() {
-			log.Lvl3(p.ServerIdentity().Address, "starting verification")
+			log.Lvl3(p.ServerIdentity(), "starting verification")
 			verifyChan <- p.verificationFn(p.Msg, p.Data)
 		}()
 	}
 
-	if errs := p.SendToChildrenInParallel(&announcement.Announcement); len(errs) > 0 {
-		log.Lvl3(p.ServerIdentity().Address, "failed to send announcement to all children")
+	if !p.IsLeaf() {
+		// Only send commits if it's the root node or the subleader.
+		go func() {
+			if errs := p.SendToChildrenInParallel(&announcement.Announcement); len(errs) > 0 {
+				log.Lvl3(p.ServerIdentity(), "failed to send announcement to all children")
+			}
+		}()
 	}
 
 	// ----- Commitment -----
 	commitments := make([]StructCommitment, 0)
-	if p.IsRoot() {
-		select { // one commitment expected from super-protocol
-		case commitment, channelOpen := <-p.ChannelCommitment:
-			if !channelOpen {
-				return nil
-			}
-			commitments = append(commitments, commitment)
-		case <-time.After(p.Timeout):
-			// the timeout here should be shorter than the main protocol timeout
-			// because main protocol waits on the channel below
-			p.subleaderNotResponding <- true
-			return nil
-		}
-	} else {
-		// the timeout should be shorter than the timeout for receiving
-		// commits above (i.e. p.Timeout), hence it is reduced
+	if !p.IsLeaf() {
+		// Only wait for commits if it's the root or the subleader.
 		t := time.After(p.Timeout / 2)
 	loop:
-		// note that this section will not execute if it's on the leaf
 		for range p.Children() {
 			select {
 			case commitment, channelOpen := <-p.ChannelCommitment:
@@ -152,6 +147,12 @@ func (p *SubFtCosi) Dispatch() error {
 				}
 				commitments = append(commitments, commitment)
 			case <-t:
+				if p.IsRoot() {
+					log.Error(p.ServerIdentity(), "timed out while waiting for subleader")
+					p.subleaderNotResponding <- true
+					return nil
+				}
+				log.Error(p.ServerIdentity(), "timed out while waiting for commits")
 				break loop
 			}
 		}
@@ -167,6 +168,7 @@ func (p *SubFtCosi) Dispatch() error {
 	log.Lvl3(p.ServerIdentity().Address, "finished receiving commitments, ", len(commitments), "commitment(s) received")
 
 	var secret kyber.Scalar
+	var ok bool
 
 	if p.IsRoot() {
 		// send commitment to super-protocol
@@ -176,19 +178,34 @@ func (p *SubFtCosi) Dispatch() error {
 		}
 		p.subCommitment <- commitments[0]
 	} else {
-		// do not commit if the verification does not succeed
-		if !<-verifyChan {
-			log.Lvl2(p.ServerIdentity().Address, "verification failed, terminating")
-			return nil
+		ok = <-verifyChan
+		if !ok {
+			log.Lvl2(p.ServerIdentity().Address, "verification failed, unsetting the mask")
 		}
 
 		// otherwise, compute personal commitment and send to parent
 		var commitment kyber.Point
 		var mask *cosi.Mask
-		secret, commitment, mask, err = generateCommitmentAndAggregate(p.suite, p.TreeNodeInstance, p.Publics, commitments)
+		secret, commitment, mask, err = generateCommitmentAndAggregate(p.suite, p.TreeNodeInstance, p.Publics, commitments, ok)
 		if err != nil {
 			return err
 		}
+
+		// unset the mask if the verification failed and remove commitment
+		var found bool
+		if !ok {
+			for i := range p.Publics {
+				if p.Public().Equal(p.Publics[i]) {
+					mask.SetBit(i, false)
+					found = true
+					break
+				}
+			}
+		}
+		if !ok && !found {
+			return fmt.Errorf("%s was unable to find its own public key", p.ServerIdentity().Address)
+		}
+
 		err = p.SendToParent(&Commitment{commitment, mask.Mask()})
 		if err != nil {
 			return err
@@ -201,10 +218,12 @@ func (p *SubFtCosi) Dispatch() error {
 		return nil
 	}
 
-	log.Lvl3(p.ServerIdentity().Address, "received challenge")
-	if errs := p.Multicast(&challenge.Challenge, committedChildren...); len(errs) > 0 {
-		log.Lvl3(p.ServerIdentity().Address, "")
-	}
+	log.Lvl3(p.ServerIdentity(), "received challenge")
+	go func() {
+		if errs := p.multicastParallel(&challenge.Challenge, committedChildren...); len(errs) > 0 {
+			log.Lvl3(p.ServerIdentity(), errs)
+		}
+	}()
 
 	// ----- Response -----
 	if p.IsLeaf() {
@@ -212,14 +231,21 @@ func (p *SubFtCosi) Dispatch() error {
 	}
 	responses := make([]StructResponse, 0)
 
+	// Second half of our time budget for the responses.
+	timeout := time.After(p.Timeout / 2)
 	for range committedChildren {
-		response, channelOpen := <-p.ChannelResponse
-		if !channelOpen {
-			return nil
+		select {
+		case response, channelOpen := <-p.ChannelResponse:
+			if !channelOpen {
+				return nil
+			}
+			responses = append(responses, response)
+		case <-timeout:
+			log.Error(p.ServerIdentity(), "timeout while waiting for responses")
+			break
 		}
-		responses = append(responses, response)
 	}
-	log.Lvl3(p.ServerIdentity().Address, "received all", len(responses), "response(s)")
+	log.Lvl3(p.ServerIdentity(), "received all", len(responses), "response(s)")
 
 	if p.IsRoot() {
 		// send response to super-protocol
@@ -232,7 +258,7 @@ func (p *SubFtCosi) Dispatch() error {
 	} else {
 		// generate own response and send to parent
 		response, err := generateResponse(
-			p.suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge)
+			p.suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge, ok)
 		if err != nil {
 			return err
 		}
@@ -281,4 +307,26 @@ func (p *SubFtCosi) Start() error {
 	}
 	p.ChannelAnnouncement <- announcement
 	return nil
+}
+
+// multicastParallel can be moved to onet.TreeNodeInstance once it shows
+// promise.
+func (p *SubFtCosi) multicastParallel(msg interface{}, nodes ...*onet.TreeNode) []error {
+	var errs []error
+	eMut := sync.Mutex{}
+	wg := sync.WaitGroup{}
+	for _, node := range nodes {
+		name := node.Name()
+		wg.Add(1)
+		go func(n2 *onet.TreeNode) {
+			if err := p.SendTo(n2, msg); err != nil {
+				eMut.Lock()
+				errs = append(errs, errors.New(name+": "+err.Error()))
+				eMut.Unlock()
+			}
+			wg.Done()
+		}(node)
+	}
+	wg.Wait()
+	return errs
 }

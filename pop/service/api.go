@@ -42,6 +42,21 @@ func (c *Client) PinRequest(dst network.Address, pin string, pub kyber.Point) er
 	return c.SendProtobuf(si, &PinRequest{pin, pub}, nil)
 }
 
+// VerifyLink checks if a given public key is in the list of administrators
+// in the service. It returns a nil error if the key is present.
+func (c *Client) VerifyLink(dst network.Address, pub kyber.Point) error {
+	si := &network.ServerIdentity{Address: dst}
+	rep := &VerifyLinkReply{}
+	err := c.SendProtobuf(si, &VerifyLink{pub}, rep)
+	if err != nil {
+		return err
+	}
+	if rep.Exists {
+		return nil
+	}
+	return errors.New("this public key is not stored")
+}
+
 // StoreConfig sends the configuration to the conode for later usage.
 func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar) error {
 	si := &network.ServerIdentity{Address: dst}
@@ -56,12 +71,24 @@ func (c *Client) StoreConfig(dst network.Address, p *PopDesc, priv kyber.Scalar)
 	return nil
 }
 
+// GetProposals asks the conode if there is any proposed description waiting
+// to be confirmed.
+func (c *Client) GetProposals(dst network.Address) ([]PopDesc, error) {
+	si := &network.ServerIdentity{Address: dst}
+	rep := &GetProposalsReply{}
+	err := c.SendProtobuf(si, &GetProposals{}, rep)
+	if err != nil {
+		return nil, err
+	}
+	return rep.Proposals, nil
+}
+
 // FetchFinal sends Request to update local final statement
 func (c *Client) FetchFinal(dst network.Address, hash []byte) (
 	*FinalStatement, error) {
 	si := &network.ServerIdentity{Address: dst}
 	res := &FinalizeResponse{}
-	err := c.SendProtobuf(si, &FetchRequest{hash}, res)
+	err := c.SendProtobuf(si, &FetchRequest{ID: hash}, res)
 	if err != nil {
 		return nil, err
 	}

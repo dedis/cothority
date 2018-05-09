@@ -26,7 +26,7 @@ func TestService_CreateIdentity2(t *testing.T) {
 	kp := key.NewKeyPair(tSuite)
 	kp2 := key.NewKeyPair(tSuite)
 	set := anon.Set([]kyber.Point{kp.Public, kp2.Public})
-	service.Storage.Auth.sets = append(service.Storage.Auth.sets, set)
+	service.Storage.Auth.Sets = append(service.Storage.Auth.Sets, anonSet{Set: set})
 
 	da := NewData(ro, 50, kp.Public, "one")
 	ci := &CreateIdentity{}
@@ -34,7 +34,7 @@ func TestService_CreateIdentity2(t *testing.T) {
 	ci.Data = da
 	ci.Nonce = make([]byte, nonceSize)
 	random.Bytes(ci.Nonce, random.New())
-	service.Storage.Auth.nonces[string(ci.Nonce)] = struct{}{}
+	service.Storage.Auth.Nonces[string(ci.Nonce)] = true
 	ctx := []byte(ServiceName + service.ServerIdentity().String())
 
 	ci.Sig = anon.Sign(tSuite, ci.Nonce,
@@ -55,7 +55,7 @@ func TestService_CreateIdentity3(t *testing.T) {
 	service := s.(*Service)
 
 	kp := key.NewKeyPair(tSuite)
-	service.Storage.Auth.keys = append(service.Storage.Auth.keys, kp.Public)
+	service.Storage.Auth.Keys = append(service.Storage.Auth.Keys, kp.Public)
 
 	da := NewData(ro, 50, kp.Public, "one")
 	ci := &CreateIdentity{}
@@ -63,7 +63,7 @@ func TestService_CreateIdentity3(t *testing.T) {
 	ci.Data = da
 	ci.Nonce = make([]byte, nonceSize)
 	random.Bytes(ci.Nonce, tSuite.RandomStream())
-	service.Storage.Auth.nonces[string(ci.Nonce)] = struct{}{}
+	service.Storage.Auth.Nonces[string(ci.Nonce)] = true
 	var err error
 	ssig, err := schnorr.Sign(tSuite, kp.Private, ci.Nonce)
 	ci.SchnSig = &ssig

@@ -1,12 +1,22 @@
 package main
 
-import "gopkg.in/urfave/cli.v1"
+import cli "gopkg.in/urfave/cli.v1"
 
 /*
 This holds the cli-commands so the main-file is less cluttered.
 */
 
 func getCommands() cli.Commands {
+	tomlORIP := []cli.Flag{
+		cli.StringFlag{
+			Name:  "toml, t",
+			Usage: "give a toml file with the node to add",
+		},
+		cli.StringFlag{
+			Name:  "addr, a",
+			Usage: "give an ip:port pair to add to the roster",
+		},
+	}
 	return cli.Commands{
 		{
 			Name:    "link",
@@ -105,13 +115,48 @@ func getCommands() cli.Commands {
 					Usage:     "print out the qrcode of the identity-skipchain and a node for contact",
 					ArgsUsage: "[skipchain-id]",
 					Action:    scQrcode,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "e, explicit",
+							Usage: "Display the explicit IP address of the device",
+						},
+					},
 				},
 				{
-					Name:      "roster",
-					Aliases:   []string{"r"},
-					Usage:     "define a new roster for the skipchain",
-					ArgsUsage: "group.toml [skipchain-id]",
-					Action:    scRoster,
+					Name:    "roster",
+					Aliases: []string{"r"},
+					Usage:   "change the roster for the skipchain",
+					Subcommands: cli.Commands{
+						cli.Command{
+							Name:      "show",
+							Aliases:   []string{"s"},
+							Usage:     "shows the current roster of the skipchain",
+							ArgsUsage: "[skipchain-id]",
+							Action:    scRosterShow,
+						},
+						cli.Command{
+							Name:      "set",
+							Usage:     "set the current roster of the skipchain",
+							ArgsUsage: "group.toml [skipchain-id]",
+							Action:    scRosterSet,
+						},
+						cli.Command{
+							Name:      "add",
+							Aliases:   []string{"a"},
+							Usage:     "adds a node to the current roster of the skipchain",
+							ArgsUsage: "[skipchain-id]",
+							Action:    scRosterAdd,
+							Flags:     tomlORIP,
+						},
+						cli.Command{
+							Name:      "remove",
+							Aliases:   []string{"rm"},
+							Usage:     "removes a node from the current roster of the skipchain",
+							ArgsUsage: "[skipchain-id]",
+							Action:    scRosterRemove,
+							Flags:     tomlORIP,
+						},
+					},
 				},
 			},
 		},
@@ -356,6 +401,83 @@ func getCommands() cli.Commands {
 				cli.BoolFlag{
 					Name:  "inline",
 					Usage: "inline all images, css and scripts",
+				},
+			},
+		},
+
+		{
+			Name:    "cert",
+			Aliases: []string{"c"},
+			Usage:   "create and use links with admin privileges",
+			Subcommands: cli.Commands{
+				{
+					Name:      "request",
+					Aliases:   []string{"q"},
+					Usage:     "request a certificate to letsencrypt and store it to the skipchain",
+					ArgsUsage: "domain-name cert-dir www-dir",
+					Action:    certRequest,
+				},
+				{
+					Name:      "list",
+					Aliases:   []string{"l"},
+					Usage:     "List the certificate",
+					ArgsUsage: "[Skipchain-ID]",
+					Action:    certList,
+					Flags: []cli.Flag{
+						cli.BoolFlag{
+							Name:  "verbose, v",
+							Usage: "Display the fullchain certificate",
+						},
+						cli.BoolFlag{
+							Name:  "public, p",
+							Usage: "Display the public certificate",
+						},
+						cli.BoolFlag{
+							Name:  "chain, c",
+							Usage: "Display the chain certificate",
+						},
+					},
+				},
+				{
+					Name:      "verify",
+					Aliases:   []string{"v"},
+					Usage:     "verify the certificate against the root certificate",
+					ArgsUsage: "cert-key [Skipchain-ID]",
+					Action:    certVerify,
+				},
+				{
+					Name:      "renew",
+					Aliases:   []string{"u"},
+					Usage:     "renew a certificate",
+					ArgsUsage: "cert-key [Skipchain-ID]",
+					Action:    certRenew,
+				},
+				{
+					Name:      "revoke",
+					Aliases:   []string{"k"},
+					Usage:     "revoke and delete a certificate",
+					ArgsUsage: "certificate key_name [Skipchain-ID]",
+					Action:    certRevoke,
+				},
+				{
+					Name:      "retrieve",
+					Aliases:   []string{"r"},
+					Usage:     "retrieve the certificate of a given key",
+					ArgsUsage: "key [Skipchain-ID]",
+					Action:    certRetrieve,
+					Flags: []cli.Flag{
+						cli.StringFlag{
+							Name:  "directory, d",
+							Usage: "Give a directory to write the retrieved certificate",
+						},
+					},
+				},
+				{
+					Name:      "add",
+					Aliases:   []string{"a"},
+					Usage:     "add a key/cert pair",
+					ArgsUsage: "domain path [Skipchain-ID]",
+					Action:    certStore,
 				},
 			},
 		},

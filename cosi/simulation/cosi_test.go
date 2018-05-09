@@ -14,7 +14,7 @@ var tSuite = cothority.Suite
 
 func TestMain(m *testing.M) {
 	raiseLimit()
-	log.MainTest(m)
+	m.Run()
 }
 
 func TestCoSimul(t *testing.T) {

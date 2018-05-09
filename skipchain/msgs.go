@@ -129,7 +129,8 @@ type GetSingleBlock struct {
 	ID SkipBlockID
 }
 
-// GetSingleBlockByIndex asks for a single block.
+// GetSingleBlockByIndex asks for a single block at a certain index. If Index == -1,
+// the last block on the skipchain is returned.
 type GetSingleBlockByIndex struct {
 	Genesis SkipBlockID
 	Index   int

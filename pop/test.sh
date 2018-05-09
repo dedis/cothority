@@ -41,7 +41,20 @@ main(){
 	test AtVerify
 	test AtMultipleKey
 	test Merge
+	test PropagateConfig
 	stopTest
+}
+
+testPropagateConfig(){
+	mkPopConfig 1 2
+	mkLink 2
+	runDbgCl 2 1 org config pop_desc1.toml > pop_hash_file
+	pop_hash=$(grep config: pop_hash_file | sed -e "s/.* //")
+	runDbgCl 0 1 org proposed -quiet ${addr[2]} > proposed.toml
+	testGrep "City1" cat proposed.toml
+	testOK cmp -s pop_desc1.toml proposed.toml
+	testNGrep "City1" runCl 1 org proposed ${addr[2]}
+	testNGrep "City1" runCl 1 org proposed ${addr[1]}
 }
 
 testMerge(){
@@ -378,7 +391,7 @@ testOrgConfig(){
 	testFail runCl 1 org config pop_desc1.toml
 	mkLink 2
 	testOK runCl 1 org config pop_desc1.toml
-	testOK runCl 2 org config pop_desc1.toml
+	testFail runCl 2 org config pop_desc1.toml
 }
 
 # $1 number of parties $2 number of organizers

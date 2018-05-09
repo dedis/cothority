@@ -12,7 +12,6 @@ node will only use the `Handle`-methods, and not call `Start` again.
 
 import (
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
@@ -88,17 +87,25 @@ func NewProtocolGetBlocks(n *onet.TreeNodeInstance) (onet.ProtocolInstance, erro
 // Start sends the extend roster request to all of the children.
 func (p *ExtendRoster) Start() error {
 	log.Lvl3("Starting Protocol ExtendRoster")
-	errs := p.SendToChildrenInParallel(p.ExtendRoster)
-	if len(errs) > p.allowedFailures {
-		return fmt.Errorf("Send to children failed: %v", errs)
-	}
+	go func() {
+		errs := p.SendToChildrenInParallel(p.ExtendRoster)
+		if len(errs) > p.allowedFailures {
+			log.Errorf("Send to children failed: %v", errs)
+		}
+	}()
 	return nil
 }
 
 // Start sends the block request to all of the children.
 func (p *GetBlocks) Start() error {
 	log.Lvl3("Starting Protocol GetBlocks")
-	return p.SendToChildren(p.GetBlocks)
+	go func() {
+		errs := p.SendToChildrenInParallel(p.GetBlocks)
+		if len(errs) > 0 {
+			log.Lvlf1("Error while sending to children: %+v", errs)
+		}
+	}()
+	return nil
 }
 
 // HandleExtendRoster uses the stored followers to decide if we want to accept

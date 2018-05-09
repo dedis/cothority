@@ -18,7 +18,6 @@ package bftcosi
 import (
 	"crypto/sha512"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 
@@ -807,9 +806,11 @@ func (bft *ProtocolBFTCoSi) setClosing() {
 
 func (bft *ProtocolBFTCoSi) sendToChildren(msg interface{}) error {
 	// TODO send to only nodes that did reply
-	errs := bft.SendToChildrenInParallel(msg)
-	if len(errs) > bft.allowedExceptions {
-		return fmt.Errorf("sendToChildren failed with errors: %v", errs)
-	}
+	go func() {
+		errs := bft.SendToChildrenInParallel(msg)
+		if len(errs) > bft.allowedExceptions {
+			log.Errorf("sendToChildren failed with errors: %v", errs)
+		}
+	}()
 	return nil
 }

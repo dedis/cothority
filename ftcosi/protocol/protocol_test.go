@@ -1,7 +1,9 @@
 package protocol
 
 import (
+	"flag"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 
@@ -13,12 +15,41 @@ import (
 	"gopkg.in/dedis/onet.v2/log"
 )
 
+const FailureProtocolName = "FailureProtocol"
+const FailureSubProtocolName = "FailureSubProtocol"
+
+const RefuseOneProtocolName = "RefuseOneProtocol"
+const RefuseOneSubProtocolName = "RefuseOneSubProtocol"
+
 func init() {
 	GlobalRegisterDefaultProtocols()
+	onet.GlobalProtocolRegister(FailureProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		vf := func(a, b []byte) bool { return true }
+		return NewFtCosi(n, vf, FailureSubProtocolName, cothority.Suite)
+	})
+	onet.GlobalProtocolRegister(FailureSubProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		vf := func(a, b []byte) bool { return false }
+		return NewSubFtCosi(n, vf, cothority.Suite)
+	})
+	onet.GlobalProtocolRegister(RefuseOneProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		vf := func(a, b []byte) bool { return true }
+		return NewFtCosi(n, vf, RefuseOneSubProtocolName, cothority.Suite)
+	})
+	onet.GlobalProtocolRegister(RefuseOneSubProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+		return NewSubFtCosi(n, refuse, cothority.Suite)
+	})
 }
 
 var testSuite = cothority.Suite
-var defaultTimeout = time.Second * 5
+var defaultTimeout = 5 * time.Second
+
+func TestMain(m *testing.M) {
+	flag.Parse()
+	if testing.Short() {
+		defaultTimeout = 20 * time.Second
+	}
+	log.MainTest(m)
+}
 
 // Tests various trees configurations
 func TestProtocol(t *testing.T) {
@@ -266,10 +297,150 @@ func TestProtocolErrors(t *testing.T) {
 	}
 }
 
+func TestProtocolRefusalAll(t *testing.T) {
+	nodes := []int{4, 5, 13}
+	subtrees := []int{1, 2, 5, 9}
+	proposal := []byte{0xFF}
+
+	for _, nNodes := range nodes {
+		for _, nSubtrees := range subtrees {
+			log.Lvl2("test asking for", nNodes, "nodes and", nSubtrees, "subtrees")
+
+			local := onet.NewLocalTest(testSuite)
+			_, _, tree := local.GenTree(nNodes, false)
+
+			// get public keys
+			publics := make([]kyber.Point, tree.Size())
+			for i, node := range tree.List() {
+				publics[i] = node.ServerIdentity.Public
+			}
+
+			pi, err := local.CreateProtocol(FailureProtocolName, tree)
+			if err != nil {
+				local.CloseAll()
+				t.Fatal("Error in creation of protocol:", err)
+			}
+			cosiProtocol := pi.(*FtCosi)
+			cosiProtocol.CreateProtocol = local.CreateProtocol
+			cosiProtocol.Msg = proposal
+			cosiProtocol.NSubtrees = nSubtrees
+			cosiProtocol.Timeout = defaultTimeout
+
+			err = cosiProtocol.Start()
+			if err != nil {
+				local.CloseAll()
+				t.Fatal(err)
+			}
+
+			// only the leader agrees, the verification should only pass with a threshold of 1
+			// the rest, including using the complete policy should fail
+			var signature []byte
+			select {
+			case signature = <-cosiProtocol.FinalSignature:
+				log.Lvl3("Instance is done")
+			case <-time.After(defaultTimeout * 2):
+				// wait a bit longer than the protocol timeout
+				local.CloseAll()
+				t.Fatal("didn't get commitment in time")
+			}
+
+			err = verifySignature(signature, publics, proposal, cosi.CompletePolicy{})
+			if err == nil {
+				local.CloseAll()
+				t.Fatal("verification should fail")
+			}
+
+			err = verifySignature(signature, publics, proposal, cosi.NewThresholdPolicy(2))
+			if err == nil {
+				local.CloseAll()
+				t.Fatal("verification should fail")
+			}
+
+			err = verifySignature(signature, publics, proposal, cosi.NewThresholdPolicy(1))
+			if err != nil {
+				local.CloseAll()
+				t.Fatal(err)
+			}
+
+			local.CloseAll()
+		}
+	}
+}
+
+func TestProtocolRefuseOne(t *testing.T) {
+	nodes := []int{4, 5, 13}
+	subtrees := []int{1, 2, 5, 9}
+	proposal := []byte{0xFF}
+
+	for _, nNodes := range nodes {
+		for _, nSubtrees := range subtrees {
+			for refuseIdx := 0; refuseIdx < nNodes-1; refuseIdx++ {
+				log.Lvl2("test asking for", nNodes, "nodes and", nSubtrees, "subtrees")
+				counter = &Counter{refuseIdx: refuseIdx}
+
+				local := onet.NewLocalTest(testSuite)
+				_, _, tree := local.GenTree(nNodes, false)
+
+				// get public keys
+				publics := make([]kyber.Point, tree.Size())
+				for i, node := range tree.List() {
+					publics[i] = node.ServerIdentity.Public
+				}
+
+				pi, err := local.CreateProtocol(RefuseOneProtocolName, tree)
+				if err != nil {
+					local.CloseAll()
+					t.Fatal("Error in creation of protocol:", err)
+				}
+				cosiProtocol := pi.(*FtCosi)
+				cosiProtocol.CreateProtocol = local.CreateProtocol
+				cosiProtocol.Msg = proposal
+				cosiProtocol.NSubtrees = nSubtrees
+				cosiProtocol.Timeout = defaultTimeout
+
+				err = cosiProtocol.Start()
+				if err != nil {
+					local.CloseAll()
+					t.Fatal(err)
+				}
+
+				// only the leader agrees, the verification should only pass with a threshold of 1
+				// the rest, including using the complete policy should fail
+				var signature []byte
+				select {
+				case signature = <-cosiProtocol.FinalSignature:
+					log.Lvl3("Instance is done")
+				case <-time.After(defaultTimeout * 2):
+					// wait a bit longer than the protocol timeout
+					local.CloseAll()
+					t.Fatal("didn't get commitment in time")
+				}
+
+				err = verifySignature(signature, publics, proposal, cosi.CompletePolicy{})
+				if err == nil {
+					local.CloseAll()
+					t.Fatalf("verification should fail, refused index: %d", refuseIdx)
+				}
+
+				err = verifySignature(signature, publics, proposal, cosi.NewThresholdPolicy(nNodes-1))
+				if err != nil {
+					local.CloseAll()
+					t.Fatal(err)
+				}
+				local.CloseAll()
+
+				counter.Lock()
+				if counter.veriCount != nNodes-1 {
+					counter.Unlock()
+					t.Fatalf("not enough verified count, need %d but got %d", counter.veriCount, nNodes-1)
+				}
+			}
+		}
+	}
+}
+
 func getAndVerifySignature(cosiProtocol *FtCosi, publics []kyber.Point,
 	proposal []byte, policy cosi.Policy) error {
-
-	// get response
 	var signature []byte
 	select {
 	case signature = <-cosiProtocol.FinalSignature:
@@ -279,6 +450,11 @@ func getAndVerifySignature(cosiProtocol *FtCosi, publics []kyber.Point,
 		return fmt.Errorf("didn't get commitment in time")
 	}
 
+	return verifySignature(signature, publics, proposal, policy)
+}
+
+func verifySignature(signature []byte, publics []kyber.Point,
+	proposal []byte, policy cosi.Policy) error {
 	// verify signature
 	err := cosi.Verify(testSuite, publics, proposal, signature, policy)
 	if err != nil {
@@ -286,4 +462,22 @@ func getAndVerifySignature(cosiProtocol *FtCosi, publics []kyber.Point,
 	}
 	log.Lvl2("Signature correctly verified!")
 	return nil
+}
+
+type Counter struct {
+	veriCount int
+	refuseIdx int
+	sync.Mutex
+}
+
+var counter = &Counter{}
+
+func refuse(msg, data []byte) bool {
+	counter.Lock()
+	defer counter.Unlock()
+	defer func() { counter.veriCount++ }()
+	if counter.veriCount == counter.refuseIdx {
+		return false
+	}
+	return true
 }

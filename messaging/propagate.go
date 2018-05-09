@@ -37,8 +37,6 @@ type Propagate struct {
 		PropagateReply
 	}
 
-	received        int
-	subtreeCount    int
 	allowedFailures int
 	sync.Mutex
 }
@@ -88,8 +86,6 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 		p := &Propagate{
 			sd:               &PropagateSendData{[]byte{}, initialWait},
 			TreeNodeInstance: n,
-			received:         0,
-			subtreeCount:     n.TreeNode().SubtreeCount(),
 			onData:           f,
 			allowedFailures:  t,
 		}
@@ -155,6 +151,12 @@ func (p *Propagate) Dispatch() error {
 	process := true
 	log.Lvl4(p.ServerIdentity(), "Start dispatch")
 	defer p.Done()
+
+	var gotSendData bool
+	var received int
+	var errs []error
+	subtreeCount := p.TreeNode().SubtreeCount()
+
 	for process {
 		p.Lock()
 		timeout := p.sd.Timeout
@@ -162,11 +164,18 @@ func (p *Propagate) Dispatch() error {
 		p.Unlock()
 		select {
 		case msg := <-p.ChannelSD:
+			if gotSendData {
+				log.Error("already got msg")
+				continue
+			}
+			gotSendData = true
 			log.Lvl3(p.ServerIdentity(), "Got data from", msg.ServerIdentity, "and setting timeout to", msg.Timeout)
 			p.sd.Timeout = msg.Timeout
 			if p.onData != nil {
 				_, netMsg, err := network.Unmarshal(msg.Data, p.Suite())
-				if err == nil {
+				if err != nil {
+					log.Lvlf2("Unmarshal failed with %v", err)
+				} else {
 					p.onData(netMsg)
 				}
 			}
@@ -180,34 +189,38 @@ func (p *Propagate) Dispatch() error {
 				process = false
 			} else {
 				log.Lvl3(p.ServerIdentity(), "Sending to children")
-				if err := p.SendToChildrenInParallel(&msg.PropagateSendData); err != nil {
-					var errs []string
-					for _, e := range err {
-						errs = append(errs, e.Error())
+				if errs = p.SendToChildrenInParallel(&msg.PropagateSendData); len(errs) != 0 {
+					var errsStr []string
+					for _, e := range errs {
+						errsStr = append(errsStr, e.Error())
 					}
-					if len(err) > p.allowedFailures {
-						return errors.New(strings.Join(errs, "\n"))
+					if len(errs) > p.allowedFailures {
+						return errors.New(strings.Join(errsStr, "\n"))
 					}
-					log.Lvl2("Error while sending to children:", errs)
+					log.Lvl2("Error while sending to children:", errsStr)
 				}
 			}
 		case <-p.ChannelReply:
-			p.received++
-			log.Lvl4(p.ServerIdentity(), "received:", p.received, p.subtreeCount)
+			if !gotSendData {
+				log.Error("got response before send")
+				continue
+			}
+			received++
+			log.Lvl4(p.ServerIdentity(), "received:", received, subtreeCount)
 			if !p.IsRoot() {
 				if err := p.SendToParent(&PropagateReply{}); err != nil {
 					return err
 				}
 			}
-			// propagate to as many as we can
-			if p.received == p.subtreeCount {
+			// Only wait for the number of children that successfully received our message.
+			if received == subtreeCount-len(errs) && received >= subtreeCount-p.allowedFailures {
 				process = false
 			}
 		case <-time.After(timeout):
-			if p.received < p.subtreeCount-p.allowedFailures {
+			if received < subtreeCount-p.allowedFailures {
 				_, _, err := network.Unmarshal(p.sd.Data, p.Suite())
 				return fmt.Errorf("Timeout of %s reached, got %v but need %v, err: %v",
-					timeout, p.received, p.subtreeCount-p.allowedFailures, err)
+					timeout, received, subtreeCount-p.allowedFailures, err)
 			}
 			process = false
 		}
@@ -215,7 +228,7 @@ func (p *Propagate) Dispatch() error {
 	log.Lvl3(p.ServerIdentity(), "done, isroot:", p.IsRoot())
 	if p.IsRoot() {
 		if p.onDoneCb != nil {
-			p.onDoneCb(p.received + 1)
+			p.onDoneCb(received + 1)
 		}
 	}
 	return nil

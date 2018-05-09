@@ -27,7 +27,7 @@ func TestPropagation(t *testing.T) {
 }
 
 // Tests an n-node system
-func propagate(t *testing.T, nbrNodes []int, nbrFailures []int) {
+func propagate(t *testing.T, nbrNodes, nbrFailures []int) {
 	for i, n := range nbrNodes {
 		local := onet.NewLocalTest(tSuite)
 		servers, el, _ := local.GenTree(n, true)

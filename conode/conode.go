@@ -16,9 +16,12 @@ import (
 	"bufio"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
+	"net"
 	"os"
 	"path"
+	"reflect"
 	"strings"
 
 	"gopkg.in/dedis/cothority.v2"
@@ -27,9 +30,12 @@ import (
 	_ "gopkg.in/dedis/cothority.v2/identity"
 	_ "gopkg.in/dedis/cothority.v2/skipchain"
 	_ "gopkg.in/dedis/cothority.v2/status/service"
+	"gopkg.in/dedis/kyber.v2/util/encoding"
+	"gopkg.in/dedis/kyber.v2/util/key"
 	"gopkg.in/dedis/onet.v2/app"
 	"gopkg.in/dedis/onet.v2/cfgpath"
 	"gopkg.in/dedis/onet.v2/log"
+	"gopkg.in/dedis/onet.v2/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -42,12 +48,17 @@ const (
 	Version = "2.0"
 )
 
-func main() {
+var gitTag = ""
 
+func main() {
 	cliApp := cli.NewApp()
-	cliApp.Name = "conode"
+	cliApp.Name = DefaultName
 	cliApp.Usage = "run a cothority server"
-	cliApp.Version = Version
+	if gitTag == "" {
+		cliApp.Version = Version
+	} else {
+		cliApp.Version = Version + "-" + gitTag
+	}
 
 	cliApp.Commands = []cli.Command{
 		{
@@ -55,6 +66,22 @@ func main() {
 			Aliases: []string{"s"},
 			Usage:   "Setup server configuration (interactive)",
 			Action:  setup,
+			Flags: []cli.Flag{
+				cli.BoolFlag{
+					Name:  "non-interactive",
+					Usage: "generate private.toml in non-interactive mode",
+				},
+				cli.IntFlag{
+					Name:  "port",
+					Usage: "which port to listen on",
+					Value: 6879,
+				},
+				cli.StringFlag{
+					Name:  "description",
+					Usage: "the description to use",
+					Value: "configured in non-interactive mode",
+				},
+			},
 		},
 		{
 			Name:   "server",
@@ -92,13 +119,23 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: path.Join(cfgpath.GetConfigPath("conode"), app.DefaultServerConfig),
+			Value: path.Join(cfgpath.GetConfigPath(DefaultName), app.DefaultServerConfig),
 			Usage: "Configuration file of the server",
 		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
 		return nil
+	}
+
+	// Do not allow conode to run when built in 32-bit mode.
+	// The dedis/protobuf package is the origin of this limit.
+	// Instead of getting the error later from protobuf and being
+	// confused, just make it totally clear up-front.
+	var i int
+	iType := reflect.TypeOf(i)
+	if iType.Size() < 8 {
+		log.ErrFatal(errors.New("conode cannot run when built in 32-bit mode"))
 	}
 
 	err := cliApp.Run(os.Args)
@@ -119,6 +156,9 @@ func checkConfig(c *cli.Context) error {
 	if c.NArg() > 0 {
 		tomlFileName = c.Args().First()
 	}
+	if tomlFileName == "" {
+		log.Fatal("[-] Must give the roster file to check.")
+	}
 	return check.Config(tomlFileName, c.Bool("detail"))
 }
 
@@ -129,7 +169,48 @@ func setup(c *cli.Context) error {
 	if c.String("debug") != "" {
 		log.Fatal("[-] Debug option cannot be used for the 'setup' command")
 	}
-	app.InteractiveConfig(cothority.Suite, "conode")
+
+	if c.Bool("non-interactive") {
+		port := c.Int("port")
+		portStr := fmt.Sprintf("%v", port)
+
+		serverBinding := network.NewAddress(network.TLS, net.JoinHostPort("", portStr))
+		kp := key.NewKeyPair(cothority.Suite)
+
+		pub, _ := encoding.PointToStringHex(cothority.Suite, kp.Public)
+		priv, _ := encoding.ScalarToStringHex(cothority.Suite, kp.Private)
+
+		conf := &app.CothorityConfig{
+			Suite:       cothority.Suite.String(),
+			Public:      pub,
+			Private:     priv,
+			Address:     serverBinding,
+			Description: c.String("description"),
+		}
+
+		out := path.Join(cfgpath.GetConfigPath(DefaultName), app.DefaultServerConfig)
+		err := conf.Save(out)
+		if err == nil {
+			fmt.Fprintf(os.Stderr, "Wrote config file to %v\n", out)
+		}
+
+		// We are not going to write out the public.toml file here.
+		// We don't because in the current use case for --non-interactive, which
+		// is for containers to auto-generate configs on startup, the
+		// roster (i.e. public IP addresses + public keys) will be generated
+		// based on how Kubernetes does service discovery. Writing the public.toml
+		// file based on the data we have here, would result in writing an invalid
+		// public Address.
+
+		// If we had written it, it would look like this:
+		//  server := app.NewServerToml(cothority.Suite, kp.Public, conf.Address, conf.Description)
+		//  group := app.NewGroupToml(server)
+		//  group.Save(path.Join(dir, "public.toml"))
+
+		return err
+	}
+
+	app.InteractiveConfig(cothority.Suite, DefaultName)
 	return nil
 }
 

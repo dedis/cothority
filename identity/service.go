@@ -64,7 +64,7 @@ type Service struct {
 	propagateSkipBlock messaging.PropagationFunc
 	propagateData      messaging.PropagationFunc
 	storageMutex       sync.Mutex
-	skipchain          *skipchain.Client
+	skipchain          *skipchain.Service
 	// limits on number of skipchain creation. Map keys are link tags
 	tagsLimits map[string]int8
 	// limits on number of skipchain creation. Map keys are public keys
@@ -92,16 +92,20 @@ type IDBlock struct {
 }
 
 type authData struct {
-	// set of pins and keys
-	pins map[string]struct{}
-	// sets of public keys to verify linkable ring signatures
-	sets []anon.Set
-	// list of public keys to verify simple authentication with Schnorr sig
-	keys []kyber.Point
-	// list of adminKeys
-	adminKeys []kyber.Point
-	// set of nonces
-	nonces map[string]struct{}
+	// set of Pins and keys
+	Pins map[string]bool
+	// Sets of public keys to verify linkable ring signatures
+	Sets []anonSet
+	// list of public Keys to verify simple authentication with Schnorr sig
+	Keys []kyber.Point
+	// list of AdminKeys
+	AdminKeys []kyber.Point
+	// set of Nonces
+	Nonces map[string]bool
+}
+
+type anonSet struct {
+	Set anon.Set
 }
 
 /*
@@ -117,15 +121,15 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 	log.Lvl3("PinRequest", s.ServerIdentity())
 	if req.PIN == "" {
 		pin := fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
-		s.Storage.Auth.pins[pin] = struct{}{}
+		s.Storage.Auth.Pins[pin] = true
 		log.Info("PIN:", pin)
 		return nil, ErrorReadPIN
 	}
-	if _, ok := s.Storage.Auth.pins[req.PIN]; !ok {
+	if !s.Storage.Auth.Pins[req.PIN] {
 		return nil, errors.New("Wrong PIN")
 	}
-	s.Storage.Auth.adminKeys = append(s.Storage.Auth.adminKeys, req.Public)
-	s.Storage.Auth.keys = append(s.Storage.Auth.keys, req.Public)
+	s.Storage.Auth.AdminKeys = append(s.Storage.Auth.AdminKeys, req.Public)
+	s.Storage.Auth.Keys = append(s.Storage.Auth.Keys, req.Public)
 	s.save()
 	log.Lvl1("Successfully registered PIN/Public", req.PIN, req.Public)
 	return nil, nil
@@ -186,7 +190,7 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, error) {
 
 	// check Signature
 	valid := false
-	for _, key := range s.Storage.Auth.adminKeys {
+	for _, key := range s.Storage.Auth.AdminKeys {
 		if schnorr.Verify(s.Suite(), key, msg, req.Sig) == nil {
 			valid = true
 			break
@@ -200,9 +204,9 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, error) {
 	}
 	switch req.Type {
 	case PoPAuth:
-		s.Storage.Auth.sets = append(s.Storage.Auth.sets, anon.Set(req.Final.Attendees))
+		s.Storage.Auth.Sets = append(s.Storage.Auth.Sets, anonSet{Set: anon.Set(req.Final.Attendees)})
 	case PublicAuth:
-		s.Storage.Auth.keys = append(s.Storage.Auth.keys, req.Publics...)
+		s.Storage.Auth.Keys = append(s.Storage.Auth.Keys, req.Publics...)
 	}
 	return nil, nil
 }
@@ -215,7 +219,7 @@ func (s *Service) Authenticate(ap *Authenticate) (*Authenticate, error) {
 	ap.Ctx = []byte(ServiceName + s.ServerIdentity().String())
 	ap.Nonce = make([]byte, nonceSize)
 	random.Bytes(ap.Nonce, s.Suite().RandomStream())
-	s.Storage.Auth.nonces[string(ap.Nonce)] = struct{}{}
+	s.Storage.Auth.Nonces[string(ap.Nonce)] = true
 	return ap, nil
 }
 
@@ -223,7 +227,7 @@ func (s *Service) Authenticate(ap *Authenticate) (*Authenticate, error) {
 // managed identities.
 func (s *Service) CreateIdentity(ai *CreateIdentity) (*CreateIdentityReply, error) {
 	ctx := []byte(ServiceName + s.ServerIdentity().String())
-	if _, ok := s.Storage.Auth.nonces[string(ai.Nonce)]; !ok {
+	if !s.Storage.Auth.Nonces[string(ai.Nonce)] {
 		log.Error("Given nonce is not stored on ", s.ServerIdentity())
 		return nil, fmt.Errorf("Given nonce is not stored on %s", s.ServerIdentity())
 	}
@@ -232,8 +236,8 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (*CreateIdentityReply, erro
 	var pubStr string
 	switch ai.Type {
 	case PoPAuth:
-		for _, set := range s.Storage.Auth.sets {
-			t, err := anon.Verify(s.anonSuite, ai.Nonce, set, ctx, ai.Sig)
+		for _, set := range s.Storage.Auth.Sets {
+			t, err := anon.Verify(s.anonSuite, ai.Nonce, set.Set, ctx, ai.Sig)
 			if err == nil {
 				tag = string(t)
 				valid = true
@@ -248,12 +252,12 @@ func (s *Service) CreateIdentity(ai *CreateIdentity) (*CreateIdentityReply, erro
 					}
 				}
 				// authentication succeeded. we need to delete the nonce
-				delete(s.Storage.Auth.nonces, string(ai.Nonce))
+				delete(s.Storage.Auth.Nonces, string(ai.Nonce))
 				break
 			}
 		}
 	case PublicAuth:
-		for _, k := range s.Storage.Auth.keys {
+		for _, k := range s.Storage.Auth.Keys {
 			if schnorr.Verify(s.Suite(), k, ai.Nonce, *ai.SchnSig) == nil {
 				valid = true
 				pubStr = k.String()
@@ -288,14 +292,19 @@ func (s *Service) CreateIdentityInternal(ai *CreateIdentity, tag, pubStr string)
 		Latest: ai.Data,
 	}
 	log.Lvl3("Creating Data-skipchain", ai.Data)
-	var err error
-	priv := s.verifySkipchainAuth()
-	ids.LatestSkipblock, err = s.skipchain.CreateGenesisSignature(ai.Data.Roster, 10, 10,
-		VerificationIdentity, ai.Data, nil, priv)
+	sb := &skipchain.SkipBlock{
+		SkipBlockFix: &skipchain.SkipBlockFix{
+			Roster:        ai.Data.Roster,
+			BaseHeight:    10,
+			MaximumHeight: 10,
+			VerifierIDs:   VerificationIdentity,
+		},
+	}
+	reply, err := s.storeSkipBlock(sb, ai.Data)
 	if err != nil {
 		return nil, err
 	}
-
+	ids.LatestSkipblock = reply.Latest
 	roster := ai.Data.Roster
 	replies, err := s.propagateIdentity(roster, &PropagateIdentity{ids, tag, pubStr}, propagateTimeout)
 	if err != nil {
@@ -311,6 +320,27 @@ func (s *Service) CreateIdentityInternal(ai *CreateIdentity, tag, pubStr string)
 	}, nil
 }
 
+func (s *Service) storeSkipBlock(sb *skipchain.SkipBlock, data network.Message) (*skipchain.StoreSkipBlockReply, error) {
+	d, err := network.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+	sb.Data = d
+	ssb := &skipchain.StoreSkipBlock{
+		TargetSkipChainID: sb.GenesisID,
+		NewBlock:          sb,
+	}
+	priv := s.verifySkipchainAuth()
+	if priv != nil {
+		sig, err := schnorr.Sign(cothority.Suite, priv, sb.CalculateHash())
+		if err != nil {
+			return nil, errors.New("couldn't sign block: " + err.Error())
+		}
+		ssb.Signature = &sig
+	}
+	return s.skipchain.StoreSkipBlock(ssb)
+}
+
 // DataUpdate returns a new data-update
 func (s *Service) DataUpdate(cu *DataUpdate) (*DataUpdateReply, error) {
 	// Check if there is something new on the skipchain - in case we've been
@@ -321,7 +351,7 @@ func (s *Service) DataUpdate(cu *DataUpdate) (*DataUpdateReply, error) {
 	}
 	sid.Lock()
 	defer sid.Unlock()
-	reply, err := s.skipchain.GetUpdateChain(sid.LatestSkipblock.Roster, sid.LatestSkipblock.Hash)
+	reply, err := s.skipchain.GetUpdateChain(&skipchain.GetUpdateChain{LatestID: sid.LatestSkipblock.Hash})
 	if err != nil {
 		return nil, err
 	}
@@ -440,8 +470,13 @@ func (s *Service) ProposeVote(v *ProposeVote) (*ProposeVoteReply, error) {
 
 		// Making a new data-skipblock
 		log.Lvl3("Sending data-block with", sid.Proposed.Device)
-		priv := s.verifySkipchainAuth()
-		reply, err := s.skipchain.StoreSkipBlockSignature(sid.LatestSkipblock, sid.Proposed.Roster, sid.Proposed, priv)
+		sb := &skipchain.SkipBlock{
+			SkipBlockFix: &skipchain.SkipBlockFix{
+				GenesisID: sid.LatestSkipblock.SkipChainID(),
+				Roster:    sid.Proposed.Roster,
+			},
+		}
+		reply, err := s.storeSkipBlock(sb, sid.Proposed)
 		if err != nil {
 			return nil, err
 		}
@@ -451,7 +486,7 @@ func (s *Service) ProposeVote(v *ProposeVote) (*ProposeVoteReply, error) {
 			ID:     v.ID,
 			Latest: reply.Latest,
 		}
-		_, err = s.propagateSkipBlock(sid.LatestSkipblock.Roster, usb, propagateTimeout)
+		_, err = s.propagateSkipBlock(reply.Latest.Roster, usb, propagateTimeout)
 		if err != nil {
 			return nil, err
 		}
@@ -496,7 +531,9 @@ func (s *Service) VerifyBlock(sbID []byte, sb *skipchain.SkipBlock) bool {
 		if latest == nil {
 			// If we don't have the block, the leader should have it.
 			var err error
-			latest, err = s.skipchain.GetSingleBlock(sb.Roster, sb.BackLinkIDs[0])
+			latest, err = s.skipchain.GetSingleBlock(&skipchain.GetSingleBlock{
+				ID: sb.BackLinkIDs[0],
+			})
 			if err != nil {
 				return err
 			}
@@ -540,7 +577,7 @@ func (s *Service) VerifyBlock(sbID []byte, sb *skipchain.SkipBlock) bool {
 
 // propagateData handles propagation of all configuration-proposals in the identity-service.
 func (s *Service) propagateDataHandler(msg network.Message) {
-	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
+	log.Lvlf4("%s: Got msg %+v %v", s.ServerIdentity(), msg, reflect.TypeOf(msg).String())
 	id := ID(nil)
 	switch msg.(type) {
 	case *ProposeSend:
@@ -593,19 +630,12 @@ func (s *Service) propagateDataHandler(msg network.Message) {
 
 // propagateSkipBlock saves a new skipblock to the identity
 func (s *Service) propagateSkipBlockHandler(msg network.Message) {
-	log.Lvlf4("Got msg %+v %v", msg, reflect.TypeOf(msg).String())
+	log.Lvlf4("%s: Got msg %+v %v", s.ServerIdentity(), msg, reflect.TypeOf(msg).String())
 	usb, ok := msg.(*UpdateSkipBlock)
 	if !ok {
 		log.Error("Wrong message-type")
 		return
 	}
-	sid := s.getIdentityStorage(usb.ID)
-	if sid == nil {
-		log.Error("Didn't find entity in", s)
-		return
-	}
-	sid.Lock()
-	defer sid.Unlock()
 	skipblock := msg.(*UpdateSkipBlock).Latest
 	_, msgLatest, err := network.Unmarshal(skipblock.Data, s.Suite())
 	if err != nil {
@@ -617,6 +647,22 @@ func (s *Service) propagateSkipBlockHandler(msg network.Message) {
 		log.Error(err)
 		return
 	}
+
+	sid := s.getIdentityStorage(usb.ID)
+	if sid == nil {
+		if i, _ := skipblock.Roster.Search(s.ServerIdentity().ID); i < 0 {
+			log.Error("asked to store new skipblock but we're not in the roster")
+			return
+		}
+		log.Lvlf2("Storing new identity %x", usb.ID)
+		sid = &IDBlock{
+			Latest:          al,
+			LatestSkipblock: skipblock,
+		}
+		s.setIdentityStorage(usb.ID, sid)
+	}
+	sid.Lock()
+	defer sid.Unlock()
 	sid.LatestSkipblock = skipblock
 	sid.Latest = al
 	sid.Proposed = nil
@@ -738,17 +784,17 @@ func (s *Service) tryLoad() error {
 	if s.Storage.Auth == nil {
 		s.Storage.Auth = &authData{}
 	}
-	if len(s.Storage.Auth.pins) == 0 {
-		s.Storage.Auth.pins = map[string]struct{}{}
+	if len(s.Storage.Auth.Pins) == 0 {
+		s.Storage.Auth.Pins = map[string]bool{}
 	}
-	if len(s.Storage.Auth.nonces) == 0 {
-		s.Storage.Auth.nonces = map[string]struct{}{}
+	if len(s.Storage.Auth.Nonces) == 0 {
+		s.Storage.Auth.Nonces = map[string]bool{}
 	}
-	if s.Storage.Auth.sets == nil {
-		s.Storage.Auth.sets = []anon.Set{}
+	if s.Storage.Auth.Sets == nil {
+		s.Storage.Auth.Sets = []anonSet{}
 	}
-	if s.Storage.Auth.adminKeys == nil {
-		s.Storage.Auth.adminKeys = []kyber.Point{}
+	if s.Storage.Auth.AdminKeys == nil {
+		s.Storage.Auth.AdminKeys = []kyber.Point{}
 	}
 	log.Lvl3("Successfully loaded")
 	return nil
@@ -757,7 +803,7 @@ func (s *Service) tryLoad() error {
 func newIdentityService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		skipchain:        skipchain.NewClient(),
+		skipchain:        c.Service(skipchain.ServiceName).(*skipchain.Service),
 	}
 	if as, ok := c.Suite().(anon.Suite); ok {
 		s.anonSuite = as

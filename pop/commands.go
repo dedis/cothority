@@ -30,6 +30,19 @@ func init() {
 				Action:    orgConfig,
 			},
 			{
+				Name:      "proposed",
+				Aliases:   []string{"prop"},
+				Usage:     "fetches proposed configs",
+				ArgsUsage: "IP-address:port",
+				Action:    orgProposed,
+				Flags: []cli.Flag{
+					cli.BoolFlag{
+						Name:  "quiet, q",
+						Usage: "only return proposed toml data",
+					},
+				},
+			},
+			{
 				Name:      "public",
 				Aliases:   []string{"p"},
 				Usage:     "stores one or more public keys during the party",

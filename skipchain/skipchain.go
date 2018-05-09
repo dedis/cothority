@@ -15,6 +15,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"reflect"
+	"runtime"
 	"strconv"
 	"sync"
 	"time"
@@ -167,12 +169,11 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		}
 	}
 	var prev *SkipBlock
-	var changed []*SkipBlock
 
 	// If TargetSkipChainID is not given, it is a genesis block.
 	if psbd.TargetSkipChainID.IsNull() {
 		// A new chain is created
-		log.Lvl3("Creating new skipchain with roster", psbd.NewBlock.Roster.List)
+		log.Lvl2("Creating new skipchain with roster", psbd.NewBlock.Roster.List)
 		prop.Height = prop.MaximumHeight
 		prop.ForwardLink = make([]*ForwardLink, 0)
 		// genesis block has a random back-link, so that two
@@ -187,6 +188,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			return nil, err
 		}
 
+		var changed []*SkipBlock
 		if !prop.ParentBlockID.IsNull() {
 			parent := s.db.GetByID(prop.ParentBlockID)
 			if parent == nil {
@@ -197,84 +199,76 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			changed = append(changed, parent)
 		}
 		changed = append(changed, prop)
-
+		log.Lvlf3("Propagate %d blocks", len(changed))
+		if err := s.startPropagation(changed); err != nil {
+			return nil, errors.New(
+				"Couldn't propagate new blocks: " + err.Error())
+		}
 	} else {
 
 		// We're appending a block to an existing chain.
-		log.Lvlf3("Adding block with roster %+v to %x",
+		log.Lvlf2("Adding block with roster %+v to %x",
 			psbd.NewBlock.Roster.List, psbd.TargetSkipChainID)
+
+		// Check if we really want to take this block with regard to our
+		// authorization lists.
+		if !s.blockIsFriendly(psbd.NewBlock) {
+			log.Lvlf2("%s: block is not friendly: %x",
+				s.ServerIdentity(), psbd.NewBlock.Hash)
+			return nil, errors.New("chain not followed")
+		}
 
 		// At this point the TargetSkipChainID must have something in
 		// it, so we look for the correct skipchain identified by it.
 		// For backward compatibility, TargetSkipChainID does not need
 		// to be a genesis block, it can also be a block on one of the
 		// chains.
-		if b := s.db.GetByID(psbd.TargetSkipChainID); b != nil {
-			// Ignore error here because even if prev ends up
-			// nil, we'll handle it in the next step.
-			prev, _ = s.db.GetLatest(b)
+		// This makes sure we have the genesis block and get the correct
+		// ID.
+		scID := psbd.TargetSkipChainID
+		sb := s.db.GetByID(psbd.TargetSkipChainID)
+		if sb == nil {
+			err := s.syncChain(psbd.NewBlock.Roster, scID)
+			if err != nil {
+				return nil, errors.New("didn't find block to attach to")
+			}
+			sb = s.db.GetByID(scID)
+		}
+		if !sb.SkipChainID().Equal(scID) {
+			scID = sb.SkipChainID()
 		}
 
-		var needSync bool
+		// From now on we have everything we need and lock the adding of new blocks
+		// from this leader to this skipchain.
+		s.chains.lock(scID)
+		defer s.chains.unlock(scID)
 
-		// If we cannot find the latest block, try to set it to the
-		// genesis and then update it later.
-		if prev == nil {
-			if !s.blockIsFriendly(psbd.NewBlock) {
-				log.Lvlf2("%s: block is not friendly: %x",
-					s.ServerIdentity(), psbd.NewBlock.Hash)
-				return nil, errors.New("chain not followed")
-			}
-
-			prev = s.db.GetByID(psbd.NewBlock.SkipChainID())
-			if prev == nil {
-				return nil, errors.New("unknown latest block, unknown chain-id")
-			}
-			needSync = true
+		var err error
+		prev, err = s.db.GetLatestByID(scID)
+		if err != nil {
+			return nil, errors.New("error while getting latest block: " + err.Error())
 		}
 
-		// Check the roster.
+		// Check the roster of the previous block - for the protocols to work
+		// correctly, we need to be in the roster of the latest block.
 		if i, _ := prev.Roster.Search(s.ServerIdentity().ID); i < 0 {
 			return nil, errors.New("this node is not in the previous roster")
 		}
 
-		// Now that we are sure we are responsible for this chain,
-		// make sure that concurrent requests to us to append to
-		// it can not happen.
-		chainID := prev.SkipChainID()
-		s.chains.lock(chainID)
-		defer s.chains.unlock(chainID)
-
-		// Try to find the latest block if the flag is set.
-		// Synchronisation should only be done when we are locked
-		// because it modifies the database.
-		if needSync {
-			latest := s.findLatest(prev)
-			log.Lvlf2("Catching up chain %x from index %v", prev.SkipChainID(), latest.Index)
-			err := s.syncChain(latest.Roster, latest.Hash)
-			if err != nil {
-				return nil, errors.New("failed to catch up with error: " + err.Error())
-			}
-			prev = latest
-		}
-
-		// Once we have the lock on this skipchain, refresh
-		// prev in case someone else added a block to it while
-		// we were waiting for the lock.
-		prev = s.db.GetByID(prev.Hash)
-		prev = s.findLatest(prev)
-
+		// Check if the previous block already has a forward link.
 		if len(prev.ForwardLink) > 0 {
 			return nil, errors.New(
 				"the latest block already has a follower")
 		}
 
+		// Copy the block-header to a new block.
 		prop.MaximumHeight = prev.MaximumHeight
 		prop.BaseHeight = prev.BaseHeight
 		prop.ParentBlockID = nil
 		prop.VerifierIDs = prev.VerifierIDs
 		prop.Index = prev.Index + 1
-		prop.GenesisID = chainID
+		prop.GenesisID = scID
+		// And calculate the height of that block.
 		index := prop.Index
 		for prop.Height = 1; index%prop.BaseHeight == 0; prop.Height++ {
 			index /= prop.BaseHeight
@@ -284,17 +278,29 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		}
 		log.Lvl4("Found height", prop.Height, "for index", prop.Index,
 			"and maxHeight", prop.MaximumHeight, "and base", prop.BaseHeight)
+
+		// Add backlinks to the block.
 		prop.BackLinkIDs = make([]SkipBlockID, prop.Height)
 		pointer := prev
 		for h := range prop.BackLinkIDs {
-			for pointer.Height < h+1 {
-				pointer = s.db.GetByID(pointer.BackLinkIDs[0])
-				if pointer == nil {
-					return nil, errors.New(
-						"Didn't find convenient SkipBlock for height " +
-							strconv.Itoa(h))
-
+			// For every height, we pass the skiplist backwards at the lower height,
+			// till we find a block with the desired height.
+			for pointer.Height <= h {
+				prevPointer := s.db.GetByID(pointer.BackLinkIDs[h-1])
+				if prevPointer == nil {
+					pp, err := s.getBlocks(pointer.Roster, pointer.BackLinkIDs[h-1], 1)
+					if err != nil {
+						return nil, errors.New("couldn't fetch missing block: " + err.Error())
+					}
+					if len(pp) == 0 {
+						return nil, errors.New(
+							"Didn't find convenient SkipBlock for height " +
+								strconv.Itoa(h))
+					}
+					s.db.Store(pp[0])
+					prevPointer = pp[0]
 				}
+				pointer = prevPointer
 			}
 			prop.BackLinkIDs[h] = pointer.Hash
 		}
@@ -311,11 +317,20 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			}
 		}
 
+		// Create first forward link. The first forward link is crucial, as it's the
+		// one where all the nodes will verify that the block is valid. Higher level
+		// forward links can depend on this forward link.
+		// After creating the forward link, it will propagate it to all nodes.
+		// TODO: we could optimize this by not sending around all the blocks again,
+		// but merely sending the ForwardLinks. But this would change the messages
+		// between conodes, and thus is kept for later versions.
 		if err := s.forwardLinkLevel0(prev, prop); err != nil {
 			return nil, errors.New(
 				"Couldn't get forward signature on block: " + err.Error())
 		}
-		changed = append(changed, prev, prop)
+
+		// Now create all further forward links. Again, after creation of each
+		// forward-link, it will propagate them to all nodes.
 		log.Lvl3("Asking forward-links from all linked blocks")
 		for i, bl := range prop.BackLinkIDs[1:] {
 			back := s.db.GetByID(bl)
@@ -336,12 +351,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			}
 		}
 	}
-	log.Lvlf3("Propagate %d blocks", len(changed))
-	if err := s.startPropagation(changed); err != nil {
-		return nil, errors.New(
-			"Couldn't propagate new blocks: " + err.Error())
-
-	}
 	reply := &StoreSkipBlockReply{
 		Previous: prev,
 		Latest:   prop,
@@ -355,7 +364,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 // SkipBlock we know. The last block in the returned slice of blocks is
 // not guaranteed to have no forward links. It is up to the caller
 // to continue following forward links with the new roster if necessary.
-func (s *Service) GetUpdateChain(guc *GetUpdateChain) (network.Message, error) {
+func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, error) {
 	block := s.db.GetByID(guc.LatestID)
 	if block == nil {
 		return nil, errors.New("Couldn't find latest skipblock")
@@ -389,21 +398,6 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (network.Message, error) {
 	return reply, nil
 }
 
-// Search the local DB starting at bl and finding the latest block we know.
-func (s *Service) findLatest(bl *SkipBlock) *SkipBlock {
-	for {
-		if len(bl.ForwardLink) == 0 {
-			return bl
-		}
-		next := bl.ForwardLink[len(bl.ForwardLink)-1].To
-		nextBl := s.db.GetByID(next)
-		if nextBl == nil {
-			return bl
-		}
-		bl = nextBl
-	}
-}
-
 // syncChain communicates with conodes in the Roster via getBlocks
 // in order traverse the chain and save the blocks locally.
 func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
@@ -432,7 +426,8 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 // in the roster, in order to find an answer, even in the case that a few
 // nodes in the network are down.
 func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*SkipBlock, error) {
-	subCount := (len(roster.List)-1)/3 + 1
+	// Only take half of the nodes to not spam the whole network.
+	subCount := len(roster.List) / 2
 	r := roster.RandomSubset(s.ServerIdentity(), subCount)
 	tr := r.GenerateStar()
 	pi, err := s.CreateProtocol(ProtocolGetBlocks, tr)
@@ -491,8 +486,7 @@ func (s *Service) getLastBlock(roster *onet.Roster, latest SkipBlockID) (*SkipBl
 func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, error) {
 	sb := s.db.GetByID(id.ID)
 	if sb == nil {
-		return nil, errors.New(
-			"No such block")
+		return nil, errors.New("No such block")
 
 	}
 	return sb, nil
@@ -503,9 +497,7 @@ func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, error) {
 func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, error) {
 	sb := s.db.GetByID(id.Genesis)
 	if sb == nil {
-		return nil, errors.New(
-			"No such genesis-block")
-
+		return nil, errors.New("No such genesis-block")
 	}
 	if sb.Index == id.Index {
 		return sb, nil
@@ -519,9 +511,7 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, 
 			return sb, nil
 		}
 	}
-	return nil, errors.New(
-		"No block with this index found")
-
+	return nil, errors.New("No block with this index found")
 }
 
 // GetAllSkipchains returns a list of all known skipchains
@@ -784,6 +774,11 @@ func (s *Service) SetBFTTimeout(t time.Duration) {
 	s.bftTimeout = t
 }
 
+// SetPropTimeout is used to set the propagation timeout
+func (s *Service) SetPropTimeout(t time.Duration) {
+	s.propTimeout = t
+}
+
 func (s *Service) verifySigs(msg, sig []byte) bool {
 	// If there are no clients, all signatures verify.
 	if len(s.Storage.Clients) == 0 {
@@ -842,7 +837,7 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	if err = src.VerifyForwardSignatures(); err != nil {
 		return errors.New("Wrong BFT-signature: " + err.Error())
 	}
-	s.startPropagation([]*SkipBlock{src})
+	s.startPropagation([]*SkipBlock{src, dst})
 	return nil
 }
 
@@ -901,7 +896,8 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 				return false
 			}
 			if !f(fl.To, fs.Newest) {
-				log.Lvlf2("verification function failed: %v %s", f, ver)
+				fname := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
+				log.Lvlf2("verification function failed: %v %s", fname, ver)
 				return false
 			}
 		}
@@ -953,7 +949,7 @@ func (s *Service) forwardLink(fs *ForwardSignature) error {
 		fl.NewRoster = fs.Newest.Roster
 	}
 	from.AddForward(fl)
-	s.startPropagation([]*SkipBlock{from})
+	s.startPropagation([]*SkipBlock{from, fs.Newest})
 	return nil
 }
 
@@ -1055,7 +1051,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	root.Data = data
 	root.CreateProtocol = s.CreateProtocol
 	root.FinalSignatureChan = make(chan byzcoinx.FinalSignature, 1)
-	root.Timeout = s.propTimeout / 2
+	root.Timeout = s.propTimeout
 	if s.bftTimeout != 0 {
 		root.Timeout = s.bftTimeout
 	}
@@ -1071,7 +1067,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 			return nil, errors.New("couldn't sign forward-link")
 		}
 		return &sig, nil
-	case <-time.After(s.propTimeout):
+	case <-time.After(root.Timeout * 2):
 		return nil, errors.New("timed out while waiting for signature")
 	}
 }
@@ -1111,9 +1107,6 @@ func (s *Service) verifyBlock(sb *SkipBlock) error {
 	}
 	if sb.BaseHeight <= 0 {
 		return errors.New("Set a baseHeight > 0")
-	}
-	if sb.MaximumHeight > sb.BaseHeight {
-		return errors.New("maximumHeight must be smaller or equal baseHeight")
 	}
 	if sb.Index < 0 {
 		return errors.New("Can't have an index < 0")

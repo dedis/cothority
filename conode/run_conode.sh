@@ -45,6 +45,7 @@ main(){
 		PATH=$PATH:$gopath/bin
 		export PATH
 	fi
+
 	case $( uname ) in
 	Darwin)
 		PATH_CO=~/Library

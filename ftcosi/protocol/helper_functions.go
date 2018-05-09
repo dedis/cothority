@@ -1,6 +1,7 @@
 package protocol
 
 import (
+	"errors"
 	"fmt"
 
 	"gopkg.in/dedis/kyber.v2"
@@ -13,7 +14,7 @@ import (
 // generateCommitmentAndAggregate generates a personal secret and commitment
 // and returns respectively the secret, an aggregated commitment and an aggregated mask
 func generateCommitmentAndAggregate(s cosi.Suite, t *onet.TreeNodeInstance, publics []kyber.Point,
-	structCommitments []StructCommitment) (kyber.Scalar, kyber.Point, *cosi.Mask, error) {
+	structCommitments []StructCommitment, ok bool) (kyber.Scalar, kyber.Point, *cosi.Mask, error) {
 
 	if t == nil {
 		return nil, nil, nil, fmt.Errorf("TreeNodeInstance should not be nil, but is")
@@ -33,12 +34,27 @@ func generateCommitmentAndAggregate(s cosi.Suite, t *onet.TreeNodeInstance, publ
 
 	//generate personal secret and commitment
 	secret, commitment := cosi.Commit(s)
+	if !ok {
+		commitment = s.Point().Null()
+	}
 	commitments = append(commitments, commitment)
 
 	//generate personal mask
 	personalMask, err := cosi.NewMask(s, publics, t.Public())
 	if err != nil {
 		return nil, nil, nil, err
+	}
+	if !ok {
+		var found bool
+		for i, p := range publics {
+			if p.Equal(t.Public()) {
+				personalMask.SetBit(i, false)
+				found = true
+			}
+		}
+		if !found {
+			return nil, nil, nil, errors.New("failed to find own public key")
+		}
 	}
 	masks = append(masks, personalMask.Mask())
 
@@ -65,7 +81,7 @@ func generateCommitmentAndAggregate(s cosi.Suite, t *onet.TreeNodeInstance, publ
 // generateResponse generates a personal response based on the secret
 // and returns the aggregated response of all children and the node
 func generateResponse(s cosi.Suite, t *onet.TreeNodeInstance, structResponses []StructResponse,
-	secret kyber.Scalar, challenge kyber.Scalar) (kyber.Scalar, error) {
+	secret kyber.Scalar, challenge kyber.Scalar, ok bool) (kyber.Scalar, error) {
 
 	if t == nil {
 		return nil, fmt.Errorf("TreeNodeInstance should not be nil, but is")
@@ -87,6 +103,9 @@ func generateResponse(s cosi.Suite, t *onet.TreeNodeInstance, structResponses []
 	personalResponse, err := cosi.Response(s, t.Private(), secret, challenge)
 	if err != nil {
 		return nil, err
+	}
+	if !ok {
+		personalResponse = s.Scalar().Zero()
 	}
 	responses = append(responses, personalResponse)
 	log.Lvl3(t.ServerIdentity().Address, "Verification successful")

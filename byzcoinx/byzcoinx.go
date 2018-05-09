@@ -89,8 +89,10 @@ func (bft *ByzCoinX) Start() error {
 		select {
 		case tmpSig := <-prepProto.FinalSignature:
 			bft.prepSigChan <- tmpSig
-		case <-time.After(time.Duration(bft.nSubtrees) * bft.Timeout):
-			log.Error(bft.ServerIdentity().Address, "timeout while waiting for signature")
+		case <-time.After(bft.Timeout):
+			// Waiting for bft.Timeout is too long here but used as a safeguard in
+			// case the prepProto does not return in time.
+			log.Error(bft.ServerIdentity().Address, "timeout should not happen while waiting for signature")
 			bft.prepSigChan <- nil
 		}
 	}()
@@ -117,7 +119,8 @@ func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.FtCosi, error) {
 	cosiProto.NSubtrees = bft.nSubtrees
 	cosiProto.Msg = bft.Msg
 	cosiProto.Data = bft.Data
-	cosiProto.Timeout = bft.Timeout
+	// For each of the prepare and commit phase we get half of the time.
+	cosiProto.Timeout = bft.Timeout / 2
 
 	return cosiProto, nil
 }
@@ -164,8 +167,10 @@ func (bft *ByzCoinX) Dispatch() error {
 	select {
 	case commitSig = <-commitProto.FinalSignature:
 		log.Lvl3("Finished commit phase")
-	case <-time.After(time.Duration(bft.nSubtrees) * bft.Timeout):
-		log.Error(bft.ServerIdentity().Address, "timeout while waiting for signature")
+	case <-time.After(bft.Timeout):
+		// Waiting for bft.Timeout is too long here but used as a safeguard in
+		// case the commitProto does not return in time.
+		log.Error(bft.ServerIdentity().Address, "timeout should not happen while waiting for signature")
 	}
 
 	bft.FinalSignatureChan <- FinalSignature{bft.Msg, commitSig}

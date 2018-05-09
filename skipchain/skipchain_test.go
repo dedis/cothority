@@ -44,6 +44,8 @@ func TestService_StoreSkipBlock(t *testing.T) {
 }
 
 func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
+	defaultPropagateTimeout = time.Second
+
 	// First create a roster to attach the data to it
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
@@ -81,7 +83,7 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 
 	// kill one node and it should still work
 	if fail {
-		log.Lvl3("Pausing server", deadServer.Address())
+		log.Lvl2("Pausing server", deadServer.Address())
 		deadServer.Pause()
 	}
 
@@ -151,9 +153,8 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for i, h := range hosts {
 		log.Lvlf2("%x", skipchainSID)
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
-		m, err := s.GetUpdateChain(&GetUpdateChain{LatestID: sbRoot.Hash})
+		sb, err := s.GetUpdateChain(&GetUpdateChain{LatestID: sbRoot.Hash})
 		log.ErrFatal(err, "Failed in iteration="+strconv.Itoa(i)+":")
-		sb := m.(*GetUpdateChainReply)
 		log.Lvl2(s.Context)
 		if len(sb.Update) != 1 {
 			// we expect only the first block
@@ -175,8 +176,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	for _, h := range hosts {
 		s := local.Services[h.ServerIdentity.ID][skipchainSID].(*Service)
 
-		m, err := s.GetUpdateChain(&GetUpdateChain{LatestID: sbInter.Hash})
-		sb := m.(*GetUpdateChainReply)
+		sb, err := s.GetUpdateChain(&GetUpdateChain{LatestID: sbInter.Hash})
 
 		log.ErrFatal(err)
 		if len(sb.Update) != 1 {
@@ -192,6 +192,9 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 }
 
 func TestService_MultiLevel(t *testing.T) {
+	if testing.Short() {
+		t.Skip("flaky test on travis - skip")
+	}
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
@@ -887,7 +890,7 @@ func checkMLUpdate(service *Service, root, latest *SkipBlock, base, height int) 
 	if err != nil {
 		return err
 	}
-	updates := chain.(*GetUpdateChainReply).Update
+	updates := chain.Update
 	genesis := updates[0]
 	if len(genesis.ForwardLink) != height {
 		return errors.New("genesis-block doesn't have height " + strconv.Itoa(height))
@@ -989,7 +992,7 @@ func TestService_LeaderCatchup(t *testing.T) {
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 
-	hosts := local.GenServers(2)
+	hosts := local.GenServers(3)
 	roster := local.GenRosterFromHost(hosts...)
 	leader := local.Services[hosts[0].ServerIdentity.ID][skipchainSID].(*Service)
 	follower := local.Services[hosts[1].ServerIdentity.ID][skipchainSID].(*Service)
@@ -1004,15 +1007,13 @@ func TestService_LeaderCatchup(t *testing.T) {
 		},
 	}
 	ssbrep, err := leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: []byte{}, NewBlock: sbRoot})
-	log.ErrFatal(err)
+	require.Nil(t, err)
 
 	var third SkipBlockID
 	for i := 0; i < 10; i++ {
 		ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbrep.Latest.Hash,
 			NewBlock: sbRoot})
-		if err != nil {
-			t.Fatal(err)
-		}
+		require.Nil(t, err)
 		if i == 3 {
 			third = ssbrep.Latest.Hash
 		}
@@ -1027,9 +1028,7 @@ func TestService_LeaderCatchup(t *testing.T) {
 	// to handle this write.
 	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbrep.Latest.Hash,
 		NewBlock: sbRoot})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 
 	sb11 := leader.db.GetByID(ssbrep.Latest.Hash)
 	require.Equal(t, sb11.Index, 11)
@@ -1040,9 +1039,7 @@ func TestService_LeaderCatchup(t *testing.T) {
 	// Write onto leader; the follower will need to sync to be able to sign this.
 	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbrep.Latest.Hash,
 		NewBlock: sbRoot})
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.Nil(t, err)
 }
 
 func nukeBlocksFrom(t *testing.T, db *SkipBlockDB, where SkipBlockID) {

@@ -124,7 +124,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	sbs := make([]*SkipBlock, sbCount)
 	var err error
 	sbs[0], err = makeGenesisRosterArgs(s, onet.NewRoster(roster.List[0:2]),
-		nil, VerificationNone, 1, 1)
+		nil, VerificationNone, 2, 3)
 	log.ErrFatal(err)
 
 	log.Lvl1("Initialize skipchain.")
@@ -260,14 +260,18 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 	log.ErrFatal(err)
 	reply2, err := c.StoreSkipBlock(sb1, roster, nil)
 	log.ErrFatal(err)
-	_, err = c.GetSingleBlockByIndex(roster, sb1.Hash, -1)
-	require.NotNil(t, err)
+
+	// 0
 	search, err := c.GetSingleBlockByIndex(roster, sb1.Hash, 0)
 	log.ErrFatal(err)
 	require.True(t, sb1.Equal(search))
+
+	// 1
 	search, err = c.GetSingleBlockByIndex(roster, sb1.Hash, 1)
 	log.ErrFatal(err)
 	require.True(t, reply2.Latest.Equal(search))
+
+	// non existing
 	_, err = c.GetSingleBlockByIndex(roster, sb1.Hash, 2)
 	require.NotNil(t, err)
 }

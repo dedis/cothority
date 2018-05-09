@@ -16,6 +16,26 @@ import (
 
 var tSuite = cothority.Suite
 
+func TestClient_VerifyLink(t *testing.T) {
+	l := onet.NewTCPTest(cothority.Suite)
+	servers, roster, _ := l.GenTree(1, true)
+	defer l.CloseAll()
+	addr := roster.List[0].Address
+	services := l.GetServices(servers, onet.ServiceFactory.ServiceID(Name))
+	service := services[0].(*Service)
+	c := NewClient()
+	kp := key.NewKeyPair(cothority.Suite)
+
+	err := c.VerifyLink(addr, kp.Public)
+	require.NotNil(t, err)
+	err = c.PinRequest(addr, "", kp.Public)
+	require.NotNil(t, err)
+	err = c.PinRequest(addr, service.data.Pin, kp.Public)
+	require.Nil(t, err)
+	err = c.VerifyLink(addr, kp.Public)
+	require.Nil(t, err)
+}
+
 func TestFinalStatement_ToToml(t *testing.T) {
 	pk := key.NewKeyPair(tSuite)
 	si := network.NewServerIdentity(pk.Public, network.NewAddress(network.PlainTCP, "0:2000"))

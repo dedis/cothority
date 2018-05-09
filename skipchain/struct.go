@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
 
 	bolt "github.com/coreos/bbolt"
@@ -21,8 +22,9 @@ import (
 	"gopkg.in/satori/go.uuid.v1"
 )
 
-// How long to wait before a timeout is generated in the propagation.
-const defaultPropagateTimeout = 15 * time.Second
+// How long to wait before a timeout is generated in the propagation. It is not
+// set to a constant because we'd like to change it in the test.
+var defaultPropagateTimeout = 15 * time.Second
 
 // SkipBlockID represents the Hash of the SkipBlock
 type SkipBlockID []byte
@@ -332,7 +334,7 @@ func (sbf *SkipBlockFix) CalculateHash() SkipBlockID {
 // be hashed (yet).
 type SkipBlock struct {
 	*SkipBlockFix
-	// Hash is our Block-hash
+	// Hash is our Block-hash of the SkipBlockFix part.
 	Hash SkipBlockID
 
 	// ForwardLink will be calculated once future SkipBlocks are
@@ -341,6 +343,13 @@ type SkipBlock struct {
 	// SkipLists that depend on us, given as the first SkipBlock - can
 	// be a Data or a Roster SkipBlock
 	ChildSL []SkipBlockID
+
+	// Payload is additional data that needs to be hashed by the application
+	// itself into SkipBlockFix.Data. A normal usecase is to set
+	// SkipBlockFix.Data to the sha256 of this payload. Then the proofs
+	// using the skipblocks can return simply the SkipBlockFix, as long as they
+	// don't need the payload.
+	Payload []byte `protobuf:"opt"`
 }
 
 // NewSkipBlock pre-initialises the block so it can be sent over
@@ -531,13 +540,17 @@ func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
 type SkipBlockDB struct {
 	*bolt.DB
 	bucketName []byte
+	// latestBlocks is used as a simple caching mechanism
+	latestBlocks map[string]SkipBlockID
+	latestMutex  sync.Mutex
 }
 
 // NewSkipBlockDB returns an initialized SkipBlockDB structure.
 func NewSkipBlockDB(db *bolt.DB, bn []byte) *SkipBlockDB {
 	return &SkipBlockDB{
-		DB:         db,
-		bucketName: bn,
+		DB:           db,
+		bucketName:   bn,
+		latestBlocks: map[string]SkipBlockID{},
 	}
 }
 
@@ -605,6 +618,7 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 			if err != nil {
 				return err
 			}
+			db.latestUpdate(sb)
 		}
 		result = sb.Hash
 		return nil
@@ -618,7 +632,23 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 	return result
 }
 
-// Length returns how many skip blocks there are in this SkipBlockDB.
+func (db *SkipBlockDB) latestUpdate(sb *SkipBlock) {
+	db.latestMutex.Lock()
+	defer db.latestMutex.Unlock()
+	idStr := string(sb.SkipChainID())
+	latest, exists := db.latestBlocks[idStr]
+	if !exists {
+		db.latestBlocks[idStr] = sb.Hash
+	} else {
+		old := db.GetByID(latest)
+		if old == nil || old.Index < sb.Index {
+			log.Lvlf3("updating sc %x: storing index %d", idStr, sb.Index)
+			db.latestBlocks[idStr] = sb.Hash
+		}
+	}
+}
+
+// Length returns the actual length using mutexes
 func (db *SkipBlockDB) Length() int {
 	var i int
 	db.View(func(tx *bolt.Tx) error {
@@ -708,25 +738,51 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 	if err := sbBack.VerifyForwardSignatures(); err != nil {
 		return err
 	}
-	if !sbBack.GetForward(0).To.Equal(sb.Hash) {
+	if !sbBack.GetForward(0).Hash().Equal(sb.Hash) {
 		return errors.New("didn't find our block in forward-links")
 	}
 	return nil
 }
 
+// GetLatestByID returns the latest skipblock of a skipchain
+// given its ID.
+func (db *SkipBlockDB) GetLatestByID(genID SkipBlockID) (*SkipBlock, error) {
+	gen := db.GetByID(genID)
+	if gen == nil {
+		return nil, fmt.Errorf("cannot find genesis block %x", genID)
+	}
+	return db.GetLatest(gen)
+}
+
 // GetLatest searches for the latest available block for that skipblock.
 func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
+	start := time.Now()
+	defer func() {
+		log.Lvl3("Time to get latest:", time.Since(start))
+	}()
 	if sb == nil {
 		return nil, errors.New("got nil skipblock")
 	}
 	latest := sb
-	// TODO this can be optimised by using multiple bucket.Get in a single transaction
-	for latest.GetForwardLen() > 0 {
-		latest = db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).To)
+	db.latestMutex.Lock()
+	latestID, exists := db.latestBlocks[string(sb.SkipChainID())]
+	if exists {
+		latest = db.GetByID(latestID)
 		if latest == nil {
-			return nil, errors.New("missing block")
+			latest = sb
 		}
 	}
+	db.latestMutex.Unlock()
+
+	// TODO this can be optimised by using multiple bucket.Get in a single transaction
+	for latest.GetForwardLen() > 0 {
+		next := db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).To)
+		if next == nil {
+			return latest, errors.New("missing block")
+		}
+		latest = next
+	}
+	db.latestUpdate(latest)
 	return latest, nil
 }
 

@@ -27,7 +27,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -65,6 +64,7 @@ const cfgName = "pop.bin"
 const bftSignFinal = "BFTFinal"
 const bftSignMerge = "PopBFTSignMerge"
 const propagFinal = "PoPPropagateFinal"
+const propagDescription = "PoPPropagateDescription"
 const timeout = 60 * time.Second
 
 // SIGSIZE size of signature
@@ -91,9 +91,9 @@ type Service struct {
 	path string
 	data *saveData
 	// propagate final message
-	PropagateFinalize messaging.PropagationFunc
-	// propagate merge info
-	PropagateMerging messaging.PropagationFunc
+	propagateFinalize messaging.PropagationFunc
+	// propagate possible new descriptions
+	propagateDescription messaging.PropagationFunc
 	// Sync tools
 	// key of map is ID of party
 	// synchronizing inside one party
@@ -106,6 +106,9 @@ type Service struct {
 	// verifyMergeBuffer is a temporary buffer for bftVerifyMerge results.
 	// The logic is the same for verifyFinalBuffer above.
 	verifyMergeBuffer sync.Map
+	// all proposed configurations - they don't need to be saved. Every time they
+	// are retrived, they will be deleted.
+	proposedDescription []PopDesc
 }
 
 type saveData struct {
@@ -155,6 +158,16 @@ func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 	return nil, nil
 }
 
+// VerifyLink returns whether a given public key is stored and allowed
+// to store pop-configurations.
+func (s *Service) VerifyLink(req *VerifyLink) (*VerifyLinkReply, error) {
+	exists := false
+	if req.Public != nil && s.data.Public != nil {
+		exists = req.Public.Equal(s.data.Public)
+	}
+	return &VerifyLinkReply{Exists: exists}, nil
+}
+
 // StoreConfig saves the pop-config locally
 func (s *Service) StoreConfig(req *StoreConfig) (network.Message, error) {
 	log.Lvlf2("StoreConfig: %s %v %x", s.Context.ServerIdentity(), req.Desc, req.Desc.Hash())
@@ -180,7 +193,27 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Message, error) {
 		meta.statementsMap[string(hash)] = s.data.Finals[string(hash)]
 	}
 	s.save()
+
+	// And send the proposed config to all other nodes, so that an eventual client
+	// can fetch it from there.
+	replies, err := s.propagateDescription(req.Desc.Roster, req.Desc, 10*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	if replies != len(req.Desc.Roster.List) {
+		log.Warn("Did only get", replies)
+	}
 	return &StoreConfigReply{hash}, nil
+}
+
+// GetProposals returns all collected proposals so far and deletes the proposals.
+func (s *Service) GetProposals(req *GetProposals) (*GetProposalsReply, error) {
+	tmp := s.proposedDescription
+	s.proposedDescription = make([]PopDesc, 0)
+	log.Lvlf2("Sending proposals: %+v", tmp)
+	return &GetProposalsReply{
+		Proposals: tmp,
+	}, nil
 }
 
 // FinalizeRequest returns the FinalStatement if all conodes already received
@@ -254,12 +287,12 @@ func (s *Service) FetchFinal(req *FetchRequest) (network.Message,
 			"No config found")
 
 	}
-	if len(fs.Signature) <= 0 {
-		return nil, errors.New(
-			"Not all other conodes finalized yet")
-
+	if (req.ReturnUncomplete != nil && *req.ReturnUncomplete) ||
+		len(fs.Signature) > 0 {
+		return &FinalizeResponse{fs}, nil
 	}
-	return &FinalizeResponse{fs}, nil
+	return nil, errors.New(
+		"Not all other conodes finalized yet")
 }
 
 // MergeRequest starts Merge process and returns FinalStatement after
@@ -736,7 +769,23 @@ func (s *Service) PropagateFinal(msg network.Message) {
 	log.Lvlf2("%s Stored final statement %v", s.ServerIdentity(), fs)
 }
 
-//signs FinalStatement with BFTCosi and Propagates signature to other nodes
+// PropagateDescription is called to store new descriptions on the nodes that
+// are supposed to participate.
+func (s *Service) PropagateDescription(msg network.Message) {
+	pd, ok := msg.(*PopDesc)
+	if !ok {
+		log.Error("Couldn't convert to a PopDesc")
+		return
+	}
+	if pd.Roster.List[0].Equal(s.ServerIdentity()) {
+		log.Lvl2("Not storing proposition on leader")
+		return
+	}
+	s.proposedDescription = append(s.proposedDescription, *pd)
+	log.Lvl2("Stored proposed description on", s.ServerIdentity())
+}
+
+// signs FinalStatement with BFTCosi and Propagates signature to other nodes
 func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	data []byte) error {
 	rooted := final.Desc.Roster.NewRosterWithRoot(s.ServerIdentity())
@@ -797,7 +846,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 
 	}
 
-	replies, err := s.PropagateFinalize(final.Desc.Roster, final, 10*time.Second)
+	replies, err := s.propagateFinalize(final.Desc.Roster, final, 10*time.Second)
 	if err != nil {
 		return err
 	}
@@ -983,8 +1032,11 @@ func newService(c *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		data:             &saveData{},
 	}
-	log.ErrFatal(s.RegisterHandlers(s.PinRequest, s.StoreConfig, s.FinalizeRequest,
-		s.FetchFinal, s.MergeRequest), "Couldn't register messages")
+	err := s.RegisterHandlers(s.PinRequest, s.VerifyLink, s.StoreConfig, s.FinalizeRequest,
+		s.FetchFinal, s.MergeRequest, s.GetProposals)
+	if err != nil {
+		return nil, err
+	}
 	if err := s.tryLoad(); err != nil {
 		return nil, err
 	}
@@ -995,8 +1047,11 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.data.merges = make(map[string]*merge)
 	}
 	s.syncs = make(map[string]*syncChans)
-	var err error
-	s.PropagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal, 0)
+	s.propagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal, 0)
+	if err != nil {
+		return nil, err
+	}
+	s.propagateDescription, err = messaging.NewPropagationFunc(c, propagDescription, s.PropagateDescription, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -1014,41 +1069,4 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 	return s, nil
-}
-
-func newMerge() *merge {
-	mm := &merge{}
-	mm.statementsMap = make(map[string]*FinalStatement)
-	mm.distrib = false
-	return mm
-}
-
-type byIdentity []*network.ServerIdentity
-
-func (p byIdentity) Len() int      { return len(p) }
-func (p byIdentity) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p byIdentity) Less(i, j int) bool {
-	return p[i].String() < p[j].String()
-}
-
-type byPoint []kyber.Point
-
-func (p byPoint) Len() int      { return len(p) }
-func (p byPoint) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-func (p byPoint) Less(i, j int) bool {
-	return p[i].String() < p[j].String()
-}
-
-func sortAll(locs []string, roster []*network.ServerIdentity, atts []kyber.Point) {
-	sort.Strings(locs)
-	sort.Sort(byIdentity(roster))
-	sort.Sort(byPoint(atts))
-}
-
-// sliceToArr does what the name suggests, we need it to turn a slice into
-// something hashable.
-func sliceToArr(msg []byte) [32]byte {
-	var arr [32]byte
-	copy(arr[:], msg)
-	return arr
 }

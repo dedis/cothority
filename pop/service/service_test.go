@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
+	"gopkg.in/dedis/cothority.v2"
 	"gopkg.in/dedis/kyber.v2"
 	"gopkg.in/dedis/kyber.v2/sign/schnorr"
 	"gopkg.in/dedis/kyber.v2/suites"
@@ -249,6 +250,16 @@ func TestService_FetchFinal(t *testing.T) {
 
 		_, err = services[0].FinalizeRequest(fr)
 		require.NotNil(t, err)
+		_, err = services[0].FetchFinal(&FetchRequest{
+			ID: fr.DescID,
+		})
+		require.NotNil(t, err)
+		tr := true
+		_, err = services[0].FetchFinal(&FetchRequest{
+			ID:               fr.DescID,
+			ReturnUncomplete: &tr,
+		})
+		require.Nil(t, err)
 
 		sg, err = schnorr.Sign(tSuite, priv[1], hash)
 		log.ErrFatal(err)
@@ -264,7 +275,7 @@ func TestService_FetchFinal(t *testing.T) {
 		// Fetch final
 		descHash := desc.Hash()
 		for _, s := range services {
-			msg, err := s.FetchFinal(&FetchRequest{descHash})
+			msg, err := s.FetchFinal(&FetchRequest{ID: descHash})
 			require.Nil(t, err)
 			require.NotNil(t, msg)
 			resp, ok := msg.(*FinalizeResponse)
@@ -348,6 +359,23 @@ func suiteSkip(t *testing.T) {
 		t.Skip("current suite is not compatible with this test, skipping it")
 		return
 	}
+}
+func TestService_VerifyLink(t *testing.T) {
+	suiteSkip(t)
+	local := onet.NewTCPTest(tSuite)
+	defer local.CloseAll()
+	nodes, _, _ := local.GenTree(1, true)
+	services := local.GetServices(nodes, serviceID)
+	s := services[0].(*Service)
+	kp := key.NewKeyPair(cothority.Suite)
+	rep, err := s.VerifyLink(&VerifyLink{Public: kp.Public})
+	require.Nil(t, err)
+	require.False(t, rep.Exists)
+
+	s.data.Public = kp.Public
+	rep, err = s.VerifyLink(&VerifyLink{Public: kp.Public})
+	require.Nil(t, err)
+	require.True(t, rep.Exists)
 }
 
 func TestService_MergeRequest(t *testing.T) {
