@@ -67,9 +67,9 @@ func NewProof(c *collectionDB, s *skipchain.SkipBlockDB, id skipchain.SkipBlockI
 // is not properly set up.
 var ErrorVerifyCollection = errors.New("collection inclusion proof is wrong")
 
-// ErrorVerifyMerkleRoot is returned if the root of the collection
+// ErrorVerifyCollectionRoot is returned if the root of the collection
 // is different than the stored value in the skipblock.
-var ErrorVerifyMerkleRoot = errors.New("root of collection is not in skipblock")
+var ErrorVerifyCollectionRoot = errors.New("root of collection is not in skipblock")
 
 // ErrorVerifySkipchain is returned if the stored skipblock doesn't
 // have a proper proof that it comes from the genesis block.
@@ -87,8 +87,8 @@ func (p Proof) Verify(scID skipchain.SkipBlockID) error {
 	if err != nil {
 		return err
 	}
-	if !bytes.Equal(p.InclusionProof.TreeRootHash(), d.(*Data).MerkleRoot) {
-		return ErrorVerifyMerkleRoot
+	if !bytes.Equal(p.InclusionProof.TreeRootHash(), d.(*DataHeader).CollectionRoot) {
+		return ErrorVerifyCollectionRoot
 	}
 	var sbID skipchain.SkipBlockID
 	var publics []kyber.Point

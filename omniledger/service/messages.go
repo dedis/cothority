@@ -44,8 +44,6 @@ type CreateGenesisBlock struct {
 	Version Version
 	// Roster defines which nodes participate in the skipchain.
 	Roster onet.Roster
-	// Genesis Tx contains the initial configuration.
-	GenesisTx Transaction
 	// GenesisDarc defines who is allowed to write to this skipchain.
 	GenesisDarc darc.Darc
 }
@@ -66,7 +64,7 @@ type SetKeyValue struct {
 	// SkipchainID is the hash of the first skipblock
 	SkipchainID skipchain.SkipBlockID
 	// Transaction to be apllied to the kv-store
-	Transaction Transaction
+	Transaction ClientTransaction
 }
 
 // SetKeyValueResponse gives the timestamp and the skipblock-id

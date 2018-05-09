@@ -2,10 +2,12 @@ package service
 
 import (
 	"bytes"
+	"errors"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/dedis/student_18_omniledger/omniledger/collection"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -40,31 +42,45 @@ func TestService_CreateSkipchain(t *testing.T) {
 		Version:     CurrentVersion,
 		Roster:      *s.roster,
 		GenesisDarc: darc.Darc{},
-		GenesisTx: Transaction{
-			Key:   []byte("someKey"),
-			Kind:  []byte("someKind"),
-			Value: []byte("someValue"),
-		},
 	})
 	require.NotNil(t, err)
 
-	// set up two genesis messages
+	// create valid darc
 	signer := darc.NewSignerEd25519(nil, nil)
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, signer)
 	require.Nil(t, err)
 
-	// tamper the message, verification should fail
-	v := genesisMsg.GenesisTx.Value
-	genesisMsg.GenesisTx.Value = []byte("bad value")
-	resp, err = s.service.CreateGenesisBlock(genesisMsg)
-	require.NotNil(t, err)
-
 	// finally passing
-	genesisMsg.GenesisTx.Value = v
 	resp, err = s.service.CreateGenesisBlock(genesisMsg)
 	require.Nil(t, err)
 	assert.Equal(t, CurrentVersion, resp.Version)
 	assert.NotNil(t, resp.Skipblock)
+}
+
+func padKey(key []byte) []byte {
+	keyPadded := make([]byte, 64)
+	copy(keyPadded, key)
+	return keyPadded
+}
+
+func padDarc(key []byte) []byte {
+	keyPadded := make([]byte, 32)
+	copy(keyPadded, key)
+	return keyPadded
+}
+
+func createClientTransaction(key []byte, kind string, value []byte) ClientTransaction {
+	return ClientTransaction{
+		Instructions: []Instruction{
+			{
+				DarcID:  padDarc(key),
+				Nonce:   ZeroNonce,
+				Command: "Create",
+				Kind:    kind,
+				Data:    value,
+			},
+		},
+	}
 }
 
 func TestService_AddKeyValue(t *testing.T) {
@@ -79,26 +95,18 @@ func TestService_AddKeyValue(t *testing.T) {
 	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
-		Transaction: Transaction{
-			Key:   s.key,
-			Kind:  []byte("dummy"),
-			Value: s.value,
-		},
+		Transaction: createClientTransaction(s.key, dummyKind, s.value),
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
-	key2 := []byte("second")
+	key2 := padKey([]byte("second"))
 	value2 := []byte("value2")
 	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
-		Transaction: Transaction{
-			Key:   key2,
-			Kind:  []byte("dummy"),
-			Value: value2,
-		},
+		Transaction: createClientTransaction(key2, dummyKind, value2),
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
@@ -121,6 +129,7 @@ func TestService_AddKeyValue(t *testing.T) {
 					Key:     []byte(key),
 				})
 				if err != nil {
+					log.Error(err)
 					continue
 				}
 				require.Equal(t, CurrentVersion, pr.Version)
@@ -130,6 +139,7 @@ func TestService_AddKeyValue(t *testing.T) {
 					require.Nil(t, err)
 					require.Equal(t, 0, bytes.Compare(value, vs[0]))
 					break
+				} else {
 				}
 			}
 		}
@@ -187,33 +197,23 @@ func TestService_DummyVerification(t *testing.T) {
 	})
 	require.NotNil(t, err)
 
-	key1 := []byte("a")
+	key1 := padKey([]byte("a"))
 	value1 := []byte("a")
 	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
-		Transaction: Transaction{
-			Key:    key1,
-			Kind:   []byte("invalid"),
-			Value:  value1,
-			Action: Remove,
-		},
+		Transaction: createClientTransaction(key1, "invalid", value1),
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
-	key2 := []byte("b")
+	key2 := padKey([]byte("b"))
 	value2 := []byte("b")
 	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
-		Transaction: Transaction{
-			Key:    key2,
-			Kind:   []byte("dummy"),
-			Value:  value2,
-			Action: Remove,
-		},
+		Transaction: createClientTransaction(key2, dummyKind, value2),
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
@@ -241,10 +241,6 @@ func TestService_DummyVerification(t *testing.T) {
 
 }
 
-func verifyInvalidKind(cdb *collectionDB, tx *Transaction) bool {
-	return false
-}
-
 type ser struct {
 	local    *onet.LocalTest
 	hosts    []*onet.Server
@@ -260,7 +256,7 @@ type ser struct {
 func newSer(t *testing.T, step int) *ser {
 	s := &ser{
 		local: onet.NewTCPTest(tSuite),
-		key:   []byte("anykey"),
+		key:   padKey([]byte("anykey")),
 		value: []byte("anyvalue"),
 	}
 	s.hosts, s.roster, _ = s.local.GenTree(5, true)
@@ -287,11 +283,7 @@ func newSer(t *testing.T, step int) *ser {
 			_, err := s.service.SetKeyValue(&SetKeyValue{
 				Version:     CurrentVersion,
 				SkipchainID: s.sb.SkipChainID(),
-				Transaction: Transaction{
-					Key:   s.key,
-					Kind:  []byte("dummy"),
-					Value: s.value,
-				},
+				Transaction: createClientTransaction(s.key, dummyKind, s.value),
 			})
 			require.Nil(t, err)
 			time.Sleep(4 * waitQueueing)
@@ -307,13 +299,21 @@ func closeQueues(local *onet.LocalTest) {
 	}
 }
 
+func verifyInvalidKind(cdb collection.Collection, tx Instruction, kind string, state []byte) ([]StateChange, error) {
+	return nil, errors.New("Invalid")
+}
+
+func verifyDummy(cdb collection.Collection, tx Instruction, kind string, state []byte) ([]StateChange, error) {
+	return []StateChange{
+		NewStateChange(Create, tx.DarcID, tx.Nonce, kind, tx.Data),
+	}, nil
+}
+
 func registerDummy(services interface{}) {
 	// For testing - there must be a better way to do that. But putting
 	// services []skipchain.GetService in the method signature doesn't work :(
 	for i := 0; i < reflect.ValueOf(services).Len(); i++ {
 		s := reflect.ValueOf(services).Index(i).Interface().(skipchain.GetService)
-		RegisterVerification(s.(skipchain.GetService), dummyKind, func(cdb *collectionDB, tx *Transaction) bool {
-			return true
-		})
+		RegisterVerification(s.(skipchain.GetService), dummyKind, verifyDummy)
 	}
 }

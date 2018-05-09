@@ -51,7 +51,7 @@ func (c *Client) CreateGenesisBlock(r *onet.Roster, signers ...*darc.Signer) (*C
 
 // SetKeyValue sets a key/value pair and returns the created skipblock.
 func (c *Client) SetKeyValue(r *onet.Roster, id skipchain.SkipBlockID,
-	tx Transaction) (*SetKeyValueResponse, error) {
+	tx ClientTransaction) (*SetKeyValueResponse, error) {
 	reply := &SetKeyValueResponse{}
 	err := c.SendProtobuf(r.List[0], &SetKeyValue{
 		Version:     CurrentVersion,
@@ -94,41 +94,10 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, signers ...*darc.Signer) (*Cre
 	d.Rules.AddRule(ActionAddDarc, d.Rules.GetSignExpr())
 	d.Rules.AddRule(ActionAddGenesis, d.Rules.GetSignExpr())
 
-	// This transaction doesn't have signatures yet, we populate it later.
-	tx := Transaction{
-		Key:   append(d.GetID(), make([]byte, 64)...),
-		Kind:  []byte(ActionAddGenesis),
-		Value: []byte{},
-	}
-
-	req, err := tx.ToDarcRequest()
-	if err != nil {
-		return nil, err
-	}
-	req.Identities = ids
-
-	digest, err := req.Hash()
-	if err != nil {
-		return nil, err
-	}
-
-	tx.Signatures = make([]darc.Signature, len(signers))
-	for i := range tx.Signatures {
-		sig, err := signers[i].Sign(digest)
-		if err != nil {
-			return nil, err
-		}
-		tx.Signatures[i] = darc.Signature{
-			Signature: sig,
-			Signer:    *signers[i].Identity(),
-		}
-	}
-
 	m := CreateGenesisBlock{
 		Version:     v,
 		Roster:      *r,
 		GenesisDarc: *d,
-		GenesisTx:   tx,
 	}
 	return &m, nil
 }

@@ -12,13 +12,12 @@ import (
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	"gopkg.in/dedis/cothority.v2"
 	"gopkg.in/dedis/cothority.v2/skipchain"
-	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/network"
 )
 
 func init() {
-	network.RegisterMessages(&Transaction{},
-		&darc.Signature{})
+	network.RegisterMessages(&darc.Signature{},
+		DataHeader{}, DataBody{})
 }
 
 type collectionDB struct {
@@ -27,11 +26,11 @@ type collectionDB struct {
 	coll       collection.Collection
 }
 
-// OmniledgerVerifier is the type signature of the verification functions
+// OmniledgerClass is the type signature of the class functions
 // which can be registered with the omniledger service.
 // Since the outcome of the verification depends on the state of the collection
 // which is to be modified, we pass it as a pointer here.
-type OmniledgerVerifier func(cdb *collectionDB, tx *Transaction) bool
+type OmniledgerClass func(cdb collection.Collection, tx Instruction, kind string, state []byte) ([]StateChange, error)
 
 // newCollectionDB initialises a structure and reads all key/value pairs to store
 // it in the collection.
@@ -68,7 +67,7 @@ func (c *collectionDB) loadAll() {
 	})
 }
 
-func (c *collectionDB) Store(t *Transaction) error {
+func (c *collectionDB) Store(t *StateChange) error {
 	c.coll.Add(t.Key, t.Value, t.Kind)
 	err := c.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(c.bucketName))
@@ -119,43 +118,33 @@ func (c *collectionDB) RootHash() []byte {
 
 // tryHash returns the merkle root of the collection as if the key value pairs
 // in the transactions had been added, without actually adding it.
-func (c *collectionDB) tryHash(ts []Transaction) (mr []byte, rerr error) {
+func (c *collectionDB) tryHash(ts []OmniledgerTransaction) (mr []byte, rerr error) {
 	for _, t := range ts {
-		err := c.coll.Add(t.Key, t.Value, t.Kind)
-		if err != nil {
-			rerr = err
-			return
-		}
-		// remove the pair after we got the merkle root.
-		defer func(k []byte) {
-			err = c.coll.Remove(k)
+		for _, sc := range t.StateChanges {
+			err := c.coll.Add(sc.Key, sc.Value, sc.Kind)
 			if err != nil {
 				rerr = err
-				mr = nil
+				return
 			}
-		}(t.Key)
+			// remove the pair after we got the merkle root.
+			defer func(k []byte) {
+				err = c.coll.Remove(k)
+				if err != nil {
+					rerr = err
+					mr = nil
+				}
+			}(sc.Key)
+		}
 	}
 	mr = c.coll.GetRoot()
 	return
 }
 
-// Action describes how the collectionDB will be modified.
-type Action int
-
-const (
-	// Create allows to insert a new key-value association.
-	Create Action = iota + 1
-	// Update allows to change the value of an existing key.
-	Update
-	// Remove allows to delete an existing key-value association.
-	Remove
-)
-
 // RegisterVerification stores the verification in a map and will
 // call it whenever a verification needs to be done.
 // GetService makes it possible to give either an `onet.Context` or
 // `onet.Server` to `RegisterVerification`.
-func RegisterVerification(s skipchain.GetService, kind string, f OmniledgerVerifier) error {
+func RegisterVerification(s skipchain.GetService, kind string, f OmniledgerClass) error {
 	scs := s.Service(ServiceName)
 	if scs == nil {
 		return errors.New("Didn't find our service: " + ServiceName)
@@ -163,47 +152,21 @@ func RegisterVerification(s skipchain.GetService, kind string, f OmniledgerVerif
 	return scs.(*Service).registerVerification(kind, f)
 }
 
-func (a Action) String() string {
-	switch a {
-	case Create:
-		return "create"
-	case Update:
-		return "update"
-	case Remove:
-		return "remove"
-	default:
-		return "invalid action"
-	}
+// DataHeader is the data passed to the Skipchain
+type DataHeader struct {
+	// CollectionRoot is the root of the merkle tree of the colleciton after
+	// applying the valid transactions.
+	CollectionRoot []byte
+	// TransactionHash is the sha256 hash of all the transactions in the body
+	TransactionHash []byte
+	// Timestamp is a unix timestamp in nanoseconds.
+	Timestamp int64
 }
 
-// Transaction is the struct specifying the modifications to the skipchain.
-// Key is the key chosen by the user, Kind is the kind of value to store
-// (e.g. a drac...). The key used in the conode's collection will be
-// Kind ':' Key, in order to maintain key uniqueness across different kinds
-// of values.
-// For a Transaction to be valid, there must exist a path from the master-darc
-// in the genesis block to the SubjectPK in Signature.
-type Transaction struct {
-	Action Action
-	Key    []byte
-	Kind   []byte
-	Value  []byte
-	// The Valid flag is set IFF the corresponding verifier considers the
-	// transaction valid
-	Valid bool
-	// The signature is performed on the concatenation of the []bytes
-	Signatures []darc.Signature
-}
-
-// Data is the data passed to the Skipchain
-type Data struct {
-	// Root of the merkle tree after applying the transactions to the
-	// kv store
-	MerkleRoot []byte
-	// The transactions applied to the kv store with this block
-	Transactions []Transaction
-	Timestamp    int64
-	Roster       *onet.Roster
+// DataBody is stored in the body of the skipblock but is not hashed. This reduces
+// the proof needed for a key/value pair.
+type DataBody struct {
+	Transactions []OmniledgerTransaction
 }
 
 // sortWithSalt sorts transactions according to their salted hash:
@@ -225,9 +188,9 @@ func sortWithSalt(ts [][]byte, salt []byte) {
 // The helper functions (sortWithSalt, xorTransactions) operate on []byte
 // representations directly. This allows for some more compact error handling
 // when (un)marshalling.
-func sortTransactions(ts []Transaction) error {
+func sortTransactions(ts []ClientTransaction) error {
 	bs := make([][]byte, len(ts))
-	sortedTs := make([]*Transaction, len(ts))
+	sortedTs := make([]*ClientTransaction, len(ts))
 	var err error
 	var ok bool
 	for i := range ts {
@@ -249,7 +212,7 @@ func sortTransactions(ts []Transaction) error {
 		if err != nil {
 			return err
 		}
-		sortedTs[i], ok = tmp.(*Transaction)
+		sortedTs[i], ok = tmp.(*ClientTransaction)
 		if !ok {
 			return errors.New("Data of wrong type")
 		}

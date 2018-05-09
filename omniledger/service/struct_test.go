@@ -8,7 +8,6 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/onet.v2/network"
 )
 
 var testName = []byte("coll1")
@@ -26,10 +25,11 @@ func TestCollectionDBStrange(t *testing.T) {
 	key := []byte("first")
 	value := []byte("value")
 	kind := []byte("mykind")
-	err = cdb.Store(&Transaction{
-		Key:   key,
-		Value: value,
-		Kind:  kind,
+	err = cdb.Store(&StateChange{
+		Action: Create,
+		Key:    key,
+		Value:  value,
+		Kind:   kind,
 	})
 	require.Nil(t, err)
 	v, k, err := cdb.GetValueKind([]byte("first"))
@@ -58,12 +58,13 @@ func TestCollectionDB(t *testing.T) {
 
 	// Store all key/value pairs
 	for k, v := range pairs {
-		tr := &Transaction{
-			Key:   []byte(k),
-			Value: []byte(v),
-			Kind:  mykind,
+		sc := &StateChange{
+			Action: Create,
+			Key:    []byte(k),
+			Value:  []byte(v),
+			Kind:   mykind,
 		}
-		require.Nil(t, cdb.Store(tr))
+		require.Nil(t, cdb.Store(sc))
 	}
 
 	// Verify it's all there
@@ -96,72 +97,83 @@ func TestCollectionDBtryHash(t *testing.T) {
 	require.Nil(t, err)
 
 	cdb := newCollectionDB(db, testName)
-	ts := []Transaction{
-		Transaction{
-			Key:   []byte("key1"),
-			Kind:  []byte("kind1"),
-			Value: []byte("value1"),
+	ts := []OmniledgerTransaction{{
+		StateChanges: []StateChange{{
+			Action: Create,
+			Key:    []byte("key1"),
+			Kind:   []byte("kind1"),
+			Value:  []byte("value1"),
 		},
-		Transaction{
-			Key:   []byte("key2"),
-			Kind:  []byte("kind2"),
-			Value: []byte("value2"),
+			{
+				Action: Create,
+				Key:    []byte("key2"),
+				Kind:   []byte("kind2"),
+				Value:  []byte("value2"),
+			},
 		},
-	}
+	}}
 	mrTrial, err := cdb.tryHash(ts)
 	require.Nil(t, err)
 	_, _, err = cdb.GetValueKind([]byte("key1"))
 	require.EqualError(t, err, "no match found")
 	_, _, err = cdb.GetValueKind([]byte("key2"))
 	require.EqualError(t, err, "no match found")
-	cdb.Store(&ts[0])
-	cdb.Store(&ts[1])
+	cdb.Store(&ts[0].StateChanges[0])
+	cdb.Store(&ts[0].StateChanges[1])
 	mrReal := cdb.RootHash()
 	require.Equal(t, mrTrial, mrReal)
 }
 
 func TestSortTransactions(t *testing.T) {
-	network.RegisterMessages(&Transaction{})
-
-	ts1 := []Transaction{
-		Transaction{
-			Key:    []byte("key1"),
-			Kind:   []byte("kind1"),
-			Value:  []byte("value1"),
-			Action: Update,
-		},
-		Transaction{
-			Key:    []byte("key2"),
-			Kind:   []byte("kind2"),
-			Value:  []byte("value2"),
-			Action: Update,
-		},
-		Transaction{
-			Key:    []byte("key3"),
-			Kind:   []byte("kind3"),
-			Value:  []byte("value3"),
-			Action: Update,
-		},
+	ts1 := []ClientTransaction{{
+		Instructions: []Instruction{{
+			DarcID:  []byte("key1"),
+			Nonce:   []byte("nonce1"),
+			Command: "Create",
+			Kind:    "kind1",
+			Data:    []byte("value1"),
+		}}},
+		{
+			Instructions: []Instruction{{
+				DarcID:  []byte("key2"),
+				Nonce:   []byte("nonce2"),
+				Command: "Create",
+				Kind:    "kind2",
+				Data:    []byte("value2"),
+			}}},
+		{
+			Instructions: []Instruction{{
+				DarcID:  []byte("key2"),
+				Nonce:   []byte("nonce2"),
+				Command: "Create",
+				Kind:    "kind2",
+				Data:    []byte("value2"),
+			}}},
 	}
-	ts2 := []Transaction{
-		Transaction{
-			Key:    []byte("key2"),
-			Kind:   []byte("kind2"),
-			Value:  []byte("value2"),
-			Action: Update,
-		},
-		Transaction{
-			Key:    []byte("key1"),
-			Kind:   []byte("kind1"),
-			Value:  []byte("value1"),
-			Action: Update,
-		},
-		Transaction{
-			Key:    []byte("key3"),
-			Kind:   []byte("kind3"),
-			Value:  []byte("value3"),
-			Action: Update,
-		},
+	ts2 := []ClientTransaction{{
+		Instructions: []Instruction{{
+			DarcID:  []byte("key2"),
+			Nonce:   []byte("nonce2"),
+			Command: "Create",
+			Kind:    "kind2",
+			Data:    []byte("value2"),
+		}}},
+		{
+			Instructions: []Instruction{{
+				DarcID:  []byte("key1"),
+				Nonce:   []byte("nonce1"),
+				Command: "Create",
+				Kind:    "kind1",
+				Data:    []byte("value1"),
+			}}},
+		{
+			Instructions: []Instruction{{
+				DarcID:  []byte("key2"),
+				Nonce:   []byte("nonce2"),
+				Command: "Create",
+				Kind:    "kind2",
+				Data:    []byte("value2"),
+			}}},
 	}
 	err := sortTransactions(ts1)
 	require.Nil(t, err)

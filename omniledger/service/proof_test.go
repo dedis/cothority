@@ -43,11 +43,11 @@ func TestVerify(t *testing.T) {
 
 	require.Equal(t, ErrorVerifySkipchain, p.Verify(s.genesis2.SkipChainID()))
 
-	p.Latest.Data, err = network.Marshal(&Data{
-		MerkleRoot: getSBID("123"),
+	p.Latest.Data, err = network.Marshal(&DataHeader{
+		CollectionRoot: getSBID("123"),
 	})
 	require.Nil(t, err)
-	require.Equal(t, ErrorVerifyMerkleRoot, p.Verify(s.genesis.SkipChainID()))
+	require.Equal(t, ErrorVerifyCollectionRoot, p.Verify(s.genesis.SkipChainID()))
 }
 
 type sc struct {
@@ -91,7 +91,7 @@ func createSC(t *testing.T) (s sc) {
 
 	s.key = []byte("key")
 	s.value = []byte("value")
-	s.c.Store(&Transaction{Key: s.key, Value: s.value})
+	s.c.Store(&StateChange{Action: Create, Key: s.key, Value: s.value})
 
 	s.genesis = skipchain.NewSkipBlock()
 	s.genesis.Roster, s.genesisPrivs = genRoster(1)
@@ -99,8 +99,8 @@ func createSC(t *testing.T) (s sc) {
 
 	s.sb2 = skipchain.NewSkipBlock()
 	s.sb2.Roster, _ = genRoster(2)
-	s.sb2.Data, err = network.Marshal(&Data{
-		MerkleRoot: s.c.RootHash(),
+	s.sb2.Data, err = network.Marshal(&DataHeader{
+		CollectionRoot: s.c.RootHash(),
 	})
 	require.Nil(t, err)
 	s.sb2.Hash = s.sb2.CalculateHash()
