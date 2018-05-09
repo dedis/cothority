@@ -219,6 +219,7 @@ testFailure() {
 	sleep 5
 	testOK runSc skipchain block add --roster public.toml $ID
 
+	sleep 10
 	runCoBG 4
 	sleep .1
 	testOK runSc skipchain block add --roster public.toml $ID
