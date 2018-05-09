@@ -79,7 +79,7 @@ func TestService_AddKeyValue(t *testing.T) {
 		SkipchainID: s.sb.SkipChainID(),
 		Transaction: Transaction{
 			Key:   s.key,
-			Kind:  []byte("testKind"),
+			Kind:  []byte("dummy"),
 			Value: s.value,
 		},
 	})
@@ -94,7 +94,7 @@ func TestService_AddKeyValue(t *testing.T) {
 		SkipchainID: s.sb.SkipChainID(),
 		Transaction: Transaction{
 			Key:   key2,
-			Kind:  []byte("testKind"),
+			Kind:  []byte("dummy"),
 			Value: value2,
 		},
 	})
@@ -177,7 +177,9 @@ func TestService_DummyVerification(t *testing.T) {
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
-	RegisterVerification(s.hosts[0], "dummy", verifyDummyKind)
+	for i := range s.hosts {
+		RegisterVerification(s.hosts[i], "invalid", verifyInvalidKind)
+	}
 	akvresp, err := s.service.SetKeyValue(&SetKeyValue{
 		Version: 0,
 	})
@@ -190,7 +192,7 @@ func TestService_DummyVerification(t *testing.T) {
 		SkipchainID: s.sb.SkipChainID(),
 		Transaction: Transaction{
 			Key:    key1,
-			Kind:   []byte("dummy"),
+			Kind:   []byte("invalid"),
 			Value:  value1,
 			Action: Remove,
 		},
@@ -199,7 +201,24 @@ func TestService_DummyVerification(t *testing.T) {
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
-	time.Sleep(2 * waitQueueing)
+	key2 := []byte("b")
+	value2 := []byte("b")
+	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
+		Version:     CurrentVersion,
+		SkipchainID: s.sb.SkipChainID(),
+		Transaction: Transaction{
+			Key:    key2,
+			Kind:   []byte("dummy"),
+			Value:  value2,
+			Action: Remove,
+		},
+	})
+	require.Nil(t, err)
+	require.NotNil(t, akvresp)
+	require.Equal(t, CurrentVersion, akvresp.Version)
+
+	time.Sleep(8 * waitQueueing)
+
 	pr, err := s.service.GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
@@ -209,23 +228,6 @@ func TestService_DummyVerification(t *testing.T) {
 	match := pr.Proof.InclusionProof.Match()
 	require.False(t, match)
 
-	key2 := []byte("b")
-	value2 := []byte("b")
-	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
-		Version:     CurrentVersion,
-		SkipchainID: s.sb.SkipChainID(),
-		Transaction: Transaction{
-			Key:    key2,
-			Kind:   []byte("other"),
-			Value:  value2,
-			Action: Remove,
-		},
-	})
-	require.Nil(t, err)
-	require.NotNil(t, akvresp)
-	require.Equal(t, CurrentVersion, akvresp.Version)
-
-	time.Sleep(4 * waitQueueing)
 	pr, err = s.service.GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
@@ -235,21 +237,10 @@ func TestService_DummyVerification(t *testing.T) {
 	match = pr.Proof.InclusionProof.Match()
 	require.True(t, match)
 
-	time.Sleep(4 * waitQueueing)
 }
 
-func verifyDummyKind(cdb *collectionDB, tx *Transaction) bool {
-	switch a := tx.Action; a {
-	case Create:
-		return true
-	case Update:
-		return true
-	// removing and unknown actions are forbidden
-	case Remove:
-		return false
-	default:
-		return false
-	}
+func verifyInvalidKind(cdb *collectionDB, tx *Transaction) bool {
+	return false
 }
 
 type ser struct {
@@ -288,7 +279,7 @@ func newSer(t *testing.T, step int) *ser {
 				SkipchainID: s.sb.SkipChainID(),
 				Transaction: Transaction{
 					Key:   s.key,
-					Kind:  []byte("testKind"),
+					Kind:  []byte("dummy"),
 					Value: s.value,
 				},
 			})

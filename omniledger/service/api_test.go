@@ -25,9 +25,11 @@ func TestClient_GetProof(t *testing.T) {
 
 	key := []byte{1, 2, 3, 4}
 	value := []byte{5, 6, 7, 8}
+	kind := []byte("dummy")
 	_, err = c.SetKeyValue(roster, csr.Skipblock.SkipChainID(),
 		Transaction{
 			Key:   key,
+			Kind:  kind,
 			Value: value,
 		})
 	require.Nil(t, err)

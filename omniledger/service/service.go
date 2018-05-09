@@ -29,6 +29,7 @@ const darcIDLen int = 32
 // TODO move to test
 var omniledgerID onet.ServiceID
 var verifyOmniledger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Omniledger"))
+var dummyKind = "dummy"
 
 func init() {
 	var err error
@@ -222,6 +223,9 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, ts 
 		// We have to register the verification functions in the genesis block
 		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, verifyOmniledger}
 		for _, t := range ts {
+			// For the moment, we assume that in the genesis block, all
+			// transactions are valid.
+			t.Valid = true
 			log.Printf("Adding transaction %+v", t)
 			err := c.Add(t.Key, t.Value, t.Kind)
 			if err != nil {
@@ -240,10 +244,12 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, ts 
 		if r != nil {
 			sb.Roster = r
 		}
-		mr, err = s.getCollection(scID).tryHash(ts)
+		cdb := s.getCollection(scID)
+		mr, err = cdb.tryHash(ts)
 		if err != nil {
 			return nil, errors.New("error while getting merkle root from collection: " + err.Error())
 		}
+		s.validateTransactions(cdb, ts)
 	}
 
 	data := &Data{
@@ -262,6 +268,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, ts 
 		NewBlock:          sb,
 		TargetSkipChainID: scID,
 	}
+	log.Lvl2("Storing skipblock with transactions %+v", ts)
 	ssbReply, err := s.skService().StoreSkipBlock(&ssb)
 	if err != nil {
 		return nil, err
@@ -306,6 +313,9 @@ func (s *Service) updateCollection(msg network.Message) {
 	log.Lvlf2("%s: Updating transactions for %x", s.ServerIdentity(), sb.SkipChainID())
 	cdb := s.getCollection(sb.SkipChainID())
 	for _, t := range data.Transactions {
+		if !t.Valid {
+			continue
+		}
 		log.Lvlf2("Storing transaction key/kind/value: %x / %x / %x", t.Key, t.Kind, t.Value)
 		err = cdb.Store(&t)
 		if err != nil {
@@ -368,17 +378,10 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) (chan Transactio
 					if err != nil {
 						panic("DB is in bad state and cannot find skipchain anymore: " + err.Error())
 					}
-					log.Lvlf2("Creating block with transactions %+v", ts)
 					_, err = s.createNewBlock(scID, sb.Roster, ts)
 					if err != nil {
 						log.Error("couldn't create new block: " + err.Error())
 
-						// For testing purposes, I remove all the transactions from
-						// the queue if the block was not accepted by the skipchain.
-						// A better solution would be to mark them invalid and have
-						// the skipchain ignore them during the verification.
-						// TODO: Above.
-						ts = []Transaction{}
 						to = time.After(waitQueueing)
 						continue
 					}
@@ -466,14 +469,17 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 
 	s.verifiers = make(map[string]OmniledgerVerifier)
+	// For testing
+	s.verifiers[dummyKind] = func(cdb *collectionDB, tx *Transaction) bool {
+		return true
+	}
 	skipchain.RegisterVerification(c, verifyOmniledger, s.verifySkipBlock)
 	return s, nil
 }
 
 // We use the omniledger as a receiver (as is done in the identity service),
 // so we can access e.g. the collectionDBs of the service.
-func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) (validSB bool) {
-	validSB = true
+func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
 	_, dataI, err := network.Unmarshal(newSB.Data, cothority.Suite)
 	data, ok := dataI.(*Data)
 	if err != nil || !ok {
@@ -483,12 +489,27 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) (val
 	txs := data.Transactions
 	cdb := s.getCollection(newSB.Hash)
 	for _, tx := range txs {
-		f, ok := s.verifiers[string(tx.Kind)]
-		if ok {
-			validSB = validSB && f(cdb, &tx)
+		f, exists := s.verifiers[string(tx.Kind)]
+		if !exists || tx.Valid != f(cdb, &tx) {
+			return false
 		}
 	}
-	return
+	return true
+}
+
+// validateTransactions sets the valid-flag of the transaction according to the
+// registered OmniledgerVerifiers.
+func (s *Service) validateTransactions(cdb *collectionDB, txs []Transaction) {
+	for i := range txs {
+		f, exists := s.verifiers[string(txs[i].Kind)]
+		// If the leader does not have a verifier for this kind, it drops the
+		// transaction.
+		if !exists {
+			txs = append(txs[:i], txs[i+1:]...)
+			continue
+		}
+		txs[i].Valid = f(cdb, &txs[i])
+	}
 }
 
 // RegisterVerification stores the verification in a map and will
