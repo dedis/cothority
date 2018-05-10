@@ -130,16 +130,16 @@ be put on the skipchain.
 
 ## cisc cert
 
-Commands to request or manage certificates stored in the skipchain.
+Each skipchain can store multiple certificates. These Commands permit to request or 
+manage certificates stored in the skipchain.
   
-  * Request - requests a certificate and add it to the skipchain. Request takes the `domain`
+  * Request - request a certificate and add it to the skipchain. Request takes the `domain`
   the `cert` and the `www` path. The certificates and the private key are then saved in the cert
   folder with the name of the domain
-  * List - returns a list of all the certificates with their expiry date and the path of the certificate. 
-  * Add - Store a certificate in the skipchain by giving the key and path to the certificate.
-  * Renew - Renew a certificate stored in the skipchain by giving the key of this latter.
-  * Verify - Verify a certificate in the skipchain.
-  * Retrieve - By giving a directory as argument, the command retrieve the certificate and save it in the
-  specified directory.
-  * Revoke - Revoke and remove the certificate from the skipchain.
+  * List - return a list of all the certificates with their expiry date and the path of the certificate. 
+  * Add - stores a certificate in the skipchain by giving the key and path to the certificate.
+  * Renew - renew a certificate stored in the skipchain by giving the key of this latter.
+  * Verify - verify a certificate in the skipchain.
+  * Retrieve - retrieve the certificate and save it in the specified directory.
+  * Revoke - revoke and remove the certificate from the skipchain.
 
