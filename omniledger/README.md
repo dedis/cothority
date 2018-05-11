@@ -89,25 +89,117 @@ can use logical operators to specify the rule.  For exmple, the expression
 "ed25519:b" and "ed25519:c" must sign. For more information please see the
 expression package.
 
-## Transactions
+## Smart Contracts in Omniledger are called Classes
 
-A block in omniledger contains zero or more transactions. Each transaction
+Previous name was _Precompiled Smart Contracts_, but looking at how we want
+it to work, we decided to call it simply a set of Classes. A class defines
+how to interpret the methods sent by the client. Examples of classes and some
+of their methods are:
 
-A transaction in Omniledger has the following format:
+- Darc:
+  - create a new Darc
+	- update a darc
+- Omniledger Configuration
+  - create new configuration
+  - Add or remove nodes
+  - Change the block interval time
+- Onchain-secrets write request:
+  - create a write request
+- Onchain-secrets read request:
+  - create a read request
+- Onchain-secrets reencryption request:
+  - create a reencryption request
+- Evoting:
+  - Creating a new election
+  - Casting a vote
+  - Requesting mix
+  - Requesting decryption
+- PoP:
+  - Create a new party
+  - Adding attendees
+	- Finalizing the party
+- PoPCoin:
+  - Creating a popcoin source
+- PoPCoinAccount:
+  - Creating an account
+	- Transfer coins from one account to another
+
+## From Client to the Collection
+
+In Omniledger we define the following path from client instructions to
+global state changes:
+
+* _Instruction_ is a key and a list of method/data pairs that is signed
+and verifiable by the darc defined in the first part of the key
+* _ClientTransactions_ is a set of instructions sent by a client
+* _StateChange_ is calculated at the leader and verified by every node. It
+contains the new key/kind/value triplets to create/update/delete.
+* _OmniledgerTransactions_ is a set of ClientTransactions and the corresponding
+StateChanges
+
+A block in omniledger contains zero or more OmniledgerTransactions. Every
+one of these transactions can be valid or not and will be marked as such by
+the leader. Every node has to verify whether it accepts or refuses the
+decisions made by the leader.
+
+### Instruction
+
+An instruction is created by a client. It has the following format:
 
 ```
-message Transaction {
-  bytes Key = 1;
-  bytes Kind = 2;
-  bytes Value = 3;
-  enum Operation {
-    ADD = 0;
-    UPDATE = 1;
-    DELETE = 2;
-  }
-  Operation Operation = 4;
-  DarcSignature Signature = 5;
-  boolean Valid = 6;
+message Instruction{
+	// DarcID points to the darc that can verify the signature
+	bytes DarcID = 1;
+	// Nonce: will be concatenated to the darcID to create the key
+	bytes Nonce = 2;
+	// Command is object-specific and case-sensitive. The only command common to
+	// all classes is "Create".
+	string Command = 3;
+	// Kind indicates what class we want to instantiate if we have a "Create"
+	// command. This field is only required for "Create".
+	string Kind = 4;
+	// Data is a free slice of bytes that can be sent to the object. For a
+	// "Create" command, the data is the kind of class to instantiate.
+	bytes Data = 5;
+	// Signatures that can be verified using the given darcID
+	repeated DarcSignature Signatures = 6;
+}
+```
+
+### ClientTransaction
+
+If a client needs a set of instructions to be applied atomically by omniledger,
+it can send more than one instruction in a ClientTransaction. This structure
+has the following format:
+
+```
+message ClientTransaction{
+	repeated Instruction Instructions = 1;
+}
+```
+
+### StateChange
+
+Once the leader receives the ClientTransactions, it will send the individual
+instructions to the corresponding classes and/or objects. Each call to a
+class/object will return 0 or more StateChanges that define how to update the
+state of the collection. This means that the class definitions must be trustworthy
+as they can change every state available.
+
+```
+message StateChange{
+	// Action can be any of Create, Update, Delete
+	Action Action = 1;
+	// Key is the darcID concatenated with the Nonce
+	bytes Key = 2;
+	// Kind points to the class that can interpret the value
+	bytes Kind = 3;
+	// Value is the data needed by the class
+	bytes Value = 4;
+	// Previous points to the skipBlockID of the previous StateChange for this Key
+	// Yet to be defined if really needed and if the ID is the skipblockID or some
+	// concatenation indicating the position in the block.
+	bytes Previous = 5;
 }
 ```
 
@@ -117,37 +209,21 @@ Darc that allows the Key/Kind/Value triplet to be stored in omniledger.
 The upper 32 bytes are a nonce that needs to be unique for unique triplets,
 but that doesn't need to be monotonic or increasing.
 
-The *Kind* is the hash of the precompiled smart contract that will be executed
-to verify the triplet is valid. Some examples of such contracts are:
+### OmniledgerTransaction
 
-- create a new Darc
-- Administer omniledger:
-  - Add or remove nodes
-  - Change the time between two blocks
-- Onchain-secrets:
-  - Create a write request
-  - Create a read request
-- Evoting:
-  - Setting up a new election
-  - Casting a vote
-  - Requesting mix
-  - Requesting decryption
-- PoP:
-  - Create a new party
+The leader gathers all ClientTransactions and the corresponding StateChanges
+in a set of OmniledgerTransactions. For each of the ClientTransaction, the
+leader will test whether this is a valid transaction or not and mark it as
+such in his list. All nodes need to verify that they get the same results as
+the leader and reject the block if this is not the case.
 
-The *Value* is any slice of bytes that will be interpreted correctly by the
-smart contract.
-
-The *Operation* defines whether this is a new triplet, an update to an existing one
-or whether it deletes the triplet. The smart contract has to take into account
-the different Operation requested.
-
-The *Signature* is created on the darc-action with regard to the Transaction
-and needs to be verifiable by all nodes.
-
-The *Valid* field is filled in by the leader to indicate whether this transaction
-will be included in the system state or not. Every node needs to make sure that
-valid transactions are correct and that invalid transactions are indeed incorrect.
+```
+message OmniledgerTransaction{
+	ClientTransaction ClientTransaction = 1;
+	repeated StateChange StateChagnes = 2;
+	bool Valid = 3;
+}
+```
 
 ## Proof
 

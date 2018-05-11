@@ -109,10 +109,13 @@ func set(c *cli.Context) error {
 	kind := c.Args().Get(3)
 	key := c.Args().Get(4)
 	value := c.Args().Get(5)
-	tx := service.Transaction{
-		Kind:  []byte(kind),
-		Key:   []byte(key),
-		Value: []byte(value),
+	tx := service.ClientTransaction{
+		Instructions: []service.Instruction{{
+			DarcID: darc.ID(key[0:32]),
+			Nonce:  []byte(key[32:]),
+			Kind:   kind,
+			Data:   []byte(value),
+		}},
 	}
 	_, err = service.NewClient().SetKeyValue(group.Roster, scid, tx)
 	if err != nil {
