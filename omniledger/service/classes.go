@@ -3,7 +3,6 @@ package service
 import (
 	"errors"
 
-	"github.com/dedis/protobuf"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	"gopkg.in/dedis/onet.v2/log"
@@ -28,18 +27,17 @@ var KindConfig = "config"
 func (s *Service) ClassConfig(cdb collection.Collection, tx Instruction, kind string, state []byte) ([]StateChange, error) {
 	switch tx.Command {
 	case CmdCreate:
-		darc := &darc.Darc{}
-		err := protobuf.Decode(tx.Data, darc)
+		d, err := darc.NewDarcFromProto(tx.Data)
 		if err != nil {
-			log.Error("couldn't get darc")
+			log.Error("couldn't decode darc")
 			return nil, err
 		}
-		if err = darc.Verify(); err != nil {
+		if len(d.Rules) == 0 {
+			return nil, errors.New("don't accept darc with empty rules")
+		}
+		if err = d.Verify(); err != nil {
 			log.Error("couldn't verify darc")
 			return nil, err
-		}
-		if len(darc.Rules) == 0 {
-			return nil, errors.New("don't accept darc with empty rules")
 		}
 		return []StateChange{
 			NewStateChange(Create, ConfigID, nil, KindConfig, tx.DarcID),

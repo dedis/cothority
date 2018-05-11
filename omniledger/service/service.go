@@ -99,7 +99,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		return nil, fmt.Errorf("version mismatch - got %d but need %d", req.Version, CurrentVersion)
 	}
 
-	darcBuf, err := protobuf.Encode(&req.GenesisDarc)
+	darcBuf, err := req.GenesisDarc.ToProto()
 	if err != nil {
 		return nil, err
 	}
@@ -425,14 +425,13 @@ func (s *Service) createOmniledgerTransactions(coll collection.Collection, txs [
 	cdbTemp := coll.Clone()
 	var otx []OmniledgerTransaction
 clientTransactions:
-	for i, ctx := range txs {
+	for _, ctx := range txs {
 		cdbI := cdbTemp.Clone()
 		ot := OmniledgerTransaction{ClientTransaction: ctx, Valid: true}
 		for _, instr := range ctx.Instructions {
 			kind, state, err := instr.GetKindState(cdbI)
 			if err != nil {
 				log.Lvl1("Couldn't get kind of instruction")
-				txs = append(txs[:i], txs[i+1:]...)
 				continue clientTransactions
 			}
 
@@ -441,7 +440,6 @@ clientTransactions:
 			// transaction.
 			if !exists {
 				log.Lvl1("Leader is dropping instruction of unknown kind:", kind)
-				txs = append(txs[:i], txs[i+1:]...)
 				continue clientTransactions
 			}
 			// Now we call the class function with the data of the key:
