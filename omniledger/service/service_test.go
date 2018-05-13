@@ -31,14 +31,14 @@ func TestService_CreateSkipchain(t *testing.T) {
 	defer closeQueues(s.local)
 
 	// invalid version, missing transaction
-	resp, err := s.service.CreateGenesisBlock(&CreateGenesisBlock{
+	resp, err := s.service().CreateGenesisBlock(&CreateGenesisBlock{
 		Version: 0,
 		Roster:  *s.roster,
 	})
 	require.NotNil(t, err)
 
 	// invalid darc
-	resp, err = s.service.CreateGenesisBlock(&CreateGenesisBlock{
+	resp, err = s.service().CreateGenesisBlock(&CreateGenesisBlock{
 		Version:     CurrentVersion,
 		Roster:      *s.roster,
 		GenesisDarc: darc.Darc{},
@@ -47,20 +47,14 @@ func TestService_CreateSkipchain(t *testing.T) {
 
 	// create valid darc
 	signer := darc.NewSignerEd25519(nil, nil)
-	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, signer)
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, signer.Identity())
 	require.Nil(t, err)
 
 	// finally passing
-	resp, err = s.service.CreateGenesisBlock(genesisMsg)
+	resp, err = s.service().CreateGenesisBlock(genesisMsg)
 	require.Nil(t, err)
 	assert.Equal(t, CurrentVersion, resp.Version)
 	assert.NotNil(t, resp.Skipblock)
-}
-
-func padKey(key []byte) []byte {
-	keyPadded := make([]byte, 64)
-	copy(keyPadded, key)
-	return keyPadded
 }
 
 func padDarc(key []byte) []byte {
@@ -69,64 +63,71 @@ func padDarc(key []byte) []byte {
 	return keyPadded
 }
 
-func createClientTransaction(key []byte, kind string, value []byte) ClientTransaction {
-	return ClientTransaction{
-		Instructions: []Instruction{
-			{
-				DarcID:  padDarc(key),
-				Nonce:   ZeroNonce,
-				Command: "Create",
-				Kind:    kind,
-				Data:    value,
-			},
-		},
-	}
-}
-
 func TestService_AddKeyValue(t *testing.T) {
 	s := newSer(t, 1)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
-	akvresp, err := s.service.SetKeyValue(&SetKeyValue{
-		Version: 0,
+	// wrong version
+	akvresp, err := s.service().SetKeyValue(&SetKeyValue{
+		Version: CurrentVersion + 1,
 	})
 	require.NotNil(t, err)
-	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
+
+	// missing skipchain
+	akvresp, err = s.service().SetKeyValue(&SetKeyValue{
+		Version: CurrentVersion,
+	})
+	require.NotNil(t, err)
+
+	// missing transaction
+	akvresp, err = s.service().SetKeyValue(&SetKeyValue{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
-		Transaction: createClientTransaction(s.key, dummyKind, s.value),
+	})
+	require.NotNil(t, err)
+
+	// the operations below should succeed
+	// add the first tx
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, s.value, s.signer)
+	require.Nil(t, err)
+	akvresp, err = s.service().SetKeyValue(&SetKeyValue{
+		Version:     CurrentVersion,
+		SkipchainID: s.sb.SkipChainID(),
+		Transaction: tx1,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
-	key2 := padKey([]byte("second"))
+	// add the second tx
 	value2 := []byte("value2")
-	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
+	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, value2, s.signer)
+	require.Nil(t, err)
+	akvresp, err = s.service().SetKeyValue(&SetKeyValue{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
-		Transaction: createClientTransaction(key2, dummyKind, value2),
+		Transaction: tx2,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
-	pairs := map[string][]byte{string(s.key): s.value, string(key2): value2}
-
+	// try to read the transaction back again
+	txs := []ClientTransaction{tx1, tx2}
 	for i := 0; i < 2; i++ {
 		if i == 1 {
 			// Now read the key/values from a new service
 			log.Lvl1("Recreate services and fetch keys again")
-			s.service.tryLoad()
+			s.service().tryLoad()
 		}
-		for key, value := range pairs {
+		for _, tx := range txs {
 			for {
 				time.Sleep(2 * waitQueueing)
-				pr, err := s.service.GetProof(&GetProof{
+				pr, err := s.service().GetProof(&GetProof{
 					Version: CurrentVersion,
 					ID:      s.sb.SkipChainID(),
-					Key:     []byte(key),
+					Key:     tx.Instructions[0].GetKey(),
 				})
 				if err != nil {
 					log.Error(err)
@@ -137,7 +138,7 @@ func TestService_AddKeyValue(t *testing.T) {
 				if pr.Proof.InclusionProof.Match() {
 					_, vs, err := pr.Proof.KeyValue()
 					require.Nil(t, err)
-					require.Equal(t, 0, bytes.Compare(value, vs[0]))
+					require.Equal(t, 0, bytes.Compare(tx.Instructions[0].Data, vs[0]))
 					break
 				} else {
 				}
@@ -151,15 +152,17 @@ func TestService_GetProof(t *testing.T) {
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
+	serKey := s.tx.Instructions[0].GetKey()
+
 	var rep *GetProofResponse
 	var i int
 	for i = 0; i < 10; i++ {
 		time.Sleep(2 * waitQueueing)
 		var err error
-		rep, err = s.service.GetProof(&GetProof{
+		rep, err = s.service().GetProof(&GetProof{
 			Version: CurrentVersion,
 			ID:      s.sb.SkipChainID(),
-			Key:     s.key,
+			Key:     serKey,
 		})
 		require.Nil(t, err)
 		if rep.Proof.InclusionProof.Match() {
@@ -170,13 +173,14 @@ func TestService_GetProof(t *testing.T) {
 	key, values, err := rep.Proof.KeyValue()
 	require.Nil(t, err)
 	require.Nil(t, rep.Proof.Verify(s.sb.SkipChainID()))
-	require.Equal(t, s.key, key)
+	require.Equal(t, serKey, key)
 	require.Equal(t, s.value, values[0])
 
-	rep, err = s.service.GetProof(&GetProof{
+	// Modify the key and we should not be able to get the proof.
+	rep, err = s.service().GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
-		Key:     append(s.key, byte(0)),
+		Key:     append(serKey, byte(0)),
 	})
 	require.Nil(t, err)
 	require.Nil(t, rep.Proof.Verify(s.sb.SkipChainID()))
@@ -192,28 +196,27 @@ func TestService_DummyVerification(t *testing.T) {
 	for i := range s.hosts {
 		RegisterVerification(s.hosts[i], "invalid", verifyInvalidKind)
 	}
-	akvresp, err := s.service.SetKeyValue(&SetKeyValue{
-		Version: 0,
-	})
-	require.NotNil(t, err)
 
-	key1 := padKey([]byte("a"))
+	// tx1 uses the invalid kind, so it should _not_ be stored.
 	value1 := []byte("a")
-	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), "invalid", value1, s.signer)
+	require.Nil(t, err)
+	akvresp, err := s.service().SetKeyValue(&SetKeyValue{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
-		Transaction: createClientTransaction(key1, "invalid", value1),
+		Transaction: tx1,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
-	key2 := padKey([]byte("b"))
+	// tx2 uses the dummy kind, its value should be stored.
 	value2 := []byte("b")
-	akvresp, err = s.service.SetKeyValue(&SetKeyValue{
+	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, value2, s.signer)
+	akvresp, err = s.service().SetKeyValue(&SetKeyValue{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
-		Transaction: createClientTransaction(key2, dummyKind, value2),
+		Transaction: tx2,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
@@ -221,19 +224,21 @@ func TestService_DummyVerification(t *testing.T) {
 
 	time.Sleep(8 * waitQueueing)
 
-	pr, err := s.service.GetProof(&GetProof{
+	// Check that tx1 is _not_ stored.
+	pr, err := s.service().GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
-		Key:     key1,
+		Key:     tx1.Instructions[0].GetKey(),
 	})
 	require.Nil(t, err)
 	match := pr.Proof.InclusionProof.Match()
 	require.False(t, match)
 
-	pr, err = s.service.GetProof(&GetProof{
+	// Check that tx2 is stored.
+	pr, err = s.service().GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
-		Key:     key2,
+		Key:     tx2.Instructions[0].GetKey(),
 	})
 	require.Nil(t, err)
 	match = pr.Proof.InclusionProof.Match()
@@ -246,18 +251,22 @@ type ser struct {
 	hosts    []*onet.Server
 	roster   *onet.Roster
 	services []*Service
-	service  *Service
 	sb       *skipchain.SkipBlock
-	key      []byte
 	value    []byte
 	darc     *darc.Darc
+	signer   *darc.Signer
+	tx       ClientTransaction
+}
+
+func (s *ser) service() *Service {
+	return s.services[0]
 }
 
 func newSer(t *testing.T, step int) *ser {
 	s := &ser{
-		local: onet.NewTCPTest(tSuite),
-		key:   padKey([]byte("anykey")),
-		value: []byte("anyvalue"),
+		local:  onet.NewTCPTest(tSuite),
+		value:  []byte("anyvalue"),
+		signer: darc.NewSignerEd25519(nil, nil),
 	}
 	s.hosts, s.roster, _ = s.local.GenTree(5, true)
 
@@ -266,27 +275,30 @@ func newSer(t *testing.T, step int) *ser {
 		s.services = append(s.services, service)
 	}
 	registerDummy(s.services)
-	s.service = s.services[0]
 
-	signer := darc.NewSignerEd25519(nil, nil)
-	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, signer)
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
 	for i := 0; i < step; i++ {
 		switch i {
 		case 0:
-			resp, err := s.service.CreateGenesisBlock(genesisMsg)
+			resp, err := s.service().CreateGenesisBlock(genesisMsg)
 			require.Nil(t, err)
 			s.sb = resp.Skipblock
 		case 1:
-			_, err := s.service.SetKeyValue(&SetKeyValue{
+			tx, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, s.value, s.signer)
+			require.Nil(t, err)
+			s.tx = tx
+			_, err = s.service().SetKeyValue(&SetKeyValue{
 				Version:     CurrentVersion,
 				SkipchainID: s.sb.SkipChainID(),
-				Transaction: createClientTransaction(s.key, dummyKind, s.value),
+				Transaction: tx,
 			})
 			require.Nil(t, err)
 			time.Sleep(4 * waitQueueing)
+		default:
+			require.Fail(t, "no such step")
 		}
 	}
 	return s

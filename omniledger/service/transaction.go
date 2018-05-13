@@ -1,13 +1,17 @@
 package service
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"errors"
 	"fmt"
+	"sort"
+
+	"gopkg.in/dedis/cothority.v2"
+	"gopkg.in/dedis/onet.v2/network"
 
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
-	"gopkg.in/dedis/onet.v2/network"
 )
 
 func init() {
@@ -43,13 +47,43 @@ func (instr Instruction) Hash() []byte {
 	return h.Sum(nil)
 }
 
-// ToDarcRequest converts the Transaction content into a darc.Request.
-func (instr Instruction) ToDarcRequest(kind string) (*darc.Request, error) {
-	if len(instr.DarcID) < darcIDLen {
-		return nil, errors.New("incorrect transaction length")
+// SignBy gets signers to sign the (receiver) transaction.
+func (instr *Instruction) SignBy(signers ...*darc.Signer) error {
+	// Create the request and populate it with the right identities.  We
+	// need to do this prior to signing because identities are a part of
+	// the digest.
+	req, err := instr.ToDarcRequest()
+	if err != nil {
+		return err
 	}
+	req.Identities = make([]*darc.Identity, len(signers))
+	for i := range signers {
+		req.Identities[i] = signers[i].Identity()
+	}
+
+	// Sign the instruction and write the signatures to it.
+	digest, err := req.Hash()
+	if err != nil {
+		return err
+	}
+	instr.Signatures = make([]darc.Signature, len(signers))
+	for i := range signers {
+		sig, err := signers[i].Sign(digest)
+		if err != nil {
+			return err
+		}
+		instr.Signatures[i] = darc.Signature{
+			Signature: sig,
+			Signer:    *signers[i].Identity(),
+		}
+	}
+	return nil
+}
+
+// ToDarcRequest converts the Instruction content into a darc.Request.
+func (instr Instruction) ToDarcRequest() (*darc.Request, error) {
 	baseID := instr.DarcID
-	action := kind
+	action := instr.Command
 	ids := make([]*darc.Identity, len(instr.Signatures))
 	sigs := make([][]byte, len(instr.Signatures))
 	for i, sig := range instr.Signatures {
@@ -94,6 +128,17 @@ func (instr Instruction) GetKey() []byte {
 	return append(instr.DarcID, instr.Nonce...)
 }
 
+func (instr Instruction) String() string {
+	var out string
+	out += fmt.Sprintf("instr: %x\n", instr.Hash())
+	out += fmt.Sprintf("\tcommand: %s\n", instr.Command)
+	out += fmt.Sprintf("\tkind: %s\n", instr.Kind)
+	out += fmt.Sprintf("\tdarc ID: %x\n", instr.DarcID)
+	out += fmt.Sprintf("\tnonce: %x\n", instr.Nonce)
+	out += fmt.Sprintf("\tsignatures: %d", len(instr.Signatures))
+	return out
+}
+
 // ClientTransaction is a slice of Instructions that will be applied in order.
 // If any of the instructions fails, none of them will be applied.
 type ClientTransaction struct {
@@ -131,7 +176,13 @@ func NewStateChange(a Action, darcid, nonce []byte, kind string, value []byte) S
 
 // String can be used in print.
 func (sc StateChange) String() string {
-	return fmt.Sprintf("%s(%s): %x / %x", sc.Action, sc.Kind, sc.Key, sc.Value)
+	var out string
+	out += "statechange"
+	out += fmt.Sprintf("\taction: %s\n", sc.Action)
+	out += fmt.Sprintf("\tkind: %s\n", sc.Kind)
+	out += fmt.Sprintf("\tkey: %x\n", sc.Key)
+	out += fmt.Sprintf("\tvalue: %x", sc.Value)
+	return out
 }
 
 // Action describes how the collectionDB will be modified.
@@ -169,4 +220,70 @@ type OmniledgerTransaction struct {
 	StateChanges []StateChange
 	// Valid is set by the leader
 	Valid bool
+}
+
+// sortWithSalt sorts transactions according to their salted hash:
+// The salt is prepended to the transactions []byte representation
+// and this concatenation is hashed then.
+// Using a salt here makes the resulting order of the transactions
+// harder to guess.
+func sortWithSalt(ts [][]byte, salt []byte) {
+	less := func(i, j int) bool {
+		h1 := sha256.Sum256(append(salt, ts[i]...))
+		h2 := sha256.Sum256(append(salt, ts[j]...))
+		return bytes.Compare(h1[:], h2[:]) == -1
+	}
+	sort.Slice(ts, less)
+}
+
+// sortTransactions needs to marshal transactions, if it fails to do so,
+// it returns an error and leaves the slice unchange.
+// The helper functions (sortWithSalt, xorTransactions) operate on []byte
+// representations directly. This allows for some more compact error handling
+// when (un)marshalling.
+func sortTransactions(ts []ClientTransaction) error {
+	bs := make([][]byte, len(ts))
+	sortedTs := make([]*ClientTransaction, len(ts))
+	var err error
+	var ok bool
+	for i := range ts {
+		bs[i], err = network.Marshal(&ts[i])
+		if err != nil {
+			return err
+		}
+	}
+	// An alternative to XOR-ing the transactions would have been to
+	// concatenate them and hash the result. However, if we generate the salt
+	// as the hash of the concatenation of the transactions, we have to
+	// concatenate them in a specific order to be deterministic.
+	// This means we would have to sort them, just to get the salt.
+	// In order to avoid this, we XOR them.
+	salt := xorTransactions(bs)
+	sortWithSalt(bs, salt)
+	for i := range bs {
+		_, tmp, err := network.Unmarshal(bs[i], cothority.Suite)
+		if err != nil {
+			return err
+		}
+		sortedTs[i], ok = tmp.(*ClientTransaction)
+		if !ok {
+			return errors.New("Data of wrong type")
+		}
+	}
+	for i := range sortedTs {
+		ts[i] = *sortedTs[i]
+	}
+	return nil
+}
+
+// xorTransactions returns the XOR of the hash values of all the transactions.
+func xorTransactions(ts [][]byte) []byte {
+	result := make([]byte, sha256.Size)
+	for _, t := range ts {
+		hs := sha256.Sum256(t)
+		for i := range result {
+			result[i] = result[i] ^ hs[i]
+		}
+	}
+	return result
 }

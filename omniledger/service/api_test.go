@@ -16,34 +16,35 @@ func TestClient_GetProof(t *testing.T) {
 	registerDummy(servers)
 	defer l.CloseAll()
 	defer closeQueues(l)
+
+	// Initialise the genesis message and send it to the service.
 	signer := darc.NewSignerEd25519(nil, nil)
-	c := NewClient()
-	// fail when we have no signer
-	csr, err := c.CreateGenesisBlock(roster)
-	require.NotNil(t, err)
-	csr, err = c.CreateGenesisBlock(roster, signer)
+	msg, err := DefaultGenesisMsg(CurrentVersion, roster, signer.Identity())
 	require.Nil(t, err)
 
-	key := []byte{1, 2, 3, 4}
+	// The darc inside it should be valid.
+	d := msg.GenesisDarc
+	require.Nil(t, d.Verify())
+
+	c := NewClient()
+	csr, err := c.CreateGenesisBlock(roster, msg)
+	require.Nil(t, err)
+
+	// Create a new transaction.
 	value := []byte{5, 6, 7, 8}
 	kind := "dummy"
-	_, err = c.SetKeyValue(roster, csr.Skipblock.SkipChainID(),
-		ClientTransaction{
-			Instructions: []Instruction{{
-				DarcID:  key,
-				Command: "Create",
-				Kind:    kind,
-				Data:    value,
-			}},
-		})
+	tx, err := createOneClientTx(d.GetBaseID(), kind, value, signer)
+	require.Nil(t, err)
+	_, err = c.SetKeyValue(roster, csr.Skipblock.SkipChainID(), tx)
 	require.Nil(t, err)
 
+	// We should have a proof of our transaction in the skipchain.
 	var p *GetProofResponse
 	var i int
 	for i = 0; i < 10; i++ {
 		time.Sleep(4 * waitQueueing)
 		var err error
-		p, err = c.GetProof(roster, csr.Skipblock.SkipChainID(), key)
+		p, err = c.GetProof(roster, csr.Skipblock.SkipChainID(), tx.Instructions[0].GetKey())
 		if err != nil {
 			continue
 		}
@@ -55,6 +56,6 @@ func TestClient_GetProof(t *testing.T) {
 	require.Nil(t, p.Proof.Verify(csr.Skipblock.SkipChainID()))
 	k, vs, err := p.Proof.KeyValue()
 	require.Nil(t, err)
-	require.Equal(t, k, key)
+	require.Equal(t, k, tx.Instructions[0].GetKey())
 	require.Equal(t, value, vs[0])
 }

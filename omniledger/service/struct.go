@@ -1,16 +1,12 @@
 package service
 
 import (
-	"bytes"
-	"crypto/sha256"
 	"errors"
 	"fmt"
-	"sort"
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
-	"gopkg.in/dedis/cothority.v2"
 	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/onet.v2/network"
 )
@@ -167,70 +163,4 @@ type DataHeader struct {
 // the proof needed for a key/value pair.
 type DataBody struct {
 	Transactions []OmniledgerTransaction
-}
-
-// sortWithSalt sorts transactions according to their salted hash:
-// The salt is prepended to the transactions []byte representation
-// and this concatenation is hashed then.
-// Using a salt here makes the resulting order of the transactions
-// harder to guess.
-func sortWithSalt(ts [][]byte, salt []byte) {
-	less := func(i, j int) bool {
-		h1 := sha256.Sum256(append(salt, ts[i]...))
-		h2 := sha256.Sum256(append(salt, ts[j]...))
-		return bytes.Compare(h1[:], h2[:]) == -1
-	}
-	sort.Slice(ts, less)
-}
-
-// sortTransactions needs to marshal transactions, if it fails to do so,
-// it returns an error and leaves the slice unchange.
-// The helper functions (sortWithSalt, xorTransactions) operate on []byte
-// representations directly. This allows for some more compact error handling
-// when (un)marshalling.
-func sortTransactions(ts []ClientTransaction) error {
-	bs := make([][]byte, len(ts))
-	sortedTs := make([]*ClientTransaction, len(ts))
-	var err error
-	var ok bool
-	for i := range ts {
-		bs[i], err = network.Marshal(&ts[i])
-		if err != nil {
-			return err
-		}
-	}
-	// An alternative to XOR-ing the transactions would have been to
-	// concatenate them and hash the result. However, if we generate the salt
-	// as the hash of the concatenation of the transactions, we have to
-	// concatenate them in a specific order to be deterministic.
-	// This means we would have to sort them, just to get the salt.
-	// In order to avoid this, we XOR them.
-	salt := xorTransactions(bs)
-	sortWithSalt(bs, salt)
-	for i := range bs {
-		_, tmp, err := network.Unmarshal(bs[i], cothority.Suite)
-		if err != nil {
-			return err
-		}
-		sortedTs[i], ok = tmp.(*ClientTransaction)
-		if !ok {
-			return errors.New("Data of wrong type")
-		}
-	}
-	for i := range sortedTs {
-		ts[i] = *sortedTs[i]
-	}
-	return nil
-}
-
-// xorTransactions returns the XOR of the hash values of all the transactions.
-func xorTransactions(ts [][]byte) []byte {
-	result := make([]byte, sha256.Size)
-	for _, t := range ts {
-		hs := sha256.Sum256(t)
-		for i := range result {
-			result[i] = result[i] ^ hs[i]
-		}
-	}
-	return result
 }
