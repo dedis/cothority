@@ -35,12 +35,12 @@ class Ed25519Test {
         String short_str = "short2";
         String long_str = "this is a string too long to be embedded";
 
-        Point pub = Ed25519Point.pubStore(short_str.getBytes());
-        byte[] ret = pub.pubLoad();
+        Point pub = Ed25519Point.embed(short_str.getBytes());
+        byte[] ret = pub.data();
         assertEquals(short_str, new String(ret));
 
         try {
-            Ed25519Point.pubStore(long_str.getBytes());
+            Ed25519Point.embed(long_str.getBytes());
             throw new CothorityCryptoException("this should not pass");
         } catch (CothorityCryptoException e) {
         }

@@ -141,7 +141,7 @@ public class WriteRequest {
                 if (to > keyMaterial.length) {
                     to = keyMaterial.length;
                 }
-                Point keyEd25519Point = Ed25519Point.pubStore(Arrays.copyOfRange(keyMaterial, from, to));
+                Point keyEd25519Point = Ed25519Point.embed(Arrays.copyOfRange(keyMaterial, from, to));
                 Point Ckey = C.add(keyEd25519Point);
                 Cs.add(Ckey);
                 write.addCs(Ckey.toProto());

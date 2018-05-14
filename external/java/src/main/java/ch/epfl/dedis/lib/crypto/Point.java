@@ -16,6 +16,6 @@ public interface Point {
     public String toString();
 
     public Point negate();
-    public byte[] pubLoad() throws CothorityCryptoException;
-//    public static Point pubStore(byte[] data) throws CothorityCryptoException;
+    public byte[] data() throws CothorityCryptoException;
+    // public static Point embed(byte[] data) throws CothorityCryptoException;
 }

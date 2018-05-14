@@ -47,7 +47,7 @@ public class DecryptKey {
         byte[] keyMaterial = "".getBytes();
         for (Point C : Cs) {
             Point keyEd25519PointHat = C.add(XhatInv);
-            byte[] keyPart = keyEd25519PointHat.pubLoad();
+            byte[] keyPart = keyEd25519PointHat.data();
             int lastpos = keyMaterial.length;
             keyMaterial = Arrays.copyOfRange(keyMaterial, 0, keyMaterial.length + keyPart.length);
             System.arraycopy(keyPart, 0, keyMaterial, lastpos, keyPart.length);

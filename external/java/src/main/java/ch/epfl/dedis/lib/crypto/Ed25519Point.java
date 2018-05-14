@@ -15,7 +15,7 @@ import java.util.Arrays;
 public class Ed25519Point implements Point {
     private final static Logger logger = LoggerFactory.getLogger(Ed25519Point.class);
 
-    public GroupElement element;
+    private GroupElement element;
 
     public Ed25519Point(ByteString pub) {
         this(pub.toByteArray());
@@ -85,7 +85,7 @@ public class Ed25519Point implements Point {
         return new Ed25519Point(element.toP3().negate());
     }
 
-    public byte[] pubLoad() throws CothorityCryptoException {
+    public byte[] data() throws CothorityCryptoException {
         byte[] bytes = toBytes();
         int len = bytes[0];
         if (len > Ed25519.pubLen || len < 0) {
@@ -96,7 +96,7 @@ public class Ed25519Point implements Point {
     }
 
 
-    public static Point pubStore(byte[] data) throws CothorityCryptoException {
+    public static Point embed(byte[] data) throws CothorityCryptoException {
         if (data.length > Ed25519.pubLen) {
             throw new CothorityCryptoException("too much data for point");
         }
