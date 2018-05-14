@@ -73,16 +73,11 @@ func GlobalRegisterDefaultProtocols() {
 // NewFtCosi method is used to define the ftcosi protocol.
 func NewFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName string, suite cosi.Suite) (onet.ProtocolInstance, error) {
 
-	var list []kyber.Point
-	for _, t := range n.Tree().List() {
-		list = append(list, t.ServerIdentity.Public)
-	}
-
 	c := &FtCosi{
 		TreeNodeInstance: n,
 		FinalSignature:   make(chan []byte, 1),
 		Data:             make([]byte, 0),
-		publics:          list,
+		publics:          n.Roster().Publics(),
 		startChan:        make(chan bool, 1),
 		verificationFn:   vf,
 		subProtocolName:  subProtocolName,
@@ -102,7 +97,7 @@ func (p *FtCosi) Shutdown() error {
 
 // Dispatch is the main method of the protocol, defining the root node behaviour
 // and sequential handling of subprotocols.
-func (p *FtCosi) Dispatch() error {
+func (p *FtCosi) Dispatch() error { //TODO: send empty signature
 	defer p.Done()
 	if !p.IsRoot() {
 		return nil
@@ -119,7 +114,7 @@ func (p *FtCosi) Dispatch() error {
 		return fmt.Errorf("timeout, did you forget to call Start?")
 	}
 
-	log.Lvl3("leader protocol started")
+	log.Lvl3("root protocol started")
 
 	verifyChan := make(chan bool, 1)
 	go func() {
@@ -149,26 +144,27 @@ func (p *FtCosi) Dispatch() error {
 	}
 	log.Lvl3(p.ServerIdentity().Address, "all protocols started")
 
+	// collect commitments
 	commitments, runningSubProtocols, err := p.collectCommitments(trees, cosiSubProtocols)
 	if err != nil {
 		return err
 	}
 
-	// signs the proposal
+	// verifies the proposal
 	ok := <-verifyChan
 	if !ok {
-		// root should not fail the verification otherwise it would not have
-		// started the protocol
+		// root should not fail the verification otherwise it would not have started the protocol
 		p.FinalSignature <- nil
 		return fmt.Errorf("verification failed on root node")
 	}
 
-	log.Lvl3("root-node generating global challenge")
-	secret, commitment, finalMask, err := generateCommitmentAndAggregate(p.suite, p.TreeNodeInstance, p.publics, commitments, ok)
+	// generate own aggregated commitment
+	secret, commitment, finalMask, err := generateAggregatedCommitment(p.suite, p.TreeNodeInstance, p.publics, commitments, ok)
 	if err != nil {
 		return err
 	}
 
+	log.Lvl3("root-node generating global challenge")
 	cosiChallenge, err := cosi.Challenge(p.suite, commitment, finalMask.AggregatePublic, p.Msg)
 	if err != nil {
 		return err
@@ -214,11 +210,13 @@ func (p *FtCosi) Dispatch() error {
 		return fmt.Errorf("nodes timed out while waiting for response %v", errs)
 	}
 
-	// generate challenge
+	// generate own response
 	response, err := generateResponse(p.suite, p.TreeNodeInstance, responses, secret, cosiChallenge, ok)
 	if err != nil {
 		return err
 	}
+
+	//starts final signature
 	log.Lvl3(p.ServerIdentity().Address, "starts final signature")
 	var signature []byte
 	signature, err = cosi.Sign(p.suite, commitment, response, finalMask)
@@ -229,132 +227,6 @@ func (p *FtCosi) Dispatch() error {
 
 	log.Lvl3("Root-node is done without errors")
 	return nil
-}
-
-func (p *FtCosi) collectCommitments(trees []*onet.Tree,
-	cosiSubProtocols []*SubFtCosi) ([]StructCommitment, []*SubFtCosi, error) {
-	// get all commitments, restart subprotocols where subleaders do not respond
-	var mut sync.Mutex
-
-	sharedMask, err := cosi.NewMask(p.suite, p.publics, nil)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	errChan := make(chan error, len(cosiSubProtocols))
-	thresholdReachedChan := make(chan bool, 2*len(cosiSubProtocols))    //TODO: remove
-	subProtocolsCommitments := make(map[*SubFtCosi]StructCommitment, 0) //TODO: use this as a channel to do threshold check
-	closingChan := make(chan bool)
-
-	var closingWg sync.WaitGroup
-	for i, subProtocol := range cosiSubProtocols {
-		closingWg.Add(1)
-		go func(i int, subProtocol *SubFtCosi) {
-			defer closingWg.Done()
-			timeout := time.After(p.Timeout / 2)
-			for {
-				select {
-				case <-closingChan:
-					return
-				case <-subProtocol.subleaderNotResponding:
-					subleaderID := trees[i].Root.Children[0].RosterIndex
-					log.Lvlf2("(subprotocol %v) subleader with id %d failed, restarting subprotocol", i, subleaderID)
-
-					// send stop signal
-					subProtocol.HandleStop(StructStop{subProtocol.TreeNode(), Stop{}})
-
-					// generate new tree
-					newSubleaderID := subleaderID + 1
-					if newSubleaderID >= len(trees[i].Roster.List) {
-						log.Lvl2("(subprotocol %v) failed with every subleader, ignoring this subtree")
-						return
-					}
-					var err error
-					trees[i], err = genSubtree(trees[i].Roster, newSubleaderID)
-					if err != nil {
-						errChan <- fmt.Errorf("(subprotocol %v) error in tree generation: %v", i, err)
-						return
-					}
-
-					// restart subprotocol
-					subProtocol, err = p.startSubProtocol(trees[i])
-					if err != nil {
-						err = fmt.Errorf("(subprotocol %v) error in restarting of subprotocol: %s", i, err)
-						errChan <- err
-						return
-					}
-					mut.Lock()
-					cosiSubProtocols[i] = subProtocol
-					mut.Unlock()
-				case commitment := <-subProtocol.subCommitment:
-					mut.Lock()
-					subProtocolsCommitments[subProtocol] = commitment
-					newMask, err := cosi.AggregateMasks(sharedMask.Mask(), commitment.Mask)
-					if err != nil {
-						mut.Unlock()
-						err = fmt.Errorf("(subprotocol %v) error in aggregation of commitment masks: %s", i, err)
-						errChan <- err
-						return
-					}
-					err = sharedMask.SetMask(newMask)
-					mut.Unlock()
-					if err != nil {
-						err = fmt.Errorf("(subprotocol %v) error in setting of shared masks: %s", i, err)
-						errChan <- err
-						return
-					}
-					if sharedMask.CountEnabled() >= p.Threshold-1 {
-						thresholdReachedChan <- true
-						return
-					}
-				case <-timeout:
-					errChan <- fmt.Errorf("(subprotocol %v) didn't get commitment after timeout %v", i, p.Timeout)
-					return
-				}
-			}
-		}(i, subProtocol)
-	}
-
-	if p.Threshold == 0 {
-
-	}
-
-	thresholdReached := true
-	if len(cosiSubProtocols) > 0 {
-		thresholdReached = false
-		select {
-		case thresholdReached = <-thresholdReachedChan:
-		case <-time.After(p.Timeout):
-			log.Lvl2("Threshold", p.Threshold, "not reached at timeout, got", sharedMask.CountEnabled(), "commitments")
-		}
-	}
-
-	close(closingChan)
-	closingWg.Wait()
-	close(thresholdReachedChan)
-	close(errChan)
-	var errs []error
-	for err := range errChan {
-		errs = append(errs, err)
-	}
-
-	if len(errs) > 0 {
-		return nil, nil, fmt.Errorf("failed to collect commitments with errors %v", errs)
-	}
-
-	if !thresholdReached {
-		return nil, nil, fmt.Errorf("commitments not completed in time")
-	}
-
-	// extract protocols and commitments from map
-	runningSubProtocols := make([]*SubFtCosi, 0, len(subProtocolsCommitments))
-	commitments := make([]StructCommitment, 0, len(subProtocolsCommitments))
-	for subProtocol, commitment := range subProtocolsCommitments {
-		runningSubProtocols = append(runningSubProtocols, subProtocol)
-		commitments = append(commitments, commitment)
-	}
-
-	return commitments, runningSubProtocols, nil
 }
 
 // Start is done only by root and starts the protocol.

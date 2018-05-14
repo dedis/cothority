@@ -53,6 +53,17 @@ func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, err
 // the channels where the messages will be received.
 func NewSubFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite) (onet.ProtocolInstance, error) {
 
+	// tests if it's a three level tree
+	moreThreeLevel := false
+	n.Tree().Root.Visit(0, func(depth int, n *onet.TreeNode) {
+		if depth > 2 {
+			moreThreeLevel = true
+		}
+	})
+	if moreThreeLevel {
+		return nil, fmt.Errorf("subFtCosi launched with a more than three level tree")
+	}
+
 	c := &SubFtCosi{
 		TreeNodeInstance: n,
 		verificationFn:   vf,
@@ -140,24 +151,7 @@ func (p *SubFtCosi) Dispatch() error {
 			}
 		}()
 	}
-	////send personalised announcement to all nodes //TODO: discuss if correct
-	//childrenThreshold :=  int(math.Ceil(float64(p.Threshold-1) / float64(len(p.Children()))))
-	//if p.IsRoot() { //since root is not counted in subtree threshold
-	//	childrenThreshold = p.Threshold
-	//}
-	//for _, c := range p.Children() {
-	//	go func() {
-	//		if childrenThreshold > 1 +c.SubtreeCount() {
-	//			childrenThreshold = 1 + c.SubtreeCount()
-	//		}
-	//		specificAnnouncement := Announcement{announcement.Msg, announcement.Data,
-	//		announcement.Publics, announcement.Timeout, childrenThreshold}
-	//		err := p.SendTo(c, &specificAnnouncement)
-	//		if err != nil {
-	//			log.Lvl3(p.ServerIdentity(), "failed to send announcement to children", c)
-	//		}
-	//	}()
-	//}
+
 	// ----- Commitment & Challenge -----
 
 	var challenge StructChallenge
@@ -191,7 +185,8 @@ loop:
 				return nil
 			}
 			if commitment.TreeNode.Parent != p.TreeNode() {
-				return errors.New("received a Commitment from a non-Children node") //TODO: see needed behaviour
+				log.Lvl2("received a Commitment from a non-Children node")
+				break //discards it
 			}
 			if p.IsRoot() {
 				// send commitment to super-protocol
@@ -319,7 +314,7 @@ func (p *SubFtCosi) sendAgregatedCommitments(ok bool, commitments []StructCommit
 	// compute personal commitment
 	var commitment kyber.Point
 	var mask *cosi.Mask
-	secret, commitment, mask, err = generateCommitmentAndAggregate(p.suite, p.TreeNodeInstance,
+	secret, commitment, mask, err = generateAggregatedCommitment(p.suite, p.TreeNodeInstance,
 		p.Publics, commitments, ok)
 	if err != nil {
 		return nil, err

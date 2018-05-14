@@ -11,9 +11,9 @@ import (
 	"github.com/dedis/onet/network"
 )
 
-// generateCommitmentAndAggregate generates a personal secret and commitment
+// generateAggregatedCommitment generates a personal secret and commitment
 // and returns respectively the secret, an aggregated commitment and an aggregated mask
-func generateCommitmentAndAggregate(s cosi.Suite, t *onet.TreeNodeInstance, publics []kyber.Point,
+func generateAggregatedCommitment(s cosi.Suite, t *onet.TreeNodeInstance, publics []kyber.Point,
 	structCommitments []StructCommitment, ok bool) (kyber.Scalar, kyber.Point, *cosi.Mask, error) {
 
 	if t == nil {
