@@ -15,6 +15,7 @@ import (
 	"gopkg.in/dedis/cothority.v2"
 	"gopkg.in/dedis/cothority.v2/messaging"
 	"gopkg.in/dedis/cothority.v2/skipchain"
+	"gopkg.in/dedis/kyber.v2/util/random"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/log"
 	"gopkg.in/dedis/onet.v2/network"
@@ -22,6 +23,7 @@ import (
 
 	"github.com/dedis/protobuf"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
+	"github.com/dedis/student_18_omniledger/omniledger/darc"
 )
 
 const darcIDLen int = 32
@@ -36,6 +38,13 @@ func init() {
 	omniledgerID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
 	network.RegisterMessages(&storage{}, &DataHeader{}, &updateCollection{})
+}
+
+// GenNonce returns a random nonce.
+func GenNonce() []byte {
+	nonce := make([]byte, 32)
+	random.Bytes(nonce, random.New())
+	return nonce
 }
 
 // Service is our lleap-service
@@ -112,7 +121,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	// reference to the actual genesis transaction.
 	transaction := []ClientTransaction{{
 		Instructions: []Instruction{{
-			DarcID:  ConfigID,
+			DarcID:  req.GenesisDarc.GetID(),
 			Nonce:   ZeroNonce,
 			Command: "Create",
 			Kind:    "config",
@@ -146,6 +155,11 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 	if !ok {
 		return nil, fmt.Errorf("we don't know skipchain ID %x", req.SkipchainID)
 	}
+
+	if len(req.Transaction.Instructions) == 0 {
+		return nil, errors.New("no transactions to add")
+	}
+
 	c <- req.Transaction
 
 	return &SetKeyValueResponse{
@@ -183,6 +197,62 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.storage.Unlock()
 }
 
+func padKey(key []byte) []byte {
+	keyPadded := make([]byte, 64)
+	copy(keyPadded, key)
+	return keyPadded
+}
+
+func (s *Service) getLatestDarcByID(sid skipchain.SkipBlockID, dID darc.ID) (*darc.Darc, error) {
+	colldb := s.getCollection(sid)
+	if colldb == nil {
+		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", sid.Short())
+	}
+	value, kind, err := colldb.GetValueKind(padKey(dID))
+	if err != nil {
+		return nil, err
+	}
+	if string(kind) != "darc" {
+		return nil, fmt.Errorf("for darc %x, expected Kind to be 'darc' but got '%s'", dID, string(kind))
+	}
+	// TODO we need to make sure this darc is the latest
+	return darc.NewDarcFromProto(value)
+}
+
+func (s *Service) verifyAndFilterTxs(scID skipchain.SkipBlockID, ts []ClientTransaction) []ClientTransaction {
+	var validTxs []ClientTransaction
+	for _, t := range ts {
+		if err := s.verifyClientTx(scID, t); err != nil {
+			log.Error(err)
+			continue
+		}
+		validTxs = append(validTxs, t)
+	}
+	return validTxs
+}
+
+func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransaction) error {
+	for _, instr := range tx.Instructions {
+		if err := s.verifyInstruction(scID, instr); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
+	d, err := s.getLatestDarcByID(scID, instr.DarcID)
+	if err != nil {
+		return err
+	}
+	req, err := instr.ToDarcRequest()
+	if err != nil {
+		return err
+	}
+	// TODO we need to use req.VerifyWithCB to search for missing darcs
+	return req.Verify(d)
+}
+
 // createNewBlock creates a new block and proposes it to the
 // skipchain-service. Once the block has been created, we
 // inform all nodes to update their internal collections
@@ -193,9 +263,10 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, ts 
 	var ots []OmniledgerTransaction
 	var coll collection.Collection
 
-	sortTransactions(ts)
 	if scID.IsNull() {
 		// For a genesis block, we create a throwaway collection.
+		// There is no need to verify the darc because the caller does
+		// it.
 		sb = skipchain.NewSkipBlock()
 		sb.Roster = r
 		sb.MaximumHeight = 10
@@ -205,7 +276,9 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, ts 
 
 		coll = collection.New(&collection.Data{}, &collection.Data{})
 	} else {
-		// For further blocks, we use tryHash to get a hash and undo the changes.
+		// For all other blocks, we try to verify the signature using
+		// the darcs and remove those that do not have a valid
+		// signature before continuing.
 		sbLatest, err := s.db().GetLatest(s.db().GetByID(scID))
 		if err != nil {
 			return nil, errors.New(
@@ -215,7 +288,16 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, ts 
 		if r != nil {
 			sb.Roster = r
 		}
+		ts = s.verifyAndFilterTxs(sb.SkipChainID(), ts)
+		if len(ts) == 0 {
+			return nil, errors.New("no valid transaction")
+		}
 		coll = s.getCollection(scID).coll
+	}
+
+	// Note that the transactions are sorted in-place.
+	if err := sortTransactions(ts); err != nil {
+		return nil, err
 	}
 
 	// Create header of skipblock containing only hashes
@@ -359,13 +441,13 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) (chan ClientTran
 						panic("DB is in bad state and cannot find skipchain anymore: " + err.Error())
 					}
 					_, err = s.createNewBlock(scID, sb.Roster, ts)
+					// We empty ts because createNewBlock only returns an error only if it's a critical failure.
+					ts = []ClientTransaction{}
 					if err != nil {
 						log.Error("couldn't create new block: " + err.Error())
-
 						to = time.After(waitQueueing)
 						continue
 					}
-					ts = []ClientTransaction{}
 				}
 				to = time.After(waitQueueing)
 			case <-s.CloseQueues:

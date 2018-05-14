@@ -84,7 +84,11 @@ func create(c *cli.Context) error {
 	}
 	client := service.NewClient()
 	signer := darc.NewSignerEd25519(pk, sk)
-	resp, err := client.CreateGenesisBlock(group.Roster, signer)
+	msg, err := service.DefaultGenesisMsg(service.CurrentVersion, group.Roster, signer.Identity())
+	if err != nil {
+		return err
+	}
+	resp, err := client.CreateGenesisBlock(group.Roster, msg)
 	if err != nil {
 		return errors.New("during creation of skipchain: " + err.Error())
 	}

@@ -18,12 +18,6 @@ import (
 // ServiceName is used for registration on the onet.
 const ServiceName = "OmniLedger"
 
-// ActionAddDarc is the action name for adding a darc to OmniLedger.
-const ActionAddDarc = darc.Action("add_darc")
-
-// ActionAddGenesis is the action name for adding a genesis block to OmniLedger.
-const ActionAddGenesis = darc.Action("add_genesis")
-
 // Client is a structure to communicate with the CoSi
 // service
 type Client struct {
@@ -37,12 +31,8 @@ func NewClient() *Client {
 
 // CreateGenesisBlock sets up a new skipchain to hold the key/value pairs. If
 // a key is given, it is used to authenticate towards the cothority.
-func (c *Client) CreateGenesisBlock(r *onet.Roster, signers ...*darc.Signer) (*CreateGenesisBlockResponse, error) {
+func (c *Client) CreateGenesisBlock(r *onet.Roster, msg *CreateGenesisBlock) (*CreateGenesisBlockResponse, error) {
 	reply := &CreateGenesisBlockResponse{}
-	msg, err := DefaultGenesisMsg(CurrentVersion, r, signers...)
-	if err != nil {
-		return nil, err
-	}
 	if err := c.SendProtobuf(r.List[0], msg, reply); err != nil {
 		return nil, err
 	}
@@ -82,17 +72,12 @@ func (c *Client) GetProof(r *onet.Roster, id skipchain.SkipBlockID, key []byte) 
 
 // DefaultGenesisMsg creates the message that is used to for creating the
 // genesis darc and block.
-func DefaultGenesisMsg(v Version, r *onet.Roster, signers ...*darc.Signer) (*CreateGenesisBlock, error) {
-	if len(signers) == 0 {
-		return nil, errors.New("no signers")
-	}
-	ids := make([]*darc.Identity, len(signers))
-	for i := range ids {
-		ids[i] = signers[i].Identity()
+func DefaultGenesisMsg(v Version, r *onet.Roster, ids ...*darc.Identity) (*CreateGenesisBlock, error) {
+	if len(ids) == 0 {
+		return nil, errors.New("no identities ")
 	}
 	d := darc.NewDarc(darc.InitRules(ids, ids), []byte("genesis darc"))
-	d.Rules.AddRule(ActionAddDarc, d.Rules.GetSignExpr())
-	d.Rules.AddRule(ActionAddGenesis, d.Rules.GetSignExpr())
+	d.Rules.AddRule("Create", d.Rules.GetSignExpr())
 
 	m := CreateGenesisBlock{
 		Version:     v,
