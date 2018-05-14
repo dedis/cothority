@@ -145,6 +145,22 @@ func TestService(t *testing.T) {
 	// expect a failure
 	require.NotNil(t, err)
 
+	// Cast a vote for no users at all: should work.
+	log.Lvl1("Casting empty ballot")
+	k0, c0 := lib.Encrypt(replyOpen.Key, []byte{})
+	ballot = &lib.Ballot{
+		User:  idUser1,
+		Alpha: k0,
+		Beta:  c0,
+	}
+	_, err = s0.Cast(&evoting.Cast{
+		ID:        replyOpen.ID,
+		Ballot:    ballot,
+		User:      idUser1,
+		Signature: idUser1Sig,
+	})
+	require.Nil(t, err)
+
 	// Prepare a helper for testing voting.
 	vote := func(user uint32, bufCand []byte) *evoting.CastReply {
 		k, c := lib.Encrypt(replyOpen.Key, bufCand)
