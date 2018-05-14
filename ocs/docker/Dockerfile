@@ -1,4 +1,9 @@
-FROM dedis/conode:dev
+FROM golang:1.10 as builder
+RUN go get -d -v github.com/dedis/cothority/
+WORKDIR /go/src/github.com/dedis/cothority
+RUN sed -i 's/_ "github.com\/dedis\/cothority\/evoting\/service"/_ "github.com\/dedis\/cothority\/ocs\/service"/g' conode/experimental.go
+RUN go get -u ./...
+RUN go install ./conode
 
 EXPOSE 7003 7005 7007 7009
 

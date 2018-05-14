@@ -271,7 +271,6 @@ public class OnchainSecretsRPC {
 
         ByteString msg = roster.sendMessage("OnChainSecrets/ReadRequest", request.build());
 
-
         try {
             OCSProto.ReadReply reply = OCSProto.ReadReply.parseFrom(msg);
             logger.info("Created a read-request");
