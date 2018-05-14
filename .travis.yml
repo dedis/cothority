@@ -44,6 +44,6 @@ matrix:
 
       script:
         - (cd conode/; make docker)
-        - (cd ocs/docker/; make docker-test)
+        - (cd ocs/docker/; make docker_test)
         - (cd external/java; mvn test)
 
