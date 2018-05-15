@@ -220,7 +220,7 @@ the leader and reject the block if this is not the case.
 ```
 message OmniledgerTransaction{
 	ClientTransaction ClientTransaction = 1;
-	repeated StateChange StateChagnes = 2;
+	repeated StateChange StateChanges = 2;
 	bool Valid = 3;
 }
 ```
