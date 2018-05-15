@@ -10,11 +10,12 @@ installed. First you need to setup the conode, use the following command to
 setup conode in your `~/conode_data`-directory:
 
 ```
-docker run -it --rm -P --name conode -v ~/conode_data:/conode_data dedis/conode:latest ./conode setup
+docker run -it --rm -p 6879-6880:6879-6880 --name conode -v ~/conode_data:/conode_data dedis/conode:latest ./conode setup
 ```
 
 This will create a `conode_data`-directory and ask you for the configuration details:
-- PORT: the indicated port and port+1 will be used for communication
+- PORT: the indicated port and port+1 will be used for communication. If you
+change this port, also update the ports in the docker-command.
 - IP-address: if it cannot detect your IP-address, it will ask for it. This
 usually means that something is wrong. Perhaps you didn't allow your firewall
 to accept incoming connections
@@ -34,7 +35,7 @@ used in the `docker run`-command.
 Once a conode is setup, you can start it like that:
 
 ```
-docker run --rm -P --name conode -v ~/conode_data:/conode_data dedis/conode:latest
+docker run --rm -p 6879-6880:6879-6880 --name conode -v ~/conode_data:/conode_data dedis/conode:latest
 ```
 
 ### Using Crontab
@@ -44,7 +45,7 @@ line to your crontab (`crontab -e`) and your conode will start with the next
 system-startup:
 
 ```
-@reboot docker run --rm -P --name conode -v ~/conode_data:/conode_data dedis/conode:latest
+@reboot docker run --rm -p 6879-6880:6879-6880 --name conode -v ~/conode_data:/conode_data dedis/conode:latest
 ```
 
 ### Using systemd
@@ -91,3 +92,23 @@ be used.
 
 To stop the docker, simply run `make docker_stop` or kill the docker-container. All
 configuration is stored in `conode_data`
+
+# Apps
+
+For most of the apps you need at least 3 running nodes. Once you have them up
+and running, you will need a `roster.toml` that includes all the
+`public.toml`-files from your conodes:
+
+```
+cat ../*/conode_data/public.toml > roster.toml
+```
+
+You will find more details about the available apps on
+[Applications](https://github.com/dedis/cothority/tree/master/doc/Applications.md).
+
+# Development version
+
+For the latest and greatest version of the conode, you can replace `conode:latest`
+with `conode:dev` and you should get a stable, but changing conode. This means, that
+to use all the functionalities you need to update the apps and follow the latest
+`conode:dev` container regularly.
