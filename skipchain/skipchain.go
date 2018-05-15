@@ -401,6 +401,8 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 // syncChain communicates with conodes in the Roster via getBlocks
 // in order traverse the chain and save the blocks locally.
 func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
+	log.Lvlf2("Sync chain from roster %v, starting at %x", roster, latest)
+
 	// loop on getBlocks, fetching 10 at a time
 	for {
 		blocks, err := s.getBlocks(roster, latest, 10)
@@ -413,6 +415,29 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 				return err
 			}
 			s.db.Store(sb)
+
+			// Now that we've accepted it into our DB, follow
+			// all of its back links, and update our copies
+			// of those blocks, since our copy's forward links
+			// are out of date. (Do not try to walk backwards
+			// from Index==0 blocks, since they have one random
+			// back link.)
+			if sb.Index != 0 {
+				for i, bl := range sb.BackLinkIDs {
+					blocks, err := s.getBlocks(roster, bl, 1)
+					if err != nil {
+						return fmt.Errorf("error fetching new forward links for back link %v (%x): %v", i, bl, err)
+					}
+					if len(blocks) != 1 {
+						return errors.New("getBlocks did not return one block")
+					}
+					if err := blocks[0].VerifyForwardSignatures(); err != nil {
+						return fmt.Errorf("error verifying new forward links for back link %v (%x): %v", i, bl, err)
+					}
+					s.db.Store(blocks[0])
+				}
+			}
+
 			if len(sb.ForwardLink) == 0 {
 				return nil
 			}
