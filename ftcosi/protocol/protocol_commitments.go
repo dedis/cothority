@@ -21,7 +21,6 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 	commitmentsChan := make(chan commitmentProtocol, 2*len(subProtocols))
 	errChan := make(chan error, len(subProtocols))
 	closingChan := make(chan bool)
-	var protocolsSliceMut sync.Mutex
 
 	// receive in parallel
 	var closingWg sync.WaitGroup
@@ -61,11 +60,10 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 						errChan <- err
 						return
 					}
-					protocolsSliceMut.Lock() //TODO: necessary?
 					subProtocols[i] = subProtocol
-					protocolsSliceMut.Unlock()
 				case com := <-subProtocol.subCommitment:
 					commitmentsChan <- commitmentProtocol{com, subProtocol}
+					timeout = make(chan time.Time) //deactivate timeout
 				case <-timeout:
 					errChan <- fmt.Errorf("(subprotocol %v) didn't get commitment after timeout %v", i, p.Timeout)
 					return
@@ -75,7 +73,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 	}
 
 	if p.Threshold == 0 {
-		//TODO
+		//TODO R: implement threshold 0
 	}
 
 	//handle answers from all parallel threads
@@ -115,8 +113,8 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 				err = fmt.Errorf("error in getting commitments: %s", err)
 				return nil, nil, err
 			case <-time.After(p.Timeout):
-				return nil, nil, fmt.Errorf("not enough replies from nodes at timeout"+
-					"for Threshold %d,got %d commitments and %d refusals",
+				return nil, nil, fmt.Errorf("not enough replies from nodes at timeout "+
+					"for Threshold %d, got %d commitments and %d refusals",
 					p.Threshold, sharedMask.CountEnabled(), sumRefusal(commitmentsMap))
 			}
 		}
@@ -136,7 +134,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 	}
 	if !thresholdReachable {
 		return nil, nil, fmt.Errorf("too many refusals (got %d), the threshold %d is no more reachable",
-			sumRefusal(commitmentsMap), p.Threshold) //TODO: see if should be an error
+			sumRefusal(commitmentsMap), p.Threshold)
 	}
 
 	// extract protocols and commitments from map

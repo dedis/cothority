@@ -97,7 +97,7 @@ func (p *FtCosi) Shutdown() error {
 
 // Dispatch is the main method of the protocol, defining the root node behaviour
 // and sequential handling of subprotocols.
-func (p *FtCosi) Dispatch() error { //TODO: send empty signature
+func (p *FtCosi) Dispatch() error { //TODO R: verify that it sends empty signature
 	defer p.Done()
 	if !p.IsRoot() {
 		return nil
@@ -129,8 +129,8 @@ func (p *FtCosi) Dispatch() error { //TODO: send empty signature
 		return fmt.Errorf("error in tree generation: %s", err)
 	}
 
-	// if one node, sign without subprotocols
-	if nNodes == 1 {
+	// if one node or threshold is one, sign without subprotocols
+	if nNodes == 1 || p.Threshold == 1 {
 		trees = make([]*onet.Tree, 0)
 	}
 
@@ -150,16 +150,29 @@ func (p *FtCosi) Dispatch() error { //TODO: send empty signature
 		return err
 	}
 
+	var secret kyber.Scalar
 	// verifies the proposal
-	ok := <-verifyChan
-	if !ok {
+	verificationOk := <-verifyChan
+	close(verifyChan)
+	if verificationOk {
+		//add own commitment
+		var personalCommitment kyber.Point
+		secret, personalCommitment = cosi.Commit(p.suite)
+		personalMask, err := cosi.NewMask(p.suite, p.publics, p.Public())
+		if err != nil {
+			return err
+		}
+		personalStructCommitment := StructCommitment{p.TreeNode(),
+			Commitment{personalCommitment, personalMask.Mask(), 0}}
+		commitments = append(commitments, personalStructCommitment)
+	} else {
 		// root should not fail the verification otherwise it would not have started the protocol
 		p.FinalSignature <- nil
 		return fmt.Errorf("verification failed on root node")
 	}
 
 	// generate own aggregated commitment
-	secret, commitment, finalMask, err := generateAggregatedCommitment(p.suite, p.TreeNodeInstance, p.publics, commitments, ok)
+	commitment, finalMask, err := aggregateCommitments(p.suite, p.publics, commitments)
 	if err != nil {
 		return err
 	}
@@ -211,7 +224,7 @@ func (p *FtCosi) Dispatch() error { //TODO: send empty signature
 	}
 
 	// generate own response
-	response, err := generateResponse(p.suite, p.TreeNodeInstance, responses, secret, cosiChallenge, ok)
+	response, err := generateResponse(p.suite, p.TreeNodeInstance, responses, secret, cosiChallenge, verificationOk)
 	if err != nil {
 		return err
 	}
@@ -288,12 +301,12 @@ func (p *FtCosi) startSubProtocol(tree *onet.Tree) (*SubFtCosi, error) {
 	cosiSubProtocol.Timeout = p.Timeout / 3
 
 	//the Threshold (minus root node) is divided evenly among the subtrees
-	threshold := int(math.Ceil(float64(p.Threshold-1) / float64(p.NSubtrees)))
-	if threshold > tree.Size()-1 {
-		threshold = tree.Size() - 1
+	subThreshold := int(math.Ceil(float64(p.Threshold-1) / float64(p.NSubtrees)))
+	if subThreshold > tree.Size()-1 {
+		subThreshold = tree.Size() - 1
 	}
 
-	cosiSubProtocol.Threshold = threshold
+	cosiSubProtocol.Threshold = subThreshold
 
 	err = cosiSubProtocol.Start()
 	if err != nil {

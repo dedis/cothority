@@ -1,7 +1,6 @@
 package protocol
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/dedis/kyber"
@@ -11,17 +10,14 @@ import (
 	"github.com/dedis/onet/network"
 )
 
-// generateAggregatedCommitment generates a personal secret and commitment
-// and returns respectively the secret, an aggregated commitment and an aggregated mask
-func generateAggregatedCommitment(s cosi.Suite, t *onet.TreeNodeInstance, publics []kyber.Point,
-	structCommitments []StructCommitment, ok bool) (kyber.Scalar, kyber.Point, *cosi.Mask, error) {
+// aggregateCommitments returns an aggregated commitment and an aggregated mask
+func aggregateCommitments(s cosi.Suite, publics []kyber.Point,
+	structCommitments []StructCommitment) (kyber.Point, *cosi.Mask, error) {
 
-	if t == nil {
-		return nil, nil, nil, fmt.Errorf("TreeNodeInstance should not be nil, but is")
-	} else if publics == nil {
-		return nil, nil, nil, fmt.Errorf("publics should not be nil, but is")
+	if publics == nil {
+		return nil, nil, fmt.Errorf("publics should not be nil, but is")
 	} else if structCommitments == nil {
-		return nil, nil, nil, fmt.Errorf("structCommitments should not be nil, but is")
+		return nil, nil, fmt.Errorf("structCommitments should not be nil, but is")
 	}
 
 	//extract lists of commitments and masks
@@ -32,50 +28,50 @@ func generateAggregatedCommitment(s cosi.Suite, t *onet.TreeNodeInstance, public
 		masks = append(masks, c.Mask)
 	}
 
-	//generate personal secret and commitment
-	secret, commitment := cosi.Commit(s)
-	if !ok {
-		commitment = s.Point().Null()
-	}
-	commitments = append(commitments, commitment)
-
 	//generate personal mask
-	personalMask, err := cosi.NewMask(s, publics, t.Public())
-	if err != nil {
-		return nil, nil, nil, err
-	}
-	if !ok {
-		var found bool
-		for i, p := range publics {
-			if p.Equal(t.Public()) {
-				personalMask.SetBit(i, false)
-				found = true
-			}
-		}
-		if !found {
-			return nil, nil, nil, errors.New("failed to find own public key")
-		}
-	}
-	masks = append(masks, personalMask.Mask())
-
-	//aggregate commitments and masks
-	aggCommitment, aggMask, err :=
-		cosi.AggregateCommitments(s, commitments, masks)
-	if err != nil {
-		return nil, nil, nil, err
-	}
+	//if isInMask {
+	//	personalMask, err := cosi.NewMask(s, publics, t.Public())
+	//	if err != nil {
+	//		return nil, nil, err
+	//	}
+	//	masks = append(masks, personalMask.Mask())
+	//}
+	//if !isInMask {
+	//	var found bool
+	//	for i, p := range publics {
+	//		if p.Equal(t.Public()) {
+	//			personalMask.SetBit(i, false)
+	//			found = true
+	//		}
+	//	}
+	//	if !found {
+	//		return nil, nil, errors.New("failed to find own public key")
+	//	}
+	//}
 
 	//create final aggregated mask
 	finalMask, err := cosi.NewMask(s, publics, nil)
 	if err != nil {
-		return nil, nil, nil, err
-	}
-	err = finalMask.SetMask(aggMask)
-	if err != nil {
-		return nil, nil, nil, err
+		return nil, nil, err
 	}
 
-	return secret, aggCommitment, finalMask, nil
+	aggCommitment := s.Point().Null()
+	aggMask := finalMask.Mask()
+	if len(masks) > 0 {
+		//aggregate commitments and masks
+		aggCommitment, aggMask, err =
+			cosi.AggregateCommitments(s, commitments, masks)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+
+	err = finalMask.SetMask(aggMask)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return aggCommitment, finalMask, nil
 }
 
 // generateResponse generates a personal response based on the secret

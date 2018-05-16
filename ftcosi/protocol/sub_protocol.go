@@ -105,6 +105,7 @@ func (p *SubFtCosi) Shutdown() error {
 	return nil
 }
 
+//TODO R: think about 2-level trees (especially !p.IsRoot())
 // Dispatch is the main method of the subprotocol, running on each node and handling the messages in order
 func (p *SubFtCosi) Dispatch() error {
 	defer p.Done()
@@ -138,13 +139,14 @@ func (p *SubFtCosi) Dispatch() error {
 	verifyChan := make(chan bool, 1)
 	if !p.IsRoot() {
 		go func() {
-			log.Lvl3(p.ServerIdentity(), "starting verification")
+			log.Lvl3(p.ServerIdentity(), "starting verification in the background")
 			verifyChan <- p.verificationFn(p.Msg, p.Data)
+			log.Lvl3(p.ServerIdentity(), "verification done")
 		}()
 	}
 
 	if !p.IsLeaf() {
-		// Only send commits if it's the root node or the subleader.
+		// Only send commits if the node has children
 		go func() {
 			if errs := p.SendToChildrenInParallel(&announcement.Announcement); len(errs) > 0 {
 				log.Lvl3(p.ServerIdentity(), "failed to send announcement to all children")
@@ -154,27 +156,37 @@ func (p *SubFtCosi) Dispatch() error {
 
 	// ----- Commitment & Challenge -----
 
+	var secret kyber.Scalar
 	var challenge StructChallenge
 	committedChildren := make([]*onet.TreeNode, 0)
 	commitments := make([]StructCommitment, 0)              // for the subleader
 	ThresholdRefusal := 1 + len(p.Children()) - p.Threshold // for the subleader
 	NRefusal := 0                                           // for the subleader
-	var secret kyber.Scalar
 	var verificationOk bool
 	firstCommitmentSent := false
 	t := time.After(p.Timeout / 2)
 
 	if p.IsLeaf() {
 		verificationOk = <-verifyChan
-		if !verificationOk {
-			log.Lvl2(p.ServerIdentity(), "verification failed, unsetting the mask")
+		close(verifyChan)
+		//verificationOk = false
+		if verificationOk {
+			var personalStructCommitment StructCommitment
+			secret, personalStructCommitment, err = p.getCommitment()
+			if err != nil {
+				return err
+			}
+			commitments = append(commitments, personalStructCommitment)
+		} else {
+			log.Lvl2(p.ServerIdentity(), "verification failed, not adding own commitment")
+			NRefusal++
 		}
 
-		secret, err = p.sendAgregatedCommitments(verificationOk, commitments, 0)
+		err = p.sendAggregatedCommitments(commitments, NRefusal)
 		if err != nil {
 			return err
 		}
-		t = make(chan time.Time) //deactivate timeout
+		t = make(chan time.Time) //deactivate timeout to wait for challenge
 	}
 
 loop:
@@ -184,57 +196,65 @@ loop:
 			if !channelOpen {
 				return nil
 			}
+			if p.IsLeaf() { // leafs ignore commitments
+				break
+			}
 			if commitment.TreeNode.Parent != p.TreeNode() {
 				log.Lvl2("received a Commitment from a non-Children node")
 				break //discards it
 			}
+
 			if p.IsRoot() {
 				// send commitment to super-protocol
 				p.subCommitment <- commitment
 
 				//deactivate timeout
-				t = make(chan time.Time) //TODO: see if should only do that on final answer
+				t = make(chan time.Time) //TODO T: see if should only do that on final answer
 
 				committedChildren = []*onet.TreeNode{commitment.TreeNode}
-			} else {
+			} else { // subleader
 				if commitment.CoSiCommitment.Equal(p.suite.Point().Null()) { //refusal
 					NRefusal++
-
-					if NRefusal == ThresholdRefusal-1 {
-						verificationOk = <-verifyChan
-						if !verificationOk {
-							//NRefusal++
-						}
-						verifyChan <- verificationOk // send back for other uses
-					}
 				} else { //accepted
 					committedChildren = append(committedChildren, commitment.TreeNode)
 					commitments = append(commitments, commitment)
+				}
 
-					if len(commitments) == p.Threshold-1 {
-						verificationOk = <-verifyChan
-						if verificationOk {
-							//NRefusal++
+				//generates own commitment if proposal is accepted
+				if len(commitments) == p.Threshold-1 || NRefusal == ThresholdRefusal-1 { //if almost threshold
+					var channelOpen bool
+					verificationOk, channelOpen = <-verifyChan
+					if channelOpen {
+						close(verifyChan)
+						if verificationOk { //accepted
+							var personalStructCommitment StructCommitment
+							secret, personalStructCommitment, err = p.getCommitment()
+							if err != nil {
+								return err
+							}
+							commitments = append(commitments, personalStructCommitment)
+						} else { //refused
+							NRefusal++
 						}
-						verifyChan <- verificationOk // send back for other uses
 					}
 				}
 
-				//TODO:implement 0 threshold
+				//TODO R: implement 0 threshold
 				if (!firstCommitmentSent &&
-					(len(commitments)+1 >= p.Threshold || // quick answer
-						NRefusal > ThresholdRefusal)) || // quick refusal answer
-					len(commitments)+NRefusal == len(p.Children()) { // final answer
+					(len(commitments) >= p.Threshold || // quick answer
+						NRefusal >= ThresholdRefusal)) || // quick refusal answer
+					len(commitments)+NRefusal == len(p.Children())+1 { // final answer
 
-					secret, err = p.sendAgregatedCommitments(verificationOk, commitments, NRefusal)
+					err = p.sendAggregatedCommitments(commitments, NRefusal)
 					if err != nil {
 						return err
 					}
 
 					firstCommitmentSent = true
 				}
-				if len(commitments)+NRefusal > len(p.Children()) {
-					log.Error(p.ServerIdentity(), "more commitments and refusal than number of children in subleader")
+				if len(commitments)+NRefusal > maxThreshold {
+					log.Error(p.ServerIdentity(), "more commitments (", len(commitments),
+						") and refusals (", NRefusal, ") than possible in subleader (", maxThreshold, ")")
 				}
 			}
 		case challenge, channelOpen = <-p.ChannelChallenge:
@@ -257,20 +277,37 @@ loop:
 				return nil
 			}
 			log.Error(p.ServerIdentity(), "timed out while waiting for commits, got", len(commitments), "commitments")
+
+			//generate own commitment, if accepted
+			var channelOpen bool
+			verificationOk, channelOpen = <-verifyChan
+			if channelOpen {
+				close(verifyChan)
+				if verificationOk { // accepted
+					var personalStructCommitment StructCommitment
+					secret, personalStructCommitment, err = p.getCommitment()
+					if err != nil {
+						return err
+					}
+					commitments = append(commitments, personalStructCommitment)
+				} else { // refused
+					NRefusal++
+				}
+			}
+
 			//sending commits received
-			secret, err = p.sendAgregatedCommitments(verificationOk, commitments, NRefusal) //TODO: note that can still send final answer
+			err = p.sendAggregatedCommitments(commitments, NRefusal) //TODO R: deactivate so that no new answers can be sent
 			if err != nil {
 				return err
 			}
 		}
 	}
-	//log.Lvl3(p.ServerIdentity(), "finished receiving commitments, ", len(commitments), "commitment(s) received")
 
 	// ----- Response -----
 	responses := make([]StructResponse, 0)
 
 	// Second half of our time budget for the responses.
-	timeout := time.After(p.Timeout / 2) //TODO: do we really need a timeout for the responses?
+	timeout := time.After(p.Timeout / 2) //TODO T: do we really need a timeout for the responses?
 	for range committedChildren {
 		select {
 		case response, channelOpen := <-p.ChannelResponse:
@@ -308,25 +345,23 @@ loop:
 	return nil
 }
 
-func (p *SubFtCosi) sendAgregatedCommitments(ok bool, commitments []StructCommitment,
-	NRefusal int) (secret kyber.Scalar, err error) {
+func (p *SubFtCosi) sendAggregatedCommitments(commitments []StructCommitment, NRefusal int) error {
 
-	// compute personal commitment
-	var commitment kyber.Point
-	var mask *cosi.Mask
-	secret, commitment, mask, err = generateAggregatedCommitment(p.suite, p.TreeNodeInstance,
-		p.Publics, commitments, ok)
+	// aggregate commitments
+	commitment, mask, err := aggregateCommitments(p.suite, p.Publics, commitments)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// send to parent
 	err = p.SendToParent(&Commitment{commitment, mask.Mask(), NRefusal})
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return secret, nil
+	log.Lvl2(p.ServerIdentity(), "commitment sent with", mask.CountEnabled(), "accepted and", NRefusal, "refusals")
+
+	return nil
 }
 
 // HandleStop is called when a Stop message is send to this node.
@@ -395,4 +430,16 @@ func (p *SubFtCosi) multicastParallel(msg interface{}, nodes ...*onet.TreeNode) 
 	}
 	wg.Wait()
 	return errs
+}
+
+func (p *SubFtCosi) getCommitment() (secret kyber.Scalar, structCommitment StructCommitment, err error) {
+	secret, personalCommitment := cosi.Commit(p.suite)
+	personalMask, err := cosi.NewMask(p.suite, p.Publics, p.Public())
+	if err != nil {
+		secret = nil
+		return
+	}
+	structCommitment = StructCommitment{p.TreeNode(),
+		Commitment{personalCommitment, personalMask.Mask(), 0}}
+	return
 }
