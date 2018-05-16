@@ -26,10 +26,10 @@ func TestCollectionDBStrange(t *testing.T) {
 	value := []byte("value")
 	kind := []byte("mykind")
 	err = cdb.Store(&StateChange{
-		Action: Create,
-		Key:    key,
-		Value:  value,
-		Kind:   kind,
+		StateAction: Create,
+		ObjectID:    key,
+		Value:       value,
+		ContractID:  kind,
 	})
 	require.Nil(t, err)
 	v, k, err := cdb.GetValueKind([]byte("first"))
@@ -59,10 +59,10 @@ func TestCollectionDB(t *testing.T) {
 	// Store all key/value pairs
 	for k, v := range pairs {
 		sc := &StateChange{
-			Action: Create,
-			Key:    []byte(k),
-			Value:  []byte(v),
-			Kind:   mykind,
+			StateAction: Create,
+			ObjectID:    []byte(k),
+			Value:       []byte(v),
+			ContractID:  mykind,
 		}
 		require.Nil(t, cdb.Store(sc))
 	}
@@ -97,29 +97,27 @@ func TestCollectionDBtryHash(t *testing.T) {
 	require.Nil(t, err)
 
 	cdb := newCollectionDB(db, testName)
-	ts := []OmniledgerTransaction{{
-		StateChanges: []StateChange{{
-			Action: Create,
-			Key:    []byte("key1"),
-			Kind:   []byte("kind1"),
-			Value:  []byte("value1"),
+	scs := []StateChange{{
+		StateAction: Create,
+		ObjectID:    []byte("key1"),
+		ContractID:  []byte("kind1"),
+		Value:       []byte("value1"),
+	},
+		{
+			StateAction: Create,
+			ObjectID:    []byte("key2"),
+			ContractID:  []byte("kind2"),
+			Value:       []byte("value2"),
 		},
-			{
-				Action: Create,
-				Key:    []byte("key2"),
-				Kind:   []byte("kind2"),
-				Value:  []byte("value2"),
-			},
-		},
-	}}
-	mrTrial, err := cdb.tryHash(ts)
+	}
+	mrTrial, err := cdb.tryHash(scs)
 	require.Nil(t, err)
 	_, _, err = cdb.GetValueKind([]byte("key1"))
 	require.EqualError(t, err, "no match found")
 	_, _, err = cdb.GetValueKind([]byte("key2"))
 	require.EqualError(t, err, "no match found")
-	cdb.Store(&ts[0].StateChanges[0])
-	cdb.Store(&ts[0].StateChanges[1])
+	cdb.Store(&scs[0])
+	cdb.Store(&scs[1])
 	mrReal := cdb.RootHash()
 	require.Equal(t, mrTrial, mrReal)
 }

@@ -36,133 +36,131 @@ Following is an overview of the most important structures defined in Omniledger
 and how they can be described using protobuf. For each protobuf description we
 give a short overview of the different fields and how they work together.
 
-## Darc
+## Skipchain Block
 
-Package darc in most of our projects we need some kind of access control to
-protect resources. Instead of having a simple password or public key for
-authentication, we want to have access control that can be: evolved with a
-threshold number of keys be delegated. So instead of having a fixed list of
-identities that are allowed to access a resource, the goal is to have an
-evolving description of who is allowed or not to access a certain resource.
+Whenever Omniledger stores a new Skipchain Block, the header will only contain
+hashes, while the clientTransactions will be stored in the body. This allows
+for a reduced proof size.
 
-A darc has the following format:
+Block header:
+- Merkle tree root of the global state
+- Hash of all clientTransactions in this block
+- Hash of all stateChanges resulting from the clientTransactions
 
-```
-message Darc {
-	// Version should be monotonically increasing over the evolution of a Darc.
-	uint64 Version = 1;
-	// Description is a free-form field that can hold any data as required by the user.
-	// Darc itself will never depend on any of the data in here.
-	bytes Description = 2;
-	// BaseID is the ID of the first darc of this Series
-	bytes BaseID = 3;
-	// Rules map an action to an expression.
-	Rules Rules = 4;
-	// Signature is calculated over the protobuf representation of [Rules, Version, Description]
-	// and needs to be created by an Owner from the previous valid Darc.
-	bytes Signature = 5;
-}
+Block body:
+- List of all clientTransactions
 
-message Rule {
-  map<string, bytes> Rules = 1;
-}
-```
-
-The primary type is a darc. Which contains a set of rules that what type of
-permission are granted for any identity. A darc can be updated by performing an
-evolution.  That is, the identities that have the "evolve" permission in the
-old darc can creates a signature that signs off the new darc. Evolutions can be
-performed any number of times, which creates a chain of darcs, also known as a
-path. A path can be verified by starting at the oldest darc (also known as the
-base darc), walking down the path and verifying the signature at every step.
-
-As mentioned before, it is possible to perform delegation. For example, instead
-of giving the "evolve" permission to (public key) identities, we can give it to
-other darcs. For example, suppose the newest darc in some path, let's called it
-darc_A, has the "evolve" permission set to true for another darc---darc_B, then
-darc_B is allowed to evolve the path.
-
-Of course, we do not want to have static rules that allows only a single
-signer.  Our darc implementation supports an expression language where the user
-can use logical operators to specify the rule.  For exmple, the expression
-"darc:a & ed25519:b | ed25519:c" means that "darc:a" and at least one of
-"ed25519:b" and "ed25519:c" must sign. For more information please see the
-expression package.
-
-## Smart Contracts in Omniledger are called Classes
+## Smart Contracts in Omniledger
 
 Previous name was _Precompiled Smart Contracts_, but looking at how we want
-it to work, we decided to call it simply a set of Classes. A class defines
-how to interpret the methods sent by the client. Examples of classes and some
-of their methods are:
+it to work, we decided to call it simply a set of Contracts. A contract defines
+how to interpret the methods sent by the client. It is identified by the
+contractID which is a string pointing to a given contract.
 
-- Darc:
-  - create a new Darc
-	- update a darc
-- Omniledger Configuration
-  - create new configuration
-  - Add or remove nodes
-  - Change the block interval time
-- Onchain-secrets write request:
-  - create a write request
-- Onchain-secrets read request:
-  - create a read request
-- Onchain-secrets reencryption request:
-  - create a reencryption request
-- Evoting:
-  - Creating a new election
-  - Casting a vote
-  - Requesting mix
-  - Requesting decryption
-- PoP:
-  - Create a new party
-  - Adding attendees
-	- Finalizing the party
-- PoPCoin:
-  - Creating a popcoin source
-- PoPCoinAccount:
-  - Creating an account
-	- Transfer coins from one account to another
+Contracts receive as an input a list of coins that are available to them. As
+an output, a contract needs to give the new list of coins that is available.
+
+After all contracts have been run, the leftover coins are given to the leader as
+a mining reward.
+
+Input arguments:
+- pointer to database for read-access
+- Instruction from the client
+- key/value pairs of coins available
+
+Output arguments:
+- one StateChange (might be empty)
+- updated key/value pairs of coins still available
+- error that will abort the clientTransaction if it is non-zero. No global
+state will be changed if any of the contracts returns non-zero.
 
 ## From Client to the Collection
 
 In Omniledger we define the following path from client instructions to
 global state changes:
 
-* _Instruction_ is a key and a list of method/data pairs that is signed
-and verifiable by the darc defined in the first part of the key
-* _ClientTransactions_ is a set of instructions sent by a client
+* _Instruction_ is one of Spawn, Invoke or Delete that is called upon an
+existing object
+* _ClientTransaction_ is a set of instructions sent by a client
 * _StateChange_ is calculated at the leader and verified by every node. It
-contains the new key/kind/value triplets to create/update/delete.
-* _OmniledgerTransactions_ is a set of ClientTransactions and the corresponding
-StateChanges
+contains the new key/contractID/value triplets to create/update/delete.
 
 A block in omniledger contains zero or more OmniledgerTransactions. Every
 one of these transactions can be valid or not and will be marked as such by
 the leader. Every node has to verify whether it accepts or refuses the
 decisions made by the leader.
 
+### Authentication and Coins
+
+Current authentications support darc-signatures, later authentications will also
+support use of coins. It is the contracts' responsibility to verify the
+authentication and that enough coins are available.
+
 ### Instruction
 
 An instruction is created by a client. It has the following format:
 
 ```
-message Instruction{
-	// DarcID points to the darc that can verify the signature
-	bytes DarcID = 1;
-	// Nonce: will be concatenated to the darcID to create the key
+// Instruction holds only one of Spawn, Invoke, or Delete
+message Instruction {
+	// ObjectID holds the id of the existing object that can spawn new objects.
+	ObjectID ObjectID = 1;
+	// Nonce is monotonically increasing with regard to the darc in the objectID
+	// and used to prevent replay attacks.
+	// The client has to track which is the current nonce of a darc-ID.
 	bytes Nonce = 2;
-	// Command is object-specific and case-sensitive. The only command common to
-	// all classes is "Create".
-	string Command = 3;
-	// Kind indicates what class we want to instantiate if we have a "Create"
-	// command. This field is only required for "Create".
-	string Kind = 4;
-	// Data is a free slice of bytes that can be sent to the object. For a
-	// "Create" command, the data is the kind of class to instantiate.
-	bytes Data = 5;
-	// Signatures that can be verified using the given darcID
-	repeated DarcSignature Signatures = 6;
+	// Index and length prevent a leader from censoring specific instructions from
+	// a client and still keep the other instructions valid.
+	// Index is relative to the beginning of the clientTransaction.
+	int32 Index = 3;
+	// Length is the total number of instructions in this clientTransaction
+	int32 Length = 4;
+	// Spawn creates a new object
+	Spawn spawn = 5;
+	// Invoke calls a method of an existing object
+	Invoke invoke = 6;
+	// Delete removes the given object
+	Delete delete = 7;
+	// Signatures that can be verified using the darc defined by the objectID.
+	repeated DarcSignature Signatures = 8;
+}
+
+// ObjectID points to an object that holds the state of a contract.
+message ObjectID {
+	// DarcID points to the darc controlling access to this object
+	DarcID DarcID = 1;
+	// InstanceID is taken from the Instruction.Nonce when the Spawn instruction is
+	// sent.
+	bytes InstanceID = 2;
+}
+
+// Spawn is called upon an existing object that will spawn a new object.
+message Spawn {
+	// ContractID represents the kind of contract that needs to be spawn.
+	string ContractID = 1;
+	// args holds all data necessary to authenticate and spawn the new object.
+	repeated Argument args = 2;
+}
+
+// Invoke calls a method of an existing object which will update its internal
+// state.
+message Invoke {
+	// Command is object specific and interpreted by the object.
+	string Command = 1;
+	// args holds all data necessary to authenticate and spawn the new object.
+	repeat Argument args = 2;
+}
+
+// Delete removes the object.
+message Delete {
+}
+
+// Argument is a name/value pair that will be passed to the object.
+message Argument {
+	// Name can be any name recognized by the object.
+	string Name = 1;
+	// Value must be binary marshalled
+	bytes Value = 2;
 }
 ```
 
@@ -181,49 +179,30 @@ message ClientTransaction{
 ### StateChange
 
 Once the leader receives the ClientTransactions, it will send the individual
-instructions to the corresponding classes and/or objects. Each call to a
-class/object will return 0 or more StateChanges that define how to update the
-state of the collection. This means that the class definitions must be trustworthy
-as they can change every state available.
+instructions to the corresponding contracts and/or objects. Each call to a
+contract/object will return 0 or more StateChanges that define how to update the
+state of the collection.
+Omniledger will take care that the following instruction/StateChanges are
+respected. *This might be too restrictive*:
+- Spawn: only Create-Actions
+- Invoke: only Update-Action on the invoked object
+- Delete: only Delete-Action on the invoked object
 
 ```
 message StateChange{
-	// Action can be any of Create, Update, Delete
-	Action Action = 1;
-	// Key is the darcID concatenated with the Nonce
-	bytes Key = 2;
-	// Kind points to the class that can interpret the value
-	bytes Kind = 3;
-	// Value is the data needed by the class
+	// StateAction can be any of Create, Update, Delete
+	StateAction StateAction = 1;
+	// ObjectID is the identifier of the key
+	bytes ObjectID = 2;
+	// ContractID points to the contract that can interpret the value
+	bytes ContractID = 3;
+	// Value is the data needed by the contract
 	bytes Value = 4;
-	// Previous points to the skipBlockID of the previous StateChange for this Key
-	// Yet to be defined if really needed and if the ID is the skipblockID or some
-	// concatenation indicating the position in the block.
-	bytes Previous = 5;
 }
 ```
 
-The *Key* is created similar to the way Ethereum creates its addresses and is
-always 64 bytes long. The lower 32 bytes are filled with the BaseID of the
-Darc that allows the Key/Kind/Value triplet to be stored in omniledger.
-The upper 32 bytes are a nonce that needs to be unique for unique triplets,
-but that doesn't need to be monotonic or increasing.
-
-### OmniledgerTransaction
-
-The leader gathers all ClientTransactions and the corresponding StateChanges
-in a set of OmniledgerTransactions. For each of the ClientTransaction, the
-leader will test whether this is a valid transaction or not and mark it as
-such in his list. All nodes need to verify that they get the same results as
-the leader and reject the block if this is not the case.
-
-```
-message OmniledgerTransaction{
-	ClientTransaction ClientTransaction = 1;
-	repeated StateChange StateChanges = 2;
-	bool Valid = 3;
-}
-```
+The *ObjectID* is a random key chosen by Omniledger and must correspond to
+further Instructions sent by the client.
 
 ## Proof
 
@@ -296,7 +275,92 @@ in this package focuses on ease of use and flexibility, allowing to easily
 develop applications ranging from simple client-server storage to fully
 distributed and decentralized ledgers with minimal bootstrapping time.
 
+## Darc
+
+Package darc in most of our projects we need some kind of access control to
+protect resources. Instead of having a simple password or public key for
+authentication, we want to have access control that can be: evolved with a
+threshold number of keys be delegated. So instead of having a fixed list of
+identities that are allowed to access a resource, the goal is to have an
+evolving description of who is allowed or not to access a certain resource.
+
+A darc has the following format:
+
+```
+message Darc {
+	// Version should be monotonically increasing over the evolution of a Darc.
+	uint64 Version = 1;
+	// Description is a free-form field that can hold any data as required by the user.
+	// Darc itself will never depend on any of the data in here.
+	bytes Description = 2;
+	// BaseID is the ID of the first darc of this Series
+	bytes BaseID = 3;
+	// Rules map an action to an expression.
+	Rules Rules = 4;
+	// Signature is calculated over the protobuf representation of [Rules, Version, Description]
+	// and needs to be created by an Owner from the previous valid Darc.
+	bytes Signature = 5;
+}
+
+message Rule {
+  map<string, bytes> Rules = 1;
+}
+```
+
+The primary type is a darc. Which contains a set of rules that what type of
+permission are granted for any identity. A darc can be updated by performing an
+evolution.  That is, the identities that have the "evolve" permission in the
+old darc can creates a signature that signs off the new darc. Evolutions can be
+performed any number of times, which creates a chain of darcs, also known as a
+path. A path can be verified by starting at the oldest darc (also known as the
+base darc), walking down the path and verifying the signature at every step.
+
+As mentioned before, it is possible to perform delegation. For example, instead
+of giving the "evolve" permission to (public key) identities, we can give it to
+other darcs. For example, suppose the newest darc in some path, let's called it
+darc_A, has the "evolve" permission set to true for another darc---darc_B, then
+darc_B is allowed to evolve the path.
+
+Of course, we do not want to have static rules that allows only a single
+signer.  Our darc implementation supports an expression language where the user
+can use logical operators to specify the rule.  For example, the expression
+"darc:a & ed25519:b | ed25519:c" means that "darc:a" and at least one of
+"ed25519:b" and "ed25519:c" must sign. For more information please see the
+expression package.
+
 # Usage and Comments
+
+## Contract Examples
+
+Examples of contracts and some of their methods are:
+
+- Darc:
+  - create a new Darc
+	- update a darc
+- Omniledger Configuration
+  - create new configuration
+  - Add or remove nodes
+  - Change the block interval time
+- Onchain-secrets write request:
+  - create a write request
+- Onchain-secrets read request:
+  - create a read request
+- Onchain-secrets reencryption request:
+  - create a reencryption request
+- Evoting:
+  - Creating a new election
+  - Casting a vote
+  - Requesting mix
+  - Requesting decryption
+- PoP:
+  - Create a new party
+  - Adding attendees
+	- Finalizing the party
+- PoPCoin:
+  - Creating a popcoin source
+- PoPCoinAccount:
+  - Creating an account
+	- Transfer coins from one account to another
 
 ## Transaction Queue and Block Generation
 
