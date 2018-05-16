@@ -26,7 +26,15 @@ const nodeConfig = {
     ]
   },
   externals: [nodeExternals()],
-  plugins: [new UglifyJsPlugin()]
+  plugins: [
+    new UglifyJsPlugin({
+      uglifyOptions: {
+        mangle: {
+          safari10: true
+        }
+      }
+    })
+  ]
 };
 
 const browserConfig = {
@@ -60,7 +68,15 @@ const browserConfig = {
     ]
   },
   externals: ["bufferutil", "utf-8-validate"],
-  plugins: [new UglifyJsPlugin()]
+  plugins: [
+    new UglifyJsPlugin({
+      uglifyOptions: {
+        mangle: {
+          safari10: true
+        }
+      }
+    })
+  ]
 };
 
 module.exports = [nodeConfig, browserConfig];
