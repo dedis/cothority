@@ -199,6 +199,7 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		if err != nil {
 			return err
 		}
+
 		err = schnorr.Verify(cothority.Suite, election.MasterKey, digest, t.Signature)
 		if err != nil {
 			return err
