@@ -14,9 +14,9 @@ matrix:
 
     - language: node_js
 
-        node_js:
-          - "lts/*"
-          - "8"
+        # node_js:
+        #   - "lts/*"
+        #   - "8"
 
         # install:
         #   - gimme 1.9
