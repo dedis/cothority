@@ -18,6 +18,10 @@ matrix:
         - "lts/*"
         - "8"
 
+      env:
+        - TEST_DIR=cothority
+        - TEST_DIR=kyber
+
       install:
         - gimme 1.9
         - . $HOME/.gimme/envs/go1.9.env
