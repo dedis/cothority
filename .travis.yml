@@ -18,7 +18,8 @@ matrix:
         - gimme 1.9
         - . $HOME/.gimme/envs/go1.9.env
         - go get github.com/dedis/Coding || true
-        - go get -t ./...
+        - git clone . `go env GOPATH`/src/github.com/dedis/cothority
+        - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
 
         # node_js:
         #   - "lts/*"
