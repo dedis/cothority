@@ -16,6 +16,8 @@ matrix:
 
       install:
         - gimme 1.9
+        - . $HOME/.gimme/envs/go1.9.env
+        - go get github.com/dedis/Coding || true
         - go get -t ./...
 
         # node_js:
