@@ -11,7 +11,7 @@ EXCLUDE_LINT = "should be.*UI|_test.go"
 test_playground:
 	cd skipchain; \
 	for a in $$( seq 100 ); do \
-	  go test -race -run Catchup || exit 1 ; \
+	  go test -race -v -run Catchup || exit 1 ; \
 	done;
 
 # Other targets are:

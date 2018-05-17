@@ -1,9 +1,3 @@
-language: node_js
-
-node_js:
-  - "lts/*"
-  - "8"
-
 env:
   - TEST_DIR=cothority
   - TEST_DIR=kyber
@@ -16,11 +10,6 @@ install:
   # GOPATH. So make a copy of it over where it is supposed to be.
   - git clone . `go env GOPATH`/src/github.com/dedis/cothority
   - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
-
-script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
-
-after_success:
-  - npm run coveralls
 
 notifications:
   email: false
@@ -38,3 +27,14 @@ matrix:
 
       script:
         - make test_playground
+
+    - language: node_js
+
+        node_js:
+          - "lts/*"
+          - "8"
+
+        script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
+
+        after_success:
+          - npm run coveralls
