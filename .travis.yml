@@ -14,10 +14,13 @@ matrix:
 
     - language: node_js
 
-        node_js:
-          - "lts/*"
-          - "8"
+      install:
+        - go get -t ./...
 
+        # node_js:
+        #   - "lts/*"
+        #   - "8"
+        #
         # install:
         #   - gimme 1.9
         #   - . $HOME/.gimme/envs/go1.9.env
