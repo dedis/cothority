@@ -15,6 +15,7 @@ matrix:
     - language: node_js
 
       install:
+        - gimme 1.9
         - go get -t ./...
 
         # node_js:
