@@ -27,10 +27,10 @@ matrix:
           - git clone . `go env GOPATH`/src/github.com/dedis/cothority
           - (cd `go env GOPATH`/src/github.com/dedis/cothority && go get -t ./... )
 
-        script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
-
-        after_success:
-          - npm run coveralls
+        # script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
+        #
+        # after_success:
+        #   - npm run coveralls
 
 notifications:
   email: false
