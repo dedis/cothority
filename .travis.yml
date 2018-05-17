@@ -37,4 +37,4 @@ matrix:
         - cd $TRAVIS_BUILD_DIR
 
       script:
-        - make test
+        - make test_playground
