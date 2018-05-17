@@ -91,8 +91,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 			case com := <-commitmentsChan:
 				commitmentsMap[com.subProtocol] = com.structCommitment //assumes that the last commit of a subtree is the biggest one
 
-				totalRefusals := sumRefusal(commitmentsMap)
-				if totalRefusals > len(p.publics)-p.Threshold { // we assume the root accepts the proposal
+				if sumRefusals(commitmentsMap) > len(p.publics)-p.Threshold { // we assume the root accepts the proposal
 					thresholdReachable = false
 				}
 
@@ -115,7 +114,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 			case <-time.After(p.Timeout):
 				return nil, nil, fmt.Errorf("not enough replies from nodes at timeout "+
 					"for Threshold %d, got %d commitments and %d refusals",
-					p.Threshold, sharedMask.CountEnabled(), sumRefusal(commitmentsMap))
+					p.Threshold, sharedMask.CountEnabled(), sumRefusals(commitmentsMap))
 			}
 		}
 	}
@@ -134,7 +133,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 	}
 	if !thresholdReachable {
 		return nil, nil, fmt.Errorf("too many refusals (got %d), the threshold %d is no more reachable",
-			sumRefusal(commitmentsMap), p.Threshold)
+			sumRefusals(commitmentsMap), p.Threshold)
 	}
 
 	// extract protocols and commitments from map
@@ -148,7 +147,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 	return commitments, runningSubProtocols, nil
 }
 
-func sumRefusal(commitmentsMap map[*SubFtCosi]StructCommitment) int {
+func sumRefusals(commitmentsMap map[*SubFtCosi]StructCommitment) int {
 	sumRefusal := 0
 	for _, commitment := range commitmentsMap {
 		sumRefusal += commitment.NRefusal

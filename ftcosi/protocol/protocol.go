@@ -224,7 +224,13 @@ func (p *FtCosi) Dispatch() error { //TODO R: verify that it sends empty signatu
 	}
 
 	// generate own response
-	response, err := generateResponse(p.suite, p.TreeNodeInstance, responses, secret, cosiChallenge, verificationOk)
+	personalResponse, err := cosi.Response(p.suite, p.Private(), secret, structChallenge.CoSiChallenge)
+	if err != nil {
+		return fmt.Errorf("error while generating own response: %s", err)
+	}
+	responses = append(responses, StructResponse{p.TreeNode(), Response{personalResponse}})
+
+	aggResponse, err := aggregateResponses(p.suite, responses)
 	if err != nil {
 		return err
 	}
@@ -232,7 +238,7 @@ func (p *FtCosi) Dispatch() error { //TODO R: verify that it sends empty signatu
 	//starts final signature
 	log.Lvl3(p.ServerIdentity().Address, "starts final signature")
 	var signature []byte
-	signature, err = cosi.Sign(p.suite, commitment, response, finalMask)
+	signature, err = cosi.Sign(p.suite, commitment, aggResponse, finalMask)
 	if err != nil {
 		return err
 	}
