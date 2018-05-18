@@ -177,6 +177,7 @@ class LeaderSocket {
     // maximum 3 times and returns on the first successful attempt
     const that = this;
     const fn = co.wrap(function*() {
+      var lastErr
       for (let i = 0; i < 3; i++) {
         try {
           const socket = new Socket(
@@ -187,10 +188,11 @@ class LeaderSocket {
           return Promise.resolve(reply);
         } catch (e) {
           console.error("error sending request: ", e.message);
+	  lastErr = e
         }
       }
       return Promise.reject(
-        new Error("couldn't send request after 3 attempts")
+        new Error("couldn't send request after 3 attempts: "+lastErr.message)
       );
     });
     return fn();

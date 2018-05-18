@@ -184,7 +184,7 @@ describe("leader socket", () => {
     // create the socket and see if we have any messages back
     const socket = new network.LeaderSocket(roster, "test");
     socket.send("Request", "ServerIdentity", {}).catch(e => {
-      expect(e.message).to.equal("couldn't send request after 3 attempts");
+      expect(e.message).to.include("couldn't send request after 3 attempts");
       done();
     });
   });
