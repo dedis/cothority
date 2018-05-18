@@ -49,8 +49,8 @@ docker_setup:
 docker_run:
 	if [ ! -f conode_data/private.toml ]; then make docker_setup; fi
 	mkdir -p $(DATA_DIR)
-	docker run -it --rm -P --name $(CONTAINER) -v $(DATA_DIR):/conode_data \
-	    $(IMAGE_NAME):$(VERSION)
+	docker run -it --rm -p 6879-6880:6879-6880 --name $(CONTAINER) -v $(DATA_DIR):/conode_data \
+	    $(IMAGE_NAME)
 
 docker_stop:
 	docker rm -f $(CONTAINER)
@@ -77,4 +77,3 @@ bindist: exe/conode.Linux.x86_64
 	chmod +x $(OUTPUT_DIR)/conode
 	LANG=C tar zcf $(OUTPUT_DIR).tar.gz $(OUTPUT_DIR)
 	rm -rf $(OUTPUT_DIR)
-

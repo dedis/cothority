@@ -214,8 +214,8 @@ testFailure() {
 	setupGenesis
 	testOK runSc skipchain block add --roster public.toml $ID
 
-	# -n: newest, so #4 is the one that is dead now
-	pkill -n conode
+	# Kill number 4
+	pkill -f "conode.*co4.*server"
 	sleep .1
 	testOK runSc skipchain block add --roster public.toml $ID
 
