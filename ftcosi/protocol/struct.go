@@ -29,6 +29,7 @@ const DefaultProtocolName = "ftCoSiProtoDefault"
 // main protocol.
 const DefaultSubProtocolName = "ftSubCoSiProtoDefault"
 
+
 type ftCosiSuite struct {
 	cosi.Suite
 	r cipher.Stream
@@ -45,6 +46,8 @@ func (m *ftCosiSuite) RandomStream() cipher.Stream {
 // EdDSACompatibleCosiSuite is a custom suite made to be compatible with eddsa because
 // cothority.Suite uses sha256 but EdDSA uses sha512.
 var EdDSACompatibleCosiSuite = &ftCosiSuite{edwards25519.NewBlakeSHA256Ed25519(), random.New()}
+
+// PROTOSTART
 
 // Announcement is the announcement message, the first message in the CoSi protocol
 type Announcement struct {

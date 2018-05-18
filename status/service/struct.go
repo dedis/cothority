@@ -5,6 +5,8 @@ import (
 	"github.com/dedis/onet/network"
 )
 
+//PROTOSTART
+
 // Request is what the Status service is expected to receive from clients.
 type Request struct {
 }

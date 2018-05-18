@@ -18,6 +18,8 @@ func init() {
 	}
 }
 
+// PROTOSTART
+
 // RandHound is the main protocol struct and implements the
 // onet.ProtocolInstance interface.
 type RandHound struct {

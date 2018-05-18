@@ -224,6 +224,7 @@ func sortUniq(slice []string) []string {
 	return ret
 }
 
+// PROTOSTART
 // Messages between the Client-API and the Service
 
 // PinRequest used for admin autentification
