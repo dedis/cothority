@@ -63,12 +63,7 @@ func TestProtocol(t *testing.T) {
 
 			local := onet.NewLocalTest(testSuite)
 			_, _, tree := local.GenTree(nNodes, false)
-
-			// get public keys
-			publics := make([]kyber.Point, tree.Size())
-			for i, node := range tree.List() {
-				publics[i] = node.ServerIdentity.Public
-			}
+			publics := tree.Roster.Publics()
 
 			pi, err := local.CreateProtocol(DefaultProtocolName, tree)
 			if err != nil {
@@ -113,12 +108,7 @@ func TestUnresponsiveLeafs(t *testing.T) {
 			local := onet.NewLocalTest(testSuite)
 			servers, roster, tree := local.GenTree(nNodes, false)
 			require.NotNil(t, roster)
-
-			// get public keys
-			publics := make([]kyber.Point, tree.Size())
-			for i, node := range tree.List() {
-				publics[i] = node.ServerIdentity.Public
-			}
+			publics := tree.Roster.Publics()
 
 			// find first subtree leaves servers based on GenTree function
 			leafsServerIdentities, err := GetLeafsIDs(tree, nNodes, nSubtrees)
@@ -187,12 +177,7 @@ func TestUnresponsiveSubleader(t *testing.T) {
 
 			local := onet.NewLocalTest(testSuite)
 			servers, _, tree := local.GenTree(nNodes, false)
-
-			// get public keys
-			publics := make([]kyber.Point, tree.Size())
-			for i, node := range tree.List() {
-				publics[i] = node.ServerIdentity.Public
-			}
+			publics := tree.Roster.Publics()
 
 			// find first subleader server based on genTree function
 			subleaderIds, err := GetSubleaderIDs(tree, nNodes, nSubtrees)
@@ -311,12 +296,7 @@ func TestProtocolRefusalAll(t *testing.T) {
 
 			local := onet.NewLocalTest(testSuite)
 			_, _, tree := local.GenTree(nNodes, false)
-
-			// get public keys
-			publics := make([]kyber.Point, tree.Size())
-			for i, node := range tree.List() {
-				publics[i] = node.ServerIdentity.Public
-			}
+			publics := tree.Roster.Publics()
 
 			pi, err := local.CreateProtocol(FailureProtocolName, tree)
 			if err != nil {
@@ -383,12 +363,7 @@ func TestProtocolRefuseOne(t *testing.T) {
 
 				local := onet.NewLocalTest(testSuite)
 				_, _, tree := local.GenTree(nNodes, false)
-
-				// get public keys
-				publics := make([]kyber.Point, tree.Size())
-				for i, node := range tree.List() {
-					publics[i] = node.ServerIdentity.Public
-				}
+				publics := tree.Roster.Publics()
 
 				pi, err := local.CreateProtocol(RefuseOneProtocolName, tree)
 				if err != nil {
