@@ -131,7 +131,7 @@ func NewWrite(suite suites.Suite, scid skipchain.SkipBlockID, X kyber.Point, rea
 		key = key[min(len(key), kp.EmbedLen()):]
 	}
 
-	gBar := suite.Point().Pick(suite.XOF(scid))
+	gBar := suite.Point().Mul(suite.Scalar().SetBytes(scid), nil)
 	wr.Ubar = suite.Point().Mul(r, gBar)
 	s := suite.Scalar().Pick(suite.RandomStream())
 	w := suite.Point().Mul(s, nil)
@@ -164,7 +164,7 @@ func (wr *Write) CheckProof(suite suite, scid skipchain.SkipBlockID) error {
 	ue := suite.Point().Mul(suite.Scalar().Neg(wr.E), wr.U)
 	w := suite.Point().Add(gf, ue)
 
-	gBar := suite.Point().Pick(suite.XOF(scid))
+	gBar := suite.Point().Mul(suite.Scalar().SetBytes(scid), nil)
 	gfBar := suite.Point().Mul(wr.F, gBar)
 	ueBar := suite.Point().Mul(suite.Scalar().Neg(wr.E), wr.Ubar)
 	wBar := suite.Point().Add(gfBar, ueBar)

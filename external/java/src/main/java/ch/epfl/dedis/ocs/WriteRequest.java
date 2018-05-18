@@ -147,7 +147,7 @@ public class WriteRequest {
                 write.addCs(Ckey.toProto());
             }
 
-            Point gBar = Point.pubStore(Arrays.copyOfRange(scid.getId(), 0, Ed25519.pubLen));
+            Point gBar = new Scalar(scid.getId()).scalarMult(null);
             Point Ubar = r.scalarMult(gBar);
             write.setUbar(Ubar.toProto());
             KeyPair skp = new KeyPair();
