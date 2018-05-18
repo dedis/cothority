@@ -1,9 +1,4 @@
-FROM golang:1.10 as builder
-RUN go get -d -v github.com/dedis/cothority/
-WORKDIR /go/src/github.com/dedis/cothority
-RUN sed -i 's/_ "github.com\/dedis\/cothority\/evoting\/service"/_ "github.com\/dedis\/cothority\/ocs\/service"/g' conode/experimental.go
-RUN go get -u ./...
-RUN go install ./conode
+FROM dedis/conode:dev
 
 EXPOSE 7003 7005 7007 7009
 
@@ -21,4 +16,5 @@ COPY co4/public.toml co4/public.toml
 # 3 - number of nodes to run
 # 2 - debug-level: 0 - none .. 5 - a lot
 # -wait - don't return from script when all nodes are started
-CMD ["env", "GODEBUG=gctrace=1", "conode/run_conode.sh", "local",  "4", "2", "-wait" ]
+RUN cp ./conode /usr/local/bin/
+CMD ["env", "GODEBUG=gctrace=1", "./run_conode.sh", "local",  "4", "2", "-wait", "-nobuild" ]

@@ -33,6 +33,7 @@ docker: Dockerfile
 # Use this target to build from local source instead of from publish sources.
 docker_dev: Dockerfile-dev exe/conode.Linux.x86_64
 	docker build -t $(IMAGE_NAME):$(TAG) -f Dockerfile-dev .
+	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):$(VERSION)
 
 docker_push: docker
 	@[ -n "$(GITUNTRACKEDCHANGES)" ] && echo "Pushing dirty images not allowed." && exit 1 || true
