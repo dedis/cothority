@@ -20,7 +20,7 @@ admins=$sc_jallen,$sc_lindo,$sc_giovanni
 
 sig=397ffd9cf68fc673dac8451007779a0a59e47b5ebcad69f400c0f07ac7f054a6ea3b6f9b8646280ee37f9960340ae451afe1e703195fb07e59f99fabd3e39404
 
-./evoting-admin \
+../evoting-admin \
 	-id $id \
 	-user $sc_jallen \
 	-sig $sig \
@@ -29,7 +29,7 @@ sig=397ffd9cf68fc673dac8451007779a0a59e47b5ebcad69f400c0f07ac7f054a6ea3b6f9b8646
 	-admins $admins \
 	-key 912dd6f8df921f5f51cadc64be3964a6b21a6fe1afac9a7c3b581a45df782895
 
-./evoting-admin \
+../evoting-admin \
 	-id $id \
 	-roster roster.toml \
 	-show
