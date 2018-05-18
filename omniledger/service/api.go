@@ -72,12 +72,14 @@ func (c *Client) GetProof(r *onet.Roster, id skipchain.SkipBlockID, key []byte) 
 
 // DefaultGenesisMsg creates the message that is used to for creating the
 // genesis darc and block.
-func DefaultGenesisMsg(v Version, r *onet.Roster, ids ...*darc.Identity) (*CreateGenesisBlock, error) {
+func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...*darc.Identity) (*CreateGenesisBlock, error) {
 	if len(ids) == 0 {
 		return nil, errors.New("no identities ")
 	}
 	d := darc.NewDarc(darc.InitRules(ids, ids), []byte("genesis darc"))
-	d.Rules.AddRule("Create", d.Rules.GetSignExpr())
+	for _, r := range rules {
+		d.Rules.AddRule(darc.Action(r), d.Rules.GetSignExpr())
+	}
 
 	m := CreateGenesisBlock{
 		Version:     v,

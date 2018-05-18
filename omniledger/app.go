@@ -84,7 +84,7 @@ func create(c *cli.Context) error {
 	}
 	client := service.NewClient()
 	signer := darc.NewSignerEd25519(pk, sk)
-	msg, err := service.DefaultGenesisMsg(service.CurrentVersion, group.Roster, signer.Identity())
+	msg, err := service.DefaultGenesisMsg(service.CurrentVersion, group.Roster, []string{"Spawn_dummy"}, signer.Identity())
 	if err != nil {
 		return err
 	}
@@ -110,15 +110,25 @@ func set(c *cli.Context) error {
 	}
 	// TODO: parse darc from c.Args().Get(2) and sign tx with it
 
-	kind := c.Args().Get(3)
+	contractID := c.Args().Get(3)
 	key := c.Args().Get(4)
 	value := c.Args().Get(5)
+	iid := service.Nonce{}
+	copy(iid[:], key[32:])
 	tx := service.ClientTransaction{
 		Instructions: []service.Instruction{{
-			DarcID: darc.ID(key[0:32]),
-			Nonce:  []byte(key[32:]),
-			Kind:   kind,
-			Data:   []byte(value),
+			ObjectID: service.ObjectID{
+				DarcID:     darc.ID(key[0:32]),
+				InstanceID: iid,
+			},
+			Nonce: service.Nonce{},
+			Spawn: &service.Spawn{
+				ContractID: contractID,
+				Args: service.Arguments{{
+					Name:  "value",
+					Value: []byte(value),
+				}},
+			},
 		}},
 	}
 	_, err = service.NewClient().SetKeyValue(group.Roster, scid, tx)

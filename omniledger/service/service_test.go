@@ -47,7 +47,7 @@ func TestService_CreateSkipchain(t *testing.T) {
 
 	// create valid darc
 	signer := darc.NewSignerEd25519(nil, nil)
-	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, signer.Identity())
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"Spawn_dummy"}, signer.Identity())
 	require.Nil(t, err)
 
 	// finally passing
@@ -127,7 +127,7 @@ func TestService_AddKeyValue(t *testing.T) {
 				pr, err := s.service().GetProof(&GetProof{
 					Version: CurrentVersion,
 					ID:      s.sb.SkipChainID(),
-					Key:     tx.Instructions[0].GetKey(),
+					Key:     tx.Instructions[0].ObjectID.Slice(),
 				})
 				if err != nil {
 					log.Error(err)
@@ -138,7 +138,7 @@ func TestService_AddKeyValue(t *testing.T) {
 				if pr.Proof.InclusionProof.Match() {
 					_, vs, err := pr.Proof.KeyValue()
 					require.Nil(t, err)
-					require.Equal(t, 0, bytes.Compare(tx.Instructions[0].Data, vs[0]))
+					require.Equal(t, 0, bytes.Compare(tx.Instructions[0].Spawn.Args[0].Value, vs[0]))
 					break
 				} else {
 				}
@@ -152,7 +152,7 @@ func TestService_GetProof(t *testing.T) {
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
-	serKey := s.tx.Instructions[0].GetKey()
+	serKey := s.tx.Instructions[0].ObjectID.Slice()
 
 	var rep *GetProofResponse
 	var i int
@@ -188,13 +188,13 @@ func TestService_GetProof(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-func TestService_DummyVerification(t *testing.T) {
+func TestService_InvalidVerification(t *testing.T) {
 	s := newSer(t, 1)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
 	for i := range s.hosts {
-		RegisterVerification(s.hosts[i], "invalid", verifyInvalidKind)
+		RegisterContract(s.hosts[i], "invalid", verifyInvalidKind)
 	}
 
 	// tx1 uses the invalid kind, so it should _not_ be stored.
@@ -228,7 +228,7 @@ func TestService_DummyVerification(t *testing.T) {
 	pr, err := s.service().GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
-		Key:     tx1.Instructions[0].GetKey(),
+		Key:     tx1.Instructions[0].ObjectID.Slice(),
 	})
 	require.Nil(t, err)
 	match := pr.Proof.InclusionProof.Match()
@@ -238,12 +238,11 @@ func TestService_DummyVerification(t *testing.T) {
 	pr, err = s.service().GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
-		Key:     tx2.Instructions[0].GetKey(),
+		Key:     tx2.Instructions[0].ObjectID.Slice(),
 	})
 	require.Nil(t, err)
 	match = pr.Proof.InclusionProof.Match()
 	require.True(t, match)
-
 }
 
 type ser struct {
@@ -268,7 +267,7 @@ func newSer(t *testing.T, step int) *ser {
 		value:  []byte("anyvalue"),
 		signer: darc.NewSignerEd25519(nil, nil),
 	}
-	s.hosts, s.roster, _ = s.local.GenTree(5, true)
+	s.hosts, s.roster, _ = s.local.GenTree(2, true)
 
 	for _, sv := range s.local.GetServices(s.hosts, omniledgerID) {
 		service := sv.(*Service)
@@ -276,7 +275,7 @@ func newSer(t *testing.T, step int) *ser {
 	}
 	registerDummy(s.services)
 
-	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, s.signer.Identity())
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"Spawn_dummy", "Spawn_invalid"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
@@ -311,14 +310,19 @@ func closeQueues(local *onet.LocalTest) {
 	}
 }
 
-func verifyInvalidKind(cdb collection.Collection, tx Instruction, kind string, state []byte) ([]StateChange, error) {
-	return nil, errors.New("Invalid")
+func verifyInvalidKind(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	return nil, nil, errors.New("Invalid")
 }
 
-func verifyDummy(cdb collection.Collection, tx Instruction, kind string, state []byte) ([]StateChange, error) {
+func verifyDummy(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	args := tx.Spawn.Args[0].Value
+	cid, _, err := tx.GetContractState(cdb)
+	if err != nil {
+		return nil, nil, err
+	}
 	return []StateChange{
-		NewStateChange(Create, tx.DarcID, tx.Nonce, kind, tx.Data),
-	}, nil
+		NewStateChange(Create, tx.ObjectID, cid, args),
+	}, nil, nil
 }
 
 func registerDummy(services interface{}) {
@@ -326,6 +330,6 @@ func registerDummy(services interface{}) {
 	// services []skipchain.GetService in the method signature doesn't work :(
 	for i := 0; i < reflect.ValueOf(services).Len(); i++ {
 		s := reflect.ValueOf(services).Index(i).Interface().(skipchain.GetService)
-		RegisterVerification(s.(skipchain.GetService), dummyKind, verifyDummy)
+		RegisterContract(s.(skipchain.GetService), dummyKind, verifyDummy)
 	}
 }

@@ -22,11 +22,11 @@ type collectionDB struct {
 	coll       collection.Collection
 }
 
-// OmniledgerClass is the type signature of the class functions
+// OmniledgerContract is the type signature of the class functions
 // which can be registered with the omniledger service.
 // Since the outcome of the verification depends on the state of the collection
 // which is to be modified, we pass it as a pointer here.
-type OmniledgerClass func(cdb collection.Collection, tx Instruction, kind string, state []byte) ([]StateChange, error)
+type OmniledgerContract func(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error)
 
 // newCollectionDB initialises a structure and reads all key/value pairs to store
 // it in the collection.
@@ -64,16 +64,16 @@ func (c *collectionDB) loadAll() {
 }
 
 func (c *collectionDB) Store(t *StateChange) error {
-	c.coll.Add(t.Key, t.Value, t.Kind)
+	c.coll.Add(t.ObjectID, t.Value, t.ContractID)
 	err := c.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(c.bucketName))
-		if err := bucket.Put(t.Key, t.Value); err != nil {
+		if err := bucket.Put(t.ObjectID, t.Value); err != nil {
 			return err
 		}
-		keykind := make([]byte, len(t.Key)+4)
-		copy(keykind, t.Key)
+		keykind := make([]byte, len(t.ObjectID)+4)
+		copy(keykind, t.ObjectID)
 		keykind = append(keykind, []byte("kind")...)
-		if err := bucket.Put(keykind, t.Kind); err != nil {
+		if err := bucket.Put(keykind, t.ContractID); err != nil {
 			return err
 		}
 		return nil
@@ -114,38 +114,36 @@ func (c *collectionDB) RootHash() []byte {
 
 // tryHash returns the merkle root of the collection as if the key value pairs
 // in the transactions had been added, without actually adding it.
-func (c *collectionDB) tryHash(ts []OmniledgerTransaction) (mr []byte, rerr error) {
-	for _, t := range ts {
-		for _, sc := range t.StateChanges {
-			err := c.coll.Add(sc.Key, sc.Value, sc.Kind)
+func (c *collectionDB) tryHash(ts []StateChange) (mr []byte, rerr error) {
+	for _, sc := range ts {
+		err := c.coll.Add(sc.ObjectID, sc.Value, sc.ContractID)
+		if err != nil {
+			rerr = err
+			return
+		}
+		// remove the pair after we got the merkle root.
+		defer func(k []byte) {
+			err = c.coll.Remove(k)
 			if err != nil {
 				rerr = err
-				return
+				mr = nil
 			}
-			// remove the pair after we got the merkle root.
-			defer func(k []byte) {
-				err = c.coll.Remove(k)
-				if err != nil {
-					rerr = err
-					mr = nil
-				}
-			}(sc.Key)
-		}
+		}(sc.ObjectID)
 	}
 	mr = c.coll.GetRoot()
 	return
 }
 
-// RegisterVerification stores the verification in a map and will
-// call it whenever a verification needs to be done.
+// RegisterContract stores the contract in a map and will
+// call it whenever a contract needs to be done.
 // GetService makes it possible to give either an `onet.Context` or
-// `onet.Server` to `RegisterVerification`.
-func RegisterVerification(s skipchain.GetService, kind string, f OmniledgerClass) error {
+// `onet.Server` to `RegisterContract`.
+func RegisterContract(s skipchain.GetService, kind string, f OmniledgerContract) error {
 	scs := s.Service(ServiceName)
 	if scs == nil {
 		return errors.New("Didn't find our service: " + ServiceName)
 	}
-	return scs.(*Service).registerVerification(kind, f)
+	return scs.(*Service).registerContract(kind, f)
 }
 
 // DataHeader is the data passed to the Skipchain
@@ -153,8 +151,11 @@ type DataHeader struct {
 	// CollectionRoot is the root of the merkle tree of the colleciton after
 	// applying the valid transactions.
 	CollectionRoot []byte
-	// TransactionHash is the sha256 hash of all the transactions in the body
-	TransactionHash []byte
+	// ClientTransactionHash is the sha256 hash of all the transactions in the body
+	ClientTransactionHash []byte
+	// StateChangesHash is the sha256 of all the stateChanges occuring through the
+	// clientTransactions.
+	StateChangesHash []byte
 	// Timestamp is a unix timestamp in nanoseconds.
 	Timestamp int64
 }
@@ -162,5 +163,5 @@ type DataHeader struct {
 // DataBody is stored in the body of the skipblock but is not hashed. This reduces
 // the proof needed for a key/value pair.
 type DataBody struct {
-	Transactions []OmniledgerTransaction
+	Transactions ClientTransactions
 }

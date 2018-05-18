@@ -91,7 +91,7 @@ func createSC(t *testing.T) (s sc) {
 
 	s.key = []byte("key")
 	s.value = []byte("value")
-	s.c.Store(&StateChange{Action: Create, Key: s.key, Value: s.value})
+	s.c.Store(&StateChange{StateAction: Create, ObjectID: s.key, Value: s.value})
 
 	s.genesis = skipchain.NewSkipBlock()
 	s.genesis.Roster, s.genesisPrivs = genRoster(1)

@@ -6,7 +6,6 @@ package service
 
 import (
 	"bytes"
-	"crypto/sha256"
 	"errors"
 	"fmt"
 	"sync"
@@ -21,7 +20,6 @@ import (
 	"gopkg.in/dedis/onet.v2/network"
 	"gopkg.in/satori/go.uuid.v1"
 
-	"github.com/dedis/protobuf"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 )
@@ -41,10 +39,9 @@ func init() {
 }
 
 // GenNonce returns a random nonce.
-func GenNonce() []byte {
-	nonce := make([]byte, 32)
-	random.Bytes(nonce, random.New())
-	return nonce
+func GenNonce() (n Nonce) {
+	random.Bytes(n[:], random.New())
+	return n
 }
 
 // Service is our lleap-service
@@ -62,8 +59,8 @@ type Service struct {
 	// CloseQueues is closed when the queues should stop - this is mostly for
 	// testing and there should be a better way to clean up services for testing...
 	CloseQueues chan bool
-	// classes map kinds to kind specific verification functions
-	classes map[string]OmniledgerClass
+	// contracts map kinds to kind specific verification functions
+	contracts map[string]OmniledgerContract
 	// propagate the new transactions
 	propagateTransactions messaging.PropagationFunc
 
@@ -117,15 +114,20 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		return nil, errors.New("invalid genesis darc")
 	}
 
+	spawn := &Spawn{
+		ContractID: ContractConfigID,
+		Args:       Arguments{{Name: "darc", Value: darcBuf}},
+	}
+
 	// Create the genesis-transaction with a special key, it acts as a
 	// reference to the actual genesis transaction.
 	transaction := []ClientTransaction{{
 		Instructions: []Instruction{{
-			DarcID:  req.GenesisDarc.GetID(),
-			Nonce:   ZeroNonce,
-			Command: "Create",
-			Kind:    "config",
-			Data:    darcBuf,
+			ObjectID: ObjectID{DarcID: req.GenesisDarc.GetID()},
+			Nonce:    ZeroNonce,
+			Index:    0,
+			Length:   1,
+			Spawn:    spawn,
 		}},
 	}}
 
@@ -241,7 +243,7 @@ func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransactio
 }
 
 func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
-	d, err := s.getLatestDarcByID(scID, instr.DarcID)
+	d, err := s.getLatestDarcByID(scID, instr.ObjectID.DarcID)
 	if err != nil {
 		return err
 	}
@@ -257,10 +259,9 @@ func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instructio
 // skipchain-service. Once the block has been created, we
 // inform all nodes to update their internal collections
 // to include the new transactions.
-func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, ts []ClientTransaction) (*skipchain.SkipBlock, error) {
+func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts ClientTransactions) (*skipchain.SkipBlock, error) {
 	var sb *skipchain.SkipBlock
 	var mr []byte
-	var ots []OmniledgerTransaction
 	var coll collection.Collection
 
 	if scID.IsNull() {
@@ -288,41 +289,39 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, ts 
 		if r != nil {
 			sb.Roster = r
 		}
-		ts = s.verifyAndFilterTxs(sb.SkipChainID(), ts)
-		if len(ts) == 0 {
+		cts = s.verifyAndFilterTxs(sb.SkipChainID(), cts)
+		if len(cts) == 0 {
 			return nil, errors.New("no valid transaction")
 		}
 		coll = s.getCollection(scID).coll
 	}
 
 	// Note that the transactions are sorted in-place.
-	if err := sortTransactions(ts); err != nil {
+	if err := sortTransactions(cts); err != nil {
 		return nil, err
 	}
 
 	// Create header of skipblock containing only hashes
-	mr, ots = s.createOmniledgerTransactions(coll, ts)
-	hash := sha256.New()
-	for _, tx := range ots {
-		txBuf, err := protobuf.Encode(&tx)
-		if err != nil {
-			log.Lvl2(s.ServerIdentity(), "Couldn't marshal transaction")
-		}
-		hash.Write(txBuf)
+	var scs StateChanges
+	var err error
+	var ctsOK ClientTransactions
+	mr, ctsOK, scs, err = s.createStateChanges(coll, cts)
+	if err != nil {
+		return nil, err
 	}
 	header := &DataHeader{
-		CollectionRoot:  mr,
-		TransactionHash: hash.Sum(nil),
-		Timestamp:       time.Now().Unix(),
+		CollectionRoot:        mr,
+		ClientTransactionHash: ctsOK.Hash(),
+		StateChangesHash:      scs.Hash(),
+		Timestamp:             time.Now().Unix(),
 	}
-	var err error
 	sb.Data, err = network.Marshal(header)
 	if err != nil {
 		return nil, errors.New("Couldn't marshal data: " + err.Error())
 	}
 
 	// Store transactions in the body
-	body := &DataBody{Transactions: ots}
+	body := &DataBody{Transactions: ctsOK}
 	sb.Payload, err = network.Marshal(body)
 	if err != nil {
 		return nil, errors.New("Couldn't marshal data: " + err.Error())
@@ -332,7 +331,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, ts 
 		NewBlock:          sb,
 		TargetSkipChainID: scID,
 	}
-	log.Lvlf2("Storing skipblock with transactions %+v", ts)
+	log.Lvlf2("Storing skipblock with transactions %+v", ctsOK)
 	ssbReply, err := s.skService().StoreSkipBlock(&ssb)
 	if err != nil {
 		return nil, err
@@ -382,17 +381,16 @@ func (s *Service) updateCollection(msg network.Message) {
 
 	log.Lvlf2("%s: Updating transactions for %x", s.ServerIdentity(), sb.SkipChainID())
 	cdb := s.getCollection(sb.SkipChainID())
-	for _, t := range body.Transactions {
-		if !t.Valid {
-			continue
-		}
-		for _, sc := range t.StateChanges {
-			log.Lvl2("Storing statechange", sc)
-			err = cdb.Store(&sc)
-			if err != nil {
-				log.Error(
-					"error while storing in collection: " + err.Error())
-			}
+	_, _, scs, err := s.createStateChanges(cdb.coll, body.Transactions)
+	if err != nil {
+		log.Error("Couldn't recreate state changes:", err.Error())
+		return
+	}
+	for _, sc := range scs {
+		log.Lvl2("Storing statechange", sc)
+		err = cdb.Store(&sc)
+		if err != nil {
+			log.Error("error while storing in collection: " + err.Error())
 		}
 	}
 	if !bytes.Equal(cdb.RootHash(), data.CollectionRoot) {
@@ -475,76 +473,71 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		return false
 	}
 
-	txs := body.Transactions
-	var ctx []ClientTransaction
-	for _, t := range txs {
-		ctx = append(ctx, t.ClientTransaction)
+	if bytes.Compare(header.ClientTransactionHash, body.Transactions.Hash()) != 0 {
+		log.Lvl2(s.ServerIdentity(), "Client Transaction Hash doesn't verify")
+		return false
 	}
+	ctx := body.Transactions
 	cdb := s.getCollection(newSB.Hash)
-	mtr, ots := s.createOmniledgerTransactions(cdb.coll, ctx)
-	if bytes.Compare(mtr, header.CollectionRoot) != 0 {
+	mtr, _, scs, err := s.createStateChanges(cdb.coll, ctx)
+	if err != nil {
+		log.Error("Couldn't create state changes:", err)
+		return false
+	}
+	if bytes.Compare(header.CollectionRoot, mtr) != 0 {
 		log.Lvl2(s.ServerIdentity(), "Collection root doesn't verify")
 		return false
 	}
-	hash := sha256.New()
-	for _, tx := range ots {
-		txBuf, err := protobuf.Encode(&tx)
-		if err != nil {
-			log.Lvl2(s.ServerIdentity(), "Couldn't marshal transaction")
-		}
-		hash.Write(txBuf)
-	}
-	if bytes.Compare(hash.Sum(nil), header.TransactionHash) != 0 {
-		log.Lvl2(s.ServerIdentity(), "Transaction hash doesn't verify")
+	if bytes.Compare(header.StateChangesHash, scs.Hash()) != 0 {
+		log.Lvl2(s.ServerIdentity(), "State Changes hash doesn't verify")
 		return false
 	}
 	return true
 }
 
-// createOmniledgerTransactions goes through all ClientTransactions and creates
-// the appropriate StateChanges and sets the valid flag.
-func (s *Service) createOmniledgerTransactions(coll collection.Collection, txs []ClientTransaction) ([]byte, []OmniledgerTransaction) {
+// createStateChanges goes through all ClientTransactions and creates
+// the appropriate StateChanges. If any of the transactions are invalid,
+// it returns an error.
+func (s *Service) createStateChanges(coll collection.Collection, cts ClientTransactions) (merkleRoot []byte, ctsOK ClientTransactions, states StateChanges, err error) {
 	cdbTemp := coll.Clone()
-	var otx []OmniledgerTransaction
 clientTransactions:
-	for _, ctx := range txs {
+	for _, ct := range cts {
 		cdbI := cdbTemp.Clone()
-		ot := OmniledgerTransaction{ClientTransaction: ctx, Valid: true}
-		for _, instr := range ctx.Instructions {
-			kind, state, err := instr.GetKindState(cdbI)
+		for _, instr := range ct.Instructions {
+			kind, _, err := instr.GetContractState(cdbI)
 			if err != nil {
 				log.Lvl1("Couldn't get kind of instruction")
 				continue clientTransactions
 			}
 
-			f, exists := s.classes[kind]
+			f, exists := s.contracts[kind]
 			// If the leader does not have a verifier for this kind, it drops the
 			// transaction.
 			if !exists {
 				log.Lvl1("Leader is dropping instruction of unknown kind:", kind)
 				continue clientTransactions
 			}
-			// Now we call the class function with the data of the key:
-			scs, err := f(cdbI, instr, kind, state)
+			// Now we call the contract function with the data of the key:
+			log.Lvlf3("%s: Calling contract %s", s.ServerIdentity(), kind)
+			scs, _, err := f(cdbI, instr, nil)
 			if err != nil {
-				log.Lvl1("Call to class returned error:", err)
-				ot.Valid = false
-				ot.StateChanges = nil
+				log.Lvl1("Call to contract returned error:", err)
 				cdbI = cdbTemp
-				break
+				continue clientTransactions
 			}
-			ot.StateChanges = append(ot.StateChanges, scs...)
+			// TODO: apply new state
+			states = append(states, scs...)
 		}
-		otx = append(otx, ot)
 		cdbTemp = cdbI
+		ctsOK = append(ctsOK, ct)
 	}
-	return cdbTemp.GetRoot(), otx
+	return cdbTemp.GetRoot(), ctsOK, states, nil
 }
 
-// RegisterVerification stores the verification in a map and will
-// call it whenever a verification needs to be done.
-func (s *Service) registerVerification(kind string, f OmniledgerClass) error {
-	s.classes[kind] = f
+// registerContract stores the contract in a map and will
+// call it whenever a contract needs to be done.
+func (s *Service) registerContract(contractID string, c OmniledgerContract) error {
+	s.contracts[contractID] = c
 	return nil
 }
 
@@ -613,7 +606,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		CloseQueues:      make(chan bool),
-		classes:          make(map[string]OmniledgerClass),
+		contracts:        make(map[string]OmniledgerContract),
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.SetKeyValue,
 		s.GetProof); err != nil {
@@ -630,7 +623,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
-	s.registerVerification(KindConfig, s.ClassConfig)
+	s.registerContract(ContractConfigID, s.ContractConfig)
+	s.registerContract(ContractDarcID, s.ContractDarc)
 	skipchain.RegisterVerification(c, verifyOmniledger, s.verifySkipBlock)
 	return s, nil
 }
