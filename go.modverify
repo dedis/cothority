@@ -33,4 +33,5 @@ gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+
 gopkg.in/satori/go.uuid.v1 v1.2.0-gopkgin-v1.2.0 h1:XM3PiEbr7wDCubDOuJOOtcviQkNz46RErsWEs1z7Vno=
 gopkg.in/tylerb/graceful.v1 v1.2.15-gopkgin-v1.2.15 h1:0HYfpriPLd1cc3QZtRXiGU23Ejc1Qoo/GWaqpqT13rY=
 gopkg.in/urfave/cli.v1 v1.20.0-gopkgin-v1.20.0 h1:WQvBdi4Z9TrtzrT9WUl6X+hr1/HIWZS2ePFKHpuTR5k=
+gopkg.in/urfave/cli.v1 v1.20.0 h1:NdAVW6RYxDif9DhDHaAortIu956m2c0v+09AZBPTbE0=
 rsc.io/goversion v1.2.0 h1:SPn+NLTiAG7w30IRK/DKp1BjvpWabYgxlLp/+kx5J8w=
