@@ -7,7 +7,7 @@ fi
 
 . ./chains/$CHAIN/id.sh
 
-./evoting-admin \
+../evoting-admin \
 	-id $id \
 	-roster leader.toml \
 	-show

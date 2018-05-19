@@ -10,7 +10,7 @@ sc_lindo=128871
 sc_giovanni=121769
 admins=$sc_jallen,$sc_lindo,$sc_giovanni
 
-./evoting-admin \
+../evoting-admin \
 	-roster roster.toml \
 	-pin $PIN \
 	-admins $admins
