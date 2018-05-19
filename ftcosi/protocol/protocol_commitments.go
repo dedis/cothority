@@ -91,7 +91,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 			case com := <-commitmentsChan:
 
 				//if there is a commitment, add to map
-				if ! com.structCommitment.CoSiCommitment.Equal(p.suite.Point().Null()) {
+				if !com.structCommitment.CoSiCommitment.Equal(p.suite.Point().Null()) {
 					//assumes that the last commit of a subtree is the biggest one
 					commitmentsMap[com.subProtocol] = com.structCommitment
 				}

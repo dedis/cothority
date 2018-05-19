@@ -164,11 +164,12 @@ func (p *SubFtCosi) Dispatch() error {
 	// ----- Commitment & Challenge -----
 
 	var challenge StructChallenge
-	var committedChildren= make([]*onet.TreeNode, 0)
-	var NRefusal= 0 // for the subleader
-	var commitments= make([]StructCommitment, 0)
-	var firstCommitmentSent= false
-	var t= time.After(p.Timeout / 2)
+	var committedChildren = make([]*onet.TreeNode, 0)
+	var NRefusal = 0 // for the subleader
+	var commitments = make([]StructCommitment, 0)
+	var firstCommitmentSent = false
+	var timedOut = false
+	var t = time.After(p.Timeout / 2)
 
 loop:
 	for {
@@ -177,6 +178,10 @@ loop:
 			if !channelOpen {
 				return nil
 			}
+			if timedOut { //ignore new commits once time-out has been reached //TODO L: check if correct
+				break
+			}
+
 			isOwnCommitment := commitment.TreeNode.ID.Equal(p.TreeNode().ID)
 
 			if commitment.TreeNode.Parent != p.TreeNode() && !isOwnCommitment {
@@ -253,10 +258,11 @@ loop:
 			log.Error(p.ServerIdentity(), "timed out while waiting for commits, got", len(commitments), "commitments and", NRefusal, "refusals")
 
 			//sending commits received
-			err = p.sendAggregatedCommitments(commitments, NRefusal) //TODO R: deactivate so that no new answers can be sent
+			err = p.sendAggregatedCommitments(commitments, NRefusal)
 			if err != nil {
 				return err
 			}
+			timedOut = true
 		}
 	}
 

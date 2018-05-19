@@ -376,7 +376,7 @@ func TestProtocolRefuseOne(t *testing.T) {
 				cosiProtocol.Msg = proposal
 				cosiProtocol.NSubtrees = nSubtrees
 				cosiProtocol.Timeout = defaultTimeout
-				cosiProtocol.Threshold = nNodes -1
+				cosiProtocol.Threshold = nNodes - 1
 
 				err = cosiProtocol.Start()
 				if err != nil {
