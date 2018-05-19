@@ -308,6 +308,7 @@ func TestProtocolRefusalAll(t *testing.T) {
 			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
 			cosiProtocol.Timeout = defaultTimeout
+			cosiProtocol.Threshold = 1
 
 			err = cosiProtocol.Start()
 			if err != nil {
@@ -375,6 +376,7 @@ func TestProtocolRefuseOne(t *testing.T) {
 				cosiProtocol.Msg = proposal
 				cosiProtocol.NSubtrees = nSubtrees
 				cosiProtocol.Timeout = defaultTimeout
+				cosiProtocol.Threshold = nNodes -1
 
 				err = cosiProtocol.Start()
 				if err != nil {
@@ -410,7 +412,7 @@ func TestProtocolRefuseOne(t *testing.T) {
 				counter.Lock()
 				if counter.veriCount != nNodes-1 {
 					counter.Unlock()
-					t.Fatalf("not enough verified count, need %d but got %d", counter.veriCount, nNodes-1)
+					t.Fatalf("not the right number of verified count, need %d but got %d", nNodes-1, counter.veriCount)
 				}
 			}
 		}

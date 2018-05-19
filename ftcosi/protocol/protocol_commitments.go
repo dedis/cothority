@@ -89,8 +89,14 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 		for !thresholdReached && thresholdReachable {
 			select {
 			case com := <-commitmentsChan:
-				commitmentsMap[com.subProtocol] = com.structCommitment //assumes that the last commit of a subtree is the biggest one
 
+				//if there is a commitment, add to map
+				if ! com.structCommitment.CoSiCommitment.Equal(p.suite.Point().Null()) {
+					//assumes that the last commit of a subtree is the biggest one
+					commitmentsMap[com.subProtocol] = com.structCommitment
+				}
+
+				//check if threshold is reachable
 				if sumRefusals(commitmentsMap) > len(p.publics)-p.Threshold { // we assume the root accepts the proposal
 					thresholdReachable = false
 				}
