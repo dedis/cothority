@@ -167,7 +167,7 @@ func TestUnresponsiveLeafs(t *testing.T) {
 
 // Tests unresponsive subleaders in various tree configurations
 func TestUnresponsiveSubleader(t *testing.T) {
-	nodes := []int{6, 13, 24}
+	nodes := []int{3, 13, 24}
 	subtrees := []int{1, 2}
 	proposal := []byte{0xFF}
 

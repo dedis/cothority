@@ -105,7 +105,6 @@ func (p *SubFtCosi) Shutdown() error {
 	return nil
 }
 
-//TODO R: think about 2-level trees (especially !p.IsRoot())
 // Dispatch is the main method of the subprotocol, running on each node and handling the messages in order
 func (p *SubFtCosi) Dispatch() error {
 	defer p.Done()
@@ -185,7 +184,8 @@ loop:
 			isOwnCommitment := commitment.TreeNode.ID.Equal(p.TreeNode().ID)
 
 			if commitment.TreeNode.Parent != p.TreeNode() && !isOwnCommitment {
-				log.Lvl2("received a Commitment from a node that is neither a children nor itself, ignored")
+				log.Lvl2("received a Commitment from node", commitment.ServerIdentity,
+					"that is neither a children nor itself, ignored")
 				break //discards it
 			}
 
@@ -198,6 +198,22 @@ loop:
 
 				committedChildren = []*onet.TreeNode{commitment.TreeNode}
 			} else {
+
+				//verify mask of received commitment
+				verificationMask, err := cosi.NewMask(p.suite, p.Publics, nil)
+				if err != nil {
+					return err
+				}
+				err = verificationMask.SetMask(commitment.Mask)
+				if err != nil {
+					return err
+				}
+				if verificationMask.CountEnabled() > 1 {
+					log.Lvl2("received commitment with ill-formed mask in non-root node: has",
+						verificationMask.CountEnabled(), "nodes enabled instead of 0 or 1")
+					break
+				}
+
 				if commitment.CoSiCommitment.Equal(p.suite.Point().Null()) { //refusal
 					NRefusal++
 				} else { //accepted
@@ -412,7 +428,7 @@ func (p *SubFtCosi) getCommitment(accepts bool) (kyber.Scalar, StructCommitment,
 	structCommitment := StructCommitment{p.TreeNode(),
 		Commitment{p.suite.Point().Null(), emptyMask.Mask(), 0}}
 
-	var secret kyber.Scalar = nil
+	var secret kyber.Scalar //nil
 	if accepts {
 		secret, structCommitment.CoSiCommitment = cosi.Commit(p.suite)
 		var personalMask *cosi.Mask

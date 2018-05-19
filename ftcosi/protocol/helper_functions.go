@@ -28,27 +28,6 @@ func aggregateCommitments(s cosi.Suite, publics []kyber.Point,
 		masks = append(masks, c.Mask)
 	}
 
-	//generate personal mask
-	//if isInMask {
-	//	personalMask, err := cosi.NewMask(s, publics, t.Public())
-	//	if err != nil {
-	//		return nil, nil, err
-	//	}
-	//	masks = append(masks, personalMask.Mask())
-	//}
-	//if !isInMask {
-	//	var found bool
-	//	for i, p := range publics {
-	//		if p.Equal(t.Public()) {
-	//			personalMask.SetBit(i, false)
-	//			found = true
-	//		}
-	//	}
-	//	if !found {
-	//		return nil, nil, errors.New("failed to find own public key")
-	//	}
-	//}
-
 	//create final aggregated mask
 	finalMask, err := cosi.NewMask(s, publics, nil)
 	if err != nil {

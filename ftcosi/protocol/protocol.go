@@ -96,8 +96,9 @@ func (p *FtCosi) Shutdown() error {
 }
 
 // Dispatch is the main method of the protocol, defining the root node behaviour
-// and sequential handling of subprotocols.
-func (p *FtCosi) Dispatch() error { //TODO R: verify that it sends empty signature
+// and sequential handling of subprotocols. //TODO L: discuss how to get non-responsive nodes for quick abort
+// TODO L: discuss when should send empty signature, every errors, only "normal" errors, never?
+func (p *FtCosi) Dispatch() error {
 	defer p.Done()
 	if !p.IsRoot() {
 		return nil

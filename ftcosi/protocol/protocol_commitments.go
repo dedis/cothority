@@ -11,7 +11,7 @@ import (
 
 // get all commitments, restart subprotocols where subleaders do not respond
 func (p *FtCosi) collectCommitments(trees []*onet.Tree,
-	subProtocols []*SubFtCosi) ([]StructCommitment, []*SubFtCosi, error) {
+	subProtocols []*SubFtCosi, signChan chan []byte) ([]StructCommitment, []*SubFtCosi, error) {
 
 	type commitmentProtocol struct {
 		structCommitment StructCommitment
@@ -118,6 +118,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 				err = fmt.Errorf("error in getting commitments: %s", err)
 				return nil, nil, err
 			case <-time.After(p.Timeout):
+				signChan <- nil
 				return nil, nil, fmt.Errorf("not enough replies from nodes at timeout "+
 					"for Threshold %d, got %d commitments and %d refusals",
 					p.Threshold, sharedMask.CountEnabled(), sumRefusals(commitmentsMap))
@@ -138,6 +139,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 		return nil, nil, fmt.Errorf("failed to collect commitments with errors %v", errs)
 	}
 	if !thresholdReachable {
+		signChan <- nil
 		return nil, nil, fmt.Errorf("too many refusals (got %d), the threshold %d is no more reachable",
 			sumRefusals(commitmentsMap), p.Threshold)
 	}
