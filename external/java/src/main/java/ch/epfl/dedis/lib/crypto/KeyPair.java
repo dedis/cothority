@@ -10,6 +10,6 @@ public class KeyPair {
         byte[] seed = new byte[Ed25519.field.getb() / 8];
         new Random().nextBytes(seed);
         scalar = new Ed25519Scalar(seed);
-        point = scalar.scalarMult(null);
+        point = Ed25519Point.base().mul(scalar);
     }
 }

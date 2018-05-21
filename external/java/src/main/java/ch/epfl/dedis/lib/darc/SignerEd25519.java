@@ -29,7 +29,7 @@ public class SignerEd25519 implements Signer {
      */
     public SignerEd25519(byte[] data){
         priv = new Ed25519Scalar(data);
-        pub = priv.scalarMult(null);
+        pub = Ed25519Point.base().mul(priv);
     }
 
     /**

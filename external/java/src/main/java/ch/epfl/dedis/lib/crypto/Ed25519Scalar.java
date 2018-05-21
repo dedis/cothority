@@ -100,13 +100,6 @@ public class Ed25519Scalar implements Scalar {
         return !convert(reduce()).fieldElement.isNonZero();
     }
 
-    public Point scalarMult(Point p) {
-        if (p == null) {
-            p = Ed25519.base;
-        }
-        return p.scalarMult(this);
-    }
-
     public Scalar mul(Scalar s) {
         Ed25519Scalar other = convert(s);
         return new Ed25519Scalar(Ed25519.ed25519.getScalarOps().multiplyAndAdd(fieldElement.toByteArray(), other.fieldElement.toByteArray(),

@@ -50,7 +50,7 @@ class Ed25519Test {
     void toPrivate() {
         KeyPair kp = new KeyPair();
 
-        Point pub = kp.scalar.scalarMult(null);
+        Point pub = Ed25519Point.base().mul(kp.scalar);
         assertTrue(pub.equals(kp.point));
 
         Scalar onep = kp.scalar.addOne();
@@ -63,16 +63,16 @@ class Ed25519Test {
         String priv_str_reduced = "8C499C905D9A5445E440376FB385F72E3E42C3D0FDBB2B7B8638A8DBC1AD4602";
         String pub_str = "6ECFEB30C65BA92D16521DB20BA21C64F86E4CE294A733C66B38B691311078E6";
         Scalar priv = new Ed25519Scalar(priv_str);
-        Point pub = priv.scalarMult(null);
+        Point pub = Ed25519Point.base().mul(priv);
         assertEquals(pub_str, pub.toString());
 
         Scalar priv_reduced = new Ed25519Scalar(priv_str_reduced);
-        assertEquals(pub_str, priv_reduced.reduce().scalarMult(null).toString());
+        assertEquals(pub_str, Ed25519Point.base().mul(priv_reduced.reduce()).toString());
 
         Scalar priv1 = priv.addOne();
         Point base = Ed25519.base;
         Point pub1 = pub.add(base);
-        assertTrue(pub1.equals(priv1.scalarMult(null)));
+        assertTrue(pub1.equals(Ed25519Point.base().mul(priv1)));
     }
 
     @Test
@@ -87,12 +87,12 @@ class Ed25519Test {
         assertEquals(priv_str, priv.toString());
         assertEquals(priv_reduced_str, priv.reduce().toString());
 
-        Point pub = priv.scalarMult(null);
+        Point pub = Ed25519Point.base().mul(priv);
         assertEquals(pub_str, pub.toString());
 
         Scalar priv_next = priv.reduce().addOne();
         assertEquals(priv1_reduced_str, priv_next.toString());
-        assertEquals(pub1_str, priv_next.scalarMult(null).toString());
+        assertEquals(pub1_str, Ed25519Point.base().mul(priv_next).toString());
     }
 
     @Test
@@ -126,7 +126,7 @@ class Ed25519Test {
     @Test
     void storeLoad() {
         Scalar s = new Ed25519Scalar("762755eb09f5a1b3927d89625a90ac93351eba404aa0d0a62315985cc94ba304").reduce();
-        Point S = s.scalarMult(null);
+        Point S = Ed25519Point.base().mul(s);
 
         Scalar sprime = new Ed25519Scalar(s.toBytes());
         Point Sprime = new Ed25519Point(S.toBytes());
@@ -152,7 +152,7 @@ class Ed25519Test {
         byte[] msg = "Hello Schnorr".getBytes();
         KeyPair kp1 = new KeyPair();
         kp1.scalar = new Ed25519Scalar("379ccd218573e8ac7c9184de1bdce3398cf37bd2d66460275d11d0517f0f6700");
-        kp1.point = kp1.scalar.scalarMult(null);
+        kp1.point = Ed25519Point.base().mul(kp1.scalar);
         KeyPair kp2 = new KeyPair();
         SchnorrSig sig = new SchnorrSig(msg, kp1.scalar);
 

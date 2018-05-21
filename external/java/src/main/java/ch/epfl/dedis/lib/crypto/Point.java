@@ -7,7 +7,7 @@ public interface Point {
     public Point copy();
     public boolean equals(Point other);
 
-    public Point scalarMult(Scalar s);
+    public Point mul(Scalar s);
     public Point add(Point other);
 
     public ByteString toProto();

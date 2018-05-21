@@ -49,7 +49,7 @@ public class Ed25519Point implements Point {
         return Arrays.equals(element.toByteArray(), convert(other).element.toByteArray());
     }
 
-    public Point scalarMult(Scalar s) {
+    public Point mul(Scalar s) {
         element = element.toP3();
         element.precompute(true);
         return new Ed25519Point(element.scalarMultiply(s.getLittleEndian()));
@@ -107,7 +107,7 @@ public class Ed25519Point implements Point {
         for (bytes[31] = (byte) 0; bytes[31] < (byte) 127; bytes[31]++) {
             try {
                 Ed25519Point e = new Ed25519Point(bytes);
-                if (!e.scalarMult(Ed25519.prime_order).isZero()) {
+                if (!e.mul(Ed25519.prime_order).isZero()) {
                     continue;
                 }
                 return e;
@@ -116,6 +116,10 @@ public class Ed25519Point implements Point {
             }
         }
         throw new CothorityCryptoException("did not find matching point!?!");
+    }
+
+    public static Point base() {
+        return Ed25519.base;
     }
 
     private static Ed25519Point convert(Point p) {

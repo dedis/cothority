@@ -24,6 +24,5 @@ public interface Scalar {
     public Scalar negate();
     public boolean isZero();
 
-    public Point scalarMult(Point p);
     public Scalar mul(Scalar s);
 }

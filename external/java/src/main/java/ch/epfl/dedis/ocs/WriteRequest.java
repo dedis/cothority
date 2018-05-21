@@ -134,7 +134,7 @@ public class WriteRequest {
             Point U = randkp.point;
             write.setU(U.toProto());
 
-            Point C = X.scalarMult(r);
+            Point C = X.mul(r);
             List<Point> Cs = new ArrayList<>();
             for (int from = 0; from < keyMaterial.length; from += Ed25519.pubLen) {
                 int to = from + Ed25519.pubLen;
@@ -147,13 +147,13 @@ public class WriteRequest {
                 write.addCs(Ckey.toProto());
             }
 
-            Point gBar = new Scalar(scid.getId()).scalarMult(null);
-            Point Ubar = r.scalarMult(gBar);
+            Point gBar = Ed25519Point.base().mul(new Ed25519Scalar(scid.getId()));
+            Point Ubar = gBar.mul(r);
             write.setUbar(Ubar.toProto());
             KeyPair skp = new KeyPair();
             Scalar s = skp.scalar;
             Point w = skp.point;
-            Point wBar = s.scalarMult(gBar);
+            Point wBar = gBar.mul(s);
 
             MessageDigest hash = MessageDigest.getInstance("SHA-256");
             for (Point c: Cs) {

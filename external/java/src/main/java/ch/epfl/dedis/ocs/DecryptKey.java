@@ -40,7 +40,7 @@ public class DecryptKey {
         // to recover the symmetric key.
         Scalar xc = reader.reduce();
         Scalar xcInv = xc.negate();
-        Point XhatDec = xcInv.scalarMult(X);
+        Point XhatDec = X.mul(xcInv);
         Point Xhat = XhatEnc.add(XhatDec);
         Point XhatInv = Xhat.negate();
 

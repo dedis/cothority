@@ -14,7 +14,7 @@ public class SchnorrSig {
         KeyPair kp = new KeyPair();
         challenge = kp.point;
 
-        Point pub = priv.scalarMult(null);
+        Point pub = Ed25519Point.base().mul(priv);
         Scalar xh = priv.mul(toHash(challenge, pub, msg));
         response = kp.scalar.add(xh);
     }
@@ -26,8 +26,8 @@ public class SchnorrSig {
 
     public boolean verify(byte[] msg, Point pub) {
         Scalar hash = toHash(challenge, pub, msg);
-        Point S = response.scalarMult(null);
-        Point Ah = pub.scalarMult(hash);
+        Point S = Ed25519Point.base().mul(response);
+        Point Ah = pub.mul(hash);
         Point RAs = challenge.add(Ah);
         return S.equals(RAs);
     }
