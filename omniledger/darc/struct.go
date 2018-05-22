@@ -53,13 +53,14 @@ type Darc struct {
 	// Represents the path to get up to information to be able to verify
 	// this signature.  These justify the right of the signer to push a new
 	// Darc.  These are ordered from the oldest to the newest, i.e.
-	// Darcs[0] should be the base Darc.
+	// Path[0] should be the base Darc.
 	Path []*Darc
-	// PathDigest should be set when Path has length 0. It should be the
-	// same as the return value of GetPathMsg.
+	// PathDigest is the digest of Path, it should be set when Path has
+	// length 0.
 	PathDigest []byte
-	// Signature is calculated over the protobuf representation of [Rules, Version, Description]
-	// and needs to be created by an Owner from the previous valid Darc.
+	// Signature is calculated on the Request-representation of the darc.
+	// It needs to be created by identities that have the "_evolve" action
+	// from the previous valid Darc.
 	Signatures []*Signature
 }
 
@@ -72,7 +73,8 @@ type Action string
 // Rules are action-expression associations.
 type Rules map[Action]expression.Expr
 
-// Identity is a generic structure can be either an Ed25519 public key or a Darc
+// Identity is a generic structure can be either an Ed25519 public key, a Darc
+// or a X509 Identity.
 type Identity struct {
 	// Darc identity
 	Darc *IdentityDarc
@@ -80,7 +82,6 @@ type Identity struct {
 	Ed25519 *IdentityEd25519
 	// Public-key identity
 	X509EC *IdentityX509EC
-	// Add information re. where the identity is from?
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -133,7 +134,6 @@ type innerRequest struct {
 	Action     Action
 	Msg        []byte
 	Identities []*Identity
-	// TODO add the darc for where the identities should come from, e.g. SignerDarcs []string
 }
 
 // Request is the structure that the client must provide to be verified

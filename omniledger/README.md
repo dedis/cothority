@@ -297,13 +297,22 @@ message Darc {
 	bytes BaseID = 3;
 	// Rules map an action to an expression.
 	Rules Rules = 4;
-	// Signature is calculated over the protobuf representation of [Rules, Version, Description]
-	// and needs to be created by an Owner from the previous valid Darc.
-	bytes Signature = 5;
+	// Path represents the path to get up to information to be able to
+	// verify this signature. These justify the right of the signer to push
+	// a new Darc. These are ordered from the oldest to the newest, i.e.
+	// Path[0] should be the base Darc. This field is optional unless
+	// offline verification is needed.
+	repeated Darc Path
+	// PathDigest is the digest that represent the path above.
+	bytes PathDigest = 5
+	// Signature is calculated on the Request-representation of the darc.
+	// It needs to be created by identities that have the "_evolve" action
+	// from the previous valid Darc.
+	repeated bytes Signature = 6;
 }
 
 message Rule {
-  map<string, bytes> Rules = 1;
+	map<string, bytes> Rules = 1;
 }
 ```
 
