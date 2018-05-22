@@ -46,7 +46,6 @@ func (m *ftCosiSuite) RandomStream() cipher.Stream {
 // cothority.Suite uses sha256 but EdDSA uses sha512.
 var EdDSACompatibleCosiSuite = &ftCosiSuite{edwards25519.NewBlakeSHA256Ed25519(), random.New()}
 
-// PROTOSTART
 // Announcement is the announcement message, the first message in the CoSi protocol
 type Announcement struct {
 	Msg     []byte
