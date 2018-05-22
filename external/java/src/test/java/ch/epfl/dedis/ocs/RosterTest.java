@@ -2,6 +2,7 @@ package ch.epfl.dedis.ocs;
 
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
+import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.proto.RosterProto;
 import org.junit.jupiter.api.Test;
@@ -33,7 +34,7 @@ class RosterTest {
 
     //private static Roster r = ConnectingWithTomlConfig.constructRosterWithTomlConfig(LocalRosters.firstToml);
 
-    private static Point agg = new Point(SAMPLE_AGGREGATE);
+    private static Point agg = new Ed25519Point(SAMPLE_AGGREGATE);
 
     @Test
     void testRoster() {

@@ -47,6 +47,6 @@ public class ConnectingWithTomlConfig {
     }
 
     public static String getPublicKeyFromToml(Toml t) {
-        return t.getString("Point");
+        return t.getString("Ed25519Point");
     }
 }
