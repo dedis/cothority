@@ -3,6 +3,7 @@ package ch.epfl.dedis.ocs;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
@@ -124,7 +125,7 @@ public class OnchainSecretsRPC {
 
         try {
             OCSProto.CreateSkipchainsReply reply = OCSProto.CreateSkipchainsReply.parseFrom(msg);
-            X = new Point(reply.getX());
+            X = new Ed25519Point(reply.getX());
             logger.debug("Got reply: {}", reply.toString());
             ocsID = new SkipblockId(reply.getOcs().getHash().toByteArray());
             logger.info("Initialised OCS: {}", ocsID.toString());
@@ -183,7 +184,7 @@ public class OnchainSecretsRPC {
         try {
             OCSProto.SharedPublicReply reply = OCSProto.SharedPublicReply.parseFrom(msg);
             logger.info("Got shared public symmetricKey");
-            return new Point(reply.getX());
+            return new Ed25519Point(reply.getX());
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
@@ -270,7 +271,6 @@ public class OnchainSecretsRPC {
         request.setRead(rr.ToProto());
 
         ByteString msg = roster.sendMessage("OnChainSecrets/ReadRequest", request.build());
-
 
         try {
             OCSProto.ReadReply reply = OCSProto.ReadReply.parseFrom(msg);

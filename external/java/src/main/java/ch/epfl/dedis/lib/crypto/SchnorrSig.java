@@ -12,22 +12,22 @@ public class SchnorrSig {
 
     public SchnorrSig(byte[] msg, Scalar priv) {
         KeyPair kp = new KeyPair();
-        challenge = kp.Point;
+        challenge = kp.point;
 
-        Point pub = priv.scalarMult(null);
+        Point pub = Ed25519Point.base().mul(priv);
         Scalar xh = priv.mul(toHash(challenge, pub, msg));
-        response = kp.Scalar.add(xh);
+        response = kp.scalar.add(xh);
     }
 
     public SchnorrSig(byte[] data) {
-        challenge = new Point(Arrays.copyOfRange(data, 0, 32));
-        response = new Scalar(Arrays.copyOfRange(data, 32, 64));
+        challenge = new Ed25519Point(Arrays.copyOfRange(data, 0, 32));
+        response = new Ed25519Scalar(Arrays.copyOfRange(data, 32, 64));
     }
 
     public boolean verify(byte[] msg, Point pub) {
         Scalar hash = toHash(challenge, pub, msg);
-        Point S = response.scalarMult(null);
-        Point Ah = pub.scalarMult(hash);
+        Point S = Ed25519Point.base().mul(response);
+        Point Ah = pub.mul(hash);
         Point RAs = challenge.add(Ah);
         return S.equals(RAs);
     }
@@ -46,7 +46,7 @@ public class SchnorrSig {
             digest.update(pub.toBytes());
             digest.update(msg);
             byte[] hash = Arrays.copyOfRange(digest.digest(), 0, 64);
-            Scalar s = new Scalar(hash);
+            Scalar s = new Ed25519Scalar(hash);
             return s;
         } catch (NoSuchAlgorithmException e) {
             return null;

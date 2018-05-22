@@ -1,9 +1,6 @@
 package ch.epfl.dedis.lib.darc;
 
-import ch.epfl.dedis.lib.crypto.KeyPair;
-import ch.epfl.dedis.lib.crypto.Point;
-import ch.epfl.dedis.lib.crypto.Scalar;
-import ch.epfl.dedis.lib.crypto.SchnorrSig;
+import ch.epfl.dedis.lib.crypto.*;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,18 +18,18 @@ public class SignerEd25519 implements Signer {
      */
     public SignerEd25519() {
         KeyPair kp = new KeyPair();
-        pub = kp.Point;
-        priv = kp.Scalar;
+        pub = kp.point;
+        priv = kp.scalar;
     }
 
     /**
      * Creates a new signer from a slice of bytes. This must correspond to
-     * what Ed25519.Scalar.toBytes() returns.
+     * what Ed25519.prime_order.toBytes() returns.
      * @param data
      */
     public SignerEd25519(byte[] data){
-        priv = new Scalar(data);
-        pub = priv.scalarMult(null);
+        priv = new Ed25519Scalar(data);
+        pub = Ed25519Point.base().mul(priv);
     }
 
     /**

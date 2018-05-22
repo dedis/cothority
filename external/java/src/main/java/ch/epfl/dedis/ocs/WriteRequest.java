@@ -130,30 +130,30 @@ public class WriteRequest {
             write.setData(ByteString.copyFrom(dataEnc));
 
             KeyPair randkp = new KeyPair();
-            Scalar r = randkp.Scalar;
-            Point U = randkp.Point;
+            Scalar r = randkp.scalar;
+            Point U = randkp.point;
             write.setU(U.toProto());
 
-            Point C = X.scalarMult(r);
+            Point C = X.mul(r);
             List<Point> Cs = new ArrayList<>();
             for (int from = 0; from < keyMaterial.length; from += Ed25519.pubLen) {
                 int to = from + Ed25519.pubLen;
                 if (to > keyMaterial.length) {
                     to = keyMaterial.length;
                 }
-                Point keyPoint = Point.pubStore(Arrays.copyOfRange(keyMaterial, from, to));
-                Point Ckey = C.add(keyPoint);
+                Point keyEd25519Point = Ed25519Point.embed(Arrays.copyOfRange(keyMaterial, from, to));
+                Point Ckey = C.add(keyEd25519Point);
                 Cs.add(Ckey);
                 write.addCs(Ckey.toProto());
             }
 
-            Point gBar = Point.pubStore(Arrays.copyOfRange(scid.getId(), 0, Ed25519.pubLen));
-            Point Ubar = r.scalarMult(gBar);
+            Point gBar = Ed25519Point.base().mul(new Ed25519Scalar(scid.getId()));
+            Point Ubar = gBar.mul(r);
             write.setUbar(Ubar.toProto());
             KeyPair skp = new KeyPair();
-            Scalar s = skp.Scalar;
-            Point w = skp.Point;
-            Point wBar = s.scalarMult(gBar);
+            Scalar s = skp.scalar;
+            Point w = skp.point;
+            Point wBar = gBar.mul(s);
 
             MessageDigest hash = MessageDigest.getInstance("SHA-256");
             for (Point c: Cs) {
@@ -164,7 +164,7 @@ public class WriteRequest {
             hash.update(w.toBytes());
             hash.update(wBar.toBytes());
             hash.update(owner.getId().getId());
-            Scalar E = new Scalar(hash.digest());
+            Scalar E = new Ed25519Scalar(hash.digest());
             write.setE(E.toProto());
             Scalar F = s.add(E.mul(r));
             write.setF(F.toProto());

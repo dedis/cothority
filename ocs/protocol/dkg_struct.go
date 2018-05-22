@@ -21,7 +21,7 @@ const NameDKG = "SetupDKG"
 
 func init() {
 	network.RegisterMessages(&SharedSecret{},
-		&Init{}, &InitReply{},
+		&InitDKG{}, &InitDKGReply{},
 		&StartDeal{}, &Deal{},
 		&Response{}, &SecretCommit{},
 		&Verification{}, &VerificationReply{})
@@ -57,26 +57,26 @@ func NewSharedSecret(dkg *dkg.DistKeyGenerator) (*SharedSecret, error) {
 	}, nil
 }
 
-// Init asks all nodes to set up a private/public key pair. It is sent to
+// InitDKG asks all nodes to set up a private/public key pair. It is sent to
 // all nodes from the root-node. If Wait is true, at the end of the setup
 // an additional message is sent to wait for all nodes to be set up.
-type Init struct {
+type InitDKG struct {
 	Wait bool
 }
 
-type structInit struct {
+type structInitDKG struct {
 	*onet.TreeNode
-	Init
+	InitDKG
 }
 
-// InitReply returns the public key of that node.
-type InitReply struct {
+// InitDKGReply returns the public key of that node.
+type InitDKGReply struct {
 	Public kyber.Point
 }
 
 type structInitReply struct {
 	*onet.TreeNode
-	InitReply
+	InitDKGReply
 }
 
 // StartDeal is used by the leader to initiate the Deals.
@@ -141,7 +141,7 @@ type structVerificationReply struct {
 	VerificationReply
 }
 
-// WaitSetup is only sent if Init.Wait == true
+// WaitSetup is only sent if InitDKG.Wait == true
 type WaitSetup struct {
 }
 

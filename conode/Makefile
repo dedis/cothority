@@ -5,10 +5,13 @@ TAG=$(shell git describe --tags)
 OUTPUT_DIR=conode-$(TAG)
 # dev is the master branch, which will get automatic date tagging for
 # distribution files.
-ifeq ($(TAG),dev)
-	TAG := $(TAG)-$(shell date +%y%m%d)
+STRIPPED_TAG = $(shell echo $(TAG) | cut -d '-' -f 1)
+VERSION := $(STRIPPED_TAG)
+ifeq ($(findstring v2,$(STRIPPED_TAG)),v2)
+	VERSION = latest
 endif
-VERSION := $(TAG)
+TAG := $(STRIPPED_TAG)-$(shell date +%y%m%d)
+
 GITUNTRACKEDCHANGES := $(shell git status --porcelain --untracked-files=no)
 ifneq ($(GITUNTRACKEDCHANGES),)
 	VERSION := $(VERSION)-dirty
@@ -24,11 +27,13 @@ all: docker
 # Use this target to build from only published sources.
 docker: Dockerfile
 	BUILDFLAG=$(flags)
-	docker build -t $(IMAGE_NAME):$(VERSION) --build-arg BUILDFLAG="$(ldflags)" .
+	docker build -t $(IMAGE_NAME):$(TAG) --build-arg BUILDFLAG="$(ldflags)" .
+	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):$(VERSION)
 
 # Use this target to build from local source instead of from publish sources.
 docker_dev: Dockerfile-dev exe/conode.Linux.x86_64
-	docker build -t $(IMAGE_NAME):$(VERSION) -f Dockerfile-dev .
+	docker build -t $(IMAGE_NAME):$(TAG) -f Dockerfile-dev .
+	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):$(VERSION)
 
 docker_push: docker
 	@[ -n "$(GITUNTRACKEDCHANGES)" ] && echo "Pushing dirty images not allowed." && exit 1 || true

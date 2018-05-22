@@ -1,5 +1,6 @@
 package ch.epfl.dedis.lib;
 
+import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.proto.ServerIdentityProto;
@@ -33,7 +34,7 @@ public class ServerIdentity {
     public ServerIdentity(final URI serverWsAddress, final String publicKey) {
         this.conodeAddress = serverWsAddress;
         // TODO: It will be better to use some class for server key and move this conversion outside of this class
-        this.Public = new Point(DatatypeConverter.parseHexBinary(publicKey));
+        this.Public = new Ed25519Point(DatatypeConverter.parseHexBinary(publicKey));
     }
 
     public ServerIdentity(Toml siToml) throws URISyntaxException {

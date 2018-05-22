@@ -70,7 +70,7 @@ func NewSetupDKG(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 func (o *SetupDKG) Start() error {
 	log.Lvl3("Starting Protocol")
 	// 1a - root asks children to send their public key
-	errs := o.Broadcast(&Init{Wait: o.Wait})
+	errs := o.Broadcast(&InitDKG{Wait: o.Wait})
 	if len(errs) != 0 {
 		return fmt.Errorf("boradcast failed with error(s): %v", errs)
 	}
@@ -132,10 +132,10 @@ func (o *SetupDKG) SharedSecret() (*SharedSecret, error) {
 }
 
 // Children reactions
-func (o *SetupDKG) childInit(i structInit) error {
+func (o *SetupDKG) childInit(i structInitDKG) error {
 	o.Wait = i.Wait
 	log.Lvl3(o.Name(), o.Wait)
-	return o.SendToParent(&InitReply{Public: o.keypair.Public})
+	return o.SendToParent(&InitDKGReply{Public: o.keypair.Public})
 }
 
 // Root-node messages
