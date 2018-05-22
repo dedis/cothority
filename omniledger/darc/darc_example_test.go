@@ -24,16 +24,17 @@ func Example() {
 	rules2 := darc.InitRules([]*darc.Identity{owner2.Identity()}, []*darc.Identity{})
 	d2 := darc.NewDarc(rules2, []byte("example darc 2"))
 	d2.EvolveFrom([]*darc.Darc{d1})
-	r, err := d2.MakeEvolveRequest(owner1)
+	r, d2Buf, err := d2.MakeEvolveRequest(owner1)
 	fmt.Println(err)
 
-	// Client sends request r to the server, and the server must verify it.
-	// Usually the server will look in its database for the base ID of the
-	// darc in the request and find the latest one. But in this case we
-	// assume it already knows. If the verification is successful, then the
-	// server should add the darc in the request to its database.
-	fmt.Println(r.Verify(d1))
-	d2Server, _ := r.MsgToDarc([]*darc.Darc{d1}) // Server stores d2Server.
+	// Client sends request r and serialised darc d2Buf to the server, and
+	// the server must verify it. Usually the server will look in its
+	// database for the base ID of the darc in the request and find the
+	// latest one. But in this case we assume it already knows. If the
+	// verification is successful, then the server should add the darc in
+	// the request to its database.
+	fmt.Println(r.Verify(d1)) // Assume we can find d1 given r.
+	d2Server, _ := r.MsgToDarc(d2Buf, []*darc.Darc{d1})
 	fmt.Println(bytes.Equal(d2Server.GetID(), d2.GetID()))
 
 	// If the darcs stored on the server are trustworthy, then using
@@ -56,6 +57,9 @@ func Example() {
 	d3 := d1.Copy()
 	d3.Rules.AddRule(action3, expr3)
 
+	// Typically the Msg part of the request is a digest of the actual
+	// message. For simplicity in this example, we put the actual message
+	// in there.
 	r, _ = darc.InitAndSignRequest(d3.GetID(), action3, []byte("example request"), owner3)
 	if err := r.Verify(d3); err != nil {
 		// not ok because the expression is created using logical and

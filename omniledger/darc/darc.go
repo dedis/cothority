@@ -20,12 +20,11 @@ other darcs. For example, suppose the newest darc in some path, let's called it
 darc_A, has the "evolve" permission set to true for another darc---darc_B, then
 darc_B is allowed to evolve the path.
 
-Of course, we do not want to have static rules that allows only a single
-signer.  Our darc implementation supports an expression language where the user
-can use logical operators to specify the rule.  For exmple, the expression
-"darc:a & ed25519:b | ed25519:c" means that "darc:a" and at least one of
-"ed25519:b" and "ed25519:c" must sign. For more information please see the
-expression package.
+Of course, we do not want to have static rules that allow only one signer.  Our
+darc implementation supports an expression language where the user can use
+logical operators to specify the rule.  For exmple, the expression "darc:a &
+ed25519:b | ed25519:c" means that "darc:a" and at least one of "ed25519:b" and
+"ed25519:c" must sign. For more information please see the expression package.
 */
 package darc
 
@@ -268,17 +267,16 @@ func (d *Darc) EvolveFrom(path []*Darc) error {
 // MakeEvolveRequest creates a request and signs it such that it can be sent to
 // the darc service (for example) to execute the evolution. This function
 // assumes that the receiver has all the correct attributes to form a valid
-// evolution.
-// TODO we need to change this function. We now consider the Msg part of the
-// request as a hash. So, if a service wants to make a evolution request, it'd
-// create a message that contains the new darc and the request, where the
-// request message is the hash of the new darc.
-func (d *Darc) MakeEvolveRequest(prevSigners ...*Signer) (*Request, error) {
+// evolution. It returns a request, and the actual serialisation of the darc.
+// We do not put the actual Msg in the request because requests should be kept
+// small and the actual payload should be managed by the user of darcs. For
+// example the payload could be in an OmniLedger transaction.
+func (d *Darc) MakeEvolveRequest(prevSigners ...*Signer) (*Request, []byte, error) {
 	if d == nil {
-		return nil, errors.New("darc is nil")
+		return nil, nil, errors.New("darc is nil")
 	}
 	if len(prevSigners) == 0 {
-		return nil, errors.New("no signers")
+		return nil, nil, errors.New("no signers")
 	}
 	// Create the inner request, this is the message that the signers will
 	// sign.
@@ -286,33 +284,30 @@ func (d *Darc) MakeEvolveRequest(prevSigners ...*Signer) (*Request, error) {
 	for i, s := range prevSigners {
 		signerIDs[i] = s.Identity()
 	}
-	darcBuf, err := d.ToProto()
-	if err != nil {
-		return nil, err
-	}
 	inner := innerRequest{
 		BaseID:     d.GetBaseID(),
 		Action:     evolve,
-		Msg:        darcBuf,
+		Msg:        d.GetID(),
 		Identities: signerIDs,
 	}
-
 	// Have every signer sign the digest of the innerRequest.
-	digest, err := inner.DarcHash(d.GetID())
-	if err != nil {
-		return nil, err
-	}
+	digest := inner.Hash()
 	tmpSigs := make([][]byte, len(prevSigners))
 	for i, s := range prevSigners {
+		var err error
 		tmpSigs[i], err = s.Sign(digest)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
+	}
+	darcBuf, err := d.ToProto()
+	if err != nil {
+		return nil, nil, err
 	}
 	return &Request{
 		inner,
 		tmpSigs,
-	}, nil
+	}, darcBuf, nil
 }
 
 // IncrementVersion updates the version number of the Darc
@@ -416,27 +411,14 @@ func (r *Request) VerifyWithCB(d *Darc, getDarc func(string) *Darc) error {
 	if !d.Rules.Contains(r.Action) {
 		return fmt.Errorf("action '%v' does not exist", r.Action)
 	}
-	var digest []byte
-	var err error
-	if r.Action == evolve {
-		d, err := NewDarcFromProto(r.Msg)
-		if err != nil {
-			return err
-		}
-		digest, err = r.DarcHash(d.GetID())
-	} else {
-		digest, err = r.Hash()
-	}
-	if err != nil {
-		return err
-	}
+	digest := r.Hash()
 	for i, id := range r.Identities {
 		if err := id.Verify(digest, r.Signatures[i]); err != nil {
 			return err
 		}
 	}
 	validIDs := r.GetIdentityStrings()
-	err = evalExpr(d.Rules[r.Action], getDarc, validIDs...)
+	err := evalExpr(d.Rules[r.Action], getDarc, validIDs...)
 	if err != nil {
 		return err
 	}
@@ -837,27 +819,19 @@ func (eds *SignerEd25519) Sign(msg []byte) ([]byte, error) {
 
 // Hash computes the digest of the request, the identities and signatures are
 // not included.
-func (r *Request) Hash() ([]byte, error) {
+func (r *Request) Hash() []byte {
 	return r.innerRequest.Hash()
 }
 
-func (r innerRequest) Hash() ([]byte, error) {
+func (r innerRequest) Hash() []byte {
 	h := sha256.New()
-	if _, err := h.Write(r.BaseID); err != nil {
-		return nil, err
-	}
-	if _, err := h.Write([]byte(r.Action)); err != nil {
-		return nil, err
-	}
-	if _, err := h.Write(r.Msg); err != nil {
-		return nil, err
-	}
+	h.Write(r.BaseID)
+	h.Write([]byte(r.Action))
+	h.Write(r.Msg)
 	for _, i := range r.Identities {
-		if _, err := h.Write([]byte(i.String())); err != nil {
-			return nil, err
-		}
+		h.Write([]byte(i.String()))
 	}
-	return h.Sum(nil), nil
+	return h.Sum(nil)
 }
 
 // DarcHash is similar to innerRequest.Hash but it does not hash the Msg.
@@ -899,10 +873,14 @@ func (r *Request) GetIdentityStrings() []string {
 // MsgToDarc attempts to return a darc if the Msg part of the request is
 // serialised as a darc. This function should NOT be used as a way to check
 // whether the Msg part is a darc.
-func (r *Request) MsgToDarc(path []*Darc) (*Darc, error) {
-	d, err := NewDarcFromProto(r.Msg)
+func (r *Request) MsgToDarc(darcBuf []byte, existingPath []*Darc) (*Darc, error) {
+	d, err := NewDarcFromProto(darcBuf)
 	if err != nil {
 		return nil, err
+	}
+
+	if !d.GetID().Equal(r.Msg) {
+		return nil, errors.New("darc IDs are not equal")
 	}
 
 	if len(r.Signatures) != len(r.Identities) {
@@ -917,14 +895,14 @@ func (r *Request) MsgToDarc(path []*Darc) (*Darc, error) {
 	}
 	d.Signatures = darcSigs
 
-	pathDigest, err := hashAll(darcsMsg(path))
+	pathDigest, err := hashAll(darcsMsg(existingPath))
 	if err != nil {
 		return nil, err
 	}
 	if !bytes.Equal(pathDigest, d.PathDigest) {
 		return nil, fmt.Errorf("recomputed path digest is not equal to the original")
 	}
-	d.Path = path
+	d.Path = existingPath
 
 	return d, nil
 }
@@ -960,12 +938,10 @@ func InitAndSignRequest(baseID ID, action Action, msg []byte, signers ...*Signer
 		Msg:        msg,
 		Identities: signerIDs,
 	}
-	digest, err := inner.Hash()
-	if err != nil {
-		return nil, err
-	}
+	digest := inner.Hash()
 	sigs := make([][]byte, len(signers))
 	for i, s := range signers {
+		var err error
 		sigs[i], err = s.Sign(digest)
 		if err != nil {
 			return nil, err

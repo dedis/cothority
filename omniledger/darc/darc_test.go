@@ -288,28 +288,33 @@ func TestDarc_EvolveRequest(t *testing.T) {
 
 	// cannot create request with nil darc
 	var nilDarc *Darc
-	r, err = nilDarc.MakeEvolveRequest()
+	r, _, err = nilDarc.MakeEvolveRequest()
 	require.NotNil(t, err)
 	require.Nil(t, r)
 
 	// cannot create request with no signers
-	r, err = dNew.MakeEvolveRequest()
+	r, _, err = dNew.MakeEvolveRequest()
 	require.NotNil(t, err)
 	require.Nil(t, r)
 
 	// create a request with a wrong signer, the creation should succeed
 	// but the verification shold fail
 	badOwner := NewSignerEd25519(nil, nil)
-	r, err = dNew.MakeEvolveRequest(badOwner)
+	r, _, err = dNew.MakeEvolveRequest(badOwner)
 	require.Nil(t, err)
 	require.NotNil(t, r)
 	require.NotNil(t, r.Verify(td.darc))
 
 	// create the request with the right signer and it should pass
-	r, err = dNew.MakeEvolveRequest(td.owners[0])
+	r, dNewBuf, err := dNew.MakeEvolveRequest(td.owners[0])
 	require.Nil(t, err)
 	require.NotNil(t, r)
 	require.Nil(t, r.Verify(td.darc))
+
+	// check that the evolution is actually OK
+	dNew2, err := r.MsgToDarc(dNewBuf, []*Darc{td.darc})
+	require.Nil(t, err)
+	require.Nil(t, dNew2.Verify())
 }
 
 // TestDarc_Delegation in this test we test delegation. We start with two
@@ -447,7 +452,7 @@ func localEvolution(newDarc *Darc, path []*Darc, signers ...*Signer) error {
 	if err := newDarc.EvolveFrom(path); err != nil {
 		return err
 	}
-	r, err := newDarc.MakeEvolveRequest(signers...)
+	r, _, err := newDarc.MakeEvolveRequest(signers...)
 	if err != nil {
 		return err
 	}

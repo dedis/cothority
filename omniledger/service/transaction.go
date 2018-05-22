@@ -208,10 +208,7 @@ func (instr *Instruction) SignBy(signers ...*darc.Signer) error {
 	}
 
 	// Sign the instruction and write the signatures to it.
-	digest, err := req.Hash()
-	if err != nil {
-		return err
-	}
+	digest := req.Hash()
 	instr.Signatures = make([]darc.Signature, len(signers))
 	for i := range signers {
 		sig, err := signers[i].Sign(digest)
