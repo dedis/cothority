@@ -9,6 +9,7 @@ before_install:
 
 script:
   - make test_fmt test_lint test_goveralls
+  - mvn test
 
 notifications:
   email: false

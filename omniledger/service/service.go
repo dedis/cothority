@@ -1,7 +1,4 @@
-// Package service implements the lleap service using the collection library to
-// handle the merkle-tree. Each call to SetKeyValue updates the Merkle-tree and
-// creates a new block containing the root of the Merkle-tree plus the new
-// value that has been stored last in the Merkle-tree.
+// Package service implements the Omniledger service.
 package service
 
 import (
@@ -88,7 +85,7 @@ type updateCollection struct {
 	ID skipchain.SkipBlockID
 }
 
-// CreateGenesisBlock asks the cisc-service to create a new skipchain ready to
+// CreateGenesisBlock asks the service to create a new skipchain ready to
 // store key/value pairs. If it is given exactly one writer, this writer will
 // be stored in the skipchain.
 // For faster access, all data is also stored locally in the Service.storage
@@ -137,6 +134,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	}
 	s.save()
 
+	// TODO: Protect access to queueWorkers with a mutex?
 	s.queueWorkers[string(sb.SkipChainID())], err = s.createQueueWorker(sb.SkipChainID())
 	if err != nil {
 		return nil, err
@@ -147,12 +145,13 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	}, nil
 }
 
-// SetKeyValue asks cisc to add a new key/value pair.
-func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
+// AddTransaction requests to apply a new transaction to the ledger.
+func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
 
+	// TODO: Protect access to queueWorkers with a mutex?
 	c, ok := s.queueWorkers[string(req.SkipchainID)]
 	if !ok {
 		return nil, fmt.Errorf("we don't know skipchain ID %x", req.SkipchainID)
@@ -164,7 +163,7 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 
 	c <- req.Transaction
 
-	return &SetKeyValueResponse{
+	return &AddTxResponse{
 		Version: CurrentVersion,
 	}, nil
 }
@@ -499,6 +498,11 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 // the appropriate StateChanges. If any of the transactions are invalid,
 // it returns an error.
 func (s *Service) createStateChanges(coll collection.Collection, cts ClientTransactions) (merkleRoot []byte, ctsOK ClientTransactions, states StateChanges, err error) {
+
+	// TODO: Because we depend on making at least one clone per transaction
+	// we need to find out if this is as expensive as it looks, and if so if
+	// we could use some kind of copy-on-write technique.
+
 	cdbTemp := coll.Clone()
 clientTransactions:
 	for _, ct := range cts {
@@ -569,17 +573,12 @@ func (s *Service) tryLoad() error {
 	if err != nil {
 		return err
 	}
-	// GetAllSkipchains erronously returns all skipBLOCKS, so we need
-	// to filter out the skipchainIDs.
-	scIDs := map[string]bool{}
-	for _, sb := range gasr.SkipChains {
-		scIDs[string(sb.SkipChainID())] = true
-	}
 
-	for scID := range scIDs {
-		sbID := skipchain.SkipBlockID(scID)
-		s.getCollection(sbID)
-		s.queueWorkers[scID], err = s.createQueueWorker(sbID)
+	for _, sb := range gasr.SkipChains {
+		s.getCollection(sb.Hash)
+		// At this point the service is not yet up, so no need to
+		// protect access to queueWorkers with a mutex.
+		s.queueWorkers[string(sb.Hash)], err = s.createQueueWorker(sb.Hash)
 		if err != nil {
 			return err
 		}
@@ -608,7 +607,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		CloseQueues:      make(chan bool),
 		contracts:        make(map[string]OmniledgerContract),
 	}
-	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.SetKeyValue,
+	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
 		s.GetProof); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}

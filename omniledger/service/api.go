@@ -39,11 +39,13 @@ func (c *Client) CreateGenesisBlock(r *onet.Roster, msg *CreateGenesisBlock) (*C
 	return reply, nil
 }
 
-// SetKeyValue sets a key/value pair and returns the created skipblock.
-func (c *Client) SetKeyValue(r *onet.Roster, id skipchain.SkipBlockID,
-	tx ClientTransaction) (*SetKeyValueResponse, error) {
-	reply := &SetKeyValueResponse{}
-	err := c.SendProtobuf(r.List[0], &SetKeyValue{
+// AddTransaction adds a transaction. It does not return any feedback
+// on the transaction. Use GetProof to find out if the transaction
+// was committed.
+func (c *Client) AddTransaction(r *onet.Roster, id skipchain.SkipBlockID,
+	tx ClientTransaction) (*AddTxResponse, error) {
+	reply := &AddTxResponse{}
+	err := c.SendProtobuf(r.List[0], &AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: id,
 		Transaction: tx,
@@ -56,7 +58,7 @@ func (c *Client) SetKeyValue(r *onet.Roster, id skipchain.SkipBlockID,
 
 // GetProof returns a proof for the key stored in the skipchain.
 // The proof can be verified with the genesis skipblock and
-// can proof the existence or the absence of the key.
+// can prove the existence or the absence of the key.
 func (c *Client) GetProof(r *onet.Roster, id skipchain.SkipBlockID, key []byte) (*GetProofResponse, error) {
 	reply := &GetProofResponse{}
 	err := c.SendProtobuf(r.List[0], &GetProof{

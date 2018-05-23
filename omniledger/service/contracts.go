@@ -22,7 +22,7 @@ var ConfigID = ObjectID{ZeroDarc, ZeroNonce}
 // ContractConfigID denotes a config-contract
 var ContractConfigID = "config"
 
-// ContractConfig can only be instantiated once per skipchain, and that only for
+// ContractConfig can only be instantiated once per skipchain, and only for
 // the genesis block.
 func (s *Service) ContractConfig(cdb collection.Collection, tx Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	if tx.Spawn == nil {

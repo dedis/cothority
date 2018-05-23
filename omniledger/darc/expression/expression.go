@@ -1,8 +1,7 @@
 /*
-Package expression contains the definition and implementation of a simple DSL
-for defining complex policies. We define the language in extended-BNF notation,
-the syntax we use is from -
-https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
+Package expression contains the definition and implementation of a simple
+language for defining complex policies. We define the language in extended-BNF notation,
+the syntax we use is from: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%93Naur_form
 
 	expr = term, [ '&', term ]*
 	term = factor, [ '|', factor ]*

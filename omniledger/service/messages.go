@@ -15,7 +15,7 @@ import (
 func init() {
 	network.RegisterMessages(
 		&CreateGenesisBlock{}, &CreateGenesisBlockResponse{},
-		&SetKeyValue{}, &SetKeyValueResponse{},
+		&AddTxRequest{}, &AddTxResponse{},
 	)
 }
 
@@ -56,19 +56,18 @@ type CreateGenesisBlockResponse struct {
 	Skipblock *skipchain.SkipBlock
 }
 
-// SetKeyValue asks for inclusion for a new key/value pair. The value needs
-// to be signed by one of the Writers from the createSkipchain call.
-type SetKeyValue struct {
+// AddTxRequest requests to apply a new transaction to the ledger.
+type AddTxRequest struct {
 	// Version of the protocol
 	Version Version
 	// SkipchainID is the hash of the first skipblock
 	SkipchainID skipchain.SkipBlockID
-	// Transaction to be apllied to the kv-store
+	// Transaction to be applied to the kv-store
 	Transaction ClientTransaction
 }
 
-// SetKeyValueResponse gives the timestamp and the skipblock-id
-type SetKeyValueResponse struct {
+// AddTxResponse is the reply after an AddTxRequest is finished.
+type AddTxResponse struct {
 	// Version of the protocol
 	Version Version
 }

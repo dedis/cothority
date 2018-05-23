@@ -35,7 +35,7 @@ func TestClient_GetProof(t *testing.T) {
 	kind := "dummy"
 	tx, err := createOneClientTx(d.GetBaseID(), kind, value, signer)
 	require.Nil(t, err)
-	_, err = c.SetKeyValue(roster, csr.Skipblock.SkipChainID(), tx)
+	_, err = c.AddTransaction(roster, csr.Skipblock.SkipChainID(), tx)
 	require.Nil(t, err)
 
 	// We should have a proof of our transaction in the skipchain.
