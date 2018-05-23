@@ -58,9 +58,10 @@ type Service struct {
 	// starting of new blocks.
 	queueWorkers map[string]chan ClientTransaction
 
-	// CloseQueues is closed when the queues should stop - this is mostly for
-	// testing and there should be a better way to clean up services for testing...
+	// CloseQueues should be closed when the queues should be stopped. This
+	// should only be needed for testing.
 	CloseQueues chan bool
+
 	// contracts map kinds to kind specific verification functions
 	contracts map[string]OmniLedgerContract
 	// propagate the new transactions
@@ -106,6 +107,9 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 
 	if req.Version != CurrentVersion {
 		return nil, fmt.Errorf("version mismatch - got %d but need %d", req.Version, CurrentVersion)
+	}
+	if req.Roster.List == nil {
+		return nil, errors.New("must provide a roster")
 	}
 
 	darcBuf, err := req.GenesisDarc.ToProto()

@@ -29,7 +29,19 @@ type Service struct {
 // Init will create a new event log. Logs will be accepted
 // from the signers mentioned in the request.
 func (s *Service) Init(req *InitRequest) (*InitResponse, error) {
-	return nil, errors.New("not impl")
+	cg := &omniledger.CreateGenesisBlock{
+		Version:     omniledger.CurrentVersion,
+		GenesisDarc: req.Writer,
+		Roster:      req.Roster,
+	}
+	cgr, err := s.omni.CreateGenesisBlock(cg)
+	if err != nil {
+		return nil, err
+	}
+
+	return &InitResponse{
+		ID: cgr.Skipblock.Hash,
+	}, nil
 }
 
 // Log will create a new event log entry.

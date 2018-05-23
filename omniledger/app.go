@@ -9,8 +9,6 @@ import (
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	"github.com/dedis/student_18_omniledger/omniledger/service"
 
-	"gopkg.in/dedis/cothority.v2"
-	"gopkg.in/dedis/kyber.v2/util/key"
 	"gopkg.in/dedis/onet.v2/app"
 	"gopkg.in/dedis/onet.v2/log"
 	"gopkg.in/urfave/cli.v1"
@@ -53,10 +51,8 @@ func create(c *cli.Context) error {
 	}
 	group := readGroup(c)
 
-	kp := key.NewKeyPair(cothority.Suite)
-
 	client := service.NewClient()
-	signer := darc.NewSignerEd25519(kp.Public, kp.Private)
+	signer := darc.NewSignerEd25519(nil, nil)
 	msg, err := service.DefaultGenesisMsg(service.CurrentVersion, group.Roster, []string{"Spawn_dummy"}, signer.Identity())
 	if err != nil {
 		return err
@@ -66,8 +62,8 @@ func create(c *cli.Context) error {
 		return errors.New("during creation of skipchain: " + err.Error())
 	}
 	log.Infof("Created new skipchain on roster %s with ID: %x", group.Roster.List, resp.Skipblock.Hash)
-	log.Infof("Private: %s", kp.Private)
-	log.Infof(" Public: %s", kp.Public)
+	log.Infof("Private: %s", signer.Ed25519.Secret)
+	log.Infof(" Public: %s", signer.Ed25519.Point)
 	return nil
 }
 
