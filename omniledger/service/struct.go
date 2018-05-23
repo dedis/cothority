@@ -81,7 +81,7 @@ func (c *collectionDB) Store(t *StateChange) error {
 	return err
 }
 
-func (c *collectionDB) GetValueKind(key []byte) (value, kind []byte, err error) {
+func (c *collectionDB) GetValueContract(key []byte) (value, contract []byte, err error) {
 	proof, err := c.coll.Get(key).Record()
 	if err != nil {
 		return
@@ -99,9 +99,9 @@ func (c *collectionDB) GetValueKind(key []byte) (value, kind []byte, err error) 
 		err = errors.New("the value is not of type []byte")
 		return
 	}
-	kind, ok = hashes[1].([]byte)
+	contract, ok = hashes[1].([]byte)
 	if !ok {
-		err = errors.New("the signature is not of type []byte")
+		err = errors.New("the contract is not of type []byte")
 		return
 	}
 	return
