@@ -61,7 +61,7 @@ func (oid ObjectID) Slice() []byte {
 	return append(oid.DarcID[:], oid.InstanceID[:]...)
 }
 
-// Nonce is used to prevent replay attacks in the instructions and
+// Nonce is used to prevent replay attacks in instructions.
 type Nonce [32]byte
 
 // Spawn is called upon an existing object that will spawn a new object.
@@ -97,8 +97,9 @@ type Argument struct {
 type Arguments []Argument
 
 // Search returns the value of a given argument. If it is not found, nil
-// is returned. So an argument with nil value cannot be distinguished from
-// a missing argument.
+// is returned.
+// TODO: An argument with nil value cannot be distinguished from
+// a missing argument!
 func (args Arguments) Search(name string) []byte {
 	for _, arg := range args {
 		if arg.Name == name {
@@ -367,7 +368,7 @@ func sortWithSalt(ts [][]byte, salt []byte) {
 }
 
 // sortTransactions needs to marshal transactions, if it fails to do so,
-// it returns an error and leaves the slice unchange.
+// it returns an error and leaves the slice unchanged.
 // The helper functions (sortWithSalt, xorTransactions) operate on []byte
 // representations directly. This allows for some more compact error handling
 // when (un)marshalling.

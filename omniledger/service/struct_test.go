@@ -24,18 +24,18 @@ func TestCollectionDBStrange(t *testing.T) {
 	cdb := newCollectionDB(db, testName)
 	key := []byte("first")
 	value := []byte("value")
-	kind := []byte("mykind")
+	contract := []byte("mycontract")
 	err = cdb.Store(&StateChange{
 		StateAction: Create,
 		ObjectID:    key,
 		Value:       value,
-		ContractID:  kind,
+		ContractID:  contract,
 	})
 	require.Nil(t, err)
-	v, k, err := cdb.GetValueKind([]byte("first"))
+	v, c, err := cdb.GetValueContract([]byte("first"))
 	require.Nil(t, err)
 	require.Equal(t, value, v)
-	require.Equal(t, kind, k)
+	require.Equal(t, contract, c)
 }
 
 func TestCollectionDB(t *testing.T) {
@@ -51,7 +51,7 @@ func TestCollectionDB(t *testing.T) {
 
 	cdb := newCollectionDB(db, testName)
 	pairs := map[string]string{}
-	mykind := []byte("mykind")
+	myContract := []byte("myContract")
 	for i := 0; i < kvPairs; i++ {
 		pairs[fmt.Sprintf("Key%d", i)] = fmt.Sprintf("value%d", i)
 	}
@@ -62,25 +62,25 @@ func TestCollectionDB(t *testing.T) {
 			StateAction: Create,
 			ObjectID:    []byte(k),
 			Value:       []byte(v),
-			ContractID:  mykind,
+			ContractID:  myContract,
 		}
 		require.Nil(t, cdb.Store(sc))
 	}
 
 	// Verify it's all there
-	for k, v := range pairs {
-		stored, kind, err := cdb.GetValueKind([]byte(k))
+	for c, v := range pairs {
+		stored, contract, err := cdb.GetValueContract([]byte(c))
 		require.Nil(t, err)
 		require.Equal(t, v, string(stored))
-		require.Equal(t, mykind, kind)
+		require.Equal(t, myContract, contract)
 	}
 
 	// Get a new db handler
 	cdb2 := newCollectionDB(db, testName)
 
 	// Verify it's all there
-	for k, v := range pairs {
-		stored, _, err := cdb2.GetValueKind([]byte(k))
+	for c, v := range pairs {
+		stored, _, err := cdb2.GetValueContract([]byte(c))
 		require.Nil(t, err)
 		require.Equal(t, v, string(stored))
 	}
@@ -112,9 +112,9 @@ func TestCollectionDBtryHash(t *testing.T) {
 	}
 	mrTrial, err := cdb.tryHash(scs)
 	require.Nil(t, err)
-	_, _, err = cdb.GetValueKind([]byte("key1"))
+	_, _, err = cdb.GetValueContract([]byte("key1"))
 	require.EqualError(t, err, "no match found")
-	_, _, err = cdb.GetValueKind([]byte("key2"))
+	_, _, err = cdb.GetValueContract([]byte("key2"))
 	require.EqualError(t, err, "no match found")
 	cdb.Store(&scs[0])
 	cdb.Store(&scs[1])

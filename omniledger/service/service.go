@@ -1,7 +1,4 @@
-// Package service implements the lleap service using the collection library to
-// handle the merkle-tree. Each call to SetKeyValue updates the Merkle-tree and
-// creates a new block containing the root of the Merkle-tree plus the new
-// value that has been stored last in the Merkle-tree.
+// Package service implements the OmniLedger service.
 package service
 
 import (
@@ -29,7 +26,7 @@ const darcIDLen int = 32
 // Used for tests
 // TODO move to test
 var omniledgerID onet.ServiceID
-var verifyOmniledger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Omniledger"))
+var verifyOmniLedger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OmniLedger"))
 
 func init() {
 	var err error
@@ -53,14 +50,17 @@ type Service struct {
 	// service reloads.
 	collectionDB map[string]*collectionDB
 
+	// wokersMu protects access to queueWorkers
+	workersMu sync.Mutex
 	// queueWorkers is a map that points to channels that handle queueing and
 	// starting of new blocks.
 	queueWorkers map[string]chan ClientTransaction
+
 	// CloseQueues is closed when the queues should stop - this is mostly for
 	// testing and there should be a better way to clean up services for testing...
 	CloseQueues chan bool
 	// contracts map kinds to kind specific verification functions
-	contracts map[string]OmniledgerContract
+	contracts map[string]OmniLedgerContract
 	// propagate the new transactions
 	propagateTransactions messaging.PropagationFunc
 
@@ -88,7 +88,7 @@ type updateCollection struct {
 	ID skipchain.SkipBlockID
 }
 
-// CreateGenesisBlock asks the cisc-service to create a new skipchain ready to
+// CreateGenesisBlock asks the service to create a new skipchain ready to
 // store key/value pairs. If it is given exactly one writer, this writer will
 // be stored in the skipchain.
 // For faster access, all data is also stored locally in the Service.storage
@@ -137,23 +137,25 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	}
 	s.save()
 
-	s.queueWorkers[string(sb.SkipChainID())], err = s.createQueueWorker(sb.SkipChainID())
-	if err != nil {
-		return nil, err
-	}
+	s.workersMu.Lock()
+	s.queueWorkers[string(sb.SkipChainID())] = s.createQueueWorker(sb.SkipChainID())
+	s.workersMu.Unlock()
+
 	return &CreateGenesisBlockResponse{
 		Version:   CurrentVersion,
 		Skipblock: sb,
 	}, nil
 }
 
-// SetKeyValue asks cisc to add a new key/value pair.
-func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
+// AddTransaction requests to apply a new transaction to the ledger.
+func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
 
+	s.workersMu.Lock()
 	c, ok := s.queueWorkers[string(req.SkipchainID)]
+	s.workersMu.Unlock()
 	if !ok {
 		return nil, fmt.Errorf("we don't know skipchain ID %x", req.SkipchainID)
 	}
@@ -164,7 +166,7 @@ func (s *Service) SetKeyValue(req *SetKeyValue) (*SetKeyValueResponse, error) {
 
 	c <- req.Transaction
 
-	return &SetKeyValueResponse{
+	return &AddTxResponse{
 		Version: CurrentVersion,
 	}, nil
 }
@@ -210,12 +212,12 @@ func (s *Service) getLatestDarcByID(sid skipchain.SkipBlockID, dID darc.ID) (*da
 	if colldb == nil {
 		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", sid.Short())
 	}
-	value, kind, err := colldb.GetValueKind(padKey(dID))
+	value, contract, err := colldb.GetValueContract(padKey(dID))
 	if err != nil {
 		return nil, err
 	}
-	if string(kind) != "darc" {
-		return nil, fmt.Errorf("for darc %x, expected Kind to be 'darc' but got '%s'", dID, string(kind))
+	if string(contract) != "darc" {
+		return nil, fmt.Errorf("for darc %x, expected Kind to be 'darc' but got '%v'", dID, string(contract))
 	}
 	// TODO we need to make sure this darc is the latest
 	return darc.NewDarcFromProto(value)
@@ -273,7 +275,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 		sb.MaximumHeight = 10
 		sb.BaseHeight = 10
 		// We have to register the verification functions in the genesis block
-		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, verifyOmniledger}
+		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, verifyOmniLedger}
 
 		coll = collection.New(&collection.Data{}, &collection.Data{})
 	} else {
@@ -421,7 +423,7 @@ func (s *Service) db() *skipchain.SkipBlockDB {
 
 // createQueueWorker sets up a worker that will listen on a channel for
 // incoming requests and then create a new block every epoch.
-func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) (chan ClientTransaction, error) {
+func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) chan ClientTransaction {
 	c := make(chan ClientTransaction)
 	go func() {
 		ts := []ClientTransaction{}
@@ -454,7 +456,7 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) (chan ClientTran
 			}
 		}
 	}()
-	return c, nil
+	return c
 }
 
 // We use the omniledger as a receiver (as is done in the identity service),
@@ -499,6 +501,11 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 // the appropriate StateChanges. If any of the transactions are invalid,
 // it returns an error.
 func (s *Service) createStateChanges(coll collection.Collection, cts ClientTransactions) (merkleRoot []byte, ctsOK ClientTransactions, states StateChanges, err error) {
+
+	// TODO: Because we depend on making at least one clone per transaction
+	// we need to find out if this is as expensive as it looks, and if so if
+	// we could use some kind of copy-on-write technique.
+
 	cdbTemp := coll.Clone()
 clientTransactions:
 	for _, ct := range cts {
@@ -536,7 +543,7 @@ clientTransactions:
 
 // registerContract stores the contract in a map and will
 // call it whenever a contract needs to be done.
-func (s *Service) registerContract(contractID string, c OmniledgerContract) error {
+func (s *Service) registerContract(contractID string, c OmniLedgerContract) error {
 	s.contracts[contractID] = c
 	return nil
 }
@@ -569,20 +576,12 @@ func (s *Service) tryLoad() error {
 	if err != nil {
 		return err
 	}
-	// GetAllSkipchains erronously returns all skipBLOCKS, so we need
-	// to filter out the skipchainIDs.
-	scIDs := map[string]bool{}
-	for _, sb := range gasr.SkipChains {
-		scIDs[string(sb.SkipChainID())] = true
-	}
 
-	for scID := range scIDs {
-		sbID := skipchain.SkipBlockID(scID)
-		s.getCollection(sbID)
-		s.queueWorkers[scID], err = s.createQueueWorker(sbID)
-		if err != nil {
-			return err
-		}
+	for _, sb := range gasr.SkipChains {
+		s.getCollection(sb.Hash)
+		// At this point the service is not yet up, so no need to
+		// protect access to queueWorkers with a mutex.
+		s.queueWorkers[string(sb.Hash)] = s.createQueueWorker(sb.Hash)
 	}
 
 	return nil
@@ -606,9 +605,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		CloseQueues:      make(chan bool),
-		contracts:        make(map[string]OmniledgerContract),
+		contracts:        make(map[string]OmniLedgerContract),
 	}
-	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.SetKeyValue,
+	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
 		s.GetProof); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
@@ -618,13 +617,13 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 
 	var err error
-	s.propagateTransactions, err = messaging.NewPropagationFunc(c, "OmniledgerPropagate", s.updateCollection, -1)
+	s.propagateTransactions, err = messaging.NewPropagationFunc(c, "OmniLedgerPropagate", s.updateCollection, -1)
 	if err != nil {
 		return nil, err
 	}
 
 	s.registerContract(ContractConfigID, s.ContractConfig)
 	s.registerContract(ContractDarcID, s.ContractDarc)
-	skipchain.RegisterVerification(c, verifyOmniledger, s.verifySkipBlock)
+	skipchain.RegisterVerification(c, verifyOmniLedger, s.verifySkipBlock)
 	return s, nil
 }

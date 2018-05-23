@@ -69,19 +69,19 @@ func TestService_AddKeyValue(t *testing.T) {
 	defer closeQueues(s.local)
 
 	// wrong version
-	akvresp, err := s.service().SetKeyValue(&SetKeyValue{
+	akvresp, err := s.service().AddTransaction(&AddTxRequest{
 		Version: CurrentVersion + 1,
 	})
 	require.NotNil(t, err)
 
 	// missing skipchain
-	akvresp, err = s.service().SetKeyValue(&SetKeyValue{
+	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version: CurrentVersion,
 	})
 	require.NotNil(t, err)
 
 	// missing transaction
-	akvresp, err = s.service().SetKeyValue(&SetKeyValue{
+	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 	})
@@ -91,7 +91,7 @@ func TestService_AddKeyValue(t *testing.T) {
 	// add the first tx
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, s.value, s.signer)
 	require.Nil(t, err)
-	akvresp, err = s.service().SetKeyValue(&SetKeyValue{
+	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 		Transaction: tx1,
@@ -104,7 +104,7 @@ func TestService_AddKeyValue(t *testing.T) {
 	value2 := []byte("value2")
 	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, value2, s.signer)
 	require.Nil(t, err)
-	akvresp, err = s.service().SetKeyValue(&SetKeyValue{
+	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 		Transaction: tx2,
@@ -201,7 +201,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	value1 := []byte("a")
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), "invalid", value1, s.signer)
 	require.Nil(t, err)
-	akvresp, err := s.service().SetKeyValue(&SetKeyValue{
+	akvresp, err := s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 		Transaction: tx1,
@@ -213,7 +213,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	// tx2 uses the dummy kind, its value should be stored.
 	value2 := []byte("b")
 	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, value2, s.signer)
-	akvresp, err = s.service().SetKeyValue(&SetKeyValue{
+	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 		Transaction: tx2,
@@ -289,7 +289,7 @@ func newSer(t *testing.T, step int) *ser {
 			tx, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, s.value, s.signer)
 			require.Nil(t, err)
 			s.tx = tx
-			_, err = s.service().SetKeyValue(&SetKeyValue{
+			_, err = s.service().AddTransaction(&AddTxRequest{
 				Version:     CurrentVersion,
 				SkipchainID: s.sb.SkipChainID(),
 				Transaction: tx,
