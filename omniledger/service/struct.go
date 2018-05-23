@@ -22,11 +22,11 @@ type collectionDB struct {
 	coll       collection.Collection
 }
 
-// OmniledgerContract is the type signature of the class functions
+// OmniLedgerContract is the type signature of the class functions
 // which can be registered with the omniledger service.
 // Since the outcome of the verification depends on the state of the collection
 // which is to be modified, we pass it as a pointer here.
-type OmniledgerContract func(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error)
+type OmniLedgerContract func(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error)
 
 // newCollectionDB initialises a structure and reads all key/value pairs to store
 // it in the collection.
@@ -138,7 +138,7 @@ func (c *collectionDB) tryHash(ts []StateChange) (mr []byte, rerr error) {
 // call it whenever a contract needs to be done.
 // GetService makes it possible to give either an `onet.Context` or
 // `onet.Server` to `RegisterContract`.
-func RegisterContract(s skipchain.GetService, kind string, f OmniledgerContract) error {
+func RegisterContract(s skipchain.GetService, kind string, f OmniLedgerContract) error {
 	scs := s.Service(ServiceName)
 	if scs == nil {
 		return errors.New("Didn't find our service: " + ServiceName)

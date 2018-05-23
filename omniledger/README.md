@@ -1,12 +1,12 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](https://github.com/dedis/cothority/tree/master/README.md) ::
 [Building Blocks](https://github.com/dedis/cothority/tree/master/BuildingBlocks.md) ::
-Omniledger
+OmniLedger
 
 # OmniLedger
 
-This implementation of Omniledger has its goal to implement the protocol
-described in the [Omniledger Paper](https://eprint.iacr.org/2017/406.pdf).
+This implementation of OmniLedger has its goal to implement the protocol
+described in the [OmniLedger Paper](https://eprint.iacr.org/2017/406.pdf).
 As the paper is only describing the network interaction and very few of the
 details of how the transactions themselves are handled, we will include
 them as seem fit.
@@ -28,17 +28,17 @@ block by the leader
 
 1-4 are issues that should've been included in skipchains for a long time, but
 never got in. Only 5-6 are 'real' omniledger improvements as described in the
-[Omniledger Paper](https://eprint.iacr.org/2017/406.pdf).
+[OmniLedger Paper](https://eprint.iacr.org/2017/406.pdf).
 
 # Structure Definitions
 
-Following is an overview of the most important structures defined in Omniledger
+Following is an overview of the most important structures defined in OmniLedger
 and how they can be described using protobuf. For each protobuf description we
 give a short overview of the different fields and how they work together.
 
 ## Skipchain Block
 
-Whenever Omniledger stores a new Skipchain Block, the header will only contain
+Whenever OmniLedger stores a new Skipchain Block, the header will only contain
 hashes, while the clientTransactions will be stored in the body. This allows
 for a reduced proof size.
 
@@ -50,7 +50,7 @@ Block header:
 Block body:
 - List of all clientTransactions
 
-## Smart Contracts in Omniledger
+## Smart Contracts in OmniLedger
 
 Previous name was _Precompiled Smart Contracts_, but looking at how we want
 it to work, we decided to call it simply a set of Contracts. A contract defines
@@ -76,7 +76,7 @@ state will be changed if any of the contracts returns non-zero.
 
 ## From Client to the Collection
 
-In Omniledger we define the following path from client instructions to
+In OmniLedger we define the following path from client instructions to
 global state changes:
 
 * _Instruction_ is one of Spawn, Invoke or Delete that is called upon an
@@ -85,7 +85,7 @@ existing object
 * _StateChange_ is calculated at the leader and verified by every node. It
 contains the new key/contractID/value triplets to create/update/delete.
 
-A block in omniledger contains zero or more OmniledgerTransactions. Every
+A block in omniledger contains zero or more OmniLedgerTransactions. Every
 one of these transactions can be valid or not and will be marked as such by
 the leader. Every node has to verify whether it accepts or refuses the
 decisions made by the leader.
@@ -182,7 +182,7 @@ Once the leader receives the ClientTransactions, it will send the individual
 instructions to the corresponding contracts and/or objects. Each call to a
 contract/object will return 0 or more StateChanges that define how to update the
 state of the collection.
-Omniledger will take care that the following instruction/StateChanges are
+OmniLedger will take care that the following instruction/StateChanges are
 respected. *This might be too restrictive*:
 - Spawn: only Create-Actions
 - Invoke: only Update-Action on the invoked object
@@ -201,7 +201,7 @@ message StateChange{
 }
 ```
 
-The *ObjectID* is a random key chosen by Omniledger and must correspond to
+The *ObjectID* is a random key chosen by OmniLedger and must correspond to
 further Instructions sent by the client.
 
 ## Proof
@@ -346,7 +346,7 @@ Examples of contracts and some of their methods are:
 - Darc:
   - create a new Darc
 	- update a darc
-- Omniledger Configuration
+- OmniLedger Configuration
   - create new configuration
   - Add or remove nodes
   - Change the block interval time

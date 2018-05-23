@@ -1,8 +1,8 @@
-# Omniledger
+# OmniLedger
 
 This repo is the development of the omniledger project, that aims to bring
 skipchains to a new level of performance and functionality. Broadly speaking,
-Omniledger will implement:
+OmniLedger will implement:
 
 1. multiple transactions per block
 2. queuing of transactions at each node and periodical creation of a new
@@ -14,13 +14,13 @@ block by the leader
 
 1-4 are issues that should've been included in skipchains for a long time, but
 never got in. Only 5-6 are 'real' omniledger improvements as described in the
-[Omniledger Paper](https://eprint.iacr.org/2017/406.pdf).
+[OmniLedger Paper](https://eprint.iacr.org/2017/406.pdf).
 
 # Implementation
 
 ## Schedule
 
-We will follow the above list to implement the different parts of Omniledger.
+We will follow the above list to implement the different parts of OmniLedger.
 Once we reach point 3 or 4, we'll start porting services over to the new
 omniledger blockchain. As we still want to keep downwards-compatibility, we
 probably will need to create new services.
@@ -51,7 +51,7 @@ The followers hold a queue
 
 ### ByzCoinX
 
-This protocol handles the consensus algorithm of Omniledger and is described
+This protocol handles the consensus algorithm of OmniLedger and is described
 in the paper. One thing that is missing in the paper is possible improvements
 to make the protocol more usable in a real-world environment:
 - sub-leaders propagate the commit once a threshold of leafs replied

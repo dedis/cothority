@@ -1,4 +1,4 @@
-// Package service implements the Omniledger service.
+// Package service implements the OmniLedger service.
 package service
 
 import (
@@ -26,7 +26,7 @@ const darcIDLen int = 32
 // Used for tests
 // TODO move to test
 var omniledgerID onet.ServiceID
-var verifyOmniledger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Omniledger"))
+var verifyOmniLedger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OmniLedger"))
 
 func init() {
 	var err error
@@ -60,7 +60,7 @@ type Service struct {
 	// testing and there should be a better way to clean up services for testing...
 	CloseQueues chan bool
 	// contracts map kinds to kind specific verification functions
-	contracts map[string]OmniledgerContract
+	contracts map[string]OmniLedgerContract
 	// propagate the new transactions
 	propagateTransactions messaging.PropagationFunc
 
@@ -275,7 +275,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 		sb.MaximumHeight = 10
 		sb.BaseHeight = 10
 		// We have to register the verification functions in the genesis block
-		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, verifyOmniledger}
+		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, verifyOmniLedger}
 
 		coll = collection.New(&collection.Data{}, &collection.Data{})
 	} else {
@@ -543,7 +543,7 @@ clientTransactions:
 
 // registerContract stores the contract in a map and will
 // call it whenever a contract needs to be done.
-func (s *Service) registerContract(contractID string, c OmniledgerContract) error {
+func (s *Service) registerContract(contractID string, c OmniLedgerContract) error {
 	s.contracts[contractID] = c
 	return nil
 }
@@ -605,7 +605,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		CloseQueues:      make(chan bool),
-		contracts:        make(map[string]OmniledgerContract),
+		contracts:        make(map[string]OmniLedgerContract),
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
 		s.GetProof); err != nil {
@@ -617,13 +617,13 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 
 	var err error
-	s.propagateTransactions, err = messaging.NewPropagationFunc(c, "OmniledgerPropagate", s.updateCollection, -1)
+	s.propagateTransactions, err = messaging.NewPropagationFunc(c, "OmniLedgerPropagate", s.updateCollection, -1)
 	if err != nil {
 		return nil, err
 	}
 
 	s.registerContract(ContractConfigID, s.ContractConfig)
 	s.registerContract(ContractDarcID, s.ContractDarc)
-	skipchain.RegisterVerification(c, verifyOmniledger, s.verifySkipBlock)
+	skipchain.RegisterVerification(c, verifyOmniLedger, s.verifySkipBlock)
 	return s, nil
 }

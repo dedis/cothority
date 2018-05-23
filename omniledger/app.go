@@ -1,4 +1,4 @@
-// Package main is an app to interact with an Omniledger service. It can set up
+// Package main is an app to interact with an OmniLedger service. It can set up
 // a new skipchain, store transactions and retrieve values given a key.
 package main
 
@@ -18,8 +18,8 @@ import (
 
 func main() {
 	cliApp := cli.NewApp()
-	cliApp.Name = "Omniledger app"
-	cliApp.Usage = "Key/value storage for Omniledger"
+	cliApp.Name = "OmniLedger app"
+	cliApp.Usage = "Key/value storage for OmniLedger"
 	cliApp.Version = "0.1"
 	cliApp.Commands = []cli.Command{
 		{
