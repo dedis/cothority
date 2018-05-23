@@ -9,7 +9,9 @@ import (
 	"gopkg.in/dedis/onet.v2/log"
 )
 
+// ServiceName is the service name for the EventLog service.
 var ServiceName = "EventLog"
+
 var sid onet.ServiceID
 
 func init() {

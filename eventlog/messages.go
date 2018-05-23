@@ -15,19 +15,23 @@ func init() {
 	)
 }
 
+// InitRequest is sent to start a new EventLog.
 type InitRequest struct {
 	Writer darc.Darc
 	Roster onet.Roster
 }
 
+// InitResponse is the reply to InitRequest.
 type InitResponse struct {
 	ID skipchain.SkipBlockID
 }
 
+// LogRequest is sent to create an event log.
 type LogRequest struct {
 	Topic string
 	Event string
 }
 
+// LogResponse is the reply to LogRequest.
 type LogResponse struct {
 }
