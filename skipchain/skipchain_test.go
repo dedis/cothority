@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
 	"sync"
 	"testing"
@@ -1128,5 +1129,100 @@ func TestRosterAddCausesSync(t *testing.T) {
 		NewBlock:          newBlock})
 	if err != nil {
 		t.Error(err)
+	}
+}
+
+func TestSyncDoesForwardLinks(t *testing.T) {
+	if testing.Short() {
+		t.Skip("node failure tests do not run on travis, see #1000")
+	}
+
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	servers, roster, genService := local.MakeSRS(cothority.Suite, 5, skipchainSID)
+	leader := genService.(*Service)
+
+	log.Lvl1("Creating chain with 5 servers")
+	sbRoot := &SkipBlock{
+		SkipBlockFix: &SkipBlockFix{
+			MaximumHeight: 2,
+			BaseHeight:    3,
+			Roster:        roster,
+			Data:          []byte{},
+		},
+	}
+	gen, err := leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: []byte{}, NewBlock: sbRoot})
+	if err != nil {
+		t.Error(err)
+	}
+	genId := gen.Latest.Hash
+
+	// put last server to sleep so it misses the next block
+	servers[4].Pause()
+	leader.bftTimeout = 100 * time.Millisecond
+	leader.propTimeout = 5 * leader.bftTimeout
+
+	log.Lvl1("Add a block")
+	ssbrep, err := leader.StoreSkipBlock(&StoreSkipBlock{
+		TargetSkipChainID: gen.Latest.Hash,
+		NewBlock:          sbRoot,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	log.Lvl1("Wake up last server")
+	servers[4].Unpause()
+
+	// Add a block on. #4 will be asked to sign a forward link on a block
+	// it has never heard of, so it will sync.
+	ssbrep, err = leader.StoreSkipBlock(&StoreSkipBlock{
+		TargetSkipChainID: ssbrep.Latest.Hash,
+		NewBlock:          sbRoot,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// See if 4's view of block 0 has the forward link it should have to
+	// block 1.
+
+	s4 := local.Services[servers[4].ServerIdentity.ID][skipchainSID].(*Service)
+	//leader.dumpChain("leader", genId, os.Stdout)
+	//s4.dumpChain("s4", genId, os.Stdout)
+
+	gb := s4.GetDB().GetByID(genId)
+	if gb == nil {
+		t.Fatal("gen not found")
+	}
+	if len(gb.ForwardLink) != 1 {
+		t.Fatalf("expected 1 forward link, got %v", len(gb.ForwardLink))
+	}
+}
+
+func (s *Service) dumpChain(name string, x SkipBlockID, out io.Writer) {
+	fmt.Fprintln(out, "Dump of chain", name)
+	for {
+		b := s.db.GetByID(x)
+		if b == nil {
+			fmt.Fprintf(out, "Block %x not found.\n", x)
+			return
+		}
+
+		fmt.Fprintf(out, "Block %x, index %v\n", b.Hash, b.Index)
+		fmt.Fprintf(out, "  back: %v\n", len(b.BackLinkIDs))
+		for i, bl := range b.BackLinkIDs {
+			fmt.Fprintf(out, "     %v: %x\n", i, bl)
+		}
+		fmt.Fprintf(out, "   fwd: %v\n", len(b.ForwardLink))
+		for i, fl := range b.ForwardLink {
+			fmt.Fprintf(out, "     %v: %x -> %x\n", i, fl.From, fl.To)
+		}
+
+		if len(b.ForwardLink) == 0 {
+			return
+		}
+		x = b.ForwardLink[0].To
 	}
 }
