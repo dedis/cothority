@@ -436,8 +436,8 @@ type testData struct {
 }
 
 func TestClient_ParallelWrite(t *testing.T) {
-	numClients := 15
-	numWrites := 15
+	numClients := 10
+	numWrites := 10
 	if testing.Short() {
 		numClients = 2
 	}
@@ -448,15 +448,12 @@ func TestClient_ParallelWrite(t *testing.T) {
 
 	cl := newTestClient(l)
 	msg := []byte("genesis")
-	gen, err := cl.CreateGenesis(ro, 1, 1, VerificationRoot, msg, nil)
-	if err != nil {
-		t.Fatal(err)
-	}
+	gen, err := cl.CreateGenesis(ro, 2, 10, VerificationRoot, msg, nil)
+	require.Nil(t, err)
 
 	s := l.Services[svrs[0].ServerIdentity.ID][sid].(*Service)
 
 	wg := sync.WaitGroup{}
-	errCh := make(chan error, numClients*numWrites)
 
 	for i := 0; i < numClients; i++ {
 		wg.Add(1)
@@ -466,38 +463,30 @@ func TestClient_ParallelWrite(t *testing.T) {
 
 			for j := 0; j < numWrites; j++ {
 				_, err := cl.StoreSkipBlock(gen, nil, msg)
-				if err != nil {
-					errCh <- err
-					break
-				}
+				require.Nil(t, err)
 			}
 			wg.Done()
 		}(i)
 	}
 	wg.Wait()
 
-	select {
-	case err := <-errCh:
-		t.Fatal(err)
-	default:
-		t.Log("congrats, no errors")
-	}
-
 	num := s.db.Length()
 	// plus 1 for the genesis block
 	expected := numClients*numWrites + 1
-	if num != expected {
-		t.Fatal("length db", num)
-	}
+	require.Equal(t, expected, num)
 
 	// Read the chain back, check it.
 	reply, err := cl.GetUpdateChain(ro, gen.SkipChainID())
-	if err != nil {
-		t.Fatal(err)
+	require.Nil(t, err)
+	for i, sb := range reply.Update {
+		if i == 0 {
+			require.True(t, sb.SkipChainID().Equal(gen.Hash))
+		} else {
+			fl := reply.Update[i-1].ForwardLink
+			require.True(t, sb.Hash.Equal(fl[len(fl)-1].To))
+		}
 	}
-	if len(reply.Update) != expected {
-		t.Fatal("not enough updates")
-	}
+	require.Equal(t, reply.Update[len(reply.Update)-1].Index, expected-1)
 	for i, x := range reply.Update {
 		// Genesis does not match the expected string. NBD.
 		if i == 0 {

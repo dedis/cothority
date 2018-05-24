@@ -44,13 +44,15 @@ func TestService_StoreSkipBlock(t *testing.T) {
 }
 
 func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
-	defaultPropagateTimeout = time.Second
-
 	// First create a roster to attach the data to it
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	servers, el, genService := local.MakeSRS(cothority.Suite, nbrServers, skipchainSID)
+	services := local.GetServices(servers, skipchainSID)
+	for _, s := range services {
+		s.(*Service).bftTimeout = time.Second
+	}
 	service := genService.(*Service)
 	// This is the poor server who will play the part of the dead server
 	// for us.
@@ -509,31 +511,23 @@ func TestService_ParallelGenesis(t *testing.T) {
 		},
 	}
 
-	const nbrRoutines = 20
-	const numBlocks = 100
-	errs := make(chan error, nbrRoutines*numBlocks)
+	const nbrRoutines = 10
+	const numBlocks = 50
 
-	wg := &sync.WaitGroup{}
-	wg.Add(nbrRoutines)
+	stored := make(chan bool)
 	for i := 0; i < nbrRoutines; i++ {
 		go func(sb *SkipBlock) {
 			for j := 0; j < numBlocks; j++ {
 				_, err := s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sb})
-				if err != nil {
-					errs <- err
-					break
-				}
+				require.Nil(t, err)
+				stored <- true
 			}
-			wg.Done()
 		}(sb0.Copy())
 	}
-	wg.Wait()
 
-	select {
-	case err := <-errs:
-		t.Error("got an error", err)
-	default:
-		t.Log("congratulations, no errors")
+	for i := 0; i < nbrRoutines*numBlocks; i++ {
+		<-stored
+		log.Lvl2("Stored", i+1, "out of", nbrRoutines*numBlocks, "blocks")
 	}
 
 	n := s1.db.Length()
@@ -612,6 +606,7 @@ func TestService_Propagation(t *testing.T) {
 	services := make([]*Service, len(servers))
 	for i, s := range local.GetServices(servers, skipchainSID) {
 		services[i] = s.(*Service)
+		services[i].propTimeout = 60 * time.Second
 	}
 	service := genService.(*Service)
 
