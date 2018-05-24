@@ -84,9 +84,10 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...*darc.I
 	}
 
 	m := CreateGenesisBlock{
-		Version:     v,
-		Roster:      *r,
-		GenesisDarc: *d,
+		Version:       v,
+		Roster:        *r,
+		GenesisDarc:   *d,
+		BlockInterval: defaultInterval,
 	}
 	return &m, nil
 }

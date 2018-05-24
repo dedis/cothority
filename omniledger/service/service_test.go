@@ -21,7 +21,6 @@ var tSuite = suites.MustFind("Ed25519")
 var dummyKind = "dummy"
 
 func TestMain(m *testing.M) {
-	waitQueueing = 100 * time.Millisecond
 	log.MainTest(m)
 }
 
@@ -48,6 +47,7 @@ func TestService_CreateSkipchain(t *testing.T) {
 	// create valid darc
 	signer := darc.NewSignerEd25519(nil, nil)
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"Spawn_dummy"}, signer.Identity())
+	genesisMsg.BlockInterval = 100 * time.Millisecond
 	require.Nil(t, err)
 
 	// finally passing
@@ -123,7 +123,7 @@ func TestService_AddKeyValue(t *testing.T) {
 		}
 		for _, tx := range txs {
 			for {
-				time.Sleep(2 * waitQueueing)
+				time.Sleep(2 * s.interval)
 				pr, err := s.service().GetProof(&GetProof{
 					Version: CurrentVersion,
 					ID:      s.sb.SkipChainID(),
@@ -157,7 +157,7 @@ func TestService_GetProof(t *testing.T) {
 	var rep *GetProofResponse
 	var i int
 	for i = 0; i < 10; i++ {
-		time.Sleep(2 * waitQueueing)
+		time.Sleep(2 * s.interval)
 		var err error
 		rep, err = s.service().GetProof(&GetProof{
 			Version: CurrentVersion,
@@ -222,7 +222,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
-	time.Sleep(8 * waitQueueing)
+	time.Sleep(8 * s.interval)
 
 	// Check that tx1 is _not_ stored.
 	pr, err := s.service().GetProof(&GetProof{
@@ -255,6 +255,7 @@ type ser struct {
 	darc     *darc.Darc
 	signer   *darc.Signer
 	tx       ClientTransaction
+	interval time.Duration
 }
 
 func (s *ser) service() *Service {
@@ -279,6 +280,9 @@ func newSer(t *testing.T, step int) *ser {
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
+	genesisMsg.BlockInterval = 100 * time.Millisecond
+	s.interval = genesisMsg.BlockInterval
+
 	for i := 0; i < step; i++ {
 		switch i {
 		case 0:
@@ -295,7 +299,7 @@ func newSer(t *testing.T, step int) *ser {
 				Transaction: tx,
 			})
 			require.Nil(t, err)
-			time.Sleep(4 * waitQueueing)
+			time.Sleep(4 * s.interval)
 		default:
 			require.Fail(t, "no such step")
 		}

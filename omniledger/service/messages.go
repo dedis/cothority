@@ -5,6 +5,8 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
+	"time"
+
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/onet.v2"
@@ -46,6 +48,8 @@ type CreateGenesisBlock struct {
 	Roster onet.Roster
 	// GenesisDarc defines who is allowed to write to this skipchain.
 	GenesisDarc darc.Darc
+	// BlockInterval in int64.
+	BlockInterval time.Duration
 }
 
 // CreateGenesisBlockResponse holds the genesis-block of the new skipchain.
