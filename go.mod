@@ -7,5 +7,7 @@ require (
 	github.com/satori/go.uuid v1.2.0
 	github.com/stretchr/objx v0.0.0-20180129172003-8a3f7159479f
 	golang.org/x/sys v0.0.0-20180404203733-1d206c9fa897
+	gopkg.in/satori/go.uuid.v1 v1.2.0
+	gopkg.in/tylerb/graceful.v1 v1.2.15
 	gopkg.in/urfave/cli.v1 v1.20.0
 )

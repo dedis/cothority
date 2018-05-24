@@ -31,7 +31,9 @@ golang.org/x/sys v0.0.0-20180404203733-1d206c9fa897 h1:6v7qiKaN+CIIE+8O09n/3mik7
 golang.org/x/text v0.0.0-20171214130843-f21a4dfb5e38 h1:yr7ItWHARpqySNZjEh5mPMHrw3xPR9tMnomFZVcO1mQ=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
 gopkg.in/satori/go.uuid.v1 v1.2.0-gopkgin-v1.2.0 h1:XM3PiEbr7wDCubDOuJOOtcviQkNz46RErsWEs1z7Vno=
+gopkg.in/satori/go.uuid.v1 v1.2.0 h1:AH9uksa7bGe9rluapecRKBCpZvxaBEyu0RepitcD0Hw=
 gopkg.in/tylerb/graceful.v1 v1.2.15-gopkgin-v1.2.15 h1:0HYfpriPLd1cc3QZtRXiGU23Ejc1Qoo/GWaqpqT13rY=
+gopkg.in/tylerb/graceful.v1 v1.2.15 h1:1JmOyhKqAyX3BgTXMI84LwT6FOJ4tP2N9e2kwTCM0nQ=
 gopkg.in/urfave/cli.v1 v1.20.0-gopkgin-v1.20.0 h1:WQvBdi4Z9TrtzrT9WUl6X+hr1/HIWZS2ePFKHpuTR5k=
 gopkg.in/urfave/cli.v1 v1.20.0 h1:NdAVW6RYxDif9DhDHaAortIu956m2c0v+09AZBPTbE0=
 rsc.io/goversion v1.2.0 h1:SPn+NLTiAG7w30IRK/DKp1BjvpWabYgxlLp/+kx5J8w=
