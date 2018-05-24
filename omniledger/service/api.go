@@ -18,8 +18,7 @@ import (
 // ServiceName is used for registration on the onet.
 const ServiceName = "OmniLedger"
 
-// Client is a structure to communicate with the CoSi
-// service
+// Client is a structure to communicate with the OmniLedger service.
 type Client struct {
 	*onet.Client
 }

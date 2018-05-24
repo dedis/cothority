@@ -48,7 +48,11 @@ func (s *Service) Init(req *InitRequest) (*InitResponse, error) {
 
 // Log will create a new event log entry.
 func (s *Service) Log(req *LogRequest) (*LogResponse, error) {
-	return nil, errors.New("not impl")
+	_, err := s.omni.AddTransaction(&req.AddTxRequest)
+	if err != nil {
+		return nil, err
+	}
+	return &LogResponse{}, nil
 }
 
 const contractName = "eventlog"
