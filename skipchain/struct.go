@@ -366,6 +366,11 @@ func NewSkipBlock() *SkipBlock {
 // are correctly signed by the aggregate public key of the roster.
 func (sb *SkipBlock) VerifyForwardSignatures() error {
 	for _, fl := range sb.ForwardLink {
+		if fl.IsEmpty() {
+			// This means it's an empty forward-link to correctly place a higher-order
+			// forward-link in place.
+			continue
+		}
 		if err := fl.Verify(cothority.Suite, sb.Roster.Publics()); err != nil {
 			return errors.New("Wrong signature in forward-link: " + err.Error())
 		}
@@ -433,11 +438,24 @@ func (sb *SkipBlock) SkipChainID() SkipBlockID {
 	return sb.GenesisID
 }
 
-// AddForward stores the forward-link with mutex protection.
-// TODO: with failing nodes, we might have 'holes' in the list of forward links.
-// TODO: add an index to the method signature.
+// AddForward stores the forward-link.
+// DEPRECATION NOTICE: this method will disappear in onet.v3
 func (sb *SkipBlock) AddForward(fw *ForwardLink) {
+	log.Warn("this is deprecated, because it might create 'holes'")
 	sb.ForwardLink = append(sb.ForwardLink, fw)
+}
+
+// AddForwardLink stores the forward-link at the indicated position. If the
+// forwardlink at pos already exists, it returns an error.
+func (sb *SkipBlock) AddForwardLink(fw *ForwardLink, pos int) error {
+	if len(sb.ForwardLink) > pos || pos < 0 {
+		return errors.New("this forward-link already exists or invalid position")
+	}
+	for len(sb.ForwardLink) <= pos {
+		sb.ForwardLink = append(sb.ForwardLink, &ForwardLink{})
+	}
+	sb.ForwardLink[pos] = fw
+	return nil
 }
 
 // GetForward returns copy of the forward-link at position i. It returns nil if no link
@@ -538,6 +556,12 @@ func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
 		cosi.NewThresholdPolicy(len(pubs)-t))
 }
 
+// IsEmpty indicates whether this forwardlink is merely a placeholder for
+// higher-order forwardlinks to be in the correct place.
+func (fl *ForwardLink) IsEmpty() bool {
+	return fl.From.IsNull() || fl.To.IsNull()
+}
+
 // SkipBlockDB holds the database to the skipblocks.
 // This is used for verification, so that all links can be followed.
 // It is a wrapper to embed bolt.DB.
@@ -603,11 +627,18 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 			// If this skipblock already exists, only copy forward-links and
 			// new children.
 			if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
-				for _, fl := range sb.ForwardLink[len(sbOld.ForwardLink):] {
+				for i, fl := range sb.ForwardLink {
+					if i < len(sbOld.ForwardLink) || fl.IsEmpty() {
+						// Don't overwrite existing forwardlinks and ignore empty links
+						continue
+					}
 					if err := fl.Verify(cothority.Suite, sbOld.Roster.Publics()); err != nil {
 						return errors.New("Got a known block with wrong signature in forward-link with error: " + err.Error())
 					}
-					sbOld.ForwardLink = append(sbOld.ForwardLink, fl)
+					if err := sbOld.AddForwardLink(fl, i); err != nil {
+						log.Error(err)
+						return nil
+					}
 				}
 			}
 			if len(sb.ChildSL) > len(sbOld.ChildSL) {
@@ -887,7 +918,11 @@ func (db *SkipBlockDB) getFromTx(tx *bolt.Tx, sbID SkipBlockID) (*SkipBlock, err
 		return nil, nil
 	}
 
-	_, sbMsg, err := network.Unmarshal(val, cothority.Suite)
+	// For some reason boltdb changes the val before Unmarshal finishes. When
+	// copying the value into a buffer, there is no SIGSEGV anymore.
+	buf := make([]byte, len(val))
+	copy(buf, val)
+	_, sbMsg, err := network.Unmarshal(buf, cothority.Suite)
 	if err != nil {
 		return nil, err
 	}
