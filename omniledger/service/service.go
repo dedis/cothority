@@ -76,7 +76,7 @@ type Service struct {
 const storageID = "main"
 
 // defaultInterval is used if the BlockInterval field in the genesis
-// trnasaction is not set.
+// transaction is not set.
 var defaultInterval = 5 * time.Second
 
 // storage is used to save our data locally.
@@ -213,10 +213,11 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.storage.Unlock()
 }
 
-func padKey(key []byte) []byte {
-	keyPadded := make([]byte, 64)
-	copy(keyPadded, key)
-	return keyPadded
+func toObjectID(dID darc.ID) ObjectID {
+	return ObjectID{
+		DarcID:     dID,
+		InstanceID: ZeroNonce,
+	}
 }
 
 func (s *Service) verifyAndFilterTxs(scID skipchain.SkipBlockID, ts []ClientTransaction) []ClientTransaction {
@@ -427,12 +428,12 @@ func (s *Service) loadConfig(scID skipchain.SkipBlockID) (*Config, error) {
 	if string(contract) != ContractConfigID {
 		return nil, errors.New("did not get " + ContractConfigID)
 	}
-	if len(val) != 64 {
+	if len(val) != 32 {
 		return nil, errors.New("value has a invalid length")
 	}
 	// Use the genesis-darc ID to create the config key and read the config.
 	configID := ObjectID{
-		DarcID:     darc.ID(val[:32]),
+		DarcID:     darc.ID(val),
 		InstanceID: OneNonce,
 	}
 	val, contract, err = coll.GetValueContract(configID.Slice())
@@ -463,7 +464,7 @@ func (s *Service) loadLatestDarc(sid skipchain.SkipBlockID, dID darc.ID) (*darc.
 	if colldb == nil {
 		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", sid.Short())
 	}
-	value, contract, err := colldb.GetValueContract(padKey(dID))
+	value, contract, err := colldb.GetValueContract(toObjectID(dID).Slice())
 	if err != nil {
 		return nil, err
 	}

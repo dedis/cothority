@@ -19,13 +19,14 @@ import (
 
 var tSuite = suites.MustFind("Ed25519")
 var dummyKind = "dummy"
+var testInterval = 100 * time.Millisecond
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
 func TestService_CreateSkipchain(t *testing.T) {
-	s := newSer(t, 0)
+	s := newSer(t, 0, testInterval)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
@@ -64,7 +65,7 @@ func padDarc(key []byte) []byte {
 }
 
 func TestService_AddKeyValue(t *testing.T) {
-	s := newSer(t, 1)
+	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
@@ -148,7 +149,7 @@ func TestService_AddKeyValue(t *testing.T) {
 }
 
 func TestService_GetProof(t *testing.T) {
-	s := newSer(t, 2)
+	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
@@ -189,7 +190,7 @@ func TestService_GetProof(t *testing.T) {
 }
 
 func TestService_InvalidVerification(t *testing.T) {
-	s := newSer(t, 1)
+	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
@@ -245,6 +246,17 @@ func TestService_InvalidVerification(t *testing.T) {
 	require.True(t, match)
 }
 
+func TestService_LoadBlockInterval(t *testing.T) {
+	interval := 200 * time.Millisecond
+	s := newSer(t, 1, interval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	dur, err := s.service().loadBlockInterval(s.sb.SkipChainID())
+	require.Nil(t, err)
+	require.Equal(t, dur, interval)
+}
+
 type ser struct {
 	local    *onet.LocalTest
 	hosts    []*onet.Server
@@ -262,7 +274,7 @@ func (s *ser) service() *Service {
 	return s.services[0]
 }
 
-func newSer(t *testing.T, step int) *ser {
+func newSer(t *testing.T, step int, interval time.Duration) *ser {
 	s := &ser{
 		local:  onet.NewTCPTest(tSuite),
 		value:  []byte("anyvalue"),
@@ -280,7 +292,7 @@ func newSer(t *testing.T, step int) *ser {
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
-	genesisMsg.BlockInterval = 100 * time.Millisecond
+	genesisMsg.BlockInterval = interval
 	s.interval = genesisMsg.BlockInterval
 
 	for i := 0; i < step; i++ {

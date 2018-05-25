@@ -33,6 +33,12 @@ var GenesisReferenceID = ObjectID{ZeroDarc, ZeroNonce}
 // ContractConfigID denotes a config-contract
 var ContractConfigID = "config"
 
+// ContractDarcID denotes a darc-contract
+var ContractDarcID = "darc"
+
+// CmdDarcEvolve is needed to evolve a darc.
+var CmdDarcEvolve = "Evolve"
+
 // Config stores all the configuration information for one skipchain. It will
 // be stored under the key "GenesisDarcID || OneNonce", in the collections. The
 // GenesisDarcID is the value of GenesisReferenceID.
@@ -84,15 +90,9 @@ func (s *Service) ContractConfig(cdb collection.Collection, tx Instruction, coin
 			ObjectID{
 				DarcID:     tx.ObjectID.DarcID,
 				InstanceID: OneNonce,
-			}, ContractDarcID, configBuf),
+			}, ContractConfigID, configBuf),
 	}, nil, nil
 }
-
-// ContractDarcID denotes a darc-contract
-var ContractDarcID = "darc"
-
-// CmdDarcEvolve is needed to evolve a darc.
-var CmdDarcEvolve = "Evolve"
 
 // ContractDarc accepts the following instructions:
 //   - Spawn - creates a new darc
