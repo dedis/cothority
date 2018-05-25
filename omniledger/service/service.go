@@ -255,7 +255,8 @@ func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instructio
 		return err
 	}
 	// TODO we need to use req.VerifyWithCB to search for missing darcs
-	return req.Verify(d)
+	err = req.Verify(d)
+	return err
 }
 
 // createNewBlock creates a new block and proposes it to the
@@ -489,7 +490,7 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID, interval time.Du
 			select {
 			case t := <-c:
 				ts = append(ts, t)
-				log.Lvlf2("%x: Stored transaction %+v - length is %d: %+v", scID, t, len(ts), ts)
+				log.Lvlf2("%x: Stored transaction. Next block length: %v, New Tx: %+v", scID, len(ts), t)
 			case <-to:
 				log.Lvlf2("%x: New epoch and transaction-length: %d", scID, len(ts))
 				if len(ts) > 0 {
@@ -568,21 +569,21 @@ clientTransactions:
 	for _, ct := range cts {
 		cdbI := cdbTemp.Clone()
 		for _, instr := range ct.Instructions {
-			kind, _, err := instr.GetContractState(cdbI)
+			contract, _, err := instr.GetContractState(cdbI)
 			if err != nil {
-				log.Lvl1("Couldn't get kind of instruction")
+				log.Lvl1("Couldn't get contract type of instruction")
 				continue clientTransactions
 			}
 
-			f, exists := s.contracts[kind]
-			// If the leader does not have a verifier for this kind, it drops the
+			f, exists := s.contracts[contract]
+			// If the leader does not have a verifier for this contract, it drops the
 			// transaction.
 			if !exists {
-				log.Lvl1("Leader is dropping instruction of unknown kind:", kind)
+				log.Lvl1("Leader is dropping instruction of unknown contract:", contract)
 				continue clientTransactions
 			}
 			// Now we call the contract function with the data of the key:
-			log.Lvlf3("%s: Calling contract %s", s.ServerIdentity(), kind)
+			log.Lvlf3("%s: Calling contract %s", s.ServerIdentity(), contract)
 			scs, _, err := f(cdbI, instr, nil)
 			if err != nil {
 				log.Lvl1("Call to contract returned error:", err)

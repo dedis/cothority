@@ -200,7 +200,7 @@ func (r Rules) DeleteRules(a Action) error {
 		return fmt.Errorf("cannot delete action %s", a)
 	}
 	if _, ok := r[a]; !ok {
-		return fmt.Errorf("action %s does not exist", a)
+		return fmt.Errorf("DeleteRules: action '%v' does not exist", a)
 	}
 	delete(r, a)
 	return nil
@@ -237,7 +237,7 @@ func (r Rules) UpdateSign(expr expression.Expr) error {
 
 func (r Rules) updateRule(a Action, expr expression.Expr) error {
 	if _, ok := r[a]; !ok {
-		return errors.New("action does not exist")
+		return fmt.Errorf("updateRule: action '%v' does not exist", a)
 	}
 	r[a] = expr
 	return nil
@@ -414,7 +414,7 @@ func (r *Request) VerifyWithCB(d *Darc, getDarc func(string) *Darc) error {
 		return fmt.Errorf("base id mismatch")
 	}
 	if !d.Rules.Contains(r.Action) {
-		return fmt.Errorf("action '%v' does not exist", r.Action)
+		return fmt.Errorf("VerifyWithCB: action '%v' does not exist", r.Action)
 	}
 	digest := r.Hash()
 	for i, id := range r.Identities {

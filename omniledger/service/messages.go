@@ -82,7 +82,7 @@ type GetProof struct {
 	Version Version
 	// Key is the key we want to look up
 	Key []byte
-	// ID is any block that is know to us in the skipchain, can be the genesis
+	// ID is any block that is known to us in the skipchain, can be the genesis
 	// block or any later block. The proof returned will be starting at this block.
 	ID skipchain.SkipBlockID
 }

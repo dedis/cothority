@@ -49,7 +49,7 @@ type Instruction struct {
 
 // ObjectID points to an object that holds the state of a contract.
 type ObjectID struct {
-	// DarcID points to the darc controlling access to this object
+	// DarcID is the base ID of the Darc controlling access to this object
 	DarcID darc.ID
 	// InstanceID is taken from the Instruction.Nonce when the Spawn instruction is
 	// sent.

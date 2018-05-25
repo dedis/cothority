@@ -196,7 +196,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	defer closeQueues(s.local)
 
 	for i := range s.hosts {
-		RegisterContract(s.hosts[i], "invalid", verifyInvalidKind)
+		RegisterContract(s.hosts[i], "invalid", invalidContractFunc)
 	}
 
 	// tx1 uses the invalid kind, so it should _not_ be stored.
@@ -429,11 +429,11 @@ func closeQueues(local *onet.LocalTest) {
 	}
 }
 
-func verifyInvalidKind(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func invalidContractFunc(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	return nil, nil, errors.New("Invalid")
 }
 
-func verifyDummy(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func dummyContractFunc(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	args := tx.Spawn.Args[0].Value
 	cid, _, err := tx.GetContractState(cdb)
 	if err != nil {
@@ -449,6 +449,6 @@ func registerDummy(services interface{}) {
 	// services []skipchain.GetService in the method signature doesn't work :(
 	for i := 0; i < reflect.ValueOf(services).Len(); i++ {
 		s := reflect.ValueOf(services).Index(i).Interface().(skipchain.GetService)
-		RegisterContract(s.(skipchain.GetService), dummyKind, verifyDummy)
+		RegisterContract(s.(skipchain.GetService), dummyKind, dummyContractFunc)
 	}
 }

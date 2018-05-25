@@ -18,7 +18,7 @@ func init() {
 
 // InitRequest is sent to start a new EventLog.
 type InitRequest struct {
-	Writer darc.Darc
+	Owner  darc.Darc
 	Roster onet.Roster
 }
 
@@ -30,7 +30,8 @@ type InitResponse struct {
 // LogRequest is a wrapper around omniledger.AddTxRequest for use in the
 // event logger.
 type LogRequest struct {
-	omniledger.AddTxRequest
+	SkipchainID skipchain.SkipBlockID
+	Transaction omniledger.ClientTransaction
 }
 
 // Event is sent to create an event log.

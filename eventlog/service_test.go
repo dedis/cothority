@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
-	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/kyber.v2/suites"
@@ -15,7 +14,7 @@ import (
 var tSuite = suites.MustFind("Ed25519")
 
 func TestMain(m *testing.M) {
-	log.MainTest(m)
+	log.MainTest(m, 3)
 }
 
 func TestService_Init(t *testing.T) {
@@ -34,42 +33,39 @@ func TestService_Log(t *testing.T) {
 	s := newSer(t)
 	defer s.close()
 
-	scID, d, signer := s.init(t)
+	scID, d, signers := s.init(t)
 
 	req := Event{
 		Topic:   "auth",
 		Content: "login",
 	}
 
-	ctx, err := makeTx([]Event{req}, d.GetBaseID(), &signer)
+	ctx, err := makeTx([]Event{req}, d.GetBaseID(), signers)
 	require.Nil(t, err)
 
 	_, err = s.services[0].Log(&LogRequest{
-		AddTxRequest: omniledger.AddTxRequest{
-			Version:     omniledger.CurrentVersion,
-			SkipchainID: scID,
-			Transaction: *ctx,
-		},
+		SkipchainID: scID,
+		Transaction: *ctx,
 	})
 	require.Nil(t, err)
 
 	// TODO check that the events are actually stored
 }
 
-func (s *ser) init(t *testing.T) (skipchain.SkipBlockID, darc.Darc, darc.Signer) {
-	owner1 := darc.NewSignerEd25519(nil, nil)
-	rules1 := darc.InitRules([]*darc.Identity{owner1.Identity()}, []*darc.Identity{})
-	d1 := darc.NewDarc(rules1, []byte("eventlog writer"))
+func (s *ser) init(t *testing.T) (skipchain.SkipBlockID, darc.Darc, []*darc.Signer) {
+	owner := darc.NewSignerEd25519(nil, nil)
+	rules := darc.InitRules([]*darc.Identity{owner.Identity()}, []*darc.Identity{})
+	d1 := darc.NewDarc(rules, []byte("eventlog writer"))
 
 	reply, err := s.services[0].Init(&InitRequest{
 		Roster: *s.roster,
-		Writer: *d1,
+		Owner:  *d1,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, reply.ID)
 	require.False(t, reply.ID.IsNull())
 
-	return reply.ID, *d1, *owner1
+	return reply.ID, *d1, []*darc.Signer{owner}
 }
 
 type ser struct {
