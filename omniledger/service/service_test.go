@@ -2,6 +2,7 @@ package service
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"reflect"
 	"testing"
@@ -255,6 +256,108 @@ func TestService_LoadBlockInterval(t *testing.T) {
 	dur, err := s.service().loadBlockInterval(s.sb.SkipChainID())
 	require.Nil(t, err)
 	require.Equal(t, dur, interval)
+}
+
+func TestService_StateChange(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	var latest int64
+	f := func(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+		cid, _, err := tx.GetContractState(cdb)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		rec, err := cdb.Get(tx.ObjectID.Slice()).Record()
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// create the object if it doesn't exist
+		if !rec.Match() {
+			if tx.Spawn == nil {
+				return nil, nil, errors.New("expected spawn")
+			}
+			zeroBuf := make([]byte, 8)
+			binary.PutVarint(zeroBuf, 0)
+			return []StateChange{
+				StateChange{
+					StateAction: Create,
+					ObjectID:    tx.ObjectID.Slice(),
+					ContractID:  []byte(cid),
+					Value:       zeroBuf,
+				},
+			}, nil, nil
+		}
+
+		if tx.Invoke == nil {
+			return nil, nil, errors.New("expected invoke")
+		}
+
+		// increment the object value
+		vals, err := rec.Values()
+		if err != nil {
+			return nil, nil, err
+		}
+		v, _ := binary.Varint(vals[0].([]byte))
+		v++
+
+		// we read v back to check later in the test
+		latest = v
+
+		vBuf := make([]byte, 8)
+		binary.PutVarint(vBuf, v)
+		return []StateChange{
+			StateChange{
+				StateAction: Update,
+				ObjectID:    tx.ObjectID.Slice(),
+				ContractID:  []byte(cid),
+				Value:       vBuf,
+			},
+		}, nil, nil
+
+	}
+	RegisterContract(s.hosts[0], "add", f)
+
+	cdb := s.service().getCollection(s.sb.SkipChainID())
+	require.NotNil(t, cdb)
+
+	n := 5
+	inst := GenNonce()
+	nonce := GenNonce()
+	instrs := make([]Instruction, n)
+	for i := range instrs {
+		instrs[i] = Instruction{
+			ObjectID: ObjectID{
+				DarcID:     s.darc.GetBaseID(),
+				InstanceID: inst,
+			},
+			Nonce:  nonce,
+			Index:  i,
+			Length: n,
+		}
+		if i == 0 {
+			instrs[i].Spawn = &Spawn{
+				ContractID: "add",
+			}
+		} else {
+			instrs[i].Invoke = &Invoke{}
+		}
+	}
+
+	cts := []ClientTransaction{
+		ClientTransaction{
+			Instructions: instrs,
+		},
+	}
+
+	_, ctsOK, scs, err := s.service().createStateChanges(cdb.coll, cts)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(ctsOK))
+	require.Equal(t, n, len(scs))
+	require.Equal(t, latest, int64(n-1))
 }
 
 type ser struct {

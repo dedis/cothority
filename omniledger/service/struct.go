@@ -56,27 +56,56 @@ func (c *collectionDB) loadAll() {
 
 		for k, v := cur.First(); k != nil; k, v = cur.Next() {
 			sig := b.Get(append(k, []byte("sig")...))
-			c.coll.Add(k, v, sig)
+			ck := make([]byte, len(k))
+			vk := make([]byte, len(v))
+			csig := make([]byte, len(sig))
+			copy(ck, k)
+			copy(vk, v)
+			copy(csig, sig)
+			c.coll.Add(ck, vk, csig)
 		}
 
 		return nil
 	})
 }
 
+func storeInColl(coll collection.Collection, t *StateChange) error {
+	switch t.StateAction {
+	case Create:
+		return coll.Add(t.ObjectID, t.Value, t.ContractID)
+	case Update:
+		return coll.Set(t.ObjectID, t.Value, t.ContractID)
+	case Remove:
+		return coll.Remove(t.ObjectID)
+	default:
+		return errors.New("invalid state action")
+	}
+}
+
 func (c *collectionDB) Store(t *StateChange) error {
-	c.coll.Add(t.ObjectID, t.Value, t.ContractID)
+	if err := storeInColl(c.coll, t); err != nil {
+		return err
+	}
 	err := c.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(c.bucketName))
-		if err := bucket.Put(t.ObjectID, t.Value); err != nil {
-			return err
-		}
 		keykind := make([]byte, len(t.ObjectID)+4)
 		copy(keykind, t.ObjectID)
 		keykind = append(keykind, []byte("kind")...)
-		if err := bucket.Put(keykind, t.ContractID); err != nil {
-			return err
+
+		switch t.StateAction {
+		case Create, Update:
+			if err := bucket.Put(t.ObjectID, t.Value); err != nil {
+				return err
+			}
+			return bucket.Put(keykind, t.ContractID)
+		case Remove:
+			if err := bucket.Delete(t.ObjectID); err != nil {
+				return err
+			}
+			return bucket.Delete(keykind)
+		default:
+			return errors.New("invalid state action")
 		}
-		return nil
 	})
 	return err
 }

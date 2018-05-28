@@ -84,6 +84,40 @@ func TestCollectionDB(t *testing.T) {
 		require.Nil(t, err)
 		require.Equal(t, v, string(stored))
 	}
+
+	// Update
+	for k, v := range pairs {
+		pairs[k] = v + "-2"
+	}
+	for k, v := range pairs {
+		sc := &StateChange{
+			StateAction: Update,
+			ObjectID:    []byte(k),
+			Value:       []byte(v),
+			ContractID:  myContract,
+		}
+		require.Nil(t, cdb2.Store(sc), k)
+	}
+	for k, v := range pairs {
+		stored, contract, err := cdb2.GetValueContract([]byte(k))
+		require.Nil(t, err)
+		require.Equal(t, v, string(stored))
+		require.Equal(t, myContract, contract)
+	}
+
+	// Delete
+	for c := range pairs {
+		sc := &StateChange{
+			StateAction: Remove,
+			ObjectID:    []byte(c),
+			ContractID:  myContract,
+		}
+		require.Nil(t, cdb2.Store(sc))
+	}
+	for c := range pairs {
+		_, _, err := cdb2.GetValueContract([]byte(c))
+		require.NotNil(t, err, c)
+	}
 }
 
 // TODO: Test good case, bad add case, bad remove case

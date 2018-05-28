@@ -582,10 +582,14 @@ clientTransactions:
 			scs, _, err := f(cdbI, instr, nil)
 			if err != nil {
 				log.Lvl1("Call to contract returned error:", err)
-				cdbI = cdbTemp
 				continue clientTransactions
 			}
-			// TODO: apply new state
+			for _, sc := range scs {
+				if err := storeInColl(cdbI, &sc); err != nil {
+					log.Lvl1("failed to add to collections with error: " + err.Error())
+					continue clientTransactions
+				}
+			}
 			states = append(states, scs...)
 		}
 		cdbTemp = cdbI

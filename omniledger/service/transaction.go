@@ -162,8 +162,8 @@ func (instr Instruction) GetContractState(coll collection.Collection) (contractI
 	if err != nil {
 		return
 	}
-	contractID = string(cv[0].([]byte))
-	state = cv[1].([]byte)
+	contractID = string(cv[1].([]byte))
+	state = cv[0].([]byte)
 	return
 }
 
