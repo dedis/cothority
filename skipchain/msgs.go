@@ -122,6 +122,9 @@ type ForwardSignature struct {
 	Previous SkipBlockID
 	// Newest is the newest skipblock, signed by previous
 	Newest *SkipBlock
+	// Links holds the forwardlinks to prove that 'Newest' is valid. For
+	// the level-0 forwardlink, this is empty.
+	Links []*ForwardLink
 }
 
 // GetSingleBlock asks for a single block.

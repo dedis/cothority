@@ -434,6 +434,8 @@ func (sb *SkipBlock) SkipChainID() SkipBlockID {
 }
 
 // AddForward stores the forward-link with mutex protection.
+// TODO: with failing nodes, we might have 'holes' in the list of forward links.
+// TODO: add an index to the method signature.
 func (sb *SkipBlock) AddForward(fw *ForwardLink) {
 	sb.ForwardLink = append(sb.ForwardLink, fw)
 }
@@ -616,6 +618,9 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 				return err
 			}
 		} else {
+			if !db.HasForwardLink(sb) {
+				return fmt.Errorf("Tried to store unlinkable block: %+v", sb.SkipBlockFix)
+			}
 			err := db.storeToTx(tx, sb)
 			if err != nil {
 				return err
@@ -632,6 +637,28 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 	}
 
 	return result
+}
+
+// HasForwardLink verififes if sb can be accepted in the database by searching
+// for a forwardlink of any level.
+func (db *SkipBlockDB) HasForwardLink(sb *SkipBlock) bool {
+	if sb.Index == 0 {
+		// Genesis blocks never have a reference to them.
+		return true
+	}
+
+	// Any non-genesis blocks need to be referenced by a previous block.
+	for i, bl := range sb.BackLinkIDs {
+		prev := db.GetByID(bl)
+		if prev != nil {
+			if len(prev.ForwardLink) > i {
+				if prev.ForwardLink[i].To.Equal(sb.Hash) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 func (db *SkipBlockDB) latestUpdate(sb *SkipBlock) {

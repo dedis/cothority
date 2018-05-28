@@ -230,11 +230,16 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		if sb == nil {
 			err := s.syncChain(psbd.NewBlock.Roster, scID)
 			if err != nil {
-				return nil, errors.New("didn't find block to attach to")
+				return nil, errors.New("didn't find block to attach to: " + err.Error())
 			}
 			sb = s.db.GetByID(scID)
+			if sb == nil {
+				return nil, errors.New("couldn't update to latest block")
+			}
 		}
 		if !sb.SkipChainID().Equal(scID) {
+			// In case the user asked to add to a specific block, get the correct
+			// skipchain-ID.
 			scID = sb.SkipChainID()
 		}
 
@@ -313,7 +318,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			if !s.willNodesAcceptBlock(prop) {
 				return nil, errors.New(
 					"node refused to accept new roster")
-
 			}
 		}
 
@@ -399,7 +403,12 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 }
 
 // syncChain communicates with conodes in the Roster via getBlocks
-// in order traverse the chain and save the blocks locally.
+// in order traverse the chain and save the blocks locally. It starts with
+// the given 'latest' skipblockid and fetches all blocks up to the latest block.
+// In case there is no link in the database to store the 'latest' skipblock,
+// syncchain will start at the genesis block and fetch all blocks up to the latest
+// skipblock. However, this means that the 'latest' skipblock might _not_ be in
+// the database when syncChain returns!
 func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 	// loop on getBlocks, fetching 10 at a time
 	for {
@@ -411,6 +420,13 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 		for _, sb := range blocks {
 			if err := sb.VerifyForwardSignatures(); err != nil {
 				return err
+			}
+			if !s.db.HasForwardLink(sb) {
+				if latest.Equal(sb.SkipChainID()) {
+					return errors.New("synching failed even when trying to start at the genesis block")
+				}
+				log.Lvl3("couldn't store synched block - synching from genesis block")
+				return s.syncChain(sb.Roster, sb.SkipChainID())
 			}
 			s.db.Store(sb)
 			if len(sb.ForwardLink) == 0 {
@@ -426,8 +442,11 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 // in the roster, in order to find an answer, even in the case that a few
 // nodes in the network are down.
 func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*SkipBlock, error) {
-	// Only take half of the nodes to not spam the whole network.
-	subCount := len(roster.List) / 2
+	subCount := len(roster.List)
+	if subCount > 10 {
+		// Only take half of the nodes to not spam the whole network.
+		subCount /= 2
+	}
 	r := roster.RandomSubset(s.ServerIdentity(), subCount)
 	tr := r.GenerateStar()
 	pi, err := s.CreateProtocol(ProtocolGetBlocks, tr)
@@ -837,7 +856,29 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	if err = src.VerifyForwardSignatures(); err != nil {
 		return errors.New("Wrong BFT-signature: " + err.Error())
 	}
-	s.startPropagation([]*SkipBlock{src, dst})
+	if s.db.Store(src).IsNull() {
+		return errors.New("couldn't store new forward link")
+	}
+	if s.db.Store(dst).IsNull() {
+		return errors.New("couldn't store new block")
+	}
+	var proof []*SkipBlock
+	pointer := s.db.GetByID(dst.SkipChainID())
+	for {
+		if pointer == nil {
+			return errors.New("missing skipblock in proof creation")
+		}
+		proof = append(proof, pointer)
+		if pointer.Hash.Equal(dst.Hash) {
+			break
+		}
+		highest := len(pointer.ForwardLink) - 1
+		if highest < 0 {
+			return errors.New("proof chain has a missing forward link")
+		}
+		pointer = s.db.GetByID(pointer.ForwardLink[highest].To)
+	}
+	s.startPropagation(proof)
 	return nil
 }
 
@@ -933,6 +974,21 @@ func (s *Service) forwardLink(fs *ForwardSignature) error {
 	if !fs.Previous.Equal(from.Hash) {
 		return errors.New("TargetHeight backlink doesn't correspond to previous")
 	}
+	// Add links to prove the newest block is valid.
+	pointer := from
+	for !pointer.Hash.Equal(fs.Newest.Hash) {
+		highest := pointer.ForwardLink[len(pointer.ForwardLink)-1]
+		fs.Links = append(fs.Links, highest)
+		next := s.db.GetByID(highest.To)
+		if next == nil {
+			sbs, err := s.getBlocks(pointer.Roster, highest.To, 1)
+			if err != nil || len(sbs) == 0 {
+				return errors.New("cannot create proof that the blocks are linked: " + err.Error())
+			}
+			next = sbs[0]
+		}
+		pointer = next
+	}
 	data, err := network.Marshal(fs)
 	if err != nil {
 		return err
@@ -949,7 +1005,7 @@ func (s *Service) forwardLink(fs *ForwardSignature) error {
 		fl.NewRoster = fs.Newest.Roster
 	}
 	from.AddForward(fl)
-	s.startPropagation([]*SkipBlock{from, fs.Newest})
+	s.startPropagation([]*SkipBlock{from})
 	return nil
 }
 
@@ -965,36 +1021,56 @@ func (s *Service) bftForwardLink(msg, data []byte) bool {
 		if !ok {
 			return errors.New("Didn't receive a ForwardSignature")
 		}
-		newest := fs.Newest
-		if len(newest.BackLinkIDs) <= fs.TargetHeight {
+
+		// Retrieve the src and dst blocks and make sure the basic parameters
+		// are ok.
+		dst := fs.Newest
+		if fs.TargetHeight > len(dst.BackLinkIDs) {
 			return errors.New("Asked for signing too high a backlink")
 		}
-		previous := s.db.GetByID(newest.BackLinkIDs[0])
-		if previous == nil {
-			return errors.New("Didn't find newest block")
+		src := s.db.GetByID(dst.BackLinkIDs[fs.TargetHeight])
+		if src == nil {
+			return errors.New("Don't have src-block")
 		}
-		if len(previous.ForwardLink) == 0 {
-			return errors.New("Previous doesn't have forward link - cannot verify it's valid")
-		}
-		highest := previous.ForwardLink[len(previous.ForwardLink)-1]
-		if err := highest.Verify(cothority.Suite, previous.Roster.Publics()); err != nil {
-			return errors.New("Wrong forward-link signature: " + err.Error())
-		}
-		if !highest.To.Equal(newest.Hash) {
-			return errors.New("Previous doesn't point to newest")
-		}
-		target := s.db.GetByID(newest.BackLinkIDs[fs.TargetHeight])
-		if target == nil {
-			return errors.New("Don't have target-block")
-		}
-		if target.GetForwardLen() >= fs.TargetHeight+1 {
+		if src.GetForwardLen() >= fs.TargetHeight+1 {
 			return errors.New("Already have forward-link at height " +
 				strconv.Itoa(fs.TargetHeight+1))
 		}
-		if !target.SkipChainID().Equal(newest.SkipChainID()) {
-			return errors.New("Target and newest not from same skipchain")
+		if !src.SkipChainID().Equal(dst.SkipChainID()) {
+			return errors.New("src and newest not from same skipchain")
 		}
-		fl := NewForwardLink(target, fs.Newest)
+
+		// Make sure the links are correctly linking src to dst:
+		// - every link is correctly linked to the previous and next link
+		// - the signatures are correct
+		if len(fs.Links) == 0 {
+			return errors.New("link list should not be empty")
+		}
+		newRoster := src.Roster
+		for i, fl := range fs.Links {
+			if err := fl.Verify(cothority.Suite, newRoster.Publics()); err != nil {
+				return errors.New("verification failed: " + err.Error())
+			}
+			if fl.NewRoster != nil {
+				newRoster = fl.NewRoster
+			}
+			if i == 0 {
+				if !src.Hash.Equal(fl.From) {
+					return errors.New("first link in link list is not source-block")
+				}
+			} else {
+				if !fl.From.Equal(fs.Links[i-1].To) {
+					return errors.New("links are not correctly chained together")
+				}
+			}
+		}
+		if !fs.Links[len(fs.Links)-1].To.Equal(dst.Hash) {
+			return errors.New("latest link doesn't point to newest block")
+		}
+
+		// Verify the forward link itself is correct before agreeing to sign
+		// it.
+		fl := NewForwardLink(src, fs.Newest)
 		if bytes.Compare(fl.Hash(), msg) != 0 {
 			return errors.New("Hash to sign doesn't correspond to ForwardSignature")
 		}
@@ -1087,6 +1163,12 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 		if !s.blockIsFriendly(sb) {
 			log.Lvlf2("%s: block is not friendly: %x", s.ServerIdentity(), sb.Hash)
 			return
+		}
+		// We trust the db.Store to make sure that some block is correctly
+		// forward-linking to this block.
+		if !s.db.HasForwardLink(sb) {
+			log.Errorf("%s: couldn't store block %+v", s.ServerIdentity(), sb.SkipBlockFix)
+			continue
 		}
 		s.db.Store(sb)
 	}
