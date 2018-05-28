@@ -70,10 +70,7 @@ func TestClient_Log(t *testing.T) {
 		t.Fatal("values length")
 	}
 	idx := v[0].([]byte)
-	// BUG: the length should be 64 * 2, but because of the TODO in createStateChanges,
-	// two Events that come in together, the second one stomps the index key made by the
-	// first one.
-	expected := 1 * 64
+	expected := 2 * 64
 	if len(idx) != expected {
 		t.Fatalf("index key content is %v, expected %v", len(idx), expected)
 	}
@@ -110,5 +107,12 @@ func TestClient_Log1000(t *testing.T) {
 		t.Fatal("proof of exclusion of index")
 	}
 	v, _ := p.Values()
-	t.Logf("values: %T %+v", v, v)
+	if len(v) != 2 {
+		t.Fatal("values length")
+	}
+	idx := v[0].([]byte)
+	expected := 1000 * 64
+	if len(idx) != expected {
+		t.Fatalf("index key content is %v, expected %v", len(idx), expected)
+	}
 }
