@@ -20,6 +20,7 @@ func TestClient_GetProof(t *testing.T) {
 	// Initialise the genesis message and send it to the service.
 	signer := darc.NewSignerEd25519(nil, nil)
 	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"Spawn_dummy"}, signer.Identity())
+	msg.BlockInterval = 100 * time.Millisecond
 	require.Nil(t, err)
 
 	// The darc inside it should be valid.
@@ -42,7 +43,7 @@ func TestClient_GetProof(t *testing.T) {
 	var p *GetProofResponse
 	var i int
 	for i = 0; i < 10; i++ {
-		time.Sleep(4 * waitQueueing)
+		time.Sleep(4 * msg.BlockInterval)
 		var err error
 		p, err = c.GetProof(roster, csr.Skipblock.SkipChainID(), tx.Instructions[0].ObjectID.Slice())
 		if err != nil {

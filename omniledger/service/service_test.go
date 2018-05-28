@@ -19,14 +19,14 @@ import (
 
 var tSuite = suites.MustFind("Ed25519")
 var dummyKind = "dummy"
+var testInterval = 100 * time.Millisecond
 
 func TestMain(m *testing.M) {
-	waitQueueing = 100 * time.Millisecond
 	log.MainTest(m)
 }
 
 func TestService_CreateSkipchain(t *testing.T) {
-	s := newSer(t, 0)
+	s := newSer(t, 0, testInterval)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
@@ -48,6 +48,7 @@ func TestService_CreateSkipchain(t *testing.T) {
 	// create valid darc
 	signer := darc.NewSignerEd25519(nil, nil)
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"Spawn_dummy"}, signer.Identity())
+	genesisMsg.BlockInterval = 100 * time.Millisecond
 	require.Nil(t, err)
 
 	// finally passing
@@ -64,7 +65,7 @@ func padDarc(key []byte) []byte {
 }
 
 func TestService_AddKeyValue(t *testing.T) {
-	s := newSer(t, 1)
+	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
@@ -123,7 +124,7 @@ func TestService_AddKeyValue(t *testing.T) {
 		}
 		for _, tx := range txs {
 			for {
-				time.Sleep(2 * waitQueueing)
+				time.Sleep(2 * s.interval)
 				pr, err := s.service().GetProof(&GetProof{
 					Version: CurrentVersion,
 					ID:      s.sb.SkipChainID(),
@@ -148,7 +149,7 @@ func TestService_AddKeyValue(t *testing.T) {
 }
 
 func TestService_GetProof(t *testing.T) {
-	s := newSer(t, 2)
+	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
@@ -157,7 +158,7 @@ func TestService_GetProof(t *testing.T) {
 	var rep *GetProofResponse
 	var i int
 	for i = 0; i < 10; i++ {
-		time.Sleep(2 * waitQueueing)
+		time.Sleep(2 * s.interval)
 		var err error
 		rep, err = s.service().GetProof(&GetProof{
 			Version: CurrentVersion,
@@ -189,7 +190,7 @@ func TestService_GetProof(t *testing.T) {
 }
 
 func TestService_InvalidVerification(t *testing.T) {
-	s := newSer(t, 1)
+	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
@@ -222,7 +223,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
-	time.Sleep(8 * waitQueueing)
+	time.Sleep(8 * s.interval)
 
 	// Check that tx1 is _not_ stored.
 	pr, err := s.service().GetProof(&GetProof{
@@ -245,6 +246,17 @@ func TestService_InvalidVerification(t *testing.T) {
 	require.True(t, match)
 }
 
+func TestService_LoadBlockInterval(t *testing.T) {
+	interval := 200 * time.Millisecond
+	s := newSer(t, 1, interval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	dur, err := s.service().loadBlockInterval(s.sb.SkipChainID())
+	require.Nil(t, err)
+	require.Equal(t, dur, interval)
+}
+
 type ser struct {
 	local    *onet.LocalTest
 	hosts    []*onet.Server
@@ -255,13 +267,14 @@ type ser struct {
 	darc     *darc.Darc
 	signer   *darc.Signer
 	tx       ClientTransaction
+	interval time.Duration
 }
 
 func (s *ser) service() *Service {
 	return s.services[0]
 }
 
-func newSer(t *testing.T, step int) *ser {
+func newSer(t *testing.T, step int, interval time.Duration) *ser {
 	s := &ser{
 		local:  onet.NewTCPTest(tSuite),
 		value:  []byte("anyvalue"),
@@ -279,6 +292,9 @@ func newSer(t *testing.T, step int) *ser {
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
+	genesisMsg.BlockInterval = interval
+	s.interval = genesisMsg.BlockInterval
+
 	for i := 0; i < step; i++ {
 		switch i {
 		case 0:
@@ -295,7 +311,7 @@ func newSer(t *testing.T, step int) *ser {
 				Transaction: tx,
 			})
 			require.Nil(t, err)
-			time.Sleep(4 * waitQueueing)
+			time.Sleep(4 * s.interval)
 		default:
 			require.Fail(t, "no such step")
 		}

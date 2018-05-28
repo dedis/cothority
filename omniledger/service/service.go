@@ -3,6 +3,7 @@ package service
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"sync"
@@ -17,6 +18,7 @@ import (
 	"gopkg.in/dedis/onet.v2/network"
 	"gopkg.in/satori/go.uuid.v1"
 
+	"github.com/dedis/protobuf"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 )
@@ -73,8 +75,9 @@ type Service struct {
 // than one structure.
 const storageID = "main"
 
-// TODO: this should go into the genesis-configuration
-var waitQueueing = 5 * time.Second
+// defaultInterval is used if the BlockInterval field in the genesis
+// transaction is not set.
+var defaultInterval = 5 * time.Second
 
 // storage is used to save our data locally.
 type storage struct {
@@ -114,9 +117,18 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		return nil, errors.New("invalid genesis darc")
 	}
 
+	if req.BlockInterval == 0 {
+		req.BlockInterval = defaultInterval
+	}
+	intervalBuf := make([]byte, 8)
+	binary.PutVarint(intervalBuf, int64(req.BlockInterval))
+
 	spawn := &Spawn{
 		ContractID: ContractConfigID,
-		Args:       Arguments{{Name: "darc", Value: darcBuf}},
+		Args: Arguments{
+			{Name: "darc", Value: darcBuf},
+			{Name: "block_interval", Value: intervalBuf},
+		},
 	}
 
 	// Create the genesis-transaction with a special key, it acts as a
@@ -138,7 +150,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	s.save()
 
 	s.workersMu.Lock()
-	s.queueWorkers[string(sb.SkipChainID())] = s.createQueueWorker(sb.SkipChainID())
+	s.queueWorkers[string(sb.SkipChainID())] = s.createQueueWorker(sb.SkipChainID(), req.BlockInterval)
 	s.workersMu.Unlock()
 
 	return &CreateGenesisBlockResponse{
@@ -201,26 +213,11 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.storage.Unlock()
 }
 
-func padKey(key []byte) []byte {
-	keyPadded := make([]byte, 64)
-	copy(keyPadded, key)
-	return keyPadded
-}
-
-func (s *Service) getLatestDarcByID(sid skipchain.SkipBlockID, dID darc.ID) (*darc.Darc, error) {
-	colldb := s.getCollection(sid)
-	if colldb == nil {
-		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", sid.Short())
+func toObjectID(dID darc.ID) ObjectID {
+	return ObjectID{
+		DarcID:     dID,
+		InstanceID: ZeroNonce,
 	}
-	value, contract, err := colldb.GetValueContract(padKey(dID))
-	if err != nil {
-		return nil, err
-	}
-	if string(contract) != "darc" {
-		return nil, fmt.Errorf("for darc %x, expected Kind to be 'darc' but got '%v'", dID, string(contract))
-	}
-	// TODO we need to make sure this darc is the latest
-	return darc.NewDarcFromProto(value)
 }
 
 func (s *Service) verifyAndFilterTxs(scID skipchain.SkipBlockID, ts []ClientTransaction) []ClientTransaction {
@@ -245,7 +242,7 @@ func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransactio
 }
 
 func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
-	d, err := s.getLatestDarcByID(scID, instr.ObjectID.DarcID)
+	d, err := s.loadLatestDarc(scID, instr.ObjectID.DarcID)
 	if err != nil {
 		return err
 	}
@@ -421,13 +418,69 @@ func (s *Service) db() *skipchain.SkipBlockDB {
 	return s.skService().GetDB()
 }
 
+func (s *Service) loadConfig(scID skipchain.SkipBlockID) (*Config, error) {
+	coll := s.getCollection(scID)
+	// Find the genesis-darc ID.
+	val, contract, err := coll.GetValueContract(GenesisReferenceID.Slice())
+	if err != nil {
+		return nil, err
+	}
+	if string(contract) != ContractConfigID {
+		return nil, errors.New("did not get " + ContractConfigID)
+	}
+	if len(val) != 32 {
+		return nil, errors.New("value has a invalid length")
+	}
+	// Use the genesis-darc ID to create the config key and read the config.
+	configID := ObjectID{
+		DarcID:     darc.ID(val),
+		InstanceID: OneNonce,
+	}
+	val, contract, err = coll.GetValueContract(configID.Slice())
+	if err != nil {
+		return nil, err
+	}
+	if string(contract) != ContractConfigID {
+		return nil, errors.New("did not get " + ContractConfigID)
+	}
+	config := Config{}
+	err = protobuf.Decode(val, &config)
+	if err != nil {
+		return nil, err
+	}
+	return &config, nil
+}
+
+func (s *Service) loadBlockInterval(scID skipchain.SkipBlockID) (time.Duration, error) {
+	config, err := s.loadConfig(scID)
+	if err != nil {
+		return defaultInterval, err
+	}
+	return config.BlockInterval, nil
+}
+
+func (s *Service) loadLatestDarc(sid skipchain.SkipBlockID, dID darc.ID) (*darc.Darc, error) {
+	colldb := s.getCollection(sid)
+	if colldb == nil {
+		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", sid.Short())
+	}
+	value, contract, err := colldb.GetValueContract(toObjectID(dID).Slice())
+	if err != nil {
+		return nil, err
+	}
+	if string(contract) != "darc" {
+		return nil, fmt.Errorf("for darc %x, expected Kind to be 'darc' but got '%v'", dID, string(contract))
+	}
+	return darc.NewDarcFromProto(value)
+}
+
 // createQueueWorker sets up a worker that will listen on a channel for
 // incoming requests and then create a new block every epoch.
-func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) chan ClientTransaction {
+func (s *Service) createQueueWorker(scID skipchain.SkipBlockID, interval time.Duration) chan ClientTransaction {
 	c := make(chan ClientTransaction)
 	go func() {
 		ts := []ClientTransaction{}
-		to := time.After(waitQueueing)
+		to := time.After(interval)
 		for {
 			select {
 			case t := <-c:
@@ -445,11 +498,11 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID) chan ClientTrans
 					ts = []ClientTransaction{}
 					if err != nil {
 						log.Error("couldn't create new block: " + err.Error())
-						to = time.After(waitQueueing)
+						to = time.After(interval)
 						continue
 					}
 				}
-				to = time.After(waitQueueing)
+				to = time.After(interval)
 			case <-s.CloseQueues:
 				log.Lvlf2("closing queues...")
 				return
@@ -578,10 +631,13 @@ func (s *Service) tryLoad() error {
 	}
 
 	for _, sb := range gasr.SkipChains {
-		s.getCollection(sb.Hash)
+		interval, err := s.loadBlockInterval(sb.Hash)
+		if err != nil {
+			return err
+		}
 		// At this point the service is not yet up, so no need to
 		// protect access to queueWorkers with a mutex.
-		s.queueWorkers[string(sb.Hash)] = s.createQueueWorker(sb.Hash)
+		s.queueWorkers[string(sb.Hash)] = s.createQueueWorker(sb.Hash, interval)
 	}
 
 	return nil
