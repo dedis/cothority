@@ -19,9 +19,10 @@ func init() {
 // using RegisterOnDone()
 type Broadcast struct {
 	*onet.TreeNodeInstance
-	onDoneCb    func()
-	repliesLeft int
-	tnIndex     int
+	onDoneCb   func()
+	contactRcv int
+	doneRcv    int
+	tnIndex    int
 }
 
 // NewBroadcastProtocol returns a new Broadcast protocol
@@ -38,6 +39,11 @@ func NewBroadcastProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, erro
 	if b.tnIndex == -1 {
 		return nil, errors.New("Didn't find my TreeNode in the Tree")
 	}
+	// How many done requests we'll send before being done
+	b.contactRcv = b.tnIndex
+	// How many done requests we'll receive before sending to root
+	b.doneRcv = len(b.Tree().List()) - b.tnIndex - 1
+
 	err := n.RegisterHandler(b.handleContactNodes)
 	if err != nil {
 		return nil, err
@@ -51,9 +57,8 @@ func NewBroadcastProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, erro
 
 // Start will contact everyone and make the connections
 func (b *Broadcast) Start() error {
-	n := len(b.Tree().List())
-	b.repliesLeft = n * (n - 1) / 2
-	log.Lvl3(b.Name(), "Sending announce to", b.repliesLeft, "nodes")
+	b.doneRcv *= 2
+	log.Lvl3(b.Name(), "Sending announce and waiting for", b.doneRcv, "confirmations")
 	b.SendTo(b.Root(), &ContactNodes{})
 	return nil
 }
@@ -64,28 +69,35 @@ func (b *Broadcast) handleContactNodes(msg struct {
 	*onet.TreeNode
 	ContactNodes
 }) error {
-	log.Lvl3(b.Info(), "Received message from", msg.TreeNode.String())
+	log.Lvl3(b.ServerIdentity(), "Received contact message from", msg.TreeNode.ServerIdentity)
+	err := b.SendTo(msg.TreeNode, &Done{})
+	if err != nil {
+		return err
+	}
 	if msg.TreeNode.ID.Equal(b.Root().ID) {
-		b.repliesLeft = len(b.Tree().List()) - b.tnIndex - 1
-		if b.repliesLeft == 0 {
-			log.Lvl3("Won't contact anybody - finishing")
-			b.SendTo(b.Root(), &Done{})
-			return nil
-		}
-		log.Lvl3(b.Info(), "Contacting nodes:", b.repliesLeft)
-		// Connect to all nodes that are later in the TreeNodeList, but only if
-		// the message comes from root
+		// Connect to all nodes that are later in the TreeNodeList.
 		for _, tn := range b.Tree().List()[b.tnIndex+1:] {
-			log.Lvl3("Connecting to", tn.String())
+			log.Lvl3("Contacting", tn.String())
 			err := b.SendTo(tn, &ContactNodes{})
 			if err != nil {
-				return nil
+				return err
 			}
 		}
-	} else {
-		// Tell the caller we're done
-		log.Lvl3("Sending back to", msg.TreeNode.ServerIdentity.String())
-		b.SendTo(msg.TreeNode, &Done{})
+	}
+	b.contactRcv--
+	return b.verifyDone()
+}
+
+func (b *Broadcast) verifyDone() error {
+	if b.contactRcv+b.doneRcv == 0 {
+		defer b.Done()
+		err := b.SendTo(b.Root(), &Done{})
+		if err != nil {
+			return err
+		}
+		if b.onDoneCb != nil {
+			b.onDoneCb()
+		}
 	}
 	return nil
 }
@@ -96,21 +108,8 @@ func (b *Broadcast) handleDone(msg struct {
 	*onet.TreeNode
 	Done
 }) error {
-	b.repliesLeft--
-	log.Lvl3(b.Info(), "Got reply and waiting for more:", b.repliesLeft)
-	if b.repliesLeft == 0 {
-		if b.onDoneCb != nil {
-			log.Lvl3("Done with broadcasting to everybody")
-			b.onDoneCb()
-		}
-		if !b.IsRoot() {
-			// Tell root we're done
-			log.Lvl3(b.Info(), "Sending done on done to", msg.TreeNode.ServerIdentity.String())
-			b.SendTo(b.Root(), &Done{})
-		}
-
-	}
-	return nil
+	b.doneRcv--
+	return b.verifyDone()
 }
 
 // RegisterOnDone takes a function that will be called once all connections

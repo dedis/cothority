@@ -1,4 +1,6 @@
 language: node_js
+sudo: required
+dist: trusty
 
 node_js:
   - "lts/*"
@@ -47,4 +49,3 @@ matrix:
         - (cd conode/; make docker_dev)
         - (cd ocs/docker/; make docker_test)
         - (cd external/java; mvn test)
-
