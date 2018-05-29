@@ -1,6 +1,8 @@
 package eventlog
 
 import (
+	"time"
+
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
 	"gopkg.in/dedis/cothority.v2/skipchain"
@@ -36,8 +38,9 @@ type LogRequest struct {
 
 // Event is sent to create an event log.
 type Event struct {
-	Topic   string
-	Content string
+	Topic     string
+	Content   string
+	Timestamp time.Time
 }
 
 // LogResponse is the reply to Content.
