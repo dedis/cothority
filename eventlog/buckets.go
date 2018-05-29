@@ -2,7 +2,7 @@ package eventlog
 
 import (
 	"errors"
-	"time"
+	"fmt"
 
 	"github.com/dedis/protobuf"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
@@ -12,21 +12,22 @@ import (
 var errIndexMissing = errors.New("index does not exist")
 
 type bucket struct {
-	Start     time.Time
-	End       time.Time
+	Start     int64
+	End       int64
 	Prev      []byte
 	EventRefs [][]byte
 }
 
 func (b *bucket) updateBucket(bucketObjID, eventObjID []byte, event Event) (omniledger.StateChanges, error) {
-	if event.Timestamp.Before(b.Start) {
-		return nil, errors.New("invalid timestamp")
+	// TODO substitue for block interval
+	if event.Timestamp+1000 < b.Start {
+		return nil, fmt.Errorf("invalid timestamp %d < %d", event.Timestamp-1000, b.Start)
 	}
-	if event.Timestamp.After(b.End) {
-		b.End = event.Timestamp
-	}
-	if b.Start.Before(time.Unix(0, 0)) {
+	if b.Start == 0 {
 		b.Start = event.Timestamp
+	}
+	if event.Timestamp > b.End {
+		b.End = event.Timestamp
 	}
 	b.EventRefs = append(b.EventRefs, eventObjID)
 	bucketBuf, err := protobuf.Encode(b)
@@ -36,16 +37,17 @@ func (b *bucket) updateBucket(bucketObjID, eventObjID []byte, event Event) (omni
 	return []omniledger.StateChange{
 		omniledger.StateChange{
 			StateAction: omniledger.Update,
-			ObjectID:    bucketObjID,
+			ObjectID:    append([]byte{}, bucketObjID...),
 			ContractID:  []byte(contractName),
 			Value:       bucketBuf,
 		},
 	}, nil
 }
 
-func (b *bucket) newLink(oldID, newID []byte) (omniledger.StateChanges, *bucket, error) {
+func (b *bucket) newLink(oldID, newID, eventID []byte) (omniledger.StateChanges, *bucket, error) {
 	var newBucket bucket
-	newBucket.Prev = oldID
+	newBucket.Prev = append([]byte{}, oldID...)
+	newBucket.EventRefs = [][]byte{eventID}
 	bucketBuf, err := protobuf.Encode(&newBucket)
 	if err != nil {
 		return nil, nil, err
@@ -53,7 +55,7 @@ func (b *bucket) newLink(oldID, newID []byte) (omniledger.StateChanges, *bucket,
 	return []omniledger.StateChange{
 		omniledger.StateChange{
 			StateAction: omniledger.Create,
-			ObjectID:    newID,
+			ObjectID:    append([]byte{}, newID...),
 			ContractID:  []byte(contractName),
 			Value:       bucketBuf,
 		},

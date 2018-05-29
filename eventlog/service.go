@@ -1,11 +1,11 @@
 package eventlog
 
 import (
+	"encoding/binary"
 	"errors"
 
 	"github.com/dedis/protobuf"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/log"
@@ -73,6 +73,28 @@ func (s *Service) Log(req *LogRequest) (*LogResponse, error) {
 
 const contractName = "eventlog"
 
+type bucketNonce struct {
+	nonce [32]byte
+}
+
+func newBucketNonce() bucketNonce {
+	// TODO write a proper way to increment slices
+	x := uint64(8) // needs to be the same for every node
+	var nonce [32]byte
+	binary.PutUvarint(nonce[:], x)
+	return bucketNonce{nonce}
+}
+
+func (n bucketNonce) increment() bucketNonce {
+	buf := make([]byte, binary.MaxVarintLen64)
+	x, _ := binary.Uvarint(buf)
+	x++
+
+	binary.PutUvarint(buf, x)
+	copy(n.nonce[:], buf)
+	return n
+}
+
 // contractFunction is the function that runs to process a transaction of
 // type "eventlog"
 func (s *Service) contractFunction(coll collection.Collection, tx omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
@@ -108,36 +130,47 @@ func (s *Service) contractFunction(coll collection.Collection, tx omniledger.Ins
 
 	// Get the bucket either update the existing one or create a new one,
 	// depending on the bucket size.
-	bID, b, err := getLatestBucket(coll)
+	bIDCopy, b, err := getLatestBucket(coll)
+	bID := append([]byte{}, bIDCopy...)
 	if err == errIndexMissing {
 		// TODO which darc do we use for the buckets?
 		bID = omniledger.ObjectID{
 			DarcID:     tx.ObjectID.DarcID,
-			InstanceID: omniledger.GenNonce(),
+			InstanceID: omniledger.Nonce(newBucketNonce().nonce),
 		}.Slice()
-		b = &bucket{}
-		scsNew, err := b.updateBucket(bID, tx.ObjectID.Slice(), event)
+		b = &bucket{
+			Start:     event.Timestamp,
+			End:       event.Timestamp,
+			Prev:      []byte{},
+			EventRefs: [][]byte{tx.ObjectID.Slice()},
+		}
+		bBuf, err := protobuf.Encode(b)
 		if err != nil {
 			return nil, nil, err
 		}
-		// This is the very first bucket, so we have to change the
-		// action to create.
-		scsNew[0].StateAction = omniledger.Create
-		scs = append(scs, scsNew...)
+		scs = append(scs, omniledger.StateChange{
+			StateAction: omniledger.Create,
+			ObjectID:    bID,
+			ContractID:  []byte(cid),
+			Value:       bBuf,
+		})
 	} else if err != nil {
 		return nil, nil, err
 	} else if len(b.EventRefs) >= s.bucketSize {
 		// TODO which darc do we use for the buckets?
-		newbID := omniledger.ObjectID{
-			DarcID:     darc.ID(bID[0:32]),
-			InstanceID: omniledger.GenNonce(),
-		}
-		scsNew, newBucket, err := b.newLink(bID, newbID.Slice())
+		var oldNonce [32]byte
+		copy(oldNonce[:], bID[32:64])
+		newNonce := bucketNonce{oldNonce}.increment()
+
+		newbID := append([]byte{}, bID[0:32]...)
+		newbID = append(newbID, newNonce.nonce[:]...)
+
+		scsNew, newBucket, err := b.newLink(bID, newbID, tx.ObjectID.Slice())
 		if err != nil {
 			return nil, nil, err
 		}
 		scs = append(scs, scsNew...)
-		bID = newbID.Slice()
+		bID = newbID
 		b = newBucket
 	} else {
 		scsNew, err := b.updateBucket(bID, tx.ObjectID.Slice(), event)
@@ -157,7 +190,6 @@ func (s *Service) contractFunction(coll collection.Collection, tx omniledger.Ins
 		return nil, nil, err
 	}
 
-	log.Print(scs)
 	return scs, nil, nil
 }
 

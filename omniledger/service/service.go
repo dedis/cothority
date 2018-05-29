@@ -390,8 +390,8 @@ func (s *Service) updateCollection(msg network.Message) {
 		log.Error("Couldn't recreate state changes:", err.Error())
 		return
 	}
+	log.Lvlf2("%s: Storing %d state changes", s.ServerIdentity(), len(scs))
 	for _, sc := range scs {
-		log.Lvl2("Storing statechange", sc)
 		err = cdb.Store(&sc)
 		if err != nil {
 			log.Error("error while storing in collection: " + err.Error())

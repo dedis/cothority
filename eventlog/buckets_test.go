@@ -9,7 +9,7 @@ import (
 )
 
 func TestBucket_UpdateBucket(t *testing.T) {
-	tn := time.Now()
+	tn := time.Now().Unix()
 	b := bucket{
 		Start: tn,
 	}
@@ -20,14 +20,14 @@ func TestBucket_UpdateBucket(t *testing.T) {
 	event := Event{
 		Topic:     "Art",
 		Content:   "Rembrandt",
-		Timestamp: tn.Add(-time.Second),
+		Timestamp: tn - 1000,
 	}
 	// time is in the past, so fail
 	_, err := b.updateBucket([]byte("dummy_id"), objID.Slice(), event)
 	require.NotNil(t, err)
 
 	// time in the future, should pass
-	event.Timestamp = tn.Add(time.Second)
+	event.Timestamp = tn + 1000
 	_, err = b.updateBucket([]byte("dummy_id"), objID.Slice(), event)
 	require.Nil(t, err)
 
@@ -37,7 +37,7 @@ func TestBucket_UpdateBucket(t *testing.T) {
 }
 
 func TestBucket_NewLink(t *testing.T) {
-	tn := time.Now()
+	tn := time.Now().Unix()
 	b := bucket{
 		Start: tn,
 	}
@@ -49,7 +49,7 @@ func TestBucket_NewLink(t *testing.T) {
 		DarcID:     omniledger.ZeroDarc,
 		InstanceID: omniledger.GenNonce(),
 	}
-	scs, newBucket, err := b.newLink(oldID.Slice(), newID.Slice())
+	scs, newBucket, err := b.newLink(oldID.Slice(), newID.Slice(), []byte("dummy event"))
 	require.Nil(t, err)
 	require.Equal(t, newBucket.Prev, oldID.Slice())
 	require.Equal(t, 1, len(scs))
