@@ -196,14 +196,27 @@ func TestService_InvalidVerification(t *testing.T) {
 	defer closeQueues(s.local)
 
 	for i := range s.hosts {
+		RegisterContract(s.hosts[i], "panic", panicContractFunc)
 		RegisterContract(s.hosts[i], "invalid", invalidContractFunc)
 	}
 
-	// tx1 uses the invalid kind, so it should _not_ be stored.
+	// tx0 uses the panicing contract, so it should _not_ be stored.
 	value1 := []byte("a")
-	tx1, err := createOneClientTx(s.darc.GetBaseID(), "invalid", value1, s.signer)
+	tx0, err := createOneClientTx(s.darc.GetBaseID(), "panic", value1, s.signer)
 	require.Nil(t, err)
 	akvresp, err := s.service().AddTransaction(&AddTxRequest{
+		Version:     CurrentVersion,
+		SkipchainID: s.sb.SkipChainID(),
+		Transaction: tx0,
+	})
+	require.Nil(t, err)
+	require.NotNil(t, akvresp)
+	require.Equal(t, CurrentVersion, akvresp.Version)
+
+	// tx1 uses the invalid contract, so it should _not_ be stored.
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), "invalid", value1, s.signer)
+	require.Nil(t, err)
+	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 		Transaction: tx1,
@@ -391,7 +404,7 @@ func newSer(t *testing.T, step int, interval time.Duration) *ser {
 	}
 	registerDummy(s.services)
 
-	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"Spawn_dummy", "Spawn_invalid"}, s.signer.Identity())
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"Spawn_dummy", "Spawn_invalid", "Spawn_panic"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
@@ -430,7 +443,11 @@ func closeQueues(local *onet.LocalTest) {
 }
 
 func invalidContractFunc(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
-	return nil, nil, errors.New("Invalid")
+	return nil, nil, errors.New("this invalid contract always returns an error")
+}
+
+func panicContractFunc(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	panic("this contract panics")
 }
 
 func dummyContractFunc(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {

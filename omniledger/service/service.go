@@ -25,8 +25,6 @@ import (
 
 const darcIDLen int = 32
 
-// Used for tests
-// TODO move to test
 var omniledgerID onet.ServiceID
 var verifyOmniLedger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OmniLedger"))
 
@@ -498,8 +496,21 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID, interval time.Du
 					if err != nil {
 						panic("DB is in bad state and cannot find skipchain anymore: " + err.Error())
 					}
+
 					_, err = s.createNewBlock(scID, sb.Roster, ts)
-					// We empty ts because createNewBlock only returns an error only if it's a critical failure.
+
+					// TODO: In createNewBlock, we
+					// need to limit how many tx
+					// we consume according the
+					// final size of the block.
+					// Thus createNewBlock needs to return how
+					// many it took.
+
+					// (The maximum size
+					// of a block is currently
+					// fixed by (at least) the
+					// maximum message size
+					// allowed in onet.)
 					ts = []ClientTransaction{}
 					if err != nil {
 						log.Error("couldn't create new block: " + err.Error())
@@ -582,9 +593,20 @@ clientTransactions:
 				log.Lvl1("Leader is dropping instruction of unknown contract:", contract)
 				continue clientTransactions
 			}
-			// Now we call the contract function with the data of the key:
+			// Now we call the contract function with the data of the key.
+			// Wrap up f() inside of g(), so that we can recover panics
+			// from f().
 			log.Lvlf3("%s: Calling contract %s", s.ServerIdentity(), contract)
-			scs, _, err := f(cdbI, instr, nil)
+			g := func(cdb collection.Collection, tx Instruction, c []Coin) (sc []StateChange, cout []Coin, err error) {
+				defer func() {
+					if re := recover(); re != nil {
+						err = errors.New(re.(string))
+					}
+				}()
+				sc, cout, err = f(cdb, tx, c)
+				return
+			}
+			scs, _, err := g(cdbI, instr, nil)
 			if err != nil {
 				log.Lvl1("Call to contract returned error:", err)
 				continue clientTransactions

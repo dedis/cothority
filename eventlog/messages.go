@@ -1,6 +1,8 @@
 package eventlog
 
 import (
+	"time"
+
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
 	"gopkg.in/dedis/cothority.v2/skipchain"
@@ -27,8 +29,7 @@ type InitResponse struct {
 	ID skipchain.SkipBlockID
 }
 
-// LogRequest is a wrapper around omniledger.AddTxRequest for use in the
-// event logger.
+// LogRequest is puts one or more new log events into the OmniLedger.
 type LogRequest struct {
 	SkipchainID skipchain.SkipBlockID
 	Transaction omniledger.ClientTransaction
@@ -36,10 +37,20 @@ type LogRequest struct {
 
 // Event is sent to create an event log.
 type Event struct {
+	When    int64
 	Topic   string
 	Content string
 }
 
-// LogResponse is the reply to Content.
+// NewEvent returns a new event with the current time sec correctly.
+func NewEvent(topic, content string) Event {
+	return Event{
+		When:    time.Now().UnixNano(),
+		Topic:   topic,
+		Content: content,
+	}
+}
+
+// LogResponse is the reply to LogRequest.
 type LogResponse struct {
 }

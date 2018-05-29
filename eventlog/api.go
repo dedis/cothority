@@ -3,6 +3,7 @@ package eventlog
 import (
 	"github.com/dedis/protobuf"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
+	"github.com/dedis/student_18_omniledger/omniledger/darc/expression"
 	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
 
 	"gopkg.in/dedis/cothority.v2"
@@ -31,14 +32,22 @@ func NewClient(r *onet.Roster) *Client {
 	}
 }
 
+// AddWriter modifies the given darc.Rules to use expr as the authorized writer
+// to add new Event Logs. If expr is nil, the current evolution expression is used instead.
+func AddWriter(r darc.Rules, expr expression.Expr) darc.Rules {
+	if expr == nil {
+		expr = r.GetEvolutionExpr()
+	}
+	r["Spawn_eventlog"] = expr
+	return r
+}
+
 // Init initialises an event logging skipchain. A sucessful call
 // updates the ID, Signer and Darc fields of the Client. The new
 // skipchain has a Darc that requires one signature from owner.
 func (c *Client) Init(owner *darc.Signer) error {
-	rules1 := darc.InitRules([]*darc.Identity{owner.Identity()}, []*darc.Identity{})
-	rules1["Spawn_eventlog"] = rules1.GetEvolutionExpr()
-
-	d := darc.NewDarc(rules1, []byte("eventlog owner"))
+	rules := darc.InitRules([]*darc.Identity{owner.Identity()}, []*darc.Identity{})
+	d := darc.NewDarc(AddWriter(rules, nil), []byte("eventlog owner"))
 
 	msg := &InitRequest{
 		Owner:  *d,

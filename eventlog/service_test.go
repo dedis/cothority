@@ -2,8 +2,10 @@ package eventlog
 
 import (
 	"testing"
+	"time"
 
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
+	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
 	"github.com/stretchr/testify/require"
 	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/kyber.v2/suites"
@@ -35,11 +37,7 @@ func TestService_Log(t *testing.T) {
 
 	scID, d, signers := s.init(t)
 
-	req := Event{
-		Topic:   "auth",
-		Content: "login",
-	}
-
+	req := NewEvent("auth", "login")
 	ctx, err := makeTx([]Event{req}, d.GetBaseID(), signers)
 	require.Nil(t, err)
 
@@ -49,13 +47,21 @@ func TestService_Log(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	// TODO check that the events are actually stored
+	s.check(t, "one log arrived", func() bool {
+		resp, err := s.services[0].omni.GetProof(&omniledger.GetProof{
+			Version: omniledger.CurrentVersion,
+			Key:     ctx.Instructions[0].ObjectID.Slice(),
+			ID:      scID,
+		})
+		require.Nil(t, err)
+		return resp.Proof.InclusionProof.Match()
+	})
 }
 
 func (s *ser) init(t *testing.T) (skipchain.SkipBlockID, darc.Darc, []*darc.Signer) {
 	owner := darc.NewSignerEd25519(nil, nil)
 	rules := darc.InitRules([]*darc.Identity{owner.Identity()}, []*darc.Identity{})
-	d1 := darc.NewDarc(rules, []byte("eventlog writer"))
+	d1 := darc.NewDarc(AddWriter(rules, nil), []byte("eventlog writer"))
 
 	reply, err := s.services[0].Init(&InitRequest{
 		Roster: *s.roster,
@@ -82,6 +88,17 @@ func (s *ser) close() {
 	}
 }
 
+func (s *ser) check(t *testing.T, what string, f func() bool) {
+	for ct := 0; ct < 10; ct++ {
+		if f() == true {
+			return
+		}
+		t.Log("check failed, sleep and retry")
+		s.services[0].waitForBlock()
+	}
+	t.Fatalf("check for %v failed", what)
+}
+
 func newSer(t *testing.T) *ser {
 	s := &ser{
 		local: onet.NewTCPTest(tSuite),
@@ -90,6 +107,7 @@ func newSer(t *testing.T) *ser {
 
 	for _, sv := range s.local.GetServices(s.hosts, sid) {
 		service := sv.(*Service)
+		service.blockInterval = 100 * time.Millisecond
 		s.services = append(s.services, service)
 	}
 
