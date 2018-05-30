@@ -256,7 +256,8 @@ message skipchain.ForwardLink{
 
 ```
 
-During verification, the verifier then can do the following:
+During verification, the verifier then can do the following to make sure that the
+key/value pair returned is valid:
 
 1. Verify the inclusion proof of the key in the merkle tree root of the collection.
 This is described in the [colleciton](#collection) section.
@@ -274,6 +275,11 @@ verifiably store key / value associations on untrusted nodes. The library
 in this package focuses on ease of use and flexibility, allowing to easily
 develop applications ranging from simple client-server storage to fully
 distributed and decentralized ledgers with minimal bootstrapping time.
+
+Our collection used is a library that has been
+[developed for a PhD project](collection/README.md) and
+can do much more than simple Merkle-trees. Depending on the future direction
+of the project, it might be replaced by a simpler Merkle-tree implementation.
 
 ## Darc
 
