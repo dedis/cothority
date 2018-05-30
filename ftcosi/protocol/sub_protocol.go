@@ -177,7 +177,7 @@ loop:
 			if !channelOpen {
 				return nil
 			}
-			if timedOut { //ignore new commits once time-out has been reached //TODO L: check if correct
+			if timedOut { //ignore new commits once time-out has been reached
 				break
 			}
 
@@ -194,7 +194,7 @@ loop:
 				p.subCommitment <- commitment
 
 				//deactivate timeout
-				t = make(chan time.Time) //TODO T: see if should only do that on final answer
+				t = make(chan time.Time)
 
 				committedChildren = []*onet.TreeNode{commitment.TreeNode}
 			} else {
@@ -223,7 +223,6 @@ loop:
 					commitments = append(commitments, commitment)
 				}
 
-				//TODO R: implement 0 threshold
 				thresholdRefusal := (1 + len(p.Children()) - p.Threshold) + 1
 				quickAnswer := !firstCommitmentSent &&
 					(len(commitments) >= p.Threshold || // quick valid answer
@@ -286,7 +285,7 @@ loop:
 	responses := make([]StructResponse, 0)
 
 	// Second half of our time budget for the responses.
-	timeout := time.After(p.Timeout / 2) //TODO T: do we really need a timeout for the responses?
+	timeout := time.After(p.Timeout / 2)
 	for range committedChildren {
 		select {
 		case response, channelOpen := <-p.ChannelResponse:

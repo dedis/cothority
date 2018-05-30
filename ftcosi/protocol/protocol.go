@@ -96,8 +96,7 @@ func (p *FtCosi) Shutdown() error {
 }
 
 // Dispatch is the main method of the protocol, defining the root node behaviour
-// and sequential handling of subprotocols. //TODO L: discuss how to get non-responsive nodes for quick abort
-// TODO L: discuss when should send empty signature, every errors, only "normal" errors, never?
+// and sequential handling of subprotocols.
 func (p *FtCosi) Dispatch() error {
 	defer p.Done()
 	if !p.IsRoot() {
@@ -127,6 +126,7 @@ func (p *FtCosi) Dispatch() error {
 	nNodes := p.Tree().Size()
 	trees, err := genTrees(p.Tree().Roster, nNodes, p.NSubtrees)
 	if err != nil {
+		p.FinalSignature <- nil
 		return fmt.Errorf("error in tree generation: %s", err)
 	}
 
@@ -140,6 +140,7 @@ func (p *FtCosi) Dispatch() error {
 	for i, tree := range trees {
 		cosiSubProtocols[i], err = p.startSubProtocol(tree)
 		if err != nil {
+			p.FinalSignature <- nil
 			return err
 		}
 	}
@@ -148,6 +149,7 @@ func (p *FtCosi) Dispatch() error {
 	// collect commitments
 	commitments, runningSubProtocols, err := p.collectCommitments(trees, cosiSubProtocols)
 	if err != nil {
+		p.FinalSignature <- nil
 		return err
 	}
 
@@ -161,6 +163,7 @@ func (p *FtCosi) Dispatch() error {
 		secret, personalCommitment = cosi.Commit(p.suite)
 		personalMask, err := cosi.NewMask(p.suite, p.publics, p.Public())
 		if err != nil {
+			p.FinalSignature <- nil
 			return err
 		}
 		personalStructCommitment := StructCommitment{p.TreeNode(),
@@ -175,12 +178,14 @@ func (p *FtCosi) Dispatch() error {
 	// generate own aggregated commitment
 	commitment, finalMask, err := aggregateCommitments(p.suite, p.publics, commitments)
 	if err != nil {
+		p.FinalSignature <- nil
 		return err
 	}
 
 	log.Lvl3("root-node generating global challenge")
 	cosiChallenge, err := cosi.Challenge(p.suite, commitment, finalMask.AggregatePublic, p.Msg)
 	if err != nil {
+		p.FinalSignature <- nil
 		return err
 	}
 	structChallenge := StructChallenge{p.TreeNode(), Challenge{cosiChallenge}}
@@ -221,18 +226,21 @@ func (p *FtCosi) Dispatch() error {
 		errs = append(errs, err)
 	}
 	if len(errs) > 0 {
+		p.FinalSignature <- nil
 		return fmt.Errorf("nodes timed out while waiting for response %v", errs)
 	}
 
 	// generate own response
 	personalResponse, err := cosi.Response(p.suite, p.Private(), secret, structChallenge.CoSiChallenge)
 	if err != nil {
+		p.FinalSignature <- nil
 		return fmt.Errorf("error while generating own response: %s", err)
 	}
 	responses = append(responses, StructResponse{p.TreeNode(), Response{personalResponse}})
 
 	aggResponse, err := aggregateResponses(p.suite, responses)
 	if err != nil {
+		p.FinalSignature <- nil
 		return err
 	}
 
@@ -241,6 +249,7 @@ func (p *FtCosi) Dispatch() error {
 	var signature []byte
 	signature, err = cosi.Sign(p.suite, commitment, aggResponse, finalMask)
 	if err != nil {
+		p.FinalSignature <- nil
 		return err
 	}
 	p.FinalSignature <- signature
