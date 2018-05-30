@@ -64,6 +64,7 @@ func TestClient_Log(t *testing.T) {
 	require.Equal(t, 0, len(b.Prev))
 }
 
+// TODO this test only passes when the block interval is long enough
 func TestClient_Log1000(t *testing.T) {
 	s := newSer(t)
 	leader := s.services[0]
@@ -74,7 +75,8 @@ func TestClient_Log1000(t *testing.T) {
 	err := c.Init(owner)
 	require.Nil(t, err)
 
-	for ct := 0; ct < 11; ct++ {
+	logCount := 1000
+	for ct := 0; ct < logCount; ct++ {
 		_, err := c.Log(NewEvent("auth", fmt.Sprintf("user %v logged in", ct)))
 		require.Nil(t, err)
 	}
@@ -102,7 +104,7 @@ func TestClient_Log1000(t *testing.T) {
 		eventIDs = append(eventIDs, b.EventRefs...)
 		bucketID = b.Prev
 	}
-	require.Equal(t, 11, eventCount)
+	require.Equal(t, logCount, eventCount)
 
 	for _, eventID := range eventIDs {
 		eventBuf := checkProof(t, leader.omni, eventID, c.ID)

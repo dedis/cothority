@@ -58,17 +58,6 @@ func TestService_Log(t *testing.T) {
 	})
 }
 
-func TestService_Nonce(t *testing.T) {
-	nonce1 := newBucketNonce()
-	nonce2 := newBucketNonce()
-	require.Equal(t, nonce1.nonce, nonce2.nonce)
-
-	require.NotEqual(t, nonce1.nonce, nonce1.increment().nonce)
-	require.NotEqual(t, nonce2.nonce, nonce2.increment().nonce)
-	require.Equal(t, nonce1.increment().nonce, nonce2.increment().nonce)
-	require.Equal(t, nonce1.increment().increment().nonce, nonce2.increment().increment().nonce)
-}
-
 func (s *ser) init(t *testing.T) (skipchain.SkipBlockID, darc.Darc, []*darc.Signer) {
 	owner := darc.NewSignerEd25519(nil, nil)
 	rules := darc.InitRules([]*darc.Identity{owner.Identity()}, []*darc.Identity{})
@@ -118,7 +107,7 @@ func newSer(t *testing.T) *ser {
 
 	for _, sv := range s.local.GetServices(s.hosts, sid) {
 		service := sv.(*Service)
-		service.blockInterval = 100 * time.Millisecond
+		service.blockInterval = time.Second
 		s.services = append(s.services, service)
 	}
 

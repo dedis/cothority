@@ -10,6 +10,8 @@ import (
 
 var errIndexMissing = errors.New("index does not exist")
 
+var initialBucketNonce = [32]byte{1, 1, 1, 1}
+
 type bucket struct {
 	Start     int64
 	Prev      []byte
@@ -107,4 +109,20 @@ func getIndexValue(coll collection.Collection) ([]byte, error) {
 		return nil, errors.New("invalid value")
 	}
 	return newval, nil
+}
+
+func incrementNonce(nonce [32]byte) [32]byte {
+	var carry = true
+	for i := range nonce {
+		if carry {
+			if nonce[i] != 255 {
+				nonce[i]++
+				break
+			} else {
+				nonce[i] = 0
+				carry = true
+			}
+		}
+	}
+	return nonce
 }

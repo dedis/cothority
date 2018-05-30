@@ -1,7 +1,6 @@
 package eventlog
 
 import (
-	"encoding/binary"
 	"errors"
 	"time"
 
@@ -84,28 +83,6 @@ func (s *Service) Log(req *LogRequest) (*LogResponse, error) {
 
 const contractName = "eventlog"
 
-type bucketNonce struct {
-	nonce [32]byte
-}
-
-func newBucketNonce() bucketNonce {
-	// TODO write a proper way to increment slices
-	x := uint64(8) // needs to be the same for every node
-	var nonce [32]byte
-	binary.PutUvarint(nonce[:], x)
-	return bucketNonce{nonce}
-}
-
-func (n bucketNonce) increment() bucketNonce {
-	buf := make([]byte, binary.MaxVarintLen64)
-	x, _ := binary.Uvarint(buf)
-	x++
-
-	binary.PutUvarint(buf, x)
-	copy(n.nonce[:], buf)
-	return n
-}
-
 func (s *Service) decodeAndCheckEvent(eventBuf []byte) (*Event, error) {
 	// Check the timestamp of the event: it should never be in the future,
 	// and it should not be more than 10 blocks in the past. (Why 10?
@@ -175,7 +152,7 @@ func (s *Service) contractFunction(coll collection.Collection, tx omniledger.Ins
 		// TODO which darc do we use for the buckets?
 		bID = omniledger.ObjectID{
 			DarcID:     tx.ObjectID.DarcID,
-			InstanceID: omniledger.Nonce(newBucketNonce().nonce),
+			InstanceID: omniledger.Nonce(initialBucketNonce),
 		}.Slice()
 		b = &bucket{
 			Start:     event.When,
@@ -198,10 +175,11 @@ func (s *Service) contractFunction(coll collection.Collection, tx omniledger.Ins
 		// TODO which darc do we use for the buckets?
 		var oldNonce [32]byte
 		copy(oldNonce[:], bID[32:64])
-		newNonce := bucketNonce{oldNonce}.increment()
+		newNonce := incrementNonce(oldNonce)
 
-		newbID := append([]byte{}, bID[0:32]...)
-		newbID = append(newbID, newNonce.nonce[:]...)
+		newbID := make([]byte, 64)
+		copy(newbID[0:32], bID[0:32])
+		copy(newbID[32:64], newNonce[:])
 
 		scsNew, newBucket, err := b.newLink(bID, newbID, tx.ObjectID.Slice())
 		if err != nil {
