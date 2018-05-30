@@ -13,6 +13,7 @@ import org.testcontainers.containers.wait.Wait;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,6 +50,7 @@ public class DockerTestServerController extends TestServerController {
             blockchainContainer.withExtraHost("conode2", "127.0.0.1");
             blockchainContainer.withExtraHost("conode3", "127.0.0.1");
             blockchainContainer.withExtraHost("conode4", "127.0.0.1");
+            blockchainContainer.withStartupTimeout(Duration.ofMinutes(1));
             blockchainContainer.waitingFor(Wait.forListeningPort());
             blockchainContainer.start();
             Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(logger);
