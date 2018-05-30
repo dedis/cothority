@@ -9,31 +9,27 @@ import (
 )
 
 func TestBucket_UpdateBucket(t *testing.T) {
-	tn := time.Now().Unix()
-	b := bucket{
-		Start: tn,
-	}
+	b := bucket{}
 	objID := omniledger.ObjectID{
 		DarcID:     omniledger.ZeroDarc,
 		InstanceID: omniledger.GenNonce(),
 	}
-	event := Event{
-		Topic:   "Art",
-		Content: "Rembrandt",
-		When:    tn - 1000,
-	}
-	// time is in the past, so fail
-	_, err := b.updateBucket([]byte("dummy_id"), objID.Slice(), event)
-	require.NotNil(t, err)
+	event := NewEvent("Art", "Rembrandt")
 
-	// time in the future, should pass
-	event.When = tn + 1000
+	// new time, we should see an update in b.Start
+	_, err := b.updateBucket([]byte("dummy_id"), objID.Slice(), event)
+	require.Nil(t, err)
+	require.Equal(t, event.When, b.Start)
+
+	// time is in the past, we should see another update
+	event.When = event.When - 1000
 	_, err = b.updateBucket([]byte("dummy_id"), objID.Slice(), event)
 	require.Nil(t, err)
+	require.Equal(t, event.When, b.Start)
 
-	require.Equal(t, event.When, b.End)
-	require.Equal(t, tn, b.Start)
+	// check the references
 	require.Equal(t, b.EventRefs[0], objID.Slice())
+	require.Equal(t, b.EventRefs[1], objID.Slice())
 }
 
 func TestBucket_NewLink(t *testing.T) {

@@ -179,7 +179,6 @@ func (s *Service) contractFunction(coll collection.Collection, tx omniledger.Ins
 		}.Slice()
 		b = &bucket{
 			Start:     event.When,
-			End:       event.When,
 			Prev:      []byte{},
 			EventRefs: [][]byte{tx.ObjectID.Slice()},
 		}

@@ -2,7 +2,6 @@ package eventlog
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/dedis/protobuf"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
@@ -13,20 +12,15 @@ var errIndexMissing = errors.New("index does not exist")
 
 type bucket struct {
 	Start     int64
-	End       int64
 	Prev      []byte
 	EventRefs [][]byte
 }
 
+// updateBucket expectes the timestamps to be correct, it will set the start
+// time to be the lowest of all events.
 func (b *bucket) updateBucket(bucketObjID, eventObjID []byte, event Event) (omniledger.StateChanges, error) {
-	if event.When < b.Start {
-		return nil, fmt.Errorf("invalid timestamp %d < %d", event.When, b.Start)
-	}
-	if b.Start == 0 {
+	if b.Start == 0 || event.When < b.Start {
 		b.Start = event.When
-	}
-	if event.When > b.End {
-		b.End = event.When
 	}
 	b.EventRefs = append(b.EventRefs, eventObjID)
 	bucketBuf, err := protobuf.Encode(b)
