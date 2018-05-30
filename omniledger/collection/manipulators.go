@@ -3,6 +3,7 @@ package collection
 import (
 	"crypto/sha256"
 	"errors"
+	"fmt"
 )
 
 // Same is used as a placeholder for the individual values that don't need to be updated
@@ -63,7 +64,7 @@ func (c *Collection) Add(key []byte, values ...interface{}) error {
 			break
 		} else if cursor.leaf() {
 			if equal(key, cursor.key) {
-				return errors.New("key collision")
+				return fmt.Errorf("key collision - %x", key)
 			}
 
 			collision := *cursor
