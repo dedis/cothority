@@ -5,6 +5,7 @@ Cothority
 
 # Cothority
 
+One
 The collective authority (cothority) project provides a framework for
 development, analysis, and deployment of decentralized, distributed
 (cryptographic) protocols. A given set of servers running these protocols is
