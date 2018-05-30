@@ -5,9 +5,7 @@ import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.proto.RosterProto;
 import com.google.protobuf.ByteString;
-import com.moandjiezana.toml.Toml;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,7 +25,7 @@ public class Roster {
 
         for (final ServerIdentity serverIdentity : nodes) {
             if (aggregate == null) {
-                // TODO: it will be much better if there is some kind of 'zero' element for Point type. Is it possible to use just a new created Point
+                // TODO: it will be much better if there is some kind of 'zero' element for Ed25519Point type. Is it possible to use just a new created Ed25519Point
                 aggregate = serverIdentity.Public;
             } else {
                 aggregate = aggregate.add(serverIdentity.Public);

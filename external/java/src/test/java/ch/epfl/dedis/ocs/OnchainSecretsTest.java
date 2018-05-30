@@ -103,7 +103,7 @@ class OnchainSecretsTest {
     }
 
     @Test
-    void getDocument() throws CothorityException, IOException, InterruptedException {
+    void getDocument() throws CothorityException {
         WriteRequest wr = ocs.publishDocument(doc, publisher);
         Document doc2 = ocs.getDocument(wr.id, reader);
         assertTrue(doc.equals(doc2));
@@ -134,8 +134,8 @@ class OnchainSecretsTest {
 
         KeyPair kp = new KeyPair();
         Signer reader2 = new SignerEd25519();
-        DarcSignature sig = new DarcSignature(kp.Point.toBytes(), readerDarc, reader2, SignaturePath.USER);
-        assertThrows(CothorityCommunicationException.class,()->{ocs.getDecryptionKeyEphemeral(rrId, sig, kp.Point);});
+        DarcSignature sig = new DarcSignature(kp.point.toBytes(), readerDarc, reader2, SignaturePath.USER);
+        assertThrows(CothorityCommunicationException.class,()->{ocs.getDecryptionKeyEphemeral(rrId, sig, kp.point);});
     }
 
     @Test

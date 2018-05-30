@@ -181,9 +181,9 @@ public class OnchainSecrets extends OnchainSecretsRPC {
         ReadRequestId rrId = createReadRequest(new ReadRequest(this, wrId, reader));
 
         KeyPair kp = new KeyPair();
-        DarcSignature sig = new DarcSignature(kp.Point.toBytes(), readerDarc, reader, SignaturePath.USER);
-        DecryptKey dk = getDecryptionKeyEphemeral(rrId, sig, kp.Point);
-        byte[] keyMaterial = dk.getKeyMaterial(write, kp.Scalar);
+        DarcSignature sig = new DarcSignature(kp.point.toBytes(), readerDarc, reader, SignaturePath.USER);
+        DecryptKey dk = getDecryptionKeyEphemeral(rrId, sig, kp.point);
+        byte[] keyMaterial = dk.getKeyMaterial(write, kp.scalar);
         return new Document(write.getData().toByteArray(), keyMaterial, write.getExtradata().toByteArray(),
                 readerDarc, wrId);
     }

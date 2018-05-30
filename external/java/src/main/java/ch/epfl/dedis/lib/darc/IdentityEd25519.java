@@ -1,6 +1,7 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.SchnorrSig;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
@@ -14,7 +15,7 @@ public class IdentityEd25519 implements Identity {
      * @param proto
      */
     public IdentityEd25519(DarcProto.IdentityEd25519 proto){
-        pub = new Point(proto.getPoint());
+        pub = new Ed25519Point(proto.getPoint());
     }
 
     /**
@@ -23,7 +24,7 @@ public class IdentityEd25519 implements Identity {
      */
     public IdentityEd25519(Signer signer) throws CothorityCryptoException{
         if (SignerEd25519.class.isInstance(signer)) {
-            pub = new Point(signer.getPublic());
+            pub = new Ed25519Point(signer.getPublic());
         } else {
             throw new CothorityCryptoException("Wrong signer type: " + signer.toString());
         }

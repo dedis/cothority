@@ -15,7 +15,7 @@ public class Sha256id implements HashId {
 
     public Sha256id(byte[] id) throws CothorityCryptoException {
         if (id.length != length) {
-            throw new CothorityCryptoException("need 32 bytes for sha256-hash");
+            throw new CothorityCryptoException("need 32 bytes for sha256-hash, only got " + id.length);
         }
         this.id = Arrays.copyOf(id, id.length);
     }

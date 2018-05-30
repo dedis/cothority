@@ -56,7 +56,7 @@ public class GetPathTest {
         // when
         SignaturePath path = ocs.getDarcPath(documentDarc.getId(), IdentityFactory.New(consumer), SignaturePath.USER);
 
-        //then
+        // then
         assertNotNull(path);
     }
 
@@ -74,7 +74,7 @@ public class GetPathTest {
         CothorityCommunicationException exception = assertThrows(CothorityCommunicationException.class, () ->
                 ocs.getDarcPath(documentDarc.getId(), IdentityFactory.New(userWithoutAccess), SignaturePath.USER));
 
-        //then
+        // then
         assertEquals("didn't find a path to the given identity", exception.getMessage()); // consider it as 'permission deny'
     }
 
@@ -91,7 +91,7 @@ public class GetPathTest {
         // when
         SignaturePath path = ocs.getDarcPath(documentDarc.getId(), consumerIdentity, SignaturePath.USER);
 
-        //then
+        // then
         assertNotNull(path);
     }
 
@@ -108,7 +108,7 @@ public class GetPathTest {
         // when
         SignaturePath path = ocs.getDarcPath(documentDarc.getId(), groupIdentity, SignaturePath.USER);
 
-        //then
+        // then
         assertNotNull(path);
     }
 

@@ -10,7 +10,6 @@ MAILCMD=/usr/bin/mail
 
 # Find out which package this copy of run_conode.sh is checked into.
 dir=$(dirname $(realpath $0))
-pkg=`cd $dir && go list ..`
 all_args="$*"
 
 # increment version sub if there's something about cothority that changes
@@ -98,6 +97,7 @@ runLocal(){
 	shift
 	WAIT=""
 	DEBUG=2
+	local BUILD=true
 	while [ "$1" ]; do
 		case $1 in
 		-update)
@@ -110,6 +110,9 @@ runLocal(){
 		-wait_for_apocalypse|-wait)
 			WAIT=true
 			;;
+		-nobuild)
+			BUILD=false
+			;;
 		*)
 			DEBUG=$1
 			;;
@@ -118,7 +121,10 @@ runLocal(){
 	done
 
 	killall -9 conode || true
-	go install $TAGS $pkg/conode
+	if [ "$BUILD" = "true" ]; then
+		pkg=`cd $dir && go list ..`
+		go install $TAGS $pkg/conode
+	fi
 
 	rm -f public.toml
 	for n in $( seq $NBR ); do
@@ -202,6 +208,7 @@ runPublic(){
 	if [ "$UPDATE" ]; then
 		update
 	else
+		pkg=`cd $dir && go list ..`
 		go install $TAGS $pkg/conode
 	fi
 	migrate
@@ -300,6 +307,7 @@ update(){
 	TEST=$1
 	cat - > $TMP << EOF
 if [ ! "$TEST" ]; then
+  pkg=`cd $dir && go list ..`
   go get -u $pkg/...
 fi
 exec $0 $ACTION -update_rec $TMP
