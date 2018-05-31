@@ -18,6 +18,18 @@ func init() {
 	)
 }
 
+// PROTOSTART
+// import "roster.proto";
+// import "darc.proto";
+// import "transaction.proto";
+//
+// option java_package = "ch.epfl.dedis.proto";
+// option java_outer_classname = "EventLogProto";
+
+// ***
+// These are the messages used in the API-calls
+// ***
+
 // InitRequest is sent to start a new EventLog.
 type InitRequest struct {
 	Owner  darc.Darc
@@ -42,6 +54,10 @@ type Event struct {
 	Content string
 }
 
+// LogResponse is the reply to LogRequest.
+type LogResponse struct {
+}
+
 // NewEvent returns a new event with the current time sec correctly.
 func NewEvent(topic, content string) Event {
 	return Event{
@@ -49,8 +65,4 @@ func NewEvent(topic, content string) Event {
 		Topic:   topic,
 		Content: content,
 	}
-}
-
-// LogResponse is the reply to LogRequest.
-type LogResponse struct {
 }

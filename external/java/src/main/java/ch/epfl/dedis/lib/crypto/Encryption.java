@@ -9,10 +9,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
+import java.security.*;
 
 public class Encryption {
     public static String algo = "AES/CBC/PKCS5Padding";
@@ -25,7 +22,7 @@ public class Encryption {
         public IvParameterSpec ivSpec;
         public SecretKeySpec keySpec;
 
-        public keyIv(byte[] keyMaterial) throws CothorityCryptoException {
+        public keyIv(byte[] keyMaterial) throws CothorityCryptoException{
             int symmetricLength = keyMaterial.length - ivLength;
             if (symmetricLength <= 0){
                 throw new CothorityCryptoException("too short symmetricKey material");
@@ -63,7 +60,7 @@ public class Encryption {
      * @return a combined
      * @throws Exception
      */
-    public static byte[] encryptData(byte[] data, byte[] keyMaterial) throws CothorityCryptoException {
+    public static byte[] encryptData(byte[] data, byte[] keyMaterial) throws CothorityCryptoException{
         keyIv key = new keyIv(keyMaterial);
 
         try {
@@ -95,7 +92,7 @@ public class Encryption {
      * @return decrypted data
      * @throws Exception
      */
-    public static byte[] decryptData(byte[] dataEnc, byte[] keyMaterial) throws CothorityCryptoException {
+    public static byte[] decryptData(byte[] dataEnc, byte[] keyMaterial) throws CothorityCryptoException{
         keyIv key = new keyIv(keyMaterial);
         try {
             Cipher cipher = Cipher.getInstance(algo);
@@ -124,7 +121,7 @@ public class Encryption {
      * @return decypted data
      * @throws Exception
      */
-    public static byte[] decryptData(ByteString dataEnc, byte[] keyMaterial) throws CothorityCryptoException {
+    public static byte[] decryptData(ByteString dataEnc, byte[] keyMaterial) throws CothorityCryptoException{
         return decryptData(dataEnc.toByteArray(), keyMaterial);
     }
 

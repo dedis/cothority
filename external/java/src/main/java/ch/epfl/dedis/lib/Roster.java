@@ -4,9 +4,11 @@ import ch.epfl.dedis.lib.crypto.Ed25519;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.proto.RosterProto;
+import ch.epfl.dedis.proto.ServerIdentityProto;
 import com.google.protobuf.ByteString;
 import com.moandjiezana.toml.Toml;
 
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +26,19 @@ public class Roster {
 
     public Roster(List<ServerIdentity> servers) {
         nodes.addAll(servers);
+        this.updateAggregate();
+    }
 
+    public Roster(RosterProto.Roster roster) throws URISyntaxException {
+        List<ServerIdentity> sids = new ArrayList<>();
+        for (ServerIdentityProto.ServerIdentity sid : roster.getListList()) {
+            sids.add(new ServerIdentity(sid));
+        }
+        nodes.addAll(sids);
+        this.updateAggregate();
+    }
+
+    private void updateAggregate() {
         for (final ServerIdentity serverIdentity : nodes) {
             if (aggregate == null) {
                 // TODO: it will be much better if there is some kind of 'zero' element for Point type. Is it possible to use just a new created Point
@@ -39,7 +53,7 @@ public class Roster {
         return nodes;
     }
 
-    public RosterProto.Roster getProto() {
+    public RosterProto.Roster toProto() {
         RosterProto.Roster.Builder r = RosterProto.Roster.newBuilder();
         r.setId(ByteString.copyFrom(Ed25519.uuid4()));
         nodes.forEach(n -> r.addList(n.getProto()));
@@ -62,8 +76,10 @@ public class Roster {
             try {
                 cothority.add(new ServerIdentity(s));
             } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
             }
         }
         return new Roster(cothority);
     }
+
 }

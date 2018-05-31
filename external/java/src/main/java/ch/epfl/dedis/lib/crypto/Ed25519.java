@@ -23,8 +23,8 @@ public class Ed25519 {
     public static final EdDSANamedCurveSpec ed25519 = EdDSANamedCurveTable.getByName("Ed25519");
     public static Curve curve = ed25519.getCurve();
     public static Field field = curve.getField();
-    public static Point base = new Point(Ed25519.ed25519.getB());
-    public static Scalar prime_order = new Scalar("EDD3F55C1A631258D69CF7A2DEF9DE1400000000000000000000000000000010", false);
+    public static Point base = new Ed25519Point(Ed25519.ed25519.getB());
+    public static Scalar prime_order = new Ed25519Scalar("EDD3F55C1A631258D69CF7A2DEF9DE1400000000000000000000000000000010", false);
 
     public static byte[] uuid4() {
         ByteBuffer bb = ByteBuffer.wrap(new byte[16]);

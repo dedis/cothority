@@ -1,11 +1,10 @@
 package ch.epfl.dedis.lib;
 
+import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.proto.ServerIdentityProto;
-import ch.epfl.dedis.proto.StatusProto;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.moandjiezana.toml.Toml;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
@@ -33,26 +32,19 @@ public class ServerIdentity {
     public ServerIdentity(final URI serverWsAddress, final String publicKey) {
         this.conodeAddress = serverWsAddress;
         // TODO: It will be better to use some class for server key and move this conversion outside of this class
-        this.Public = new Point(DatatypeConverter.parseHexBinary(publicKey));
+        this.Public = new Ed25519Point(DatatypeConverter.parseHexBinary(publicKey));
     }
 
     public ServerIdentity(Toml siToml) throws URISyntaxException {
         this(new URI(siToml.getString("Address")), siToml.getString("Public"));
     }
 
-    public URI getAddress() {
-        return conodeAddress;
+    public ServerIdentity(ServerIdentityProto.ServerIdentity sid) throws URISyntaxException {
+        this(new URI(sid.getAddress()), DatatypeConverter.printHexBinary(sid.getPublic().toByteArray()));
     }
 
-    public StatusProto.Response GetStatus() throws CothorityCommunicationException {
-        StatusProto.Request request =
-                StatusProto.Request.newBuilder().build();
-        try {
-            SyncSendMessage msg = new SyncSendMessage("Status/Request", request.toByteArray());
-            return StatusProto.Response.parseFrom(msg.response);
-        } catch (InvalidProtocolBufferException e) {
-            throw new CothorityCommunicationException(e.toString());
-        }
+    public URI getAddress() {
+        return conodeAddress;
     }
 
     public ServerIdentityProto.ServerIdentity getProto() {
@@ -68,7 +60,11 @@ public class ServerIdentity {
     }
 
     public byte[] SendMessage(String path, byte[] data) throws CothorityCommunicationException {
-        return new SyncSendMessage(path, data).response.array();
+        SyncSendMessage ssm = new SyncSendMessage(path, data);
+        if (ssm.response == null){
+            throw new CothorityCommunicationException("Error while retrieving response - try again. Error-string is: " + ssm.error);
+        }
+        return ssm.response.array();
     }
 
     public class SyncSendMessage {
