@@ -48,21 +48,36 @@ func newCollectionDB(db *bolt.DB, name []byte) *collectionDB {
 	return c
 }
 
-func (c *collectionDB) loadAll() {
-	c.db.View(func(tx *bolt.Tx) error {
+// dup makes a copy of in. We use this with results from BoltDB
+// because BoltDB's docs say, "The returned value is only valid for
+// the life of the transaction."
+func dup(in []byte) []byte {
+	return append([]byte{}, in...)
+}
+
+func (c *collectionDB) loadAll() error {
+	return c.db.View(func(tx *bolt.Tx) error {
 		// Assume bucket exists and has keys
 		b := tx.Bucket([]byte(c.bucketName))
 		cur := b.Cursor()
 
 		for k, v := cur.First(); k != nil; k, v = cur.Next() {
-			sig := b.Get(append(k, []byte("sig")...))
-			ck := make([]byte, len(k))
-			vk := make([]byte, len(v))
-			csig := make([]byte, len(sig))
-			copy(ck, k)
-			copy(vk, v)
-			copy(csig, sig)
-			c.coll.Add(ck, vk, csig)
+			// This is a Contract key, skip it.
+			if len(k) > 0 && k[0] == 'C' {
+				continue
+			}
+			kc := make([]byte, len(k)+1)
+			kc[0] = 'C'
+			copy(kc[1:], k)
+
+			cv := b.Get(kc)
+			if cv == nil {
+				return fmt.Errorf("contract ype missing for object ID %x", k)
+			}
+			err := c.coll.Add(dup(k), dup(v), dup(cv))
+			if err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -88,21 +103,23 @@ func (c *collectionDB) Store(t *StateChange) error {
 	}
 	err := c.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(c.bucketName))
-		keykind := make([]byte, len(t.ObjectID)+4)
-		copy(keykind, t.ObjectID)
-		keykind = append(keykind, []byte("kind")...)
+
+		// The contract type is stored in a key starting with C
+		keyC := make([]byte, 1+len(t.ObjectID))
+		keyC[0] = byte('C')
+		copy(keyC[1:], t.ObjectID)
 
 		switch t.StateAction {
 		case Create, Update:
 			if err := bucket.Put(t.ObjectID, t.Value); err != nil {
 				return err
 			}
-			return bucket.Put(keykind, t.ContractID)
+			return bucket.Put(keyC, t.ContractID)
 		case Remove:
 			if err := bucket.Delete(t.ObjectID); err != nil {
 				return err
 			}
-			return bucket.Delete(keykind)
+			return bucket.Delete(keyC)
 		default:
 			return errors.New("invalid state action")
 		}

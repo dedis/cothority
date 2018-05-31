@@ -662,16 +662,36 @@ func (s *Service) tryLoad() error {
 	}
 
 	for _, sb := range gasr.SkipChains {
-		interval, err := s.loadBlockInterval(sb.Hash)
+		if !isOurChain(sb) {
+			continue
+		}
+		interval, err := s.loadBlockInterval(sb.SkipChainID())
 		if err != nil {
 			return err
 		}
 		// At this point the service is not yet up, so no need to
 		// protect access to queueWorkers with a mutex.
-		s.queueWorkers[string(sb.Hash)] = s.createQueueWorker(sb.Hash, interval)
+
+		if s.queueWorkers[string(sb.SkipChainID())] != nil {
+			// BUG: This seems to be happening because GetAllSkipchains seems to be
+			// returning ALL BLOCKS! What?!?
+			panic("double worker")
+		}
+
+		s.queueWorkers[string(sb.SkipChainID())] = s.createQueueWorker(sb.SkipChainID(), interval)
 	}
 
 	return nil
+}
+
+// checks that a given block has a verifier we recognize
+func isOurChain(sb *skipchain.SkipBlock) bool {
+	for _, x := range sb.VerifierIDs {
+		if x.Equal(verifyOmniLedger) {
+			return true
+		}
+	}
+	return false
 }
 
 // saves all skipblocks.
