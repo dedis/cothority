@@ -160,7 +160,7 @@ func (p *SubFtCosi) Dispatch() error {
 
 	committedChildren := make([]*onet.TreeNode, 0)
 	for _, commitment := range commitments {
-		if commitment.TreeNode.Parent != p.TreeNode() {
+		if !commitment.TreeNode.Parent.Equal(p.TreeNode()) {
 			return errors.New("received a Commitment from a non-Children node")
 		}
 		committedChildren = append(committedChildren, commitment.TreeNode)
@@ -210,11 +210,14 @@ func (p *SubFtCosi) Dispatch() error {
 		if err != nil {
 			return err
 		}
+		if !ok {
+			return errors.New("stopping because we won't sign")
+		}
 	}
 
 	// ----- Challenge -----
 	challenge, channelOpen := <-p.ChannelChallenge // from the leader
-	if !channelOpen {
+	if !channelOpen || challenge.TreeNode == nil {
 		return nil
 	}
 
@@ -251,8 +254,8 @@ func (p *SubFtCosi) Dispatch() error {
 		// send response to super-protocol
 		if len(responses) != 1 {
 			return fmt.Errorf(
-				"root node in subprotocol should have received 1 response, but received %v",
-				len(commitments))
+				"root node in subprotocol should have received %d response, but received %d",
+				len(commitments), len(responses))
 		}
 		p.subResponse <- responses[0]
 	} else {
@@ -267,7 +270,6 @@ func (p *SubFtCosi) Dispatch() error {
 			return err
 		}
 	}
-
 	return nil
 }
 

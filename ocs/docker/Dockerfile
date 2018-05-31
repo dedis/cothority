@@ -1,6 +1,6 @@
 FROM dedis/conode:dev
 
-EXPOSE 7003 7005 7007 7009
+# EXPOSE 7003 7005 7007 7009
 
 COPY co1/private.toml co1/private.toml
 COPY co2/private.toml co2/private.toml

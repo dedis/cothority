@@ -8,6 +8,7 @@ import (
 
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 
@@ -132,6 +133,9 @@ func (t *Transaction) Verify(genesis skipchain.SkipBlockID, s *skipchain.Service
 		}
 		if len(t.Master.Roster.List) == 0 {
 			return errors.New("empty roster in master update")
+		}
+		if !m.Roster.ID.Equal(t.Master.Roster.ID) {
+			log.Lvl2("Changing roster to:", t.Master.Roster.List)
 		}
 		null := t.Master.Key.Clone().Null()
 		if t.Master.Key.Equal(null) {

@@ -228,7 +228,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		scID := psbd.TargetSkipChainID
 		sb := s.db.GetByID(psbd.TargetSkipChainID)
 		if sb == nil {
-			err := s.syncChain(psbd.NewBlock.Roster, scID)
+			err := s.SyncChain(psbd.NewBlock.Roster, scID)
 			if err != nil {
 				return nil, errors.New("didn't find block to attach to: " + err.Error())
 			}
@@ -402,19 +402,22 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 	return reply, nil
 }
 
-// syncChain communicates with conodes in the Roster via getBlocks
+// SyncChain communicates with conodes in the Roster via getBlocks
 // in order traverse the chain and save the blocks locally. It starts with
 // the given 'latest' skipblockid and fetches all blocks up to the latest block.
 // In case there is no link in the database to store the 'latest' skipblock,
 // syncchain will start at the genesis block and fetch all blocks up to the latest
 // skipblock. However, this means that the 'latest' skipblock might _not_ be in
-// the database when syncChain returns!
-func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
+// the database when SyncChain returns!
+func (s *Service) SyncChain(roster *onet.Roster, latest SkipBlockID) error {
 	// loop on getBlocks, fetching 10 at a time
 	for {
 		blocks, err := s.getBlocks(roster, latest, 10)
 		if err != nil {
 			return err
+		}
+		if len(blocks) == 0 {
+			return errors.New("didn't find any corresponding blocks")
 		}
 
 		for _, sb := range blocks {
@@ -426,7 +429,7 @@ func (s *Service) syncChain(roster *onet.Roster, latest SkipBlockID) error {
 					return errors.New("synching failed even when trying to start at the genesis block")
 				}
 				log.Lvl3("couldn't store synched block - synching from genesis block")
-				return s.syncChain(sb.Roster, sb.SkipChainID())
+				return s.SyncChain(sb.Roster, sb.SkipChainID())
 			}
 			s.db.Store(sb)
 			if len(sb.ForwardLink) == 0 {
@@ -903,7 +906,7 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 			return false
 		}
 		log.Lvl3(s.ServerIdentity(), "Didn't find src-skipblock, trying to sync")
-		if err := s.syncChain(fs.Newest.Roster, fs.Previous); err != nil {
+		if err := s.SyncChain(fs.Newest.Roster, fs.Previous); err != nil {
 			log.Error("failed to sync skipchain", err)
 			return false
 		}

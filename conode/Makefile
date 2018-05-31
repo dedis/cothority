@@ -25,13 +25,13 @@ flags=-ldflags="$(ldflags)"
 all: docker
 
 # Use this target to build from only published sources.
-docker: Dockerfile
+docker: clean Dockerfile
 	BUILDFLAG=$(flags)
 	docker build -t $(IMAGE_NAME):$(TAG) --build-arg BUILDFLAG="$(ldflags)" .
 	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):$(VERSION)
 
 # Use this target to build from local source instead of from publish sources.
-docker_dev: Dockerfile-dev exe/conode.Linux.x86_64
+docker_dev: clean Dockerfile-dev exe/conode.Linux.x86_64
 	docker build -t $(IMAGE_NAME):$(TAG) -f Dockerfile-dev .
 	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):$(VERSION)
 
@@ -59,6 +59,9 @@ docker_stop:
 docker_clean:
 	docker kill $(CONTAINER) || echo nothing to stop
 	docker image ls $(IMAGE_NAME) -q | xargs docker rmi -f || echo done
+
+clean:
+	rm -rf exe $(OUTPUT_DIR)
 
 # The suffix on conode exe is the result from: echo `uname -s`.`uname -m`
 # so that we can find the right one in the wrapper script.
