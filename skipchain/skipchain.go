@@ -536,19 +536,35 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, 
 	return nil, errors.New("No block with this index found")
 }
 
-// GetAllSkipchains returns a list of all known skipchains
+// GetAllSkipchains returns all known last blocks of skipchains.
 func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, error) {
-	// Write all known skipblocks to a map, thus removing double blocks.
 	chains, err := s.db.getAll()
 	if err != nil {
 		return nil, err
 	}
 
-	reply := &GetAllSkipchainsReply{
-		SkipChains: make([]*SkipBlock, 0, len(chains)),
-	}
+	// chains is now a map of sbid -> skipblock. We need to run through them
+	// looking at all the SkipchainIDs, taking the block with the highest index
+	// for each SkipchainID.
+	gen := make(map[string]*SkipBlock)
 	for _, sb := range chains {
-		reply.SkipChains = append(reply.SkipChains, sb)
+		k := string(sb.SkipChainID())
+		if cur, ok := gen[k]; ok {
+			if cur.Index < sb.Index {
+				gen[k] = sb
+			}
+		} else {
+			gen[k] = sb
+		}
+	}
+
+	reply := &GetAllSkipchainsReply{
+		SkipChains: make([]*SkipBlock, len(gen)),
+	}
+	i := 0
+	for _, sb := range gen {
+		reply.SkipChains[i] = sb
+		i++
 	}
 	return reply, nil
 }
