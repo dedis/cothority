@@ -56,7 +56,11 @@ public class IdentityEd25519 implements Identity {
     }
 
     public String toString(){
-        return pub.toString();
+        return String.format("%s:%s", this.typeString(), this.pub.toString().toLowerCase());
+    }
+
+    public String typeString() {
+        return "ed25519";
     }
 
     @Override

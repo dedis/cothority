@@ -35,9 +35,8 @@ func init() {
 // Service is the EventLog service.
 type Service struct {
 	*onet.ServiceProcessor
-	omni          *omniledger.Service
-	blockInterval time.Duration
-	bucketSize    int
+	omni       *omniledger.Service
+	bucketSize int
 }
 
 const defaultBlockInterval = 5 * time.Second
@@ -45,17 +44,16 @@ const defaultBlockInterval = 5 * time.Second
 // waitForBlock is for use in tests; it will sleep long enough to be sure that
 // a block has been created.
 func (s *Service) waitForBlock() {
-	time.Sleep(5 * s.blockInterval)
+	time.Sleep(5 * s.omni.GetDefaultBlockInterval())
 }
 
 // Init will create a new event log. Logs will be accepted
 // from the signers mentioned in the request.
 func (s *Service) Init(req *InitRequest) (*InitResponse, error) {
 	cg := &omniledger.CreateGenesisBlock{
-		Version:       omniledger.CurrentVersion,
-		GenesisDarc:   req.Owner,
-		Roster:        req.Roster,
-		BlockInterval: s.blockInterval,
+		Version:     omniledger.CurrentVersion,
+		GenesisDarc: req.Owner,
+		Roster:      req.Roster,
 	}
 	cgr, err := s.omni.CreateGenesisBlock(cg)
 	if err != nil {
@@ -98,8 +96,7 @@ func (s *Service) decodeAndCheckEvent(eventBuf []byte) (*Event, error) {
 	}
 	when := time.Unix(0, event.When)
 	now := time.Now()
-	//log.LLvl2("when", when, "now", now, "sub", now.Sub(when), "int", s.blockInterval)
-	if when.Before(now.Add(-10 * s.blockInterval)) {
+	if when.Before(now.Add(-10 * s.omni.GetDefaultBlockInterval())) {
 		return nil, errors.New("event timestamp too long ago")
 	}
 	if when.After(now) {

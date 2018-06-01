@@ -4,6 +4,7 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
+import javax.xml.bind.DatatypeConverter;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -84,7 +85,7 @@ public class IdentityX509EC implements Identity {
     }
 
     public String toString(){
-        return pubKey.getEncoded().toString();
+        return String.format("%s:%s", this.typeString(), DatatypeConverter.printHexBinary(this.pubKey.getEncoded()).toLowerCase());
     }
 
     @Override
@@ -94,5 +95,9 @@ public class IdentityX509EC implements Identity {
         if (!(other instanceof IdentityX509EC))return false;
         IdentityX509EC otherEd = (IdentityX509EC) other;
         return Arrays.equals(pubKey.getEncoded(), otherEd.pubKey.getEncoded());
+    }
+
+    public String typeString() {
+        return "x509ec";
     }
 }

@@ -5,7 +5,6 @@ import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -21,7 +20,7 @@ class EventLogTest {
     }
 
     @Test
-    void testLog() {
+    void testLog() throws CothorityCryptoException, CothorityCommunicationException {
         Event event = new Event("login", "alice");
         this.el.log(event);
     }

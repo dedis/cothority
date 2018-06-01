@@ -8,7 +8,6 @@ import ch.epfl.dedis.proto.ServerIdentityProto;
 import com.google.protobuf.ByteString;
 import com.moandjiezana.toml.Toml;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;

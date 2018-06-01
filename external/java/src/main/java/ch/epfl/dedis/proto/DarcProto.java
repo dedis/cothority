@@ -59,7 +59,7 @@ public final class DarcProto {
      * 	 BaseID is the ID of the first darc of this Series
      * </pre>
      *
-     * <code>required bytes baseid = 3;</code>
+     * <code>optional bytes baseid = 3;</code>
      */
     boolean hasBaseid();
     /**
@@ -67,7 +67,7 @@ public final class DarcProto {
      * 	 BaseID is the ID of the first darc of this Series
      * </pre>
      *
-     * <code>required bytes baseid = 3;</code>
+     * <code>optional bytes baseid = 3;</code>
      */
     com.google.protobuf.ByteString getBaseid();
 
@@ -482,7 +482,7 @@ public final class DarcProto {
      * 	 BaseID is the ID of the first darc of this Series
      * </pre>
      *
-     * <code>required bytes baseid = 3;</code>
+     * <code>optional bytes baseid = 3;</code>
      */
     public boolean hasBaseid() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
@@ -492,7 +492,7 @@ public final class DarcProto {
      * 	 BaseID is the ID of the first darc of this Series
      * </pre>
      *
-     * <code>required bytes baseid = 3;</code>
+     * <code>optional bytes baseid = 3;</code>
      */
     public com.google.protobuf.ByteString getBaseid() {
       return baseid_;
@@ -777,10 +777,6 @@ public final class DarcProto {
         return false;
       }
       if (!hasDescription()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasBaseid()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -1313,9 +1309,6 @@ public final class DarcProto {
         if (!hasDescription()) {
           return false;
         }
-        if (!hasBaseid()) {
-          return false;
-        }
         if (!hasPathdigest()) {
           return false;
         }
@@ -1460,7 +1453,7 @@ public final class DarcProto {
        * 	 BaseID is the ID of the first darc of this Series
        * </pre>
        *
-       * <code>required bytes baseid = 3;</code>
+       * <code>optional bytes baseid = 3;</code>
        */
       public boolean hasBaseid() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
@@ -1470,7 +1463,7 @@ public final class DarcProto {
        * 	 BaseID is the ID of the first darc of this Series
        * </pre>
        *
-       * <code>required bytes baseid = 3;</code>
+       * <code>optional bytes baseid = 3;</code>
        */
       public com.google.protobuf.ByteString getBaseid() {
         return baseid_;
@@ -1480,7 +1473,7 @@ public final class DarcProto {
        * 	 BaseID is the ID of the first darc of this Series
        * </pre>
        *
-       * <code>required bytes baseid = 3;</code>
+       * <code>optional bytes baseid = 3;</code>
        */
       public Builder setBaseid(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -1496,7 +1489,7 @@ public final class DarcProto {
        * 	 BaseID is the ID of the first darc of this Series
        * </pre>
        *
-       * <code>required bytes baseid = 3;</code>
+       * <code>optional bytes baseid = 3;</code>
        */
       public Builder clearBaseid() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -9424,7 +9417,7 @@ public final class DarcProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\ndarc.proto\"\324\001\n\004Darc\022\017\n\007version\030\001 \002(\004\022\023" +
-      "\n\013description\030\002 \002(\014\022\016\n\006baseid\030\003 \002(\014\022\037\n\005r" +
+      "\n\013description\030\002 \002(\014\022\016\n\006baseid\030\003 \001(\014\022\037\n\005r" +
       "ules\030\004 \003(\0132\020.Darc.RulesEntry\022\023\n\004path\030\005 \003" +
       "(\0132\005.Darc\022\022\n\npathdigest\030\006 \002(\014\022\036\n\nsignatu" +
       "res\030\007 \003(\0132\n.Signature\032,\n\nRulesEntry\022\013\n\003k" +

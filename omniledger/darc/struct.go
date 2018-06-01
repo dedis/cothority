@@ -55,8 +55,7 @@ type Darc struct {
 	// Darc.  These are ordered from the oldest to the newest, i.e.
 	// Path[0] should be the base Darc.
 	Path []*Darc
-	// PathDigest is the digest of Path, it should be set when Path has
-	// length 0.
+	// PathDigest is the digest of Path, it should be always set.
 	PathDigest []byte
 	// Signature is calculated on the Request-representation of the darc.
 	// It needs to be created by identities that have the "_evolve" action

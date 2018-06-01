@@ -4,6 +4,8 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
+import javax.xml.bind.DatatypeConverter;
+
 public class IdentityDarc implements Identity {
     private DarcId darcID;
 
@@ -82,5 +84,13 @@ public class IdentityDarc implements Identity {
     @Override
     public int hashCode() {
         return darcID != null ? darcID.hashCode() : 0;
+    }
+
+    public String toString() {
+        return String.format("%s:%s", this.typeString(), DatatypeConverter.printHexBinary(this.darcID.getId()).toLowerCase());
+    }
+
+    public String typeString() {
+        return "darc";
     }
 }

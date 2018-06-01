@@ -7,12 +7,14 @@ import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Darc {
     private int version;
@@ -40,8 +42,15 @@ public class Darc {
         this.baseID = null;
         this.rules = rules;
         this.path = new ArrayList<>();
-        this.pathDigest = new byte[0];
         this.signatures = new ArrayList<>();
+
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(new byte[0]);
+            this.pathDigest = digest.digest();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -60,7 +69,9 @@ public class Darc {
         this.path.forEach((d) -> b.addPath(d.toProto()));
         b.setPathdigest(ByteString.copyFrom(this.pathDigest));
         this.signatures.forEach((s) -> b.addSignatures(s.toProto()));
-        b.setBaseid(ByteString.copyFrom(this.getBaseId().getId()));
+        if (this.baseID != null) {
+            b.setBaseid(ByteString.copyFrom(this.baseID.getId()));
+        }
         return b.build();
     }
 
@@ -98,8 +109,8 @@ public class Darc {
         return this.baseID;
     }
 
-    private List<String> sortedAction() {
-        return this.rules.keySet().stream().sorted().collect(Collectors.toList());
+    private Stream<String> sortedAction() {
+        return this.rules.keySet().stream().sorted();
     }
 
     private static byte[] intToArr(int x) {

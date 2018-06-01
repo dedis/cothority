@@ -16,7 +16,7 @@ message Darc {
   // 	 Darc itself will never depend on any of the data in here.
   required bytes description = 2;
   // 	 BaseID is the ID of the first darc of this Series
-  required bytes baseid = 3;
+  optional bytes baseid = 3;
   // 	 Rules map an action to an expression.
   // An action is a string that should be associated with an expression. The
   // application typically will define the action but there are two actions that

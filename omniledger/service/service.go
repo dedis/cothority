@@ -207,6 +207,11 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 	return
 }
 
+// GetDefaultBlockInterval returns the default block interval.
+func (s *Service) GetDefaultBlockInterval() time.Duration {
+	return defaultInterval
+}
+
 // SetPropagationTimeout overrides the default propagation timeout that is used
 // when a new block is announced to the nodes.
 func (s *Service) SetPropagationTimeout(p time.Duration) {
@@ -388,7 +393,7 @@ func (s *Service) updateCollection(msg network.Message) {
 		log.Error("Couldn't recreate state changes:", err.Error())
 		return
 	}
-	log.Lvlf2("%s: Storing %d state changes", s.ServerIdentity(), len(scs))
+	log.Lvlf2("%s: Storing state changes %v", s.ServerIdentity(), scs)
 	for _, sc := range scs {
 		err = cdb.Store(&sc)
 		if err != nil {

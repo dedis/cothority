@@ -21,4 +21,8 @@ public interface Identity {
     DarcProto.Identity toProto();
 
     boolean equals(Object other);
+
+    String typeString();
+
+    String toString();
 }
