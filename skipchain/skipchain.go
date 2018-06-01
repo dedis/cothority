@@ -536,31 +536,14 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, 
 	return nil, errors.New("No block with this index found")
 }
 
-// GetAllSkipchains returns all known last blocks of skipchains.
-func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, error) {
-	chains, err := s.db.getAll()
+// GetAllSkipchains returns the latest block of all known skipchains.
+func (s *Service) GetAllSkipchains(_ *GetAllSkipchains) (*GetAllSkipchainsReply, error) {
+	gen, err := s.db.GetAllSkipchains()
 	if err != nil {
 		return nil, err
 	}
 
-	// chains is now a map of sbid -> skipblock. We need to run through them
-	// looking at all the SkipchainIDs, taking the block with the highest index
-	// for each SkipchainID.
-	gen := make(map[string]*SkipBlock)
-	for _, sb := range chains {
-		k := string(sb.SkipChainID())
-		if cur, ok := gen[k]; ok {
-			if cur.Index < sb.Index {
-				gen[k] = sb
-			}
-		} else {
-			gen[k] = sb
-		}
-	}
-
-	reply := &GetAllSkipchainsReply{
-		SkipChains: make([]*SkipBlock, len(gen)),
-	}
+	reply := &GetAllSkipchainsReply{SkipChains: make([]*SkipBlock, len(gen))}
 	i := 0
 	for _, sb := range gen {
 		reply.SkipChains[i] = sb
@@ -663,12 +646,12 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, error) {
 				sis[si.ID.String()] = si
 			}
 		}
-		// TODO: this is really not good and will fail if we have too many blocks.
-		sbs, err := s.db.getAll()
+
+		gen, err := s.db.GetAllSkipchains()
 		if err != nil {
-			return nil, errors.New("couldn't load db of all blocks")
+			return nil, err
 		}
-		for sc := range sbs {
+		for sc := range gen {
 			for _, si := range s.db.GetByID(SkipBlockID(sc)).Roster.List {
 				sis[si.ID.String()] = si
 			}

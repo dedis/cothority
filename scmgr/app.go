@@ -452,7 +452,7 @@ func dnsList(c *cli.Context) error {
 		short := !c.Bool("long")
 		log.Info(g.Sprint(short))
 		sub := sbli{}
-		sbs, err := cfg.Db.GetSkipchains()
+		sbs, err := cfg.Db.GetAll()
 		if err != nil {
 			return err
 		}
@@ -541,7 +541,7 @@ func dnsUpdate(c *cli.Context) error {
 	var sisNew []*network.ServerIdentity
 
 	// Get ServerIdentities from all skipblocks
-	sbs, err := cfg.Db.GetSkipchains()
+	sbs, err := cfg.Db.GetAll()
 	if err != nil {
 		return err
 	}
@@ -756,15 +756,13 @@ func (cfg *config) save(c *cli.Context) error {
 
 func (cfg *config) getSortedGenesis() []*skipchain.SkipBlock {
 	genesis := sbl{}
-	sbs, err := cfg.Db.GetSkipchains()
+	sbs, err := cfg.Db.GetAllSkipchains()
 	if err != nil {
 		log.Error(err)
 		return nil
 	}
 	for _, sb := range sbs {
-		if sb.Index == 0 {
-			genesis = append(genesis, sb)
-		}
+		genesis = append(genesis, sb)
 	}
 	sort.Sort(genesis)
 	return genesis

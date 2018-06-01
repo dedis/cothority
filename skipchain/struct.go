@@ -677,7 +677,7 @@ func (db *SkipBlockDB) latestUpdate(sb *SkipBlock) {
 	}
 }
 
-// Length returns the actual length using mutexes
+// Length returns the number of blocks in the database.
 func (db *SkipBlockDB) Length() int {
 	var i int
 	db.View(func(tx *bolt.Tx) error {
@@ -860,11 +860,6 @@ func (db *SkipBlockDB) GetFuzzy(id string) (*SkipBlock, error) {
 	return sb, nil
 }
 
-// GetSkipchains returns all latest skipblocks from all skipchains.
-func (db *SkipBlockDB) GetSkipchains() (map[string]*SkipBlock, error) {
-	return db.getAll()
-}
-
 // storeToTx stores the skipblock into the database.
 // An error is returned on failure.
 // The caller must ensure that this function is called from within a valid transaction.
@@ -895,8 +890,12 @@ func (db *SkipBlockDB) getFromTx(tx *bolt.Tx, sbID SkipBlockID) (*SkipBlock, err
 	return sbMsg.(*SkipBlock).Copy(), nil
 }
 
-// getAll returns all the data in the database as a map of (block id -> block)
-func (db *SkipBlockDB) getAll() (map[string]*SkipBlock, error) {
+// GetAll returns all the data in the database as a map of (block id -> block)
+//
+// Caution: this could be a huge amount of data. This should only be used
+// in diagnostic or test code where you know the size of the result that you
+// expect.
+func (db *SkipBlockDB) GetAll() (map[string]*SkipBlock, error) {
 	data := map[string]*SkipBlock{}
 	err := db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(db.bucketName))
@@ -917,4 +916,39 @@ func (db *SkipBlockDB) getAll() (map[string]*SkipBlock, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+// GetAllSkipchains returns each of the skipchains in the database
+// in the form of a map from skipblock ID to the latest block.
+func (db *SkipBlockDB) GetAllSkipchains() (map[string]*SkipBlock, error) {
+	gen := make(map[string]*SkipBlock)
+
+	// Loop over all blocks. If we see a new genesis block we
+	// have not seen, remember it. If we see a higher Index than what
+	// we have, replace it.
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(db.bucketName))
+		return b.ForEach(func(k, v []byte) error {
+			_, sbMsg, err := network.Unmarshal(v, cothority.Suite)
+			if err != nil {
+				return err
+			}
+			sb, ok := sbMsg.(*SkipBlock)
+			if ok {
+				k := string(sb.SkipChainID())
+				if cur, ok := gen[k]; ok {
+					if cur.Index < sb.Index {
+						gen[k] = sb
+					}
+				} else {
+					gen[k] = sb
+				}
+			}
+			return nil
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	return gen, nil
 }
