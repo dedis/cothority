@@ -1,13 +1,11 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
@@ -65,7 +63,6 @@ public class Darc {
         for (Map.Entry<String, byte[]> entry : this.rules.entrySet()) {
             b.putRules(entry.getKey(), ByteString.copyFrom(entry.getValue()));
         }
-        // TODO not sure if this will work, it's recursively calling toProto
         this.path.forEach((d) -> b.addPath(d.toProto()));
         b.setPathdigest(ByteString.copyFrom(this.pathDigest));
         this.signatures.forEach((s) -> b.addSignatures(s.toProto()));
@@ -81,7 +78,7 @@ public class Darc {
      *
      * @return sha256
      */
-    public DarcId getId() {
+    public DarcId getId() throws CothorityCryptoException {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             digest.update(Darc.intToArr(this.version));
@@ -96,13 +93,13 @@ public class Darc {
                 digest.update(expr);
             });
             return new DarcId(digest.digest());
-        } catch (NoSuchAlgorithmException | CothorityCryptoException e) {
+        } catch (NoSuchAlgorithmException e) {
             // TODO we should throw exceptions
             throw new RuntimeException(e);
         }
     }
 
-    public DarcId getBaseId() {
+    public DarcId getBaseId() throws CothorityCryptoException {
         if (this.version == 0 ) {
             return this.getId();
         }

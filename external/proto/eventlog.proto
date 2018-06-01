@@ -38,3 +38,14 @@ message Event {
 // LogResponse is the reply to LogRequest.
 message LogResponse {
 }
+
+// GetEventRequest is sent to get an event.
+message GetEventRequest {
+	required bytes skipchainid = 1;
+	required bytes key = 2;
+}
+
+// GetEventResponse is the reply of GetEventRequest.
+message GetEventResponse {
+	required Event event = 1;
+}

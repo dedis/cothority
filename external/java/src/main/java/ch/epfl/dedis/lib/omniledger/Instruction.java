@@ -61,8 +61,8 @@ public class Instruction {
             digest.update(this.objId.getDarcId().getId());
             digest.update(this.objId.getInstanceId());
             digest.update(this.nonce);
-            digest.update(intToArr(this.index));
-            digest.update(intToArr(this.length));
+            digest.update(intToArr4(this.index));
+            digest.update(intToArr4(this.length));
             List<Argument> args= new ArrayList<>();
             if (this.spawn != null) {
                 digest.update((byte)(0));
@@ -84,7 +84,7 @@ public class Instruction {
         }
     }
 
-    private static byte[] intToArr(int x) {
+    private static byte[] intToArr4(int x) {
         ByteBuffer b = ByteBuffer.allocate(4);
         b.order(ByteOrder.LITTLE_ENDIAN);
         b.putInt(x);

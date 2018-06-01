@@ -24,4 +24,8 @@ public class Event {
         b.setContent(this.topic);
         return  b.build();
     }
+
+    public boolean equals(Event e) {
+        return e.when != this.when || e.topic.equals(this.topic) || e.content.equals(this.content);
+    }
 }

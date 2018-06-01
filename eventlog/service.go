@@ -1,6 +1,7 @@
 package eventlog
 
 import (
+	"bytes"
 	"errors"
 	"time"
 
@@ -77,6 +78,38 @@ func (s *Service) Log(req *LogRequest) (*LogResponse, error) {
 		return nil, err
 	}
 	return &LogResponse{}, nil
+}
+
+// GetEvent asks omniledger for a stored event.
+func (s *Service) GetEvent(req *GetEventRequest) (*GetEventResponse, error) {
+	req2 := omniledger.GetProof{
+		Version: omniledger.CurrentVersion,
+		Key:     req.Key,
+		ID:      req.SkipchainID,
+	}
+	reply, err := s.omni.GetProof(&req2)
+	if err != nil {
+		return nil, err
+	}
+	k, vs, err := reply.Proof.KeyValue()
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal(k, req2.Key) {
+		return nil, errors.New("wrong key")
+	}
+	// TODO verify the proof
+	if len(vs) < 2 {
+		return nil, errors.New("not enough values")
+	}
+	e := Event{}
+	err = protobuf.Decode(vs[0], &e)
+	if err != nil {
+		return nil, err
+	}
+	return &GetEventResponse{
+		Event: e,
+	}, nil
 }
 
 const contractName = "eventlog"
@@ -216,7 +249,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		omni:             c.Service(omniledger.ServiceName).(*omniledger.Service),
 		bucketSize:       10,
 	}
-	if err := s.RegisterHandlers(s.Init, s.Log); err != nil {
+	if err := s.RegisterHandlers(s.Init, s.Log, s.GetEvent); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 

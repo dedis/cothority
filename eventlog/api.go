@@ -87,6 +87,19 @@ func (c *Client) Log(ev ...Event) ([]LogID, error) {
 	return out, nil
 }
 
+// GetEvent asks the service to retrieve an event.
+func (c *Client) GetEvent(id []byte) (*Event, error) {
+	reply := &GetEventResponse{}
+	req := &GetEventRequest{
+		SkipchainID: c.ID,
+		Key:         id,
+	}
+	if err := c.SendProtobuf(c.roster.List[0], req, reply); err != nil {
+		return nil, err
+	}
+	return &reply.Event, nil
+}
+
 func makeTx(msgs []Event, darcID darc.ID, signers []*darc.Signer) (*omniledger.ClientTransaction, error) {
 	// We need the identity part of the signatures before
 	// calling ToDarcRequest() below, because the identities

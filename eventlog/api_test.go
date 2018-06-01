@@ -62,6 +62,12 @@ func TestClient_Log(t *testing.T) {
 	require.Nil(t, protobuf.Decode(bucketBuf, &b))
 	require.Equal(t, 2, len(b.EventRefs))
 	require.Equal(t, 0, len(b.Prev))
+
+	// Use the client API to get the event back
+	for _, key := range ids {
+		_, err = c.GetEvent(key)
+		require.Nil(t, err)
+	}
 }
 
 // TODO this test only passes when the block interval is long enough

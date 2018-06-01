@@ -2,7 +2,6 @@ package eventlog
 
 import (
 	"testing"
-	"time"
 
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
@@ -107,7 +106,6 @@ func newSer(t *testing.T) *ser {
 
 	for _, sv := range s.local.GetServices(s.hosts, sid) {
 		service := sv.(*Service)
-		service.blockInterval = time.Second
 		s.services = append(s.services, service)
 	}
 

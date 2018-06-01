@@ -56,8 +56,8 @@ public class IdentityX509EC implements Identity {
      * @return
      */
     public boolean verify(byte[] msg, byte[] signature) {
-        // TODO: it is interesting why client code need to verify keycard singature ? It should
-        // be verified at server side.
+        // TODO: it is interesting why client code need to verify keycard singature ?
+        // TODO It should be verified at server side.
         // TODO: verify the signature given the msg, the signature and our public byte-array.
         try {
             final Signature signature2 = Signature.getInstance("SHA384withECDSA");

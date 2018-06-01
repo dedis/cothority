@@ -15,6 +15,8 @@ func init() {
 		&InitResponse{},
 		&Event{},
 		&LogResponse{},
+		&GetEventRequest{},
+		&GetEventResponse{},
 	)
 }
 
@@ -56,6 +58,17 @@ type Event struct {
 
 // LogResponse is the reply to LogRequest.
 type LogResponse struct {
+}
+
+// GetEventRequest is sent to get an event.
+type GetEventRequest struct {
+	SkipchainID skipchain.SkipBlockID
+	Key         []byte
+}
+
+// GetEventResponse is the reply of GetEventRequest.
+type GetEventResponse struct {
+	Event Event
 }
 
 // NewEvent returns a new event with the current time sec correctly.

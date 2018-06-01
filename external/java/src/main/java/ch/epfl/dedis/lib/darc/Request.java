@@ -3,7 +3,6 @@ package ch.epfl.dedis.lib.darc;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
-import javax.xml.bind.DatatypeConverter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.List;
@@ -57,21 +56,4 @@ public class Request {
             throw new RuntimeException(e);
         }
     }
-
-    /*
-    public void print() {
-        System.out.print("baseId: ");
-        if (this.baseId != null) {
-            System.out.println(DatatypeConverter.printHexBinary(this.baseId.getId()));
-        }
-        System.out.println("action: " + this.action);
-        System.out.print("msg: ");
-        if (this.msg != null) {
-            System.out.println(DatatypeConverter.printHexBinary(this.msg));
-        }
-        this.identities.forEach((id) -> {
-            System.out.println(id.toString());
-        });
-    }
-    */
 }

@@ -10,8 +10,6 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import ch.epfl.dedis.proto.EventLogProto;
 
-import javax.xml.bind.DatatypeConverter;
-import javax.xml.crypto.Data;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,12 +20,12 @@ public class EventLog {
     private Roster roster;
     private Darc darc;
     private List<Signer> signers;
-    // private static int version = 1;
-    // private final Logger logger = LoggerFactory.getlogger(EventLog.class);
 
-    public EventLog(Roster roster, Signer signer) throws CothorityCommunicationException, CothorityCryptoException {
+    public EventLog(Roster roster, List<Signer> signers) throws CothorityCommunicationException, CothorityCryptoException {
         List<Identity> identities = new ArrayList<>();
-        identities.add(signer.getIdentity());
+        for (Signer signer : signers) {
+            identities.add(signer.getIdentity());
+        }
         Map<String, byte[]> rules = Darc.initRules(identities, new ArrayList<>());
         rules.put("Spawn_eventlog", rules.get("_evolve"));
 
@@ -37,10 +35,7 @@ public class EventLog {
         this.genesis = new SkipblockId(genesisBuf);
         this.roster = roster;
         this.darc = darc;
-
-        // TODO constructor should be able to support multiple signers
-        this.signers = new ArrayList<>();
-        this.signers.add(signer);
+        this.signers = signers;
     }
 
     private byte[] init(Roster roster, Darc ownerDarc) throws CothorityCommunicationException  {
@@ -80,6 +75,21 @@ public class EventLog {
                 out.add(instr.getObjId().toByteArray());
             }
             return out;
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
+    public Event get(byte[] key) throws CothorityCommunicationException {
+        EventLogProto.GetEventRequest.Builder b = EventLogProto.GetEventRequest.newBuilder();
+        b.setSkipchainid(ByteString.copyFrom(this.genesis.getId()));
+        b.setKey(ByteString.copyFrom(key));
+
+        ByteString msg = this.roster.sendMessage("EventLog/GetEventRequest", b.build());
+
+        try {
+            EventLogProto.Event event = EventLogProto.GetEventResponse.parseFrom(msg).getEvent();
+            return new Event(event.getWhen(), event.getTopic(), event.getContent());
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
