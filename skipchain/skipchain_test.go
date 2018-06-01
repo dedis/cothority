@@ -703,11 +703,11 @@ func TestService_AddFollow(t *testing.T) {
 	sig, err = schnorr.Sign(cothority.Suite, priv1, ssb.NewBlock.CalculateHash())
 	log.ErrFatal(err)
 	ssb.Signature = &sig
-	sbs, err := service.db.getAll()
-	log.ErrFatal(err)
-	for _, sb := range sbs {
-		services[1].db.Store(sb)
-	}
+	// sbs, err := service.db.getAll()
+	// log.ErrFatal(err)
+	// for _, sb := range sbs {
+	// 	services[1].db.Store(sb)
+	// }
 	master2, err := services[1].StoreSkipBlock(ssb)
 	log.ErrFatal(err)
 	require.True(t, services[1].db.GetByID(master1.Latest.Hash).ForwardLink[0].To.Equal(master2.Latest.Hash))

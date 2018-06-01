@@ -228,24 +228,43 @@ func TestClient_GetAllSkipchains(t *testing.T) {
 	defer l.CloseAll()
 
 	c := newTestClient(l)
-	log.Lvl1("Creating root and control chain")
+	log.Lvl1("Creating one chain")
 	sb1, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil, nil)
 	log.ErrFatal(err)
-	_, err = c.StoreSkipBlock(sb1, ro, nil)
+	r, err := c.StoreSkipBlock(sb1, ro, nil)
 	log.ErrFatal(err)
+	require.Equal(t, 1, r.Latest.Index)
+	// And add a second block onto this one (to find out if
+	// GetAllSkipchains returns only genesis blocks or all blocks).
+	r, err = c.StoreSkipBlock(sb1, ro, nil)
+	log.ErrFatal(err)
+	require.Equal(t, 2, r.Latest.Index)
+
 	sb2, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil, nil)
 	log.ErrFatal(err)
+	r, err = c.StoreSkipBlock(sb2, ro, nil)
+	log.ErrFatal(err)
+	require.Equal(t, 1, r.Latest.Index)
+
 	sb1id := sb1.SkipChainID()
 	sb2id := sb2.SkipChainID()
 
 	sbs, err := c.GetAllSkipchains(ro.List[0])
 	log.ErrFatal(err)
-	require.Equal(t, 3, len(sbs.SkipChains))
+	require.Equal(t, 2, len(sbs.SkipChains))
 	sbs1id := sbs.SkipChains[0].SkipChainID()
 	sbs2id := sbs.SkipChains[1].SkipChainID()
 	require.True(t, sb1id.Equal(sbs1id) || sb1id.Equal(sbs2id))
-	require.True(t, sb1id.Equal(sbs2id) || sb2id.Equal(sbs2id))
+	require.True(t, sb2id.Equal(sbs1id) || sb2id.Equal(sbs2id))
 	require.NotEmpty(t, sb1id, sb2id)
+
+	if sbs1id.Equal(sb1id) {
+		require.Equal(t, 2, sbs.SkipChains[0].Index)
+		require.Equal(t, 1, sbs.SkipChains[1].Index)
+	} else {
+		require.Equal(t, 1, sbs.SkipChains[0].Index)
+		require.Equal(t, 2, sbs.SkipChains[1].Index)
+	}
 }
 
 func TestClient_GetSingleBlockByIndex(t *testing.T) {

@@ -536,19 +536,18 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, 
 	return nil, errors.New("No block with this index found")
 }
 
-// GetAllSkipchains returns a list of all known skipchains
-func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, error) {
-	// Write all known skipblocks to a map, thus removing double blocks.
-	chains, err := s.db.getAll()
+// GetAllSkipchains returns the latest block of all known skipchains.
+func (s *Service) GetAllSkipchains(_ *GetAllSkipchains) (*GetAllSkipchainsReply, error) {
+	gen, err := s.db.GetAllSkipchains()
 	if err != nil {
 		return nil, err
 	}
 
-	reply := &GetAllSkipchainsReply{
-		SkipChains: make([]*SkipBlock, 0, len(chains)),
-	}
-	for _, sb := range chains {
-		reply.SkipChains = append(reply.SkipChains, sb)
+	reply := &GetAllSkipchainsReply{SkipChains: make([]*SkipBlock, len(gen))}
+	i := 0
+	for _, sb := range gen {
+		reply.SkipChains[i] = sb
+		i++
 	}
 	return reply, nil
 }
@@ -647,12 +646,12 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, error) {
 				sis[si.ID.String()] = si
 			}
 		}
-		// TODO: this is really not good and will fail if we have too many blocks.
-		sbs, err := s.db.getAll()
+
+		gen, err := s.db.GetAllSkipchains()
 		if err != nil {
-			return nil, errors.New("couldn't load db of all blocks")
+			return nil, err
 		}
-		for sc := range sbs {
+		for sc := range gen {
 			for _, si := range s.db.GetByID(SkipBlockID(sc)).Roster.List {
 				sis[si.ID.String()] = si
 			}
