@@ -13,8 +13,11 @@ import org.testcontainers.containers.wait.Wait;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+
+import static java.time.temporal.ChronoUnit.MINUTES;
 
 public class DockerTestServerController extends TestServerController {
     private static final Logger logger = LoggerFactory.getLogger(DockerTestServerController.class);
@@ -54,7 +57,9 @@ public class DockerTestServerController extends TestServerController {
             Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(logger);
             blockchainContainer.withLogConsumer(logConsumer);
             blockchainContainer.followOutput(logConsumer);
+            logger.info("Started at {}", LocalDateTime.now());
         } catch (Exception e) {
+            logger.info("Exception at {}", LocalDateTime.now());
             throw new IllegalStateException("Cannot start docker image with test server. Please ensure that local conodes are not running.", e);
         }
     }

@@ -60,6 +60,7 @@ type GetBlocks struct {
 	GetBlocks      *ProtoGetBlocks
 	GetBlocksReply chan []*SkipBlock
 	DB             *SkipBlockDB
+	replies        int
 }
 
 // NewProtocolExtendRoster prepares for a protocol that checks if a roster can
@@ -260,22 +261,19 @@ func (p *GetBlocks) HandleGetBlocks(msg ProtoStructGetBlocks) error {
 		}
 		next = s.ForwardLink[linkNum].To
 	}
-	if len(result) == 0 {
-		// Not found, so send no reply. Another conode will
-		// hopefully find it and send it.
-		return nil
-	}
-
 	return p.SendToParent(&ProtoGetBlocksReply{SkipBlocks: result})
 }
 
 // HandleGetBlocksReply contacts the service that a new block has arrived
 func (p *GetBlocks) HandleGetBlocksReply(msg ProtoStructGetBlocksReply) error {
 
-	// Take the first answer we get and then terminate the protocol,
-	// other answers will be discarded by onet.
-	p.GetBlocksReply <- msg.SkipBlocks
-	p.Done()
-
+	// Take the first non-nil answer, or send a nil reply if all nodes
+	// replied that they don't know the blocks.
+	p.replies++
+	blocksReply := msg.SkipBlocks
+	if p.replies == len(p.Children()) || len(blocksReply) > 0 {
+		p.GetBlocksReply <- blocksReply
+		p.Done()
+	}
 	return nil
 }

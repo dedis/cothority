@@ -13,7 +13,7 @@ import (
 func TestBroadcast(t *testing.T) {
 	for _, nbrNodes := range []int{3, 10, 14} {
 		local := onet.NewLocalTest(tSuite)
-		_, _, tree := local.GenTree(nbrNodes, false)
+		_, _, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, false)
 
 		pi, err := local.CreateProtocol("Broadcast", tree)
 		if err != nil {

@@ -51,7 +51,9 @@ func storeSkipBlock(t *testing.T, nbrServers int, fail bool) {
 	servers, el, genService := local.MakeSRS(cothority.Suite, nbrServers, skipchainSID)
 	services := local.GetServices(servers, skipchainSID)
 	for _, s := range services {
-		s.(*Service).bftTimeout = time.Second
+		if fail {
+			s.(*Service).bftTimeout = 10 * time.Second
+		}
 	}
 	service := genService.(*Service)
 	// This is the poor server who will play the part of the dead server
@@ -391,8 +393,9 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	sb1.Roster = roster2
 	ssbr, err = s2.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb1})
 	require.NotNil(t, err)
+	log.Lvl1("Correctly proposing new roster")
 	ssbr, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb1})
-	log.ErrFatal(err)
+	require.Nil(t, err)
 	require.NotNil(t, ssbr.Latest)
 
 	// Error testing
@@ -407,10 +410,12 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	sbErr.ParentBlockID = SkipBlockID([]byte{1, 2, 3})
 	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sbErr})
 	require.NotNil(t, err)
+	log.Lvl1("Trying to add to non-existing skipchain")
 	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbErr.ParentBlockID, NewBlock: sbErr})
 	// Last successful log...
 	require.NotNil(t, err)
 
+	log.Lvl1("Adding to existing skipchain")
 	sbErr = ssbr.Latest.Copy()
 	_, err = s3.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: ssbr.Latest.Hash, NewBlock: sbErr})
 	require.NotNil(t, err)

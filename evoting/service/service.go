@@ -167,7 +167,7 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		return nil, err
 	}
 	select {
-	case <-protocol.Done:
+	case <-protocol.Finished:
 		secret, _ := lib.NewSharedSecret(protocol.DKG)
 		req.Election.ID = genesis.Hash
 		req.Election.Master = req.ID
@@ -632,7 +632,7 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 		instance, _ := protocol.NewSetupDKG(node)
 		protocol := instance.(*protocol.SetupDKG)
 		go func() {
-			<-protocol.Done
+			<-protocol.Finished
 			secret, _ := lib.NewSharedSecret(protocol.DKG)
 			s.mutex.Lock()
 			s.storage.Secrets[sync.ID.Short()] = secret
@@ -696,7 +696,7 @@ func (s *Service) verify(id []byte, skipblock *skipchain.SkipBlock) bool {
 
 	err := transaction.Verify(skipblock.GenesisID, s.skipchain)
 	if err != nil {
-		log.Lvl2("verify failed:", err)
+		log.Lvl2(s.ServerIdentity(), "verify failed:", err)
 		return false
 	}
 	return true

@@ -24,13 +24,10 @@ import (
 	"github.com/dedis/cothority/skipchain"
 )
 
-var defaultTimeout = 5 * time.Second
+var defaultTimeout = 20 * time.Second
 
 func TestMain(m *testing.M) {
 	flag.Parse()
-	if testing.Short() {
-		defaultTimeout = 20 * time.Second
-	}
 	log.MainTest(m)
 }
 
@@ -128,9 +125,10 @@ func TestService(t *testing.T) {
 		Signature: idUser1Sig,
 	})
 	require.Equal(t, err, errOnlyLeader)
+	require.Nil(t, local.WaitDone(time.Second))
 
 	// Try to cast a vote for another person. (i.e. t.User != t.Ballot.User)
-	log.Lvl1("Casting vote for another user")
+	log.Lvl1("Casting vote for another user - this will fail")
 	ballot = &lib.Ballot{
 		User:  idUser2,
 		Alpha: k,
@@ -144,6 +142,7 @@ func TestService(t *testing.T) {
 	})
 	// expect a failure
 	require.NotNil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
 
 	// Cast a vote for no users at all: should work.
 	log.Lvl1("Casting empty ballot")
@@ -160,6 +159,7 @@ func TestService(t *testing.T) {
 		Signature: idUser1Sig,
 	})
 	require.Nil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
 
 	// Prepare a helper for testing voting.
 	vote := func(user uint32, bufCand []byte) *evoting.CastReply {
@@ -331,6 +331,7 @@ func TestEvolveRoster(t *testing.T) {
 	runAnElection(t, s0, rl, nodeKP, idAdmin)
 
 	// Try to change master as idAdmin2: it should not be allowed.
+	log.Lvl1("Check rejection of invalid admin")
 	idAdmin2Sig := generateSignature(nodeKP.Private, rl.ID, idAdmin2)
 	_, err = s0.Link(&evoting.Link{
 		ID:        &rl.ID,
@@ -342,8 +343,10 @@ func TestEvolveRoster(t *testing.T) {
 		Admins:    []uint32{idAdmin2},
 	})
 	require.NotNil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
 
 	// Change roster to all 7 nodes. Set new nodeKP. Change admin user.
+	log.Lvl1("Check changing of roster")
 	idAdminSig := generateSignature(nodeKP.Private, rl.ID, idAdmin)
 	nodeKP = key.NewKeyPair(cothority.Suite)
 	rl, err = s0.Link(&evoting.Link{

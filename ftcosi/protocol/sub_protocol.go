@@ -183,8 +183,8 @@ loop:
 
 			isOwnCommitment := commitment.TreeNode.ID.Equal(p.TreeNode().ID)
 
-			if commitment.TreeNode.Parent != p.TreeNode() && !isOwnCommitment {
-				log.Lvl2("received a Commitment from node", commitment.ServerIdentity,
+			if !commitment.TreeNode.Parent.Equal(p.TreeNode()) && !isOwnCommitment {
+				log.Lvl2(p.ServerIdentity(), "received a Commitment from node", commitment.ServerIdentity,
 					"that is neither a children nor itself, ignored")
 				break //discards it
 			}
@@ -303,7 +303,7 @@ loop:
 		// send response to super-protocol
 		if len(responses) != 1 {
 			return fmt.Errorf(
-				"root node in subprotocol should have received 1 response, but received %v",
+				"root node in subprotocol should have received 1 response, but received %d",
 				len(responses))
 		}
 		p.subResponse <- responses[0]
@@ -326,7 +326,6 @@ loop:
 			return err
 		}
 	}
-
 	return nil
 }
 

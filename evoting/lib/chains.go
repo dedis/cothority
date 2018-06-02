@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
 
 	"github.com/dedis/cothority/skipchain"
@@ -64,6 +65,10 @@ func Store(s *skipchain.Service, ID skipchain.SkipBlockID, transaction *Transact
 	block := latest.Copy()
 	block.Data = enc
 	block.GenesisID = block.SkipChainID()
+	if transaction.Master != nil {
+		log.Lvl2("Setting new roster for master skipchain.")
+		block.Roster = transaction.Master.Roster
+	}
 	block.Index++
 	// Using an unset LatestID with block.GenesisID set is to ensure concurrent
 	// append.
