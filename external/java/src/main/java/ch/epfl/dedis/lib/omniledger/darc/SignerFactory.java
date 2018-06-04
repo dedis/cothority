@@ -1,4 +1,4 @@
-package ch.epfl.dedis.lib.darc;
+package ch.epfl.dedis.lib.omniledger.darc;
 
 import java.util.Arrays;
 

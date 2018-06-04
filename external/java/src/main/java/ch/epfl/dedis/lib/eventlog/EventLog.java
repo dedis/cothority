@@ -2,7 +2,7 @@ package ch.epfl.dedis.lib.eventlog;
 
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.lib.darc.*;
+import ch.epfl.dedis.lib.omniledger.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.omniledger.*;

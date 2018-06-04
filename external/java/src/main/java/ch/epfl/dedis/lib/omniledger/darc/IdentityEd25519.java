@@ -1,4 +1,4 @@
-package ch.epfl.dedis.lib.darc;
+package ch.epfl.dedis.lib.omniledger.darc;
 
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.Ed25519Point;

@@ -1,8 +1,8 @@
 package ch.epfl.dedis.lib.omniledger;
 
-import ch.epfl.dedis.lib.darc.Identity;
-import ch.epfl.dedis.lib.darc.Request;
-import ch.epfl.dedis.lib.darc.Signature;
+import ch.epfl.dedis.lib.omniledger.darc.Identity;
+import ch.epfl.dedis.lib.omniledger.darc.Request;
+import ch.epfl.dedis.lib.omniledger.darc.Signature;
 import ch.epfl.dedis.proto.TransactionProto;
 import com.google.protobuf.ByteString;
 

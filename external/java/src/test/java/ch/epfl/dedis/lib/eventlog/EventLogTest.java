@@ -1,8 +1,8 @@
 package ch.epfl.dedis.lib.eventlog;
 
 import ch.epfl.dedis.lib.Local;
-import ch.epfl.dedis.lib.darc.Signer;
-import ch.epfl.dedis.lib.darc.SignerEd25519;
+import ch.epfl.dedis.lib.omniledger.darc.Signer;
+import ch.epfl.dedis.lib.omniledger.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.BeforeEach;

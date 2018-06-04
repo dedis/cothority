@@ -1,6 +1,6 @@
 package ch.epfl.dedis.lib.omniledger;
 
-import ch.epfl.dedis.lib.darc.DarcId;
+import ch.epfl.dedis.lib.omniledger.darc.DarcId;
 import ch.epfl.dedis.proto.TransactionProto;
 import com.google.protobuf.ByteString;
 

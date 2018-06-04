@@ -1,7 +1,6 @@
-package ch.epfl.dedis.lib.darc;
+package ch.epfl.dedis.lib.omniledger.darc;
 
 import ch.epfl.dedis.lib.Sha256id;
-import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
 /**
