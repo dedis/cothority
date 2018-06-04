@@ -15,6 +15,7 @@ option java_outer_classname = "EventLogProto";
 message InitRequest {
   required Darc owner = 1;
   required Roster roster = 2;
+  required sint64 blockinterval = 3;
 }
 
 // InitResponse is the reply to InitRequest.

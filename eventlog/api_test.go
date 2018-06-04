@@ -12,6 +12,10 @@ import (
 	"gopkg.in/dedis/cothority.v2/skipchain"
 )
 
+// Use this block interval for logic tests. Stress test often use a different
+// block interval.
+var testBlockInterval = 100 * time.Millisecond
+
 func TestClient_Log(t *testing.T) {
 	s := newSer(t)
 	leader := s.services[0]
@@ -19,7 +23,7 @@ func TestClient_Log(t *testing.T) {
 
 	owner := darc.NewSignerEd25519(nil, nil)
 	c := NewClient(s.roster)
-	err := c.Init(owner)
+	err := c.Init(owner, testBlockInterval)
 	require.Nil(t, err)
 
 	ids, err := c.Log(NewEvent("auth", "user alice logged out"),
@@ -78,7 +82,7 @@ func TestClient_Log1000(t *testing.T) {
 
 	owner := darc.NewSignerEd25519(nil, nil)
 	c := NewClient(s.roster)
-	err := c.Init(owner)
+	err := c.Init(owner, time.Second)
 	require.Nil(t, err)
 
 	logCount := 1000
@@ -86,8 +90,8 @@ func TestClient_Log1000(t *testing.T) {
 		_, err := c.Log(NewEvent("auth", fmt.Sprintf("user %v logged in", ct)))
 		require.Nil(t, err)
 	}
-	leader.waitForBlock()
-	leader.waitForBlock()
+	leader.waitForBlock(c.ID)
+	leader.waitForBlock(c.ID)
 
 	// Fetch index, and check its length.
 	idx := checkProof(t, leader.omni, indexKey.Slice(), c.ID)

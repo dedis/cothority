@@ -127,8 +127,12 @@ func (c *collectionDB) Store(t *StateChange) error {
 	return err
 }
 
-func (c *collectionDB) GetValueContract(key []byte) (value, contract []byte, err error) {
-	proof, err := c.coll.Get(key).Record()
+func (c *collectionDB) GetValueContract(key []byte) ([]byte, []byte, error) {
+	return getValueContract(c.coll, key)
+}
+
+func getValueContract(coll collection.Collection, key []byte) (value, contract []byte, err error) {
+	proof, err := coll.Get(key).Record()
 	if err != nil {
 		return
 	}

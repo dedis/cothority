@@ -1,6 +1,8 @@
 package eventlog
 
 import (
+	"time"
+
 	"github.com/dedis/protobuf"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	"github.com/dedis/student_18_omniledger/omniledger/darc/expression"
@@ -45,13 +47,14 @@ func AddWriter(r darc.Rules, expr expression.Expr) darc.Rules {
 // Init initialises an event logging skipchain. A sucessful call
 // updates the ID, Signer and Darc fields of the Client. The new
 // skipchain has a Darc that requires one signature from owner.
-func (c *Client) Init(owner *darc.Signer) error {
+func (c *Client) Init(owner *darc.Signer, blockInterval time.Duration) error {
 	rules := darc.InitRules([]*darc.Identity{owner.Identity()}, []*darc.Identity{})
 	d := darc.NewDarc(AddWriter(rules, nil), []byte("eventlog owner"))
 
 	msg := &InitRequest{
-		Owner:  *d,
-		Roster: *c.roster,
+		Owner:         *d,
+		Roster:        *c.roster,
+		BlockInterval: blockInterval,
 	}
 	reply := &InitResponse{}
 	if err := c.SendProtobuf(c.roster.List[0], msg, reply); err != nil {

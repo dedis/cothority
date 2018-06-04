@@ -18,7 +18,6 @@ import (
 	"gopkg.in/dedis/onet.v2/network"
 	"gopkg.in/satori/go.uuid.v1"
 
-	"github.com/dedis/protobuf"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 )
@@ -205,11 +204,6 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		Proof:   *proof,
 	}
 	return
-}
-
-// GetDefaultBlockInterval returns the default block interval.
-func (s *Service) GetDefaultBlockInterval() time.Duration {
-	return defaultInterval
 }
 
 // SetPropagationTimeout overrides the default propagation timeout that is used
@@ -426,45 +420,22 @@ func (s *Service) db() *skipchain.SkipBlockDB {
 	return s.skService().GetDB()
 }
 
-func (s *Service) loadConfig(scID skipchain.SkipBlockID) (*Config, error) {
-	coll := s.getCollection(scID)
-	// Find the genesis-darc ID.
-	val, contract, err := coll.GetValueContract(GenesisReferenceID.Slice())
-	if err != nil {
-		return nil, err
+// LoadConfig loads the configuration from a skipchain ID.
+func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*Config, error) {
+	collDb := s.getCollection(scID)
+	if collDb == nil {
+		return nil, errors.New("nil collection DB")
 	}
-	if string(contract) != ContractConfigID {
-		return nil, errors.New("did not get " + ContractConfigID)
-	}
-	if len(val) != 32 {
-		return nil, errors.New("value has a invalid length")
-	}
-	// Use the genesis-darc ID to create the config key and read the config.
-	configID := ObjectID{
-		DarcID:     darc.ID(val),
-		InstanceID: OneNonce,
-	}
-	val, contract, err = coll.GetValueContract(configID.Slice())
-	if err != nil {
-		return nil, err
-	}
-	if string(contract) != ContractConfigID {
-		return nil, errors.New("did not get " + ContractConfigID)
-	}
-	config := Config{}
-	err = protobuf.Decode(val, &config)
-	if err != nil {
-		return nil, err
-	}
-	return &config, nil
+	return LoadConfigFromColl(collDb.coll)
 }
 
-func (s *Service) loadBlockInterval(scID skipchain.SkipBlockID) (time.Duration, error) {
-	config, err := s.loadConfig(scID)
-	if err != nil {
-		return defaultInterval, err
+// LoadBlockInterval loads the block interval from the skipchain ID.
+func (s *Service) LoadBlockInterval(scID skipchain.SkipBlockID) (time.Duration, error) {
+	collDb := s.getCollection(scID)
+	if collDb == nil {
+		return defaultInterval, errors.New("nil collection DB")
 	}
-	return config.BlockInterval, nil
+	return LoadBlockIntervalFromColl(collDb.coll)
 }
 
 func (s *Service) loadLatestDarc(sid skipchain.SkipBlockID, dID darc.ID) (*darc.Darc, error) {
@@ -554,7 +525,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		return false
 	}
 	ctx := body.Transactions
-	cdb := s.getCollection(newSB.Hash)
+	cdb := s.getCollection(newSB.SkipChainID())
 	mtr, _, scs, err := s.createStateChanges(cdb.coll, ctx)
 	if err != nil {
 		log.Error("Couldn't create state changes:", err)
@@ -587,7 +558,7 @@ clientTransactions:
 		for _, instr := range ct.Instructions {
 			contract, _, err := instr.GetContractState(cdbI)
 			if err != nil {
-				log.Lvl1("Couldn't get contract type of instruction")
+				log.Error("Couldn't get contract type of instruction")
 				continue clientTransactions
 			}
 
@@ -595,7 +566,7 @@ clientTransactions:
 			// If the leader does not have a verifier for this contract, it drops the
 			// transaction.
 			if !exists {
-				log.Lvl1("Leader is dropping instruction of unknown contract:", contract)
+				log.Error("Leader is dropping instruction of unknown contract:", contract)
 				continue clientTransactions
 			}
 			// Now we call the contract function with the data of the key.
@@ -613,12 +584,12 @@ clientTransactions:
 			}
 			scs, _, err := g(cdbI, instr, nil)
 			if err != nil {
-				log.Lvl1("Call to contract returned error:", err)
+				log.Error("Call to contract returned error:", err)
 				continue clientTransactions
 			}
 			for _, sc := range scs {
 				if err := storeInColl(cdbI, &sc); err != nil {
-					log.Lvl1("failed to add to collections with error: " + err.Error())
+					log.Error("failed to add to collections with error: " + err.Error())
 					continue clientTransactions
 				}
 			}
@@ -670,7 +641,7 @@ func (s *Service) tryLoad() error {
 		if !isOurChain(sb) {
 			continue
 		}
-		interval, err := s.loadBlockInterval(sb.SkipChainID())
+		interval, err := s.LoadBlockInterval(sb.SkipChainID())
 		if err != nil {
 			return err
 		}

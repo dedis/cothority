@@ -34,8 +34,9 @@ func init() {
 
 // InitRequest is sent to start a new EventLog.
 type InitRequest struct {
-	Owner  darc.Darc
-	Roster onet.Roster
+	Owner         darc.Darc
+	Roster        onet.Roster
+	BlockInterval time.Duration
 }
 
 // InitResponse is the reply to InitRequest.

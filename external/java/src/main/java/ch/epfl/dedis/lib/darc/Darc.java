@@ -81,7 +81,7 @@ public class Darc {
     public DarcId getId() throws CothorityCryptoException {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(Darc.intToArr(this.version));
+            digest.update(Darc.intToArr8(this.version));
             digest.update(this.description);
             if (this.baseID != null) {
                 digest.update(this.baseID.getId());
@@ -110,7 +110,7 @@ public class Darc {
         return this.rules.keySet().stream().sorted();
     }
 
-    private static byte[] intToArr(int x) {
+    private static byte[] intToArr8(int x) {
         ByteBuffer b = ByteBuffer.allocate(8);
         b.order(ByteOrder.LITTLE_ENDIAN);
         b.putInt(x);

@@ -43,6 +43,15 @@ public final class EventLogProto {
      * <code>required .Roster roster = 2;</code>
      */
     ch.epfl.dedis.proto.RosterProto.RosterOrBuilder getRosterOrBuilder();
+
+    /**
+     * <code>required sint64 blockinterval = 3;</code>
+     */
+    boolean hasBlockinterval();
+    /**
+     * <code>required sint64 blockinterval = 3;</code>
+     */
+    long getBlockinterval();
   }
   /**
    * <pre>
@@ -61,6 +70,7 @@ public final class EventLogProto {
       super(builder);
     }
     private InitRequest() {
+      blockinterval_ = 0L;
     }
 
     @java.lang.Override
@@ -118,6 +128,11 @@ public final class EventLogProto {
                 roster_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              blockinterval_ = input.readSInt64();
               break;
             }
           }
@@ -187,6 +202,21 @@ public final class EventLogProto {
       return roster_ == null ? ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
     }
 
+    public static final int BLOCKINTERVAL_FIELD_NUMBER = 3;
+    private long blockinterval_;
+    /**
+     * <code>required sint64 blockinterval = 3;</code>
+     */
+    public boolean hasBlockinterval() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <code>required sint64 blockinterval = 3;</code>
+     */
+    public long getBlockinterval() {
+      return blockinterval_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -198,6 +228,10 @@ public final class EventLogProto {
         return false;
       }
       if (!hasRoster()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasBlockinterval()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -221,6 +255,9 @@ public final class EventLogProto {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeMessage(2, getRoster());
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeSInt64(3, blockinterval_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -236,6 +273,10 @@ public final class EventLogProto {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getRoster());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(3, blockinterval_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -263,6 +304,11 @@ public final class EventLogProto {
         result = result && getRoster()
             .equals(other.getRoster());
       }
+      result = result && (hasBlockinterval() == other.hasBlockinterval());
+      if (hasBlockinterval()) {
+        result = result && (getBlockinterval()
+            == other.getBlockinterval());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -281,6 +327,11 @@ public final class EventLogProto {
       if (hasRoster()) {
         hash = (37 * hash) + ROSTER_FIELD_NUMBER;
         hash = (53 * hash) + getRoster().hashCode();
+      }
+      if (hasBlockinterval()) {
+        hash = (37 * hash) + BLOCKINTERVAL_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getBlockinterval());
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -429,6 +480,8 @@ public final class EventLogProto {
           rosterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
+        blockinterval_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
         return this;
       }
 
@@ -469,6 +522,10 @@ public final class EventLogProto {
         } else {
           result.roster_ = rosterBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.blockinterval_ = blockinterval_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -517,6 +574,9 @@ public final class EventLogProto {
         if (other.hasRoster()) {
           mergeRoster(other.getRoster());
         }
+        if (other.hasBlockinterval()) {
+          setBlockinterval(other.getBlockinterval());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -527,6 +587,9 @@ public final class EventLogProto {
           return false;
         }
         if (!hasRoster()) {
+          return false;
+        }
+        if (!hasBlockinterval()) {
           return false;
         }
         if (!getOwner().isInitialized()) {
@@ -791,6 +854,38 @@ public final class EventLogProto {
           roster_ = null;
         }
         return rosterBuilder_;
+      }
+
+      private long blockinterval_ ;
+      /**
+       * <code>required sint64 blockinterval = 3;</code>
+       */
+      public boolean hasBlockinterval() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required sint64 blockinterval = 3;</code>
+       */
+      public long getBlockinterval() {
+        return blockinterval_;
+      }
+      /**
+       * <code>required sint64 blockinterval = 3;</code>
+       */
+      public Builder setBlockinterval(long value) {
+        bitField0_ |= 0x00000004;
+        blockinterval_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required sint64 blockinterval = 3;</code>
+       */
+      public Builder clearBlockinterval() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        blockinterval_ = 0L;
+        onChanged();
+        return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -4539,16 +4634,17 @@ public final class EventLogProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\016eventlog.proto\032\014roster.proto\032\ndarc.pro" +
-      "to\032\021transaction.proto\"<\n\013InitRequest\022\024\n\005" +
+      "to\032\021transaction.proto\"S\n\013InitRequest\022\024\n\005" +
       "owner\030\001 \002(\0132\005.Darc\022\027\n\006roster\030\002 \002(\0132\007.Ros" +
-      "ter\"\032\n\014InitResponse\022\n\n\002id\030\001 \002(\014\"J\n\nLogRe" +
-      "quest\022\023\n\013skipchainid\030\001 \002(\014\022\'\n\013transactio" +
-      "n\030\002 \002(\0132\022.ClientTransaction\"5\n\005Event\022\014\n\004" +
-      "when\030\001 \002(\022\022\r\n\005topic\030\002 \002(\t\022\017\n\007content\030\003 \002" +
-      "(\t\"\r\n\013LogResponse\"3\n\017GetEventRequest\022\023\n\013" +
-      "skipchainid\030\001 \002(\014\022\013\n\003key\030\002 \002(\014\")\n\020GetEve" +
-      "ntResponse\022\025\n\005event\030\001 \002(\0132\006.EventB$\n\023ch." +
-      "epfl.dedis.protoB\rEventLogProto"
+      "ter\022\025\n\rblockinterval\030\003 \002(\022\"\032\n\014InitRespon" +
+      "se\022\n\n\002id\030\001 \002(\014\"J\n\nLogRequest\022\023\n\013skipchai" +
+      "nid\030\001 \002(\014\022\'\n\013transaction\030\002 \002(\0132\022.ClientT" +
+      "ransaction\"5\n\005Event\022\014\n\004when\030\001 \002(\022\022\r\n\005top" +
+      "ic\030\002 \002(\t\022\017\n\007content\030\003 \002(\t\"\r\n\013LogResponse" +
+      "\"3\n\017GetEventRequest\022\023\n\013skipchainid\030\001 \002(\014" +
+      "\022\013\n\003key\030\002 \002(\014\")\n\020GetEventResponse\022\025\n\005eve" +
+      "nt\030\001 \002(\0132\006.EventB$\n\023ch.epfl.dedis.protoB" +
+      "\rEventLogProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -4570,7 +4666,7 @@ public final class EventLogProto {
     internal_static_InitRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_InitRequest_descriptor,
-        new java.lang.String[] { "Owner", "Roster", });
+        new java.lang.String[] { "Owner", "Roster", "Blockinterval", });
     internal_static_InitResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_InitResponse_fieldAccessorTable = new

@@ -21,7 +21,15 @@ public class EventLog {
     private Darc darc;
     private List<Signer> signers;
 
-    public EventLog(Roster roster, List<Signer> signers) throws CothorityCommunicationException, CothorityCryptoException {
+    /***
+     * Construct an EventLog client.
+     * @param roster The roster for the servers, check the Roster class documentation for the different ways of creating it.
+     * @param signers The list of signers that are authorised by the service to log events.
+     * @param blockInterval The blockInterval in nanoseconds.
+     * @throws CothorityCommunicationException
+     * @throws CothorityCryptoException
+     */
+    public EventLog(Roster roster, List<Signer> signers, long blockInterval) throws CothorityCommunicationException, CothorityCryptoException {
         List<Identity> identities = new ArrayList<>();
         for (Signer signer : signers) {
             identities.add(signer.getIdentity());
@@ -30,7 +38,7 @@ public class EventLog {
         rules.put("Spawn_eventlog", rules.get("_evolve"));
 
         Darc darc = new Darc(rules, "eventlog owner".getBytes());
-        byte[] genesisBuf  = this.init(roster, darc);
+        byte[] genesisBuf  = this.init(roster, darc, blockInterval);
 
         this.genesis = new SkipblockId(genesisBuf);
         this.roster = roster;
@@ -38,10 +46,11 @@ public class EventLog {
         this.signers = signers;
     }
 
-    private byte[] init(Roster roster, Darc ownerDarc) throws CothorityCommunicationException  {
+    private byte[] init(Roster roster, Darc ownerDarc, long blockInterval) throws CothorityCommunicationException  {
         EventLogProto.InitRequest.Builder b = EventLogProto.InitRequest.newBuilder();
         b.setRoster(roster.toProto());
         b.setOwner(ownerDarc.toProto());
+        b.setBlockinterval(blockInterval);
 
         ByteString msg = roster.sendMessage("EventLog/InitRequest", b.build());
 
@@ -53,12 +62,29 @@ public class EventLog {
         }
     }
 
+    /***
+     * Logs an event, the returned value is the ID of the event which can be retrieved later. Note that when this
+     * function returns, it does not mean the event is stored successfully in a block, use the get function to verify
+     * that the event is actually stored.
+     * @param event An event to log.
+     * @return An ID for the event.
+     * @throws CothorityCommunicationException
+     * @throws CothorityCryptoException
+     */
     public byte[] log(Event event) throws CothorityCommunicationException, CothorityCryptoException {
         List<Event> events = new ArrayList<>();
         events.add(event);
         return this.log(events).get(0);
     }
 
+    /***
+     * Logs a set of events, it returns an ID for every event. Note that when this function returns, it does not mean
+     * the event is stored successfully in a block, use the get function to verify that the event is actually stored.
+     * @param events A list of events for logging.
+     * @return A list of IDs for every event, in the same order.
+     * @throws CothorityCommunicationException
+     * @throws CothorityCryptoException
+     */
     public List<byte[]> log(List<Event> events) throws CothorityCommunicationException, CothorityCryptoException {
         ClientTransaction tx = makeTx(events, this.darc.getBaseId(), this.signers);
         EventLogProto.LogRequest.Builder b = EventLogProto.LogRequest.newBuilder();
@@ -80,6 +106,12 @@ public class EventLog {
         }
     }
 
+    /***
+     * Retrieves the stored event by key.
+     * @param key The key (ID) of the event, usually returned by log.
+     * @return The value of the event.
+     * @throws CothorityCommunicationException
+     */
     public Event get(byte[] key) throws CothorityCommunicationException {
         EventLogProto.GetEventRequest.Builder b = EventLogProto.GetEventRequest.newBuilder();
         b.setSkipchainid(ByteString.copyFrom(this.genesis.getId()));

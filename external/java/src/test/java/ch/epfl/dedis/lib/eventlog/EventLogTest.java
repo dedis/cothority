@@ -16,12 +16,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class EventLogTest {
 
     private EventLog el;
+    private long blockInterval;
 
     @BeforeEach
     void testInit() throws CothorityCryptoException, CothorityCommunicationException {
         List<Signer> signers =  new ArrayList<>();
         signers.add(new SignerEd25519());
-        this.el = new EventLog(Local.roster, signers);
+        this.blockInterval = 1000000000; // 1 second
+        this.el = new EventLog(Local.roster, signers, this.blockInterval);
     }
 
     @Test
@@ -29,7 +31,7 @@ class EventLogTest {
         Event event = new Event("login", "alice");
         byte[] key = this.el.log(event);
 
-        Thread.sleep(10 * 1000);
+        Thread.sleep(2 * this.blockInterval / 1000000);
 
         Event event2 = this.el.get(key);
         assertTrue(event.equals(event2));
@@ -43,7 +45,7 @@ class EventLogTest {
         for (int i = 0; i < n; i++) {
             keys.add(this.el.log(event));
         }
-        Thread.sleep(10 * 1000);
+        Thread.sleep(2 * this.blockInterval / 1000000);
         for (byte[] key : keys) {
             Event event2 = this.el.get(key);
             assertTrue(event.equals(event2));
