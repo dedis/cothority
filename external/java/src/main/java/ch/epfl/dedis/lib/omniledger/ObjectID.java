@@ -7,6 +7,9 @@ import com.google.protobuf.ByteString;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+/**
+ * The object ID of an OmniLedger object. It needs to be unique for every object.
+ */
 public class ObjectID {
     private DarcId darcId;
     private byte[] instanceId;

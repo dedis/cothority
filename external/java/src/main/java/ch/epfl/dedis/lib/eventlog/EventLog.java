@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * EventLog is the client class for interacting with the EventLog service.
+ */
 public class EventLog {
     private SkipblockId genesis;
     private Roster roster;

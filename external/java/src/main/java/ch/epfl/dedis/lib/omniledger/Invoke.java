@@ -4,6 +4,9 @@ import ch.epfl.dedis.proto.TransactionProto;
 
 import java.util.List;
 
+/**
+ * Invoke is an operation that an Instruction can take, it should be used for mutating an object.
+ */
 public class Invoke {
     private String command;
     private List<Argument> arguments;

@@ -4,6 +4,9 @@ import ch.epfl.dedis.proto.TransactionProto;
 
 import java.util.List;
 
+/**
+ * ClientTransaction is a set of instructions are will be executed atomically by OmniLedger.
+ */
 public class ClientTransaction {
     private List<Instruction> instructions;
 

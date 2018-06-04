@@ -2,6 +2,9 @@ package ch.epfl.dedis.lib.eventlog;
 
 import ch.epfl.dedis.proto.EventLogProto;
 
+/**
+ * An instance of an Event can be sent and stored by the EventLog service.
+ */
 public class Event {
     private long when; // in nano seconds
     private String topic;

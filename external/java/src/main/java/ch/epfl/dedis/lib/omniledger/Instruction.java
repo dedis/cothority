@@ -13,6 +13,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * An instruction is sent and executed by OmniLedger.
+ */
 public class Instruction {
     private ObjectID objId;
     private byte[] nonce;
@@ -23,6 +26,14 @@ public class Instruction {
     private Delete delete;
     private List<Signature> signatures;
 
+    /**
+     * Use this constructor if it is a spawn instruction, i.e. you want to create a new object.
+     * @param objId The ID of the object, which must be unique.
+     * @param nonce The nonce of the object.
+     * @param index The index of the instruction in the atomic set.
+     * @param length The length of the atomic set.
+     * @param spawn The spawn object, which contains the value and the argument.
+     */
     public Instruction(ObjectID objId, byte[] nonce, int index, int length, Spawn spawn) {
         this.objId = objId;
         this.nonce = nonce;
@@ -31,6 +42,14 @@ public class Instruction {
         this.spawn = spawn;
     }
 
+    /**
+     * Use this constructor if it is an invoke instruction, i.e. you want to mutate an object.
+     * @param objId The ID of the object, which must be unique.
+     * @param nonce The nonce of the object.
+     * @param index The index of the instruction in the atomic set.
+     * @param length The length of the atomic set.
+     * @param invoke The invoke object.
+     */
     public Instruction(ObjectID objId, byte[] nonce, int index, int length, Invoke invoke) {
         this.objId = objId;
         this.nonce = nonce;
@@ -39,6 +58,14 @@ public class Instruction {
         this.invoke = invoke;
     }
 
+    /**
+     * Use this constructor if it is a delete instruction, i.e. you want to delete an object.
+     * @param objId The ID of the object, which must be unique.
+     * @param nonce The nonce of the object.
+     * @param index The index of the instruction in the atomic set.
+     * @param length The length of the atomic set.
+     * @param delete The delete object.
+     */
     public Instruction(ObjectID objId, byte[] nonce, int index, int length, Delete delete) {
         this.objId = objId;
         this.nonce = nonce;
@@ -47,14 +74,24 @@ public class Instruction {
         this.delete = delete;
     }
 
+    /**
+     * Getter for the object ID.
+     */
     public ObjectID getObjId() {
         return objId;
     }
 
+    /**
+     * Setter for the signatures.
+     */
     public void setSignatures(List<Signature> signatures) {
         this.signatures = signatures;
     }
 
+    /**
+     * This method computes the sha256 hash of the instruction.
+     * @return The digest.
+     */
     public byte[] hash() {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");

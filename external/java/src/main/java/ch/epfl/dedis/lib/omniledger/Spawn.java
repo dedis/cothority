@@ -4,6 +4,9 @@ import ch.epfl.dedis.proto.TransactionProto;
 
 import java.util.List;
 
+/**
+ * Spawn is an operation that an Instruction can take, it should be used for creating an object.
+ */
 public class Spawn {
     private String contractId;
     private List<Argument> arguments;

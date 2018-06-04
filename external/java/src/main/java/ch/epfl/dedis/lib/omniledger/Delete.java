@@ -2,6 +2,9 @@ package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.proto.TransactionProto;
 
+/**
+ * Delete is an operation that an Instruction can take, it should be used for deleting an object.
+ */
 public class Delete {
     public Delete() {
 
