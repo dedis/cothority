@@ -32,6 +32,7 @@ const CurrentVersion Version = 1
 // PROTOSTART
 // import "skipblock.proto";
 // import "roster.proto";
+// import "darc.proto";
 //
 // option java_package = "ch.epfl.dedis.proto";
 // option java_outer_classname = "OmniLedgerProto";

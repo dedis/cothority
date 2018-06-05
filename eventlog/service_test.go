@@ -2,7 +2,6 @@ package eventlog
 
 import (
 	"testing"
-	"time"
 
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
 	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
@@ -47,7 +46,7 @@ func TestService_Log(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	s.check(t, "one log arrived", func() bool {
+	s.check(t, scID, "one log arrived", func() bool {
 		resp, err := s.services[0].omni.GetProof(&omniledger.GetProof{
 			Version: omniledger.CurrentVersion,
 			Key:     ctx.Instructions[0].ObjectID.Slice(),
@@ -64,8 +63,9 @@ func (s *ser) init(t *testing.T) (skipchain.SkipBlockID, darc.Darc, []*darc.Sign
 	d1 := darc.NewDarc(AddWriter(rules, nil), []byte("eventlog writer"))
 
 	reply, err := s.services[0].Init(&InitRequest{
-		Roster: *s.roster,
-		Owner:  *d1,
+		Roster:        *s.roster,
+		Owner:         *d1,
+		BlockInterval: testBlockInterval,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, reply.ID)
@@ -88,13 +88,13 @@ func (s *ser) close() {
 	}
 }
 
-func (s *ser) check(t *testing.T, what string, f func() bool) {
+func (s *ser) check(t *testing.T, scID skipchain.SkipBlockID, what string, f func() bool) {
 	for ct := 0; ct < 10; ct++ {
 		if f() == true {
 			return
 		}
 		t.Log("check failed, sleep and retry")
-		s.services[0].waitForBlock()
+		s.services[0].waitForBlock(scID)
 	}
 	t.Fatalf("check for %v failed", what)
 }
@@ -107,7 +107,6 @@ func newSer(t *testing.T) *ser {
 
 	for _, sv := range s.local.GetServices(s.hosts, sid) {
 		service := sv.(*Service)
-		service.blockInterval = time.Second
 		s.services = append(s.services, service)
 	}
 

@@ -22,6 +22,15 @@ func init() {
 		StateChange{})
 }
 
+// PROTOSTART
+//
+// option java_package = "ch.epfl.dedis.proto";
+// option java_outer_classname = "TransactionProto";
+
+// ***
+// These are the messages used in the API-calls
+// ***
+
 // Instruction holds only one of Spawn, Invoke, or Delete
 type Instruction struct {
 	// ObjectID holds the id of the existing object that can spawn new objects.

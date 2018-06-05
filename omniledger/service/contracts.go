@@ -46,6 +46,48 @@ type Config struct {
 	BlockInterval time.Duration
 }
 
+// LoadConfigFromColl loads the configuration data from the collections.
+func LoadConfigFromColl(coll collection.Collection) (*Config, error) {
+	// Find the genesis-darc ID.
+	val, contract, err := getValueContract(coll, GenesisReferenceID.Slice())
+	if err != nil {
+		return nil, err
+	}
+	if string(contract) != ContractConfigID {
+		return nil, errors.New("did not get " + ContractConfigID)
+	}
+	if len(val) != 32 {
+		return nil, errors.New("value has a invalid length")
+	}
+	// Use the genesis-darc ID to create the config key and read the config.
+	configID := ObjectID{
+		DarcID:     darc.ID(val),
+		InstanceID: OneNonce,
+	}
+	val, contract, err = getValueContract(coll, configID.Slice())
+	if err != nil {
+		return nil, err
+	}
+	if string(contract) != ContractConfigID {
+		return nil, errors.New("did not get " + ContractConfigID)
+	}
+	config := Config{}
+	err = protobuf.Decode(val, &config)
+	if err != nil {
+		return nil, err
+	}
+	return &config, nil
+}
+
+// LoadBlockIntervalFromColl loads the block interval from the collections.
+func LoadBlockIntervalFromColl(coll collection.Collection) (time.Duration, error) {
+	config, err := LoadConfigFromColl(coll)
+	if err != nil {
+		return defaultInterval, err
+	}
+	return config.BlockInterval, nil
+}
+
 // ContractConfig can only be instantiated once per skipchain, and only for
 // the genesis block.
 func (s *Service) ContractConfig(cdb collection.Collection, tx Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {

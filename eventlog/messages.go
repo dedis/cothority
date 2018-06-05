@@ -15,13 +15,28 @@ func init() {
 		&InitResponse{},
 		&Event{},
 		&LogResponse{},
+		&GetEventRequest{},
+		&GetEventResponse{},
 	)
 }
 
+// PROTOSTART
+// import "roster.proto";
+// import "darc.proto";
+// import "transaction.proto";
+//
+// option java_package = "ch.epfl.dedis.proto";
+// option java_outer_classname = "EventLogProto";
+
+// ***
+// These are the messages used in the API-calls
+// ***
+
 // InitRequest is sent to start a new EventLog.
 type InitRequest struct {
-	Owner  darc.Darc
-	Roster onet.Roster
+	Owner         darc.Darc
+	Roster        onet.Roster
+	BlockInterval time.Duration
 }
 
 // InitResponse is the reply to InitRequest.
@@ -42,6 +57,21 @@ type Event struct {
 	Content string
 }
 
+// LogResponse is the reply to LogRequest.
+type LogResponse struct {
+}
+
+// GetEventRequest is sent to get an event.
+type GetEventRequest struct {
+	SkipchainID skipchain.SkipBlockID
+	Key         []byte
+}
+
+// GetEventResponse is the reply of GetEventRequest.
+type GetEventResponse struct {
+	Event Event
+}
+
 // NewEvent returns a new event with the current time sec correctly.
 func NewEvent(topic, content string) Event {
 	return Event{
@@ -49,8 +79,4 @@ func NewEvent(topic, content string) Event {
 		Topic:   topic,
 		Content: content,
 	}
-}
-
-// LogResponse is the reply to LogRequest.
-type LogResponse struct {
 }

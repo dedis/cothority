@@ -1,12 +1,14 @@
 package eventlog
 
 import (
+	"bytes"
 	"errors"
 	"time"
 
 	"github.com/dedis/protobuf"
 	"github.com/dedis/student_18_omniledger/omniledger/collection"
 	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
+	"gopkg.in/dedis/cothority.v2/skipchain"
 	"gopkg.in/dedis/onet.v2"
 	"gopkg.in/dedis/onet.v2/log"
 )
@@ -35,17 +37,20 @@ func init() {
 // Service is the EventLog service.
 type Service struct {
 	*onet.ServiceProcessor
-	omni          *omniledger.Service
-	blockInterval time.Duration
-	bucketSize    int
+	omni       *omniledger.Service
+	bucketSize int
 }
 
 const defaultBlockInterval = 5 * time.Second
 
 // waitForBlock is for use in tests; it will sleep long enough to be sure that
 // a block has been created.
-func (s *Service) waitForBlock() {
-	time.Sleep(5 * s.blockInterval)
+func (s *Service) waitForBlock(scID skipchain.SkipBlockID) {
+	dur, err := s.omni.LoadBlockInterval(scID)
+	if err != nil {
+		panic(err.Error())
+	}
+	time.Sleep(5 * dur)
 }
 
 // Init will create a new event log. Logs will be accepted
@@ -55,7 +60,7 @@ func (s *Service) Init(req *InitRequest) (*InitResponse, error) {
 		Version:       omniledger.CurrentVersion,
 		GenesisDarc:   req.Owner,
 		Roster:        req.Roster,
-		BlockInterval: s.blockInterval,
+		BlockInterval: req.BlockInterval,
 	}
 	cgr, err := s.omni.CreateGenesisBlock(cg)
 	if err != nil {
@@ -81,9 +86,43 @@ func (s *Service) Log(req *LogRequest) (*LogResponse, error) {
 	return &LogResponse{}, nil
 }
 
+// GetEvent asks omniledger for a stored event.
+func (s *Service) GetEvent(req *GetEventRequest) (*GetEventResponse, error) {
+	req2 := omniledger.GetProof{
+		Version: omniledger.CurrentVersion,
+		Key:     req.Key,
+		ID:      req.SkipchainID,
+	}
+	reply, err := s.omni.GetProof(&req2)
+	if err != nil {
+		return nil, err
+	}
+	if !reply.Proof.InclusionProof.Match() {
+		return nil, errors.New("not an inclusion proof")
+	}
+	k, vs, err := reply.Proof.KeyValue()
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal(k, req2.Key) {
+		return nil, errors.New("wrong key")
+	}
+	if len(vs) < 2 {
+		return nil, errors.New("not enough values")
+	}
+	e := Event{}
+	err = protobuf.Decode(vs[0], &e)
+	if err != nil {
+		return nil, err
+	}
+	return &GetEventResponse{
+		Event: e,
+	}, nil
+}
+
 const contractName = "eventlog"
 
-func (s *Service) decodeAndCheckEvent(eventBuf []byte) (*Event, error) {
+func (s *Service) decodeAndCheckEvent(coll collection.Collection, eventBuf []byte) (*Event, error) {
 	// Check the timestamp of the event: it should never be in the future,
 	// and it should not be more than 10 blocks in the past. (Why 10?
 	// Because it works.  But it would be nice to have a better way to hold
@@ -96,10 +135,13 @@ func (s *Service) decodeAndCheckEvent(eventBuf []byte) (*Event, error) {
 	if err != nil {
 		return nil, err
 	}
+	blockInterval, err := omniledger.LoadBlockIntervalFromColl(coll)
+	if err != nil {
+		return nil, err
+	}
 	when := time.Unix(0, event.When)
 	now := time.Now()
-	//log.LLvl2("when", when, "now", now, "sub", now.Sub(when), "int", s.blockInterval)
-	if when.Before(now.Add(-10 * s.blockInterval)) {
+	if when.Before(now.Add(-10 * blockInterval)) {
 		return nil, errors.New("event timestamp too long ago")
 	}
 	if when.After(now) {
@@ -137,7 +179,7 @@ func (s *Service) contractFunction(coll collection.Collection, tx omniledger.Ins
 		return nil, nil, errors.New("expected a named argument of \"event\"")
 	}
 
-	event, err := s.decodeAndCheckEvent(eventBuf)
+	event, err := s.decodeAndCheckEvent(coll, eventBuf)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -219,7 +261,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		omni:             c.Service(omniledger.ServiceName).(*omniledger.Service),
 		bucketSize:       10,
 	}
-	if err := s.RegisterHandlers(s.Init, s.Log); err != nil {
+	if err := s.RegisterHandlers(s.Init, s.Log, s.GetEvent); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 

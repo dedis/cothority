@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/dedis/student_18_omniledger/eventlog"
 	"github.com/dedis/student_18_omniledger/omniledger/darc"
@@ -140,7 +141,7 @@ func create(c *cli.Context) error {
 func doCreate(name string, r *onet.Roster) (*config, error) {
 	owner := darc.NewSignerEd25519(nil, nil)
 	c := eventlog.NewClient(r)
-	err := c.Init(owner)
+	err := c.Init(owner, 5*time.Second)
 	if err != nil {
 		return nil, err
 	}

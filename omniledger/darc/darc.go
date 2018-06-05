@@ -82,11 +82,13 @@ func InitRules(owners []*Identity, signers []*Identity) Rules {
 // the BaseID is empty if the Version is 0, it must be computed using
 // GetBaseID.
 func NewDarc(rules Rules, desc []byte) *Darc {
+	zeroDigest := sha256.Sum256([]byte{})
 	return &Darc{
 		Version:     0,
 		Description: desc,
 		Signatures:  []*Signature{},
 		Rules:       rules,
+		PathDigest:  zeroDigest[:],
 	}
 }
 

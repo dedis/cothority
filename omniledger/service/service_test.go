@@ -266,7 +266,7 @@ func TestService_LoadBlockInterval(t *testing.T) {
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
-	dur, err := s.service().loadBlockInterval(s.sb.SkipChainID())
+	dur, err := s.service().LoadBlockInterval(s.sb.SkipChainID())
 	require.Nil(t, err)
 	require.Equal(t, dur, interval)
 }
