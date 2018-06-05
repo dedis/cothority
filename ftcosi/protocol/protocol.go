@@ -172,9 +172,6 @@ func (p *FtCosi) Dispatch() error {
 	} else {
 		// root should not fail the verification otherwise it would not have started the protocol
 		p.FinalSignature <- nil
-		for _, coSiProtocol := range runningSubProtocols {
-			coSiProtocol.ChannelChallenge <- StructChallenge{}
-		}
 		return fmt.Errorf("verification failed on root node")
 	}
 

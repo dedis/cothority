@@ -233,8 +233,8 @@ func TestUnresponsiveSubleader(t *testing.T) {
 
 // Tests that the protocol throws errors with invalid configurations
 func TestProtocolErrors(t *testing.T) {
-	nodes := []int{1, 2, 5, 13, 24}
-	subtrees := []int{1, 2, 5}
+	nodes := []int{1, 2, 24}
+	subtrees := []int{1, 2}
 	proposal := []byte{0xFF}
 
 	for _, nNodes := range nodes {

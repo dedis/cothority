@@ -71,9 +71,9 @@ func NewSubFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite)
 	}
 
 	if n.IsRoot() {
-		c.subleaderNotResponding = make(chan bool)
+		c.subleaderNotResponding = make(chan bool, 1)
 		c.subCommitment = make(chan StructCommitment, 2) //can send 2 commitments
-		c.subResponse = make(chan StructResponse)
+		c.subResponse = make(chan StructResponse, 1)
 	}
 
 	for _, channel := range []interface{}{
