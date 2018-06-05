@@ -1,9 +1,13 @@
 {
   "name": "@dedis/cothority",
-  "version": "1.1.12",
+  "version": "1.1.14",
   "description": "module for interacting with cothority nodes",
   "main": "dist/bundle.node.min.js",
   "browser": "dist/bundle.min.js",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dedis/cothority.git"
+  },
   "scripts": {
     "build": "node node_modules/.bin/webpack",
     "doc": "node node_modules/.bin/jsdoc2md -f 'lib/**' > doc/doc.md",
@@ -18,21 +22,21 @@
   "author": "DEDIS",
   "license": "ISC",
   "dependencies": {
-    "@dedis/kyber-js": "^0.0.8",
+    "@dedis/kyber-js": "^0.0.10",
     "co": "^4.6.0",
     "crypto-shuffle": "^1.0.1",
-    "protobufjs": "^6.8.5",
+    "protobufjs": "^6.8.6",
     "pure-uuid": "^1.5.0",
     "topl": "^0.3.1",
     "ws": "^4.0.0"
   },
   "devDependencies": {
-    "babel-core": "^6.26.0",
+    "babel-core": "^6.26.3",
     "babel-loader": "^7.1.2",
-    "babel-preset-env": "^1.6.1",
+    "babel-preset-env": "^1.7.0",
     "babel-preset-stage-3": "^6.24.1",
     "chai": "^4.1.2",
-    "eslint": "^4.18.1",
+    "eslint": "^4.19.1",
     "eslint-config-prettier": "^2.9.0",
     "eslint-plugin-prettier": "^2.5.0",
     "file": "^0.2.2",
