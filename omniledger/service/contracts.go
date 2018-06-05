@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/dedis/protobuf"
-	"github.com/dedis/student_18_omniledger/omniledger/collection"
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
-	"gopkg.in/dedis/onet.v2/log"
+	"github.com/dedis/cothority/omniledger/collection"
+	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/onet/log"
 )
 
 // Here we give a definition of pre-defined contracts.

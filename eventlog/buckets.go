@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/dedis/protobuf"
-	"github.com/dedis/student_18_omniledger/omniledger/collection"
-	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
+	"github.com/dedis/cothority/omniledger/collection"
+	omniledger "github.com/dedis/cothority/omniledger/service"
 )
 
 var errIndexMissing = errors.New("index does not exist")

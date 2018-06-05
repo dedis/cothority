@@ -8,14 +8,14 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/cothority.v2"
-	"gopkg.in/dedis/cothority.v2/byzcoinx"
-	"gopkg.in/dedis/cothority.v2/skipchain"
-	"gopkg.in/dedis/kyber.v2"
-	"gopkg.in/dedis/kyber.v2/sign/cosi"
-	"gopkg.in/dedis/kyber.v2/util/key"
-	"gopkg.in/dedis/onet.v2"
-	"gopkg.in/dedis/onet.v2/network"
+	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/byzcoinx"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/cosi"
+	"github.com/dedis/kyber/util/key"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/network"
 )
 
 func TestNewProof(t *testing.T) {

@@ -4,13 +4,13 @@ import (
 	"time"
 
 	"github.com/dedis/protobuf"
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
-	"github.com/dedis/student_18_omniledger/omniledger/darc/expression"
-	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
+	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/darc/expression"
+	omniledger "github.com/dedis/cothority/omniledger/service"
 
-	"gopkg.in/dedis/cothority.v2"
-	"gopkg.in/dedis/cothority.v2/skipchain"
-	"gopkg.in/dedis/onet.v2"
+	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/onet"
 )
 
 // Client is a structure to communicate with the eventlog service

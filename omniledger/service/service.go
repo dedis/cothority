@@ -9,17 +9,17 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/dedis/cothority.v2"
-	"gopkg.in/dedis/cothority.v2/messaging"
-	"gopkg.in/dedis/cothority.v2/skipchain"
-	"gopkg.in/dedis/kyber.v2/util/random"
-	"gopkg.in/dedis/onet.v2"
-	"gopkg.in/dedis/onet.v2/log"
-	"gopkg.in/dedis/onet.v2/network"
+	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/messaging"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber/util/random"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"gopkg.in/satori/go.uuid.v1"
 
-	"github.com/dedis/student_18_omniledger/omniledger/collection"
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/collection"
+	"github.com/dedis/cothority/omniledger/darc"
 )
 
 const darcIDLen int = 32

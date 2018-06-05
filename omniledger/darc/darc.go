@@ -48,11 +48,11 @@ import (
 	"strings"
 
 	"github.com/dedis/protobuf"
-	"github.com/dedis/student_18_omniledger/omniledger/darc/expression"
-	"gopkg.in/dedis/cothority.v2"
-	"gopkg.in/dedis/kyber.v2"
-	"gopkg.in/dedis/kyber.v2/sign/schnorr"
-	"gopkg.in/dedis/kyber.v2/util/key"
+	"github.com/dedis/cothority/omniledger/darc/expression"
+	"github.com/dedis/cothority"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/schnorr"
+	"github.com/dedis/kyber/util/key"
 )
 
 const evolve = "_evolve"

@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/cothority.v2"
-	"gopkg.in/dedis/onet.v2"
+	"github.com/dedis/cothority"
+	"github.com/dedis/onet"
 )
 
 func Test(t *testing.T) {

@@ -29,6 +29,8 @@ import (
 	_ "github.com/dedis/cothority/ftcosi/service"
 	_ "github.com/dedis/cothority/identity"
 	_ "github.com/dedis/cothority/skipchain"
+	_ "github.com/dedis/cothority/eventlog"
+	_ "github.com/dedis/cothority/omniledger/service"
 	_ "github.com/dedis/cothority/status/service"
 	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/kyber/util/key"

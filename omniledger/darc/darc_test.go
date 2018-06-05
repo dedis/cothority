@@ -3,7 +3,7 @@ package darc
 import (
 	"testing"
 
-	"github.com/dedis/student_18_omniledger/omniledger/darc/expression"
+	"github.com/dedis/cothority/omniledger/darc/expression"
 	"github.com/stretchr/testify/require"
 )
 

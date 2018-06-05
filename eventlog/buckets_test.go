@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
+	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/stretchr/testify/require"
 )
 

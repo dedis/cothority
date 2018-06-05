@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/dedis/protobuf"
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
-	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
+	"github.com/dedis/cothority/omniledger/darc"
+	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/cothority.v2/skipchain"
+	"github.com/dedis/cothority/skipchain"
 )
 
 // Use this block interval for logic tests. Stress test often use a different

@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"sort"
 
-	"gopkg.in/dedis/cothority.v2"
-	"gopkg.in/dedis/onet.v2/log"
-	"gopkg.in/dedis/onet.v2/network"
+	"github.com/dedis/cothority"
+	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 
 	"github.com/dedis/protobuf"
-	"github.com/dedis/student_18_omniledger/omniledger/collection"
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/collection"
+	"github.com/dedis/cothority/omniledger/darc"
 )
 
 func init() {

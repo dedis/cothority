@@ -4,10 +4,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/cothority.v2"
-	"gopkg.in/dedis/onet.v2"
+	"github.com/dedis/cothority"
+	"github.com/dedis/onet"
 )
 
 func TestClient_GetProof(t *testing.T) {

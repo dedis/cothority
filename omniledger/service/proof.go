@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/dedis/student_18_omniledger/omniledger/collection"
-	"gopkg.in/dedis/cothority.v2"
-	"gopkg.in/dedis/cothority.v2/skipchain"
-	"gopkg.in/dedis/kyber.v2"
-	"gopkg.in/dedis/onet.v2/network"
+	"github.com/dedis/cothority/omniledger/collection"
+	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber"
+	"github.com/dedis/onet/network"
 )
 
 // Proof represents everything necessary to verify a given

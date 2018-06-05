@@ -6,11 +6,11 @@ import (
 	"errors"
 	"os"
 
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
-	"github.com/dedis/student_18_omniledger/omniledger/service"
+	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/service"
 
-	"gopkg.in/dedis/onet.v2/app"
-	"gopkg.in/dedis/onet.v2/log"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
 )
 

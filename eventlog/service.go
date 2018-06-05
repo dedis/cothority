@@ -6,11 +6,11 @@ import (
 	"time"
 
 	"github.com/dedis/protobuf"
-	"github.com/dedis/student_18_omniledger/omniledger/collection"
-	omniledger "github.com/dedis/student_18_omniledger/omniledger/service"
-	"gopkg.in/dedis/cothority.v2/skipchain"
-	"gopkg.in/dedis/onet.v2"
-	"gopkg.in/dedis/onet.v2/log"
+	"github.com/dedis/cothority/omniledger/collection"
+	omniledger "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 )
 
 // ServiceName is the service name for the EventLog service.

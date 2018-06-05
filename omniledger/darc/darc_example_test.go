@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
-	"github.com/dedis/student_18_omniledger/omniledger/darc/expression"
+	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/darc/expression"
 )
 
 func Example() {

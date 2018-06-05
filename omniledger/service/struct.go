@@ -5,10 +5,10 @@ import (
 	"fmt"
 
 	bolt "github.com/coreos/bbolt"
-	"github.com/dedis/student_18_omniledger/omniledger/collection"
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
-	"gopkg.in/dedis/cothority.v2/skipchain"
-	"gopkg.in/dedis/onet.v2/network"
+	"github.com/dedis/cothority/omniledger/collection"
+	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/onet/network"
 )
 
 func init() {

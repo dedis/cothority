@@ -8,14 +8,14 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/student_18_omniledger/omniledger/collection"
-	"github.com/dedis/student_18_omniledger/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/collection"
+	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"gopkg.in/dedis/cothority.v2/skipchain"
-	"gopkg.in/dedis/kyber.v2/suites"
-	"gopkg.in/dedis/onet.v2"
-	"gopkg.in/dedis/onet.v2/log"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber/suites"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 )
 
 var tSuite = suites.MustFind("Ed25519")
