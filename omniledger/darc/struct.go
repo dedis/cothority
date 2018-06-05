@@ -18,17 +18,6 @@ func init() {
 // An evolving Darc will change its identity.
 type ID []byte
 
-// Role indicates if this is an Owner or a User Policy.
-type Role int
-
-const (
-	// Owner has the right to evolve the Darc to a new version.
-	Owner Role = iota
-	// User has the right to sign on behalf of the Darc for
-	// whatever decision is asked for.
-	User
-)
-
 // PROTOSTART
 //
 // option java_package = "ch.epfl.dedis.proto";
