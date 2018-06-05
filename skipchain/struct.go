@@ -956,3 +956,38 @@ func (db *SkipBlockDB) getAll() (map[string]*SkipBlock, error) {
 	}
 	return data, nil
 }
+
+// getAllSkipchains returns each of the skipchains in the database
+// in the form of a map from skipblock ID to the latest block.
+func (db *SkipBlockDB) getAllSkipchains() (map[string]*SkipBlock, error) {
+	gen := make(map[string]*SkipBlock)
+
+	// Loop over all blocks. If we see a new genesis block we
+	// have not seen, remember it. If we see a higher Index than what
+	// we have, replace it.
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(db.bucketName))
+		return b.ForEach(func(k, v []byte) error {
+			_, sbMsg, err := network.Unmarshal(v, cothority.Suite)
+			if err != nil {
+				return err
+			}
+			sb, ok := sbMsg.(*SkipBlock)
+			if ok {
+				k := string(sb.SkipChainID())
+				if cur, ok := gen[k]; ok {
+					if cur.Index < sb.Index {
+						gen[k] = sb
+					}
+				} else {
+					gen[k] = sb
+				}
+			}
+			return nil
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	return gen, nil
+}

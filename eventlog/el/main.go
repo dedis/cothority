@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/eventlog"
 	"github.com/dedis/cothority/omniledger/darc"
-	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"

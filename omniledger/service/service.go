@@ -631,37 +631,40 @@ func (s *Service) tryLoad() error {
 	s.collectionDB = map[string]*collectionDB{}
 	s.queueWorkers = map[string]chan ClientTransaction{}
 
-	gas := &skipchain.GetAllSkipchains{}
-	gasr, err := s.skService().GetAllSkipchains(gas)
+	gas := &skipchain.GetAllSkipChainIDs{}
+	gasr, err := s.skService().GetAllSkipChainIDs(gas)
 	if err != nil {
 		return err
 	}
 
-	for _, sb := range gasr.SkipChains {
-		if !isOurChain(sb) {
+	for _, gen := range gasr.IDs {
+		if !s.isOurChain(gen) {
 			continue
 		}
-		interval, err := s.LoadBlockInterval(sb.SkipChainID())
+		interval, err := s.LoadBlockInterval(gen)
 		if err != nil {
 			return err
 		}
 		// At this point the service is not yet up, so no need to
 		// protect access to queueWorkers with a mutex.
-
-		if s.queueWorkers[string(sb.SkipChainID())] != nil {
-			// BUG: This seems to be happening because GetAllSkipchains seems to be
-			// returning ALL BLOCKS! What?!?
+		if s.queueWorkers[string(gen)] != nil {
 			panic("double worker")
 		}
 
-		s.queueWorkers[string(sb.SkipChainID())] = s.createQueueWorker(sb.SkipChainID(), interval)
+		s.queueWorkers[string(gen)] = s.createQueueWorker(gen, interval)
 	}
 
 	return nil
 }
 
-// checks that a given block has a verifier we recognize
-func isOurChain(sb *skipchain.SkipBlock) bool {
+// checks that a given chain has a verifier we recognize
+func (s *Service) isOurChain(gen skipchain.SkipBlockID) bool {
+	sb := s.db().GetByID(gen)
+	if sb == nil {
+		// Not finding this ID should not happen, but
+		// if it does, just say "not ours".
+		return false
+	}
 	for _, x := range sb.VerifierIDs {
 		if x.Equal(verifyOmniLedger) {
 			return true

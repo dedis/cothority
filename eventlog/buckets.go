@@ -3,9 +3,9 @@ package eventlog
 import (
 	"errors"
 
-	"github.com/dedis/protobuf"
 	"github.com/dedis/cothority/omniledger/collection"
 	omniledger "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/protobuf"
 )
 
 var errIndexMissing = errors.New("index does not exist")

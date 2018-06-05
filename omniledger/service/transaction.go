@@ -12,9 +12,9 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 
-	"github.com/dedis/protobuf"
 	"github.com/dedis/cothority/omniledger/collection"
 	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/protobuf"
 )
 
 func init() {

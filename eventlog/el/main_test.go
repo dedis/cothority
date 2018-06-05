@@ -5,9 +5,9 @@ import (
 	"os"
 	"testing"
 
-	"github.com/stretchr/testify/require"
 	"github.com/dedis/cothority"
 	"github.com/dedis/onet"
+	"github.com/stretchr/testify/require"
 )
 
 func Test(t *testing.T) {

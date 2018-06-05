@@ -5,10 +5,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dedis/protobuf"
 	"github.com/dedis/cothority/omniledger/collection"
 	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/protobuf"
 )
 
 // Here we give a definition of pre-defined contracts.

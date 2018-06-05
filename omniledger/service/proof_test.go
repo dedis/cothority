@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	bolt "github.com/coreos/bbolt"
-	"github.com/stretchr/testify/require"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/skipchain"
@@ -16,6 +15,7 @@ import (
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
+	"github.com/stretchr/testify/require"
 )
 
 func TestNewProof(t *testing.T) {

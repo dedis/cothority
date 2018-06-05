@@ -271,12 +271,20 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 	}
 }
 
-// GetAllSkipchains returns all skipchains known to that conode. If none are
-// known, an empty slice is returned.
+// GetAllSkipchains is deprecated and should no longer be used. See GetAllSkipChainIDs.
 func (c *Client) GetAllSkipchains(si *network.ServerIdentity) (reply *GetAllSkipchainsReply,
 	err error) {
 	reply = &GetAllSkipchainsReply{}
 	err = c.SendProtobuf(si, &GetAllSkipchains{}, reply)
+	return
+}
+
+// GetAllSkipChainIDs returns the SkipBlockIDs of all of the genesis
+// blocks of all skipchains known to that conode.
+func (c *Client) GetAllSkipChainIDs(si *network.ServerIdentity) (reply *GetAllSkipChainIDsReply,
+	err error) {
+	reply = &GetAllSkipChainIDsReply{}
+	err = c.SendProtobuf(si, &GetAllSkipChainIDs{}, reply)
 	return
 }
 

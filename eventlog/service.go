@@ -5,12 +5,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dedis/protobuf"
 	"github.com/dedis/cothority/omniledger/collection"
 	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/protobuf"
 )
 
 // ServiceName is the service name for the EventLog service.

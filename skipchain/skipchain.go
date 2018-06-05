@@ -535,8 +535,16 @@ func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, 
 	return nil, errors.New("No block with this index found")
 }
 
-// GetAllSkipchains returns a list of all known skipchains
+// GetAllSkipchains currently returns a list of all the known blocks.
+// This is a bug, but for backwards compatibility it is being left as is.
+//
+// Deprecation warning: This function will be removed in v3.
+//
+// Caution: This could be a huge amount of data. This should only be
+// used in diagnostic or test code where you know the size of the result
+// that you expect.
 func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply, error) {
+	log.Warn("GetAllSkipchains is deprecated because it returns all blocks instead of all skipchains. Migrate to GetAllSkipChainIDs.")
 	// Write all known skipblocks to a map, thus removing double blocks.
 	chains, err := s.db.getAll()
 	if err != nil {
@@ -548,6 +556,23 @@ func (s *Service) GetAllSkipchains(id *GetAllSkipchains) (*GetAllSkipchainsReply
 	}
 	for _, sb := range chains {
 		reply.SkipChains = append(reply.SkipChains, sb)
+	}
+	return reply, nil
+}
+
+// GetAllSkipChainIDs returns the SkipBlockIDs of the genesis blocks
+// of all of the known skipchains.
+func (s *Service) GetAllSkipChainIDs(id *GetAllSkipChainIDs) (*GetAllSkipChainIDsReply, error) {
+	gen, err := s.db.getAllSkipchains()
+	if err != nil {
+		return nil, err
+	}
+	reply := &GetAllSkipChainIDsReply{IDs: make([]SkipBlockID, len(gen))}
+
+	ct := 0
+	for k := range gen {
+		reply.IDs[ct] = SkipBlockID(k)
+		ct++
 	}
 	return reply, nil
 }
@@ -1251,7 +1276,7 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 	}
 	roster := onet.NewRoster(siList)
 
-	log.Lvl3("%s: propagating %x to %s", s.ServerIdentity(), blocks[0].Hash, siList)
+	log.Lvlf3("%s: propagating %x to %s", s.ServerIdentity(), blocks[0].Hash, siList)
 	replies, err := s.propagate(roster, &PropagateSkipBlocks{blocks}, s.propTimeout)
 	if err != nil {
 		return err
@@ -1393,6 +1418,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	}
 	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain,
 		s.GetSingleBlock, s.GetSingleBlockByIndex, s.GetAllSkipchains,
+		s.GetAllSkipChainIDs,
 		s.CreateLinkPrivate, s.Unlink, s.AddFollow, s.ListFollow,
 		s.DelFollow, s.Listlink))
 	s.ServiceProcessor.RegisterStatusReporter("Skipblock", s.db)

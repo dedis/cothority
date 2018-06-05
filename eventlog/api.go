@@ -3,10 +3,10 @@ package eventlog
 import (
 	"time"
 
-	"github.com/dedis/protobuf"
 	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/omniledger/darc/expression"
 	omniledger "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/protobuf"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"

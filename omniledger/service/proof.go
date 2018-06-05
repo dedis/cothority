@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 
-	"github.com/dedis/cothority/omniledger/collection"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/omniledger/collection"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet/network"

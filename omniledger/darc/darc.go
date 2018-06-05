@@ -47,12 +47,12 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/dedis/protobuf"
-	"github.com/dedis/cothority/omniledger/darc/expression"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/omniledger/darc/expression"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/key"
+	"github.com/dedis/protobuf"
 )
 
 const evolve = "_evolve"

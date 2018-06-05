@@ -5,11 +5,11 @@ import (
 
 	"github.com/dedis/cothority/omniledger/darc"
 	omniledger "github.com/dedis/cothority/omniledger/service"
-	"github.com/stretchr/testify/require"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/stretchr/testify/require"
 )
 
 var tSuite = suites.MustFind("Ed25519")
@@ -82,10 +82,10 @@ type ser struct {
 }
 
 func (s *ser) close() {
-	s.local.CloseAll()
 	for _, x := range s.services {
 		close(x.omni.CloseQueues)
 	}
+	s.local.CloseAll()
 }
 
 func (s *ser) check(t *testing.T, scID skipchain.SkipBlockID, what string, f func() bool) {
