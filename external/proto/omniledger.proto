@@ -1,0 +1,71 @@
+syntax = "proto2";
+import "skipblock.proto";
+import "roster.proto";
+import "darc.proto";
+import "transaction.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "OmniLedgerProto";
+
+// ***
+// These are the messages used in the API-calls
+// ***
+
+// CreateGenesisBlock asks the cisc-service to set up a new skipchain.
+message CreateGenesisBlock {
+  // 	 Version of the protocol
+  required sint64 version = 1;
+  // 	 Roster defines which nodes participate in the skipchain.
+  required Roster roster = 2;
+  // 	 GenesisDarc defines who is allowed to write to this skipchain.
+  required Darc genesisdarc = 3;
+  // 	 BlockInterval in int64.
+  required sint64 blockinterval = 4;
+}
+
+// CreateGenesisBlockResponse holds the genesis-block of the new skipchain.
+message CreateGenesisBlockResponse {
+  // 	 Version of the protocol
+  required sint64 version = 1;
+  // 	 Skipblock of the created skipchain or empty if there was an error.
+  optional SkipBlock skipblock = 2;
+}
+
+// AddTxRequest requests to apply a new transaction to the ledger.
+message AddTxRequest {
+  // 	 Version of the protocol
+  required sint64 version = 1;
+  // 	 SkipchainID is the hash of the first skipblock
+  required bytes skipchainid = 2;
+  // 	 Transaction to be applied to the kv-store
+  required ClientTransaction transaction = 3;
+}
+
+// AddTxResponse is the reply after an AddTxRequest is finished.
+message AddTxResponse {
+  // 	 Version of the protocol
+  required sint64 version = 1;
+}
+
+/*
+// GetProof returns the proof that the given key is in the collection.
+message GetProof {
+  // 	 Version of the protocol
+  required sint64 version = 1;
+  // 	 Key is the key we want to look up
+  required bytes key = 2;
+  // 	 ID is any block that is known to us in the skipchain, can be the genesis
+  // 	 block or any later block. The proof returned will be starting at this block.
+  required bytes id = 3;
+}
+
+// GetProofResponse can be used together with the Genesis block to proof that
+// the returned key/value pair is in the collection.
+message GetProofResponse {
+  // 	 Version of the protocol
+  required sint64 version = 1;
+  // 	 Proof contains everything necessary to prove the inclusion
+  // 	 of the included key/value pair given a genesis skipblock.
+  required Proof proof = 2;
+}
+*/
