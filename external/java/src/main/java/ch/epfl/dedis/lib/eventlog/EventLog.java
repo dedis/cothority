@@ -49,22 +49,6 @@ public class EventLog {
         this.signers = signers;
     }
 
-    private byte[] init(Roster roster, Darc ownerDarc, long blockInterval) throws CothorityCommunicationException  {
-        EventLogProto.InitRequest.Builder b = EventLogProto.InitRequest.newBuilder();
-        b.setRoster(roster.toProto());
-        b.setOwner(ownerDarc.toProto());
-        b.setBlockinterval(blockInterval);
-
-        ByteString msg = roster.sendMessage("EventLog/InitRequest", b.build());
-
-        try {
-            EventLogProto.InitResponse reply = EventLogProto.InitResponse.parseFrom(msg);
-            return reply.getId().toByteArray();
-        } catch (InvalidProtocolBufferException e) {
-            throw new CothorityCommunicationException(e);
-        }
-    }
-
     /***
      * Logs an event, the returned value is the ID of the event which can be retrieved later. Note that when this
      * function returns, it does not mean the event is stored successfully in a block, use the get function to verify
@@ -117,14 +101,29 @@ public class EventLog {
      */
     public Event get(byte[] key) throws CothorityCommunicationException {
         EventLogProto.GetEventRequest.Builder b = EventLogProto.GetEventRequest.newBuilder();
-        b.setSkipchainid(ByteString.copyFrom(this.genesis.getId()));
-        b.setKey(ByteString.copyFrom(key));
+        b.setSkipchainid(ByteString.copyFrom(this.genesis.getId())); b.setKey(ByteString.copyFrom(key));
 
         ByteString msg = this.roster.sendMessage("EventLog/GetEventRequest", b.build());
 
         try {
             EventLogProto.Event event = EventLogProto.GetEventResponse.parseFrom(msg).getEvent();
             return new Event(event.getWhen(), event.getTopic(), event.getContent());
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
+    private byte[] init(Roster roster, Darc ownerDarc, long blockInterval) throws CothorityCommunicationException  {
+        EventLogProto.InitRequest.Builder b = EventLogProto.InitRequest.newBuilder();
+        b.setRoster(roster.toProto());
+        b.setOwner(ownerDarc.toProto());
+        b.setBlockinterval(blockInterval);
+
+        ByteString msg = roster.sendMessage("EventLog/InitRequest", b.build());
+
+        try {
+            EventLogProto.InitResponse reply = EventLogProto.InitResponse.parseFrom(msg);
+            return reply.getId().toByteArray();
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }

@@ -10,16 +10,31 @@ public class Event {
     private String topic;
     private String content;
 
+    /**
+     * This is the constructor for Event.
+     * @param when When the even happened, in UNIX nano seconds.
+     * @param topic The topic of the event, which can be used to filter events on retrieval.
+     * @param content The content of the event.
+     */
     public Event(long when, String topic, String content) {
         this.when = when;
         this.topic = topic;
         this.content = content;
     }
 
+    /**
+     * This is the constructor for Event, the timestamp is set to the current time.
+     * @param topic The topic of the event, which can be used to filter events on retrieval.
+     * @param content The content of the event.
+     */
     public Event(String topic, String content) {
         this(System.currentTimeMillis() * 1000 * 1000, topic, content);
     }
 
+    /**
+     * Converts this object to the protobuf representation.
+     * @return The protobuf representation.
+     */
     public EventLogProto.Event toProto() {
         EventLogProto.Event.Builder b = EventLogProto.Event.newBuilder();
         b.setWhen(this.when);

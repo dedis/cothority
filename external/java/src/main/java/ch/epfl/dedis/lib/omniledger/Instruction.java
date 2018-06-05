@@ -121,13 +121,10 @@ public class Instruction {
         }
     }
 
-    private static byte[] intToArr4(int x) {
-        ByteBuffer b = ByteBuffer.allocate(4);
-        b.order(ByteOrder.LITTLE_ENDIAN);
-        b.putInt(x);
-        return b.array();
-    }
-
+    /**
+     * Converts this object to the protobuf representation.
+     * @return The protobuf representation.
+     */
     public TransactionProto.Instruction toProto() {
         TransactionProto.Instruction.Builder b = TransactionProto.Instruction.newBuilder();
         b.setObjectid(this.objId.toProto());
@@ -147,6 +144,11 @@ public class Instruction {
         return b.build();
     }
 
+    /**
+     * Outputs the action of the instruction, this action be the same as an action in the corresponding darc. Otherwise
+     * this instruction may not be accepted.
+     * @return The action.
+     */
     public String action() {
         String a = "invalid";
         if (this.spawn != null ) {
@@ -159,6 +161,10 @@ public class Instruction {
         return a;
     }
 
+    /**
+     * Converts the instruction to a Darc request representation.
+     * @return The Darc request.
+     */
     public Request toDarcRequest() {
         List<Identity> ids = new ArrayList<>();
         List<byte[]> sigs = new ArrayList<>();
@@ -167,5 +173,12 @@ public class Instruction {
             sigs.add(sig.signature);
         }
         return new Request(this.objId.getDarcId(), this.action(), this.hash(), ids, sigs);
+    }
+
+    private static byte[] intToArr4(int x) {
+        ByteBuffer b = ByteBuffer.allocate(4);
+        b.order(ByteOrder.LITTLE_ENDIAN);
+        b.putInt(x);
+        return b.array();
     }
 }
