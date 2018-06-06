@@ -1,12 +1,12 @@
 package ch.epfl.dedis.lib.eventlog;
 
-import ch.epfl.dedis.lib.Local;
+import ch.epfl.dedis.integration.TestServerController;
+import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.omniledger.darc.Signer;
 import ch.epfl.dedis.lib.omniledger.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -18,17 +18,19 @@ class EventLogTest {
 
     private EventLog el;
     private long blockInterval;
+    private TestServerController testInstanceController;
 
     @BeforeEach
     void testInit() throws CothorityCryptoException, CothorityCommunicationException {
+
         List<Signer> signers =  new ArrayList<>();
         signers.add(new SignerEd25519());
-        this.blockInterval = 1000000000; // 1 second
-        this.el = new EventLog(Local.roster, signers, this.blockInterval);
+        testInstanceController = TestServerInit.getInstance();
+        this.blockInterval = 2000000000; // 2 seconds
+        this.el = new EventLog(testInstanceController.getRoster(), signers, this.blockInterval);
     }
 
     @Test
-    @Disabled("need to start using Docker, issue #1271")
     void testLog() throws CothorityCryptoException, CothorityCommunicationException, InterruptedException {
         Event event = new Event("login", "alice");
         byte[] key = this.el.log(event);
@@ -40,7 +42,6 @@ class EventLogTest {
     }
 
     @Test
-    @Disabled("need to start using Docker, issue #1271")
     void testLogMore() throws CothorityCryptoException, CothorityCommunicationException, InterruptedException {
         int n = 100;
         Event event = new Event("login", "alice");

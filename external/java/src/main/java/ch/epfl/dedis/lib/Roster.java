@@ -80,5 +80,4 @@ public class Roster {
         }
         return new Roster(cothority);
     }
-
 }

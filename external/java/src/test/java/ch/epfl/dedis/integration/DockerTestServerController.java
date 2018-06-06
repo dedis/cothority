@@ -17,18 +17,16 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
-import static java.time.temporal.ChronoUnit.MINUTES;
-
 public class DockerTestServerController extends TestServerController {
     private static final Logger logger = LoggerFactory.getLogger(DockerTestServerController.class);
-    private static final String ONCHAIN_TEST_SERVER_IMAGE_NAME = "dedis/onchain-secrets-test:latest";
+    private static final String TEST_SERVER_IMAGE_NAME = "dedis/conode-test:latest";
     private static final String TEMPORARY_DOCKER_IMAGE = "conode-test-run";
 
     private final GenericContainer blockchainContainer;
 
     protected DockerTestServerController() {
         logger.warn("local docker will be started for tests.");
-        logger.info("This test run assumes that image " + ONCHAIN_TEST_SERVER_IMAGE_NAME + " is available in your system.");
+        logger.info("This test run assumes that image " + TEST_SERVER_IMAGE_NAME + " is available in your system.");
         logger.info("To build such image you should run `make docker docker_test` - such run will create base image and image with test keys.");
         logger.info("For a test run this code will create additional docker image with name " + TEMPORARY_DOCKER_IMAGE +
                 ", at the end this additional image will be automatically deleted");
@@ -37,7 +35,7 @@ public class DockerTestServerController extends TestServerController {
                     new ImageFromDockerfile(TEMPORARY_DOCKER_IMAGE, true)
                             .withDockerfileFromBuilder(builder -> {
                                 builder
-                                        .from(ONCHAIN_TEST_SERVER_IMAGE_NAME)
+                                        .from(TEST_SERVER_IMAGE_NAME)
                                         .expose(7002, 7003, 7004, 7005, 7006, 7007, 7008, 7009);
                             })
             );
