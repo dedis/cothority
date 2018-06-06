@@ -1,6 +1,6 @@
 package ch.epfl.dedis.lib.darc;
 
-import ch.epfl.dedis.proto.DarcProto;
+import ch.epfl.dedis.proto.DarcOCSProto;
 
 public interface Identity {
     /**
@@ -18,7 +18,7 @@ public interface Identity {
      * identity implementations.
      * @return
      */
-    DarcProto.Identity toProto();
+    DarcOCSProto.Identity toProto();
 
     boolean equals(Object other);
 }

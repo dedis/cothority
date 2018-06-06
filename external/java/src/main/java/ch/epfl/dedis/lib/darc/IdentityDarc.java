@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.proto.DarcProto;
+import ch.epfl.dedis.proto.DarcOCSProto;
 import com.google.protobuf.ByteString;
 
 public class IdentityDarc implements Identity {
@@ -12,7 +12,7 @@ public class IdentityDarc implements Identity {
      *
      * @param proto
      */
-    public IdentityDarc(DarcProto.IdentityDarc proto) throws CothorityCryptoException{
+    public IdentityDarc(DarcOCSProto.IdentityDarc proto) throws CothorityCryptoException{
         darcID = new DarcId(proto.getId().toByteArray());
     }
 
@@ -52,9 +52,9 @@ public class IdentityDarc implements Identity {
      *
      * @return
      */
-    public DarcProto.Identity toProto() {
-        DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();
-        DarcProto.IdentityDarc.Builder bdd = DarcProto.IdentityDarc.newBuilder();
+    public DarcOCSProto.Identity toProto() {
+        DarcOCSProto.Identity.Builder bid = DarcOCSProto.Identity.newBuilder();
+        DarcOCSProto.IdentityDarc.Builder bdd = DarcOCSProto.IdentityDarc.newBuilder();
         bdd.setId(ByteString.copyFrom(darcID.getId()));
         bid.setDarc(bdd);
         return bid.build();

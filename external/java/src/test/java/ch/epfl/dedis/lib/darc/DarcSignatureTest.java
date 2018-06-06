@@ -1,6 +1,6 @@
 package ch.epfl.dedis.lib.darc;
 
-import ch.epfl.dedis.proto.DarcProto;
+import ch.epfl.dedis.proto.DarcOCSProto;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ public class DarcSignatureTest {
         SignaturePath path = new SignaturePath(darc, signer, SignaturePath.OWNER);
 
         DarcSignature sig = new DarcSignature(msg, path, signer);
-        DarcProto.Signature proto = sig.toProto();
+        DarcOCSProto.Signature proto = sig.toProto();
         DarcSignature sig2 = new DarcSignature(proto);
 
         assertTrue(sig.equals(sig2));

@@ -20,6 +20,8 @@ func init() {
 		// Fetch all skipchains
 		&GetAllSkipchains{},
 		&GetAllSkipchainsReply{},
+		&GetAllSkipChainIDs{},
+		&GetAllSkipChainIDsReply{},
 		// Create link with client
 		&CreateLinkPrivate{},
 		// Unlink a client
@@ -93,13 +95,23 @@ type GetUpdateChainReply struct {
 	Update []*SkipBlock
 }
 
-// GetAllSkipchains - returns all known last blocks of skipchains.
+// GetAllSkipchains - erronously returns all blocks. Deprecated.
 type GetAllSkipchains struct {
 }
 
-// GetAllSkipchainsReply - returns all known last blocks of skipchains.
+// GetAllSkipchainsReply - reply to GetAllSkipchains
 type GetAllSkipchainsReply struct {
 	SkipChains []*SkipBlock
+}
+
+// GetAllSkipChainIDs - returns the SkipBlockIDs of the genesis blocks
+// of all of the known skipchains.
+type GetAllSkipChainIDs struct {
+}
+
+// GetAllSkipChainIDsReply - reply to GetAllSkipchains
+type GetAllSkipChainIDsReply struct {
+	IDs []SkipBlockID
 }
 
 // Internal calls

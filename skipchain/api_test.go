@@ -228,24 +228,55 @@ func TestClient_GetAllSkipchains(t *testing.T) {
 	defer l.CloseAll()
 
 	c := newTestClient(l)
-	log.Lvl1("Creating root and control chain")
+	log.Lvl1("Creating chain with one extra block")
 	sb1, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil, nil)
-	log.ErrFatal(err)
-	_, err = c.StoreSkipBlock(sb1, ro, nil)
-	log.ErrFatal(err)
-	sb2, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil, nil)
-	log.ErrFatal(err)
-	sb1id := sb1.SkipChainID()
-	sb2id := sb2.SkipChainID()
+	require.Nil(t, err)
+	r, err := c.StoreSkipBlock(sb1, ro, nil)
+	require.Nil(t, err)
+	require.Equal(t, 1, r.Latest.Index)
 
+	// See if it works with only one chain in the system?
 	sbs, err := c.GetAllSkipchains(ro.List[0])
-	log.ErrFatal(err)
-	require.Equal(t, 3, len(sbs.SkipChains))
-	sbs1id := sbs.SkipChains[0].SkipChainID()
-	sbs2id := sbs.SkipChains[1].SkipChainID()
-	require.True(t, sb1id.Equal(sbs1id) || sb1id.Equal(sbs2id))
-	require.True(t, sb1id.Equal(sbs2id) || sb2id.Equal(sbs2id))
-	require.NotEmpty(t, sb1id, sb2id)
+	require.Nil(t, err)
+
+	// Expect 2 blocks here because GetAllSkipchains is broken and actually
+	// returns all the blocks.
+	// If GetAllSkipchains did what it said, we should expect 1.
+	require.Equal(t, 2, len(sbs.SkipChains))
+}
+
+func TestClient_GetAllSkipChainIDs(t *testing.T) {
+	nbrHosts := 3
+	l := onet.NewTCPTest(cothority.Suite)
+	_, ro, _ := l.GenTree(nbrHosts, true)
+	defer l.CloseAll()
+
+	c := newTestClient(l)
+
+	log.Lvl1("Creating chain 1 with one extra block")
+	sb1, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil, nil)
+	require.Nil(t, err)
+	r1, err := c.StoreSkipBlock(sb1, ro, nil)
+	require.Nil(t, err)
+	require.Equal(t, 1, r1.Latest.Index)
+
+	log.Lvl1("Creating chain 2 with one extra block")
+	sb2, err := c.CreateGenesis(ro, 1, 1, VerificationNone, nil, nil)
+	require.Nil(t, err)
+	r2, err := c.StoreSkipBlock(sb2, ro, nil)
+	require.Nil(t, err)
+	require.Equal(t, 1, r2.Latest.Index)
+
+	reply, err := c.GetAllSkipChainIDs(ro.List[0])
+	require.Nil(t, err)
+	require.Equal(t, 2, len(reply.IDs))
+
+	// We don't know what order they come back out, but they both have to be there.
+	if reply.IDs[0].Equal(sb1.Hash) {
+		require.True(t, reply.IDs[1].Equal(sb2.Hash))
+	} else {
+		require.True(t, reply.IDs[1].Equal(sb1.Hash))
+	}
 }
 
 func TestClient_GetSingleBlockByIndex(t *testing.T) {

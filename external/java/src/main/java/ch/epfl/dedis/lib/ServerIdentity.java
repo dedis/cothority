@@ -41,6 +41,10 @@ public class ServerIdentity {
         this(new URI(siToml.getString("Address")), siToml.getString("Public"));
     }
 
+    public ServerIdentity(ServerIdentityProto.ServerIdentity sid) throws URISyntaxException {
+        this(new URI(sid.getAddress()), DatatypeConverter.printHexBinary(sid.getPublic().toByteArray()));
+    }
+
     public URI getAddress() {
         return conodeAddress;
     }
@@ -56,7 +60,7 @@ public class ServerIdentity {
         }
     }
 
-    public ServerIdentityProto.ServerIdentity getProto() {
+    public ServerIdentityProto.ServerIdentity toProto() {
         ServerIdentityProto.ServerIdentity.Builder si =
                 ServerIdentityProto.ServerIdentity.newBuilder();
         si.setPublic(Public.toProto());

@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.proto.DarcProto;
+import ch.epfl.dedis.proto.DarcOCSProto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,11 +73,11 @@ public class SignaturePath {
         this.role = role;
     }
 
-    public SignaturePath(DarcProto.SignaturePath proto) throws CothorityCryptoException{
+    public SignaturePath(DarcOCSProto.SignaturePath proto) throws CothorityCryptoException{
         role = proto.getRole();
         signer = IdentityFactory.New(proto.getSigner());
         path = new ArrayList<>();
-        for (DarcProto.Darc d :
+        for (DarcOCSProto.Darc d :
                 proto.getDarcsList()) {
             path.add(new Darc(d));
         }
@@ -142,8 +142,8 @@ public class SignaturePath {
      * Creates a protobuf representation of this signature.
      * @return
      */
-    public DarcProto.SignaturePath toProto(){
-        DarcProto.SignaturePath.Builder b = DarcProto.SignaturePath.newBuilder();
+    public DarcOCSProto.SignaturePath toProto(){
+        DarcOCSProto.SignaturePath.Builder b = DarcOCSProto.SignaturePath.newBuilder();
         b.setRole(role);
         b.setSigner(signer.toProto());
         for (Darc d :

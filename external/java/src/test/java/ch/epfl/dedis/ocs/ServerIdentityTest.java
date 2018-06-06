@@ -48,7 +48,7 @@ class ServerIdentityTest {
 
     @Test
     void testProto(){
-        ServerIdentityProto.ServerIdentity si_proto = si.getProto();
+        ServerIdentityProto.ServerIdentity si_proto = si.toProto();
         byte[] id = DatatypeConverter.parseHexBinary("482FB9CFC2B55AB68C5F811C1D47B9E1");
         assertArrayEquals(ByteString.copyFrom(id).toByteArray(), si_proto.getId().toByteArray());
     }

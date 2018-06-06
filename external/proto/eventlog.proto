@@ -1,0 +1,52 @@
+syntax = "proto2";
+
+import "roster.proto";
+import "darc.proto";
+import "transaction.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "EventLogProto";
+
+// ***
+// These are the messages used in the API-calls
+// ***
+
+// InitRequest is sent to start a new EventLog.
+message InitRequest {
+  required Darc owner = 1;
+  required Roster roster = 2;
+  required sint64 blockinterval = 3;
+}
+
+// InitResponse is the reply to InitRequest.
+message InitResponse {
+  required bytes id = 1;
+}
+
+// LogRequest is puts one or more new log events into the OmniLedger.
+message LogRequest {
+  required bytes skipchainid = 1;
+  required ClientTransaction transaction = 2;
+}
+
+// Event is sent to create an event log.
+message Event {
+  required sint64 when = 1;
+  required string topic = 2;
+  required string content = 3;
+}
+
+// LogResponse is the reply to LogRequest.
+message LogResponse {
+}
+
+// GetEventRequest is sent to get an event.
+message GetEventRequest {
+	required bytes skipchainid = 1;
+	required bytes key = 2;
+}
+
+// GetEventResponse is the reply of GetEventRequest.
+message GetEventResponse {
+	required Event event = 1;
+}
