@@ -26,7 +26,7 @@ type collectionDB struct {
 // which can be registered with the omniledger service.
 // Since the outcome of the verification depends on the state of the collection
 // which is to be modified, we pass it as a pointer here.
-type OmniLedgerContract func(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error)
+type OmniLedgerContract func(cdb collection.Collection, tx Instruction, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
 
 // newCollectionDB initialises a structure and reads all key/value pairs to store
 // it in the collection.

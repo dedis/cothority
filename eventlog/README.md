@@ -14,7 +14,7 @@ auditability. Below are some of the main features that sets us apart.
 - Configurable acceptance criteria - we execute a smart-contract on all nodes,
   nodes only accept the event if the smart-contract returns a positive result.
 - Existance proof - once an event is logged, an authorised client can request
-  for a cryptographic proof (powered by [collection](../omniledger/collection/README.md))
+  a cryptographic proof (powered by [collection](../omniledger/collection/README.md))
   that the event is indeed stored in the blockchain and has not been tampered.
 
 ## Running the service
