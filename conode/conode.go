@@ -25,11 +25,9 @@ import (
 	"strings"
 
 	"github.com/dedis/cothority"
-	_ "github.com/dedis/cothority/eventlog"
 	"github.com/dedis/cothority/ftcosi/check"
 	_ "github.com/dedis/cothority/ftcosi/service"
 	_ "github.com/dedis/cothority/identity"
-	_ "github.com/dedis/cothority/omniledger/service"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
 	"github.com/dedis/kyber/util/encoding"
