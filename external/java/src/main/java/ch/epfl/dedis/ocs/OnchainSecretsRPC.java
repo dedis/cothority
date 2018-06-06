@@ -8,7 +8,7 @@ import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.proto.DarcProto;
+import ch.epfl.dedis.proto.DarcOCSProto;
 import ch.epfl.dedis.proto.OCSProto;
 import ch.epfl.dedis.proto.SkipBlockProto;
 import ch.epfl.dedis.proto.SkipchainProto;
@@ -117,7 +117,7 @@ public class OnchainSecretsRPC {
     public void createSkipchains(Darc writers) throws CothorityCommunicationException {
         OCSProto.CreateSkipchainsRequest.Builder request =
                 OCSProto.CreateSkipchainsRequest.newBuilder();
-        request.setRoster(roster.getProto());
+        request.setRoster(roster.toProto());
         request.setWriters(writers.toProto());
 
         ByteString msg = roster.sendMessage("OnChainSecrets/CreateSkipchainsRequest",
@@ -243,7 +243,7 @@ public class OnchainSecretsRPC {
         try {
             OCSProto.GetDarcPathReply reply = OCSProto.GetDarcPathReply.parseFrom(msg);
             List<Darc> darcs = new ArrayList<>();
-            for (DarcProto.Darc d :
+            for (DarcOCSProto.Darc d :
                     reply.getPathList()) {
                 darcs.add(new Darc(d));
             }
@@ -439,7 +439,7 @@ public class OnchainSecretsRPC {
             OCSProto.GetLatestDarcReply reply = OCSProto.GetLatestDarcReply.parseFrom(msg);
             logger.info("got latestdarc");
             List<Darc> ret = new ArrayList<>();
-            for (DarcProto.Darc d : reply.getDarcsList()) {
+            for (DarcOCSProto.Darc d : reply.getDarcsList()) {
                 ret.add(new Darc(d));
             }
             return ret;

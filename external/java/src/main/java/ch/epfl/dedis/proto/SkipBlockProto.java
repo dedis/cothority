@@ -214,6 +214,9 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2419,7 +2422,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SkipBlock(input, extensionRegistry);
+        return new SkipBlock(input, extensionRegistry);
       }
     };
 
@@ -2512,6 +2515,9 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3381,7 +3387,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new BlockLink(input, extensionRegistry);
+        return new BlockLink(input, extensionRegistry);
       }
     };
 
@@ -3449,6 +3455,9 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3965,7 +3974,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SchnorrSig(input, extensionRegistry);
+        return new SchnorrSig(input, extensionRegistry);
       }
     };
 
@@ -4033,6 +4042,9 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4546,7 +4558,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Exception(input, extensionRegistry);
+        return new Exception(input, extensionRegistry);
       }
     };
 
@@ -4594,20 +4606,19 @@ public final class SkipBlockProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\017skipblock.proto\032\025server-identity.proto" +
-      "\032\014roster.proto\"\212\002\n\tSkipBlock\022\r\n\005index\030\001 " +
-      "\002(\005\022\016\n\006height\030\002 \002(\005\022\022\n\nmax_height\030\003 \002(\005\022" +
-      "\023\n\013base_height\030\004 \002(\005\022\021\n\tbacklinks\030\005 \003(\014\022" +
-      "\021\n\tverifiers\030\006 \003(\014\022\016\n\006parent\030\007 \001(\014\022\017\n\007ge" +
-      "nesis\030\010 \002(\014\022\014\n\004data\030\t \002(\014\022\027\n\006roster\030\n \002(" +
-      "\0132\007.Roster\022\014\n\004hash\030\013 \002(\014\022\033\n\007forward\030\014 \003(" +
-      "\0132\n.BlockLink\022\034\n\010children\030\r \003(\0132\n.BlockL" +
-      "ink\"E\n\tBlockLink\022\013\n\003sig\030\001 \002(\014\022\013\n\003msg\030\002 \002" +
-      "(\014\022\036\n\nexceptions\030\003 \003(\0132\n.Exception\"1\n\nSc",
-      "hnorrSig\022\021\n\tchallenge\030\001 \002(\014\022\020\n\010response\030" +
-      "\002 \002(\014\".\n\tException\022\r\n\005index\030\001 \002(\005\022\022\n\ncom" +
-      "mitment\030\002 \002(\014B%\n\023ch.epfl.dedis.protoB\016Sk" +
-      "ipBlockProto"
+      "\n\017skipblock.proto\032\014roster.proto\"\212\002\n\tSkip" +
+      "Block\022\r\n\005index\030\001 \002(\005\022\016\n\006height\030\002 \002(\005\022\022\n\n" +
+      "max_height\030\003 \002(\005\022\023\n\013base_height\030\004 \002(\005\022\021\n" +
+      "\tbacklinks\030\005 \003(\014\022\021\n\tverifiers\030\006 \003(\014\022\016\n\006p" +
+      "arent\030\007 \001(\014\022\017\n\007genesis\030\010 \002(\014\022\014\n\004data\030\t \002" +
+      "(\014\022\027\n\006roster\030\n \002(\0132\007.Roster\022\014\n\004hash\030\013 \002(" +
+      "\014\022\033\n\007forward\030\014 \003(\0132\n.BlockLink\022\034\n\010childr" +
+      "en\030\r \003(\0132\n.BlockLink\"E\n\tBlockLink\022\013\n\003sig" +
+      "\030\001 \002(\014\022\013\n\003msg\030\002 \002(\014\022\036\n\nexceptions\030\003 \003(\0132" +
+      "\n.Exception\"1\n\nSchnorrSig\022\021\n\tchallenge\030\001" +
+      " \002(\014\022\020\n\010response\030\002 \002(\014\".\n\tException\022\r\n\005i" +
+      "ndex\030\001 \002(\005\022\022\n\ncommitment\030\002 \002(\014B%\n\023ch.epf" +
+      "l.dedis.protoB\016SkipBlockProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -4620,7 +4631,6 @@ public final class SkipBlockProto {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          ch.epfl.dedis.proto.ServerIdentityProto.getDescriptor(),
           ch.epfl.dedis.proto.RosterProto.getDescriptor(),
         }, assigner);
     internal_static_SkipBlock_descriptor =
@@ -4647,7 +4657,6 @@ public final class SkipBlockProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Exception_descriptor,
         new java.lang.String[] { "Index", "Commitment", });
-    ch.epfl.dedis.proto.ServerIdentityProto.getDescriptor();
     ch.epfl.dedis.proto.RosterProto.getDescriptor();
   }
 

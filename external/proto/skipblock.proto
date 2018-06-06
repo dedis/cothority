@@ -1,6 +1,5 @@
 syntax = "proto2";
 
-import "server-identity.proto";
 import "roster.proto";
 
 option java_package = "ch.epfl.dedis.proto";

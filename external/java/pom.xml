@@ -5,8 +5,8 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ch.epfl.dedis</groupId>
-    <artifactId>ocs</artifactId>
-    <version>0.3-SNAPSHOT</version>
+    <artifactId>cothority</artifactId>
+    <version>v2.0.0-dev</version>
     <build>
         <plugins>
             <plugin>

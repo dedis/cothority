@@ -1,6 +1,6 @@
 package ch.epfl.dedis.lib.darc;
 
-import ch.epfl.dedis.proto.DarcProto;
+import ch.epfl.dedis.proto.DarcOCSProto;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -12,7 +12,7 @@ public class SignaturePathTest {
         Darc darc = new Darc(signer, null, null);
         SignaturePath path = new SignaturePath(darc, signer, SignaturePath.OWNER);
 
-        DarcProto.SignaturePath proto = path.toProto();
+        DarcOCSProto.SignaturePath proto = path.toProto();
         SignaturePath path2 = new SignaturePath(proto);
 
         assertTrue(path.equals(path2));

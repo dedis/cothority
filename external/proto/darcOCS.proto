@@ -1,7 +1,7 @@
 syntax = "proto2";
 
 option java_package = "ch.epfl.dedis.proto";
-option java_outer_classname = "DarcProto";
+option java_outer_classname = "DarcOCSProto";
 
 // ***
 // These are the messages used in the API-calls
@@ -10,35 +10,23 @@ option java_outer_classname = "DarcProto";
 // Darc is the basic structure representing an access control. A Darc can evolve in the way that
 // a new Darc points to the previous one and is signed by the owner(s) of the previous Darc.
 message Darc {
+  // 	 Identities who are allowed to evolve this Darc.
+  repeated Identity owners = 1;
+  // 	 Identities who can perform actions (write/read) with data on a skipchain.
+  repeated Identity users = 2;
   // 	 Version should be monotonically increasing over the evolution of a Darc.
-  required uint64 version = 1;
+  required sint32 version = 3;
   // 	 Description is a free-form field that can hold any data as required by the user.
   // 	 Darc itself will never depend on any of the data in here.
-  required bytes description = 2;
+  optional bytes description = 4;
   // 	 BaseID is the ID of the first darc of this Series
-  optional bytes baseid = 3;
-  // 	 Rules map an action to an expression.
-  // An action is a string that should be associated with an expression. The
-  // application typically will define the action but there are two actions that
-  // are in all the darcs, "_evolve" and "_sign". The application can modify
-  // these actions but should not change the semantics of these actions.
-  map<string, bytes> rules = 4;
-  // 	 Represents the path to get up to information to be able to verify
-  // 	 this signature.  These justify the right of the signer to push a new
-  // 	 Darc.  These are ordered from the oldest to the newest, i.e.
-  // 	 Path[0] should be the base Darc.
-  repeated Darc path = 5;
-  // 	 PathDigest is the digest of Path, it should be set when Path has
-  // 	 length 0.
-  required bytes pathdigest = 6;
-  // 	 Signature is calculated on the Request-representation of the darc.
-  // 	 It needs to be created by identities that have the "_evolve" action
-  // 	 from the previous valid Darc.
-  repeated Signature signatures = 7;
+  optional bytes baseid = 5;
+  // 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+  // 	 and needs to be created by an Owner from the previous valid Darc.
+  optional Signature signature = 6;
 }
 
-// Identity is a generic structure can be either an Ed25519 public key, a Darc
-// or a X509 Identity.
+// Identity is a generic structure can be either an Ed25519 public key or a Darc
 message Identity {
   // 	 Darc identity
   optional IdentityDarc darc = 1;
@@ -58,10 +46,8 @@ message IdentityX509EC {
   required bytes public = 1;
 }
 
-// IdentityDarc is a structure that points to a Darc with a given ID on a
-// skipchain. The signer should belong to the Darc.
+// IdentityDarc is a structure that points to a Darc with a given DarcID on a skipchain
 message IdentityDarc {
-  // 	 Signer SignerEd25519
   required bytes id = 1;
 }
 
@@ -70,8 +56,18 @@ message IdentityDarc {
 message Signature {
   // 	 The signature itself
   required bytes signature = 1;
-  // 	 Signer is the Idenity (public key or another Darc) of the signer
+  // 	 Represents the path to get up to information to be able to verify this signature
+  required SignaturePath signaturepath = 2;
+}
+
+// SignaturePath is a struct that holds information necessary for signature verification
+message SignaturePath {
+  // 	 Darc(s) that justify the right of the signer to push a new Darc
+  repeated Darc darcs = 1;
+  // 	 the Idenity (public key or another Darc) of the signer
   required Identity signer = 2;
+  // 	 Is the signer Owner of a Darc or an user
+  required sint32 role = 3;
 }
 
 // Signer is a generic structure that can hold different types of signers
@@ -91,13 +87,4 @@ message SignerEd25519 {
 message SignerX509EC {
   required bytes point = 1;
   required bytes secret = 2;
-}
-
-// Request is the structure that the client must provide to be verified
-message Request {
-  required bytes baseid = 1;
-  required string action = 2;
-  required bytes msg = 3;
-  repeated Identity identities = 4;
-  repeated bytes signatures = 5;
 }

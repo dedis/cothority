@@ -6,6 +6,7 @@ import ch.epfl.dedis.lib.omniledger.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -27,6 +28,7 @@ class EventLogTest {
     }
 
     @Test
+    @Disabled("need to start using Docker, issue #1271")
     void testLog() throws CothorityCryptoException, CothorityCommunicationException, InterruptedException {
         Event event = new Event("login", "alice");
         byte[] key = this.el.log(event);
@@ -38,6 +40,7 @@ class EventLogTest {
     }
 
     @Test
+    @Disabled("need to start using Docker, issue #1271")
     void testLogMore() throws CothorityCryptoException, CothorityCommunicationException, InterruptedException {
         int n = 100;
         Event event = new Event("login", "alice");

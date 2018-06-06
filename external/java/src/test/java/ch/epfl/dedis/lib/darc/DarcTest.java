@@ -2,7 +2,7 @@ package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.proto.DarcProto;
+import ch.epfl.dedis.proto.DarcOCSProto;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -75,7 +75,7 @@ public class DarcTest {
     @Test
     void proto() throws Exception {
         darc.incVersion();
-        DarcProto.Darc proto = darc.toProto();
+        DarcOCSProto.Darc proto = darc.toProto();
         Darc darc2 = new Darc(proto);
         assertTrue(darc.equals(darc2));
         assertTrue(darc.getVersion() == 1);

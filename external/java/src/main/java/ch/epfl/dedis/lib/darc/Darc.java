@@ -2,7 +2,7 @@ package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
-import ch.epfl.dedis.proto.DarcProto;
+import ch.epfl.dedis.proto.DarcOCSProto;
 import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -110,12 +110,12 @@ public class Darc {
      *
      * @param proto
      */
-    public Darc(DarcProto.Darc proto) throws CothorityCryptoException {
+    public Darc(DarcOCSProto.Darc proto) throws CothorityCryptoException {
         this();
-        for (DarcProto.Identity owner : proto.getOwnersList()) {
+        for (DarcOCSProto.Identity owner : proto.getOwnersList()) {
             owners.add(IdentityFactory.New(owner));
         }
-        for (DarcProto.Identity user : proto.getUsersList()) {
+        for (DarcOCSProto.Identity user : proto.getUsersList()) {
             users.add(IdentityFactory.New(user));
         }
         version = proto.getVersion();
@@ -152,7 +152,7 @@ public class Darc {
      */
     public DarcId getId() throws CothorityCryptoException {
         Darc c = copy();
-        DarcProto.Darc proto = c.toProto();
+        DarcOCSProto.Darc proto = c.toProto();
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hash = digest.digest(proto.toByteArray());
@@ -250,8 +250,8 @@ public class Darc {
      *
      * @return the protobuf representation of the darc.
      */
-    public DarcProto.Darc toProto() {
-        DarcProto.Darc.Builder b = DarcProto.Darc.newBuilder();
+    public DarcOCSProto.Darc toProto() {
+        DarcOCSProto.Darc.Builder b = DarcOCSProto.Darc.newBuilder();
         for (Identity i : owners) {
             b.addOwners(i.toProto());
         }
