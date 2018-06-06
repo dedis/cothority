@@ -15,7 +15,7 @@ import (
 var tSuite = suites.MustFind("Ed25519")
 
 func TestMain(m *testing.M) {
-	log.MainTest(m, 3)
+	log.MainTest(m)
 }
 
 func TestService_Init(t *testing.T) {
