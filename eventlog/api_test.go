@@ -76,6 +76,9 @@ func TestClient_Log(t *testing.T) {
 
 // TODO this test only passes when the block interval is long enough
 func TestClient_Log1000(t *testing.T) {
+	if testing.Short() {
+		return
+	}
 	s := newSer(t)
 	leader := s.services[0]
 	defer s.close()
