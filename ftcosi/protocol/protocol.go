@@ -157,23 +157,23 @@ func (p *FtCosi) Dispatch() error {
 	// verifies the proposal
 	verificationOk := <-verifyChan
 	close(verifyChan)
-	if verificationOk {
-		//add own commitment
-		var personalCommitment kyber.Point
-		secret, personalCommitment = cosi.Commit(p.suite)
-		personalMask, err := cosi.NewMask(p.suite, p.publics, p.Public())
-		if err != nil {
-			p.FinalSignature <- nil
-			return err
-		}
-		personalStructCommitment := StructCommitment{p.TreeNode(),
-			Commitment{personalCommitment, personalMask.Mask(), 0}}
-		commitments = append(commitments, personalStructCommitment)
-	} else {
+	if !verificationOk {
 		// root should not fail the verification otherwise it would not have started the protocol
 		p.FinalSignature <- nil
 		return fmt.Errorf("verification failed on root node")
 	}
+
+	//add own commitment
+	var personalCommitment kyber.Point
+	secret, personalCommitment = cosi.Commit(p.suite)
+	personalMask, err := cosi.NewMask(p.suite, p.publics, p.Public())
+	if err != nil {
+		p.FinalSignature <- nil
+		return err
+	}
+	personalStructCommitment := StructCommitment{p.TreeNode(),
+		Commitment{personalCommitment, personalMask.Mask(), 0}}
+	commitments = append(commitments, personalStructCommitment)
 
 	// generate own aggregated commitment
 	commitment, finalMask, err := aggregateCommitments(p.suite, p.publics, commitments)
@@ -283,15 +283,16 @@ func (p *FtCosi) Start() error {
 	}
 	if p.Threshold > len(p.publics) {
 		close(p.startChan)
-		return fmt.Errorf("threshold bigger than number of nodes")
+		return fmt.Errorf("threshold (%d) bigger than number of nodes (%d)", p.Threshold, len(p.publics))
+	}
+	if p.Threshold < 1 {
+		close(p.startChan)
+		return fmt.Errorf("threshold of %d smaller than one node", p.Threshold)
 	}
 
 	if p.NSubtrees < 1 {
 		log.Warn("no number of subtree specified, using one subtree")
 		p.NSubtrees = 1
-	}
-	if p.Threshold == 0 {
-		log.Lvl3("no threshold specified, using \"as much as possible\" policy")
 	}
 
 	log.Lvl3("Starting CoSi")
