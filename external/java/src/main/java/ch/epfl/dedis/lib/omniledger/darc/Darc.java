@@ -21,10 +21,10 @@ public class Darc {
     private int version;
     private byte[] description;
     private DarcId baseID;
+    private DarcId prevID;
     private Map<String, byte[]> rules;
-    private List<Darc> path;
-    private byte[] pathDigest;
-    public List<Signature> signatures;
+    private List<Signature> signatures;
+    private List<Darc> verificationDarcs;
 
     /**
      * This is a convenience function that initialise a set of rules with the default actions "_evolve" and "_sign".
@@ -53,17 +53,19 @@ public class Darc {
         this.version = 0;
         this.description = desc;
         this.baseID = null;
-        this.rules = rules;
-        this.path = new ArrayList<>();
-        this.signatures = new ArrayList<>();
-
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             digest.update(new byte[0]);
-            this.pathDigest = digest.digest();
-        } catch (NoSuchAlgorithmException e) {
+            this.prevID = new DarcId(digest.digest());
+        } catch (NoSuchAlgorithmException | CothorityCryptoException e) {
+            // NoSuchAlgorithmException or CothorityCryptoException should never happen because SHA-256 exists and the
+            // digest of it has the right length (32 bytes).
             throw new RuntimeException(e);
         }
+        this.rules = rules;
+        this.signatures = new ArrayList<>();
+        this.verificationDarcs = new ArrayList<>();
+
     }
 
     /**
@@ -74,15 +76,15 @@ public class Darc {
         DarcProto.Darc.Builder b = DarcProto.Darc.newBuilder();
         b.setVersion(this.version);
         b.setDescription(ByteString.copyFrom(this.description));
-        for (Map.Entry<String, byte[]> entry : this.rules.entrySet()) {
-            b.putRules(entry.getKey(), ByteString.copyFrom(entry.getValue()));
-        }
-        this.path.forEach((d) -> b.addPath(d.toProto()));
-        b.setPathdigest(ByteString.copyFrom(this.pathDigest));
-        this.signatures.forEach((s) -> b.addSignatures(s.toProto()));
         if (this.baseID != null) {
             b.setBaseid(ByteString.copyFrom(this.baseID.getId()));
         }
+        b.setPrevid(ByteString.copyFrom(this.prevID.getId()));
+        for (Map.Entry<String, byte[]> entry : this.rules.entrySet()) {
+            b.putRules(entry.getKey(), ByteString.copyFrom(entry.getValue()));
+        }
+        this.verificationDarcs.forEach((d) -> b.addVerificationdarcs(d.toProto()));
+        this.signatures.forEach((s) -> b.addSignatures(s.toProto()));
         return b.build();
     }
 
@@ -100,7 +102,7 @@ public class Darc {
             if (this.baseID != null) {
                 digest.update(this.baseID.getId());
             }
-            digest.update(this.pathDigest);
+            digest.update(this.prevID.getId());
             this.sortedAction().forEach((k) -> {
                 byte[] expr = this.rules.get(k);
                 digest.update(k.getBytes());

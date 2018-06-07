@@ -79,45 +79,45 @@ func TestDarc_IncrementVersion(t *testing.T) {
 // TestDarc_EvolveOne creates two darcs, the first has two owners and the
 // second has one. The first darc is to be evolved into the second one.
 func TestDarc_EvolveOne(t *testing.T) {
-	d := createDarc(2, "testdarc").darc
-	require.Nil(t, d.Verify())
+	d0 := createDarc(2, "testdarc").darc
+	require.Nil(t, d0.Verify())
 	owner1 := NewSignerEd25519(nil, nil)
 	owner2 := NewSignerEd25519(nil, nil)
 	id1 := *owner1.Identity()
 	id2 := *owner2.Identity()
-	require.Nil(t, d.Rules.UpdateEvolution(expression.InitOrExpr(id1.String(), id2.String())))
+	require.Nil(t, d0.Rules.UpdateEvolution(expression.InitOrExpr(id1.String(), id2.String())))
 
-	dNew := d.Copy()
-	dNew.IncrementVersion()
-	require.Nil(t, dNew.Rules.UpdateEvolution([]byte(id1.String())))
+	d1 := d0.Copy()
+	require.Nil(t, d1.EvolveFrom(d0))
+	require.Nil(t, d1.Rules.UpdateEvolution([]byte(id1.String())))
 	// verification should fail because the signature path is not present
-	require.NotNil(t, dNew.Verify())
+	require.NotNil(t, d1.Verify())
 
-	darcs := []*Darc{d}
 	// the identity of the signer cannot be id3, it does not have the
 	// evolve permission
 	owner3 := NewSignerEd25519(nil, nil)
-	require.Nil(t, localEvolution(dNew, darcs, owner3))
-	require.NotNil(t, dNew.Verify())
+	require.Nil(t, localEvolution(d1, d0, owner3))
+	require.NotNil(t, d1.Verify())
 	// it should be possible to sign with owner2 and owner1 because they
 	// are in the first darc and have the evolve permission
-	require.Nil(t, localEvolution(dNew, darcs, owner2))
-	require.Nil(t, dNew.Verify())
-	require.Nil(t, localEvolution(dNew, darcs, owner1))
-	require.Nil(t, dNew.Verify())
+	require.Nil(t, localEvolution(d1, d0, owner2))
+	require.Nil(t, d1.Verify())
+	require.Nil(t, localEvolution(d1, d0, owner1))
+	require.Nil(t, d1.Verify())
 	// use logical-and in the evolve expression
 	// verification should if only one owner signs the darc
-	require.Nil(t, dNew.Rules.UpdateEvolution(expression.InitAndExpr(owner2.Identity().String(), owner1.Identity().String())))
-	require.Nil(t, localEvolution(dNew, darcs, owner2))
-	require.Nil(t, dNew.Verify())
-	darcs = append(darcs, dNew)
-	dNew2 := dNew.Copy()
-	require.Nil(t, localEvolution(dNew2, darcs, owner2))
-	require.NotNil(t, dNew2.Verify())
-	require.Nil(t, localEvolution(dNew2, darcs, owner1))
-	require.NotNil(t, dNew2.Verify())
-	require.Nil(t, localEvolution(dNew2, darcs, owner2, owner1))
-	require.Nil(t, dNew2.Verify())
+	require.Nil(t, d1.Rules.UpdateEvolution(expression.InitAndExpr(owner2.Identity().String(), owner1.Identity().String())))
+	require.Nil(t, localEvolution(d1, d0, owner2))
+	require.Nil(t, d1.Verify())
+	d2 := d1.Copy()
+	require.Nil(t, localEvolution(d2, d1, owner2))
+	require.NotNil(t, d2.Verify())
+	require.Nil(t, localEvolution(d2, d1, owner1))
+	require.NotNil(t, d2.Verify())
+	require.Nil(t, localEvolution(d2, d0, owner2, owner1))
+	require.Nil(t, d2.Verify())
+	require.Nil(t, localEvolution(d2, d1, owner2, owner1))
+	require.Nil(t, d2.Verify())
 }
 
 // TestDarc_EvolveMore is similar to TestDarc_EvolveOne but testing for
@@ -129,18 +129,19 @@ func TestDarc_EvolveMore(t *testing.T) {
 	require.Nil(t, d.Rules.UpdateEvolution(
 		expression.InitOrExpr(prevOwner.Identity().String())))
 
-	darcs := []*Darc{d}
+	prev := d
+	var darcs []*Darc
 	for i := 0; i < 10; i++ {
-		dNew := darcs[len(darcs)-1].Copy()
-		dNew.IncrementVersion()
+		dNew := prev.Copy()
+		dNew.EvolveFrom(prev)
 		newOwner := NewSignerEd25519(nil, nil)
 		require.Nil(t, dNew.Rules.UpdateEvolution([]byte(newOwner.Identity().String())))
-		require.Nil(t, localEvolution(dNew, darcs, prevOwner))
-		// require.Nil(t, dNew.Verify())
+		require.Nil(t, localEvolution(dNew, prev, prevOwner))
+		require.Nil(t, dNew.Verify())
 		darcs = append(darcs, dNew)
+		prev = dNew
 		prevOwner = newOwner
 	}
-	require.Nil(t, darcs[len(darcs)-1].Verify())
 
 	// verification should fail if the Rules is tampered (ID is changed)
 	darcs[len(darcs)-1].Rules.UpdateEvolution([]byte{})
@@ -148,14 +149,6 @@ func TestDarc_EvolveMore(t *testing.T) {
 
 	// but it should not affect an older darc
 	require.Nil(t, darcs[len(darcs)-2].Verify())
-
-	// test more failures
-	darcs[1].Version = 0
-	require.NotNil(t, darcs[len(darcs)-2].Verify())
-	darcs[1].Version = 1
-	require.Nil(t, darcs[len(darcs)-2].Verify())
-	darcs[0].Rules.UpdateEvolution([]byte{})
-	require.NotNil(t, darcs[len(darcs)-2].Verify())
 }
 
 func TestDarc_EvolveMoreOnline(t *testing.T) {
@@ -168,39 +161,44 @@ func TestDarc_EvolveMoreOnline(t *testing.T) {
 	darcs := []*Darc{d}
 	for i := 0; i < 10; i++ {
 		dNew := darcs[len(darcs)-1].Copy()
-		dNew.IncrementVersion()
+		dNew.EvolveFrom(darcs[len(darcs)-1])
 		newOwner := NewSignerEd25519(nil, nil)
 		require.Nil(t, dNew.Rules.UpdateEvolution([]byte(newOwner.Identity().String())))
-		require.Nil(t, localEvolution(dNew, darcs, prevOwner))
+		require.Nil(t, localEvolution(dNew, darcs[len(darcs)-1], prevOwner))
 		require.Nil(t, dNew.Verify())
 		darcs = append(darcs, dNew)
 		prevOwner = newOwner
 	}
-	require.Nil(t, darcs[len(darcs)-1].Verify())
 
-	// create some call backs
-	getDarc := func(id string) *Darc {
+	// We create some call backs, suppose the correct one doesn't know the
+	// very latest darc.
+	getDarc := func(id string, latest bool) *Darc {
+		if latest {
+			return nil
+		}
 		for _, d := range darcs {
 			if d.GetIdentityString() == id {
-				return darcs[len(darcs)-1]
+				return d
 			}
 		}
 		return nil
 	}
-	getDarcWrong0 := func(id string) *Darc {
+	getDarcWrong0 := func(id string, latest bool) *Darc {
 		return darcs[0]
 	}
-	getDarcWrong1 := func(id string) *Darc {
+	getDarcWrong1 := func(id string, latest bool) *Darc {
 		return darcs[1]
 	}
 
-	// create darcs that do not have the full path
+	// create darcs that do not have the full path, i.e. we set VerificationDarcs to nil
 	lightDarc1 := darcs[len(darcs)-1].Copy()
+	lightDarc1.VerificationDarcs = nil
 	lightDarc1.Signatures = []*Signature{&Signature{
 		Signature: copyBytes(darcs[len(darcs)-1].Signatures[0].Signature),
 		Signer:    darcs[len(darcs)-1].Signatures[0].Signer,
 	}}
 	lightDarc2 := darcs[len(darcs)-2].Copy()
+	lightDarc2.VerificationDarcs = nil
 	lightDarc2.Signatures = []*Signature{&Signature{
 		Signature: copyBytes(darcs[len(darcs)-2].Signatures[0].Signature),
 		Signer:    darcs[len(darcs)-2].Signatures[0].Signer,
@@ -282,7 +280,7 @@ func TestDarc_EvolveRequest(t *testing.T) {
 	require.Nil(t, td.darc.Verify())
 
 	dNew := td.darc.Copy()
-	require.Nil(t, dNew.EvolveFrom([]*Darc{td.darc}))
+	require.Nil(t, dNew.EvolveFrom(td.darc))
 	var err error
 	var r *Request
 
@@ -312,9 +310,17 @@ func TestDarc_EvolveRequest(t *testing.T) {
 	require.Nil(t, r.Verify(td.darc))
 
 	// check that the evolution is actually OK
-	dNew2, err := r.MsgToDarc(dNewBuf, []*Darc{td.darc})
+	dNew2, err := r.MsgToDarc(dNewBuf)
 	require.Nil(t, err)
-	require.Nil(t, dNew2.Verify())
+	require.Nil(t, dNew2.VerifyWithCB(func(s string, latest bool) *Darc {
+		if latest {
+			return nil
+		}
+		if s == NewIdentityDarc(td.darc.GetID()).String() {
+			return td.darc
+		}
+		return nil
+	}))
 }
 
 // TestDarc_Delegation in this test we test delegation. We start with two
@@ -330,36 +336,28 @@ func TestDarc_Delegation(t *testing.T) {
 	require.Nil(t, td3.darc.Rules.UpdateSign(td3.darc.Rules.GetEvolutionExpr()))
 	require.Nil(t, td4.darc.Rules.UpdateSign(td4.darc.Rules.GetEvolutionExpr()))
 
-	require.Nil(t, localEvolution(td2.darc, []*Darc{td1.darc}, td1.owners...))
+	require.Nil(t, localEvolution(td2.darc, td1.darc, td1.owners...))
 	require.Nil(t, td2.darc.Verify())
 
-	require.Nil(t, localEvolution(td4.darc, []*Darc{td3.darc}, td3.owners...))
+	require.Nil(t, localEvolution(td4.darc, td3.darc, td3.owners...))
 	require.Nil(t, td4.darc.Verify())
 
 	id3 := NewIdentityDarc(td3.darc.GetID())
 	d2Expr := []byte(id3.String())
 	require.Nil(t, td2.darc.Rules.UpdateEvolution(d2Expr))
 	require.NotNil(t, td2.darc.Verify())
-	require.Nil(t, localEvolution(td2.darc, []*Darc{td1.darc}, td1.owners...))
+	require.Nil(t, localEvolution(td2.darc, td1.darc, td1.owners...))
 	require.Nil(t, td2.darc.Verify())
 
 	td5 := createDarc(2, "testdarc5")
-	require.Nil(t, localEvolution(td5.darc, []*Darc{td1.darc, td2.darc}, td3.owners[0]))
+	require.Nil(t, localEvolution(td5.darc, td2.darc, td3.owners[0]))
 	require.NotNil(t, td5.darc.Verify())
-	getDarc := func(id string) *Darc {
-		if id == td3.darc.GetIdentityString() {
-			return td4.darc
-		}
-		if id == td4.darc.GetIdentityString() {
-			return td4.darc
-		}
-		return nil
-	}
+	getDarc := DarcsToGetDarcs([]*Darc{td1.darc, td2.darc, td3.darc, td4.darc, td5.darc})
 	// Evolution is not allowed because the evolution is signed by
 	// td3.owners which is out of date.
 	require.NotNil(t, td5.darc.VerifyWithCB(getDarc))
 	// If the evolution is signed by the latest darc, then it's ok.
-	require.Nil(t, localEvolution(td5.darc, []*Darc{td1.darc, td2.darc}, td4.owners...))
+	require.Nil(t, localEvolution(td5.darc, td2.darc, td4.owners...))
 	require.Nil(t, td5.darc.VerifyWithCB(getDarc))
 }
 
@@ -388,26 +386,19 @@ func TestDarc_DelegationChain(t *testing.T) {
 	darcs[0].Rules.UpdateEvolution([]byte(darcs[1].GetIdentityString()))
 	darcs[0].Rules.UpdateSign([]byte{})
 
-	getDarc := func(s string) *Darc {
-		for _, d := range darcs {
-			if d.GetIdentityString() == s {
-				return d
-			}
-		}
-		return nil
-	}
+	getDarc := DarcsToGetDarcs(darcs)
 	td := createDarc(1, "new")
 	// cannot do evolution because owner is not in the evolve rule
-	require.Nil(t, localEvolution(td.darc, []*Darc{darcs[0]}, owners[0]))
+	require.Nil(t, localEvolution(td.darc, darcs[0], owners[0]))
 	require.NotNil(t, td.darc.VerifyWithCB(getDarc))
 	// fail because only the key in the latest darc can sign
 	for _, o := range owners[:n-1] {
-		require.Nil(t, localEvolution(td.darc, []*Darc{darcs[0]}, o))
+		require.Nil(t, localEvolution(td.darc, darcs[0], o))
 		require.NotNil(t, td.darc.VerifyWithCB(getDarc))
 	}
 	// only the last one, containing the actual key that is in the signer
 	// expression, should evaluate to true.
-	require.Nil(t, localEvolution(td.darc, []*Darc{darcs[0]}, owners[n-1]))
+	require.Nil(t, localEvolution(td.darc, darcs[0], owners[n-1]))
 	require.Nil(t, td.darc.VerifyWithCB(getDarc))
 }
 
@@ -448,8 +439,8 @@ func createSignerIdentity() (*Signer, *Identity) {
 	return signer, signer.Identity()
 }
 
-func localEvolution(newDarc *Darc, path []*Darc, signers ...*Signer) error {
-	if err := newDarc.EvolveFrom(path); err != nil {
+func localEvolution(newDarc *Darc, oldDarc *Darc, signers ...*Signer) error {
+	if err := newDarc.EvolveFrom(oldDarc); err != nil {
 		return err
 	}
 	r, _, err := newDarc.MakeEvolveRequest(signers...)
@@ -464,5 +455,6 @@ func localEvolution(newDarc *Darc, path []*Darc, signers ...*Signer) error {
 		}
 	}
 	newDarc.Signatures = sigs
+	newDarc.VerificationDarcs = append(oldDarc.VerificationDarcs, oldDarc)
 	return nil
 }

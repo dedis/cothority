@@ -10,31 +10,29 @@ option java_outer_classname = "DarcProto";
 // Darc is the basic structure representing an access control. A Darc can evolve in the way that
 // a new Darc points to the previous one and is signed by the owner(s) of the previous Darc.
 message Darc {
-  // 	 Version should be monotonically increasing over the evolution of a Darc.
+  // Version should be monotonically increasing over the evolution of a Darc.
   required uint64 version = 1;
-  // 	 Description is a free-form field that can hold any data as required by the user.
-  // 	 Darc itself will never depend on any of the data in here.
+  // Description is a free-form field that can hold any data as required by the user.
+  // Darc itself will never depend on any of the data in here.
   required bytes description = 2;
-  // 	 BaseID is the ID of the first darc of this Series
+  // BaseID is the ID of the first darc of this Series
   optional bytes baseid = 3;
-  // 	 Rules map an action to an expression.
+  // PrevID is the previous darc ID in the chain of evolution.
+  required bytes previd = 4;
+  // Rules map an action to an expression.
   // An action is a string that should be associated with an expression. The
   // application typically will define the action but there are two actions that
   // are in all the darcs, "_evolve" and "_sign". The application can modify
   // these actions but should not change the semantics of these actions.
-  map<string, bytes> rules = 4;
-  // 	 Represents the path to get up to information to be able to verify
-  // 	 this signature.  These justify the right of the signer to push a new
-  // 	 Darc.  These are ordered from the oldest to the newest, i.e.
-  // 	 Path[0] should be the base Darc.
-  repeated Darc path = 5;
-  // 	 PathDigest is the digest of Path, it should be set when Path has
-  // 	 length 0.
-  required bytes pathdigest = 6;
-  // 	 Signature is calculated on the Request-representation of the darc.
-  // 	 It needs to be created by identities that have the "_evolve" action
-  // 	 from the previous valid Darc.
-  repeated Signature signatures = 7;
+  map<string, bytes> rules = 5;
+  // Signature is calculated on the Request-representation of the darc.
+  // It needs to be created by identities that have the "_evolve" action
+  // from the previous valid Darc.
+  repeated Signature signatures = 6;
+  // VerificationDarcs are a list of darcs that the verifier needs to
+  // verify this darc. It is not needed in online verification where the
+  // verifier stores all darcs.
+  repeated Darc verificationdarcs = 7;
 }
 
 // Identity is a generic structure can be either an Ed25519 public key, a Darc
