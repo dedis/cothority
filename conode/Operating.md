@@ -31,7 +31,7 @@ On Linux, the following files need to be backed up:
 
 The DB file is a [BoltDB](https://github.com/coreos/bbolt) file, and more
 information about considerations while backing them up is in [Database
-backup](https://github.com/dedis/onet/wiki/Database-backup-and-recovery).
+backup](https://github.com/dedis/onet/tree/master/Database-backup-and-recovery.md).
 
 ## Recovery from a crash
 
