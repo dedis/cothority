@@ -75,6 +75,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 	//handle answers from all parallel threads
 	sharedMask, err := cosi.NewMask(p.suite, p.publics, nil)
 	if err != nil {
+		close(closingChan)
 		return nil, nil, err
 	}
 	commitmentsMap := make(map[*SubFtCosi]StructCommitment, len(subProtocols))
@@ -100,11 +101,13 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 				newMask, err := cosi.AggregateMasks(sharedMask.Mask(), com.structCommitment.Mask)
 				if err != nil {
 					err = fmt.Errorf("error in aggregation of commitment masks: %s", err)
+					close(closingChan)
 					return nil, nil, err
 				}
 				err = sharedMask.SetMask(newMask)
 				if err != nil {
 					err = fmt.Errorf("error in setting of shared masks: %s", err)
+					close(closingChan)
 					return nil, nil, err
 				}
 				if sharedMask.CountEnabled() >= p.Threshold-1 { // we assume the root accepts the proposal
@@ -112,8 +115,10 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 				}
 			case err := <-errChan:
 				err = fmt.Errorf("error in getting commitments: %s", err)
+				close(closingChan)
 				return nil, nil, err
 			case <-time.After(p.Timeout):
+				close(closingChan)
 				return nil, nil, fmt.Errorf("not enough replies from nodes at timeout "+
 					"for Threshold %d, got %d commitments and %d refusals",
 					p.Threshold, sharedMask.CountEnabled(), sumRefusals(commitmentsMap))
