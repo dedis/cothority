@@ -27,29 +27,32 @@ type ID []byte
 // These are the messages used in the API-calls
 // ***
 
-// Darc is the basic structure representing an access control. A Darc can evolve in the way that
-// a new Darc points to the previous one and is signed by the owner(s) of the previous Darc.
+// Darc is the basic structure representing an access control. A Darc can
+// evolve in the way that a new Darc points to the previous one and is signed
+// by the owner(s) of the previous Darc.
 type Darc struct {
-	// Version should be monotonically increasing over the evolution of a Darc.
+	// Version should be monotonically increasing over the evolution of a
+	// Darc.
 	Version uint64
-	// Description is a free-form field that can hold any data as required by the user.
-	// Darc itself will never depend on any of the data in here.
+	// Description is a free-form field that can hold any data as required
+	// by the user. Darc itself will never depend on any of the data in
+	// here.
 	Description []byte
-	// BaseID is the ID of the first darc of this Series
+	// BaseID is the ID of the first darc in the chain of evolution. It is
+	// not set if the darc is on version 0.
 	BaseID ID
+	// PrevID is the previous darc ID in the chain of evolution.
+	PrevID ID
 	// Rules map an action to an expression.
 	Rules Rules
-	// Represents the path to get up to information to be able to verify
-	// this signature.  These justify the right of the signer to push a new
-	// Darc.  These are ordered from the oldest to the newest, i.e.
-	// Path[0] should be the base Darc.
-	Path []*Darc
-	// PathDigest is the digest of Path, it should be always set.
-	PathDigest []byte
 	// Signature is calculated on the Request-representation of the darc.
 	// It needs to be created by identities that have the "_evolve" action
 	// from the previous valid Darc.
 	Signatures []*Signature
+	// VerificationDarcs are a list of darcs that the verifier needs to
+	// verify this darc. It is not needed in online verification where the
+	// verifier stores all darcs.
+	VerificationDarcs []*Darc
 }
 
 // Action is a string that should be associated with an expression. The

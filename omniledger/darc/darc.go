@@ -58,6 +58,19 @@ import (
 const evolve = "_evolve"
 const sign = "_sign"
 
+// GetDarc is a callback function that we expect the user of this library to
+// supply in some of our methods. The user is free to choose how he/she wants
+// to store the darc. Hence, during verification, we need a way to retrieve an
+// older darc so check that the a request or an evolution is correctly signed,
+// which is done using this callback. The first argument is the ID of the darc
+// (output of IdentityDarc.String()), the second argument is to specify whether
+// this callback should return the latest darc or the exact darc. For instance,
+// if latest is true, then given a darc base-ID (a darc of version 0), the
+// callback should return the latest one with that base-ID. If latest is false,
+// then the callback should return an exact match. The callback should return
+// nil if no match is found.
+type GetDarc func(s string, latest bool) *Darc
+
 // InitRules initialise a set of rules with the default actions "_evolve" and
 // "_sign". Signers are joined with logical-Or, owners are joined with
 // logical-AND. If other expressions are needed, please set the rules manually.
@@ -82,13 +95,13 @@ func InitRules(owners []*Identity, signers []*Identity) Rules {
 // the BaseID is empty if the Version is 0, it must be computed using
 // GetBaseID.
 func NewDarc(rules Rules, desc []byte) *Darc {
-	zeroDigest := sha256.Sum256([]byte{})
+	zeroSha := sha256.Sum256([]byte{})
 	return &Darc{
 		Version:     0,
 		Description: desc,
 		Signatures:  []*Signature{},
 		Rules:       rules,
-		PathDigest:  zeroDigest[:],
+		PrevID:      zeroSha[:],
 	}
 }
 
@@ -98,7 +111,11 @@ func (d *Darc) Copy() *Darc {
 		Version:     d.Version,
 		Description: copyBytes(d.Description),
 		BaseID:      copyBytes(d.BaseID),
-		PathDigest:  copyBytes(d.PathDigest),
+		PrevID:      copyBytes(d.PrevID),
+	}
+	dCopy.VerificationDarcs = make([]*Darc, len(d.VerificationDarcs))
+	for i := range d.VerificationDarcs {
+		dCopy.VerificationDarcs[i] = d.VerificationDarcs[i]
 	}
 	newRules := make(Rules)
 	for k, v := range d.Rules {
@@ -148,7 +165,7 @@ func (d Darc) GetID() ID {
 	h.Write(verBytes)
 	h.Write(d.Description)
 	h.Write(d.BaseID)
-	h.Write(d.PathDigest)
+	h.Write(d.PrevID)
 
 	actions := make([]string, len(d.Rules))
 	var i int
@@ -253,21 +270,15 @@ func isDefault(action Action) bool {
 }
 
 // EvolveFrom sets the fields of d such that it is a valid evolution from the
-// latest darc in path.
-func (d *Darc) EvolveFrom(path []*Darc) error {
-	if len(path) == 0 {
-		return errors.New("path should not be empty")
+// darc given by prev. For the evolution to be accepted, it must be signed
+// using Darc.MakeEvolveRequest.
+func (d *Darc) EvolveFrom(prev *Darc) error {
+	if prev == nil {
+		return errors.New("prev darc cannot be nil")
 	}
-	prevDarc := path[len(path)-1]
-	d.Version = prevDarc.Version + 1
-	d.BaseID = prevDarc.GetBaseID()
-
-	pathDigest, err := hashAll(darcsMsg(path))
-	if err != nil {
-		return err
-	}
-	d.Path = path
-	d.PathDigest = pathDigest
+	d.Version = prev.Version + 1
+	d.BaseID = prev.GetBaseID()
+	d.PrevID = prev.GetID()
 	return nil
 }
 
@@ -323,19 +334,20 @@ func (d *Darc) IncrementVersion() {
 }
 
 // Verify will check that the darc is correct, an error is returned if
-// something is wrong.
+// something is wrong. This is used for offline verification where
+// Darc.VerificationDarcs has all the required darcs for doing the
+// verification.
 func (d *Darc) Verify() error {
-	return d.VerifyWithCB(func(s string) *Darc {
-		return nil
-	})
+	return d.VerifyWithCB(DarcsToGetDarcs(d.VerificationDarcs))
 }
 
 // VerifyWithCB will check that the darc is correct, an error is returned if
-// something is wrong.  The caller should supply the callback getDarc because
+// something is wrong.  The caller should supply the callback GetDarc because
 // if one of the IDs in the expression is a Darc ID, then this function needs a
-// way to retrieve the correct Darc according to that ID. Note that getDarc is
-// responsible to return the newest Darc.
-func (d *Darc) VerifyWithCB(getDarc func(string) *Darc) error {
+// way to retrieve the correct Darc according to that ID. This function will
+// ignore darcs in Darc.VerificationDarcs, please use Darc.Verify if you wish
+// to use it.
+func (d *Darc) VerifyWithCB(getDarc GetDarc) error {
 	if d == nil {
 		return errors.New("darc is nil")
 	}
@@ -347,63 +359,29 @@ func (d *Darc) VerifyWithCB(getDarc func(string) *Darc) error {
 		return errors.New("no signatures")
 	}
 
-	if err := d.findPath(getDarc); err != nil {
-		return err
+	// We try to find an exact match for the darc in Darc.PrevID, so don't
+	// ask the callback to return the latest one.
+	prev := getDarc(NewIdentityDarc(d.PrevID).String(), false)
+	if prev == nil {
+		return errors.New("cannot find the previous darc")
 	}
-
-	var prev *Darc
-	for i, curr := range d.Path {
-		if prev == nil && curr.Version == 0 {
-			prev = curr
-			continue
-		}
-		if err := verifyOneEvolution(curr, prev, getDarc); err != nil {
-			return fmt.Errorf("verification failed on index %d with error: %v", i, err)
-		}
-		prev = curr
-	}
-
-	signer := d.Path[len(d.Path)-1]
-	return verifyOneEvolution(d, signer, getDarc)
+	return verifyOneEvolution(d, prev, getDarc)
 }
 
-// findPath will check if whether d.Path is unset, if it is, it'll try to
-// populate it by looking up darcs using the getDarc callback.
-func (d *Darc) findPath(getDarc func(string) *Darc) error {
-	if len(d.Path) == 0 {
-		baseID := NewIdentityDarc(d.GetBaseID())
-		latest := getDarc(baseID.String())
-		if latest == nil {
-			return errors.New("couldn't find base darc")
-		}
-		var path []*Darc
-		for _, p := range latest.Path {
-			if d.Version > p.Version {
-				path = append(path, p)
-			} else {
-				break
-			}
-		}
-		pathDigest, err := hashAll(darcsMsg(path))
-		if err != nil {
-			return err
-		}
-		if !bytes.Equal(pathDigest, d.PathDigest) {
-			return fmt.Errorf("recomputed path digest is not equal to the original")
-		}
-		d.Path = path
-	}
-	if len(d.Path) == 0 {
-		return errors.New("empty path")
-	}
-	return nil
+// Verify checks the request with the given darc and returns an error if it
+// cannot be accepted. The caller is responsible for providing the latest darc
+// in the argument. The darcs in Darc.VerificationDarcs will be used for the
+// verification.
+func (r *Request) Verify(d *Darc) error {
+	return r.VerifyWithCB(d, DarcsToGetDarcs(d.VerificationDarcs))
 }
 
 // VerifyWithCB checks the request with the given darc using a callback which
 // looks-up missing darcs. The function returns an error if the request cannot
 // be accepted. The caller is responsible for providing the latest darc in the
-// argument.
-func (r *Request) VerifyWithCB(d *Darc, getDarc func(string) *Darc) error {
+// argument. This function will ignore darcs in Darc.VerificationDarcs, please
+// use Darc.Verify if you wish to use it.
+func (r *Request) VerifyWithCB(d *Darc, getDarc GetDarc) error {
 	if len(r.Signatures) == 0 {
 		return errors.New("no signatures - nothing to verify")
 	}
@@ -432,18 +410,9 @@ func (r *Request) VerifyWithCB(d *Darc, getDarc func(string) *Darc) error {
 	return nil
 }
 
-// Verify checks the request with the given darc and returns an error if it
-// cannot be accepted. The caller is responsible for providing  the latest
-// darc in the argument.
-func (r *Request) Verify(d *Darc) error {
-	return r.VerifyWithCB(d, func(s string) *Darc {
-		return nil
-	})
-}
-
 // String returns a human-readable string representation of the darc.
 func (d Darc) String() string {
-	s := fmt.Sprintf("ID:\t%x\nBase:\t%x\nVer:\t%d\nRules:", d.GetID(), d.GetBaseID(), d.Version)
+	s := fmt.Sprintf("ID:\t%x\nBase:\t%x\nPrev:\t%x\nVer:\t%d\nRules:", d.GetID(), d.GetBaseID(), d.PrevID, d.Version)
 	for k, v := range d.Rules {
 		s += fmt.Sprintf("\n\t%s - \"%s\"", k, v)
 	}
@@ -467,42 +436,44 @@ func (id ID) Equal(other ID) bool {
 	return bytes.Equal([]byte(id), []byte(other))
 }
 
-// pathContains checks whether the path contains the ID.
-func (d *Darc) pathContains(cb func(*Darc) bool) bool {
-	for _, p := range d.Path {
-		if cb(p) {
-			return true
+// DarcsToGetDarcs is a convenience function that convers a slice of darcs into
+// the GetDarc callback.
+func DarcsToGetDarcs(darcs []*Darc) GetDarc {
+	return func(s string, latest bool) *Darc {
+		// build a map to store the latest darcs
+		m := make(map[string]*Darc)
+		for _, inner := range darcs {
+			id := NewIdentityDarc(inner.GetBaseID())
+			if v, ok := m[id.String()]; ok {
+				if v.Version < inner.Version {
+					m[id.String()] = inner
+				}
+			} else {
+				m[id.String()] = inner
+			}
 		}
-	}
-	return false
-}
 
-func hashAll(msgs ...[]byte) ([]byte, error) {
-	h := sha256.New()
-	for _, msg := range msgs {
-		if _, err := h.Write(msg); err != nil {
-			return nil, err
+		// pick the darc depending if we're looking for the latest one
+		if latest {
+			if v, ok := m[s]; ok {
+				return v
+			}
+		} else {
+			for _, inner := range darcs {
+				if NewIdentityDarc(inner.GetID()).String() == s {
+					return inner
+				}
+			}
 		}
+		return nil
 	}
-	return h.Sum(nil), nil
-}
-
-func darcsMsg(darcs []*Darc) []byte {
-	if len(darcs) == 0 {
-		return []byte{}
-	}
-	var path []byte
-	for _, darc := range darcs {
-		path = append(path, darc.GetID()...)
-	}
-	return path
 }
 
 // verifyOneEvolution verifies that one evolution is performed correctly. That
-// is, there should exist a signature in the newDarc that is signed by one of
-// the identities with the evolve permission in the oldDarc. The message is the
-// signature path specified in the newDarc, its ID and the base ID of the darc.
-func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string) *Darc) error {
+// is, there exists a signature in the newDarc that is signed by one of the
+// identities with the evolve permission in the oldDarc. The message that
+// prevDarc signs is the digest of a Darc.Request.
+func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string, bool) *Darc) error {
 	// check base ID
 	if newDarc.BaseID == nil {
 		return errors.New("nil base ID")
@@ -533,25 +504,25 @@ func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string) *Darc) err
 	inner := innerRequest{
 		BaseID:     newDarc.GetBaseID(),
 		Action:     evolve,
-		Msg:        nil,
+		Msg:        newDarc.GetID(),
 		Identities: signerIDs,
-	}
-	digest, err := inner.DarcHash(newDarc.GetID())
-	if err != nil {
-		return nil
 	}
 
 	// perform the verification
+	digest := inner.Hash()
 	for _, sig := range newDarc.Signatures {
 		if err := sig.Signer.Verify(digest, sig.Signature); err != nil {
 			return err
 		}
 	}
-	return nil
+
+	// recursively verify the previous darc
+	return prevDarc.VerifyWithCB(getDarc)
 }
 
-// evalExprWithSigs is a simple wrapper around
-func evalExprWithSigs(expr expression.Expr, getDarc func(string) *Darc, sigs ...*Signature) error {
+// evalExprWithSigs is a simple wrapper around evalExpr that extracts Signer
+// from Signature.
+func evalExprWithSigs(expr expression.Expr, getDarc GetDarc, sigs ...*Signature) error {
 	signers := make([]string, len(sigs))
 	for i, sig := range sigs {
 		signers[i] = sig.Signer.String()
@@ -564,13 +535,12 @@ func evalExprWithSigs(expr expression.Expr, getDarc func(string) *Darc, sigs ...
 
 // evalExpr checks whether the expression evaluates to true
 // given a list of identities.
-func evalExpr(expr expression.Expr, getDarc func(string) *Darc, ids ...string) error {
+func evalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 	Y := expression.InitParser(func(s string) bool {
 		if strings.HasPrefix(s, "darc") {
 			// getDarc is responsible for returning the latest Darc
-			// but the path should contain the darc ID s.
-			d := getDarc(s)
-			if d.Verify() != nil {
+			d := getDarc(s, true)
+			if d.VerifyWithCB(getDarc) != nil {
 				return false
 			}
 			// Evaluate the "sign" action only in the latest darc
@@ -841,32 +811,6 @@ func (r innerRequest) Hash() []byte {
 	return h.Sum(nil)
 }
 
-// DarcHash is similar to innerRequest.Hash but it does not hash the Msg.
-// Instead, it hashes the argument darcID. We this this functionality because a
-// byte slice of a serialised darc is not consistent, the same darc may give
-// two different serialisation.
-func (r innerRequest) DarcHash(darcID ID) ([]byte, error) {
-	h := sha256.New()
-	if _, err := h.Write(r.BaseID); err != nil {
-		return nil, err
-	}
-	if _, err := h.Write([]byte(r.Action)); err != nil {
-		return nil, err
-	}
-	// Instead of using r.Msg, we use the darc ID, because r.Msg might not
-	// be the same for the same request (protobuf serialisation is
-	// non-deterministic).
-	if _, err := h.Write(darcID); err != nil {
-		return nil, err
-	}
-	for _, i := range r.Identities {
-		if _, err := h.Write([]byte(i.String())); err != nil {
-			return nil, err
-		}
-	}
-	return h.Sum(nil), nil
-}
-
 // GetIdentityStrings returns a slice of identity strings, this is useful for
 // creating a parser.
 func (r *Request) GetIdentityStrings() []string {
@@ -877,10 +821,10 @@ func (r *Request) GetIdentityStrings() []string {
 	return res
 }
 
-// MsgToDarc attempts to return a darc if the Msg part of the request is
-// serialised as a darc. This function should NOT be used as a way to check
-// whether the Msg part is a darc.
-func (r *Request) MsgToDarc(darcBuf []byte, existingPath []*Darc) (*Darc, error) {
+// MsgToDarc attempts to return a darc given the matching darcBuf. This
+// function should *not* be used as a way to verify the darc, it only checks
+// that darcBuf can be decoded and matches with the Msg part of the request.
+func (r *Request) MsgToDarc(darcBuf []byte) (*Darc, error) {
 	d, err := NewDarcFromProto(darcBuf)
 	if err != nil {
 		return nil, err
@@ -901,15 +845,6 @@ func (r *Request) MsgToDarc(darcBuf []byte, existingPath []*Darc) (*Darc, error)
 		}
 	}
 	d.Signatures = darcSigs
-
-	pathDigest, err := hashAll(darcsMsg(existingPath))
-	if err != nil {
-		return nil, err
-	}
-	if !bytes.Equal(pathDigest, d.PathDigest) {
-		return nil, fmt.Errorf("recomputed path digest is not equal to the original")
-	}
-	d.Path = existingPath
 
 	return d, nil
 }

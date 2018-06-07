@@ -23,7 +23,7 @@ func Example() {
 	owner2 := darc.NewSignerEd25519(nil, nil)
 	rules2 := darc.InitRules([]*darc.Identity{owner2.Identity()}, []*darc.Identity{})
 	d2 := darc.NewDarc(rules2, []byte("example darc 2"))
-	d2.EvolveFrom([]*darc.Darc{d1})
+	d2.EvolveFrom(d1)
 	r, d2Buf, err := d2.MakeEvolveRequest(owner1)
 	fmt.Println(err)
 
@@ -34,7 +34,7 @@ func Example() {
 	// verification is successful, then the server should add the darc in
 	// the request to its database.
 	fmt.Println(r.Verify(d1)) // Assume we can find d1 given r.
-	d2Server, _ := r.MsgToDarc(d2Buf, []*darc.Darc{d1})
+	d2Server, _ := r.MsgToDarc(d2Buf)
 	fmt.Println(bytes.Equal(d2Server.GetID(), d2.GetID()))
 
 	// If the darcs stored on the server are trustworthy, then using
@@ -42,7 +42,12 @@ func Example() {
 	// Darc.Verify should be used. This will traverse the chain of
 	// evolution and verify every evolution. However, the Darc.Path
 	// attribute must be set.
-	fmt.Println(d2Server.Verify())
+	fmt.Println(d2Server.VerifyWithCB(func(s string, latest bool) *darc.Darc {
+		if s == darc.NewIdentityDarc(d1.GetID()).String() {
+			return d1
+		}
+		return nil
+	}))
 
 	// The above illustrates the basic use of darcs, in the following
 	// examples, we show how to create custom rules to enforce custom
