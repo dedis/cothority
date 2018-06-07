@@ -52,9 +52,9 @@ The source code for this stable branch is
 [here](https://github.com/dedis/cothority/tree/v2).
 
 During 2018, we hope to bring you the following new pieces:
+- Cross platform mobile application to interact with the cisc and pop services
 - Evoting using a Neff shuffle
 - Omniledger implementation using key/value pair storage and protected by darcs
-- Cross platform mobile application to interact with the cisc and pop services
 - Onchain-secrets (Scarab) to hide secrets in plain sight on the public ledger!
 
 Other pieces we hope to achieve in 2018:
