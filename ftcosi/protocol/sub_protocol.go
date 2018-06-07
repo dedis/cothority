@@ -95,8 +95,15 @@ func NewSubFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite)
 }
 
 // Shutdown stops the protocol
+// If the node is the root node, it broadcasts a Stop message to all the nodes in the tree.
 func (p *SubFtCosi) Shutdown() error {
 	p.stoppedOnce.Do(func() {
+		if p.IsRoot() {
+			err := p.Broadcast(&Stop{})
+			if err != nil {
+				log.Error("error while broadcasting stopping message:", err)
+			}
+		}
 		close(p.ChannelAnnouncement)
 		close(p.ChannelCommitment)
 		close(p.ChannelChallenge)
@@ -348,14 +355,9 @@ func (p *SubFtCosi) sendAggregatedCommitments(commitments []StructCommitment, NR
 	return nil
 }
 
-// HandleStop is called when a Stop message is send to this node.
-// It broadcasts the message to all the nodes in tree and each node will stop
-// the protocol by calling p.Done.
+// HandleStop is called when a Stop message is send to this node. It stops the node.
 func (p *SubFtCosi) HandleStop(stop StructStop) error {
-	defer p.Done()
-	if p.IsRoot() {
-		p.Broadcast(&stop.Stop)
-	}
+	p.Shutdown()
 	return nil
 }
 

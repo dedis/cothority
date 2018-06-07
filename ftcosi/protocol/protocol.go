@@ -46,6 +46,7 @@ type FtCosi struct {
 
 	publics         []kyber.Point
 	stoppedOnce     sync.Once
+	subProtocols	[]*SubFtCosi
 	startChan       chan bool
 	subProtocolName string
 	verificationFn  VerificationFn
@@ -90,6 +91,9 @@ func NewFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName stri
 // Shutdown stops the protocol
 func (p *FtCosi) Shutdown() error {
 	p.stoppedOnce.Do(func() {
+		for _, subFtCosi := range p.subProtocols {
+			subFtCosi.Shutdown()
+		}
 		close(p.FinalSignature)
 	})
 	return nil
@@ -136,9 +140,9 @@ func (p *FtCosi) Dispatch() error {
 	}
 
 	// start all subprotocols
-	cosiSubProtocols := make([]*SubFtCosi, len(trees))
+	p.subProtocols = make([]*SubFtCosi, len(trees))
 	for i, tree := range trees {
-		cosiSubProtocols[i], err = p.startSubProtocol(tree)
+		p.subProtocols[i], err = p.startSubProtocol(tree)
 		if err != nil {
 			p.FinalSignature <- nil
 			return err
@@ -147,7 +151,7 @@ func (p *FtCosi) Dispatch() error {
 	log.Lvl3(p.ServerIdentity().Address, "all protocols started")
 
 	// collect commitments
-	commitments, runningSubProtocols, err := p.collectCommitments(trees, cosiSubProtocols)
+	commitments, runningSubProtocols, err := p.collectCommitments(trees, p.subProtocols)
 	if err != nil {
 		p.FinalSignature <- nil
 		return err
