@@ -105,7 +105,7 @@ func (p *SubFtCosi) Shutdown() error {
 			}
 		}
 		close(p.ChannelAnnouncement)
-		close(p.ChannelCommitment)
+		//close(p.ChannelCommitment) // Channel left open to allow verification function to safely return
 		close(p.ChannelChallenge)
 		close(p.ChannelResponse)
 	})
