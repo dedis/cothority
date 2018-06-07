@@ -22,11 +22,31 @@ type collectionDB struct {
 	coll       collection.Collection
 }
 
+// A CollectionView is an interface that defines the read-only operations
+// on a collection.
+type CollectionView interface {
+	Get(key []byte) collection.Getter
+}
+
+// roCollection is a wrapper for a collection that satisfies interface
+// CollectionView and makes it impossible for callers who receive it
+// to call the methods on the collection which can modify it. This
+// is about type safety, not real security. If the holder of the
+// CollectionView chooses to use package unsafe, then it's all over;
+// they can get write access.
+type roCollection struct {
+	c collection.Collection
+}
+
+func (r *roCollection) Get(key []byte) collection.Getter {
+	return r.c.Get(key)
+}
+
 // OmniLedgerContract is the type signature of the class functions
 // which can be registered with the omniledger service.
 // Since the outcome of the verification depends on the state of the collection
 // which is to be modified, we pass it as a pointer here.
-type OmniLedgerContract func(cdb collection.Collection, tx Instruction, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
+type OmniLedgerContract func(coll CollectionView, tx Instruction, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
 
 // newCollectionDB initialises a structure and reads all key/value pairs to store
 // it in the collection.
@@ -128,10 +148,10 @@ func (c *collectionDB) Store(t *StateChange) error {
 }
 
 func (c *collectionDB) GetValueContract(key []byte) ([]byte, []byte, error) {
-	return getValueContract(c.coll, key)
+	return getValueContract(&roCollection{c.coll}, key)
 }
 
-func getValueContract(coll collection.Collection, key []byte) (value, contract []byte, err error) {
+func getValueContract(coll CollectionView, key []byte) (value, contract []byte, err error) {
 	proof, err := coll.Get(key).Record()
 	if err != nil {
 		return

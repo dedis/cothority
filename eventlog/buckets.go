@@ -3,7 +3,6 @@ package eventlog
 import (
 	"errors"
 
-	"github.com/dedis/cothority/omniledger/collection"
 	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/protobuf"
 )
@@ -57,7 +56,7 @@ func (b *bucket) newLink(oldID, newID, eventID []byte) (omniledger.StateChanges,
 	}, &newBucket, nil
 }
 
-func getLatestBucket(coll collection.Collection) ([]byte, *bucket, error) {
+func getLatestBucket(coll omniledger.CollectionView) ([]byte, *bucket, error) {
 	bucketID, err := getIndexValue(coll)
 	if err != nil {
 		return nil, nil, err
@@ -72,7 +71,7 @@ func getLatestBucket(coll collection.Collection) ([]byte, *bucket, error) {
 	return bucketID, b, nil
 }
 
-func getBucketByID(coll collection.Collection, objID []byte) (*bucket, error) {
+func getBucketByID(coll omniledger.CollectionView, objID []byte) (*bucket, error) {
 	r, err := coll.Get(objID).Record()
 	if err != nil {
 		return nil, err
@@ -92,7 +91,7 @@ func getBucketByID(coll collection.Collection, objID []byte) (*bucket, error) {
 	return &b, nil
 }
 
-func getIndexValue(coll collection.Collection) ([]byte, error) {
+func getIndexValue(coll omniledger.CollectionView) ([]byte, error) {
 	r, err := coll.Get(indexKey.Slice()).Record()
 	if err != nil {
 		return nil, err

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dedis/cothority/omniledger/collection"
 	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
@@ -122,7 +121,7 @@ func (s *Service) GetEvent(req *GetEventRequest) (*GetEventResponse, error) {
 
 const contractName = "eventlog"
 
-func (s *Service) decodeAndCheckEvent(coll collection.Collection, eventBuf []byte) (*Event, error) {
+func (s *Service) decodeAndCheckEvent(coll omniledger.CollectionView, eventBuf []byte) (*Event, error) {
 	// Check the timestamp of the event: it should never be in the future,
 	// and it should not be more than 10 blocks in the past. (Why 10?
 	// Because it works.  But it would be nice to have a better way to hold
@@ -152,7 +151,7 @@ func (s *Service) decodeAndCheckEvent(coll collection.Collection, eventBuf []byt
 
 // contractFunction is the function that runs to process a transaction of
 // type "eventlog"
-func (s *Service) contractFunction(coll collection.Collection, tx omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
+func (s *Service) contractFunction(coll omniledger.CollectionView, tx omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
 	if tx.Delete != nil {
 		return nil, nil, errors.New("delete tx not allowed")
 	}

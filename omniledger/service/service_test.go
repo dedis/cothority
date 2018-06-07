@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dedis/cothority/omniledger/collection"
 	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/suites"
@@ -277,7 +276,7 @@ func TestService_StateChange(t *testing.T) {
 	defer closeQueues(s.local)
 
 	var latest int64
-	f := func(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	f := func(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		cid, _, err := tx.GetContractState(cdb)
 		if err != nil {
 			return nil, nil, err
@@ -442,15 +441,15 @@ func closeQueues(local *onet.LocalTest) {
 	}
 }
 
-func invalidContractFunc(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func invalidContractFunc(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	return nil, nil, errors.New("this invalid contract always returns an error")
 }
 
-func panicContractFunc(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func panicContractFunc(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	panic("this contract panics")
 }
 
-func dummyContractFunc(cdb collection.Collection, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func dummyContractFunc(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	args := tx.Spawn.Args[0].Value
 	cid, _, err := tx.GetContractState(cdb)
 	if err != nil {

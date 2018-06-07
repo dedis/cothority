@@ -150,7 +150,7 @@ func (instr Instruction) Hash() []byte {
 
 // GetContractState searches for the contract kind of this instruction and the
 // attached state to it. It needs the collection to do so.
-func (instr Instruction) GetContractState(coll collection.Collection) (contractID string, state []byte, err error) {
+func (instr Instruction) GetContractState(coll CollectionView) (contractID string, state []byte, err error) {
 	// Getting the kind is different for instructions that create a key
 	// and for instructions that send a call to an existing key.
 	if instr.Spawn != nil {

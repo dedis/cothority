@@ -426,7 +426,7 @@ func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*Config, error) {
 	if collDb == nil {
 		return nil, errors.New("nil collection DB")
 	}
-	return LoadConfigFromColl(collDb.coll)
+	return LoadConfigFromColl(&roCollection{collDb.coll})
 }
 
 // LoadBlockInterval loads the block interval from the skipchain ID.
@@ -435,7 +435,7 @@ func (s *Service) LoadBlockInterval(scID skipchain.SkipBlockID) (time.Duration, 
 	if collDb == nil {
 		return defaultInterval, errors.New("nil collection DB")
 	}
-	return LoadBlockIntervalFromColl(collDb.coll)
+	return LoadBlockIntervalFromColl(&roCollection{collDb.coll})
 }
 
 func (s *Service) loadLatestDarc(sid skipchain.SkipBlockID, dID darc.ID) (*darc.Darc, error) {
@@ -554,7 +554,10 @@ func (s *Service) createStateChanges(coll collection.Collection, cts ClientTrans
 	cdbTemp := coll.Clone()
 clientTransactions:
 	for _, ct := range cts {
-		cdbI := cdbTemp.Clone()
+		// Make a new collection for each instruction. If the instruction is sucessfully
+		// implemented and changes applied, then keep it (via cdbTemp = cdbI.c),
+		// otherwise dump it.
+		cdbI := &roCollection{c: cdbTemp.Clone()}
 		for _, instr := range ct.Instructions {
 			contract, _, err := instr.GetContractState(cdbI)
 			if err != nil {
@@ -573,7 +576,7 @@ clientTransactions:
 			// Wrap up f() inside of g(), so that we can recover panics
 			// from f().
 			log.Lvlf3("%s: Calling contract %s", s.ServerIdentity(), contract)
-			g := func(cdb collection.Collection, tx Instruction, c []Coin) (sc []StateChange, cout []Coin, err error) {
+			g := func(cdb CollectionView, tx Instruction, c []Coin) (sc []StateChange, cout []Coin, err error) {
 				defer func() {
 					if re := recover(); re != nil {
 						err = errors.New(re.(string))
@@ -588,14 +591,14 @@ clientTransactions:
 				continue clientTransactions
 			}
 			for _, sc := range scs {
-				if err := storeInColl(cdbI, &sc); err != nil {
+				if err := storeInColl(cdbI.c, &sc); err != nil {
 					log.Error("failed to add to collections with error: " + err.Error())
 					continue clientTransactions
 				}
 			}
 			states = append(states, scs...)
 		}
-		cdbTemp = cdbI
+		cdbTemp = cdbI.c
 		ctsOK = append(ctsOK, ct)
 	}
 	return cdbTemp.GetRoot(), ctsOK, states, nil
