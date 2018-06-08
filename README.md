@@ -53,9 +53,7 @@ The source code for this stable branch is
 
 During 2018, we hope to bring you the following new pieces:
 - Cross platform mobile application to interact with the cisc and pop services
-- Evoting using a Neff shuffle
 - Omniledger implementation using key/value pair storage and protected by darcs
-- Onchain-secrets (Scarab) to hide secrets in plain sight on the public ledger!
 
 Other pieces we hope to achieve in 2018:
 - Distributed internet archival functionality
@@ -89,11 +87,11 @@ it up as follows:
 
 ```ascii art
 +--------------------------+------------+--------------------------+
-|                          |APPLICATIONS|                          |
-|     Onchain-Secrets      +------------+     Proof of Personhood  |
-|                                                                  |
-| CISC Identity SkipChain       Status            E-voting         |
-|                                                                  |
+|     Onchain-Secrets      |APPLICATIONS|                          |
+|                          +------------+     Proof of Personhood  |
+|       Omniledger                                                 |
+|                               Status            E-voting         |
+| CISC Identity SkipChain                                          |
 +------------------------+---------------+-------------------------+
 |                        |BUILDING BLOCKS|                         |
 | Consensus              +---------------+       Key Sharding      |

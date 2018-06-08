@@ -24,6 +24,9 @@ an access control to it
 cryptographic tokens to physical people
 - [E-voting](../evoting/README.md) following Helios to store votes on a blockchain,
 shuffle them and decrypt all votes
+- [Omniledger](../omniledger/README.md) has the first steps of implementing
+an omniledger service, starting with batching transactions in a block and
+precompiled smart contracts
 
 Another block that is on the very edge of application and building block is the
 [skipchain](../skipchain/README.md). It's more than a building block, because it
