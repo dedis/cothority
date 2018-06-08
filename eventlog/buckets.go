@@ -17,7 +17,7 @@ type bucket struct {
 	EventRefs [][]byte
 }
 
-// updateBucket expectes the timestamps to be correct, it will set the start
+// updateBucket expects the timestamps to be correct, it will set the start
 // time to be the lowest of all events.
 func (b *bucket) updateBucket(bucketObjID, eventObjID []byte, event Event) (omniledger.StateChanges, error) {
 	if b.Start == 0 || event.When < b.Start {
@@ -36,6 +36,10 @@ func (b *bucket) updateBucket(bucketObjID, eventObjID []byte, event Event) (omni
 			Value:       bucketBuf,
 		},
 	}, nil
+}
+
+func (b *bucket) isFirst() bool {
+	return len(b.Prev) == 0
 }
 
 func (b *bucket) newLink(oldID, newID, eventID []byte) (omniledger.StateChanges, *bucket, error) {

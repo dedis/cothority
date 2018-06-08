@@ -119,6 +119,98 @@ func (s *Service) GetEvent(req *GetEventRequest) (*GetEventResponse, error) {
 	}, nil
 }
 
+// This should be a const, but we want to be able to hack it from tests.
+var searchMax = 10000
+
+// Search will search the event log for matching entries.
+func (s *Service) Search(req *SearchRequest) (*SearchResponse, error) {
+	if req.ID.IsNull() {
+		return nil, errors.New("skipchain ID required")
+	}
+
+	if req.To == 0 {
+		req.To = time.Now().UnixNano()
+	}
+
+	v := s.omni.GetCollectionView(req.ID)
+
+	// Find the latest bucket
+	id, b, err := getLatestBucket(v)
+	if err == errIndexMissing {
+		// There are no events yet on this chain, so return no results.
+		return &SearchResponse{}, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	// bEnd is normally updated from the last bucket's start. For the latest
+	// bucket, bEnd is now.
+	bEnd := time.Now().UnixNano()
+
+	// Walk backwards in the bucket chain through 2 zones: first where the
+	// bucket covers time that is not in our search range, and then where the buckets
+	// do cover the search range. When we see a bucket that ends before our search
+	// range, we can stop walking buckets.
+	var buckets []*bucket
+	var bids [][]byte
+	for {
+		if req.From > bEnd {
+			// This bucket is before the search range, so we are done walking back the bucket chain.
+			break
+		}
+
+		if req.To < b.Start {
+			// This bucket is after the search range, so we do not add it to buckets, but
+			// we keep walking up the chain.
+		} else {
+			buckets = append(buckets, b)
+			bids = append(bids, id)
+		}
+
+		if b.isFirst() {
+			break
+		}
+		bEnd = b.Start
+		id = b.Prev
+		b, err = getBucketByID(v, id)
+		if err != nil {
+			// This indicates that the event log data structure is wrong, so
+			// we cannot claim to correctly search it. Give up instead.
+			log.Errorf("expected event log bucket id %x not found: %v", b.Prev, err)
+			return nil, err
+		}
+	}
+
+	reply := &SearchResponse{}
+
+	// Process the time buckets from earliest to latest so that
+	// if we truncate, it is the latest events that are not returned,
+	// so that they can set req.From = resp.Events[len(resp.Events)-1].When.
+filter:
+	for i := len(buckets) - 1; i >= 0; i-- {
+		b := buckets[i]
+		for _, e := range b.EventRefs {
+			ev, err := getEventByID(v, e)
+			if err != nil {
+				log.Errorf("bucket %x points to event %x, but the event was not found: %v", bids[i], e, err)
+				return nil, err
+			}
+
+			if req.From <= ev.When && ev.When < req.To {
+				if req.Topic == "" || req.Topic == ev.Topic {
+					reply.Events = append(reply.Events, *ev)
+					if len(reply.Events) >= searchMax {
+						reply.Truncated = true
+						break filter
+					}
+				}
+			}
+		}
+	}
+
+	return reply, nil
+}
+
 const contractName = "eventlog"
 
 func (s *Service) decodeAndCheckEvent(coll omniledger.CollectionView, eventBuf []byte) (*Event, error) {
@@ -260,10 +352,30 @@ func newService(c *onet.Context) (onet.Service, error) {
 		omni:             c.Service(omniledger.ServiceName).(*omniledger.Service),
 		bucketSize:       10,
 	}
-	if err := s.RegisterHandlers(s.Init, s.Log, s.GetEvent); err != nil {
+	if err := s.RegisterHandlers(s.Init, s.Log, s.GetEvent, s.Search); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 
 	omniledger.RegisterContract(s, contractName, s.contractFunction)
 	return s, nil
+}
+
+func getEventByID(coll omniledger.CollectionView, objID []byte) (*Event, error) {
+	r, err := coll.Get(objID).Record()
+	if err != nil {
+		return nil, err
+	}
+	v, err := r.Values()
+	if err != nil {
+		return nil, err
+	}
+	newval, ok := v[0].([]byte)
+	if !ok {
+		return nil, errors.New("invalid value")
+	}
+	var e Event
+	if err := protobuf.Decode(newval, &e); err != nil {
+		return nil, err
+	}
+	return &e, nil
 }

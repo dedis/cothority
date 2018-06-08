@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/dedis/cothority"
@@ -28,6 +29,19 @@ type config struct {
 	Roster *onet.Roster
 	Owner  darc.Signer
 	Darc   *darc.Darc
+}
+
+func (c *config) newClient() *eventlog.Client {
+	cl := eventlog.NewClient(c.Roster)
+	// TODO: The skipchain should be created by and configured by some generic
+	// omniledger tool.
+	cl.ID = c.ID
+	// TODO: It should be possible to send logs, signing them with a different
+	// key. But first, we need to implement something like "el grant" to grant write
+	// privs to a given private/public key.
+	cl.Signers = []*darc.Signer{c.Owner}
+	cl.Darc = c.Darc
+	return cl
 }
 
 var cmds = cli.Commands{
@@ -81,14 +95,47 @@ var cmds = cli.Commands{
 		},
 		Action: doLog,
 	},
+	{
+		Name:    "search",
+		Usage:   "search for messages",
+		Aliases: []string{"s"},
+		Flags: []cli.Flag{
+			cli.IntFlag{
+				Name:   "config",
+				Value:  1,
+				EnvVar: "EL_CONFIG",
+				Usage:  "config number to use",
+			},
+			cli.StringFlag{
+				Name:  "topic, t",
+				Usage: "limit results to logs with this topic",
+			},
+			cli.IntFlag{
+				Name:  "count, c",
+				Usage: "limit results to X events",
+			},
+			cli.StringFlag{
+				Name:  "from",
+				Usage: "return events from this time (accepts mm-dd-yyyy or relative times like '10m ago')",
+			},
+			cli.StringFlag{
+				Name:  "to",
+				Usage: "return events to this time (accepts mm-dd-yyyy or relative times like '10m ago')",
+			},
+			cli.DurationFlag{
+				Name:  "for",
+				Usage: "return events for this long after the from time (when for is given, to is ignored)",
+			},
+		},
+		Action: search,
+	},
 }
+
+var cliApp = cli.NewApp()
 
 func init() {
 	network.RegisterMessages(&config{})
-}
 
-func main() {
-	cliApp := cli.NewApp()
 	cliApp.Name = "el"
 	cliApp.Usage = "Create and work with OmniLedger event logs."
 	cliApp.Version = "0.1"
@@ -111,6 +158,9 @@ func main() {
 		log.SetDebugVisible(c.Int("debug"))
 		return nil
 	}
+}
+
+func main() {
 	log.ErrFatal(cliApp.Run(os.Args))
 }
 
@@ -130,7 +180,7 @@ func create(c *cli.Context) error {
 	}
 
 	n := c.String("name")
-	cfg, err := doCreate(n, r)
+	cfg, err := doCreate(n, r, 5*time.Second)
 	if err != nil {
 		return err
 	}
@@ -138,10 +188,10 @@ func create(c *cli.Context) error {
 	return err
 }
 
-func doCreate(name string, r *onet.Roster) (*config, error) {
+func doCreate(name string, r *onet.Roster, interval time.Duration) (*config, error) {
 	owner := darc.NewSignerEd25519(nil, nil)
 	c := eventlog.NewClient(r)
-	err := c.Init(owner, 5*time.Second)
+	err := c.Init(owner, interval)
 	if err != nil {
 		return nil, err
 	}
@@ -179,7 +229,7 @@ func show(c *cli.Context) error {
 	return nil
 }
 
-func doLog(c *cli.Context) error {
+func findConfig(c *cli.Context) (*config, error) {
 	cfg := c.Int("config")
 
 	// In the UI they are 1-based, but in cfg[] they are 0-based.
@@ -187,24 +237,26 @@ func doLog(c *cli.Context) error {
 
 	cfgs, err := loadConfigs(getDataPath("el"))
 	if err != nil {
-		return err
+		return nil, err
+	}
+	if cfg < 0 {
+		return nil, fmt.Errorf("config number less than 1 is not allowed")
 	}
 	if cfg > len(cfgs)-1 {
-		return fmt.Errorf("config number %v is too big", cfg+1)
+		return nil, fmt.Errorf("config number %v is too big", cfg+1)
+	}
+	return &cfgs[cfg], nil
+}
+
+func doLog(c *cli.Context) error {
+	cfg, err := findConfig(c)
+	if err != nil {
+		return err
 	}
 
-	cl := eventlog.NewClient(cfgs[cfg].Roster)
-	cl.ID = cfgs[cfg].ID
-	// TODO: It should be possible to send logs, signing them with a different
-	// key. But first, we need to implement something like "el grant" to grant write
-	// privs to a given private/public key.
-	cl.Signers = []darc.Signer{cfgs[cfg].Owner}
-	// TODO: It is too bad that we need to store the Darc in config. It
-	// seems like the server should know this for us...
-	cl.Darc = cfgs[cfg].Darc
+	cl := cfg.newClient()
 
 	t := c.String("topic")
-
 	content := c.String("content")
 
 	// Content is set, so one shot log.
@@ -222,6 +274,96 @@ func doLog(c *cli.Context) error {
 		}
 	}
 	return nil
+}
+
+var none = time.Unix(0, 0)
+
+// parseTime will accept either dates or "X ago" where X is a duration.
+func parseTime(in string) (time.Time, error) {
+	if strings.HasSuffix(in, " ago") {
+		in = strings.Replace(in, " ago", "", -1)
+		d, err := time.ParseDuration(in)
+		if err != nil {
+			return none, err
+		}
+		return time.Now().Add(-1 * d), nil
+	}
+	tm, err := time.Parse("01-02-2006", in)
+	if err != nil {
+		return none, err
+	}
+	return tm, nil
+}
+
+func search(c *cli.Context) error {
+	cfg, err := findConfig(c)
+	if err != nil {
+		return err
+	}
+
+	cl := cfg.newClient()
+
+	req := &eventlog.SearchRequest{
+		Topic: c.String("topic"),
+	}
+
+	f := c.String("from")
+	if f != "" {
+		ft, err := parseTime(f)
+		if err != nil {
+			return err
+		}
+		req.From = ft.UnixNano()
+	}
+
+	forDur := c.Duration("for")
+	if forDur == 0 {
+		// No -for, parse -to.
+		t := c.String("to")
+		if t != "" {
+			tt, err := parseTime(t)
+			if err != nil {
+				return err
+			}
+			req.To = tt.UnixNano()
+		}
+	} else {
+		// Parse -for
+		req.To = time.Unix(0, req.From).Add(forDur).UnixNano()
+	}
+
+	resp, err := cl.Search(req)
+	if err != nil {
+		return err
+	}
+
+	ct := c.Int("count")
+
+	for _, x := range resp.Events {
+		const tsFormat = "2006-01-02 15:04:05"
+		fmt.Fprintf(out(), "%v\t%v\t%v\n", time.Unix(0, x.When).Format(tsFormat), x.Topic, x.Content)
+
+		if ct != 0 {
+			ct--
+			if ct == 0 {
+				break
+			}
+		}
+	}
+
+	if resp.Truncated {
+		return cli.NewExitError("", 1)
+	}
+	return nil
+}
+
+// This is so that main_test.go can set where the output goes.
+func out() io.Writer {
+	var out io.Writer = os.Stdout
+	if cliApp.Metadata["stdout"] != nil {
+		out = cliApp.Metadata["stdout"].(io.Writer)
+	}
+	return out
 }
 
 func loadConfigs(dir string) ([]config, error) {

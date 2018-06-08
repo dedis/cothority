@@ -48,5 +48,6 @@ func TestBucket_NewLink(t *testing.T) {
 	scs, newBucket, err := b.newLink(oldID.Slice(), newID.Slice(), []byte("dummy event"))
 	require.Nil(t, err)
 	require.Equal(t, newBucket.Prev, oldID.Slice())
+	require.Equal(t, 0, newBucket.Start)
 	require.Equal(t, 1, len(scs))
 }

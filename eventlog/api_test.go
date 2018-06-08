@@ -143,3 +143,95 @@ func checkProof(t *testing.T, omni *omniledger.Service, key []byte, scID skipcha
 
 	return v[0].([]byte)
 }
+
+func TestClient_Search(t *testing.T) {
+	s := newSer(t)
+	leader := s.services[0]
+	defer s.close()
+
+	owner := darc.NewSignerEd25519(nil, nil)
+	c := NewClient(s.roster)
+	err := c.Init(owner, testBlockInterval)
+	require.Nil(t, err)
+
+	// Search before any events are logged.
+	req := &SearchRequest{ID: c.ID}
+	resp, err := c.Search(req)
+	require.Nil(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, 0, len(resp.Events))
+	require.False(t, resp.Truncated)
+
+	// Put 20 events in with different timestamps and topics that we can search on.
+	logCount := 20
+	tm0 := time.Now().UnixNano()
+	tm := tm0
+	for ct := 0; ct < logCount; ct++ {
+		tm += 1
+		topic := "a"
+		if (tm & 1) == 0 {
+			topic = "b"
+		}
+		_, err := c.Log(Event{Topic: topic, Content: fmt.Sprintf("test event at time %v", ct), When: tm})
+		require.Nil(t, err)
+	}
+	leader.waitForBlock(c.ID)
+	leader.waitForBlock(c.ID)
+
+	// Search for all.
+	req = &SearchRequest{ID: c.ID}
+	resp, err = c.Search(req)
+	require.Nil(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, 20, len(resp.Events))
+
+	// Search by time range.
+	req = &SearchRequest{ID: c.ID, From: tm0 + 3, To: tm0 + 8}
+	resp, err = c.Search(req)
+	require.Nil(t, err)
+	require.NotNil(t, resp)
+	require.False(t, resp.Truncated)
+	require.Equal(t, 5, len(resp.Events))
+
+	// Search by topic, should find half of them.
+	req = &SearchRequest{ID: c.ID, Topic: "a"}
+	resp, err = c.Search(req)
+	require.Nil(t, err)
+	require.NotNil(t, resp)
+	require.False(t, resp.Truncated)
+	require.Equal(t, 10, len(resp.Events))
+
+	// Search by time range and topic.
+	req = &SearchRequest{ID: c.ID, Topic: "a", From: tm0 + 3, To: tm0 + 8}
+	resp, err = c.Search(req)
+	require.Nil(t, err)
+	require.NotNil(t, resp)
+	require.False(t, resp.Truncated)
+	require.Equal(t, 10, len(resp.Events))
+
+	// Cause truncation.
+	sm := searchMax
+	searchMax = 5
+	req = &SearchRequest{ID: c.ID}
+	resp, err = c.Search(req)
+	require.Nil(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, 5, len(resp.Events))
+	require.True(t, resp.Truncated)
+	searchMax = sm
+
+	// Put one more event on now.
+	tm = time.Now().UnixNano()
+	_, err = c.Log(Event{Topic: "none", Content: "one more", When: tm})
+	require.Nil(t, err)
+	leader.waitForBlock(c.ID)
+	leader.waitForBlock(c.ID)
+
+	// Search from the last event, expect only it, not previous ones.
+	req = &SearchRequest{ID: c.ID, From: tm}
+	resp, err = c.Search(req)
+	require.Nil(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, 1, len(resp.Events))
+	require.False(t, resp.Truncated)
+}

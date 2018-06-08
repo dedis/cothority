@@ -25,6 +25,10 @@ Because config files are named after their skipchain ID in ~/.config/el, you can
 them to another server if you need to. *Remember* that there is the Darc owner's private key inside
 it, and anyone who has the file can evolve the access control on the EventLog.
 
+TODO: The behavior of init is wrong. It needs to take as input a config
+for an existing skipchain and then create as output a new owner Darc on that
+skipchain. (The skipchain config will come from the Omniledger tool.)
+
 ## Logging
 
 ```
@@ -33,11 +37,13 @@ $ el log -config 2 -topic Topic -content "The log message"
 
 Using config #2, log a string to the event log.
 
-If `-topic` is not set, it defaults to the empty string. If `-content` is not set, `el log` defaults
-to reading one line at a time from stdin and logging those with the given `-topic`.
+If `-topic` is not set, it defaults to the empty string. If `-content`
+is not set, `el log` defaults to reading one line at a time from stdin
+and logging those with the given `-topic`.
 
-An interesting test that logs 100 messages, one every .1 second, so that you can see
-the messages arriving over the course of several block creation epochs:
+An interesting test that logs 100 messages, one every .1 second, so
+that you can see the messages arriving over the course of several
+block creation epochs:
 
 ```
 $ seq 100 | (while read i; do echo $i; sleep .1; done) | ./el log
@@ -45,7 +51,24 @@ $ seq 100 | (while read i; do echo $i; sleep .1; done) | ./el log
 
 ## Searching
 
-Not implemented yet.
+```
+$ el search -config 2 -topic Topic -from 12:00 -to 13:00 -count 5
+$ el search -config 2 -topic Topic -from 12:00 -for 1h
+```
+
+The exit code tells you if the search was truncated or not. (TODO: Should
+we make the CLI re-search up to N times upon detecting truncation?)
+
+If `-topic` is not set, it defaults to the empty string. If you give
+`-for`, then you must not give `-to`. The default for `-from` is 1
+hours ago.
+
+```
+$ el search -follow -config 2 -topic Topic -from 12:00 -for 1h
+```
+
+The `-follow` flag does a normal search, then starts a subscription
+on the search in order to see new events as they arrive.
 
 ## Evolution (delegation) of access control
 
