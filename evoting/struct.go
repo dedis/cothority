@@ -24,6 +24,8 @@ func init() {
 	network.RegisterMessages(Reconstruct{}, ReconstructReply{})
 }
 
+// PROTOSTART
+
 // LookupSciper takes a sciper number and returns elements of the user.
 type LookupSciper struct {
 	Sciper string

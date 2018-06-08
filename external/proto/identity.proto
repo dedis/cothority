@@ -1,0 +1,102 @@
+syntax = "proto2";
+Messages between the Client-API and the Service
+
+// PinRequest used for admin autentification
+message PinRequest {
+  required string pin = 1;
+  required bytes public = 2;
+}
+
+// StoreKeys used for setting autentification
+message StoreKeys {
+  required AuthType type = 1;
+  optional FinalStatement final = 2;
+  repeated bytes publics = 3;
+  required bytes sig = 4;
+}
+
+// CreateIdentity starts a new identity-skipchain with the initial
+// Data and asking all nodes in Roster to participate.
+message CreateIdentity {
+  // 	 Data is the first data that will be stored in the genesis-block. It should
+  // 	 contain the roster and at least one public key
+  optional Data data = 1;
+  // 	 What type of authentication we're doing
+  required AuthType type = 2;
+  // 	 SchnSig is optional; one of Public or SchnSig must be set.
+  optional bytes schnsig = 3;
+  // 	 authentication via Linkable Ring Signature
+  required bytes sig = 4;
+  // 	 Nonce plays in this case message of authentication
+  required bytes nonce = 5;
+}
+
+// CreateIdentityReply is the reply when a new Identity has been added. It
+// returns the Root and Data-skipchain.
+message CreateIdentityReply {
+  optional SkipBlock genesis = 1;
+}
+
+// DataUpdate verifies if a new update is available.
+message DataUpdate {
+  required bytes id = 1;
+}
+
+// DataUpdateReply returns the updated data.
+message DataUpdateReply {
+  optional Data data = 1;
+}
+
+// ProposeSend sends a new proposition to be stored in all identities. It
+// either replies a nil-message for success or an error.
+message ProposeSend {
+  required bytes id = 1;
+  optional Data propose = 2;
+}
+
+// ProposeUpdate verifies if new data is available.
+message ProposeUpdate {
+  required bytes id = 1;
+}
+
+// ProposeUpdateReply returns the updated propose-data.
+message ProposeUpdateReply {
+  optional Data propose = 1;
+}
+
+// ProposeVote sends the signature for a specific IdentityList. It replies nil
+// if the threshold hasn't been reached, or the new SkipBlock
+message ProposeVote {
+  required bytes id = 1;
+  required string signer = 2;
+  required bytes signature = 3;
+}
+
+// ProposeVoteReply returns the signed new skipblock if the threshold of
+// votes have arrived.
+message ProposeVoteReply {
+  optional SkipBlock data = 1;
+}
+
+// Messages to be sent from one identity to another
+
+// PropagateIdentity sends a new identity to other identityServices
+message PropagateIdentity {
+  optional  *idblock = 1;
+  required string tag = 2;
+  required string pubstr = 3;
+}
+
+// UpdateSkipBlock asks the service to fetch the latest SkipBlock
+message UpdateSkipBlock {
+  required bytes id = 1;
+  optional SkipBlock latest = 2;
+}
+
+// Authenticate first message of authentication protocol
+// Empty message serves as trigger to start authentication protocol
+// It also serves as response from server to sign nonce within LinkCtx
+message Authenticate {
+  required bytes nonce = 1;
+  required bytes ctx = 2;
+}

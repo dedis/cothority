@@ -2,6 +2,11 @@ all: test
 
 # gopkg fits all v1.1, v1.2, ... in v1
 PKG_STABLE = gopkg.in/dedis/cothority.v2
+MAKEFILE_PATH=$(shell go env GOPATH)/src/github.com/dedis/Coding/bin/Makefile.base
+MAKEFILE_EXISTS=$(shell test -f $(MAKEFILE_PATH) && echo true)
+ifneq ($(MAKEFILE_EXISTS),true)
+    $(info you should download the dedis/Coding repository using "go get github.com/dedis/Coding")
+endif
 include $(shell go env GOPATH)/src/github.com/dedis/Coding/bin/Makefile.base
 EXCLUDE_LINT = "should be.*UI|_test.go"
 
@@ -24,4 +29,4 @@ test_playground:
 # make create_stable
 
 proto:
-	awk -f proto.awk status/service/struct.go > external/proto/status.proto
+	sh proto.sh

@@ -1,0 +1,62 @@
+syntax = "proto2";
+
+// Announcement is the announcement message, the first message in the CoSi protocol
+message Announcement {
+  required bytes msg = 1;
+  required bytes data = 2;
+  repeated bytes publics = 3;
+  required Duration timeout = 4;
+}
+
+// StructAnnouncement just contains Announcement and the data necessary to identify and
+// process the message in the onet framework.
+message StructAnnouncement {
+  // 	*onet.TreeNodeender
+  required  announcement = 1;
+}
+
+// Commitment is the ftcosi commitment message
+message Commitment {
+  required bytes cosicommitment = 1;
+  required bytes mask = 2;
+}
+
+// StructCommitment just contains Commitment and the data necessary to identify and
+// process the message in the onet framework.
+message StructCommitment {
+  optional  *onet.treenode = 1;
+  required  commitment = 2;
+}
+
+// Challenge is the ftcosi challenge message
+message Challenge {
+  required bytes cosichallenge = 1;
+}
+
+// StructChallenge just contains Challenge and the data necessary to identify and
+// process the message in the onet framework.
+message StructChallenge {
+  optional  *onet.treenode = 1;
+  required  challenge = 2;
+}
+
+// Response is the ftcosi response message
+message Response {
+  required bytes cosireponse = 1;
+}
+
+// StructResponse just contains Response and the data necessary to identify and
+// process the message in the onet framework.
+message StructResponse {
+  optional  *onet.treenode = 1;
+  required  response = 2;
+}
+
+// Stop is a message used to instruct a node to stop its protocol
+message Stop {
+  required   = 1;
+  //  StructStop is a wrapper around Stop for it to work with onet
+  required StructStop type = 2;
+  optional  *onet.treenode = 3;
+  required  stop = 4;
+}

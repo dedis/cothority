@@ -1,0 +1,128 @@
+syntax = "proto2";
+
+// RandHound is the main protocol struct and implements the
+// onet.ProtocolInstance interface.
+message RandHound {
+  optional  *onet.treenodeinstance = 1;
+  required   = 2;
+  required Mutex mutex = 3;
+  required   = 4;
+  // 	 Session information
+  // 	nodes   int Total number of nodes (client + servers)
+  // 	groups  int Number of groups
+  // 	faulty  int Maximum number of Byzantine servers
+  // 	purpose string Purpose of protocol run
+  // 	time    time.Time Timestamp of initiation
+  // 	cliRand []byte Client-chosen randomness (for initial sharding)
+  // 	sid     []byte Session identifier
+  required   = 5;
+  // 	 Group information
+  // 	server              [][]*onet.TreeNode Grouped servers
+  // 	group               [][]int Grouped server indices
+  // 	threshold           []int Group thresholds
+  // 	key                 [][]kyber.Point Grouped server public keys
+  // 	ServerIdxToGroupNum []int Mapping of gloabl server index to group number
+  // 	ServerIdxToGroupIdx []int Mapping of global server index to group server index
+  required   = 6;
+  // 	 Message information
+  // 	i1s          map[int]*I1 I1 messages sent to servers (index: group)
+  // 	i2s          map[int]*I2 I2 messages sent to servers (index: server)
+  // 	r1s          map[int]*R1 R1 messages received from servers (index: server)
+  // 	r2s          map[int]*R2 R2 messages received from servers (index: server)
+  // 	polyCommit   map[int][]kyber.Point Commitments of server polynomials (index: server)
+  // 	secret       map[int][]int Valid shares per secret/server (source server index -> list of target server indices)
+  // 	chosenSecret map[int][]int Chosen secrets contributing to collective randomness
+  required   = 7;
+  // 	 Misc
+  // 	Done        chan bool Channel to signal the end of a protocol run
+  // 	SecretReady bool Boolean to indicate whether the collect randomness is ready or not
+  required   = 8;
+  // 	Byzantine map[int]int // for simulating byzantine servers (= key)
+}
+
+// Share encapsulates all information for encrypted or decrypted shares and the
+// respective consistency proofs.
+message Share {
+  // 	Source int Source server index
+  // 	Target int Target server index
+  // 	Pos    int Share position
+  // 	Val    kyber.Point Share value
+  // 	Proof  ProofCore ZK-verification proof
+}
+
+// Transcript represents the record of a protocol run created by the client.
+message Transcript {
+  // 	SID          []byte Session identifier
+  // 	Nodes        int Total number of nodes (client + server)
+  // 	Groups       int Number of groups
+  // 	Faulty       int Maximum number of Byzantine servers
+  // 	Purpose      string Purpose of protocol run
+  // 	Time         time.Time Timestamp of initiation
+  // 	CliRand      []byte Client-chosen randomness (for initial sharding)
+  // 	CliKey       kyber.Point Client public key
+  // 	Group        [][]int Grouped server indices
+  // 	Key          [][]kyber.Point Grouped server public keys
+  // 	Threshold    []int Grouped secret sharing thresholds
+  // 	ChosenSecret map[int][]int Chosen secrets that contribute to collective randomness
+  // 	I1s          map[int]*I1 I1 messages sent to servers
+  // 	I2s          map[int]*I2 I2 messages sent to servers
+  // 	R1s          map[int]*R1 R1 messages received from servers
+  // 	R2s          map[int]*R2 R2 messages received from servers
+}
+
+// I1 is the message sent by the client to the servers in step 1.
+message I1 {
+  // 	Sig       []byte Schnorr signature
+  // 	SID       []byte Session identifier
+  // 	Threshold int Secret sharing threshold
+  // 	Group     []uint32 Group indices
+  // 	Key       []kyber.Point Public keys of trustees
+}
+
+// R1 is the reply sent by the servers to the client in step 2.
+message R1 {
+  // 	Sig        []byte Schnorr signature
+  // 	HI1        []byte Hash of I1
+  // 	EncShare   []Share Encrypted shares
+  // 	CommitPoly []byte Marshalled commitment polynomial
+}
+
+// I2 is the message sent by the client to the servers in step 3.
+message I2 {
+  // 	Sig          []byte Schnorr signature
+  // 	SID          []byte Session identifier
+  // 	ChosenSecret []uint32 Chosen secrets (flattened)
+  // 	EncShare     []Share Encrypted shares
+  // 	PolyCommit   []kyber.Point Polynomial commitments
+}
+
+// R2 is the reply sent by the servers to the client in step 4.
+message R2 {
+  // 	Sig      []byte Schnorr signature
+  // 	HI2      []byte Hash of I2
+  // 	DecShare []Share Decrypted shares
+}
+
+// WI1 is a onet-wrapper around I1.
+message WI1 {
+  optional  *onet.treenode = 1;
+  required  i1 = 2;
+}
+
+// WR1 is a onet-wrapper around R1.
+message WR1 {
+  optional  *onet.treenode = 1;
+  required  r1 = 2;
+}
+
+// WI2 is a onet-wrapper around I2.
+message WI2 {
+  optional  *onet.treenode = 1;
+  required  i2 = 2;
+}
+
+// WR2 is a onet-wrapper around R2.
+message WR2 {
+  optional  *onet.treenode = 1;
+  required  r2 = 2;
+}

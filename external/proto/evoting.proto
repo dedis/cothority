@@ -1,0 +1,145 @@
+syntax = "proto2";
+
+// LookupSciper takes a sciper number and returns elements of the user.
+message LookupSciper {
+  required string sciper = 1;
+  // 	 If LookupURL is set, use it instead of the default (for testing).
+  required string lookupurl = 2;
+}
+
+// LookupSciperReply returns the elements of the vcard from
+// https://people.epfl.ch/cgi-bin/people/vCard?id=sciper
+message LookupSciperReply {
+  required string fullname = 1;
+  required string email = 2;
+  required string url = 3;
+  required string title = 4;
+}
+
+// Link message.
+message Link {
+  // 	Pin       string Pin of the running service.
+  // 	Roster    *onet.Roster Roster that handles elections.
+  // 	Key       kyber.Point Key is a front-end public key.
+  // 	Admins    []uint32 Admins is a list of election administrators.
+  // 	ID        *skipchain.SkipBlockID ID of the master skipchain to update; optional.
+  // 	User      *uint32 User identifier; optional (required with ID).
+  // 	Signature *[]byte Signature authenticating the message; optional (required with ID).
+}
+
+// LinkReply message.
+message LinkReply {
+  // 	ID skipchain.SkipBlockID ID of the master skipchain.
+}
+
+// Open message.
+message Open {
+  // 	ID       skipchain.SkipBlockID ID of the master skipchain.
+  // 	Election *lib.Election Election object.
+  required   = 1;
+  // 	User      uint32 User identifier.
+  // 	Signature []byte Signature authenticating the message.
+}
+
+// OpenReply message.
+message OpenReply {
+  // 	ID  skipchain.SkipBlockID ID of the election skipchain.
+  // 	Key kyber.Point Key assigned by the DKG.
+}
+
+// Cast message.
+message Cast {
+  // 	ID     skipchain.SkipBlockID ID of the election skipchain.
+  // 	Ballot *lib.Ballot Ballot to be casted.
+  required   = 1;
+  // 	User      uint32 User identifier.
+  // 	Signature []byte Signature authenticating the message.
+}
+
+// CastReply message.
+message CastReply {
+  // 	ID skipchain.SkipBlockID Hash of the block storing the transaction
+}
+
+// Shuffle message.
+message Shuffle {
+  // 	ID skipchain.SkipBlockID ID of the election skipchain.
+  required   = 1;
+  // 	User      uint32 User identifier.
+  // 	Signature []byte Signature authenticating the message.
+}
+
+// ShuffleReply message.
+message ShuffleReply {
+  required   = 1;
+  //  Decrypt message.
+  required Decrypt type = 2;
+  // 	ID skipchain.SkipBlockID ID of the election skipchain.
+  required   = 3;
+  // 	User      uint32 User identifier.
+  // 	Signature []byte Signature authenticating the message.
+}
+
+// DecryptReply message.
+message DecryptReply {
+  required   = 1;
+  //  GetElections message.
+  required GetElections type = 2;
+  // 	User       uint32 User identifier.
+  // 	Master     skipchain.SkipBlockID Master skipchain ID.
+  // 	Stage      lib.ElectionState Election Stage filter. 0 for all elections.
+  // 	Signature  []byte Signature authenticating the message.
+  // 	CheckVoted bool Check if user has voted in the elections.
+}
+
+// GetElectionsReply message.
+message GetElectionsReply {
+  // 	Elections []*lib.Election Elections is the retrieved list of elections.
+  // 	IsAdmin   bool Is the user in the list of admins in the master?
+  required Master master = 1;
+}
+
+// GetBox message.
+message GetBox {
+  // 	ID skipchain.SkipBlockID ID of the election skipchain.
+}
+
+// GetBoxReply message.
+message GetBoxReply {
+  // 	Box *lib.Box Box of encrypted ballots.
+}
+
+// GetMixes message.
+message GetMixes {
+  // 	ID skipchain.SkipBlockID ID of the election skipchain.
+}
+
+// GetMixesReply message.
+message GetMixesReply {
+  // 	Mixes []*lib.Mix Mixes from all conodes.
+}
+
+// GetPartials message.
+message GetPartials {
+  // 	ID skipchain.SkipBlockID ID of the election skipchain.
+}
+
+// GetPartialsReply message.
+message GetPartialsReply {
+  // 	Partials []*lib.Partial Partials from all conodes.
+}
+
+// Reconstruct message.
+message Reconstruct {
+  // 	ID skipchain.SkipBlockID ID of the election skipchain.
+}
+
+// ReconstructReply message.
+message ReconstructReply {
+  // 	Points []kyber.Point Points are the decrypted plaintexts.
+}
+
+// Ping message.
+message Ping {
+  // 	Nonce uint32 Nonce can be any integer.
+}
