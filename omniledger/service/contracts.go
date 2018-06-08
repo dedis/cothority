@@ -5,7 +5,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/dedis/cothority/omniledger/collection"
 	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
@@ -47,7 +46,7 @@ type Config struct {
 }
 
 // LoadConfigFromColl loads the configuration data from the collections.
-func LoadConfigFromColl(coll collection.Collection) (*Config, error) {
+func LoadConfigFromColl(coll CollectionView) (*Config, error) {
 	// Find the genesis-darc ID.
 	val, contract, err := getValueContract(coll, GenesisReferenceID.Slice())
 	if err != nil {
@@ -80,7 +79,7 @@ func LoadConfigFromColl(coll collection.Collection) (*Config, error) {
 }
 
 // LoadBlockIntervalFromColl loads the block interval from the collections.
-func LoadBlockIntervalFromColl(coll collection.Collection) (time.Duration, error) {
+func LoadBlockIntervalFromColl(coll CollectionView) (time.Duration, error) {
 	config, err := LoadConfigFromColl(coll)
 	if err != nil {
 		return defaultInterval, err
@@ -90,7 +89,7 @@ func LoadBlockIntervalFromColl(coll collection.Collection) (time.Duration, error
 
 // ContractConfig can only be instantiated once per skipchain, and only for
 // the genesis block.
-func (s *Service) ContractConfig(cdb collection.Collection, tx Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	if tx.Spawn == nil {
 		return nil, nil, errors.New("Config can only be spawned")
 	}
@@ -139,6 +138,6 @@ func (s *Service) ContractConfig(cdb collection.Collection, tx Instruction, coin
 // ContractDarc accepts the following instructions:
 //   - Spawn - creates a new darc
 //   - Invoke.Evolve - evolves an existing darc
-func (s *Service) ContractDarc(cdb collection.Collection, tx Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+func (s *Service) ContractDarc(cdb CollectionView, tx Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	return nil, nil, errors.New("Not yet implemented")
 }
