@@ -125,7 +125,7 @@ func TestCheckRefuseMore(t *testing.T) {
 			runProtocolOnce(t, n, TestProtocolName, refuseCount, refuseCount <= n-(n+1)*2/3)
 		}
 	}
-	// Do it manually because we set NoLeakyTest in local
+	// Do it manually because we set CheckNone in local
 	log.AfterTest(t)
 }
 
@@ -174,7 +174,7 @@ func TestCheckRefuseParallel(t *testing.T) {
 		}(fc)
 	}
 	wg.Wait()
-	// Do it manually because we set NoLeakyTest in local
+	// Do it manually because we set CheckNone in local
 	log.AfterTest(t)
 }
 
@@ -197,7 +197,7 @@ func TestNodeFailure(t *testing.T) {
 			t.Fatalf("%d/%s/%d/%t: %s", nbrHosts, TestProtocolName, 0, true, err)
 		}
 	}
-	// Do it manually because we set NoLeakyTest in local
+	// Do it manually because we set CheckNone in local
 	log.AfterTest(t)
 }
 
@@ -216,7 +216,7 @@ func runProtocolOnce(t *testing.T, nbrHosts int, name string, refuseCount int, s
 func runProtocolOnceGo(nbrHosts int, name string, refuseCount int, succeed bool, killCount int, bf int) error {
 	log.Lvl2("Running BFTCoSi with", nbrHosts, "hosts")
 	local := onet.NewLocalTest(tSuite)
-	local.NoLeakyTest = true
+	local.Check = onet.CheckNone
 	defer local.CloseAll()
 
 	// we set the branching factor to nbrHosts - 1 to have the root broadcast messages
