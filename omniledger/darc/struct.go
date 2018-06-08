@@ -43,7 +43,16 @@ type Darc struct {
 	BaseID ID
 	// PrevID is the previous darc ID in the chain of evolution.
 	PrevID ID
-	// Rules map an action to an expression.
+	// EvolveName is the name for the evolution action, which must
+	// exist and is responsible for managing the rules for evolving a darc.
+	// This field should not be changed after initialisation.
+	EvolveName Action
+	// SignName is the name of the sign action, which must exist and
+	// is responsible for giving other identities to sign on behalf of this
+	// darc. This field should not be changed after initialisation.
+	SignName Action
+	// Rules map an action to an expression. The evolve action and the sign
+	// action must exist, but they may be empty.
 	Rules Rules
 	// Signature is calculated on the Request-representation of the darc.
 	// It needs to be created by identities that have the "_evolve" action
@@ -57,8 +66,9 @@ type Darc struct {
 
 // Action is a string that should be associated with an expression. The
 // application typically will define the action but there are two actions that
-// are in all the darcs, "_evolve" and "_sign". The application can modify
-// these actions but should not change the semantics of these actions.
+// must be set in all darcs, evolve and sign. After initialisation, the
+// application can modify the expressions under these actions but should not
+// change the semantics or the name.
 type Action string
 
 // Rules are action-expression associations.
@@ -88,7 +98,6 @@ type IdentityX509EC struct {
 // IdentityDarc is a structure that points to a Darc with a given ID on a
 // skipchain. The signer should belong to the Darc.
 type IdentityDarc struct {
-	// Signer SignerEd25519
 	ID ID
 }
 

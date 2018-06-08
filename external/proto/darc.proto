@@ -7,32 +7,38 @@ option java_outer_classname = "DarcProto";
 // These are the messages used in the API-calls
 // ***
 
-// Darc is the basic structure representing an access control. A Darc can evolve in the way that
-// a new Darc points to the previous one and is signed by the owner(s) of the previous Darc.
+// Darc is the basic structure representing an access control. A Darc can
+// evolve in the way that a new Darc points to the previous one and is signed
+// by the owner(s) of the previous Darc.
 message Darc {
   // Version should be monotonically increasing over the evolution of a Darc.
   required uint64 version = 1;
-  // Description is a free-form field that can hold any data as required by the user.
-  // Darc itself will never depend on any of the data in here.
+  // Description is a free-form field that can hold any data as required by the
+  // user.  Darc itself will never depend on any of the data in here.
   required bytes description = 2;
   // BaseID is the ID of the first darc of this Series
   optional bytes baseid = 3;
   // PrevID is the previous darc ID in the chain of evolution.
   required bytes previd = 4;
-  // Rules map an action to an expression.
-  // An action is a string that should be associated with an expression. The
-  // application typically will define the action but there are two actions that
-  // are in all the darcs, "_evolve" and "_sign". The application can modify
-  // these actions but should not change the semantics of these actions.
-  map<string, bytes> rules = 5;
-  // Signature is calculated on the Request-representation of the darc.
-  // It needs to be created by identities that have the "_evolve" action
-  // from the previous valid Darc.
-  repeated Signature signatures = 6;
-  // VerificationDarcs are a list of darcs that the verifier needs to
-  // verify this darc. It is not needed in online verification where the
-  // verifier stores all darcs.
-  repeated Darc verificationdarcs = 7;
+  // EvolveName is the name for the evolution action, which must exist and is
+  // responsible for managing the rules for evolving a darc.  This field should
+  // not be changed after initialisation.
+  required string evolvename = 5;
+  // SignName is the name of the sign action, which must exist and is
+  // responsible for giving other identities to sign on behalf of this darc.
+  // This field should not be changed after initialisation.
+  required string signname = 6;
+  // Rules map an action to an expression. The evolve action and the sign
+  // action must exist, but they may be empty.
+  map<string, bytes> rules = 7;
+  // Signature is calculated on the Request-representation of the darc.  It
+  // needs to be created by identities that have the "_evolve" action from the
+  // previous valid Darc.
+  repeated Signature signatures = 8;
+  // VerificationDarcs are a list of darcs that the verifier needs to verify
+  // this darc. It is not needed in online verification where the verifier
+  // stores all darcs.
+  repeated Darc verificationdarcs = 9;
 }
 
 // Identity is a generic structure can be either an Ed25519 public key, a Darc

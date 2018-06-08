@@ -7,6 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+var testEvolveName = darc.Action("_evolve")
+var testSignName = darc.Action("_sign")
+
 func nonceStr(s string) (n Nonce) {
 	copy(n[:], s)
 	return n
@@ -94,8 +97,8 @@ func TestSortTransactions(t *testing.T) {
 func TestTransaction_Signing(t *testing.T) {
 	signer := darc.NewSignerEd25519(nil, nil)
 	ids := []*darc.Identity{signer.Identity()}
-	d := darc.NewDarc(darc.InitRules(ids, ids), []byte("genesis darc"))
-	d.Rules.AddRule("Spawn_dummy_kind", d.Rules.GetSignExpr())
+	d := darc.NewDarc(ids, ids, testEvolveName, testSignName, []byte("genesis darc"))
+	d.AddRule("Spawn_dummy_kind", d.GetSignExpr())
 	require.Nil(t, d.Verify())
 
 	instr, err := createInstr(d.GetBaseID(), "dummy_kind", []byte("dummy_value"), signer)

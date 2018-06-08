@@ -37,10 +37,9 @@ public class EventLog {
         for (Signer signer : signers) {
             identities.add(signer.getIdentity());
         }
-        Map<String, byte[]> rules = Darc.initRules(identities, new ArrayList<>());
-        rules.put("Spawn_eventlog", rules.get("_evolve"));
 
-        Darc darc = new Darc(rules, "eventlog owner".getBytes());
+        Darc darc = new Darc(identities, new ArrayList<>(), "_evolve", "_sign", "eventlog genesis darc".getBytes());
+        darc.setExpr("Spawn_eventlog", darc.getEvolveExpr());
         byte[] genesisBuf  = this.init(roster, darc, blockInterval);
 
         this.genesis = new SkipblockId(genesisBuf);
