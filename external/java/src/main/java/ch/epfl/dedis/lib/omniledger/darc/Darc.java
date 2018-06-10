@@ -22,34 +22,18 @@ public class Darc {
     private byte[] description;
     private DarcId baseID;
     private DarcId prevID;
+    private String evolveName;
+    private String signName;
     private Map<String, byte[]> rules;
     private List<Signature> signatures;
     private List<Darc> verificationDarcs;
-
-    /**
-     * This is a convenience function that initialise a set of rules with the default actions "_evolve" and "_sign".
-     * Signers are joined with logical-Or, owners are joined with logical-AND. If other expressions are needed, please
-     * set the rules manually.
-     * @param owners A list of owners.
-     * @param signers A list of signers.
-     * @return The action-expression mapping, also known as the rule.
-     */
-    public static Map<String, byte[]> initRules(List<Identity> owners, List<Identity> signers)  {
-        Map<String, byte[]> rs = new HashMap<>();
-        List<String> ownerIDs = owners.stream().map(Identity::toString).collect(Collectors.toList());
-        rs.put("_evolve", String.join(" & ", ownerIDs).getBytes());
-
-        List<String> signerIDs = signers.stream().map(Identity::toString).collect(Collectors.toList());
-        rs.put("_sign", String.join(" | ", signerIDs).getBytes());
-        return rs;
-    }
 
     /**
      * The Darc constructor.
      * @param rules The initial set of rules, consider using initRules to create them.
      * @param desc The description.
      */
-    public Darc(Map<String, byte[]> rules, byte[] desc) {
+    public Darc(List<Identity> owners, List<Identity> signers, String  evolveName, String signName, byte[] desc) {
         this.version = 0;
         this.description = desc;
         this.baseID = null;
@@ -62,10 +46,11 @@ public class Darc {
             // digest of it has the right length (32 bytes).
             throw new RuntimeException(e);
         }
-        this.rules = rules;
+        this.evolveName = evolveName;
+        this.signName = signName;
+        this.rules = Darc.initRules(owners, signers);
         this.signatures = new ArrayList<>();
         this.verificationDarcs = new ArrayList<>();
-
     }
 
     /**
@@ -80,6 +65,8 @@ public class Darc {
             b.setBaseid(ByteString.copyFrom(this.baseID.getId()));
         }
         b.setPrevid(ByteString.copyFrom(this.prevID.getId()));
+        b.setEvolvename(this.evolveName);
+        b.setSignname(this.signName);
         for (Map.Entry<String, byte[]> entry : this.rules.entrySet()) {
             b.putRules(entry.getKey(), ByteString.copyFrom(entry.getValue()));
         }
@@ -103,6 +90,8 @@ public class Darc {
                 digest.update(this.baseID.getId());
             }
             digest.update(this.prevID.getId());
+            digest.update(this.evolveName.getBytes());
+            digest.update(this.signName.getBytes());
             this.sortedAction().forEach((k) -> {
                 byte[] expr = this.rules.get(k);
                 digest.update(k.getBytes());
@@ -125,6 +114,71 @@ public class Darc {
         }
         return this.baseID;
     }
+
+    /**
+     * This method sets the sign expression in the rules. The old expression will be replaced.
+     * @param expr The expression to set.
+     */
+    public void setSignExpr(byte[] expr) {
+        this.rules.put(this.signName, expr);
+    }
+
+    /**
+     * This method sets the evolve expression in the rules. The old expression will be replaced.
+     * @param expr The expression to set.
+     */
+    public void setEvolveExpr(byte[] expr) {
+        this.rules.put(this.evolveName, expr);
+    }
+
+    /**
+     * This method sets a given action to the given expression. If the action conflicts with the evolve action name or
+     * the sign action name then the function does nothing. If the action exists, then its expression will be
+     * overwritten.
+     * @param action The action that we are setting.
+     * @param expr The expression that corresponds to the action.
+     */
+    public void setExpr(String action, byte[] expr) {
+        if (action.equals(this.evolveName) || action.equals(this.signName)) {
+            return;
+        }
+        this.rules.put(action, expr);
+    }
+
+    /**
+     * This methods gets the sign expression. If the return value is null then the darc was not initialised correctly.
+     * @return The expression.
+     */
+    public byte[] getSignExpr() {
+        return this.rules.get(this.signName);
+    }
+
+    /**
+     * This methods gets the evolve expression. If the return value is null then the darc was not initialised correctly.
+     * @return The expression.
+     */
+    public byte[] getEvolveExpr() {
+        return this.rules.get(this.evolveName);
+    }
+
+    /**
+     * This is a convenience function that initialise a set of rules with the default actions "_evolve" and "_sign".
+     * Signers are joined with logical-Or, owners are joined with logical-AND. If other expressions are needed, please
+     * set the rules manually.
+     * @param owners A list of owners.
+     * @param signers A list of signers.
+     * @return The action-expression mapping, also known as the rule.
+     */
+    private static Map<String, byte[]> initRules(List<Identity> owners, List<Identity> signers)  {
+        Map<String, byte[]> rs = new HashMap<>();
+        List<String> ownerIDs = owners.stream().map(Identity::toString).collect(Collectors.toList());
+        rs.put("_evolve", String.join(" & ", ownerIDs).getBytes());
+
+        List<String> signerIDs = signers.stream().map(Identity::toString).collect(Collectors.toList());
+        rs.put("_sign", String.join(" | ", signerIDs).getBytes());
+        return rs;
+    }
+
 
     private Stream<String> sortedAction() {
         return this.rules.keySet().stream().sorted();

@@ -9,20 +9,21 @@ import (
 )
 
 func Example() {
+	evolve := darc.Action("evolve")
+	sign := darc.Action("sign")
 	// Consider a client-server configuration. Where the client holds the
 	// credentials and wants the server to check for requests or evolve
 	// darcs. We begin by creating a darc on the server.
 	// We can create a new darc like so.
 	owner1 := darc.NewSignerEd25519(nil, nil)
-	rules1 := darc.InitRules([]*darc.Identity{owner1.Identity()}, []*darc.Identity{})
-	d1 := darc.NewDarc(rules1, []byte("example darc"))
+	d1 := darc.NewDarc([]*darc.Identity{owner1.Identity()}, []*darc.Identity{},
+		evolve, sign, []byte("example darc"))
 	fmt.Println(d1.Verify())
 
 	// Now the client wants to evolve the darc (change the owner), so it
 	// creates a request and then sends it to the server.
 	owner2 := darc.NewSignerEd25519(nil, nil)
-	rules2 := darc.InitRules([]*darc.Identity{owner2.Identity()}, []*darc.Identity{})
-	d2 := darc.NewDarc(rules2, []byte("example darc 2"))
+	d2 := darc.NewDarc([]*darc.Identity{owner2.Identity()}, []*darc.Identity{}, evolve, sign, []byte("example darc 2"))
 	d2.EvolveFrom(d1)
 	r, d2Buf, err := d2.MakeEvolveRequest(owner1)
 	fmt.Println(err)
@@ -60,7 +61,7 @@ func Example() {
 		owner2.Identity().String(),
 		owner3.Identity().String())
 	d3 := d1.Copy()
-	d3.Rules.AddRule(action3, expr3)
+	d3.AddRule(action3, expr3)
 
 	// Typically the Msg part of the request is a digest of the actual
 	// message. For simplicity in this example, we put the actual message

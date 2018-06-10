@@ -59,8 +59,8 @@ func TestService_Log(t *testing.T) {
 
 func (s *ser) init(t *testing.T) (skipchain.SkipBlockID, darc.Darc, []*darc.Signer) {
 	owner := darc.NewSignerEd25519(nil, nil)
-	rules := darc.InitRules([]*darc.Identity{owner.Identity()}, []*darc.Identity{})
-	d1 := darc.NewDarc(AddWriter(rules, nil), []byte("eventlog writer"))
+	d1 := darc.NewDarc([]*darc.Identity{owner.Identity()}, []*darc.Identity{}, "_evolve", "_sign", []byte("eventlog writer"))
+	require.Nil(t, d1.AddRule("Spawn_eventlog", d1.GetEvolutionExpr()))
 
 	reply, err := s.services[0].Init(&InitRequest{
 		Roster:        *s.roster,
