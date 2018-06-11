@@ -26,7 +26,7 @@ type config struct {
 	Name   string
 	ID     skipchain.SkipBlockID
 	Roster *onet.Roster
-	Owner  *darc.Signer
+	Owner  darc.Signer
 	Darc   *darc.Darc
 }
 
@@ -198,7 +198,7 @@ func doLog(c *cli.Context) error {
 	// TODO: It should be possible to send logs, signing them with a different
 	// key. But first, we need to implement something like "el grant" to grant write
 	// privs to a given private/public key.
-	cl.Signers = []*darc.Signer{cfgs[cfg].Owner}
+	cl.Signers = []darc.Signer{cfgs[cfg].Owner}
 	// TODO: It is too bad that we need to store the Darc in config. It
 	// seems like the server should know this for us...
 	cl.Darc = cfgs[cfg].Darc

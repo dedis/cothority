@@ -93,10 +93,10 @@ func TestSortTransactions(t *testing.T) {
 
 func TestTransaction_Signing(t *testing.T) {
 	signer := darc.NewSignerEd25519(nil, nil)
-	ids := []*darc.Identity{signer.Identity()}
+	ids := []darc.Identity{signer.Identity()}
 	d := darc.NewDarc(darc.InitRules(ids, ids), []byte("genesis darc"))
 	d.Rules.AddRule("Spawn_dummy_kind", d.Rules.GetSignExpr())
-	require.Nil(t, d.Verify())
+	require.Nil(t, d.Verify(true))
 
 	instr, err := createInstr(d.GetBaseID(), "dummy_kind", []byte("dummy_value"), signer)
 	require.Nil(t, err)
@@ -108,7 +108,7 @@ func TestTransaction_Signing(t *testing.T) {
 	require.Nil(t, req.Verify(d))
 }
 
-func createOneClientTx(dID darc.ID, kind string, value []byte, signer *darc.Signer) (ClientTransaction, error) {
+func createOneClientTx(dID darc.ID, kind string, value []byte, signer darc.Signer) (ClientTransaction, error) {
 	instr, err := createInstr(dID, kind, value, signer)
 	t := ClientTransaction{
 		Instructions: []Instruction{instr},
@@ -116,7 +116,7 @@ func createOneClientTx(dID darc.ID, kind string, value []byte, signer *darc.Sign
 	return t, err
 }
 
-func createInstr(dID darc.ID, contractID string, value []byte, signer *darc.Signer) (Instruction, error) {
+func createInstr(dID darc.ID, contractID string, value []byte, signer darc.Signer) (Instruction, error) {
 	instr := Instruction{
 		ObjectID: ObjectID{
 			DarcID:     dID,

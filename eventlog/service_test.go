@@ -57,9 +57,9 @@ func TestService_Log(t *testing.T) {
 	})
 }
 
-func (s *ser) init(t *testing.T) (skipchain.SkipBlockID, darc.Darc, []*darc.Signer) {
+func (s *ser) init(t *testing.T) (skipchain.SkipBlockID, darc.Darc, []darc.Signer) {
 	owner := darc.NewSignerEd25519(nil, nil)
-	rules := darc.InitRules([]*darc.Identity{owner.Identity()}, []*darc.Identity{})
+	rules := darc.InitRules([]darc.Identity{owner.Identity()}, []darc.Identity{})
 	d1 := darc.NewDarc(AddWriter(rules, nil), []byte("eventlog writer"))
 
 	reply, err := s.services[0].Init(&InitRequest{
@@ -71,7 +71,7 @@ func (s *ser) init(t *testing.T) (skipchain.SkipBlockID, darc.Darc, []*darc.Sign
 	require.NotNil(t, reply.ID)
 	require.False(t, reply.ID.IsNull())
 
-	return reply.ID, *d1, []*darc.Signer{owner}
+	return reply.ID, *d1, []darc.Signer{owner}
 }
 
 type ser struct {

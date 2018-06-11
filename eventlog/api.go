@@ -20,7 +20,7 @@ type Client struct {
 	// ID is the skipchain where events will be logged.
 	ID skipchain.SkipBlockID
 	// Signers are the Darc signers that will sign events sent with this client.
-	Signers []*darc.Signer
+	Signers []darc.Signer
 	// Darc is the current Darc associated with this skipchain. Use it as a base
 	// in case you need to evolve the permissions on the EventLog.
 	Darc *darc.Darc
@@ -47,8 +47,8 @@ func AddWriter(r darc.Rules, expr expression.Expr) darc.Rules {
 // Init initialises an event logging skipchain. A sucessful call
 // updates the ID, Signer and Darc fields of the Client. The new
 // skipchain has a Darc that requires one signature from owner.
-func (c *Client) Init(owner *darc.Signer, blockInterval time.Duration) error {
-	rules := darc.InitRules([]*darc.Identity{owner.Identity()}, []*darc.Identity{})
+func (c *Client) Init(owner darc.Signer, blockInterval time.Duration) error {
+	rules := darc.InitRules([]darc.Identity{owner.Identity()}, []darc.Identity{})
 	d := darc.NewDarc(AddWriter(rules, nil), []byte("eventlog owner"))
 
 	msg := &InitRequest{
@@ -61,7 +61,7 @@ func (c *Client) Init(owner *darc.Signer, blockInterval time.Duration) error {
 		return err
 	}
 	c.Darc = d
-	c.Signers = []*darc.Signer{owner}
+	c.Signers = []darc.Signer{owner}
 	c.ID = reply.ID
 	return nil
 }
@@ -103,13 +103,13 @@ func (c *Client) GetEvent(id []byte) (*Event, error) {
 	return &reply.Event, nil
 }
 
-func makeTx(msgs []Event, darcID darc.ID, signers []*darc.Signer) (*omniledger.ClientTransaction, error) {
+func makeTx(msgs []Event, darcID darc.ID, signers []darc.Signer) (*omniledger.ClientTransaction, error) {
 	// We need the identity part of the signatures before
 	// calling ToDarcRequest() below, because the identities
 	// go into the message digest.
 	sigs := make([]darc.Signature, len(signers))
 	for i, x := range signers {
-		sigs[i].Signer = *(x.Identity())
+		sigs[i].Signer = x.Identity()
 	}
 
 	instrNonce := omniledger.GenNonce()
@@ -154,7 +154,7 @@ func makeTx(msgs []Event, darcID darc.ID, signers []*darc.Signer) (*omniledger.C
 			}
 			darcSigs[j] = darc.Signature{
 				Signature: sig,
-				Signer:    *signer.Identity(),
+				Signer:    signer.Identity(),
 			}
 		}
 		tx.Instructions[i].Signatures = darcSigs

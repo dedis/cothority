@@ -113,7 +113,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	if err != nil {
 		return nil, err
 	}
-	if req.GenesisDarc.Verify() != nil ||
+	if req.GenesisDarc.Verify(true) != nil ||
 		len(req.GenesisDarc.Rules) == 0 {
 		return nil, errors.New("invalid genesis darc")
 	}
@@ -309,6 +309,9 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 	mr, ctsOK, scs, err = s.createStateChanges(coll, cts)
 	if err != nil {
 		return nil, err
+	}
+	if len(scs) == 0 {
+		return nil, errors.New("no state changes")
 	}
 	header := &DataHeader{
 		CollectionRoot:        mr,

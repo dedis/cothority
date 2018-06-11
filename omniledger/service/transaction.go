@@ -182,9 +182,9 @@ func (instr Instruction) Action() string {
 	a := "invalid"
 	switch {
 	case instr.Spawn != nil:
-		a = fmt.Sprintf("Spawn_%s", instr.Spawn.ContractID)
+		a = "Spawn_" + instr.Spawn.ContractID
 	case instr.Invoke != nil:
-		a = "Invoke_" + instr.Invoke.Command
+		a = instr.Invoke.Command
 	case instr.Delete != nil:
 		a = "Delete"
 	}
@@ -204,7 +204,7 @@ func (instr Instruction) String() string {
 }
 
 // SignBy gets signers to sign the (receiver) transaction.
-func (instr *Instruction) SignBy(signers ...*darc.Signer) error {
+func (instr *Instruction) SignBy(signers ...darc.Signer) error {
 	// Create the request and populate it with the right identities.  We
 	// need to do this prior to signing because identities are a part of
 	// the digest.
@@ -212,7 +212,7 @@ func (instr *Instruction) SignBy(signers ...*darc.Signer) error {
 	if err != nil {
 		return err
 	}
-	req.Identities = make([]*darc.Identity, len(signers))
+	req.Identities = make([]darc.Identity, len(signers))
 	for i := range signers {
 		req.Identities[i] = signers[i].Identity()
 	}
@@ -227,7 +227,7 @@ func (instr *Instruction) SignBy(signers ...*darc.Signer) error {
 		}
 		instr.Signatures[i] = darc.Signature{
 			Signature: sig,
-			Signer:    *signers[i].Identity(),
+			Signer:    signers[i].Identity(),
 		}
 	}
 	return nil
@@ -237,13 +237,26 @@ func (instr *Instruction) SignBy(signers ...*darc.Signer) error {
 func (instr Instruction) ToDarcRequest() (*darc.Request, error) {
 	baseID := instr.ObjectID.DarcID
 	action := instr.Action()
-	ids := make([]*darc.Identity, len(instr.Signatures))
+	ids := make([]darc.Identity, len(instr.Signatures))
 	sigs := make([][]byte, len(instr.Signatures))
 	for i, sig := range instr.Signatures {
-		ids[i] = &sig.Signer
+		ids[i] = sig.Signer
 		sigs[i] = sig.Signature // TODO shallow copy is ok?
 	}
-	req := darc.InitRequest(baseID, darc.Action(action), instr.Hash(), ids, sigs)
+	var req darc.Request
+	if action == "_evolve" {
+		// We make a special case for darcs evolution because the Msg
+		// part of the request must be the darc ID for verification to
+		// pass.
+		darcBuf := instr.Invoke.Args.Search("darc")
+		d, err := darc.NewDarcFromProto(darcBuf)
+		if err != nil {
+			return nil, err
+		}
+		req = darc.InitRequest(baseID, darc.Action(action), d.GetID(), ids, sigs)
+	} else {
+		req = darc.InitRequest(baseID, darc.Action(action), instr.Hash(), ids, sigs)
+	}
 	return &req, nil
 }
 
@@ -350,6 +363,27 @@ func (sc StateAction) String() string {
 		return "Remove"
 	default:
 		return "Invalid stateChange"
+	}
+}
+
+type instrType int
+
+const (
+	invalidInstrType instrType = iota
+	spawnType
+	invokeType
+	deleteType
+)
+
+func (instr Instruction) getType() instrType {
+	if instr.Spawn != nil && instr.Invoke == nil && instr.Delete == nil {
+		return spawnType
+	} else if instr.Spawn == nil && instr.Invoke != nil && instr.Delete == nil {
+		return invokeType
+	} else if instr.Spawn == nil && instr.Invoke == nil && instr.Delete != nil {
+		return deleteType
+	} else {
+		return invalidInstrType
 	}
 }
 

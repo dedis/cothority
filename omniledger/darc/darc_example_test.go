@@ -14,14 +14,14 @@ func Example() {
 	// darcs. We begin by creating a darc on the server.
 	// We can create a new darc like so.
 	owner1 := darc.NewSignerEd25519(nil, nil)
-	rules1 := darc.InitRules([]*darc.Identity{owner1.Identity()}, []*darc.Identity{})
+	rules1 := darc.InitRules([]darc.Identity{owner1.Identity()}, []darc.Identity{})
 	d1 := darc.NewDarc(rules1, []byte("example darc"))
-	fmt.Println(d1.Verify())
+	fmt.Println(d1.Verify(true))
 
 	// Now the client wants to evolve the darc (change the owner), so it
 	// creates a request and then sends it to the server.
 	owner2 := darc.NewSignerEd25519(nil, nil)
-	rules2 := darc.InitRules([]*darc.Identity{owner2.Identity()}, []*darc.Identity{})
+	rules2 := darc.InitRules([]darc.Identity{owner2.Identity()}, []darc.Identity{})
 	d2 := darc.NewDarc(rules2, []byte("example darc 2"))
 	d2.EvolveFrom(d1)
 	r, d2Buf, err := d2.MakeEvolveRequest(owner1)
@@ -47,7 +47,7 @@ func Example() {
 			return d1
 		}
 		return nil
-	}))
+	}, true))
 
 	// The above illustrates the basic use of darcs, in the following
 	// examples, we show how to create custom rules to enforce custom

@@ -372,6 +372,74 @@ func TestService_StateChange(t *testing.T) {
 	require.Equal(t, latest, int64(n-1))
 }
 
+func TestService_DarcEvolutionFail(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	d2 := s.darc.Copy()
+	require.Nil(t, d2.EvolveFrom(s.darc))
+
+	// first we create a bad request, i.e., with an invalid version number
+	d2.Version = 11
+	resp := s.testDarcEvolution(t, *d2)
+
+	// parse the darc
+	require.True(t, resp.Proof.InclusionProof.Match())
+	_, vs, err := resp.Proof.KeyValue()
+	require.Nil(t, err)
+	d22, err := darc.NewDarcFromProto(vs[0])
+	require.Nil(t, err)
+	require.False(t, d22.Equal(d2))
+	require.True(t, d22.Equal(s.darc))
+}
+
+func TestService_DarcEvolution(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	d2 := s.darc.Copy()
+	require.Nil(t, d2.EvolveFrom(s.darc))
+	resp := s.testDarcEvolution(t, *d2)
+
+	// parse the darc
+	require.True(t, resp.Proof.InclusionProof.Match())
+	_, vs, err := resp.Proof.KeyValue()
+	require.Nil(t, err)
+	d22, err := darc.NewDarcFromProto(vs[0])
+	require.Nil(t, err)
+	require.True(t, d22.Equal(d2))
+}
+
+func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction {
+	d2Buf, err := d2.ToProto()
+	require.Nil(t, err)
+	invoke := Invoke{
+		Command: "_evolve",
+		Args: []Argument{
+			Argument{
+				Name:  "darc",
+				Value: d2Buf,
+			},
+		},
+	}
+	instr := Instruction{
+		ObjectID: ObjectID{
+			DarcID:     d2.GetBaseID(),
+			InstanceID: ZeroNonce,
+		},
+		Nonce:  GenNonce(),
+		Index:  0,
+		Length: 1,
+		Invoke: &invoke,
+	}
+	require.Nil(t, instr.SignBy(signer))
+	return ClientTransaction{
+		Instructions: []Instruction{instr},
+	}
+}
+
 type ser struct {
 	local    *onet.LocalTest
 	hosts    []*onet.Server
@@ -380,13 +448,39 @@ type ser struct {
 	sb       *skipchain.SkipBlock
 	value    []byte
 	darc     *darc.Darc
-	signer   *darc.Signer
+	signer   darc.Signer
 	tx       ClientTransaction
 	interval time.Duration
 }
 
 func (s *ser) service() *Service {
 	return s.services[0]
+}
+
+// caller gives us a darc, and we try to make an evolution request.
+func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc) GetProofResponse {
+	ctx := darcToTx(t, d2, s.signer)
+	_, err := s.service().AddTransaction(&AddTxRequest{
+		Version:     CurrentVersion,
+		SkipchainID: s.sb.SkipChainID(),
+		Transaction: ctx,
+	})
+	require.Nil(t, err)
+
+	// wait for the block to be processed
+	time.Sleep(4 * s.interval)
+
+	// try to get the darc back, we should get the genesis back instead
+	resp, err := s.service().GetProof(&GetProof{
+		Version: CurrentVersion,
+		Key: ObjectID{
+			DarcID:     s.darc.GetBaseID(),
+			InstanceID: ZeroNonce,
+		}.Slice(),
+		ID: s.sb.SkipChainID(),
+	})
+	require.Nil(t, err)
+	return *resp
 }
 
 func newSer(t *testing.T, step int, interval time.Duration) *ser {
