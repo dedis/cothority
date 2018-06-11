@@ -1,6 +1,6 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](https://github.com/dedis/cothority/tree/master/README.md) ::
-[Building Blocks](https://github.com/dedis/cothority/tree/master/BuildingBlocks.md) ::
+[Building Blocks](https://github.com/dedis/cothority/tree/master/doc/BuildingBlocks.md) ::
 OmniLedger
 
 # OmniLedger
@@ -15,6 +15,12 @@ This document describes the part of omniledger that are implemented and how to
 use them. It should grow over time as more parts of the system are implemented.
 
 ## Overview
+
+Here is a graphical overview of the current implementation in the cothority
+framework:
+
+![Omniledger Implementation](https://github.com/dedis/cothority/tree/omniledger_documentation/omniledger/Omniledger.png)
+As an svg: [Omniledger Implementation](https://github.com/dedis/cothority/tree/omniledger_documentation/omniledger/Omniledger.svg)
 
 Broadly speaking, omniledger will implement:
 
@@ -36,7 +42,7 @@ The current implementation is doing 1-3.
 
 Following is an overview of the most important structures defined in OmniLedger.
 For a more programmatic description of these structures, go to the
-[DataStructures](DATASTRUCTURES.md) file.
+[DataStructures](DataStructures.md) file.
 
 ## Skipchain Block
 
@@ -125,6 +131,6 @@ evolving description of who is allowed or not to access a certain resource.
 Some documents that might get evolved later:
 
 - [Child Transactions](ChildTransactions.md) describes how we can implement
-a leader fetching new transactions from children
-- [Contract Examples](ContractExamples.md) a bare list of some examples of what
-kind of contracts we think of implementing
+a leader fetching new transactions from children.
+- [Contracts](Contracts.md) gives a short overview how contracts work and
+some examples how to use them.

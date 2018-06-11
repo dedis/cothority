@@ -1,6 +1,6 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](https://github.com/dedis/cothority/tree/master/README.md) ::
-[Building Blocks](https://github.com/dedis/cothority/tree/master/BuildingBlocks.md) ::
+[Building Blocks](https://github.com/dedis/cothority/tree/master/doc/BuildingBlocks.md) ::
 [OmniLedger](README.md) ::
 Data Structures
 
@@ -8,16 +8,16 @@ Data Structures
 
 This document gives an overview of the basic data structures used in omniledger:
 
-- [ClientTransaction](#ClientTransaction) is sent by a client to one or more
+- [ClientTransaction](#clienttransaction) is sent by a client to one or more
 nodes and holds one or more Instructions:
-- [Instruction](#Instruction) is a basic building block that will be executed
+- [Instruction](#instruction) is a basic building block that will be executed
 in omniledger. It has either a `Spawn`, `Invoke`, or a `Delete` command. Once
 accepted, every instruction creates zero or more `StateChanges`:
-- [StateChange](#StateChange) are collected and define how the global state will
+- [StateChange](#statechange) are collected and define how the global state will
 change.
-- [Darc](#Darc) protect the Instructions and proof that the instructions have
-been created by an authorized user.
-- [Proof](#Proof) shows to a client that his instruction has been accepted by
+- [Darc](#darc) control access to executing Instructions. The signers of an
+Instruction must satisfy one of the rules in the associated Darc.
+- [Proof](#proof) shows to a client that his instruction has been accepted by
 omniledger.
 
 ## ClientTransaction

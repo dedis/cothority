@@ -1,6 +1,6 @@
 Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
 [Cothority](https://github.com/dedis/cothority/tree/master/README.md) ::
-[Building Blocks](https://github.com/dedis/cothority/tree/master/BuildingBlocks.md) ::
+[Building Blocks](https://github.com/dedis/cothority/tree/master/doc/BuildingBlocks.md) ::
 [OmniLedger](README.md) ::
 Child Transactions
 
@@ -15,12 +15,12 @@ This part of the document describes the technical details of the design and
 implementation of transaction queue and block generation for OmniLedger. The
 assumption is that the leader will not fail. We will implement view-change in
 the future, starting by eliminating stop-failure and then byzantine-failure.
-Further, we assume there exists a maximum block size of B bytes. Transaction
-Queue A transaction is similar to what is defined above, namely a key/kind/value
-triplet and a signature of the requester (client). However, for bookkeeping
-purposes, we add a private field: "status". A status can be one of three
-states: "New" | "Verified" | "Submitted". The transaction request message is
-the same as the Transaction struct above, e.g.
+Further, we assume there exists a maximum block size of B bytes. A transaction
+is similar to what is defined above, namely a key/kind/value triplet and a
+signature of the requester (client). However, for bookkeeping purposes, we add a
+private field: "status". A status can be one of three states: "New" | "Verified" |
+"Submitted". The transaction request message is the same as the Transaction
+struct above, e.g.
 
 ```
 message TransactionRequest {
@@ -77,7 +77,7 @@ not be larger than B bytes.
 Upon receiving all the `PollTxResponse` message, the leader does the following:
 - remove duplicates
 - verify signature
-- sort the transactions in a random but deterministic way
+- shuffle the transactions in a deterministic way
 - go through the list of transactions, and for each transaction mark if it
 applies correctly to the state updated with previous valid transactions
 
