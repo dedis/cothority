@@ -19,15 +19,19 @@ use them. It should grow over time as more parts of the system are implemented.
 Here is a graphical overview of the current implementation in the cothority
 framework:
 
-![Omniledger Implementation](https://github.com/dedis/cothority/tree/omniledger_documentation/omniledger/Omniledger.png)
-As an svg: [Omniledger Implementation](https://github.com/dedis/cothority/tree/omniledger_documentation/omniledger/Omniledger.svg)
+![Omniledger Implementation](Omniledger.png?raw=true "Omniledger")
+As an svg: [Omniledger Implementation](Omniledger.svg). This image has been
+created with https://draw.io and can be imported there.
 
-Broadly speaking, omniledger will implement:
+Our omniledger service currently implements:
 
 1. multiple transactions per block
 2. queuing of transactions at each node and periodical creation of a new
 block by the leader
-3. allow for verification functions that apply to different kinds of data
+3. contracts that define the behaviour of how to change the global state
+
+The following points are scheduled to be done before end of '18:
+
 4. view-change in case the leader fails
 5. sharding of the nodes
 6. inter-shard transactions
