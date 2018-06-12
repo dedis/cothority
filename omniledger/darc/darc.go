@@ -2,35 +2,32 @@
 //
 // In most of our projects we need some kind of access control to protect
 // resources. Instead of having a simple password or public key for
-// authentication, we want to have access control that can be: evolved
-// with a threshold number of keys be delegated. So instead of having a
-// fixed list of identities that are allowed to access a resource, the
-// goal is to have an evolving description of who is allowed or not to
-// access a certain resource.
+// authentication, we want to have access control that can be: evolved with a
+// threshold number of keys be delegated. So instead of having a fixed list of
+// identities that are allowed to access a resource, the goal is to have an
+// evolving description of who is allowed or not to access a certain resource.
 //
-// The primary type is a Darc, which contains a set of rules that
-// determine what type of permission are granted for any identity. A Darc
-// can be updated by performing an evolution.  That is, the identities
-// that have the "evolve" permission in the old Darc can create a
-// signature that signs off the new Darc. Evolutions can be performed any
-// number of times, which creates a chain of Darcs, also known as a
-// path. A path can be verified by starting at the oldest Darc (also
-// known as the base Darc), walking down the path and verifying the
-// signature at every step.
+// The primary type is a Darc, which contains a set of rules that determine
+// what type of permission are granted for any identity. A Darc can be updated
+// by performing an evolution.  That is, the identities that have the "evolve"
+// permission in the old Darc can create a signature that signs off the new
+// Darc. Evolutions can be performed any number of times, which creates a chain
+// of Darcs, also known as a path. A path can be verified by starting at the
+// oldest Darc (also known as the base Darc), walking down the path and
+// verifying the signature at every step.
 //
-// As mentioned before, it is possible to perform delegation. For
-// example, instead of giving the "evolve" permission to (public key)
-// identities, we can give it to other Darcs. For example, suppose the
-// newest Darc in some path, let's called it darc_A, has the "evolve"
-// permission set to true for another darc: darc_B. Then darc_B is
-// allowed to evolve the path.
+// As mentioned before, it is possible to perform delegation. For example,
+// instead of giving the "evolve" permission to (public key) identities, we can
+// give it to other Darcs. For example, suppose the newest Darc in some path,
+// let's called it darc_A, has the "evolve" permission set to true for another
+// darc: darc_B. Then darc_B is allowed to evolve the path.
 //
-// Of course, we do not want to have static rules that allow only one
-// signer. Our Darc implementation supports an expression language where
-// the user can use logical operators to specify the rule.  For exmple,
-// the expression "darc:a & ed25519:b | ed25519:c" means that "darc:a"
-// and at least one of "ed25519:b" and "ed25519:c" must sign. For more
-// information please see the expression package.
+// Of course, we do not want to have static rules that allow only one signer.
+// Our Darc implementation supports an expression language where the user can
+// use logical operators to specify the rule.  For exmple, the expression
+// "darc:a & ed25519:b | ed25519:c" means that "darc:a" and at least one of
+// "ed25519:b" and "ed25519:c" must sign. For more information please see the
+// expression package.
 package darc
 
 import (
@@ -74,7 +71,7 @@ type GetDarc func(s string, latest bool) *Darc
 // InitRules initialise a set of rules with the default actions "_evolve" and
 // "_sign". Signers are joined with logical-Or, owners are joined with
 // logical-AND. If other expressions are needed, please set the rules manually.
-func InitRules(owners []*Identity, signers []*Identity) Rules {
+func InitRules(owners []Identity, signers []Identity) Rules {
 	rs := make(Rules)
 
 	ownerIDs := make([]string, len(owners))
@@ -99,7 +96,7 @@ func NewDarc(rules Rules, desc []byte) *Darc {
 	return &Darc{
 		Version:     0,
 		Description: desc,
-		Signatures:  []*Signature{},
+		Signatures:  []Signature{},
 		Rules:       rules,
 		PrevID:      zeroSha[:],
 	}
@@ -130,9 +127,9 @@ func (d *Darc) Equal(d2 *Darc) bool {
 	return d.GetID().Equal(d2.GetID())
 }
 
-// ToProto returns a protobuf representation of the Darc-structure.
-// We copy a darc first to keep only invariant fields which exclude
-// the delegation signature.
+// ToProto returns a protobuf representation of the Darc-structure. We copy a
+// darc first to keep only invariant fields which exclude the delegation
+// signature.
 func (d *Darc) ToProto() ([]byte, error) {
 	if d == nil {
 		return nil, errors.New("darc is nil")
@@ -146,7 +143,7 @@ func (d *Darc) ToProto() ([]byte, error) {
 }
 
 // NewDarcFromProto interprets a protobuf-representation of the darc and
-// returns a created Darc.
+// returns it.
 func NewDarcFromProto(protoDarc []byte) (*Darc, error) {
 	d := &Darc{}
 	if err := protobuf.Decode(protoDarc, d); err != nil {
@@ -155,9 +152,8 @@ func NewDarcFromProto(protoDarc []byte) (*Darc, error) {
 	return d, nil
 }
 
-// GetID returns the Darc ID, which is a digest of the values in the Darc.
-// The digest does not include the signature or the path, only the version,
-// description, base ID and the rules .
+// GetID returns the Darc ID, which is a digest of the values in the Darc. The
+// digest does not include the signature.
 func (d Darc) GetID() ID {
 	h := sha256.New()
 	verBytes := make([]byte, 8)
@@ -186,8 +182,7 @@ func (d Darc) GetIdentityString() string {
 	return NewIdentityDarc(d.GetID()).String()
 }
 
-// GetBaseID returns the base ID or the ID of this darc if its the
-// first darc.
+// GetBaseID returns the base ID or the ID of this darc if its the first darc.
 func (d Darc) GetBaseID() ID {
 	if d.Version == 0 {
 		return d.GetID()
@@ -289,7 +284,7 @@ func (d *Darc) EvolveFrom(prev *Darc) error {
 // We do not put the actual Msg in the request because requests should be kept
 // small and the actual payload should be managed by the user of darcs. For
 // example the payload could be in an OmniLedger transaction.
-func (d *Darc) MakeEvolveRequest(prevSigners ...*Signer) (*Request, []byte, error) {
+func (d *Darc) MakeEvolveRequest(prevSigners ...Signer) (*Request, []byte, error) {
 	if d == nil {
 		return nil, nil, errors.New("darc is nil")
 	}
@@ -298,7 +293,7 @@ func (d *Darc) MakeEvolveRequest(prevSigners ...*Signer) (*Request, []byte, erro
 	}
 	// Create the inner request, this is the message that the signers will
 	// sign.
-	signerIDs := make([]*Identity, len(prevSigners))
+	signerIDs := make([]Identity, len(prevSigners))
 	for i, s := range prevSigners {
 		signerIDs[i] = s.Identity()
 	}
@@ -336,9 +331,10 @@ func (d *Darc) IncrementVersion() {
 // Verify will check that the darc is correct, an error is returned if
 // something is wrong. This is used for offline verification where
 // Darc.VerificationDarcs has all the required darcs for doing the
-// verification.
-func (d *Darc) Verify() error {
-	return d.VerifyWithCB(DarcsToGetDarcs(d.VerificationDarcs))
+// verification. The function will verify every darc up to the genesis darc
+// (version 0) if the fullVerification flag is set.
+func (d *Darc) Verify(fullVerification bool) error {
+	return d.VerifyWithCB(DarcsToGetDarcs(d.VerificationDarcs), fullVerification)
 }
 
 // VerifyWithCB will check that the darc is correct, an error is returned if
@@ -346,8 +342,9 @@ func (d *Darc) Verify() error {
 // if one of the IDs in the expression is a Darc ID, then this function needs a
 // way to retrieve the correct Darc according to that ID. This function will
 // ignore darcs in Darc.VerificationDarcs, please use Darc.Verify if you wish
-// to use it.
-func (d *Darc) VerifyWithCB(getDarc GetDarc) error {
+// to use it. Further, it verifies every darc up to the genesis darc (version
+// 0) if the fullVerification flag is set.
+func (d *Darc) VerifyWithCB(getDarc GetDarc, fullVerification bool) error {
 	if d == nil {
 		return errors.New("darc is nil")
 	}
@@ -364,6 +361,9 @@ func (d *Darc) VerifyWithCB(getDarc GetDarc) error {
 	prev := getDarc(NewIdentityDarc(d.PrevID).String(), false)
 	if prev == nil {
 		return errors.New("cannot find the previous darc")
+	}
+	if fullVerification {
+		return verifyEvolutionRecursive(d, prev, getDarc)
 	}
 	return verifyOneEvolution(d, prev, getDarc)
 }
@@ -417,11 +417,7 @@ func (d Darc) String() string {
 		s += fmt.Sprintf("\n\t%s - \"%s\"", k, v)
 	}
 	for i, sig := range d.Signatures {
-		if sig == nil {
-			s += fmt.Sprintf("\n\t%d - <nil signature>", i)
-		} else {
-			s += fmt.Sprintf("\n\t%d - id: %s, sig: %x", i, sig.Signer.String(), sig.Signature)
-		}
+		s += fmt.Sprintf("\n\t%d - id: %s, sig: %x", i, sig.Signer.String(), sig.Signature)
 	}
 	return s
 }
@@ -469,23 +465,31 @@ func DarcsToGetDarcs(darcs []*Darc) GetDarc {
 	}
 }
 
+// sanityCheck performs a sanity check on the receiver against the previous
+// darc. It does not check the expression or signature.
+func (d Darc) sanityCheck(prev Darc) error {
+	// check base ID
+	if d.BaseID == nil {
+		return errors.New("nil base ID")
+	}
+	if !d.GetBaseID().Equal(prev.GetBaseID()) {
+		return errors.New("base IDs are not equal")
+	}
+	// check version
+	if d.Version != prev.Version+1 {
+		return fmt.Errorf("incorrect version, new version should be %d but it is %d",
+			prev.Version+1, d.Version)
+	}
+	return nil
+}
+
 // verifyOneEvolution verifies that one evolution is performed correctly. That
 // is, there exists a signature in the newDarc that is signed by one of the
 // identities with the evolve permission in the oldDarc. The message that
 // prevDarc signs is the digest of a Darc.Request.
 func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string, bool) *Darc) error {
-	// check base ID
-	if newDarc.BaseID == nil {
-		return errors.New("nil base ID")
-	}
-	if !newDarc.GetBaseID().Equal(prevDarc.GetBaseID()) {
-		return errors.New("base IDs are not equal")
-	}
-
-	// check version
-	if newDarc.Version != prevDarc.Version+1 {
-		return fmt.Errorf("incorrect version, new version should be %d but it is %d",
-			prevDarc.Version+1, newDarc.Version)
+	if err := newDarc.sanityCheck(*prevDarc); err != nil {
+		return err
 	}
 
 	// check that signers have the permission
@@ -497,9 +501,9 @@ func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string, bool) *Dar
 	}
 
 	// convert the darc into a request
-	signerIDs := make([]*Identity, len(newDarc.Signatures))
+	signerIDs := make([]Identity, len(newDarc.Signatures))
 	for i, sig := range newDarc.Signatures {
-		signerIDs[i] = &sig.Signer
+		signerIDs[i] = sig.Signer
 	}
 	inner := innerRequest{
 		BaseID:     newDarc.GetBaseID(),
@@ -515,14 +519,22 @@ func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string, bool) *Dar
 			return err
 		}
 	}
+	return nil
+}
 
+// verifyEvolutionRecursive verifies that evolutions, from the genesis darc
+// (darc of version 0), are performed correctly, recursively.
+func verifyEvolutionRecursive(newDarc, prevDarc *Darc, getDarc func(string, bool) *Darc) error {
+	if err := verifyOneEvolution(newDarc, prevDarc, getDarc); err != nil {
+		return err
+	}
 	// recursively verify the previous darc
-	return prevDarc.VerifyWithCB(getDarc)
+	return prevDarc.VerifyWithCB(getDarc, true)
 }
 
 // evalExprWithSigs is a simple wrapper around evalExpr that extracts Signer
 // from Signature.
-func evalExprWithSigs(expr expression.Expr, getDarc GetDarc, sigs ...*Signature) error {
+func evalExprWithSigs(expr expression.Expr, getDarc GetDarc, sigs ...Signature) error {
 	signers := make([]string, len(sigs))
 	for i, sig := range sigs {
 		signers[i] = sig.Signer.String()
@@ -533,14 +545,14 @@ func evalExprWithSigs(expr expression.Expr, getDarc GetDarc, sigs ...*Signature)
 	return nil
 }
 
-// evalExpr checks whether the expression evaluates to true
-// given a list of identities.
+// evalExpr checks whether the expression evaluates to true given a list of
+// identities.
 func evalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 	Y := expression.InitParser(func(s string) bool {
 		if strings.HasPrefix(s, "darc") {
 			// getDarc is responsible for returning the latest Darc
 			d := getDarc(s, true)
-			if d.VerifyWithCB(getDarc) != nil {
+			if d == nil {
 				return false
 			}
 			// Evaluate the "sign" action only in the latest darc
@@ -574,9 +586,9 @@ func evalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 	return nil
 }
 
-// Type returns an integer representing the type of key held in the signer.
-// It is compatible with Identity.Type. For an empty signer, -1 is returned.
-func (s *Signer) Type() int {
+// Type returns an integer representing the type of key held in the signer. It
+// is compatible with Identity.Type. For an empty signer, -1 is returned.
+func (s Signer) Type() int {
 	switch {
 	case s.Ed25519 != nil:
 		return 1
@@ -587,21 +599,21 @@ func (s *Signer) Type() int {
 	}
 }
 
-// Identity returns an identity struct with the pre initialised fields
-// for the appropriate signer.
-func (s *Signer) Identity() *Identity {
+// Identity returns an identity struct with the pre initialised fields for the
+// appropriate signer.
+func (s Signer) Identity() Identity {
 	switch s.Type() {
 	case 1:
-		return &Identity{Ed25519: &IdentityEd25519{Point: s.Ed25519.Point}}
+		return Identity{Ed25519: &IdentityEd25519{Point: s.Ed25519.Point}}
 	case 2:
-		return &Identity{X509EC: &IdentityX509EC{Public: s.X509EC.Point}}
+		return Identity{X509EC: &IdentityX509EC{Public: s.X509EC.Point}}
 	default:
-		return nil
+		return Identity{}
 	}
 }
 
-// Sign returns a signature in bytes for a given messages by the signer
-func (s *Signer) Sign(msg []byte) ([]byte, error) {
+// Sign returns a signature in bytes for a given messages by the signer.
+func (s Signer) Sign(msg []byte) ([]byte, error) {
 	if msg == nil {
 		return nil, errors.New("nothing to sign, message is empty")
 	}
@@ -618,7 +630,7 @@ func (s *Signer) Sign(msg []byte) ([]byte, error) {
 }
 
 // GetPrivate returns the private key, if one exists.
-func (s *Signer) GetPrivate() (kyber.Scalar, error) {
+func (s Signer) GetPrivate() (kyber.Scalar, error) {
 	switch s.Type() {
 	case 1:
 		return s.Ed25519.Secret, nil
@@ -629,9 +641,9 @@ func (s *Signer) GetPrivate() (kyber.Scalar, error) {
 	}
 }
 
-// Equal first checks the type of the two identities, and if they match,
-// it returns if their data is the same.
-func (id *Identity) Equal(id2 *Identity) bool {
+// Equal first checks the type of the two identities, and if they match, it
+// returns true if their data is the same.
+func (id Identity) Equal(id2 *Identity) bool {
 	if id.Type() != id2.Type() {
 		return false
 	}
@@ -648,7 +660,7 @@ func (id *Identity) Equal(id2 *Identity) bool {
 
 // Type returns an int indicating what type of identity this is. If all
 // identities are nil, it returns -1.
-func (id *Identity) Type() int {
+func (id Identity) Type() int {
 	switch {
 	case id.Darc != nil:
 		return 0
@@ -661,7 +673,7 @@ func (id *Identity) Type() int {
 }
 
 // TypeString returns the string of the type of the identity.
-func (id *Identity) TypeString() string {
+func (id Identity) TypeString() string {
 	switch id.Type() {
 	case 0:
 		return "darc"
@@ -674,8 +686,8 @@ func (id *Identity) TypeString() string {
 	}
 }
 
-// String returns the string representation of the identity
-func (id *Identity) String() string {
+// String returns the string representation of the identity.
+func (id Identity) String() string {
 	switch id.Type() {
 	case 0:
 		return fmt.Sprintf("%s:%x", id.TypeString(), id.Darc.ID)
@@ -690,7 +702,7 @@ func (id *Identity) String() string {
 
 // Verify returns nil if the signature is correct, or an error if something
 // went wrong.
-func (id *Identity) Verify(msg, sig []byte) error {
+func (id Identity) Verify(msg, sig []byte) error {
 	switch id.Type() {
 	case 0:
 		return errors.New("cannot verify a darc-signature")
@@ -703,9 +715,9 @@ func (id *Identity) Verify(msg, sig []byte) error {
 	}
 }
 
-// NewIdentityDarc creates a new darc identity struct given a darcid
-func NewIdentityDarc(id ID) *Identity {
-	return &Identity{
+// NewIdentityDarc creates a new darc identity struct given a darc ID.
+func NewIdentityDarc(id ID) Identity {
+	return Identity{
 		Darc: &IdentityDarc{
 			ID: id,
 		},
@@ -713,13 +725,13 @@ func NewIdentityDarc(id ID) *Identity {
 }
 
 // Equal returns true if both IdentityDarcs point to the same data.
-func (idd *IdentityDarc) Equal(idd2 *IdentityDarc) bool {
+func (idd IdentityDarc) Equal(idd2 *IdentityDarc) bool {
 	return bytes.Equal(idd.ID, idd2.ID)
 }
 
-// NewIdentityEd25519 creates a new Ed25519 identity struct given a point
-func NewIdentityEd25519(point kyber.Point) *Identity {
-	return &Identity{
+// NewIdentityEd25519 creates a new Ed25519 identity struct given a point.
+func NewIdentityEd25519(point kyber.Point) Identity {
+	return Identity{
 		Ed25519: &IdentityEd25519{
 			Point: point,
 		},
@@ -727,19 +739,19 @@ func NewIdentityEd25519(point kyber.Point) *Identity {
 }
 
 // Equal returns true if both IdentityEd25519 point to the same data.
-func (ide *IdentityEd25519) Equal(ide2 *IdentityEd25519) bool {
+func (ide IdentityEd25519) Equal(ide2 *IdentityEd25519) bool {
 	return ide.Point.Equal(ide2.Point)
 }
 
 // Verify returns nil if the signature is correct, or an error if something
 // fails.
-func (ide *IdentityEd25519) Verify(msg, sig []byte) error {
+func (ide IdentityEd25519) Verify(msg, sig []byte) error {
 	return schnorr.Verify(cothority.Suite, ide.Point, msg, sig)
 }
 
-// NewIdentityX509EC creates a new X509EC identity struct given a point
-func NewIdentityX509EC(public []byte) *Identity {
-	return &Identity{
+// NewIdentityX509EC creates a new X509EC identity struct given a point.
+func NewIdentityX509EC(public []byte) Identity {
+	return Identity{
 		X509EC: &IdentityX509EC{
 			Public: public,
 		},
@@ -747,7 +759,7 @@ func NewIdentityX509EC(public []byte) *Identity {
 }
 
 // Equal returns true if both IdentityX509EC point to the same data.
-func (idkc *IdentityX509EC) Equal(idkc2 *IdentityX509EC) bool {
+func (idkc IdentityX509EC) Equal(idkc2 *IdentityX509EC) bool {
 	return bytes.Compare(idkc.Public, idkc2.Public) == 0
 }
 
@@ -758,7 +770,7 @@ type sigRS struct {
 
 // Verify returns nil if the signature is correct, or an error if something
 // fails.
-func (idkc *IdentityX509EC) Verify(msg, s []byte) error {
+func (idkc IdentityX509EC) Verify(msg, s []byte) error {
 	public, err := x509.ParsePKIXPublicKey(idkc.Public)
 	if err != nil {
 		return err
@@ -775,28 +787,28 @@ func (idkc *IdentityX509EC) Verify(msg, s []byte) error {
 	return errors.New("Wrong signature")
 }
 
-// NewSignerEd25519 initializes a new SignerEd25519 given a public and private keys.
-// If any of the given values is nil or both are nil, then a new key pair is generated.
-// It returns a signer.
-func NewSignerEd25519(point kyber.Point, secret kyber.Scalar) *Signer {
+// NewSignerEd25519 initializes a new SignerEd25519 signer given a public and
+// private keys. If any of the given values is nil or both are nil, then a new
+// key pair is generated.
+func NewSignerEd25519(point kyber.Point, secret kyber.Scalar) Signer {
 	if point == nil || secret == nil {
 		kp := key.NewKeyPair(cothority.Suite)
 		point, secret = kp.Public, kp.Private
 	}
-	return &Signer{Ed25519: &SignerEd25519{
+	return Signer{Ed25519: &SignerEd25519{
 		Point:  point,
 		Secret: secret,
 	}}
 }
 
-// Sign creates a schnorr signautre on the message
-func (eds *SignerEd25519) Sign(msg []byte) ([]byte, error) {
+// Sign creates a schnorr signautre on the message.
+func (eds SignerEd25519) Sign(msg []byte) ([]byte, error) {
 	return schnorr.Sign(cothority.Suite, eds.Secret, msg)
 }
 
 // Hash computes the digest of the request, the identities and signatures are
 // not included.
-func (r *Request) Hash() []byte {
+func (r Request) Hash() []byte {
 	return r.innerRequest.Hash()
 }
 
@@ -813,7 +825,7 @@ func (r innerRequest) Hash() []byte {
 
 // GetIdentityStrings returns a slice of identity strings, this is useful for
 // creating a parser.
-func (r *Request) GetIdentityStrings() []string {
+func (r Request) GetIdentityStrings() []string {
 	res := make([]string, len(r.Identities))
 	for i, id := range r.Identities {
 		res[i] = id.String()
@@ -824,7 +836,7 @@ func (r *Request) GetIdentityStrings() []string {
 // MsgToDarc attempts to return a darc given the matching darcBuf. This
 // function should *not* be used as a way to verify the darc, it only checks
 // that darcBuf can be decoded and matches with the Msg part of the request.
-func (r *Request) MsgToDarc(darcBuf []byte) (*Darc, error) {
+func (r Request) MsgToDarc(darcBuf []byte) (*Darc, error) {
 	d, err := NewDarcFromProto(darcBuf)
 	if err != nil {
 		return nil, err
@@ -837,11 +849,11 @@ func (r *Request) MsgToDarc(darcBuf []byte) (*Darc, error) {
 	if len(r.Signatures) != len(r.Identities) {
 		return nil, errors.New("signature and identitity length mismatch")
 	}
-	darcSigs := make([]*Signature, len(r.Signatures))
+	darcSigs := make([]Signature, len(r.Signatures))
 	for i := range r.Signatures {
-		darcSigs[i] = &Signature{
+		darcSigs[i] = Signature{
 			Signature: r.Signatures[i],
-			Signer:    *r.Identities[i],
+			Signer:    r.Identities[i],
 		}
 	}
 	d.Signatures = darcSigs
@@ -852,7 +864,7 @@ func (r *Request) MsgToDarc(darcBuf []byte) (*Darc, error) {
 // InitRequest initialises a request, the caller must provide all the fields of
 // the request. There is no guarantee that this request is valid, please see
 // InitAndSignRequest is a valid request needs to be created.
-func InitRequest(baseID ID, action Action, msg []byte, ids []*Identity, sigs [][]byte) Request {
+func InitRequest(baseID ID, action Action, msg []byte, ids []Identity, sigs [][]byte) Request {
 	inner := innerRequest{
 		BaseID:     baseID,
 		Action:     action,
@@ -866,11 +878,11 @@ func InitRequest(baseID ID, action Action, msg []byte, ids []*Identity, sigs [][
 }
 
 // InitAndSignRequest creates a new request which can be verified by a Darc.
-func InitAndSignRequest(baseID ID, action Action, msg []byte, signers ...*Signer) (*Request, error) {
+func InitAndSignRequest(baseID ID, action Action, msg []byte, signers ...Signer) (*Request, error) {
 	if len(signers) == 0 {
 		return nil, errors.New("there are no signers")
 	}
-	signerIDs := make([]*Identity, len(signers))
+	signerIDs := make([]Identity, len(signers))
 	for i, s := range signers {
 		signerIDs[i] = s.Identity()
 	}
@@ -895,13 +907,13 @@ func InitAndSignRequest(baseID ID, action Action, msg []byte, signers ...*Signer
 	}, nil
 }
 
-// NewSignerX509EC creates a new SignerX509EC - mostly for tests
-func NewSignerX509EC() *Signer {
-	return nil
+// NewSignerX509EC creates a new SignerX509EC - mostly for tests.
+func NewSignerX509EC() Signer {
+	return Signer{}
 }
 
-// Sign creates a RSA signature on the message
-func (kcs *SignerX509EC) Sign(msg []byte) ([]byte, error) {
+// Sign creates a RSA signature on the message.
+func (kcs SignerX509EC) Sign(msg []byte) ([]byte, error) {
 	return nil, errors.New("not yet implemented")
 }
 

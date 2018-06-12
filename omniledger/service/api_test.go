@@ -25,7 +25,7 @@ func TestClient_GetProof(t *testing.T) {
 
 	// The darc inside it should be valid.
 	d := msg.GenesisDarc
-	require.Nil(t, d.Verify())
+	require.Nil(t, d.Verify(true))
 
 	c := NewClient()
 	csr, err := c.CreateGenesisBlock(roster, msg)

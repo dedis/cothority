@@ -48,7 +48,7 @@ type Darc struct {
 	// Signature is calculated on the Request-representation of the darc.
 	// It needs to be created by identities that have the "_evolve" action
 	// from the previous valid Darc.
-	Signatures []*Signature
+	Signatures []Signature
 	// VerificationDarcs are a list of darcs that the verifier needs to
 	// verify this darc. It is not needed in online verification where the
 	// verifier stores all darcs.
@@ -124,7 +124,7 @@ type innerRequest struct {
 	BaseID     ID
 	Action     Action
 	Msg        []byte
-	Identities []*Identity
+	Identities []Identity
 }
 
 // Request is the structure that the client must provide to be verified
