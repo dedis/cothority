@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib.eventlog;
 
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.omniledger.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
@@ -29,10 +30,9 @@ public class EventLog {
      * @param roster The roster for the servers, check the Roster class documentation for the different ways of creating it.
      * @param signers The list of signers that are authorised by the service to log events.
      * @param blockInterval The blockInterval in nanoseconds.
-     * @throws CothorityCommunicationException
-     * @throws CothorityCryptoException
+     * @throws CothorityException
      */
-    public EventLog(Roster roster, List<Signer> signers, long blockInterval) throws CothorityCommunicationException, CothorityCryptoException {
+    public EventLog(Roster roster, List<Signer> signers, long blockInterval) throws CothorityException {
         List<Identity> identities = new ArrayList<>();
         for (Signer signer : signers) {
             identities.add(signer.getIdentity());
@@ -55,10 +55,9 @@ public class EventLog {
      * that the event is actually stored.
      * @param event An event to log.
      * @return An ID for the event.
-     * @throws CothorityCommunicationException
-     * @throws CothorityCryptoException
+     * @throws CothorityException
      */
-    public byte[] log(Event event) throws CothorityCommunicationException, CothorityCryptoException {
+    public byte[] log(Event event) throws CothorityException {
         List<Event> events = new ArrayList<>();
         events.add(event);
         return this.log(events).get(0);
@@ -69,10 +68,9 @@ public class EventLog {
      * the event is stored successfully in a block, use the get function to verify that the event is actually stored.
      * @param events A list of events for logging.
      * @return A list of IDs for every event, in the same order.
-     * @throws CothorityCommunicationException
-     * @throws CothorityCryptoException
+     * @throws CothorityException
      */
-    public List<byte[]> log(List<Event> events) throws CothorityCommunicationException, CothorityCryptoException {
+    public List<byte[]> log(List<Event> events) throws CothorityException {
         ClientTransaction tx = makeTx(events, this.darc.getBaseId(), this.signers);
         EventLogProto.LogRequest.Builder b = EventLogProto.LogRequest.newBuilder();
         b.setSkipchainid(ByteString.copyFrom(this.genesis.getId()));

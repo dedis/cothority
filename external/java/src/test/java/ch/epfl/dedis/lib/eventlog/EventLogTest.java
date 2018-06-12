@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib.eventlog;
 
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
+import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.omniledger.darc.Signer;
 import ch.epfl.dedis.lib.omniledger.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
@@ -21,7 +22,7 @@ class EventLogTest {
     private TestServerController testInstanceController;
 
     @BeforeEach
-    void testInit() throws CothorityCryptoException, CothorityCommunicationException {
+    void testInit() throws CothorityException {
 
         List<Signer> signers =  new ArrayList<>();
         signers.add(new SignerEd25519());
@@ -31,7 +32,7 @@ class EventLogTest {
     }
 
     @Test
-    void testLog() throws CothorityCryptoException, CothorityCommunicationException, InterruptedException {
+    void testLog() throws CothorityException, InterruptedException {
         Event event = new Event("login", "alice");
         byte[] key = this.el.log(event);
 
@@ -42,7 +43,7 @@ class EventLogTest {
     }
 
     @Test
-    void testLogMore() throws CothorityCryptoException, CothorityCommunicationException, InterruptedException {
+    void testLogMore() throws CothorityException, InterruptedException {
         int n = 100;
         Event event = new Event("login", "alice");
         List<byte[]> keys = new ArrayList<>(n);
