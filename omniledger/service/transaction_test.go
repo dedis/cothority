@@ -95,7 +95,7 @@ func TestTransaction_Signing(t *testing.T) {
 	signer := darc.NewSignerEd25519(nil, nil)
 	ids := []darc.Identity{signer.Identity()}
 	d := darc.NewDarc(darc.InitRules(ids, ids), []byte("genesis darc"))
-	d.Rules.AddRule("Spawn_dummy_kind", d.Rules.GetSignExpr())
+	d.Rules.AddRule("spawn:dummy_kind", d.Rules.GetSignExpr())
 	require.Nil(t, d.Verify(true))
 
 	instr, err := createInstr(d.GetBaseID(), "dummy_kind", []byte("dummy_value"), signer)

@@ -40,7 +40,7 @@ func TestDarc_Copy(t *testing.T) {
 	d2 := d1.Copy()
 
 	// modify the first one
-	d1.IncrementVersion()
+	d1.Version++
 	desc := []byte("testdarc2")
 	d1.Description = desc
 	err = d1.Rules.UpdateRule("ocs:write", []byte(createIdentity().String()))
@@ -67,13 +67,6 @@ func TestUpdateRule(t *testing.T) {
 
 func TestDeleteRule(t *testing.T) {
 	// TODO
-}
-
-func TestDarc_IncrementVersion(t *testing.T) {
-	d := createDarc(1, "testdarc").darc
-	previousVersion := d.Version
-	d.IncrementVersion()
-	require.NotEqual(t, previousVersion, d.Version)
 }
 
 // TestDarc_EvolveOne creates two darcs, the first has two owners and the

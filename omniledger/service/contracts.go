@@ -2,9 +2,7 @@ package service
 
 import (
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/dedis/cothority/omniledger/darc"
@@ -176,36 +174,17 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 	if tx.getType() != invokeType {
 		return nil, nil, errors.New("Darc can only be invoked (evolved)")
 	}
-	if tx.Invoke.Command == "_evolve" {
+	if tx.Invoke.Command == "evolve" {
 		darcBuf := tx.Invoke.Args.Search("darc")
 		newD, err := darc.NewDarcFromProto(darcBuf)
 		if err != nil {
 			return nil, nil, err
 		}
-		newD.Signatures = append([]darc.Signature{}, tx.Signatures...)
-		// We create a a darc.GetDarc callback that looks into the
-		// collections database. If we are looking for the latest darc
-		// for some base ID, then LoadDarcFromColl will give it to us.
-		// Otherwise, we have to check whether the darc ID matches the
-		// query and only return if the darc if it does.
-		cb := func(s string, latest bool) *darc.Darc {
-			key, err := strToObjSlice(s)
-			if err != nil {
-				return nil
-			}
-			d, err := LoadDarcFromColl(coll, key)
-			if err != nil {
-				return nil
-			}
-			if latest {
-				return d
-			}
-			if s == darc.NewIdentityDarc(d.GetID()).String() {
-				return d
-			}
-			return nil
+		oldD, err := LoadDarcFromColl(coll, ObjectID{newD.BaseID, ZeroNonce}.Slice())
+		if err != nil {
+			return nil, nil, err
 		}
-		if err := newD.VerifyWithCB(cb, false); err != nil {
+		if err := newD.SanityCheck(oldD); err != nil {
 			return nil, nil, err
 		}
 		return []StateChange{
@@ -215,22 +194,4 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 		return nil, nil, errors.New("not implemented")
 	}
 	return nil, nil, errors.New("invalid command: " + tx.Invoke.Command)
-}
-
-func strToObjSlice(s string) ([]byte, error) {
-	ss := strings.SplitN(s, ":", 2)
-	if len(ss) != 2 {
-		return nil, errors.New("failed to split string into 2")
-	}
-	if ss[0] != "darc" {
-		return nil, errors.New("expected to split a darc ID string, but got " + ss[0])
-	}
-	darcID, err := hex.DecodeString(ss[1])
-	if err != nil {
-		return nil, err
-	}
-	return ObjectID{
-		DarcID:     darcID,
-		InstanceID: ZeroNonce,
-	}.Slice(), nil
 }

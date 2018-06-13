@@ -77,11 +77,10 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 	if len(ids) == 0 {
 		return nil, errors.New("no identities ")
 	}
-	d := darc.NewDarc(darc.InitRules(ids, ids), []byte("genesis darc"))
+	d := darc.NewDarc(darc.InitRulesWith(ids, ids, invokeEvolve), []byte("genesis darc"))
 	for _, r := range rules {
 		d.Rules.AddRule(darc.Action(r), d.Rules.GetSignExpr())
 	}
-
 	m := CreateGenesisBlock{
 		Version:       v,
 		Roster:        *r,
