@@ -41,7 +41,7 @@ matrix:
 
       script:
         - (cd conode/; make docker)
-        - make test
+        - make test_playground
 
     - language: java
 

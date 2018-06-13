@@ -11,7 +11,7 @@ EXCLUDE_LINT = "should be.*UI|_test.go"
 test_playground:
 	cd skipchain; \
 	for a in $$( seq 100 ); do \
-		if DEBUG_TIME=true go test -v -race -run TestRosterAddCausesSync > log.txt 2>&1; then \
+		if DEBUG_TIME=true go test -v -race -run TestService_AddFollow > log.txt 2>&1; then \
 			echo Successfully ran \#$$a at $$(date); \
 		else \
 			echo Failed at $$(date); \
