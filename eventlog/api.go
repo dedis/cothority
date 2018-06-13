@@ -40,7 +40,7 @@ func AddWriter(r darc.Rules, expr expression.Expr) darc.Rules {
 	if expr == nil {
 		expr = r.GetEvolutionExpr()
 	}
-	r["Spawn_eventlog"] = expr
+	r["spawn:eventlog"] = expr
 	return r
 }
 

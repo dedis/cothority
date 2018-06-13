@@ -24,6 +24,8 @@ import (
 
 const darcIDLen int = 32
 
+const invokeEvolve darc.Action = darc.Action("invoke:evolve")
+
 var omniledgerID onet.ServiceID
 var verifyOmniLedger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OmniLedger"))
 
@@ -478,18 +480,16 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID, interval time.Du
 
 					_, err = s.createNewBlock(scID, sb.Roster, ts)
 
-					// TODO: In createNewBlock, we
-					// need to limit how many tx
-					// we consume according the
-					// final size of the block.
-					// Thus createNewBlock needs to return how
-					// many it took.
+					// TODO: In createNewBlock, we need to
+					// limit how many tx we consume
+					// according the final size of the
+					// block. Thus createNewBlock needs to
+					// return how many it took.
 
-					// (The maximum size
-					// of a block is currently
-					// fixed by (at least) the
-					// maximum message size
-					// allowed in onet.)
+					// (The maximum size of a block is
+					// currently fixed by (at least) the
+					// maximum message size allowed in
+					// onet.)
 					ts = []ClientTransaction{}
 					if err != nil {
 						log.Error("couldn't create new block: " + err.Error())

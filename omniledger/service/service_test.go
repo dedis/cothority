@@ -47,7 +47,7 @@ func TestService_CreateSkipchain(t *testing.T) {
 
 	// create valid darc
 	signer := darc.NewSignerEd25519(nil, nil)
-	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"Spawn_dummy"}, signer.Identity())
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"spawn:dummy"}, signer.Identity())
 	genesisMsg.BlockInterval = 100 * time.Millisecond
 	require.Nil(t, err)
 
@@ -64,7 +64,7 @@ func padDarc(key []byte) []byte {
 	return keyPadded
 }
 
-func TestService_AddKeyValue(t *testing.T) {
+func TestService_AddTransaction(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
@@ -416,7 +416,7 @@ func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction 
 	d2Buf, err := d2.ToProto()
 	require.Nil(t, err)
 	invoke := Invoke{
-		Command: "_evolve",
+		Command: "evolve",
 		Args: []Argument{
 			Argument{
 				Name:  "darc",
@@ -497,7 +497,7 @@ func newSer(t *testing.T, step int, interval time.Duration) *ser {
 	}
 	registerDummy(s.services)
 
-	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"Spawn_dummy", "Spawn_invalid", "Spawn_panic"}, s.signer.Identity())
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"spawn:dummy", "spawn:invalid", "spawn:panic"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 

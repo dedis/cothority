@@ -152,11 +152,11 @@ public class Instruction {
     public String action() {
         String a = "invalid";
         if (this.spawn != null ) {
-            a = "Spawn_" + this.spawn.getContractId();
+            a = "spawn:" + this.spawn.getContractId();
         } else if (this.invoke != null) {
-            a = "Invoke_" + this.invoke.getCommand();
+            a = "invoke:" + this.invoke.getCommand();
         } else if (this.delete != null) {
-            a = "Delete";
+            a = "delete";
         }
         return a;
     }

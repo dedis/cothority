@@ -182,9 +182,9 @@ func (instr Instruction) Action() string {
 	a := "invalid"
 	switch {
 	case instr.Spawn != nil:
-		a = "Spawn_" + instr.Spawn.ContractID
+		a = "spawn:" + instr.Spawn.ContractID
 	case instr.Invoke != nil:
-		a = instr.Invoke.Command
+		a = "invoke:" + instr.Invoke.Command
 	case instr.Delete != nil:
 		a = "Delete"
 	}

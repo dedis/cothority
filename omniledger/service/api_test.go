@@ -19,7 +19,7 @@ func TestClient_GetProof(t *testing.T) {
 
 	// Initialise the genesis message and send it to the service.
 	signer := darc.NewSignerEd25519(nil, nil)
-	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"Spawn_dummy"}, signer.Identity())
+	msg, err := DefaultGenesisMsg(CurrentVersion, roster, []string{"spawn:dummy"}, signer.Identity())
 	msg.BlockInterval = 100 * time.Millisecond
 	require.Nil(t, err)
 

@@ -37,7 +37,7 @@ public class Darc {
     public static Map<String, byte[]> initRules(List<Identity> owners, List<Identity> signers)  {
         Map<String, byte[]> rs = new HashMap<>();
         List<String> ownerIDs = owners.stream().map(Identity::toString).collect(Collectors.toList());
-        rs.put("_evolve", String.join(" & ", ownerIDs).getBytes());
+        rs.put("invoke:evolve", String.join(" & ", ownerIDs).getBytes());
 
         List<String> signerIDs = signers.stream().map(Identity::toString).collect(Collectors.toList());
         rs.put("_sign", String.join(" | ", signerIDs).getBytes());

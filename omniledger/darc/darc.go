@@ -69,16 +69,27 @@ const sign = "_sign"
 type GetDarc func(s string, latest bool) *Darc
 
 // InitRules initialise a set of rules with the default actions "_evolve" and
-// "_sign". Signers are joined with logical-Or, owners are joined with
-// logical-AND. If other expressions are needed, please set the rules manually.
+// "_sign".  Owners are joined with logical-AND under "_evolve" and signers are
+// joined with logical-Or under "_sign". If other expressions are needed,
+// please set the rules manually. You must use the default action names for
+// offline-verification. You should use InitRulesWith to initialise the rules
+// with custom action names for evolve and sign.
 func InitRules(owners []Identity, signers []Identity) Rules {
+	return InitRulesWith(owners, signers, evolve)
+}
+
+// InitRulesWith initialise a set of rules with a custom evolve action name.
+// Owners are joined with logical-AND under evolveAction and signers are joined
+// with logical-Or under "_sign". If other expressions are needed, please set
+// the rules manually.
+func InitRulesWith(owners, signers []Identity, evolveAction Action) Rules {
 	rs := make(Rules)
 
 	ownerIDs := make([]string, len(owners))
 	for i, o := range owners {
 		ownerIDs[i] = o.String()
 	}
-	rs[evolve] = expression.InitAndExpr(ownerIDs...)
+	rs[evolveAction] = expression.InitAndExpr(ownerIDs...)
 
 	signerIDs := make([]string, len(signers))
 	for i, s := range signers {
@@ -226,12 +237,14 @@ func (r Rules) Contains(a Action) bool {
 	return ok
 }
 
-// GetEvolutionExpr returns the expression that describes the evolution action.
+// GetEvolutionExpr returns the expression that describes the evolution action
+// under the default name "_evolve".
 func (r Rules) GetEvolutionExpr() expression.Expr {
 	return r[evolve]
 }
 
-// GetSignExpr returns the expression that describes the sign action.
+// GetSignExpr returns the expression that describes the sign action under the
+// default name "_sign".
 func (r Rules) GetSignExpr() expression.Expr {
 	return r[sign]
 }
@@ -323,11 +336,6 @@ func (d *Darc) MakeEvolveRequest(prevSigners ...Signer) (*Request, []byte, error
 	}, darcBuf, nil
 }
 
-// IncrementVersion updates the version number of the Darc
-func (d *Darc) IncrementVersion() {
-	d.Version++
-}
-
 // Verify will check that the darc is correct, an error is returned if
 // something is wrong. This is used for offline verification where
 // Darc.VerificationDarcs has all the required darcs for doing the
@@ -338,8 +346,8 @@ func (d *Darc) Verify(fullVerification bool) error {
 }
 
 // VerifyWithCB will check that the darc is correct, an error is returned if
-// something is wrong.  The caller should supply the callback GetDarc because
-// if one of the IDs in the expression is a Darc ID, then this function needs a
+// something is wrong. The caller should supply the callback GetDarc because if
+// one of the IDs in the expression is a Darc ID, then this function needs a
 // way to retrieve the correct Darc according to that ID. This function will
 // ignore darcs in Darc.VerificationDarcs, please use Darc.Verify if you wish
 // to use it. Further, it verifies every darc up to the genesis darc (version
@@ -465,9 +473,9 @@ func DarcsToGetDarcs(darcs []*Darc) GetDarc {
 	}
 }
 
-// sanityCheck performs a sanity check on the receiver against the previous
+// SanityCheck performs a sanity check on the receiver against the previous
 // darc. It does not check the expression or signature.
-func (d Darc) sanityCheck(prev Darc) error {
+func (d Darc) SanityCheck(prev *Darc) error {
 	// check base ID
 	if d.BaseID == nil {
 		return errors.New("nil base ID")
@@ -480,6 +488,10 @@ func (d Darc) sanityCheck(prev Darc) error {
 		return fmt.Errorf("incorrect version, new version should be %d but it is %d",
 			prev.Version+1, d.Version)
 	}
+	// check prevID
+	if !d.PrevID.Equal(prev.GetID()) {
+		return errors.New("prev ID is wrong")
+	}
 	return nil
 }
 
@@ -488,7 +500,7 @@ func (d Darc) sanityCheck(prev Darc) error {
 // identities with the evolve permission in the oldDarc. The message that
 // prevDarc signs is the digest of a Darc.Request.
 func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string, bool) *Darc) error {
-	if err := newDarc.sanityCheck(*prevDarc); err != nil {
+	if err := newDarc.SanityCheck(prevDarc); err != nil {
 		return err
 	}
 
