@@ -17,14 +17,21 @@ message SkipBlock {
     required bytes data = 9;
     required Roster roster = 10;
     required bytes hash = 11;
-    repeated BlockLink forward = 12;
-    repeated BlockLink children = 13;
+    repeated ForwardLink forward = 12;
+    repeated bytes children = 13;
+    optional bytes payload = 14;
 }
 
-message BlockLink {
-    required bytes sig = 1;
-    required bytes msg = 2;
-    repeated Exception exceptions = 3;
+message ForwardLink {
+    required bytes from = 1;
+    required bytes to = 2;
+    optional Roster newRoster = 3;
+    required ByzcoinSig signature = 4;
+}
+
+message ByzcoinSig {
+    required bytes msg = 1;
+    required bytes sig = 2;
 }
 
 message SchnorrSig {
@@ -36,4 +43,3 @@ message Exception {
     required int32 index = 1;
     required bytes commitment = 2;
 }
-

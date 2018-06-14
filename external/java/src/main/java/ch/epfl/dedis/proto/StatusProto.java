@@ -43,9 +43,6 @@ public final class StatusProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -382,7 +379,7 @@ public final class StatusProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Request(input, extensionRegistry);
+          return new Request(input, extensionRegistry);
       }
     };
 
@@ -440,15 +437,15 @@ public final class StatusProto {
         java.lang.String key);
 
     /**
-     * <code>optional .ServerIdentity server = 2;</code>
+     * <code>required .ServerIdentity server = 2;</code>
      */
     boolean hasServer();
     /**
-     * <code>optional .ServerIdentity server = 2;</code>
+     * <code>required .ServerIdentity server = 2;</code>
      */
     ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity getServer();
     /**
-     * <code>optional .ServerIdentity server = 2;</code>
+     * <code>required .ServerIdentity server = 2;</code>
      */
     ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentityOrBuilder getServerOrBuilder();
   }
@@ -477,9 +474,6 @@ public final class StatusProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -622,9 +616,6 @@ public final class StatusProto {
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
         this();
-        if (extensionRegistry == null) {
-          throw new java.lang.NullPointerException();
-        }
         int mutable_bitField0_ = 0;
         com.google.protobuf.UnknownFieldSet.Builder unknownFields =
             com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1236,7 +1227,7 @@ public final class StatusProto {
             com.google.protobuf.CodedInputStream input,
             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
             throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Status(input, extensionRegistry);
+            return new Status(input, extensionRegistry);
         }
       };
 
@@ -1335,19 +1326,19 @@ public final class StatusProto {
     public static final int SERVER_FIELD_NUMBER = 2;
     private ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity server_;
     /**
-     * <code>optional .ServerIdentity server = 2;</code>
+     * <code>required .ServerIdentity server = 2;</code>
      */
     public boolean hasServer() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional .ServerIdentity server = 2;</code>
+     * <code>required .ServerIdentity server = 2;</code>
      */
     public ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity getServer() {
       return server_ == null ? ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.getDefaultInstance() : server_;
     }
     /**
-     * <code>optional .ServerIdentity server = 2;</code>
+     * <code>required .ServerIdentity server = 2;</code>
      */
     public ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentityOrBuilder getServerOrBuilder() {
       return server_ == null ? ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.getDefaultInstance() : server_;
@@ -1359,11 +1350,13 @@ public final class StatusProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (hasServer()) {
-        if (!getServer().isInitialized()) {
-          memoizedIsInitialized = 0;
-          return false;
-        }
+      if (!hasServer()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getServer().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
       }
       memoizedIsInitialized = 1;
       return true;
@@ -1690,10 +1683,11 @@ public final class StatusProto {
       }
 
       public final boolean isInitialized() {
-        if (hasServer()) {
-          if (!getServer().isInitialized()) {
-            return false;
-          }
+        if (!hasServer()) {
+          return false;
+        }
+        if (!getServer().isInitialized()) {
+          return false;
         }
         return true;
       }
@@ -1844,13 +1838,13 @@ public final class StatusProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity, ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.Builder, ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentityOrBuilder> serverBuilder_;
       /**
-       * <code>optional .ServerIdentity server = 2;</code>
+       * <code>required .ServerIdentity server = 2;</code>
        */
       public boolean hasServer() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional .ServerIdentity server = 2;</code>
+       * <code>required .ServerIdentity server = 2;</code>
        */
       public ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity getServer() {
         if (serverBuilder_ == null) {
@@ -1860,7 +1854,7 @@ public final class StatusProto {
         }
       }
       /**
-       * <code>optional .ServerIdentity server = 2;</code>
+       * <code>required .ServerIdentity server = 2;</code>
        */
       public Builder setServer(ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity value) {
         if (serverBuilder_ == null) {
@@ -1876,7 +1870,7 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>optional .ServerIdentity server = 2;</code>
+       * <code>required .ServerIdentity server = 2;</code>
        */
       public Builder setServer(
           ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.Builder builderForValue) {
@@ -1890,7 +1884,7 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>optional .ServerIdentity server = 2;</code>
+       * <code>required .ServerIdentity server = 2;</code>
        */
       public Builder mergeServer(ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity value) {
         if (serverBuilder_ == null) {
@@ -1910,7 +1904,7 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>optional .ServerIdentity server = 2;</code>
+       * <code>required .ServerIdentity server = 2;</code>
        */
       public Builder clearServer() {
         if (serverBuilder_ == null) {
@@ -1923,7 +1917,7 @@ public final class StatusProto {
         return this;
       }
       /**
-       * <code>optional .ServerIdentity server = 2;</code>
+       * <code>required .ServerIdentity server = 2;</code>
        */
       public ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.Builder getServerBuilder() {
         bitField0_ |= 0x00000002;
@@ -1931,7 +1925,7 @@ public final class StatusProto {
         return getServerFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .ServerIdentity server = 2;</code>
+       * <code>required .ServerIdentity server = 2;</code>
        */
       public ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentityOrBuilder getServerOrBuilder() {
         if (serverBuilder_ != null) {
@@ -1942,7 +1936,7 @@ public final class StatusProto {
         }
       }
       /**
-       * <code>optional .ServerIdentity server = 2;</code>
+       * <code>required .ServerIdentity server = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity, ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.Builder, ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentityOrBuilder> 
@@ -1987,7 +1981,7 @@ public final class StatusProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Response(input, extensionRegistry);
+          return new Response(input, extensionRegistry);
       }
     };
 
@@ -2042,7 +2036,7 @@ public final class StatusProto {
     java.lang.String[] descriptorData = {
       "\n\014status.proto\032\025server-identity.proto\"\t\n" +
       "\007Request\"\367\001\n\010Response\022%\n\006system\030\001 \003(\0132\025." +
-      "Response.SystemEntry\022\037\n\006server\030\002 \001(\0132\017.S" +
+      "Response.SystemEntry\022\037\n\006server\030\002 \002(\0132\017.S" +
       "erverIdentity\032?\n\013SystemEntry\022\013\n\003key\030\001 \001(" +
       "\t\022\037\n\005value\030\002 \001(\0132\020.Response.Status:\0028\001\032b" +
       "\n\006Status\022*\n\005field\030\001 \003(\0132\033.Response.Statu" +

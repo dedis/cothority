@@ -257,9 +257,6 @@ public final class TransactionProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2386,7 +2383,7 @@ public final class TransactionProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Instruction(input, extensionRegistry);
+          return new Instruction(input, extensionRegistry);
       }
     };
 
@@ -2476,9 +2473,6 @@ public final class TransactionProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3053,7 +3047,7 @@ public final class TransactionProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ObjectID(input, extensionRegistry);
+          return new ObjectID(input, extensionRegistry);
       }
     };
 
@@ -3177,9 +3171,6 @@ public final class TransactionProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4164,7 +4155,7 @@ public final class TransactionProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Spawn(input, extensionRegistry);
+          return new Spawn(input, extensionRegistry);
       }
     };
 
@@ -4289,9 +4280,6 @@ public final class TransactionProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5277,7 +5265,7 @@ public final class TransactionProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Invoke(input, extensionRegistry);
+          return new Invoke(input, extensionRegistry);
       }
     };
 
@@ -5329,9 +5317,6 @@ public final class TransactionProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -5672,7 +5657,7 @@ public final class TransactionProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Delete(input, extensionRegistry);
+          return new Delete(input, extensionRegistry);
       }
     };
 
@@ -5769,9 +5754,6 @@ public final class TransactionProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6422,7 +6404,7 @@ public final class TransactionProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Argument(input, extensionRegistry);
+          return new Argument(input, extensionRegistry);
       }
     };
 
@@ -6500,9 +6482,6 @@ public final class TransactionProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7200,7 +7179,7 @@ public final class TransactionProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ClientTransaction(input, extensionRegistry);
+          return new ClientTransaction(input, extensionRegistry);
       }
     };
 
@@ -7324,9 +7303,6 @@ public final class TransactionProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8114,7 +8090,7 @@ public final class TransactionProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StateChange(input, extensionRegistry);
+          return new StateChange(input, extensionRegistry);
       }
     };
 
@@ -8191,7 +8167,7 @@ public final class TransactionProto {
       "\016\n\006darcid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"4\n\005S" +
       "pawn\022\022\n\ncontractid\030\001 \002(\t\022\027\n\004args\030\002 \003(\0132\t" +
       ".Argument\"2\n\006Invoke\022\017\n\007command\030\001 \002(\t\022\027\n\004" +
-      "args\030\002 \003(\0132\t.Argument\"\010\n\006Delete\"\'\n\010Argum" +
+      "args\030\002 \003(\0132\t.Argument\"\010\n\006Delete\"\'\n\010Argum",
       "ent\022\014\n\004name\030\001 \002(\t\022\r\n\005value\030\002 \002(\014\"7\n\021Clie" +
       "ntTransaction\022\"\n\014instructions\030\001 \003(\0132\014.In" +
       "struction\"W\n\013StateChange\022\023\n\013stateaction\030" +

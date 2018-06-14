@@ -83,9 +83,6 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -917,7 +914,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new InitRequest(input, extensionRegistry);
+          return new InitRequest(input, extensionRegistry);
       }
     };
 
@@ -979,9 +976,6 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1415,7 +1409,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new InitResponse(input, extensionRegistry);
+          return new InitResponse(input, extensionRegistry);
       }
     };
 
@@ -1490,9 +1484,6 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2126,7 +2117,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new LogRequest(input, extensionRegistry);
+          return new LogRequest(input, extensionRegistry);
       }
     };
 
@@ -2218,9 +2209,6 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2966,7 +2954,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Event(input, extensionRegistry);
+          return new Event(input, extensionRegistry);
       }
     };
 
@@ -3018,9 +3006,6 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -3361,7 +3346,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new LogResponse(input, extensionRegistry);
+          return new LogResponse(input, extensionRegistry);
       }
     };
 
@@ -3433,9 +3418,6 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3956,7 +3938,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetEventRequest(input, extensionRegistry);
+          return new GetEventRequest(input, extensionRegistry);
       }
     };
 
@@ -4021,9 +4003,6 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4570,7 +4549,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetEventResponse(input, extensionRegistry);
+          return new GetEventResponse(input, extensionRegistry);
       }
     };
 
@@ -4642,7 +4621,7 @@ public final class EventLogProto {
       "ransaction\"5\n\005Event\022\014\n\004when\030\001 \002(\022\022\r\n\005top" +
       "ic\030\002 \002(\t\022\017\n\007content\030\003 \002(\t\"\r\n\013LogResponse" +
       "\"3\n\017GetEventRequest\022\023\n\013skipchainid\030\001 \002(\014" +
-      "\022\013\n\003key\030\002 \002(\014\")\n\020GetEventResponse\022\025\n\005eve" +
+      "\022\013\n\003key\030\002 \002(\014\")\n\020GetEventResponse\022\025\n\005eve",
       "nt\030\001 \002(\0132\006.EventB$\n\023ch.epfl.dedis.protoB" +
       "\rEventLogProto"
     };
