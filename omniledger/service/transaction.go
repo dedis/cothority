@@ -148,6 +148,23 @@ func (instr Instruction) Hash() []byte {
 	return h.Sum(nil)
 }
 
+// DeriveID derives a new ObjectID from the instruction's
+// ObjectID, the given string, and the hash of the Instruction.
+func (instr Instruction) DeriveID(what string) ObjectID {
+	h := sha256.New()
+	h.Write([]byte(what))
+	h.Write(instr.Hash())
+	sum := h.Sum(nil)
+
+	var iid Nonce
+	copy(iid[:], sum)
+
+	return ObjectID{
+		DarcID:     instr.ObjectID.DarcID,
+		InstanceID: iid,
+	}
+}
+
 // GetContractState searches for the contract kind of this instruction and the
 // attached state to it. It needs the collection to do so.
 func (instr Instruction) GetContractState(coll CollectionView) (contractID string, state []byte, err error) {

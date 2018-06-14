@@ -17,27 +17,18 @@ var ServiceName = "EventLog"
 
 var sid onet.ServiceID
 
-var indexKey omniledger.ObjectID
-
 func init() {
 	var err error
 	sid, err = onet.RegisterNewService(ServiceName, newService)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	// TODO: This is horrible, we'll be somehow using better well known keys later. Maybe.
-	indexKey.DarcID = omniledger.ZeroDarc
-	var keyNonce = omniledger.ZeroNonce
-	copy(keyNonce[:], []byte("index"))
-	indexKey.InstanceID = keyNonce
 }
 
 // Service is the EventLog service.
 type Service struct {
 	*onet.ServiceProcessor
-	omni       *omniledger.Service
-	bucketSize int
+	omni *omniledger.Service
 }
 
 const defaultBlockInterval = 5 * time.Second
@@ -133,9 +124,9 @@ func (s *Service) Search(req *SearchRequest) (*SearchResponse, error) {
 	}
 
 	v := s.omni.GetCollectionView(req.ID)
+	el := &eventLog{ID: theEventLog.Slice(), v: v}
 
-	// Find the latest bucket
-	id, b, err := getLatestBucket(v)
+	id, b, err := el.getLatestBucket()
 	if err == errIndexMissing {
 		// There are no events yet on this chain, so return no results.
 		return &SearchResponse{}, nil
@@ -172,7 +163,7 @@ func (s *Service) Search(req *SearchRequest) (*SearchResponse, error) {
 		}
 		bEnd = b.Start
 		id = b.Prev
-		b, err = getBucketByID(v, id)
+		b, err = el.getBucketByID(id)
 		if err != nil {
 			// This indicates that the event log data structure is wrong, so
 			// we cannot claim to correctly search it. Give up instead.
@@ -215,24 +206,16 @@ const contractName = "eventlog"
 
 func (s *Service) decodeAndCheckEvent(coll omniledger.CollectionView, eventBuf []byte) (*Event, error) {
 	// Check the timestamp of the event: it should never be in the future,
-	// and it should not be more than 10 blocks in the past. (Why 10?
-	// Because it works.  But it would be nice to have a better way to hold
-	// down the window size, and to be able to reason about it better.)
-	//
-	// TODO: Adaptive window size based on recently observed block
-	// latencies?
+	// and it should not be more than 5 seconds in the past. (Why 5?
+	// Because a #of blocks limit is too fragile when using fast blocks for tests.)
 	event := &Event{}
 	err := protobuf.Decode(eventBuf, event)
 	if err != nil {
 		return nil, err
 	}
-	blockInterval, err := omniledger.LoadBlockIntervalFromColl(coll)
-	if err != nil {
-		return nil, err
-	}
 	when := time.Unix(0, event.When)
 	now := time.Now()
-	if when.Before(now.Add(-10 * blockInterval)) {
+	if when.Before(now.Add(-5 * time.Second)) {
 		return nil, errors.New("event timestamp too long ago")
 	}
 	if when.After(now) {
@@ -243,7 +226,7 @@ func (s *Service) decodeAndCheckEvent(coll omniledger.CollectionView, eventBuf [
 
 // contractFunction is the function that runs to process a transaction of
 // type "eventlog"
-func (s *Service) contractFunction(coll omniledger.CollectionView, tx omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
+func (s *Service) contractFunction(v omniledger.CollectionView, tx omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
 	if tx.Delete != nil {
 		return nil, nil, errors.New("delete tx not allowed")
 	}
@@ -257,7 +240,7 @@ func (s *Service) contractFunction(coll omniledger.CollectionView, tx omniledger
 	// This is not strictly required, because since we know we are
 	// a spawn, we know the contract comes directly from
 	// tx.Spawn.ContractID.
-	cid, _, err := tx.GetContractState(coll)
+	cid, _, err := tx.GetContractState(v)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -270,7 +253,7 @@ func (s *Service) contractFunction(coll omniledger.CollectionView, tx omniledger
 		return nil, nil, errors.New("expected a named argument of \"event\"")
 	}
 
-	event, err := s.decodeAndCheckEvent(coll, eventBuf)
+	event, err := s.decodeAndCheckEvent(v, eventBuf)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -278,17 +261,29 @@ func (s *Service) contractFunction(coll omniledger.CollectionView, tx omniledger
 	scs = append(scs, omniledger.NewStateChange(omniledger.Create, tx.ObjectID, cid, eventBuf))
 
 	// Get the bucket either update the existing one or create a new one,
-	// depending on the bucket size.
-	bIDCopy, b, err := getLatestBucket(coll)
-	bID := append([]byte{}, bIDCopy...)
-	if err == errIndexMissing {
-		// TODO which darc do we use for the buckets?
-		bID = omniledger.ObjectID{
-			DarcID:     tx.ObjectID.DarcID,
-			InstanceID: omniledger.Nonce(initialBucketNonce),
-		}.Slice()
+	// depending on the bucket age of the latest bucket.
+	el := &eventLog{ID: theEventLog.Slice(), v: v}
+	bID, b, err := el.getLatestBucket()
+	if err != nil && err != errIndexMissing {
+		return nil, nil, err
+	}
+
+	noLatestYet := (err == errIndexMissing)
+
+	if noLatestYet {
+		bID = tx.DeriveID("bucket").Slice()
+
+		// This new bucket will start with this event.
+		st := event.When
+		if noLatestYet {
+			// Special case: The first bucket for an eventlog
+			// needs a Start as 0 to catch older events that arrive
+			// and squeak through decodeAndCheckEvent above.
+			st = 0
+		}
+
 		b = &bucket{
-			Start:     event.When,
+			Start:     st,
 			Prev:      []byte{},
 			EventRefs: [][]byte{tx.ObjectID.Slice()},
 		}
@@ -302,41 +297,42 @@ func (s *Service) contractFunction(coll omniledger.CollectionView, tx omniledger
 			ContractID:  []byte(cid),
 			Value:       bBuf,
 		})
-	} else if err != nil {
-		return nil, nil, err
-	} else if len(b.EventRefs) >= s.bucketSize {
-		// TODO which darc do we use for the buckets?
-		var oldNonce [32]byte
-		copy(oldNonce[:], bID[32:64])
-		newNonce := incrementNonce(oldNonce)
 
-		newbID := make([]byte, 64)
-		copy(newbID[0:32], bID[0:32])
-		copy(newbID[32:64], newNonce[:])
+		if noLatestYet {
+			scs = append(scs, omniledger.NewStateChange(omniledger.Create, theEventLog, cid, bID))
+		} else {
+			scs = append(scs, omniledger.NewStateChange(omniledger.Update, theEventLog, cid, bID))
+		}
+		// } else if len(b.EventRefs) >= s.bucketSize {
+		// 	// TODO which darc do we use for the buckets?
+		// 	var oldNonce [32]byte
+		// 	copy(oldNonce[:], bID[32:64])
+		// 	newNonce := incrementNonce(oldNonce)
 
-		scsNew, newBucket, err := b.newLink(bID, newbID, tx.ObjectID.Slice())
+		// 	newbID := make([]byte, 64)
+		// 	copy(newbID[0:32], bID[0:32])
+		// 	copy(newbID[32:64], newNonce[:])
+
+		// 	scsNew, newBucket, err := b.newLink(bID, newbID, tx.ObjectID.Slice())
+		// 	if err != nil {
+		// 		return nil, nil, err
+		// 	}
+		// 	scs = append(scs, scsNew...)
+		// 	bID = newbID
+		// 	b = newBucket
+	} else {
+		b.EventRefs = append(b.EventRefs, tx.ObjectID.Slice())
+		bucketBuf, err := protobuf.Encode(b)
 		if err != nil {
 			return nil, nil, err
 		}
-		scs = append(scs, scsNew...)
-		bID = newbID
-		b = newBucket
-	} else {
-		scsNew, err := b.updateBucket(bID, tx.ObjectID.Slice(), *event)
-		if err != nil {
-			return nil, nil, err
-		}
-		scs = append(scs, scsNew...)
-	}
-
-	// Try to update the index, otherwise create it.
-	_, err = getIndexValue(coll)
-	if err == errIndexMissing {
-		scs = append(scs, omniledger.NewStateChange(omniledger.Create, indexKey, cid, bID))
-	} else if err == nil {
-		scs = append(scs, omniledger.NewStateChange(omniledger.Update, indexKey, cid, bID))
-	} else {
-		return nil, nil, err
+		scs = append(scs,
+			omniledger.StateChange{
+				StateAction: omniledger.Update,
+				ObjectID:    bID,
+				ContractID:  []byte(contractName),
+				Value:       bucketBuf,
+			})
 	}
 
 	return scs, nil, nil
@@ -350,7 +346,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		omni:             c.Service(omniledger.ServiceName).(*omniledger.Service),
-		bucketSize:       10,
 	}
 	if err := s.RegisterHandlers(s.Init, s.Log, s.GetEvent, s.Search); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")

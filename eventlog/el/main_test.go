@@ -79,7 +79,7 @@ func Test(t *testing.T) {
 	// order is repeatable.)
 	time.Sleep(2 * blockInterval)
 
-	// get all
+	t.Log("search: get all")
 	b := &bytes.Buffer{}
 	cliApp.Metadata["stdout"] = b
 	args = []string{"el", "search"}
@@ -87,7 +87,7 @@ func Test(t *testing.T) {
 	require.Contains(t, string(b.Bytes()), "Test Message")
 	require.Contains(t, string(b.Bytes()), "ldjkf")
 
-	// limit by topic
+	t.Log("search: limit by topic")
 	b = &bytes.Buffer{}
 	cliApp.Metadata["stdout"] = b
 	args = []string{"el", "search", "-topic", "testTopic1"}
@@ -95,7 +95,7 @@ func Test(t *testing.T) {
 	require.Contains(t, string(b.Bytes()), "Test Message")
 	require.NotContains(t, string(b.Bytes()), "ldjkf")
 
-	// limit by count
+	t.Log("search: limit by count")
 	b = &bytes.Buffer{}
 	cliApp.Metadata["stdout"] = b
 	args = []string{"el", "search", "-count", "1"}

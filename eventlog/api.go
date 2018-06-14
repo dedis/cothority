@@ -26,6 +26,15 @@ type Client struct {
 	Darc *darc.Darc
 }
 
+// TODO: This is a placeholder, while we are waiting for an OmniLedger admin
+// tool that will let us connect a public key to the right to create new eventlogs.
+var theEventLog omniledger.ObjectID
+
+func init() {
+	theEventLog.DarcID = omniledger.ZeroDarc
+	copy(theEventLog.InstanceID[:], []byte("index"))
+}
+
 // NewClient creates a new client to talk to the eventlog service.
 func NewClient(r *onet.Roster) *Client {
 	return &Client{

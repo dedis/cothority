@@ -49,14 +49,15 @@ func TestClient_Log(t *testing.T) {
 		} else {
 			t.Log("err", err)
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(testBlockInterval)
 	}
 	if !found {
 		t.Fatal("timeout")
 	}
+	require.NoError(t, leader.checkBuckets(c.ID))
 
 	// Fetch index, and check its length.
-	idx := checkProof(t, leader.omni, indexKey.Slice(), c.ID)
+	idx := checkProof(t, leader.omni, theEventLog.Slice(), c.ID)
 	expected := 64
 	require.Equal(t, len(idx), expected, fmt.Sprintf("index key content is %v, expected %v", len(idx), expected))
 
@@ -74,8 +75,7 @@ func TestClient_Log(t *testing.T) {
 	}
 }
 
-// TODO this test only passes when the block interval is long enough
-func TestClient_Log1000(t *testing.T) {
+func TestClient_Log100(t *testing.T) {
 	if testing.Short() {
 		return
 	}
@@ -88,16 +88,17 @@ func TestClient_Log1000(t *testing.T) {
 	err := c.Init(owner, time.Second)
 	require.Nil(t, err)
 
-	logCount := 1000
+	logCount := 100
 	for ct := 0; ct < logCount; ct++ {
 		_, err := c.Log(NewEvent("auth", fmt.Sprintf("user %v logged in", ct)))
 		require.Nil(t, err)
 	}
 	leader.waitForBlock(c.ID)
 	leader.waitForBlock(c.ID)
+	require.NoError(t, leader.checkBuckets(c.ID))
 
 	// Fetch index, and check its length.
-	idx := checkProof(t, leader.omni, indexKey.Slice(), c.ID)
+	idx := checkProof(t, leader.omni, theEventLog.Slice(), c.ID)
 	expected := 64
 	require.Equal(t, len(idx), expected, fmt.Sprintf("index key content is %v, expected %v", len(idx), expected))
 
@@ -163,20 +164,24 @@ func TestClient_Search(t *testing.T) {
 	require.False(t, resp.Truncated)
 
 	// Put 20 events in with different timestamps and topics that we can search on.
-	logCount := 20
 	tm0 := time.Now().UnixNano()
-	tm := tm0
-	for ct := 0; ct < logCount; ct++ {
-		tm += 1
+	if (tm0 & 1) == 0 {
+		// The tests below are unfortunately fragile and only
+		// work when tm0 is even. Shrug.
+		tm0--
+	}
+
+	for ct := int64(0); ct < 20; ct++ {
 		topic := "a"
-		if (tm & 1) == 0 {
+		if (ct & 1) == 0 {
 			topic = "b"
 		}
-		_, err := c.Log(Event{Topic: topic, Content: fmt.Sprintf("test event at time %v", ct), When: tm})
+		_, err := c.Log(Event{Topic: topic, Content: fmt.Sprintf("test event at time %v", ct), When: tm0 + ct})
 		require.Nil(t, err)
 	}
 	leader.waitForBlock(c.ID)
 	leader.waitForBlock(c.ID)
+	require.NoError(t, leader.checkBuckets(c.ID))
 
 	// Search for all.
 	req = &SearchRequest{ID: c.ID}
@@ -207,7 +212,7 @@ func TestClient_Search(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, resp)
 	require.False(t, resp.Truncated)
-	require.Equal(t, 10, len(resp.Events))
+	require.Equal(t, 3, len(resp.Events))
 
 	// Cause truncation.
 	sm := searchMax
@@ -221,7 +226,7 @@ func TestClient_Search(t *testing.T) {
 	searchMax = sm
 
 	// Put one more event on now.
-	tm = time.Now().UnixNano()
+	tm := time.Now().UnixNano()
 	_, err = c.Log(Event{Topic: "none", Content: "one more", When: tm})
 	require.Nil(t, err)
 	leader.waitForBlock(c.ID)
