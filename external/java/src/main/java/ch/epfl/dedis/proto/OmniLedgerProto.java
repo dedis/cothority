@@ -133,9 +133,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1196,7 +1193,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateGenesisBlock(input, extensionRegistry);
+          return new CreateGenesisBlock(input, extensionRegistry);
       }
     };
 
@@ -1291,9 +1288,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1994,7 +1988,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateGenesisBlockResponse(input, extensionRegistry);
+          return new CreateGenesisBlockResponse(input, extensionRegistry);
       }
     };
 
@@ -2107,9 +2101,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2924,7 +2915,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new AddTxRequest(input, extensionRegistry);
+          return new AddTxRequest(input, extensionRegistry);
       }
     };
 
@@ -2994,9 +2985,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3452,7 +3440,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new AddTxResponse(input, extensionRegistry);
+          return new AddTxResponse(input, extensionRegistry);
       }
     };
 
@@ -3466,6 +3454,7315 @@ public final class OmniLedgerProto {
     }
 
     public ch.epfl.dedis.proto.OmniLedgerProto.AddTxResponse getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface ConfigurationOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Configuration)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * Roster is the set of nodes responsible for omniledger
+     * </pre>
+     *
+     * <code>required .Roster roster = 1;</code>
+     */
+    boolean hasRoster();
+    /**
+     * <pre>
+     * Roster is the set of nodes responsible for omniledger
+     * </pre>
+     *
+     * <code>required .Roster roster = 1;</code>
+     */
+    ch.epfl.dedis.proto.RosterProto.Roster getRoster();
+    /**
+     * <pre>
+     * Roster is the set of nodes responsible for omniledger
+     * </pre>
+     *
+     * <code>required .Roster roster = 1;</code>
+     */
+    ch.epfl.dedis.proto.RosterProto.RosterOrBuilder getRosterOrBuilder();
+
+    /**
+     * <pre>
+     * BlockInterval is the time in nanoseconds between two blocks
+     * </pre>
+     *
+     * <code>optional sint64 blockInterval = 2;</code>
+     */
+    boolean hasBlockInterval();
+    /**
+     * <pre>
+     * BlockInterval is the time in nanoseconds between two blocks
+     * </pre>
+     *
+     * <code>optional sint64 blockInterval = 2;</code>
+     */
+    long getBlockInterval();
+  }
+  /**
+   * <pre>
+   * Configuration is the representation of the genesis configuration data.
+   * </pre>
+   *
+   * Protobuf type {@code Configuration}
+   */
+  public  static final class Configuration extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:Configuration)
+      ConfigurationOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use Configuration.newBuilder() to construct.
+    private Configuration(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Configuration() {
+      blockInterval_ = 0L;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Configuration(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              ch.epfl.dedis.proto.RosterProto.Roster.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = roster_.toBuilder();
+              }
+              roster_ = input.readMessage(ch.epfl.dedis.proto.RosterProto.Roster.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(roster_);
+                roster_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
+              blockInterval_ = input.readSInt64();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Configuration_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Configuration_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.OmniLedgerProto.Configuration.class, ch.epfl.dedis.proto.OmniLedgerProto.Configuration.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int ROSTER_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.proto.RosterProto.Roster roster_;
+    /**
+     * <pre>
+     * Roster is the set of nodes responsible for omniledger
+     * </pre>
+     *
+     * <code>required .Roster roster = 1;</code>
+     */
+    public boolean hasRoster() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * Roster is the set of nodes responsible for omniledger
+     * </pre>
+     *
+     * <code>required .Roster roster = 1;</code>
+     */
+    public ch.epfl.dedis.proto.RosterProto.Roster getRoster() {
+      return roster_ == null ? ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
+    }
+    /**
+     * <pre>
+     * Roster is the set of nodes responsible for omniledger
+     * </pre>
+     *
+     * <code>required .Roster roster = 1;</code>
+     */
+    public ch.epfl.dedis.proto.RosterProto.RosterOrBuilder getRosterOrBuilder() {
+      return roster_ == null ? ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
+    }
+
+    public static final int BLOCKINTERVAL_FIELD_NUMBER = 2;
+    private long blockInterval_;
+    /**
+     * <pre>
+     * BlockInterval is the time in nanoseconds between two blocks
+     * </pre>
+     *
+     * <code>optional sint64 blockInterval = 2;</code>
+     */
+    public boolean hasBlockInterval() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * BlockInterval is the time in nanoseconds between two blocks
+     * </pre>
+     *
+     * <code>optional sint64 blockInterval = 2;</code>
+     */
+    public long getBlockInterval() {
+      return blockInterval_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasRoster()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getRoster().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, getRoster());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeSInt64(2, blockInterval_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getRoster());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(2, blockInterval_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.Configuration)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.OmniLedgerProto.Configuration other = (ch.epfl.dedis.proto.OmniLedgerProto.Configuration) obj;
+
+      boolean result = true;
+      result = result && (hasRoster() == other.hasRoster());
+      if (hasRoster()) {
+        result = result && getRoster()
+            .equals(other.getRoster());
+      }
+      result = result && (hasBlockInterval() == other.hasBlockInterval());
+      if (hasBlockInterval()) {
+        result = result && (getBlockInterval()
+            == other.getBlockInterval());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasRoster()) {
+        hash = (37 * hash) + ROSTER_FIELD_NUMBER;
+        hash = (53 * hash) + getRoster().hashCode();
+      }
+      if (hasBlockInterval()) {
+        hash = (37 * hash) + BLOCKINTERVAL_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getBlockInterval());
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.Configuration prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * Configuration is the representation of the genesis configuration data.
+     * </pre>
+     *
+     * Protobuf type {@code Configuration}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:Configuration)
+        ch.epfl.dedis.proto.OmniLedgerProto.ConfigurationOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Configuration_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Configuration_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.OmniLedgerProto.Configuration.class, ch.epfl.dedis.proto.OmniLedgerProto.Configuration.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.OmniLedgerProto.Configuration.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getRosterFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        if (rosterBuilder_ == null) {
+          roster_ = null;
+        } else {
+          rosterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        blockInterval_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Configuration_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.Configuration getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.Configuration.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.Configuration build() {
+        ch.epfl.dedis.proto.OmniLedgerProto.Configuration result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.Configuration buildPartial() {
+        ch.epfl.dedis.proto.OmniLedgerProto.Configuration result = new ch.epfl.dedis.proto.OmniLedgerProto.Configuration(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (rosterBuilder_ == null) {
+          result.roster_ = roster_;
+        } else {
+          result.roster_ = rosterBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.blockInterval_ = blockInterval_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.Configuration) {
+          return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.Configuration)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.Configuration other) {
+        if (other == ch.epfl.dedis.proto.OmniLedgerProto.Configuration.getDefaultInstance()) return this;
+        if (other.hasRoster()) {
+          mergeRoster(other.getRoster());
+        }
+        if (other.hasBlockInterval()) {
+          setBlockInterval(other.getBlockInterval());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasRoster()) {
+          return false;
+        }
+        if (!getRoster().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.OmniLedgerProto.Configuration parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.Configuration) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.proto.RosterProto.Roster roster_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.RosterProto.Roster, ch.epfl.dedis.proto.RosterProto.Roster.Builder, ch.epfl.dedis.proto.RosterProto.RosterOrBuilder> rosterBuilder_;
+      /**
+       * <pre>
+       * Roster is the set of nodes responsible for omniledger
+       * </pre>
+       *
+       * <code>required .Roster roster = 1;</code>
+       */
+      public boolean hasRoster() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * Roster is the set of nodes responsible for omniledger
+       * </pre>
+       *
+       * <code>required .Roster roster = 1;</code>
+       */
+      public ch.epfl.dedis.proto.RosterProto.Roster getRoster() {
+        if (rosterBuilder_ == null) {
+          return roster_ == null ? ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
+        } else {
+          return rosterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Roster is the set of nodes responsible for omniledger
+       * </pre>
+       *
+       * <code>required .Roster roster = 1;</code>
+       */
+      public Builder setRoster(ch.epfl.dedis.proto.RosterProto.Roster value) {
+        if (rosterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          roster_ = value;
+          onChanged();
+        } else {
+          rosterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <pre>
+       * Roster is the set of nodes responsible for omniledger
+       * </pre>
+       *
+       * <code>required .Roster roster = 1;</code>
+       */
+      public Builder setRoster(
+          ch.epfl.dedis.proto.RosterProto.Roster.Builder builderForValue) {
+        if (rosterBuilder_ == null) {
+          roster_ = builderForValue.build();
+          onChanged();
+        } else {
+          rosterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <pre>
+       * Roster is the set of nodes responsible for omniledger
+       * </pre>
+       *
+       * <code>required .Roster roster = 1;</code>
+       */
+      public Builder mergeRoster(ch.epfl.dedis.proto.RosterProto.Roster value) {
+        if (rosterBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              roster_ != null &&
+              roster_ != ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance()) {
+            roster_ =
+              ch.epfl.dedis.proto.RosterProto.Roster.newBuilder(roster_).mergeFrom(value).buildPartial();
+          } else {
+            roster_ = value;
+          }
+          onChanged();
+        } else {
+          rosterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <pre>
+       * Roster is the set of nodes responsible for omniledger
+       * </pre>
+       *
+       * <code>required .Roster roster = 1;</code>
+       */
+      public Builder clearRoster() {
+        if (rosterBuilder_ == null) {
+          roster_ = null;
+          onChanged();
+        } else {
+          rosterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <pre>
+       * Roster is the set of nodes responsible for omniledger
+       * </pre>
+       *
+       * <code>required .Roster roster = 1;</code>
+       */
+      public ch.epfl.dedis.proto.RosterProto.Roster.Builder getRosterBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getRosterFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Roster is the set of nodes responsible for omniledger
+       * </pre>
+       *
+       * <code>required .Roster roster = 1;</code>
+       */
+      public ch.epfl.dedis.proto.RosterProto.RosterOrBuilder getRosterOrBuilder() {
+        if (rosterBuilder_ != null) {
+          return rosterBuilder_.getMessageOrBuilder();
+        } else {
+          return roster_ == null ?
+              ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
+        }
+      }
+      /**
+       * <pre>
+       * Roster is the set of nodes responsible for omniledger
+       * </pre>
+       *
+       * <code>required .Roster roster = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.RosterProto.Roster, ch.epfl.dedis.proto.RosterProto.Roster.Builder, ch.epfl.dedis.proto.RosterProto.RosterOrBuilder> 
+          getRosterFieldBuilder() {
+        if (rosterBuilder_ == null) {
+          rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.RosterProto.Roster, ch.epfl.dedis.proto.RosterProto.Roster.Builder, ch.epfl.dedis.proto.RosterProto.RosterOrBuilder>(
+                  getRoster(),
+                  getParentForChildren(),
+                  isClean());
+          roster_ = null;
+        }
+        return rosterBuilder_;
+      }
+
+      private long blockInterval_ ;
+      /**
+       * <pre>
+       * BlockInterval is the time in nanoseconds between two blocks
+       * </pre>
+       *
+       * <code>optional sint64 blockInterval = 2;</code>
+       */
+      public boolean hasBlockInterval() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <pre>
+       * BlockInterval is the time in nanoseconds between two blocks
+       * </pre>
+       *
+       * <code>optional sint64 blockInterval = 2;</code>
+       */
+      public long getBlockInterval() {
+        return blockInterval_;
+      }
+      /**
+       * <pre>
+       * BlockInterval is the time in nanoseconds between two blocks
+       * </pre>
+       *
+       * <code>optional sint64 blockInterval = 2;</code>
+       */
+      public Builder setBlockInterval(long value) {
+        bitField0_ |= 0x00000002;
+        blockInterval_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * BlockInterval is the time in nanoseconds between two blocks
+       * </pre>
+       *
+       * <code>optional sint64 blockInterval = 2;</code>
+       */
+      public Builder clearBlockInterval() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        blockInterval_ = 0L;
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:Configuration)
+    }
+
+    // @@protoc_insertion_point(class_scope:Configuration)
+    private static final ch.epfl.dedis.proto.OmniLedgerProto.Configuration DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.Configuration();
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<Configuration>
+        PARSER = new com.google.protobuf.AbstractParser<Configuration>() {
+      public Configuration parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Configuration(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Configuration> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Configuration> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.OmniLedgerProto.Configuration getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetProofOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:GetProof)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * 	 Version of the protocol
+     * </pre>
+     *
+     * <code>required sint64 version = 1;</code>
+     */
+    boolean hasVersion();
+    /**
+     * <pre>
+     * 	 Version of the protocol
+     * </pre>
+     *
+     * <code>required sint64 version = 1;</code>
+     */
+    long getVersion();
+
+    /**
+     * <pre>
+     * 	 Key is the key we want to look up
+     * </pre>
+     *
+     * <code>required bytes key = 2;</code>
+     */
+    boolean hasKey();
+    /**
+     * <pre>
+     * 	 Key is the key we want to look up
+     * </pre>
+     *
+     * <code>required bytes key = 2;</code>
+     */
+    com.google.protobuf.ByteString getKey();
+
+    /**
+     * <pre>
+     * 	 ID is any block that is known to us in the skipchain, can be the genesis
+     * 	 block or any later block. The proof returned will be starting at this block.
+     * </pre>
+     *
+     * <code>required bytes id = 3;</code>
+     */
+    boolean hasId();
+    /**
+     * <pre>
+     * 	 ID is any block that is known to us in the skipchain, can be the genesis
+     * 	 block or any later block. The proof returned will be starting at this block.
+     * </pre>
+     *
+     * <code>required bytes id = 3;</code>
+     */
+    com.google.protobuf.ByteString getId();
+  }
+  /**
+   * <pre>
+   * GetProof returns the proof that the given key is in the collection.
+   * </pre>
+   *
+   * Protobuf type {@code GetProof}
+   */
+  public  static final class GetProof extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:GetProof)
+      GetProofOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetProof.newBuilder() to construct.
+    private GetProof(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetProof() {
+      version_ = 0L;
+      key_ = com.google.protobuf.ByteString.EMPTY;
+      id_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetProof(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              version_ = input.readSInt64();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              key_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              id_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_GetProof_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_GetProof_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.OmniLedgerProto.GetProof.class, ch.epfl.dedis.proto.OmniLedgerProto.GetProof.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int VERSION_FIELD_NUMBER = 1;
+    private long version_;
+    /**
+     * <pre>
+     * 	 Version of the protocol
+     * </pre>
+     *
+     * <code>required sint64 version = 1;</code>
+     */
+    public boolean hasVersion() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * 	 Version of the protocol
+     * </pre>
+     *
+     * <code>required sint64 version = 1;</code>
+     */
+    public long getVersion() {
+      return version_;
+    }
+
+    public static final int KEY_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString key_;
+    /**
+     * <pre>
+     * 	 Key is the key we want to look up
+     * </pre>
+     *
+     * <code>required bytes key = 2;</code>
+     */
+    public boolean hasKey() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * 	 Key is the key we want to look up
+     * </pre>
+     *
+     * <code>required bytes key = 2;</code>
+     */
+    public com.google.protobuf.ByteString getKey() {
+      return key_;
+    }
+
+    public static final int ID_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString id_;
+    /**
+     * <pre>
+     * 	 ID is any block that is known to us in the skipchain, can be the genesis
+     * 	 block or any later block. The proof returned will be starting at this block.
+     * </pre>
+     *
+     * <code>required bytes id = 3;</code>
+     */
+    public boolean hasId() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * 	 ID is any block that is known to us in the skipchain, can be the genesis
+     * 	 block or any later block. The proof returned will be starting at this block.
+     * </pre>
+     *
+     * <code>required bytes id = 3;</code>
+     */
+    public com.google.protobuf.ByteString getId() {
+      return id_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasVersion()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasKey()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeSInt64(1, version_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, key_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, id_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(1, version_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, key_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, id_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.GetProof)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.OmniLedgerProto.GetProof other = (ch.epfl.dedis.proto.OmniLedgerProto.GetProof) obj;
+
+      boolean result = true;
+      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion()) {
+        result = result && (getVersion()
+            == other.getVersion());
+      }
+      result = result && (hasKey() == other.hasKey());
+      if (hasKey()) {
+        result = result && getKey()
+            .equals(other.getKey());
+      }
+      result = result && (hasId() == other.hasId());
+      if (hasId()) {
+        result = result && getId()
+            .equals(other.getId());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasVersion()) {
+        hash = (37 * hash) + VERSION_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getVersion());
+      }
+      if (hasKey()) {
+        hash = (37 * hash) + KEY_FIELD_NUMBER;
+        hash = (53 * hash) + getKey().hashCode();
+      }
+      if (hasId()) {
+        hash = (37 * hash) + ID_FIELD_NUMBER;
+        hash = (53 * hash) + getId().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.GetProof prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetProof returns the proof that the given key is in the collection.
+     * </pre>
+     *
+     * Protobuf type {@code GetProof}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:GetProof)
+        ch.epfl.dedis.proto.OmniLedgerProto.GetProofOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_GetProof_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_GetProof_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.OmniLedgerProto.GetProof.class, ch.epfl.dedis.proto.OmniLedgerProto.GetProof.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.OmniLedgerProto.GetProof.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        version_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        key_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        id_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_GetProof_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.GetProof getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.GetProof.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.GetProof build() {
+        ch.epfl.dedis.proto.OmniLedgerProto.GetProof result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.GetProof buildPartial() {
+        ch.epfl.dedis.proto.OmniLedgerProto.GetProof result = new ch.epfl.dedis.proto.OmniLedgerProto.GetProof(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.version_ = version_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.key_ = key_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.id_ = id_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.GetProof) {
+          return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.GetProof)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.GetProof other) {
+        if (other == ch.epfl.dedis.proto.OmniLedgerProto.GetProof.getDefaultInstance()) return this;
+        if (other.hasVersion()) {
+          setVersion(other.getVersion());
+        }
+        if (other.hasKey()) {
+          setKey(other.getKey());
+        }
+        if (other.hasId()) {
+          setId(other.getId());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasVersion()) {
+          return false;
+        }
+        if (!hasKey()) {
+          return false;
+        }
+        if (!hasId()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.OmniLedgerProto.GetProof parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.GetProof) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private long version_ ;
+      /**
+       * <pre>
+       * 	 Version of the protocol
+       * </pre>
+       *
+       * <code>required sint64 version = 1;</code>
+       */
+      public boolean hasVersion() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * 	 Version of the protocol
+       * </pre>
+       *
+       * <code>required sint64 version = 1;</code>
+       */
+      public long getVersion() {
+        return version_;
+      }
+      /**
+       * <pre>
+       * 	 Version of the protocol
+       * </pre>
+       *
+       * <code>required sint64 version = 1;</code>
+       */
+      public Builder setVersion(long value) {
+        bitField0_ |= 0x00000001;
+        version_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Version of the protocol
+       * </pre>
+       *
+       * <code>required sint64 version = 1;</code>
+       */
+      public Builder clearVersion() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        version_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString key_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * 	 Key is the key we want to look up
+       * </pre>
+       *
+       * <code>required bytes key = 2;</code>
+       */
+      public boolean hasKey() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <pre>
+       * 	 Key is the key we want to look up
+       * </pre>
+       *
+       * <code>required bytes key = 2;</code>
+       */
+      public com.google.protobuf.ByteString getKey() {
+        return key_;
+      }
+      /**
+       * <pre>
+       * 	 Key is the key we want to look up
+       * </pre>
+       *
+       * <code>required bytes key = 2;</code>
+       */
+      public Builder setKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        key_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Key is the key we want to look up
+       * </pre>
+       *
+       * <code>required bytes key = 2;</code>
+       */
+      public Builder clearKey() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        key_ = getDefaultInstance().getKey();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * 	 ID is any block that is known to us in the skipchain, can be the genesis
+       * 	 block or any later block. The proof returned will be starting at this block.
+       * </pre>
+       *
+       * <code>required bytes id = 3;</code>
+       */
+      public boolean hasId() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * 	 ID is any block that is known to us in the skipchain, can be the genesis
+       * 	 block or any later block. The proof returned will be starting at this block.
+       * </pre>
+       *
+       * <code>required bytes id = 3;</code>
+       */
+      public com.google.protobuf.ByteString getId() {
+        return id_;
+      }
+      /**
+       * <pre>
+       * 	 ID is any block that is known to us in the skipchain, can be the genesis
+       * 	 block or any later block. The proof returned will be starting at this block.
+       * </pre>
+       *
+       * <code>required bytes id = 3;</code>
+       */
+      public Builder setId(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        id_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 ID is any block that is known to us in the skipchain, can be the genesis
+       * 	 block or any later block. The proof returned will be starting at this block.
+       * </pre>
+       *
+       * <code>required bytes id = 3;</code>
+       */
+      public Builder clearId() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        id_ = getDefaultInstance().getId();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:GetProof)
+    }
+
+    // @@protoc_insertion_point(class_scope:GetProof)
+    private static final ch.epfl.dedis.proto.OmniLedgerProto.GetProof DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.GetProof();
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProof getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetProof>
+        PARSER = new com.google.protobuf.AbstractParser<GetProof>() {
+      public GetProof parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetProof(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetProof> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetProof> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.OmniLedgerProto.GetProof getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetProofResponseOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:GetProofResponse)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * 	 Version of the protocol
+     * </pre>
+     *
+     * <code>required sint64 version = 1;</code>
+     */
+    boolean hasVersion();
+    /**
+     * <pre>
+     * 	 Version of the protocol
+     * </pre>
+     *
+     * <code>required sint64 version = 1;</code>
+     */
+    long getVersion();
+
+    /**
+     * <pre>
+     * 	 Proof contains everything necessary to prove the inclusion
+     * 	 of the included key/value pair given a genesis skipblock.
+     * </pre>
+     *
+     * <code>required .Proof proof = 2;</code>
+     */
+    boolean hasProof();
+    /**
+     * <pre>
+     * 	 Proof contains everything necessary to prove the inclusion
+     * 	 of the included key/value pair given a genesis skipblock.
+     * </pre>
+     *
+     * <code>required .Proof proof = 2;</code>
+     */
+    ch.epfl.dedis.proto.OmniLedgerProto.Proof getProof();
+    /**
+     * <pre>
+     * 	 Proof contains everything necessary to prove the inclusion
+     * 	 of the included key/value pair given a genesis skipblock.
+     * </pre>
+     *
+     * <code>required .Proof proof = 2;</code>
+     */
+    ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder getProofOrBuilder();
+  }
+  /**
+   * <pre>
+   * GetProofResponse can be used together with the Genesis block to proof that
+   * the returned key/value pair is in the collection.
+   * </pre>
+   *
+   * Protobuf type {@code GetProofResponse}
+   */
+  public  static final class GetProofResponse extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:GetProofResponse)
+      GetProofResponseOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetProofResponse.newBuilder() to construct.
+    private GetProofResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetProofResponse() {
+      version_ = 0L;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetProofResponse(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              version_ = input.readSInt64();
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = proof_.toBuilder();
+              }
+              proof_ = input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.Proof.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(proof_);
+                proof_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_GetProofResponse_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_GetProofResponse_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse.class, ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int VERSION_FIELD_NUMBER = 1;
+    private long version_;
+    /**
+     * <pre>
+     * 	 Version of the protocol
+     * </pre>
+     *
+     * <code>required sint64 version = 1;</code>
+     */
+    public boolean hasVersion() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * 	 Version of the protocol
+     * </pre>
+     *
+     * <code>required sint64 version = 1;</code>
+     */
+    public long getVersion() {
+      return version_;
+    }
+
+    public static final int PROOF_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.proto.OmniLedgerProto.Proof proof_;
+    /**
+     * <pre>
+     * 	 Proof contains everything necessary to prove the inclusion
+     * 	 of the included key/value pair given a genesis skipblock.
+     * </pre>
+     *
+     * <code>required .Proof proof = 2;</code>
+     */
+    public boolean hasProof() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * 	 Proof contains everything necessary to prove the inclusion
+     * 	 of the included key/value pair given a genesis skipblock.
+     * </pre>
+     *
+     * <code>required .Proof proof = 2;</code>
+     */
+    public ch.epfl.dedis.proto.OmniLedgerProto.Proof getProof() {
+      return proof_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance() : proof_;
+    }
+    /**
+     * <pre>
+     * 	 Proof contains everything necessary to prove the inclusion
+     * 	 of the included key/value pair given a genesis skipblock.
+     * </pre>
+     *
+     * <code>required .Proof proof = 2;</code>
+     */
+    public ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder getProofOrBuilder() {
+      return proof_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance() : proof_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasVersion()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasProof()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getProof().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeSInt64(1, version_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getProof());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(1, version_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getProof());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse other = (ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse) obj;
+
+      boolean result = true;
+      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion()) {
+        result = result && (getVersion()
+            == other.getVersion());
+      }
+      result = result && (hasProof() == other.hasProof());
+      if (hasProof()) {
+        result = result && getProof()
+            .equals(other.getProof());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasVersion()) {
+        hash = (37 * hash) + VERSION_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getVersion());
+      }
+      if (hasProof()) {
+        hash = (37 * hash) + PROOF_FIELD_NUMBER;
+        hash = (53 * hash) + getProof().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetProofResponse can be used together with the Genesis block to proof that
+     * the returned key/value pair is in the collection.
+     * </pre>
+     *
+     * Protobuf type {@code GetProofResponse}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:GetProofResponse)
+        ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponseOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_GetProofResponse_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_GetProofResponse_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse.class, ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getProofFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        version_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (proofBuilder_ == null) {
+          proof_ = null;
+        } else {
+          proofBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_GetProofResponse_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse build() {
+        ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse buildPartial() {
+        ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse result = new ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.version_ = version_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (proofBuilder_ == null) {
+          result.proof_ = proof_;
+        } else {
+          result.proof_ = proofBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse) {
+          return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse other) {
+        if (other == ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse.getDefaultInstance()) return this;
+        if (other.hasVersion()) {
+          setVersion(other.getVersion());
+        }
+        if (other.hasProof()) {
+          mergeProof(other.getProof());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasVersion()) {
+          return false;
+        }
+        if (!hasProof()) {
+          return false;
+        }
+        if (!getProof().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private long version_ ;
+      /**
+       * <pre>
+       * 	 Version of the protocol
+       * </pre>
+       *
+       * <code>required sint64 version = 1;</code>
+       */
+      public boolean hasVersion() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * 	 Version of the protocol
+       * </pre>
+       *
+       * <code>required sint64 version = 1;</code>
+       */
+      public long getVersion() {
+        return version_;
+      }
+      /**
+       * <pre>
+       * 	 Version of the protocol
+       * </pre>
+       *
+       * <code>required sint64 version = 1;</code>
+       */
+      public Builder setVersion(long value) {
+        bitField0_ |= 0x00000001;
+        version_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Version of the protocol
+       * </pre>
+       *
+       * <code>required sint64 version = 1;</code>
+       */
+      public Builder clearVersion() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        version_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.proto.OmniLedgerProto.Proof proof_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OmniLedgerProto.Proof, ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder, ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder> proofBuilder_;
+      /**
+       * <pre>
+       * 	 Proof contains everything necessary to prove the inclusion
+       * 	 of the included key/value pair given a genesis skipblock.
+       * </pre>
+       *
+       * <code>required .Proof proof = 2;</code>
+       */
+      public boolean hasProof() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <pre>
+       * 	 Proof contains everything necessary to prove the inclusion
+       * 	 of the included key/value pair given a genesis skipblock.
+       * </pre>
+       *
+       * <code>required .Proof proof = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.Proof getProof() {
+        if (proofBuilder_ == null) {
+          return proof_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance() : proof_;
+        } else {
+          return proofBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * 	 Proof contains everything necessary to prove the inclusion
+       * 	 of the included key/value pair given a genesis skipblock.
+       * </pre>
+       *
+       * <code>required .Proof proof = 2;</code>
+       */
+      public Builder setProof(ch.epfl.dedis.proto.OmniLedgerProto.Proof value) {
+        if (proofBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          proof_ = value;
+          onChanged();
+        } else {
+          proofBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Proof contains everything necessary to prove the inclusion
+       * 	 of the included key/value pair given a genesis skipblock.
+       * </pre>
+       *
+       * <code>required .Proof proof = 2;</code>
+       */
+      public Builder setProof(
+          ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder builderForValue) {
+        if (proofBuilder_ == null) {
+          proof_ = builderForValue.build();
+          onChanged();
+        } else {
+          proofBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Proof contains everything necessary to prove the inclusion
+       * 	 of the included key/value pair given a genesis skipblock.
+       * </pre>
+       *
+       * <code>required .Proof proof = 2;</code>
+       */
+      public Builder mergeProof(ch.epfl.dedis.proto.OmniLedgerProto.Proof value) {
+        if (proofBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              proof_ != null &&
+              proof_ != ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance()) {
+            proof_ =
+              ch.epfl.dedis.proto.OmniLedgerProto.Proof.newBuilder(proof_).mergeFrom(value).buildPartial();
+          } else {
+            proof_ = value;
+          }
+          onChanged();
+        } else {
+          proofBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Proof contains everything necessary to prove the inclusion
+       * 	 of the included key/value pair given a genesis skipblock.
+       * </pre>
+       *
+       * <code>required .Proof proof = 2;</code>
+       */
+      public Builder clearProof() {
+        if (proofBuilder_ == null) {
+          proof_ = null;
+          onChanged();
+        } else {
+          proofBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <pre>
+       * 	 Proof contains everything necessary to prove the inclusion
+       * 	 of the included key/value pair given a genesis skipblock.
+       * </pre>
+       *
+       * <code>required .Proof proof = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder getProofBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getProofFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * 	 Proof contains everything necessary to prove the inclusion
+       * 	 of the included key/value pair given a genesis skipblock.
+       * </pre>
+       *
+       * <code>required .Proof proof = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder getProofOrBuilder() {
+        if (proofBuilder_ != null) {
+          return proofBuilder_.getMessageOrBuilder();
+        } else {
+          return proof_ == null ?
+              ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance() : proof_;
+        }
+      }
+      /**
+       * <pre>
+       * 	 Proof contains everything necessary to prove the inclusion
+       * 	 of the included key/value pair given a genesis skipblock.
+       * </pre>
+       *
+       * <code>required .Proof proof = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OmniLedgerProto.Proof, ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder, ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder> 
+          getProofFieldBuilder() {
+        if (proofBuilder_ == null) {
+          proofBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.OmniLedgerProto.Proof, ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder, ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder>(
+                  getProof(),
+                  getParentForChildren(),
+                  isClean());
+          proof_ = null;
+        }
+        return proofBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:GetProofResponse)
+    }
+
+    // @@protoc_insertion_point(class_scope:GetProofResponse)
+    private static final ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse();
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetProofResponse>
+        PARSER = new com.google.protobuf.AbstractParser<GetProofResponse>() {
+      public GetProofResponse parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetProofResponse(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetProofResponse> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetProofResponse> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface ProofOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Proof)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * InclusionProof is the deserialized InclusionProof
+     * </pre>
+     *
+     * <code>required .CollectionProof inclusionProof = 1;</code>
+     */
+    boolean hasInclusionProof();
+    /**
+     * <pre>
+     * InclusionProof is the deserialized InclusionProof
+     * </pre>
+     *
+     * <code>required .CollectionProof inclusionProof = 1;</code>
+     */
+    ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof getInclusionProof();
+    /**
+     * <pre>
+     * InclusionProof is the deserialized InclusionProof
+     * </pre>
+     *
+     * <code>required .CollectionProof inclusionProof = 1;</code>
+     */
+    ch.epfl.dedis.proto.OmniLedgerProto.CollectionProofOrBuilder getInclusionProofOrBuilder();
+
+    /**
+     * <pre>
+     * Providing the latest skipblock to retrieve the Merkle tree root.
+     * </pre>
+     *
+     * <code>required .SkipBlock latest = 2;</code>
+     */
+    boolean hasLatest();
+    /**
+     * <pre>
+     * Providing the latest skipblock to retrieve the Merkle tree root.
+     * </pre>
+     *
+     * <code>required .SkipBlock latest = 2;</code>
+     */
+    ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getLatest();
+    /**
+     * <pre>
+     * Providing the latest skipblock to retrieve the Merkle tree root.
+     * </pre>
+     *
+     * <code>required .SkipBlock latest = 2;</code>
+     */
+    ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getLatestOrBuilder();
+
+    /**
+     * <pre>
+     * Proving the path to the latest skipblock. The first ForwardLink has an
+     * empty-sliced `From` and the genesis-block in `To`, together with the
+     * roster of the genesis-block in the `NewRoster`.
+     * </pre>
+     *
+     * <code>repeated .ForwardLink links = 3;</code>
+     */
+    java.util.List<ch.epfl.dedis.proto.SkipBlockProto.ForwardLink> 
+        getLinksList();
+    /**
+     * <pre>
+     * Proving the path to the latest skipblock. The first ForwardLink has an
+     * empty-sliced `From` and the genesis-block in `To`, together with the
+     * roster of the genesis-block in the `NewRoster`.
+     * </pre>
+     *
+     * <code>repeated .ForwardLink links = 3;</code>
+     */
+    ch.epfl.dedis.proto.SkipBlockProto.ForwardLink getLinks(int index);
+    /**
+     * <pre>
+     * Proving the path to the latest skipblock. The first ForwardLink has an
+     * empty-sliced `From` and the genesis-block in `To`, together with the
+     * roster of the genesis-block in the `NewRoster`.
+     * </pre>
+     *
+     * <code>repeated .ForwardLink links = 3;</code>
+     */
+    int getLinksCount();
+    /**
+     * <pre>
+     * Proving the path to the latest skipblock. The first ForwardLink has an
+     * empty-sliced `From` and the genesis-block in `To`, together with the
+     * roster of the genesis-block in the `NewRoster`.
+     * </pre>
+     *
+     * <code>repeated .ForwardLink links = 3;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.proto.SkipBlockProto.ForwardLinkOrBuilder> 
+        getLinksOrBuilderList();
+    /**
+     * <pre>
+     * Proving the path to the latest skipblock. The first ForwardLink has an
+     * empty-sliced `From` and the genesis-block in `To`, together with the
+     * roster of the genesis-block in the `NewRoster`.
+     * </pre>
+     *
+     * <code>repeated .ForwardLink links = 3;</code>
+     */
+    ch.epfl.dedis.proto.SkipBlockProto.ForwardLinkOrBuilder getLinksOrBuilder(
+        int index);
+  }
+  /**
+   * <pre>
+   * This Structure could later be moved to cothority/skipchain.
+   * </pre>
+   *
+   * Protobuf type {@code Proof}
+   */
+  public  static final class Proof extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:Proof)
+      ProofOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use Proof.newBuilder() to construct.
+    private Proof(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private Proof() {
+      links_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private Proof(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = inclusionProof_.toBuilder();
+              }
+              inclusionProof_ = input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(inclusionProof_);
+                inclusionProof_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = latest_.toBuilder();
+              }
+              latest_ = input.readMessage(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(latest_);
+                latest_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                links_ = new java.util.ArrayList<ch.epfl.dedis.proto.SkipBlockProto.ForwardLink>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              links_.add(
+                  input.readMessage(ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.PARSER, extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          links_ = java.util.Collections.unmodifiableList(links_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Proof_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Proof_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.OmniLedgerProto.Proof.class, ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int INCLUSIONPROOF_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof inclusionProof_;
+    /**
+     * <pre>
+     * InclusionProof is the deserialized InclusionProof
+     * </pre>
+     *
+     * <code>required .CollectionProof inclusionProof = 1;</code>
+     */
+    public boolean hasInclusionProof() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * InclusionProof is the deserialized InclusionProof
+     * </pre>
+     *
+     * <code>required .CollectionProof inclusionProof = 1;</code>
+     */
+    public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof getInclusionProof() {
+      return inclusionProof_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.getDefaultInstance() : inclusionProof_;
+    }
+    /**
+     * <pre>
+     * InclusionProof is the deserialized InclusionProof
+     * </pre>
+     *
+     * <code>required .CollectionProof inclusionProof = 1;</code>
+     */
+    public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProofOrBuilder getInclusionProofOrBuilder() {
+      return inclusionProof_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.getDefaultInstance() : inclusionProof_;
+    }
+
+    public static final int LATEST_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.proto.SkipBlockProto.SkipBlock latest_;
+    /**
+     * <pre>
+     * Providing the latest skipblock to retrieve the Merkle tree root.
+     * </pre>
+     *
+     * <code>required .SkipBlock latest = 2;</code>
+     */
+    public boolean hasLatest() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * Providing the latest skipblock to retrieve the Merkle tree root.
+     * </pre>
+     *
+     * <code>required .SkipBlock latest = 2;</code>
+     */
+    public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getLatest() {
+      return latest_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : latest_;
+    }
+    /**
+     * <pre>
+     * Providing the latest skipblock to retrieve the Merkle tree root.
+     * </pre>
+     *
+     * <code>required .SkipBlock latest = 2;</code>
+     */
+    public ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getLatestOrBuilder() {
+      return latest_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : latest_;
+    }
+
+    public static final int LINKS_FIELD_NUMBER = 3;
+    private java.util.List<ch.epfl.dedis.proto.SkipBlockProto.ForwardLink> links_;
+    /**
+     * <pre>
+     * Proving the path to the latest skipblock. The first ForwardLink has an
+     * empty-sliced `From` and the genesis-block in `To`, together with the
+     * roster of the genesis-block in the `NewRoster`.
+     * </pre>
+     *
+     * <code>repeated .ForwardLink links = 3;</code>
+     */
+    public java.util.List<ch.epfl.dedis.proto.SkipBlockProto.ForwardLink> getLinksList() {
+      return links_;
+    }
+    /**
+     * <pre>
+     * Proving the path to the latest skipblock. The first ForwardLink has an
+     * empty-sliced `From` and the genesis-block in `To`, together with the
+     * roster of the genesis-block in the `NewRoster`.
+     * </pre>
+     *
+     * <code>repeated .ForwardLink links = 3;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.proto.SkipBlockProto.ForwardLinkOrBuilder> 
+        getLinksOrBuilderList() {
+      return links_;
+    }
+    /**
+     * <pre>
+     * Proving the path to the latest skipblock. The first ForwardLink has an
+     * empty-sliced `From` and the genesis-block in `To`, together with the
+     * roster of the genesis-block in the `NewRoster`.
+     * </pre>
+     *
+     * <code>repeated .ForwardLink links = 3;</code>
+     */
+    public int getLinksCount() {
+      return links_.size();
+    }
+    /**
+     * <pre>
+     * Proving the path to the latest skipblock. The first ForwardLink has an
+     * empty-sliced `From` and the genesis-block in `To`, together with the
+     * roster of the genesis-block in the `NewRoster`.
+     * </pre>
+     *
+     * <code>repeated .ForwardLink links = 3;</code>
+     */
+    public ch.epfl.dedis.proto.SkipBlockProto.ForwardLink getLinks(int index) {
+      return links_.get(index);
+    }
+    /**
+     * <pre>
+     * Proving the path to the latest skipblock. The first ForwardLink has an
+     * empty-sliced `From` and the genesis-block in `To`, together with the
+     * roster of the genesis-block in the `NewRoster`.
+     * </pre>
+     *
+     * <code>repeated .ForwardLink links = 3;</code>
+     */
+    public ch.epfl.dedis.proto.SkipBlockProto.ForwardLinkOrBuilder getLinksOrBuilder(
+        int index) {
+      return links_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasInclusionProof()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasLatest()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getInclusionProof().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getLatest().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      for (int i = 0; i < getLinksCount(); i++) {
+        if (!getLinks(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, getInclusionProof());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getLatest());
+      }
+      for (int i = 0; i < links_.size(); i++) {
+        output.writeMessage(3, links_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getInclusionProof());
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getLatest());
+      }
+      for (int i = 0; i < links_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, links_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.Proof)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.OmniLedgerProto.Proof other = (ch.epfl.dedis.proto.OmniLedgerProto.Proof) obj;
+
+      boolean result = true;
+      result = result && (hasInclusionProof() == other.hasInclusionProof());
+      if (hasInclusionProof()) {
+        result = result && getInclusionProof()
+            .equals(other.getInclusionProof());
+      }
+      result = result && (hasLatest() == other.hasLatest());
+      if (hasLatest()) {
+        result = result && getLatest()
+            .equals(other.getLatest());
+      }
+      result = result && getLinksList()
+          .equals(other.getLinksList());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasInclusionProof()) {
+        hash = (37 * hash) + INCLUSIONPROOF_FIELD_NUMBER;
+        hash = (53 * hash) + getInclusionProof().hashCode();
+      }
+      if (hasLatest()) {
+        hash = (37 * hash) + LATEST_FIELD_NUMBER;
+        hash = (53 * hash) + getLatest().hashCode();
+      }
+      if (getLinksCount() > 0) {
+        hash = (37 * hash) + LINKS_FIELD_NUMBER;
+        hash = (53 * hash) + getLinksList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.Proof prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * This Structure could later be moved to cothority/skipchain.
+     * </pre>
+     *
+     * Protobuf type {@code Proof}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:Proof)
+        ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Proof_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Proof_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.OmniLedgerProto.Proof.class, ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.OmniLedgerProto.Proof.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getInclusionProofFieldBuilder();
+          getLatestFieldBuilder();
+          getLinksFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        if (inclusionProofBuilder_ == null) {
+          inclusionProof_ = null;
+        } else {
+          inclusionProofBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (latestBuilder_ == null) {
+          latest_ = null;
+        } else {
+          latestBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (linksBuilder_ == null) {
+          links_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          linksBuilder_.clear();
+        }
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Proof_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.Proof getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.Proof build() {
+        ch.epfl.dedis.proto.OmniLedgerProto.Proof result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.Proof buildPartial() {
+        ch.epfl.dedis.proto.OmniLedgerProto.Proof result = new ch.epfl.dedis.proto.OmniLedgerProto.Proof(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (inclusionProofBuilder_ == null) {
+          result.inclusionProof_ = inclusionProof_;
+        } else {
+          result.inclusionProof_ = inclusionProofBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (latestBuilder_ == null) {
+          result.latest_ = latest_;
+        } else {
+          result.latest_ = latestBuilder_.build();
+        }
+        if (linksBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+            links_ = java.util.Collections.unmodifiableList(links_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.links_ = links_;
+        } else {
+          result.links_ = linksBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.Proof) {
+          return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.Proof)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.Proof other) {
+        if (other == ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance()) return this;
+        if (other.hasInclusionProof()) {
+          mergeInclusionProof(other.getInclusionProof());
+        }
+        if (other.hasLatest()) {
+          mergeLatest(other.getLatest());
+        }
+        if (linksBuilder_ == null) {
+          if (!other.links_.isEmpty()) {
+            if (links_.isEmpty()) {
+              links_ = other.links_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureLinksIsMutable();
+              links_.addAll(other.links_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.links_.isEmpty()) {
+            if (linksBuilder_.isEmpty()) {
+              linksBuilder_.dispose();
+              linksBuilder_ = null;
+              links_ = other.links_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              linksBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getLinksFieldBuilder() : null;
+            } else {
+              linksBuilder_.addAllMessages(other.links_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasInclusionProof()) {
+          return false;
+        }
+        if (!hasLatest()) {
+          return false;
+        }
+        if (!getInclusionProof().isInitialized()) {
+          return false;
+        }
+        if (!getLatest().isInitialized()) {
+          return false;
+        }
+        for (int i = 0; i < getLinksCount(); i++) {
+          if (!getLinks(i).isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.OmniLedgerProto.Proof parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.Proof) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof inclusionProof_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProofOrBuilder> inclusionProofBuilder_;
+      /**
+       * <pre>
+       * InclusionProof is the deserialized InclusionProof
+       * </pre>
+       *
+       * <code>required .CollectionProof inclusionProof = 1;</code>
+       */
+      public boolean hasInclusionProof() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * InclusionProof is the deserialized InclusionProof
+       * </pre>
+       *
+       * <code>required .CollectionProof inclusionProof = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof getInclusionProof() {
+        if (inclusionProofBuilder_ == null) {
+          return inclusionProof_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.getDefaultInstance() : inclusionProof_;
+        } else {
+          return inclusionProofBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * InclusionProof is the deserialized InclusionProof
+       * </pre>
+       *
+       * <code>required .CollectionProof inclusionProof = 1;</code>
+       */
+      public Builder setInclusionProof(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof value) {
+        if (inclusionProofBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          inclusionProof_ = value;
+          onChanged();
+        } else {
+          inclusionProofBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <pre>
+       * InclusionProof is the deserialized InclusionProof
+       * </pre>
+       *
+       * <code>required .CollectionProof inclusionProof = 1;</code>
+       */
+      public Builder setInclusionProof(
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Builder builderForValue) {
+        if (inclusionProofBuilder_ == null) {
+          inclusionProof_ = builderForValue.build();
+          onChanged();
+        } else {
+          inclusionProofBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <pre>
+       * InclusionProof is the deserialized InclusionProof
+       * </pre>
+       *
+       * <code>required .CollectionProof inclusionProof = 1;</code>
+       */
+      public Builder mergeInclusionProof(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof value) {
+        if (inclusionProofBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              inclusionProof_ != null &&
+              inclusionProof_ != ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.getDefaultInstance()) {
+            inclusionProof_ =
+              ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.newBuilder(inclusionProof_).mergeFrom(value).buildPartial();
+          } else {
+            inclusionProof_ = value;
+          }
+          onChanged();
+        } else {
+          inclusionProofBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <pre>
+       * InclusionProof is the deserialized InclusionProof
+       * </pre>
+       *
+       * <code>required .CollectionProof inclusionProof = 1;</code>
+       */
+      public Builder clearInclusionProof() {
+        if (inclusionProofBuilder_ == null) {
+          inclusionProof_ = null;
+          onChanged();
+        } else {
+          inclusionProofBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <pre>
+       * InclusionProof is the deserialized InclusionProof
+       * </pre>
+       *
+       * <code>required .CollectionProof inclusionProof = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Builder getInclusionProofBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getInclusionProofFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * InclusionProof is the deserialized InclusionProof
+       * </pre>
+       *
+       * <code>required .CollectionProof inclusionProof = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProofOrBuilder getInclusionProofOrBuilder() {
+        if (inclusionProofBuilder_ != null) {
+          return inclusionProofBuilder_.getMessageOrBuilder();
+        } else {
+          return inclusionProof_ == null ?
+              ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.getDefaultInstance() : inclusionProof_;
+        }
+      }
+      /**
+       * <pre>
+       * InclusionProof is the deserialized InclusionProof
+       * </pre>
+       *
+       * <code>required .CollectionProof inclusionProof = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProofOrBuilder> 
+          getInclusionProofFieldBuilder() {
+        if (inclusionProofBuilder_ == null) {
+          inclusionProofBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProofOrBuilder>(
+                  getInclusionProof(),
+                  getParentForChildren(),
+                  isClean());
+          inclusionProof_ = null;
+        }
+        return inclusionProofBuilder_;
+      }
+
+      private ch.epfl.dedis.proto.SkipBlockProto.SkipBlock latest_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> latestBuilder_;
+      /**
+       * <pre>
+       * Providing the latest skipblock to retrieve the Merkle tree root.
+       * </pre>
+       *
+       * <code>required .SkipBlock latest = 2;</code>
+       */
+      public boolean hasLatest() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <pre>
+       * Providing the latest skipblock to retrieve the Merkle tree root.
+       * </pre>
+       *
+       * <code>required .SkipBlock latest = 2;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getLatest() {
+        if (latestBuilder_ == null) {
+          return latest_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : latest_;
+        } else {
+          return latestBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * Providing the latest skipblock to retrieve the Merkle tree root.
+       * </pre>
+       *
+       * <code>required .SkipBlock latest = 2;</code>
+       */
+      public Builder setLatest(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+        if (latestBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          latest_ = value;
+          onChanged();
+        } else {
+          latestBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * Providing the latest skipblock to retrieve the Merkle tree root.
+       * </pre>
+       *
+       * <code>required .SkipBlock latest = 2;</code>
+       */
+      public Builder setLatest(
+          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder builderForValue) {
+        if (latestBuilder_ == null) {
+          latest_ = builderForValue.build();
+          onChanged();
+        } else {
+          latestBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * Providing the latest skipblock to retrieve the Merkle tree root.
+       * </pre>
+       *
+       * <code>required .SkipBlock latest = 2;</code>
+       */
+      public Builder mergeLatest(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+        if (latestBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              latest_ != null &&
+              latest_ != ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance()) {
+            latest_ =
+              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.newBuilder(latest_).mergeFrom(value).buildPartial();
+          } else {
+            latest_ = value;
+          }
+          onChanged();
+        } else {
+          latestBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * Providing the latest skipblock to retrieve the Merkle tree root.
+       * </pre>
+       *
+       * <code>required .SkipBlock latest = 2;</code>
+       */
+      public Builder clearLatest() {
+        if (latestBuilder_ == null) {
+          latest_ = null;
+          onChanged();
+        } else {
+          latestBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <pre>
+       * Providing the latest skipblock to retrieve the Merkle tree root.
+       * </pre>
+       *
+       * <code>required .SkipBlock latest = 2;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder getLatestBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getLatestFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * Providing the latest skipblock to retrieve the Merkle tree root.
+       * </pre>
+       *
+       * <code>required .SkipBlock latest = 2;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getLatestOrBuilder() {
+        if (latestBuilder_ != null) {
+          return latestBuilder_.getMessageOrBuilder();
+        } else {
+          return latest_ == null ?
+              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : latest_;
+        }
+      }
+      /**
+       * <pre>
+       * Providing the latest skipblock to retrieve the Merkle tree root.
+       * </pre>
+       *
+       * <code>required .SkipBlock latest = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> 
+          getLatestFieldBuilder() {
+        if (latestBuilder_ == null) {
+          latestBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder>(
+                  getLatest(),
+                  getParentForChildren(),
+                  isClean());
+          latest_ = null;
+        }
+        return latestBuilder_;
+      }
+
+      private java.util.List<ch.epfl.dedis.proto.SkipBlockProto.ForwardLink> links_ =
+        java.util.Collections.emptyList();
+      private void ensureLinksIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          links_ = new java.util.ArrayList<ch.epfl.dedis.proto.SkipBlockProto.ForwardLink>(links_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.proto.SkipBlockProto.ForwardLink, ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.Builder, ch.epfl.dedis.proto.SkipBlockProto.ForwardLinkOrBuilder> linksBuilder_;
+
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public java.util.List<ch.epfl.dedis.proto.SkipBlockProto.ForwardLink> getLinksList() {
+        if (linksBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(links_);
+        } else {
+          return linksBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public int getLinksCount() {
+        if (linksBuilder_ == null) {
+          return links_.size();
+        } else {
+          return linksBuilder_.getCount();
+        }
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.ForwardLink getLinks(int index) {
+        if (linksBuilder_ == null) {
+          return links_.get(index);
+        } else {
+          return linksBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public Builder setLinks(
+          int index, ch.epfl.dedis.proto.SkipBlockProto.ForwardLink value) {
+        if (linksBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureLinksIsMutable();
+          links_.set(index, value);
+          onChanged();
+        } else {
+          linksBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public Builder setLinks(
+          int index, ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.Builder builderForValue) {
+        if (linksBuilder_ == null) {
+          ensureLinksIsMutable();
+          links_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          linksBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public Builder addLinks(ch.epfl.dedis.proto.SkipBlockProto.ForwardLink value) {
+        if (linksBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureLinksIsMutable();
+          links_.add(value);
+          onChanged();
+        } else {
+          linksBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public Builder addLinks(
+          int index, ch.epfl.dedis.proto.SkipBlockProto.ForwardLink value) {
+        if (linksBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureLinksIsMutable();
+          links_.add(index, value);
+          onChanged();
+        } else {
+          linksBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public Builder addLinks(
+          ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.Builder builderForValue) {
+        if (linksBuilder_ == null) {
+          ensureLinksIsMutable();
+          links_.add(builderForValue.build());
+          onChanged();
+        } else {
+          linksBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public Builder addLinks(
+          int index, ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.Builder builderForValue) {
+        if (linksBuilder_ == null) {
+          ensureLinksIsMutable();
+          links_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          linksBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public Builder addAllLinks(
+          java.lang.Iterable<? extends ch.epfl.dedis.proto.SkipBlockProto.ForwardLink> values) {
+        if (linksBuilder_ == null) {
+          ensureLinksIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, links_);
+          onChanged();
+        } else {
+          linksBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public Builder clearLinks() {
+        if (linksBuilder_ == null) {
+          links_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          linksBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public Builder removeLinks(int index) {
+        if (linksBuilder_ == null) {
+          ensureLinksIsMutable();
+          links_.remove(index);
+          onChanged();
+        } else {
+          linksBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.Builder getLinksBuilder(
+          int index) {
+        return getLinksFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.ForwardLinkOrBuilder getLinksOrBuilder(
+          int index) {
+        if (linksBuilder_ == null) {
+          return links_.get(index);  } else {
+          return linksBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.proto.SkipBlockProto.ForwardLinkOrBuilder> 
+           getLinksOrBuilderList() {
+        if (linksBuilder_ != null) {
+          return linksBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(links_);
+        }
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.Builder addLinksBuilder() {
+        return getLinksFieldBuilder().addBuilder(
+            ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.Builder addLinksBuilder(
+          int index) {
+        return getLinksFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.getDefaultInstance());
+      }
+      /**
+       * <pre>
+       * Proving the path to the latest skipblock. The first ForwardLink has an
+       * empty-sliced `From` and the genesis-block in `To`, together with the
+       * roster of the genesis-block in the `NewRoster`.
+       * </pre>
+       *
+       * <code>repeated .ForwardLink links = 3;</code>
+       */
+      public java.util.List<ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.Builder> 
+           getLinksBuilderList() {
+        return getLinksFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.proto.SkipBlockProto.ForwardLink, ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.Builder, ch.epfl.dedis.proto.SkipBlockProto.ForwardLinkOrBuilder> 
+          getLinksFieldBuilder() {
+        if (linksBuilder_ == null) {
+          linksBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.proto.SkipBlockProto.ForwardLink, ch.epfl.dedis.proto.SkipBlockProto.ForwardLink.Builder, ch.epfl.dedis.proto.SkipBlockProto.ForwardLinkOrBuilder>(
+                  links_,
+                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  getParentForChildren(),
+                  isClean());
+          links_ = null;
+        }
+        return linksBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:Proof)
+    }
+
+    // @@protoc_insertion_point(class_scope:Proof)
+    private static final ch.epfl.dedis.proto.OmniLedgerProto.Proof DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.Proof();
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Proof getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<Proof>
+        PARSER = new com.google.protobuf.AbstractParser<Proof>() {
+      public Proof parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Proof(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<Proof> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Proof> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.OmniLedgerProto.Proof getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface CollectionProofOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:CollectionProof)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes key = 1;</code>
+     */
+    boolean hasKey();
+    /**
+     * <code>required bytes key = 1;</code>
+     */
+    com.google.protobuf.ByteString getKey();
+
+    /**
+     * <code>required .CollectionProof.Node root = 2;</code>
+     */
+    boolean hasRoot();
+    /**
+     * <code>required .CollectionProof.Node root = 2;</code>
+     */
+    ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node getRoot();
+    /**
+     * <code>required .CollectionProof.Node root = 2;</code>
+     */
+    ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder getRootOrBuilder();
+
+    /**
+     * <code>repeated .CollectionProof.Step steps = 3;</code>
+     */
+    java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step> 
+        getStepsList();
+    /**
+     * <code>repeated .CollectionProof.Step steps = 3;</code>
+     */
+    ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step getSteps(int index);
+    /**
+     * <code>repeated .CollectionProof.Step steps = 3;</code>
+     */
+    int getStepsCount();
+    /**
+     * <code>repeated .CollectionProof.Step steps = 3;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.StepOrBuilder> 
+        getStepsOrBuilderList();
+    /**
+     * <code>repeated .CollectionProof.Step steps = 3;</code>
+     */
+    ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.StepOrBuilder getStepsOrBuilder(
+        int index);
+  }
+  /**
+   * <pre>
+   * CollectionProof can be checked against the hash of the root
+   * node and also contains the key and the data.
+   * </pre>
+   *
+   * Protobuf type {@code CollectionProof}
+   */
+  public  static final class CollectionProof extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:CollectionProof)
+      CollectionProofOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use CollectionProof.newBuilder() to construct.
+    private CollectionProof(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private CollectionProof() {
+      key_ = com.google.protobuf.ByteString.EMPTY;
+      steps_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private CollectionProof(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              key_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = root_.toBuilder();
+              }
+              root_ = input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(root_);
+                root_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                steps_ = new java.util.ArrayList<ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              steps_.add(
+                  input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.PARSER, extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          steps_ = java.util.Collections.unmodifiableList(steps_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.class, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Builder.class);
+    }
+
+    public interface StepOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:CollectionProof.Step)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>required .CollectionProof.Node left = 1;</code>
+       */
+      boolean hasLeft();
+      /**
+       * <code>required .CollectionProof.Node left = 1;</code>
+       */
+      ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node getLeft();
+      /**
+       * <code>required .CollectionProof.Node left = 1;</code>
+       */
+      ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder getLeftOrBuilder();
+
+      /**
+       * <code>required .CollectionProof.Node right = 2;</code>
+       */
+      boolean hasRight();
+      /**
+       * <code>required .CollectionProof.Node right = 2;</code>
+       */
+      ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node getRight();
+      /**
+       * <code>required .CollectionProof.Node right = 2;</code>
+       */
+      ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder getRightOrBuilder();
+    }
+    /**
+     * Protobuf type {@code CollectionProof.Step}
+     */
+    public  static final class Step extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:CollectionProof.Step)
+        StepOrBuilder {
+    private static final long serialVersionUID = 0L;
+      // Use Step.newBuilder() to construct.
+      private Step(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private Step() {
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
+      private Step(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 10: {
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder subBuilder = null;
+                if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                  subBuilder = left_.toBuilder();
+                }
+                left_ = input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.PARSER, extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(left_);
+                  left_ = subBuilder.buildPartial();
+                }
+                bitField0_ |= 0x00000001;
+                break;
+              }
+              case 18: {
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder subBuilder = null;
+                if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                  subBuilder = right_.toBuilder();
+                }
+                right_ = input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.PARSER, extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(right_);
+                  right_ = subBuilder.buildPartial();
+                }
+                bitField0_ |= 0x00000002;
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Step_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Step_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.class, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.Builder.class);
+      }
+
+      private int bitField0_;
+      public static final int LEFT_FIELD_NUMBER = 1;
+      private ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node left_;
+      /**
+       * <code>required .CollectionProof.Node left = 1;</code>
+       */
+      public boolean hasLeft() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required .CollectionProof.Node left = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node getLeft() {
+        return left_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance() : left_;
+      }
+      /**
+       * <code>required .CollectionProof.Node left = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder getLeftOrBuilder() {
+        return left_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance() : left_;
+      }
+
+      public static final int RIGHT_FIELD_NUMBER = 2;
+      private ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node right_;
+      /**
+       * <code>required .CollectionProof.Node right = 2;</code>
+       */
+      public boolean hasRight() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required .CollectionProof.Node right = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node getRight() {
+        return right_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance() : right_;
+      }
+      /**
+       * <code>required .CollectionProof.Node right = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder getRightOrBuilder() {
+        return right_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance() : right_;
+      }
+
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        if (!hasLeft()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+        if (!hasRight()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+        if (!getLeft().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+        if (!getRight().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeMessage(1, getLeft());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeMessage(2, getRight());
+        }
+        unknownFields.writeTo(output);
+      }
+
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, getLeft());
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(2, getRight());
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step)) {
+          return super.equals(obj);
+        }
+        ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step other = (ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step) obj;
+
+        boolean result = true;
+        result = result && (hasLeft() == other.hasLeft());
+        if (hasLeft()) {
+          result = result && getLeft()
+              .equals(other.getLeft());
+        }
+        result = result && (hasRight() == other.hasRight());
+        if (hasRight()) {
+          result = result && getRight()
+              .equals(other.getRight());
+        }
+        result = result && unknownFields.equals(other.unknownFields);
+        return result;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasLeft()) {
+          hash = (37 * hash) + LEFT_FIELD_NUMBER;
+          hash = (53 * hash) + getLeft().hashCode();
+        }
+        if (hasRight()) {
+          hash = (37 * hash) + RIGHT_FIELD_NUMBER;
+          hash = (53 * hash) + getRight().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code CollectionProof.Step}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:CollectionProof.Step)
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.StepOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Step_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Step_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.class, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.Builder.class);
+        }
+
+        // Construct using ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+            getLeftFieldBuilder();
+            getRightFieldBuilder();
+          }
+        }
+        public Builder clear() {
+          super.clear();
+          if (leftBuilder_ == null) {
+            left_ = null;
+          } else {
+            leftBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000001);
+          if (rightBuilder_ == null) {
+            right_ = null;
+          } else {
+            rightBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000002);
+          return this;
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Step_descriptor;
+        }
+
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step getDefaultInstanceForType() {
+          return ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.getDefaultInstance();
+        }
+
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step build() {
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step buildPartial() {
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step result = new ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          if (leftBuilder_ == null) {
+            result.left_ = left_;
+          } else {
+            result.left_ = leftBuilder_.build();
+          }
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          if (rightBuilder_ == null) {
+            result.right_ = right_;
+          } else {
+            result.right_ = rightBuilder_.build();
+          }
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder clone() {
+          return (Builder) super.clone();
+        }
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return (Builder) super.setField(field, value);
+        }
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return (Builder) super.clearField(field);
+        }
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return (Builder) super.clearOneof(oneof);
+        }
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return (Builder) super.setRepeatedField(field, index, value);
+        }
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return (Builder) super.addRepeatedField(field, value);
+        }
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step) {
+            return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step other) {
+          if (other == ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.getDefaultInstance()) return this;
+          if (other.hasLeft()) {
+            mergeLeft(other.getLeft());
+          }
+          if (other.hasRight()) {
+            mergeRight(other.getRight());
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          if (!hasLeft()) {
+            return false;
+          }
+          if (!hasRight()) {
+            return false;
+          }
+          if (!getLeft().isInitialized()) {
+            return false;
+          }
+          if (!getRight().isInitialized()) {
+            return false;
+          }
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        private ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node left_ = null;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder> leftBuilder_;
+        /**
+         * <code>required .CollectionProof.Node left = 1;</code>
+         */
+        public boolean hasLeft() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>required .CollectionProof.Node left = 1;</code>
+         */
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node getLeft() {
+          if (leftBuilder_ == null) {
+            return left_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance() : left_;
+          } else {
+            return leftBuilder_.getMessage();
+          }
+        }
+        /**
+         * <code>required .CollectionProof.Node left = 1;</code>
+         */
+        public Builder setLeft(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node value) {
+          if (leftBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            left_ = value;
+            onChanged();
+          } else {
+            leftBuilder_.setMessage(value);
+          }
+          bitField0_ |= 0x00000001;
+          return this;
+        }
+        /**
+         * <code>required .CollectionProof.Node left = 1;</code>
+         */
+        public Builder setLeft(
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder builderForValue) {
+          if (leftBuilder_ == null) {
+            left_ = builderForValue.build();
+            onChanged();
+          } else {
+            leftBuilder_.setMessage(builderForValue.build());
+          }
+          bitField0_ |= 0x00000001;
+          return this;
+        }
+        /**
+         * <code>required .CollectionProof.Node left = 1;</code>
+         */
+        public Builder mergeLeft(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node value) {
+          if (leftBuilder_ == null) {
+            if (((bitField0_ & 0x00000001) == 0x00000001) &&
+                left_ != null &&
+                left_ != ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance()) {
+              left_ =
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.newBuilder(left_).mergeFrom(value).buildPartial();
+            } else {
+              left_ = value;
+            }
+            onChanged();
+          } else {
+            leftBuilder_.mergeFrom(value);
+          }
+          bitField0_ |= 0x00000001;
+          return this;
+        }
+        /**
+         * <code>required .CollectionProof.Node left = 1;</code>
+         */
+        public Builder clearLeft() {
+          if (leftBuilder_ == null) {
+            left_ = null;
+            onChanged();
+          } else {
+            leftBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000001);
+          return this;
+        }
+        /**
+         * <code>required .CollectionProof.Node left = 1;</code>
+         */
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder getLeftBuilder() {
+          bitField0_ |= 0x00000001;
+          onChanged();
+          return getLeftFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>required .CollectionProof.Node left = 1;</code>
+         */
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder getLeftOrBuilder() {
+          if (leftBuilder_ != null) {
+            return leftBuilder_.getMessageOrBuilder();
+          } else {
+            return left_ == null ?
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance() : left_;
+          }
+        }
+        /**
+         * <code>required .CollectionProof.Node left = 1;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder> 
+            getLeftFieldBuilder() {
+          if (leftBuilder_ == null) {
+            leftBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder>(
+                    getLeft(),
+                    getParentForChildren(),
+                    isClean());
+            left_ = null;
+          }
+          return leftBuilder_;
+        }
+
+        private ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node right_ = null;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder> rightBuilder_;
+        /**
+         * <code>required .CollectionProof.Node right = 2;</code>
+         */
+        public boolean hasRight() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>required .CollectionProof.Node right = 2;</code>
+         */
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node getRight() {
+          if (rightBuilder_ == null) {
+            return right_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance() : right_;
+          } else {
+            return rightBuilder_.getMessage();
+          }
+        }
+        /**
+         * <code>required .CollectionProof.Node right = 2;</code>
+         */
+        public Builder setRight(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node value) {
+          if (rightBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            right_ = value;
+            onChanged();
+          } else {
+            rightBuilder_.setMessage(value);
+          }
+          bitField0_ |= 0x00000002;
+          return this;
+        }
+        /**
+         * <code>required .CollectionProof.Node right = 2;</code>
+         */
+        public Builder setRight(
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder builderForValue) {
+          if (rightBuilder_ == null) {
+            right_ = builderForValue.build();
+            onChanged();
+          } else {
+            rightBuilder_.setMessage(builderForValue.build());
+          }
+          bitField0_ |= 0x00000002;
+          return this;
+        }
+        /**
+         * <code>required .CollectionProof.Node right = 2;</code>
+         */
+        public Builder mergeRight(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node value) {
+          if (rightBuilder_ == null) {
+            if (((bitField0_ & 0x00000002) == 0x00000002) &&
+                right_ != null &&
+                right_ != ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance()) {
+              right_ =
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.newBuilder(right_).mergeFrom(value).buildPartial();
+            } else {
+              right_ = value;
+            }
+            onChanged();
+          } else {
+            rightBuilder_.mergeFrom(value);
+          }
+          bitField0_ |= 0x00000002;
+          return this;
+        }
+        /**
+         * <code>required .CollectionProof.Node right = 2;</code>
+         */
+        public Builder clearRight() {
+          if (rightBuilder_ == null) {
+            right_ = null;
+            onChanged();
+          } else {
+            rightBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000002);
+          return this;
+        }
+        /**
+         * <code>required .CollectionProof.Node right = 2;</code>
+         */
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder getRightBuilder() {
+          bitField0_ |= 0x00000002;
+          onChanged();
+          return getRightFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>required .CollectionProof.Node right = 2;</code>
+         */
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder getRightOrBuilder() {
+          if (rightBuilder_ != null) {
+            return rightBuilder_.getMessageOrBuilder();
+          } else {
+            return right_ == null ?
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance() : right_;
+          }
+        }
+        /**
+         * <code>required .CollectionProof.Node right = 2;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder> 
+            getRightFieldBuilder() {
+          if (rightBuilder_ == null) {
+            rightBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder>(
+                    getRight(),
+                    getParentForChildren(),
+                    isClean());
+            right_ = null;
+          }
+          return rightBuilder_;
+        }
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:CollectionProof.Step)
+      }
+
+      // @@protoc_insertion_point(class_scope:CollectionProof.Step)
+      private static final ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step();
+      }
+
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      @java.lang.Deprecated public static final com.google.protobuf.Parser<Step>
+          PARSER = new com.google.protobuf.AbstractParser<Step>() {
+        public Step parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+            return new Step(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<Step> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<Step> getParserForType() {
+        return PARSER;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
+    }
+
+    public interface NodeOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:CollectionProof.Node)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>optional bytes key = 1;</code>
+       */
+      boolean hasKey();
+      /**
+       * <code>optional bytes key = 1;</code>
+       */
+      com.google.protobuf.ByteString getKey();
+
+      /**
+       * <code>repeated bytes values = 2;</code>
+       */
+      java.util.List<com.google.protobuf.ByteString> getValuesList();
+      /**
+       * <code>repeated bytes values = 2;</code>
+       */
+      int getValuesCount();
+      /**
+       * <code>repeated bytes values = 2;</code>
+       */
+      com.google.protobuf.ByteString getValues(int index);
+
+      /**
+       * <code>optional .CollectionProof.Node.Children children = 3;</code>
+       */
+      boolean hasChildren();
+      /**
+       * <code>optional .CollectionProof.Node.Children children = 3;</code>
+       */
+      ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children getChildren();
+      /**
+       * <code>optional .CollectionProof.Node.Children children = 3;</code>
+       */
+      ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.ChildrenOrBuilder getChildrenOrBuilder();
+
+      /**
+       * <code>optional bytes label = 4;</code>
+       */
+      boolean hasLabel();
+      /**
+       * <code>optional bytes label = 4;</code>
+       */
+      com.google.protobuf.ByteString getLabel();
+    }
+    /**
+     * Protobuf type {@code CollectionProof.Node}
+     */
+    public  static final class Node extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:CollectionProof.Node)
+        NodeOrBuilder {
+    private static final long serialVersionUID = 0L;
+      // Use Node.newBuilder() to construct.
+      private Node(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private Node() {
+        key_ = com.google.protobuf.ByteString.EMPTY;
+        values_ = java.util.Collections.emptyList();
+        label_ = com.google.protobuf.ByteString.EMPTY;
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
+      private Node(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 10: {
+                bitField0_ |= 0x00000001;
+                key_ = input.readBytes();
+                break;
+              }
+              case 18: {
+                if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                  values_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                  mutable_bitField0_ |= 0x00000002;
+                }
+                values_.add(input.readBytes());
+                break;
+              }
+              case 26: {
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.Builder subBuilder = null;
+                if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                  subBuilder = children_.toBuilder();
+                }
+                children_ = input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.PARSER, extensionRegistry);
+                if (subBuilder != null) {
+                  subBuilder.mergeFrom(children_);
+                  children_ = subBuilder.buildPartial();
+                }
+                bitField0_ |= 0x00000002;
+                break;
+              }
+              case 34: {
+                bitField0_ |= 0x00000004;
+                label_ = input.readBytes();
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+            values_ = java.util.Collections.unmodifiableList(values_);
+          }
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Node_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Node_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.class, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder.class);
+      }
+
+      public interface ChildrenOrBuilder extends
+          // @@protoc_insertion_point(interface_extends:CollectionProof.Node.Children)
+          com.google.protobuf.MessageOrBuilder {
+
+        /**
+         * <code>required bytes left = 1;</code>
+         */
+        boolean hasLeft();
+        /**
+         * <code>required bytes left = 1;</code>
+         */
+        com.google.protobuf.ByteString getLeft();
+
+        /**
+         * <code>required bytes right = 2;</code>
+         */
+        boolean hasRight();
+        /**
+         * <code>required bytes right = 2;</code>
+         */
+        com.google.protobuf.ByteString getRight();
+      }
+      /**
+       * Protobuf type {@code CollectionProof.Node.Children}
+       */
+      public  static final class Children extends
+          com.google.protobuf.GeneratedMessageV3 implements
+          // @@protoc_insertion_point(message_implements:CollectionProof.Node.Children)
+          ChildrenOrBuilder {
+      private static final long serialVersionUID = 0L;
+        // Use Children.newBuilder() to construct.
+        private Children(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+          super(builder);
+        }
+        private Children() {
+          left_ = com.google.protobuf.ByteString.EMPTY;
+          right_ = com.google.protobuf.ByteString.EMPTY;
+        }
+
+        @java.lang.Override
+        public final com.google.protobuf.UnknownFieldSet
+        getUnknownFields() {
+          return this.unknownFields;
+        }
+        private Children(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          this();
+          int mutable_bitField0_ = 0;
+          com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+              com.google.protobuf.UnknownFieldSet.newBuilder();
+          try {
+            boolean done = false;
+            while (!done) {
+              int tag = input.readTag();
+              switch (tag) {
+                case 0:
+                  done = true;
+                  break;
+                default: {
+                  if (!parseUnknownField(
+                      input, unknownFields, extensionRegistry, tag)) {
+                    done = true;
+                  }
+                  break;
+                }
+                case 10: {
+                  bitField0_ |= 0x00000001;
+                  left_ = input.readBytes();
+                  break;
+                }
+                case 18: {
+                  bitField0_ |= 0x00000002;
+                  right_ = input.readBytes();
+                  break;
+                }
+              }
+            }
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            throw e.setUnfinishedMessage(this);
+          } catch (java.io.IOException e) {
+            throw new com.google.protobuf.InvalidProtocolBufferException(
+                e).setUnfinishedMessage(this);
+          } finally {
+            this.unknownFields = unknownFields.build();
+            makeExtensionsImmutable();
+          }
+        }
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Node_Children_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Node_Children_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.class, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.Builder.class);
+        }
+
+        private int bitField0_;
+        public static final int LEFT_FIELD_NUMBER = 1;
+        private com.google.protobuf.ByteString left_;
+        /**
+         * <code>required bytes left = 1;</code>
+         */
+        public boolean hasLeft() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>required bytes left = 1;</code>
+         */
+        public com.google.protobuf.ByteString getLeft() {
+          return left_;
+        }
+
+        public static final int RIGHT_FIELD_NUMBER = 2;
+        private com.google.protobuf.ByteString right_;
+        /**
+         * <code>required bytes right = 2;</code>
+         */
+        public boolean hasRight() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>required bytes right = 2;</code>
+         */
+        public com.google.protobuf.ByteString getRight() {
+          return right_;
+        }
+
+        private byte memoizedIsInitialized = -1;
+        public final boolean isInitialized() {
+          byte isInitialized = memoizedIsInitialized;
+          if (isInitialized == 1) return true;
+          if (isInitialized == 0) return false;
+
+          if (!hasLeft()) {
+            memoizedIsInitialized = 0;
+            return false;
+          }
+          if (!hasRight()) {
+            memoizedIsInitialized = 0;
+            return false;
+          }
+          memoizedIsInitialized = 1;
+          return true;
+        }
+
+        public void writeTo(com.google.protobuf.CodedOutputStream output)
+                            throws java.io.IOException {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            output.writeBytes(1, left_);
+          }
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            output.writeBytes(2, right_);
+          }
+          unknownFields.writeTo(output);
+        }
+
+        public int getSerializedSize() {
+          int size = memoizedSize;
+          if (size != -1) return size;
+
+          size = 0;
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeBytesSize(1, left_);
+          }
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            size += com.google.protobuf.CodedOutputStream
+              .computeBytesSize(2, right_);
+          }
+          size += unknownFields.getSerializedSize();
+          memoizedSize = size;
+          return size;
+        }
+
+        @java.lang.Override
+        public boolean equals(final java.lang.Object obj) {
+          if (obj == this) {
+           return true;
+          }
+          if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children)) {
+            return super.equals(obj);
+          }
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children other = (ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children) obj;
+
+          boolean result = true;
+          result = result && (hasLeft() == other.hasLeft());
+          if (hasLeft()) {
+            result = result && getLeft()
+                .equals(other.getLeft());
+          }
+          result = result && (hasRight() == other.hasRight());
+          if (hasRight()) {
+            result = result && getRight()
+                .equals(other.getRight());
+          }
+          result = result && unknownFields.equals(other.unknownFields);
+          return result;
+        }
+
+        @java.lang.Override
+        public int hashCode() {
+          if (memoizedHashCode != 0) {
+            return memoizedHashCode;
+          }
+          int hash = 41;
+          hash = (19 * hash) + getDescriptor().hashCode();
+          if (hasLeft()) {
+            hash = (37 * hash) + LEFT_FIELD_NUMBER;
+            hash = (53 * hash) + getLeft().hashCode();
+          }
+          if (hasRight()) {
+            hash = (37 * hash) + RIGHT_FIELD_NUMBER;
+            hash = (53 * hash) + getRight().hashCode();
+          }
+          hash = (29 * hash) + unknownFields.hashCode();
+          memoizedHashCode = hash;
+          return hash;
+        }
+
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parseFrom(
+            java.nio.ByteBuffer data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parseFrom(
+            java.nio.ByteBuffer data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parseFrom(
+            com.google.protobuf.ByteString data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parseFrom(
+            com.google.protobuf.ByteString data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parseFrom(byte[] data)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data);
+        }
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parseFrom(
+            byte[] data,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return PARSER.parseFrom(data, extensionRegistry);
+        }
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parseFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parseFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parseDelimitedFrom(java.io.InputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input);
+        }
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parseDelimitedFrom(
+            java.io.InputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+        }
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parseFrom(
+            com.google.protobuf.CodedInputStream input)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input);
+        }
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parseFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          return com.google.protobuf.GeneratedMessageV3
+              .parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        public Builder newBuilderForType() { return newBuilder(); }
+        public static Builder newBuilder() {
+          return DEFAULT_INSTANCE.toBuilder();
+        }
+        public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children prototype) {
+          return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        }
+        public Builder toBuilder() {
+          return this == DEFAULT_INSTANCE
+              ? new Builder() : new Builder().mergeFrom(this);
+        }
+
+        @java.lang.Override
+        protected Builder newBuilderForType(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          Builder builder = new Builder(parent);
+          return builder;
+        }
+        /**
+         * Protobuf type {@code CollectionProof.Node.Children}
+         */
+        public static final class Builder extends
+            com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+            // @@protoc_insertion_point(builder_implements:CollectionProof.Node.Children)
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.ChildrenOrBuilder {
+          public static final com.google.protobuf.Descriptors.Descriptor
+              getDescriptor() {
+            return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Node_Children_descriptor;
+          }
+
+          protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+              internalGetFieldAccessorTable() {
+            return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Node_Children_fieldAccessorTable
+                .ensureFieldAccessorsInitialized(
+                    ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.class, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.Builder.class);
+          }
+
+          // Construct using ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.newBuilder()
+          private Builder() {
+            maybeForceBuilderInitialization();
+          }
+
+          private Builder(
+              com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            super(parent);
+            maybeForceBuilderInitialization();
+          }
+          private void maybeForceBuilderInitialization() {
+            if (com.google.protobuf.GeneratedMessageV3
+                    .alwaysUseFieldBuilders) {
+            }
+          }
+          public Builder clear() {
+            super.clear();
+            left_ = com.google.protobuf.ByteString.EMPTY;
+            bitField0_ = (bitField0_ & ~0x00000001);
+            right_ = com.google.protobuf.ByteString.EMPTY;
+            bitField0_ = (bitField0_ & ~0x00000002);
+            return this;
+          }
+
+          public com.google.protobuf.Descriptors.Descriptor
+              getDescriptorForType() {
+            return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Node_Children_descriptor;
+          }
+
+          public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children getDefaultInstanceForType() {
+            return ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.getDefaultInstance();
+          }
+
+          public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children build() {
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children result = buildPartial();
+            if (!result.isInitialized()) {
+              throw newUninitializedMessageException(result);
+            }
+            return result;
+          }
+
+          public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children buildPartial() {
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children result = new ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children(this);
+            int from_bitField0_ = bitField0_;
+            int to_bitField0_ = 0;
+            if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+              to_bitField0_ |= 0x00000001;
+            }
+            result.left_ = left_;
+            if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+              to_bitField0_ |= 0x00000002;
+            }
+            result.right_ = right_;
+            result.bitField0_ = to_bitField0_;
+            onBuilt();
+            return result;
+          }
+
+          public Builder clone() {
+            return (Builder) super.clone();
+          }
+          public Builder setField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return (Builder) super.setField(field, value);
+          }
+          public Builder clearField(
+              com.google.protobuf.Descriptors.FieldDescriptor field) {
+            return (Builder) super.clearField(field);
+          }
+          public Builder clearOneof(
+              com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+            return (Builder) super.clearOneof(oneof);
+          }
+          public Builder setRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              int index, java.lang.Object value) {
+            return (Builder) super.setRepeatedField(field, index, value);
+          }
+          public Builder addRepeatedField(
+              com.google.protobuf.Descriptors.FieldDescriptor field,
+              java.lang.Object value) {
+            return (Builder) super.addRepeatedField(field, value);
+          }
+          public Builder mergeFrom(com.google.protobuf.Message other) {
+            if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children) {
+              return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children)other);
+            } else {
+              super.mergeFrom(other);
+              return this;
+            }
+          }
+
+          public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children other) {
+            if (other == ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.getDefaultInstance()) return this;
+            if (other.hasLeft()) {
+              setLeft(other.getLeft());
+            }
+            if (other.hasRight()) {
+              setRight(other.getRight());
+            }
+            this.mergeUnknownFields(other.unknownFields);
+            onChanged();
+            return this;
+          }
+
+          public final boolean isInitialized() {
+            if (!hasLeft()) {
+              return false;
+            }
+            if (!hasRight()) {
+              return false;
+            }
+            return true;
+          }
+
+          public Builder mergeFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws java.io.IOException {
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children parsedMessage = null;
+            try {
+              parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+              parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children) e.getUnfinishedMessage();
+              throw e.unwrapIOException();
+            } finally {
+              if (parsedMessage != null) {
+                mergeFrom(parsedMessage);
+              }
+            }
+            return this;
+          }
+          private int bitField0_;
+
+          private com.google.protobuf.ByteString left_ = com.google.protobuf.ByteString.EMPTY;
+          /**
+           * <code>required bytes left = 1;</code>
+           */
+          public boolean hasLeft() {
+            return ((bitField0_ & 0x00000001) == 0x00000001);
+          }
+          /**
+           * <code>required bytes left = 1;</code>
+           */
+          public com.google.protobuf.ByteString getLeft() {
+            return left_;
+          }
+          /**
+           * <code>required bytes left = 1;</code>
+           */
+          public Builder setLeft(com.google.protobuf.ByteString value) {
+            if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+            left_ = value;
+            onChanged();
+            return this;
+          }
+          /**
+           * <code>required bytes left = 1;</code>
+           */
+          public Builder clearLeft() {
+            bitField0_ = (bitField0_ & ~0x00000001);
+            left_ = getDefaultInstance().getLeft();
+            onChanged();
+            return this;
+          }
+
+          private com.google.protobuf.ByteString right_ = com.google.protobuf.ByteString.EMPTY;
+          /**
+           * <code>required bytes right = 2;</code>
+           */
+          public boolean hasRight() {
+            return ((bitField0_ & 0x00000002) == 0x00000002);
+          }
+          /**
+           * <code>required bytes right = 2;</code>
+           */
+          public com.google.protobuf.ByteString getRight() {
+            return right_;
+          }
+          /**
+           * <code>required bytes right = 2;</code>
+           */
+          public Builder setRight(com.google.protobuf.ByteString value) {
+            if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+            right_ = value;
+            onChanged();
+            return this;
+          }
+          /**
+           * <code>required bytes right = 2;</code>
+           */
+          public Builder clearRight() {
+            bitField0_ = (bitField0_ & ~0x00000002);
+            right_ = getDefaultInstance().getRight();
+            onChanged();
+            return this;
+          }
+          public final Builder setUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.setUnknownFields(unknownFields);
+          }
+
+          public final Builder mergeUnknownFields(
+              final com.google.protobuf.UnknownFieldSet unknownFields) {
+            return super.mergeUnknownFields(unknownFields);
+          }
+
+
+          // @@protoc_insertion_point(builder_scope:CollectionProof.Node.Children)
+        }
+
+        // @@protoc_insertion_point(class_scope:CollectionProof.Node.Children)
+        private static final ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children DEFAULT_INSTANCE;
+        static {
+          DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children();
+        }
+
+        public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children getDefaultInstance() {
+          return DEFAULT_INSTANCE;
+        }
+
+        @java.lang.Deprecated public static final com.google.protobuf.Parser<Children>
+            PARSER = new com.google.protobuf.AbstractParser<Children>() {
+          public Children parsePartialFrom(
+              com.google.protobuf.CodedInputStream input,
+              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+              throws com.google.protobuf.InvalidProtocolBufferException {
+              return new Children(input, extensionRegistry);
+          }
+        };
+
+        public static com.google.protobuf.Parser<Children> parser() {
+          return PARSER;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Parser<Children> getParserForType() {
+          return PARSER;
+        }
+
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children getDefaultInstanceForType() {
+          return DEFAULT_INSTANCE;
+        }
+
+      }
+
+      private int bitField0_;
+      public static final int KEY_FIELD_NUMBER = 1;
+      private com.google.protobuf.ByteString key_;
+      /**
+       * <code>optional bytes key = 1;</code>
+       */
+      public boolean hasKey() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>optional bytes key = 1;</code>
+       */
+      public com.google.protobuf.ByteString getKey() {
+        return key_;
+      }
+
+      public static final int VALUES_FIELD_NUMBER = 2;
+      private java.util.List<com.google.protobuf.ByteString> values_;
+      /**
+       * <code>repeated bytes values = 2;</code>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getValuesList() {
+        return values_;
+      }
+      /**
+       * <code>repeated bytes values = 2;</code>
+       */
+      public int getValuesCount() {
+        return values_.size();
+      }
+      /**
+       * <code>repeated bytes values = 2;</code>
+       */
+      public com.google.protobuf.ByteString getValues(int index) {
+        return values_.get(index);
+      }
+
+      public static final int CHILDREN_FIELD_NUMBER = 3;
+      private ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children children_;
+      /**
+       * <code>optional .CollectionProof.Node.Children children = 3;</code>
+       */
+      public boolean hasChildren() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>optional .CollectionProof.Node.Children children = 3;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children getChildren() {
+        return children_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.getDefaultInstance() : children_;
+      }
+      /**
+       * <code>optional .CollectionProof.Node.Children children = 3;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.ChildrenOrBuilder getChildrenOrBuilder() {
+        return children_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.getDefaultInstance() : children_;
+      }
+
+      public static final int LABEL_FIELD_NUMBER = 4;
+      private com.google.protobuf.ByteString label_;
+      /**
+       * <code>optional bytes label = 4;</code>
+       */
+      public boolean hasLabel() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>optional bytes label = 4;</code>
+       */
+      public com.google.protobuf.ByteString getLabel() {
+        return label_;
+      }
+
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        if (hasChildren()) {
+          if (!getChildren().isInitialized()) {
+            memoizedIsInitialized = 0;
+            return false;
+          }
+        }
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeBytes(1, key_);
+        }
+        for (int i = 0; i < values_.size(); i++) {
+          output.writeBytes(2, values_.get(i));
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          output.writeMessage(3, getChildren());
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          output.writeBytes(4, label_);
+        }
+        unknownFields.writeTo(output);
+      }
+
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(1, key_);
+        }
+        {
+          int dataSize = 0;
+          for (int i = 0; i < values_.size(); i++) {
+            dataSize += com.google.protobuf.CodedOutputStream
+              .computeBytesSizeNoTag(values_.get(i));
+          }
+          size += dataSize;
+          size += 1 * getValuesList().size();
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(3, getChildren());
+        }
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeBytesSize(4, label_);
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node)) {
+          return super.equals(obj);
+        }
+        ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node other = (ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node) obj;
+
+        boolean result = true;
+        result = result && (hasKey() == other.hasKey());
+        if (hasKey()) {
+          result = result && getKey()
+              .equals(other.getKey());
+        }
+        result = result && getValuesList()
+            .equals(other.getValuesList());
+        result = result && (hasChildren() == other.hasChildren());
+        if (hasChildren()) {
+          result = result && getChildren()
+              .equals(other.getChildren());
+        }
+        result = result && (hasLabel() == other.hasLabel());
+        if (hasLabel()) {
+          result = result && getLabel()
+              .equals(other.getLabel());
+        }
+        result = result && unknownFields.equals(other.unknownFields);
+        return result;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasKey()) {
+          hash = (37 * hash) + KEY_FIELD_NUMBER;
+          hash = (53 * hash) + getKey().hashCode();
+        }
+        if (getValuesCount() > 0) {
+          hash = (37 * hash) + VALUES_FIELD_NUMBER;
+          hash = (53 * hash) + getValuesList().hashCode();
+        }
+        if (hasChildren()) {
+          hash = (37 * hash) + CHILDREN_FIELD_NUMBER;
+          hash = (53 * hash) + getChildren().hashCode();
+        }
+        if (hasLabel()) {
+          hash = (37 * hash) + LABEL_FIELD_NUMBER;
+          hash = (53 * hash) + getLabel().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code CollectionProof.Node}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:CollectionProof.Node)
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Node_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Node_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.class, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder.class);
+        }
+
+        // Construct using ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+            getChildrenFieldBuilder();
+          }
+        }
+        public Builder clear() {
+          super.clear();
+          key_ = com.google.protobuf.ByteString.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          values_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          if (childrenBuilder_ == null) {
+            children_ = null;
+          } else {
+            childrenBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000004);
+          label_ = com.google.protobuf.ByteString.EMPTY;
+          bitField0_ = (bitField0_ & ~0x00000008);
+          return this;
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_Node_descriptor;
+        }
+
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node getDefaultInstanceForType() {
+          return ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance();
+        }
+
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node build() {
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node buildPartial() {
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node result = new ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.key_ = key_;
+          if (((bitField0_ & 0x00000002) == 0x00000002)) {
+            values_ = java.util.Collections.unmodifiableList(values_);
+            bitField0_ = (bitField0_ & ~0x00000002);
+          }
+          result.values_ = values_;
+          if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          if (childrenBuilder_ == null) {
+            result.children_ = children_;
+          } else {
+            result.children_ = childrenBuilder_.build();
+          }
+          if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+            to_bitField0_ |= 0x00000004;
+          }
+          result.label_ = label_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder clone() {
+          return (Builder) super.clone();
+        }
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return (Builder) super.setField(field, value);
+        }
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return (Builder) super.clearField(field);
+        }
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return (Builder) super.clearOneof(oneof);
+        }
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return (Builder) super.setRepeatedField(field, index, value);
+        }
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return (Builder) super.addRepeatedField(field, value);
+        }
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node) {
+            return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node other) {
+          if (other == ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance()) return this;
+          if (other.hasKey()) {
+            setKey(other.getKey());
+          }
+          if (!other.values_.isEmpty()) {
+            if (values_.isEmpty()) {
+              values_ = other.values_;
+              bitField0_ = (bitField0_ & ~0x00000002);
+            } else {
+              ensureValuesIsMutable();
+              values_.addAll(other.values_);
+            }
+            onChanged();
+          }
+          if (other.hasChildren()) {
+            mergeChildren(other.getChildren());
+          }
+          if (other.hasLabel()) {
+            setLabel(other.getLabel());
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          if (hasChildren()) {
+            if (!getChildren().isInitialized()) {
+              return false;
+            }
+          }
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        private com.google.protobuf.ByteString key_ = com.google.protobuf.ByteString.EMPTY;
+        /**
+         * <code>optional bytes key = 1;</code>
+         */
+        public boolean hasKey() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>optional bytes key = 1;</code>
+         */
+        public com.google.protobuf.ByteString getKey() {
+          return key_;
+        }
+        /**
+         * <code>optional bytes key = 1;</code>
+         */
+        public Builder setKey(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+          key_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bytes key = 1;</code>
+         */
+        public Builder clearKey() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          key_ = getDefaultInstance().getKey();
+          onChanged();
+          return this;
+        }
+
+        private java.util.List<com.google.protobuf.ByteString> values_ = java.util.Collections.emptyList();
+        private void ensureValuesIsMutable() {
+          if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+            values_ = new java.util.ArrayList<com.google.protobuf.ByteString>(values_);
+            bitField0_ |= 0x00000002;
+           }
+        }
+        /**
+         * <code>repeated bytes values = 2;</code>
+         */
+        public java.util.List<com.google.protobuf.ByteString>
+            getValuesList() {
+          return java.util.Collections.unmodifiableList(values_);
+        }
+        /**
+         * <code>repeated bytes values = 2;</code>
+         */
+        public int getValuesCount() {
+          return values_.size();
+        }
+        /**
+         * <code>repeated bytes values = 2;</code>
+         */
+        public com.google.protobuf.ByteString getValues(int index) {
+          return values_.get(index);
+        }
+        /**
+         * <code>repeated bytes values = 2;</code>
+         */
+        public Builder setValues(
+            int index, com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureValuesIsMutable();
+          values_.set(index, value);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated bytes values = 2;</code>
+         */
+        public Builder addValues(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureValuesIsMutable();
+          values_.add(value);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated bytes values = 2;</code>
+         */
+        public Builder addAllValues(
+            java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+          ensureValuesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, values_);
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>repeated bytes values = 2;</code>
+         */
+        public Builder clearValues() {
+          values_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000002);
+          onChanged();
+          return this;
+        }
+
+        private ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children children_ = null;
+        private com.google.protobuf.SingleFieldBuilderV3<
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.ChildrenOrBuilder> childrenBuilder_;
+        /**
+         * <code>optional .CollectionProof.Node.Children children = 3;</code>
+         */
+        public boolean hasChildren() {
+          return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+        /**
+         * <code>optional .CollectionProof.Node.Children children = 3;</code>
+         */
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children getChildren() {
+          if (childrenBuilder_ == null) {
+            return children_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.getDefaultInstance() : children_;
+          } else {
+            return childrenBuilder_.getMessage();
+          }
+        }
+        /**
+         * <code>optional .CollectionProof.Node.Children children = 3;</code>
+         */
+        public Builder setChildren(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children value) {
+          if (childrenBuilder_ == null) {
+            if (value == null) {
+              throw new NullPointerException();
+            }
+            children_ = value;
+            onChanged();
+          } else {
+            childrenBuilder_.setMessage(value);
+          }
+          bitField0_ |= 0x00000004;
+          return this;
+        }
+        /**
+         * <code>optional .CollectionProof.Node.Children children = 3;</code>
+         */
+        public Builder setChildren(
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.Builder builderForValue) {
+          if (childrenBuilder_ == null) {
+            children_ = builderForValue.build();
+            onChanged();
+          } else {
+            childrenBuilder_.setMessage(builderForValue.build());
+          }
+          bitField0_ |= 0x00000004;
+          return this;
+        }
+        /**
+         * <code>optional .CollectionProof.Node.Children children = 3;</code>
+         */
+        public Builder mergeChildren(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children value) {
+          if (childrenBuilder_ == null) {
+            if (((bitField0_ & 0x00000004) == 0x00000004) &&
+                children_ != null &&
+                children_ != ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.getDefaultInstance()) {
+              children_ =
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.newBuilder(children_).mergeFrom(value).buildPartial();
+            } else {
+              children_ = value;
+            }
+            onChanged();
+          } else {
+            childrenBuilder_.mergeFrom(value);
+          }
+          bitField0_ |= 0x00000004;
+          return this;
+        }
+        /**
+         * <code>optional .CollectionProof.Node.Children children = 3;</code>
+         */
+        public Builder clearChildren() {
+          if (childrenBuilder_ == null) {
+            children_ = null;
+            onChanged();
+          } else {
+            childrenBuilder_.clear();
+          }
+          bitField0_ = (bitField0_ & ~0x00000004);
+          return this;
+        }
+        /**
+         * <code>optional .CollectionProof.Node.Children children = 3;</code>
+         */
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.Builder getChildrenBuilder() {
+          bitField0_ |= 0x00000004;
+          onChanged();
+          return getChildrenFieldBuilder().getBuilder();
+        }
+        /**
+         * <code>optional .CollectionProof.Node.Children children = 3;</code>
+         */
+        public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.ChildrenOrBuilder getChildrenOrBuilder() {
+          if (childrenBuilder_ != null) {
+            return childrenBuilder_.getMessageOrBuilder();
+          } else {
+            return children_ == null ?
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.getDefaultInstance() : children_;
+          }
+        }
+        /**
+         * <code>optional .CollectionProof.Node.Children children = 3;</code>
+         */
+        private com.google.protobuf.SingleFieldBuilderV3<
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.ChildrenOrBuilder> 
+            getChildrenFieldBuilder() {
+          if (childrenBuilder_ == null) {
+            childrenBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Children.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.ChildrenOrBuilder>(
+                    getChildren(),
+                    getParentForChildren(),
+                    isClean());
+            children_ = null;
+          }
+          return childrenBuilder_;
+        }
+
+        private com.google.protobuf.ByteString label_ = com.google.protobuf.ByteString.EMPTY;
+        /**
+         * <code>optional bytes label = 4;</code>
+         */
+        public boolean hasLabel() {
+          return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+        /**
+         * <code>optional bytes label = 4;</code>
+         */
+        public com.google.protobuf.ByteString getLabel() {
+          return label_;
+        }
+        /**
+         * <code>optional bytes label = 4;</code>
+         */
+        public Builder setLabel(com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+          label_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>optional bytes label = 4;</code>
+         */
+        public Builder clearLabel() {
+          bitField0_ = (bitField0_ & ~0x00000008);
+          label_ = getDefaultInstance().getLabel();
+          onChanged();
+          return this;
+        }
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:CollectionProof.Node)
+      }
+
+      // @@protoc_insertion_point(class_scope:CollectionProof.Node)
+      private static final ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node();
+      }
+
+      public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      @java.lang.Deprecated public static final com.google.protobuf.Parser<Node>
+          PARSER = new com.google.protobuf.AbstractParser<Node>() {
+        public Node parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+            return new Node(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<Node> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<Node> getParserForType() {
+        return PARSER;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
+    }
+
+    private int bitField0_;
+    public static final int KEY_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString key_;
+    /**
+     * <code>required bytes key = 1;</code>
+     */
+    public boolean hasKey() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes key = 1;</code>
+     */
+    public com.google.protobuf.ByteString getKey() {
+      return key_;
+    }
+
+    public static final int ROOT_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node root_;
+    /**
+     * <code>required .CollectionProof.Node root = 2;</code>
+     */
+    public boolean hasRoot() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required .CollectionProof.Node root = 2;</code>
+     */
+    public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node getRoot() {
+      return root_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance() : root_;
+    }
+    /**
+     * <code>required .CollectionProof.Node root = 2;</code>
+     */
+    public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder getRootOrBuilder() {
+      return root_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance() : root_;
+    }
+
+    public static final int STEPS_FIELD_NUMBER = 3;
+    private java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step> steps_;
+    /**
+     * <code>repeated .CollectionProof.Step steps = 3;</code>
+     */
+    public java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step> getStepsList() {
+      return steps_;
+    }
+    /**
+     * <code>repeated .CollectionProof.Step steps = 3;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.StepOrBuilder> 
+        getStepsOrBuilderList() {
+      return steps_;
+    }
+    /**
+     * <code>repeated .CollectionProof.Step steps = 3;</code>
+     */
+    public int getStepsCount() {
+      return steps_.size();
+    }
+    /**
+     * <code>repeated .CollectionProof.Step steps = 3;</code>
+     */
+    public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step getSteps(int index) {
+      return steps_.get(index);
+    }
+    /**
+     * <code>repeated .CollectionProof.Step steps = 3;</code>
+     */
+    public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.StepOrBuilder getStepsOrBuilder(
+        int index) {
+      return steps_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasKey()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasRoot()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getRoot().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      for (int i = 0; i < getStepsCount(); i++) {
+        if (!getSteps(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, key_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getRoot());
+      }
+      for (int i = 0; i < steps_.size(); i++) {
+        output.writeMessage(3, steps_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, key_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getRoot());
+      }
+      for (int i = 0; i < steps_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, steps_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof other = (ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof) obj;
+
+      boolean result = true;
+      result = result && (hasKey() == other.hasKey());
+      if (hasKey()) {
+        result = result && getKey()
+            .equals(other.getKey());
+      }
+      result = result && (hasRoot() == other.hasRoot());
+      if (hasRoot()) {
+        result = result && getRoot()
+            .equals(other.getRoot());
+      }
+      result = result && getStepsList()
+          .equals(other.getStepsList());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasKey()) {
+        hash = (37 * hash) + KEY_FIELD_NUMBER;
+        hash = (53 * hash) + getKey().hashCode();
+      }
+      if (hasRoot()) {
+        hash = (37 * hash) + ROOT_FIELD_NUMBER;
+        hash = (53 * hash) + getRoot().hashCode();
+      }
+      if (getStepsCount() > 0) {
+        hash = (37 * hash) + STEPS_FIELD_NUMBER;
+        hash = (53 * hash) + getStepsList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * CollectionProof can be checked against the hash of the root
+     * node and also contains the key and the data.
+     * </pre>
+     *
+     * Protobuf type {@code CollectionProof}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:CollectionProof)
+        ch.epfl.dedis.proto.OmniLedgerProto.CollectionProofOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.class, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getRootFieldBuilder();
+          getStepsFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        key_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (rootBuilder_ == null) {
+          root_ = null;
+        } else {
+          rootBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        if (stepsBuilder_ == null) {
+          steps_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+        } else {
+          stepsBuilder_.clear();
+        }
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_CollectionProof_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof build() {
+        ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof buildPartial() {
+        ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof result = new ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.key_ = key_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (rootBuilder_ == null) {
+          result.root_ = root_;
+        } else {
+          result.root_ = rootBuilder_.build();
+        }
+        if (stepsBuilder_ == null) {
+          if (((bitField0_ & 0x00000004) == 0x00000004)) {
+            steps_ = java.util.Collections.unmodifiableList(steps_);
+            bitField0_ = (bitField0_ & ~0x00000004);
+          }
+          result.steps_ = steps_;
+        } else {
+          result.steps_ = stepsBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof) {
+          return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof other) {
+        if (other == ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.getDefaultInstance()) return this;
+        if (other.hasKey()) {
+          setKey(other.getKey());
+        }
+        if (other.hasRoot()) {
+          mergeRoot(other.getRoot());
+        }
+        if (stepsBuilder_ == null) {
+          if (!other.steps_.isEmpty()) {
+            if (steps_.isEmpty()) {
+              steps_ = other.steps_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+            } else {
+              ensureStepsIsMutable();
+              steps_.addAll(other.steps_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.steps_.isEmpty()) {
+            if (stepsBuilder_.isEmpty()) {
+              stepsBuilder_.dispose();
+              stepsBuilder_ = null;
+              steps_ = other.steps_;
+              bitField0_ = (bitField0_ & ~0x00000004);
+              stepsBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getStepsFieldBuilder() : null;
+            } else {
+              stepsBuilder_.addAllMessages(other.steps_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasKey()) {
+          return false;
+        }
+        if (!hasRoot()) {
+          return false;
+        }
+        if (!getRoot().isInitialized()) {
+          return false;
+        }
+        for (int i = 0; i < getStepsCount(); i++) {
+          if (!getSteps(i).isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString key_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes key = 1;</code>
+       */
+      public boolean hasKey() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes key = 1;</code>
+       */
+      public com.google.protobuf.ByteString getKey() {
+        return key_;
+      }
+      /**
+       * <code>required bytes key = 1;</code>
+       */
+      public Builder setKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        key_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes key = 1;</code>
+       */
+      public Builder clearKey() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        key_ = getDefaultInstance().getKey();
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node root_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder> rootBuilder_;
+      /**
+       * <code>required .CollectionProof.Node root = 2;</code>
+       */
+      public boolean hasRoot() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required .CollectionProof.Node root = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node getRoot() {
+        if (rootBuilder_ == null) {
+          return root_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance() : root_;
+        } else {
+          return rootBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .CollectionProof.Node root = 2;</code>
+       */
+      public Builder setRoot(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node value) {
+        if (rootBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          root_ = value;
+          onChanged();
+        } else {
+          rootBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .CollectionProof.Node root = 2;</code>
+       */
+      public Builder setRoot(
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder builderForValue) {
+        if (rootBuilder_ == null) {
+          root_ = builderForValue.build();
+          onChanged();
+        } else {
+          rootBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .CollectionProof.Node root = 2;</code>
+       */
+      public Builder mergeRoot(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node value) {
+        if (rootBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              root_ != null &&
+              root_ != ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance()) {
+            root_ =
+              ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.newBuilder(root_).mergeFrom(value).buildPartial();
+          } else {
+            root_ = value;
+          }
+          onChanged();
+        } else {
+          rootBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .CollectionProof.Node root = 2;</code>
+       */
+      public Builder clearRoot() {
+        if (rootBuilder_ == null) {
+          root_ = null;
+          onChanged();
+        } else {
+          rootBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>required .CollectionProof.Node root = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder getRootBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getRootFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .CollectionProof.Node root = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder getRootOrBuilder() {
+        if (rootBuilder_ != null) {
+          return rootBuilder_.getMessageOrBuilder();
+        } else {
+          return root_ == null ?
+              ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.getDefaultInstance() : root_;
+        }
+      }
+      /**
+       * <code>required .CollectionProof.Node root = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder> 
+          getRootFieldBuilder() {
+        if (rootBuilder_ == null) {
+          rootBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Node.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.NodeOrBuilder>(
+                  getRoot(),
+                  getParentForChildren(),
+                  isClean());
+          root_ = null;
+        }
+        return rootBuilder_;
+      }
+
+      private java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step> steps_ =
+        java.util.Collections.emptyList();
+      private void ensureStepsIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          steps_ = new java.util.ArrayList<ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step>(steps_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.StepOrBuilder> stepsBuilder_;
+
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step> getStepsList() {
+        if (stepsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(steps_);
+        } else {
+          return stepsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public int getStepsCount() {
+        if (stepsBuilder_ == null) {
+          return steps_.size();
+        } else {
+          return stepsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step getSteps(int index) {
+        if (stepsBuilder_ == null) {
+          return steps_.get(index);
+        } else {
+          return stepsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public Builder setSteps(
+          int index, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step value) {
+        if (stepsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureStepsIsMutable();
+          steps_.set(index, value);
+          onChanged();
+        } else {
+          stepsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public Builder setSteps(
+          int index, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.Builder builderForValue) {
+        if (stepsBuilder_ == null) {
+          ensureStepsIsMutable();
+          steps_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          stepsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public Builder addSteps(ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step value) {
+        if (stepsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureStepsIsMutable();
+          steps_.add(value);
+          onChanged();
+        } else {
+          stepsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public Builder addSteps(
+          int index, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step value) {
+        if (stepsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureStepsIsMutable();
+          steps_.add(index, value);
+          onChanged();
+        } else {
+          stepsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public Builder addSteps(
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.Builder builderForValue) {
+        if (stepsBuilder_ == null) {
+          ensureStepsIsMutable();
+          steps_.add(builderForValue.build());
+          onChanged();
+        } else {
+          stepsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public Builder addSteps(
+          int index, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.Builder builderForValue) {
+        if (stepsBuilder_ == null) {
+          ensureStepsIsMutable();
+          steps_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          stepsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public Builder addAllSteps(
+          java.lang.Iterable<? extends ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step> values) {
+        if (stepsBuilder_ == null) {
+          ensureStepsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, steps_);
+          onChanged();
+        } else {
+          stepsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public Builder clearSteps() {
+        if (stepsBuilder_ == null) {
+          steps_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000004);
+          onChanged();
+        } else {
+          stepsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public Builder removeSteps(int index) {
+        if (stepsBuilder_ == null) {
+          ensureStepsIsMutable();
+          steps_.remove(index);
+          onChanged();
+        } else {
+          stepsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.Builder getStepsBuilder(
+          int index) {
+        return getStepsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.StepOrBuilder getStepsOrBuilder(
+          int index) {
+        if (stepsBuilder_ == null) {
+          return steps_.get(index);  } else {
+          return stepsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.StepOrBuilder> 
+           getStepsOrBuilderList() {
+        if (stepsBuilder_ != null) {
+          return stepsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(steps_);
+        }
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.Builder addStepsBuilder() {
+        return getStepsFieldBuilder().addBuilder(
+            ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.Builder addStepsBuilder(
+          int index) {
+        return getStepsFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .CollectionProof.Step steps = 3;</code>
+       */
+      public java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.Builder> 
+           getStepsBuilderList() {
+        return getStepsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.StepOrBuilder> 
+          getStepsFieldBuilder() {
+        if (stepsBuilder_ == null) {
+          stepsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.Step.Builder, ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof.StepOrBuilder>(
+                  steps_,
+                  ((bitField0_ & 0x00000004) == 0x00000004),
+                  getParentForChildren(),
+                  isClean());
+          steps_ = null;
+        }
+        return stepsBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:CollectionProof)
+    }
+
+    // @@protoc_insertion_point(class_scope:CollectionProof)
+    private static final ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof();
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<CollectionProof>
+        PARSER = new com.google.protobuf.AbstractParser<CollectionProof>() {
+      public CollectionProof parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new CollectionProof(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<CollectionProof> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CollectionProof> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.OmniLedgerProto.CollectionProof getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -3491,6 +10788,46 @@ public final class OmniLedgerProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_AddTxResponse_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Configuration_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_Configuration_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_GetProof_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_GetProof_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_GetProofResponse_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_GetProofResponse_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_Proof_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_Proof_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_CollectionProof_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_CollectionProof_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_CollectionProof_Step_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_CollectionProof_Step_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_CollectionProof_Node_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_CollectionProof_Node_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_CollectionProof_Node_Children_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_CollectionProof_Node_Children_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -3509,9 +10846,24 @@ public final class OmniLedgerProto {
       "(\022\022\035\n\tskipblock\030\002 \001(\0132\n.SkipBlock\"]\n\014Add" +
       "TxRequest\022\017\n\007version\030\001 \002(\022\022\023\n\013skipchaini" +
       "d\030\002 \002(\014\022\'\n\013transaction\030\003 \002(\0132\022.ClientTra" +
-      "nsaction\" \n\rAddTxResponse\022\017\n\007version\030\001 \002" +
-      "(\022B&\n\023ch.epfl.dedis.protoB\017OmniLedgerPro" +
-      "to"
+      "nsaction\" \n\rAddTxResponse\022\017\n\007version\030\001 \002",
+      "(\022\"?\n\rConfiguration\022\027\n\006roster\030\001 \002(\0132\007.Ro" +
+      "ster\022\025\n\rblockInterval\030\002 \001(\022\"4\n\010GetProof\022" +
+      "\017\n\007version\030\001 \002(\022\022\013\n\003key\030\002 \002(\014\022\n\n\002id\030\003 \002(" +
+      "\014\":\n\020GetProofResponse\022\017\n\007version\030\001 \002(\022\022\025" +
+      "\n\005proof\030\002 \002(\0132\006.Proof\"j\n\005Proof\022(\n\016inclus" +
+      "ionProof\030\001 \002(\0132\020.CollectionProof\022\032\n\006late" +
+      "st\030\002 \002(\0132\n.SkipBlock\022\033\n\005links\030\003 \003(\0132\014.Fo" +
+      "rwardLink\"\314\002\n\017CollectionProof\022\013\n\003key\030\001 \002" +
+      "(\014\022#\n\004root\030\002 \002(\0132\025.CollectionProof.Node\022" +
+      "$\n\005steps\030\003 \003(\0132\025.CollectionProof.Step\032Q\n",
+      "\004Step\022#\n\004left\030\001 \002(\0132\025.CollectionProof.No" +
+      "de\022$\n\005right\030\002 \002(\0132\025.CollectionProof.Node" +
+      "\032\215\001\n\004Node\022\013\n\003key\030\001 \001(\014\022\016\n\006values\030\002 \003(\014\0220" +
+      "\n\010children\030\003 \001(\0132\036.CollectionProof.Node." +
+      "Children\022\r\n\005label\030\004 \001(\014\032\'\n\010Children\022\014\n\004l" +
+      "eft\030\001 \002(\014\022\r\n\005right\030\002 \002(\014B&\n\023ch.epfl.dedi" +
+      "s.protoB\017OmniLedgerProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3553,6 +10905,54 @@ public final class OmniLedgerProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_AddTxResponse_descriptor,
         new java.lang.String[] { "Version", });
+    internal_static_Configuration_descriptor =
+      getDescriptor().getMessageTypes().get(4);
+    internal_static_Configuration_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_Configuration_descriptor,
+        new java.lang.String[] { "Roster", "BlockInterval", });
+    internal_static_GetProof_descriptor =
+      getDescriptor().getMessageTypes().get(5);
+    internal_static_GetProof_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_GetProof_descriptor,
+        new java.lang.String[] { "Version", "Key", "Id", });
+    internal_static_GetProofResponse_descriptor =
+      getDescriptor().getMessageTypes().get(6);
+    internal_static_GetProofResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_GetProofResponse_descriptor,
+        new java.lang.String[] { "Version", "Proof", });
+    internal_static_Proof_descriptor =
+      getDescriptor().getMessageTypes().get(7);
+    internal_static_Proof_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_Proof_descriptor,
+        new java.lang.String[] { "InclusionProof", "Latest", "Links", });
+    internal_static_CollectionProof_descriptor =
+      getDescriptor().getMessageTypes().get(8);
+    internal_static_CollectionProof_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_CollectionProof_descriptor,
+        new java.lang.String[] { "Key", "Root", "Steps", });
+    internal_static_CollectionProof_Step_descriptor =
+      internal_static_CollectionProof_descriptor.getNestedTypes().get(0);
+    internal_static_CollectionProof_Step_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_CollectionProof_Step_descriptor,
+        new java.lang.String[] { "Left", "Right", });
+    internal_static_CollectionProof_Node_descriptor =
+      internal_static_CollectionProof_descriptor.getNestedTypes().get(1);
+    internal_static_CollectionProof_Node_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_CollectionProof_Node_descriptor,
+        new java.lang.String[] { "Key", "Values", "Children", "Label", });
+    internal_static_CollectionProof_Node_Children_descriptor =
+      internal_static_CollectionProof_Node_descriptor.getNestedTypes().get(0);
+    internal_static_CollectionProof_Node_Children_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_CollectionProof_Node_Children_descriptor,
+        new java.lang.String[] { "Left", "Right", });
     ch.epfl.dedis.proto.SkipBlockProto.getDescriptor();
     ch.epfl.dedis.proto.RosterProto.getDescriptor();
     ch.epfl.dedis.proto.DarcProto.getDescriptor();

@@ -52,7 +52,7 @@ public class RestartError {
             if (sb.getForwardCount() == 0){
                 break;
             }
-            SkipblockId next = new SkipblockId(sb.getForward(0).getMsg().toByteArray());
+            SkipblockId next = new SkipblockId(sb.getForward(0).getTo().toByteArray());
             sb = ocs.getSkipblock(next);
         }
     }

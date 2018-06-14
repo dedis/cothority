@@ -89,9 +89,9 @@ public class DockerTestServerController extends TestServerController {
     public List<OcsFactory.ConodeAddress> getConodes() {
         return Arrays.asList(
                 new OcsFactory.ConodeAddress(buildURI("tcp://" + blockchainContainer.getContainerIpAddress() + ":7002"), CONODE_PUB_1),
-                new OcsFactory.ConodeAddress(buildURI("tcp://conode2:7004"), CONODE_PUB_2),
-                new OcsFactory.ConodeAddress(buildURI("tcp://conode3:7006"), CONODE_PUB_3),
-                new OcsFactory.ConodeAddress(buildURI("tcp://conode4:7008"), CONODE_PUB_4));
+                new OcsFactory.ConodeAddress(buildURI("tcp://localhost:7004"), CONODE_PUB_2),
+                new OcsFactory.ConodeAddress(buildURI("tcp://localhost:7006"), CONODE_PUB_3),
+                new OcsFactory.ConodeAddress(buildURI("tcp://localhost:7008"), CONODE_PUB_4));
     }
 
     private void runCmdInBackground(GenericContainer container, String ... cmd) throws InterruptedException {

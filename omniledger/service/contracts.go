@@ -36,7 +36,7 @@ var ContractConfigID = "config"
 var ContractDarcID = "darc"
 
 // CmdDarcEvolve is needed to evolve a darc.
-var CmdDarcEvolve = "Evolve"
+var CmdDarcEvolve = "evolve"
 
 // Config stores all the configuration information for one skipchain. It will
 // be stored under the key "GenesisDarcID || OneNonce", in the collections. The

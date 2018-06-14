@@ -3,12 +3,16 @@ package ch.epfl.dedis.lib.omniledger.darc;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,7 +22,7 @@ import java.util.stream.Stream;
  * https://github.com/dedis/cothority/omniledger/README.md#darc for more information.
  */
 public class Darc {
-    private int version;
+    private long version;
     private byte[] description;
     private DarcId baseID;
     private DarcId prevID;
@@ -26,28 +30,12 @@ public class Darc {
     private List<Signature> signatures;
     private List<Darc> verificationDarcs;
 
-    /**
-     * This is a convenience function that initialise a set of rules with the default actions "_evolve" and "_sign".
-     * Signers are joined with logical-Or, owners are joined with logical-AND. If other expressions are needed, please
-     * set the rules manually.
-     * @param owners A list of owners.
-     * @param signers A list of signers.
-     * @return The action-expression mapping, also known as the rule.
-     */
-    public static Map<String, byte[]> initRules(List<Identity> owners, List<Identity> signers)  {
-        Map<String, byte[]> rs = new HashMap<>();
-        List<String> ownerIDs = owners.stream().map(Identity::toString).collect(Collectors.toList());
-        rs.put("invoke:evolve", String.join(" & ", ownerIDs).getBytes());
-
-        List<String> signerIDs = signers.stream().map(Identity::toString).collect(Collectors.toList());
-        rs.put("_sign", String.join(" | ", signerIDs).getBytes());
-        return rs;
-    }
 
     /**
      * The Darc constructor.
+     *
      * @param rules The initial set of rules, consider using initRules to create them.
-     * @param desc The description.
+     * @param desc  The description.
      */
     public Darc(Map<String, byte[]> rules, byte[] desc) {
         this.version = 0;
@@ -69,7 +57,62 @@ public class Darc {
     }
 
     /**
+     * Convenience constructor
+     *
+     * @param owners  a list of owners that are allowed to evolve the darc
+     * @param signers a list of signers on behalf of that darc
+     * @param desc    free form description of the darc
+     */
+    public Darc(List<Identity> owners, List<Identity> signers, byte[] desc) {
+        this(initRules(owners, signers), desc);
+    }
+
+    public Darc(DarcProto.Darc proto) throws CothorityCryptoException {
+        version = proto.getVersion();
+        description = proto.getDescription().toByteArray();
+        if (version > 0) {
+            baseID = new DarcId(proto.getBaseid());
+        }
+        prevID = new DarcId(proto.getPrevid());
+        rules = new HashMap<>();
+        Map<String, ByteString> protoRules = proto.getRulesMap();
+        for (String key : protoRules.keySet()) {
+            rules.put(key, protoRules.get(key).toByteArray());
+        }
+        signatures = new ArrayList<>();
+        for (DarcProto.Signature sig : proto.getSignaturesList()) {
+            signatures.add(new Signature(sig));
+        }
+    }
+
+    public Darc(byte[] buf) throws InvalidProtocolBufferException, CothorityCryptoException {
+        this(DarcProto.Darc.parseFrom(buf));
+    }
+
+    /**
+     * Sets a rule to be the action/expression pair. This will overwrite an
+     * existing rule or create a new one.
+     *
+     * @param action
+     * @param expression
+     */
+    public void setRule(String action, byte[] expression) {
+        rules.put(action, expression);
+    }
+
+    /**
+     * Updates the version of the darc and clears any eventual signatures from previous
+     * evolutions.
+     */
+    public void increaseVersion() throws CothorityCryptoException {
+        version++;
+        signatures = new ArrayList<>();
+        verificationDarcs = new ArrayList<>();
+    }
+
+    /**
      * Creates the protobuf representation of the darc.
+     *
      * @return The protobuf representation.
      */
     public DarcProto.Darc toProto() {
@@ -97,7 +140,7 @@ public class Darc {
     public DarcId getId() throws CothorityCryptoException {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(Darc.intToArr8(this.version));
+            digest.update(Darc.longToArr8(this.version));
             digest.update(this.description);
             if (this.baseID != null) {
                 digest.update(this.baseID.getId());
@@ -115,15 +158,72 @@ public class Darc {
     }
 
     /**
+     * @param id the id of the previous darc.
+     */
+    public void setPrevId(DarcId id) {
+        prevID = id;
+    }
+
+    /**
+     * @param d the previous darc
+     * @throws CothorityCryptoException
+     */
+    public void setPrevId(Darc d) throws CothorityCryptoException {
+        setPrevId(d.getId());
+    }
+
+    /**
      * Gets the base-ID of the darc, i.e. the ID before any evolution.
+     *
      * @return base-ID
      * @throws CothorityCryptoException
      */
     public DarcId getBaseId() throws CothorityCryptoException {
-        if (this.version == 0 ) {
+        if (this.version == 0) {
             return this.getId();
         }
         return this.baseID;
+    }
+
+    /**
+     * @return the current version.
+     */
+    public long getVersion() {
+        return version;
+    }
+
+    /**
+     * @return a copy of the darc with the same version number.
+     * @throws CothorityCryptoException
+     */
+    public Darc copy() throws CothorityCryptoException {
+        Map<String, byte[]> rs = new HashMap<>();
+        for (String k : rules.keySet()) {
+            rs.put(k, rules.get(k));
+        }
+        Darc c = new Darc(rs, description.clone());
+        c.version = version;
+        c.baseID = getBaseId();
+        return c;
+    }
+
+    /**
+     * This is a convenience function that initialise a set of rules with the default actions "_evolve" and "_sign".
+     * Signers are joined with logical-Or, owners are joined with logical-AND. If other expressions are needed, please
+     * set the rules manually.
+     *
+     * @param owners  A list of owners.
+     * @param signers A list of signers.
+     * @return The action-expression mapping, also known as the rule.
+     */
+    public static Map<String, byte[]> initRules(List<Identity> owners, List<Identity> signers) {
+        Map<String, byte[]> rs = new HashMap<>();
+        List<String> ownerIDs = owners.stream().map(Identity::toString).collect(Collectors.toList());
+        rs.put("invoke:evolve", String.join(" & ", ownerIDs).getBytes());
+
+        List<String> signerIDs = signers.stream().map(Identity::toString).collect(Collectors.toList());
+        rs.put("_sign", String.join(" | ", signerIDs).getBytes());
+        return rs;
     }
 
     private Stream<String> sortedAction() {
@@ -134,6 +234,13 @@ public class Darc {
         ByteBuffer b = ByteBuffer.allocate(8);
         b.order(ByteOrder.LITTLE_ENDIAN);
         b.putInt(x);
+        return b.array();
+    }
+
+    private static byte[] longToArr8(long x) {
+        ByteBuffer b = ByteBuffer.allocate(8);
+        b.order(ByteOrder.LITTLE_ENDIAN);
+        b.putLong(x);
         return b.array();
     }
 }

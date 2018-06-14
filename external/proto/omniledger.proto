@@ -47,7 +47,14 @@ message AddTxResponse {
   required sint64 version = 1;
 }
 
-/*
+// Configuration is the representation of the genesis configuration data.
+message Configuration {
+	// Roster is the set of nodes responsible for omniledger
+	required Roster roster = 1;
+  // BlockInterval is the time in nanoseconds between two blocks
+  optional sint64 blockInterval = 2;
+}
+
 // GetProof returns the proof that the given key is in the collection.
 message GetProof {
   // 	 Version of the protocol
@@ -68,4 +75,40 @@ message GetProofResponse {
   // 	 of the included key/value pair given a genesis skipblock.
   required Proof proof = 2;
 }
-*/
+
+// This Structure could later be moved to cothority/skipchain.
+message Proof {
+	// InclusionProof is the deserialized InclusionProof
+	required CollectionProof inclusionProof = 1;
+	// Providing the latest skipblock to retrieve the Merkle tree root.
+	required SkipBlock latest = 2;
+	// Proving the path to the latest skipblock. The first ForwardLink has an
+	// empty-sliced `From` and the genesis-block in `To`, together with the
+	// roster of the genesis-block in the `NewRoster`.
+	repeated ForwardLink links = 3;
+}
+
+// CollectionProof can be checked against the hash of the root
+// node and also contains the key and the data.
+message CollectionProof {
+  required bytes key = 1;
+  required Node root = 2;
+  repeated Step steps = 3;
+
+  message Step{
+    required Node left = 1;
+    required Node right = 2;
+  }
+  
+  message Node {
+    optional bytes key = 1;
+    repeated bytes values = 2;
+    optional Children children = 3;
+    optional bytes label = 4;
+
+    message Children {
+      required bytes left = 1;
+      required bytes right = 2;
+    }
+  }
+}
