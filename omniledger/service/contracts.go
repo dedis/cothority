@@ -35,6 +35,10 @@ var ContractConfigID = "config"
 // ContractDarcID denotes a darc-contract
 var ContractDarcID = "darc"
 
+// ContractValueID denotes a contract that can store and update
+// key values.
+var ContractValueID = "value"
+
 // CmdDarcEvolve is needed to evolve a darc.
 var CmdDarcEvolve = "evolve"
 
@@ -121,6 +125,7 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 // ContractConfig can only be instantiated once per skipchain, and only for
 // the genesis block.
 func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+	c = coins
 	if tx.getType() != spawnType {
 		return nil, nil, errors.New("Config can only be spawned")
 	}
@@ -163,7 +168,7 @@ func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coi
 				DarcID:     tx.ObjectID.DarcID,
 				InstanceID: OneNonce,
 			}, ContractConfigID, configBuf),
-	}, nil, nil
+	}, c, nil
 }
 
 // ContractDarc accepts the following instructions:
@@ -181,7 +186,7 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 			}
 			return []StateChange{
 				NewStateChange(Create, ObjectID{d.GetBaseID(), ZeroNonce}, ContractDarcID, darcBuf),
-			}, nil, nil
+			}, coins, nil
 		}
 		c, found := s.contracts[tx.Spawn.ContractID]
 		if !found {
@@ -205,7 +210,7 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 			}
 			return []StateChange{
 				NewStateChange(Update, tx.ObjectID, ContractDarcID, darcBuf),
-			}, nil, nil
+			}, coins, nil
 		default:
 			return nil, nil, errors.New("invalid command: " + tx.Invoke.Command)
 		}
@@ -213,4 +218,27 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 		return nil, nil, errors.New("Only invoke and spawn are defined yet")
 	}
 	return nil, nil, errors.New("should never come here...")
+}
+
+// ContractValue is a simple key/value storage where you
+// can put any data inside as wished.
+func (s *Service) ContractValue(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	switch {
+	case tx.Spawn != nil:
+		var subId Nonce
+		copy(subId[:], tx.Hash())
+		return []StateChange{
+			NewStateChange(Create, ObjectID{tx.ObjectID.DarcID, subId},
+				ContractValueID, tx.Spawn.Args.Search("value")),
+		}, c, nil
+	case tx.Invoke != nil:
+		if tx.Invoke.Command != "update" {
+			return nil, nil, errors.New("Value contract can only update")
+		}
+	case tx.Delete != nil:
+		return StateChanges{
+			NewStateChange(Remove, tx.ObjectID, ContractValueID, nil),
+		}, c, nil
+	}
+	return nil, nil, errors.New("didn't find any instruction")
 }

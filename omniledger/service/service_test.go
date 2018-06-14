@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"reflect"
 	"testing"
 	"time"
 
@@ -452,6 +451,62 @@ func TestService_DarcSpawn(t *testing.T) {
 	require.True(t, pr.InclusionProof.Match())
 }
 
+func TestService_ValueSpawn(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	darc2 := s.darc.Copy()
+	darc2.Rules.AddRule("spawn:value", darc2.Rules.GetSignExpr())
+	darc2.BaseID = s.darc.GetBaseID()
+	darc2.PrevID = s.darc.GetID()
+	darc2.Version++
+	ctx := darcToTx(t, *darc2, s.signer)
+	s.sendTx(t, ctx)
+	for {
+		pr := s.waitProof(t, ctx.Instructions[0].ObjectID)
+		require.True(t, pr.InclusionProof.Match())
+		values, err := pr.InclusionProof.RawValues()
+		require.Nil(t, err)
+		d, err := darc.NewDarcFromProto(values[0])
+		require.Nil(t, err)
+		if d.Version == darc2.Version {
+			break
+		}
+		time.Sleep(s.interval)
+	}
+	log.Lvl1("Updated darc")
+
+	myvalue := []byte("1234")
+	ctx = ClientTransaction{
+		Instructions: []Instruction{{
+			ObjectID: ObjectID{
+				DarcID:     s.darc.GetBaseID(),
+				InstanceID: ZeroNonce,
+			},
+			Nonce:  GenNonce(),
+			Index:  0,
+			Length: 1,
+			Spawn: &Spawn{
+				ContractID: ContractValueID,
+				Args: []Argument{{
+					Name:  "value",
+					Value: myvalue,
+				}},
+			},
+		}},
+	}
+	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
+
+	var subId Nonce
+	copy(subId[:], ctx.Instructions[0].Hash())
+	pr := s.sendTxAndWait(t, ctx, &ObjectID{darc2.GetBaseID(), subId})
+	require.True(t, pr.InclusionProof.Match())
+	values, err := pr.InclusionProof.RawValues()
+	require.Nil(t, err)
+	require.Equal(t, myvalue, values[0])
+}
+
 func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction {
 	d2Buf, err := d2.ToProto()
 	require.Nil(t, err)
@@ -581,7 +636,7 @@ func newSer(t *testing.T, step int, interval time.Duration) *ser {
 		service := sv.(*Service)
 		s.services = append(s.services, service)
 	}
-	registerDummy(s.services)
+	registerDummy(s.hosts)
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
 		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc"}, s.signer.Identity())
@@ -641,11 +696,10 @@ func dummyContractFunc(cdb CollectionView, tx Instruction, c []Coin) ([]StateCha
 	}, nil, nil
 }
 
-func registerDummy(services interface{}) {
+func registerDummy(servers []*onet.Server) {
 	// For testing - there must be a better way to do that. But putting
 	// services []skipchain.GetService in the method signature doesn't work :(
-	for i := 0; i < reflect.ValueOf(services).Len(); i++ {
-		s := reflect.ValueOf(services).Index(i).Interface().(skipchain.GetService)
-		RegisterContract(s.(skipchain.GetService), dummyKind, dummyContractFunc)
+	for _, s := range servers {
+		RegisterContract(s, dummyKind, dummyContractFunc)
 	}
 }
