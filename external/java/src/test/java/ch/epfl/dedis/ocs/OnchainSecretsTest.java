@@ -197,7 +197,7 @@ class OnchainSecretsTest {
                 darcs.add(new Darc(transaction.getDarc()));
             }
             if (sb.getForwardCount() > 0) {
-                latest = new SkipblockId(sb.getForward(0).getMsg().toByteArray());
+                latest = new SkipblockId(sb.getForward(0).getTo().toByteArray());
             } else {
                 latest = null;
             }

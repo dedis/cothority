@@ -194,7 +194,7 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 	}
 	log.Lvlf2("%s: Getting proof for key %x on sc %x", s.ServerIdentity(), req.Key, req.ID)
 	latest, err := s.db().GetLatest(s.db().GetByID(req.ID))
-	if err != nil {
+	if err != nil && latest == nil {
 		return
 	}
 	proof, err := NewProof(s.getCollection(req.ID), s.db(), latest.Hash, req.Key)
@@ -247,15 +247,18 @@ func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransactio
 func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
 	d, err := s.loadLatestDarc(scID, instr.ObjectID.DarcID)
 	if err != nil {
-		return err
+		return errors.New("darc not found: " + err.Error())
 	}
 	req, err := instr.ToDarcRequest()
 	if err != nil {
-		return err
+		return errors.New("couldn't create darc request: " + err.Error())
 	}
 	// TODO we need to use req.VerifyWithCB to search for missing darcs
 	err = req.Verify(d)
-	return err
+	if err != nil {
+		return errors.New("request verification failed: " + err.Error())
+	}
+	return nil
 }
 
 // createNewBlock creates a new block and proposes it to the
@@ -392,7 +395,11 @@ func (s *Service) updateCollection(msg network.Message) {
 		log.Error("Couldn't recreate state changes:", err.Error())
 		return
 	}
-	log.Lvlf2("%s: Storing state changes %v", s.ServerIdentity(), scs)
+	if i, _ := sb.Roster.Search(s.ServerIdentity().ID); i == 0 {
+		log.Lvlf2("%s: Storing state changes %v", s.ServerIdentity(), scs)
+	} else {
+		log.Lvlf3("%s: Storing state changes %v", s.ServerIdentity(), scs)
+	}
 	for _, sc := range scs {
 		err = cdb.Store(&sc)
 		if err != nil {
@@ -471,8 +478,8 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID, interval time.Du
 				ts = append(ts, t)
 				log.Lvlf2("%x: Stored transaction. Next block length: %v, New Tx: %+v", scID, len(ts), t)
 			case <-to:
-				log.Lvlf2("%x: New epoch and transaction-length: %d", scID, len(ts))
 				if len(ts) > 0 {
+					log.Lvlf2("%x: New epoch and transaction-length: %d", scID, len(ts))
 					sb, err := s.db().GetLatest(s.db().GetByID(scID))
 					if err != nil {
 						panic("DB is in bad state and cannot find skipchain anymore: " + err.Error())

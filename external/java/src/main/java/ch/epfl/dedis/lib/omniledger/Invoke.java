@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.proto.TransactionProto;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -19,6 +20,10 @@ public class Invoke {
     public Invoke(String command, List<Argument> arguments) {
         this.command = command;
         this.arguments = arguments;
+    }
+
+    public Invoke(String command, String argument, byte[] value){
+        this(command, Arrays.asList(new Argument(argument, value)));
     }
 
     /**

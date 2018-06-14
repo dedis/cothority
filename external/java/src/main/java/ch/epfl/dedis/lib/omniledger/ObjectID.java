@@ -66,4 +66,8 @@ public class ObjectID {
         b.setInstanceid(ByteString.copyFrom(this.instanceId));
         return b.build();
     }
+
+    public static byte[] zero(){
+        return new byte[32];
+    }
 }

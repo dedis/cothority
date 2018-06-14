@@ -131,6 +131,7 @@ public class ServerIdentity {
                 throw new CothorityCommunicationException(e.toString());
             }
             if (error != null) {
+                logger.error("error: {}", error);
                 throw new CothorityCommunicationException(error);
             }
         }
