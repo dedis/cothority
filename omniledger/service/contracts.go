@@ -171,27 +171,46 @@ func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coi
 //   - Invoke.Evolve - evolves an existing darc
 func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 	coins []Coin) ([]StateChange, []Coin, error) {
-	if tx.getType() != invokeType {
-		return nil, nil, errors.New("Darc can only be invoked (evolved)")
+	switch {
+	case tx.Spawn != nil:
+		if tx.Spawn.ContractID == ContractDarcID {
+			darcBuf := tx.Spawn.Args.Search("darc")
+			d, err := darc.NewDarcFromProto(darcBuf)
+			if err != nil {
+				return nil, nil, errors.New("given darc was not valid: " + err.Error())
+			}
+			return []StateChange{
+				NewStateChange(Create, ObjectID{d.GetBaseID(), ZeroNonce}, ContractDarcID, darcBuf),
+			}, nil, nil
+		}
+		c, found := s.contracts[tx.Spawn.ContractID]
+		if !found {
+			return nil, nil, errors.New("couldn't find this contract type")
+		}
+		return c(coll, tx, coins)
+	case tx.Invoke != nil:
+		switch tx.Invoke.Command {
+		case "evolve":
+			darcBuf := tx.Invoke.Args.Search("darc")
+			newD, err := darc.NewDarcFromProto(darcBuf)
+			if err != nil {
+				return nil, nil, err
+			}
+			oldD, err := LoadDarcFromColl(coll, ObjectID{newD.BaseID, ZeroNonce}.Slice())
+			if err != nil {
+				return nil, nil, err
+			}
+			if err := newD.SanityCheck(oldD); err != nil {
+				return nil, nil, err
+			}
+			return []StateChange{
+				NewStateChange(Update, tx.ObjectID, ContractDarcID, darcBuf),
+			}, nil, nil
+		default:
+			return nil, nil, errors.New("invalid command: " + tx.Invoke.Command)
+		}
+	default:
+		return nil, nil, errors.New("Only invoke and spawn are defined yet")
 	}
-	if tx.Invoke.Command == "evolve" {
-		darcBuf := tx.Invoke.Args.Search("darc")
-		newD, err := darc.NewDarcFromProto(darcBuf)
-		if err != nil {
-			return nil, nil, err
-		}
-		oldD, err := LoadDarcFromColl(coll, ObjectID{newD.BaseID, ZeroNonce}.Slice())
-		if err != nil {
-			return nil, nil, err
-		}
-		if err := newD.SanityCheck(oldD); err != nil {
-			return nil, nil, err
-		}
-		return []StateChange{
-			NewStateChange(Update, tx.ObjectID, ContractDarcID, darcBuf),
-		}, nil, nil
-	} else if tx.Invoke.Command == "add" {
-		return nil, nil, errors.New("not implemented")
-	}
-	return nil, nil, errors.New("invalid command: " + tx.Invoke.Command)
+	return nil, nil, errors.New("should never come here...")
 }
