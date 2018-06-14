@@ -39,7 +39,7 @@ func (c *config) newClient() *eventlog.Client {
 	// TODO: It should be possible to send logs, signing them with a different
 	// key. But first, we need to implement something like "el grant" to grant write
 	// privs to a given private/public key.
-	cl.Signers = []*darc.Signer{c.Owner}
+	cl.Signers = []darc.Signer{c.Owner}
 	cl.Darc = c.Darc
 	return cl
 }
