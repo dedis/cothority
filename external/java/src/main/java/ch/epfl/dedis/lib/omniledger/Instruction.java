@@ -1,5 +1,6 @@
 package ch.epfl.dedis.lib.omniledger;
 
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.omniledger.darc.Identity;
 import ch.epfl.dedis.lib.omniledger.darc.Request;
 import ch.epfl.dedis.lib.omniledger.darc.Signature;
@@ -17,7 +18,7 @@ import java.util.List;
  * An instruction is sent and executed by OmniLedger.
  */
 public class Instruction {
-    private ObjectID objId;
+    private InstanceId instId;
     private byte[] nonce;
     private int index;
     private int length;
@@ -28,14 +29,14 @@ public class Instruction {
 
     /**
      * Use this constructor if it is a spawn instruction, i.e. you want to create a new object.
-     * @param objId The ID of the object, which must be unique.
+     * @param instId The ID of the object, which must be unique.
      * @param nonce The nonce of the object.
      * @param index The index of the instruction in the atomic set.
      * @param length The length of the atomic set.
      * @param spawn The spawn object, which contains the value and the argument.
      */
-    public Instruction(ObjectID objId, byte[] nonce, int index, int length, Spawn spawn) {
-        this.objId = objId;
+    public Instruction(InstanceId instId, byte[] nonce, int index, int length, Spawn spawn) {
+        this.instId = instId;
         this.nonce = nonce;
         this.index = index;
         this.length = length;
@@ -44,14 +45,14 @@ public class Instruction {
 
     /**
      * Use this constructor if it is an invoke instruction, i.e. you want to mutate an object.
-     * @param objId The ID of the object, which must be unique.
+     * @param instId The ID of the object, which must be unique.
      * @param nonce The nonce of the object.
      * @param index The index of the instruction in the atomic set.
      * @param length The length of the atomic set.
      * @param invoke The invoke object.
      */
-    public Instruction(ObjectID objId, byte[] nonce, int index, int length, Invoke invoke) {
-        this.objId = objId;
+    public Instruction(InstanceId instId, byte[] nonce, int index, int length, Invoke invoke) {
+        this.instId = instId;
         this.nonce = nonce;
         this.index = index;
         this.length = length;
@@ -60,14 +61,14 @@ public class Instruction {
 
     /**
      * Use this constructor if it is a delete instruction, i.e. you want to delete an object.
-     * @param objId The ID of the object, which must be unique.
+     * @param instId The ID of the object, which must be unique.
      * @param nonce The nonce of the object.
      * @param index The index of the instruction in the atomic set.
      * @param length The length of the atomic set.
      * @param delete The delete object.
      */
-    public Instruction(ObjectID objId, byte[] nonce, int index, int length, Delete delete) {
-        this.objId = objId;
+    public Instruction(InstanceId instId, byte[] nonce, int index, int length, Delete delete) {
+        this.instId = instId;
         this.nonce = nonce;
         this.index = index;
         this.length = length;
@@ -77,8 +78,8 @@ public class Instruction {
     /**
      * Getter for the object ID.
      */
-    public ObjectID getObjId() {
-        return objId;
+    public InstanceId getInstId() {
+        return instId;
     }
 
     /**
@@ -95,8 +96,8 @@ public class Instruction {
     public byte[] hash() {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(this.objId.getDarcId().getId());
-            digest.update(this.objId.getInstanceId());
+            digest.update(this.instId.getDarcId().getId());
+            digest.update(this.instId.getSubId().getId());
             digest.update(this.nonce);
             digest.update(intToArr4(this.index));
             digest.update(intToArr4(this.length));
@@ -118,6 +119,8 @@ public class Instruction {
             return digest.digest();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
+        } catch (CothorityCryptoException e){
+            throw new RuntimeException(e);
         }
     }
 
@@ -127,7 +130,7 @@ public class Instruction {
      */
     public TransactionProto.Instruction toProto() {
         TransactionProto.Instruction.Builder b = TransactionProto.Instruction.newBuilder();
-        b.setObjectid(this.objId.toProto());
+        b.setObjectid(this.instId.toProto());
         b.setNonce(ByteString.copyFrom(this.nonce));
         b.setIndex(this.index);
         b.setLength(this.length);
@@ -172,7 +175,11 @@ public class Instruction {
             ids.add(sig.signer);
             sigs.add(sig.signature);
         }
-        return new Request(this.objId.getDarcId(), this.action(), this.hash(), ids, sigs);
+        try {
+            return new Request(this.instId.getDarcId(), this.action(), this.hash(), ids, sigs);
+        } catch (CothorityCryptoException e){
+            throw new RuntimeException(e);
+        }
     }
 
     private static byte[] intToArr4(int x) {

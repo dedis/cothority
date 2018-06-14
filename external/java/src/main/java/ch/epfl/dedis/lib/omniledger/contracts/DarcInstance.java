@@ -1,6 +1,5 @@
 package ch.epfl.dedis.lib.omniledger.contracts;
 
-import ch.epfl.dedis.lib.omniledger.SubId;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
@@ -13,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * DarcInstance represents an instance of a darc on Omniledger. It is self-
@@ -67,6 +67,8 @@ public class DarcInstance {
     /**
      * Creates an instruction to evolve the darc in omniledger. The signer must have its identity in the current
      * darc as "Invoke_Evolve" rule.
+     * <p>
+     * TODO: allow for evolution if the expression has more than one identity.
      *
      * @param newDarc the darc to replace the old darc.
      * @param owner   must have its identity in the "Invoke_Evolve" rule
@@ -78,16 +80,14 @@ public class DarcInstance {
     public Instruction evolveDarcInstruction(Darc newDarc, Signer owner, int pos, int len) throws CothorityCryptoException {
         newDarc.increaseVersion();
         newDarc.setPrevId(darc);
+        newDarc.setBaseId(darc.getBaseId());
         if (!newDarc.getBaseId().equals(darc.getBaseId()) ||
                 newDarc.getVersion() != darc.getVersion() + 1) {
-            logger.info("{}, {}", darc.getVersion(), newDarc.getVersion());
             throw new CothorityCryptoException("not correct darc to evolve");
         }
-        logger.info("mydarc: {}", darc.getBaseId());
-        logger.info("newDarc: {} / {}", newDarc.getId(), newDarc.getBaseId());
         Invoke inv = new Invoke("evolve", "darc", newDarc.toProto().toByteArray());
-        Instruction inst = new Instruction(new ObjectID(darc.getBaseId(), ObjectID.zero()),
-                ObjectID.zero(), pos, len, inv);
+        Instruction inst = new Instruction(new InstanceId(darc.getBaseId(), SubId.zero()),
+                SubId.zero().getId(), pos, len, inv);
         try {
             Request r = new Request(darc.getBaseId(), "invoke:evolve", inst.hash(),
                     Arrays.asList(owner.getIdentity()), null);
@@ -104,7 +104,7 @@ public class DarcInstance {
         Instruction inst = evolveDarcInstruction(newDarc, owner, 0, 1);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ol.sendTransaction(ct);
-        return new TransactionId(darc.getBaseId(), new SubId(inst.hash()));
+        return new TransactionId(darc.getBaseId(), SubId.zero());
     }
 
     /**
@@ -117,22 +117,105 @@ public class DarcInstance {
      * @throws CothorityException
      */
     public void evolveDarcAndWait(Darc newDarc, Signer owner) throws CothorityException {
-        TransactionId tid = evolveDarc(newDarc, owner);
-        while (true) {
+        evolveDarc(newDarc, owner);
+        for (int i = 0; i < 10; i++) {
             Proof p = ol.getProof(instance.getId());
             Instance inst = new Instance(p);
             try {
                 darc = new Darc(inst.getData());
                 if (darc.getVersion() == newDarc.getVersion()) {
-                    break;
+                    return;
                 }
-                Thread.sleep(ol.getConfig().getBlockInterval().getNano() / 1_000_000);
+                Thread.sleep(ol.getConfig().getBlockInterval().toMillis());
             } catch (InvalidProtocolBufferException e) {
-                throw new CothorityCommunicationException(e);
+                continue;
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
         }
+        throw new CothorityCommunicationException("didn't find new darc");
+    }
+
+    /**
+     * Creates an instruction for spawning a contract.
+     * <p>
+     * TODO: allow for multi-signatures
+     *
+     * @param contractID the id of the contract to create
+     * @param s          the signer that is authorized to spawn this contract
+     * @param args       arguments to give to the contract
+     * @param pos        position in the ClientTransaction
+     * @param len        total length of the ClientTransaction
+     * @return the instruction to be added to the ClientTransaction
+     * @throws CothorityCryptoException
+     */
+    public Instruction spawnContractInstruction(String contractID, Signer s, List<Argument> args, int pos, int len)
+            throws CothorityCryptoException {
+        Spawn sp = new Spawn(contractID, args);
+        Instruction inst = new Instruction(new InstanceId(darc.getBaseId(), SubId.zero()),
+                SubId.random().getId(), pos, len, sp);
+        try {
+            Request r = new Request(darc.getBaseId(), "spawn:" + contractID, inst.hash(),
+                    Arrays.asList(s.getIdentity()), null);
+            logger.info("Signing: {}", DatatypeConverter.printHexBinary(r.hash()));
+            Signature sign = new Signature(s.sign(r.hash()), s.getIdentity());
+            inst.setSignatures(Arrays.asList(sign));
+        } catch (Signer.SignRequestRejectedException e) {
+            throw new CothorityCryptoException(e.getMessage());
+        }
+        return inst;
+    }
+
+    /**
+     * Like spawnContractInstruction, but creates a ClientTransaction with only this instruction and sends it
+     * to the omniledger.
+     *
+     * @param contractID the id of the contract to create
+     * @param s          the signer that is authorized to spawn this contract
+     * @param args       arguments to give to the contract
+     * @throws CothorityException
+     */
+    public TransactionId spawnContract(String contractID, Signer s, List<Argument> args) throws CothorityException {
+        Instruction inst = spawnContractInstruction(contractID, s, args, 0, 1);
+        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ol.sendTransaction(ct);
+        return new TransactionId(darc.getBaseId(), new SubId(inst.hash()));
+    }
+
+    /**
+     * Like spawnContract but waits for the instance to be stored in omniledger.
+     *
+     * @param contractID the id of the contract to create
+     * @param s          the signer that is authorized to spawn this contract
+     * @param args       arguments to give to the contract
+     * @throws CothorityException
+     */
+    public Proof spawnContractAndWait(String contractID, Signer s, List<Argument> args) throws CothorityException {
+        TransactionId id = spawnContract(contractID, s, args);
+        InstanceId iid = new InstanceId(id.getId());
+        if (contractID.equals("darc")){
+            // Special case for a darc, then the resulting instanceId is based
+            // on the darc itself.
+            try {
+                Darc d = new Darc(args.get(0).getValue());
+                iid = new InstanceId(d.getBaseId(), SubId.zero());
+            } catch (InvalidProtocolBufferException e){
+                throw new CothorityCommunicationException("this is not a correct darc-spawn");
+            }
+        }
+        for (int i = 0; i < 10; i++) {
+            Proof p = ol.getProof(iid);
+            if (p.matches()) {
+                logger.info("Found contract {} at {}", contractID, id);
+                return p;
+            }
+            try {
+                Thread.sleep(ol.getConfig().getBlockInterval().toMillis());
+            } catch (InterruptedException e){
+                throw new RuntimeException(e);
+            }
+        }
+        throw new CothorityCommunicationException("Couldn't create new contract-instance");
     }
 
     /**

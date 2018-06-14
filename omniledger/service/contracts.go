@@ -182,7 +182,7 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 			darcBuf := tx.Spawn.Args.Search("darc")
 			d, err := darc.NewDarcFromProto(darcBuf)
 			if err != nil {
-				return nil, nil, errors.New("given darc was not valid: " + err.Error())
+				return nil, nil, errors.New("given darc could not be decoded: " + err.Error())
 			}
 			return []StateChange{
 				NewStateChange(Create, ObjectID{d.GetBaseID(), ZeroNonce}, ContractDarcID, darcBuf),
@@ -217,7 +217,6 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 	default:
 		return nil, nil, errors.New("Only invoke and spawn are defined yet")
 	}
-	return nil, nil, errors.New("should never come here...")
 }
 
 // ContractValue is a simple key/value storage where you
@@ -225,16 +224,20 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 func (s *Service) ContractValue(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	switch {
 	case tx.Spawn != nil:
-		var subId Nonce
-		copy(subId[:], tx.Hash())
+		var subID Nonce
+		copy(subID[:], tx.Hash())
 		return []StateChange{
-			NewStateChange(Create, ObjectID{tx.ObjectID.DarcID, subId},
+			NewStateChange(Create, ObjectID{tx.ObjectID.DarcID, subID},
 				ContractValueID, tx.Spawn.Args.Search("value")),
 		}, c, nil
 	case tx.Invoke != nil:
 		if tx.Invoke.Command != "update" {
 			return nil, nil, errors.New("Value contract can only update")
 		}
+		return []StateChange{
+			NewStateChange(Update, tx.ObjectID,
+				ContractValueID, tx.Invoke.Args.Search("value")),
+		}, c, nil
 	case tx.Delete != nil:
 		return StateChanges{
 			NewStateChange(Remove, tx.ObjectID, ContractValueID, nil),

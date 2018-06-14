@@ -5,6 +5,7 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
 import javax.annotation.Nonnull;
 import javax.xml.bind.DatatypeConverter;
+import java.security.SecureRandom;
 import java.util.Arrays;
 
 /**
@@ -47,5 +48,12 @@ public class SubId implements HashId {
 
     public static SubId zero() throws CothorityCryptoException {
         return new SubId(new byte[32]);
+    }
+
+    public static SubId random() throws CothorityCryptoException{
+        SecureRandom random = new SecureRandom();
+        byte bytes[] = new byte[length];
+        random.nextBytes(bytes);
+        return new SubId(bytes);
     }
 }

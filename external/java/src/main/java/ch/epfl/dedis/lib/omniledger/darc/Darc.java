@@ -1,10 +1,14 @@
 package ch.epfl.dedis.lib.omniledger.darc;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
@@ -30,6 +34,7 @@ public class Darc {
     private List<Signature> signatures;
     private List<Darc> verificationDarcs;
 
+    private final static Logger logger = LoggerFactory.getLogger(Darc.class);
 
     /**
      * The Darc constructor.
@@ -71,6 +76,7 @@ public class Darc {
         version = proto.getVersion();
         description = proto.getDescription().toByteArray();
         if (version > 0) {
+            logger.info("setting baseID");
             baseID = new DarcId(proto.getBaseid());
         }
         prevID = new DarcId(proto.getPrevid());
@@ -83,6 +89,7 @@ public class Darc {
         for (DarcProto.Signature sig : proto.getSignaturesList()) {
             signatures.add(new Signature(sig));
         }
+        logger.info("BaseID is {}", baseID);
     }
 
     public Darc(byte[] buf) throws InvalidProtocolBufferException, CothorityCryptoException {
@@ -165,6 +172,13 @@ public class Darc {
     }
 
     /**
+     * @param id the base-id to set
+     */
+    public void setBaseId(DarcId id) {
+        baseID = id;
+    }
+
+    /**
      * @param d the previous darc
      * @throws CothorityCryptoException
      */
@@ -179,10 +193,14 @@ public class Darc {
      * @throws CothorityCryptoException
      */
     public DarcId getBaseId() throws CothorityCryptoException {
-        if (this.version == 0) {
-            return this.getId();
+        if (version == 0) {
+            return getId();
         }
-        return this.baseID;
+        return baseID;
+    }
+
+    public DarcId getPrevID() {
+        return prevID;
     }
 
     /**
@@ -203,8 +221,44 @@ public class Darc {
         }
         Darc c = new Darc(rs, description.clone());
         c.version = version;
+        return c;
+    }
+
+    /**
+     * @return a copy of the darc with the next version number and prevId and baseId set up.
+     * @throws CothorityCryptoException
+     */
+    public Darc copyEvolve() throws CothorityCryptoException {
+        Map<String, byte[]> rs = new HashMap<>();
+        for (String k : rules.keySet()) {
+            rs.put(k, rules.get(k));
+        }
+        Darc c = new Darc(rs, description.clone());
+        c.version = version + 1;
+        c.prevID = getId();
         c.baseID = getBaseId();
         return c;
+    }
+
+    public String toString() {
+        try {
+            String base = DatatypeConverter.printHexBinary(getBaseId().getId());
+            if (baseID != null) {
+                base = String.format("stored: %s", DatatypeConverter.printHexBinary(baseID.getId()));
+            }
+            String ret = String.format("Base: %s\nId: %s\nPrevId: %s\nVersion: %d\nRules:",
+                    base,
+                    DatatypeConverter.printHexBinary(getId().getId()),
+                    DatatypeConverter.printHexBinary(getPrevID().getId()),
+                    version);
+            for (String r : rules.keySet()) {
+                ret += String.format("\n%s - %s", r, DatatypeConverter.printHexBinary(rules.get(r)));
+            }
+            ret += String.format("\nDescription: %s", DatatypeConverter.printHexBinary(description));
+            return ret;
+        } catch (CothorityException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
