@@ -412,11 +412,11 @@ func readRoster(r io.Reader) (*onet.Roster, error) {
 // getDataPath is a function pointer so that tests can hook and modify this.
 var getDataPath = cfgpath.GetDataPath
 
-func (cfg *config) save() error {
+func (c *config) save() error {
 	cfgDir := getDataPath("el")
 	os.MkdirAll(cfgDir, 0755)
 
-	fn := fmt.Sprintf("%x.cfg", cfg.ID[0:8])
+	fn := fmt.Sprintf("%x.cfg", c.ID[0:8])
 	fn = filepath.Join(cfgDir, fn)
 
 	// perms = 0400 because there is key material inside this file.
@@ -425,7 +425,7 @@ func (cfg *config) save() error {
 		return fmt.Errorf("could not write %v: %v", fn, err)
 	}
 
-	buf, err := network.Marshal(cfg)
+	buf, err := network.Marshal(c)
 	if err != nil {
 		return err
 	}
