@@ -114,7 +114,6 @@ func (p *FtCosi) Dispatch() error {
 			log.Lvl1("protocol finished prematurely")
 			return nil
 		}
-		close(p.startChan)
 	case <-time.After(time.Second):
 		return fmt.Errorf("timeout, did you forget to call Start?")
 	}
@@ -267,31 +266,31 @@ func (p *FtCosi) Dispatch() error {
 // It also verifies that the protocol has been correctly parameterized.
 func (p *FtCosi) Start() error {
 	if p.Msg == nil {
-		close(p.startChan)
+		p.Shutdown()
 		return fmt.Errorf("no proposal msg specified")
 	}
 	if p.CreateProtocol == nil {
-		close(p.startChan)
+		p.Shutdown()
 		return fmt.Errorf("no create protocol function specified")
 	}
 	if p.verificationFn == nil {
-		close(p.startChan)
+		p.Shutdown()
 		return fmt.Errorf("verification function cannot be nil")
 	}
 	if p.subProtocolName == "" {
-		close(p.startChan)
+		p.Shutdown()
 		return fmt.Errorf("sub-protocol name cannot be empty")
 	}
 	if p.Timeout < 10*time.Nanosecond {
-		close(p.startChan)
+		p.Shutdown()
 		return fmt.Errorf("unrealistic timeout")
 	}
 	if p.Threshold > len(p.publics) {
-		close(p.startChan)
+		p.Shutdown()
 		return fmt.Errorf("threshold (%d) bigger than number of nodes (%d)", p.Threshold, len(p.publics))
 	}
 	if p.Threshold < 1 {
-		close(p.startChan)
+		p.Shutdown()
 		return fmt.Errorf("threshold of %d smaller than one node", p.Threshold)
 	}
 
