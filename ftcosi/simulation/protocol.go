@@ -26,7 +26,6 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/ftcosi/protocol"
-	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -141,6 +140,7 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 		proto := p.(*protocol.FtCosi)
 		proto.NSubtrees = s.NSubtrees
 		proto.Msg = proposal
+		proto.Threshold = s.Hosts - s.FailingLeafs - s.FailingSubleaders
 		// timeouts may need to be modified depending on platform
 		proto.CreateProtocol = func(name string, t *onet.Tree) (onet.ProtocolInstance, error) {
 			return config.Overlay.CreateProtocol(name, t, onet.NilServiceID)
@@ -153,14 +153,10 @@ func (s *SimulationProtocol) Run(config *onet.SimulationConfig) error {
 		round.Record()
 
 		// get public keys
-		publics := make([]kyber.Point, config.Tree.Size())
-		for i, node := range config.Tree.List() {
-			publics[i] = node.ServerIdentity.Public
-		}
+		publics := config.Roster.Publics()
 
 		// verify signature
-		threshold := s.Hosts - s.FailingLeafs - s.FailingSubleaders
-		err = cosi.Verify(cothority.Suite, publics, proposal, Signature, cosi.NewThresholdPolicy(threshold))
+		err = cosi.Verify(cothority.Suite, publics, proposal, Signature, cosi.NewThresholdPolicy(proto.Threshold))
 		if err != nil {
 			return fmt.Errorf("error while verifying signature:%s", err)
 		}

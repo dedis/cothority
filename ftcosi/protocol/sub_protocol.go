@@ -176,7 +176,6 @@ func (p *SubFtCosi) Dispatch() error {
 	var firstCommitmentSent = false
 	var timedOut = false
 	var t = time.After(p.Timeout / 2)
-
 loop:
 	for {
 		select {
@@ -273,11 +272,12 @@ loop:
 			break loop
 		case <-t:
 			if p.IsRoot() {
-				log.Error(p.ServerIdentity(), "timed out while waiting for subleader commitment")
+				log.Warn(p.ServerIdentity(), "timed out while waiting for subleader commitment")
 				p.subleaderNotResponding <- true
 				return nil
 			}
-			log.Error(p.ServerIdentity(), "timed out while waiting for commits, got", len(commitments), "commitments and", NRefusal, "refusals")
+			//TODO: uncomment
+			//log.Warn(p.ServerIdentity(), "timed out while waiting for commits, got", len(commitments), "commitments and", NRefusal, "refusals")
 
 			//sending commits received
 			err = p.sendAggregatedCommitments(commitments, NRefusal)
