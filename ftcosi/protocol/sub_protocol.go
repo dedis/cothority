@@ -276,8 +276,7 @@ loop:
 				p.subleaderNotResponding <- true
 				return nil
 			}
-			//TODO: uncomment
-			//log.Warn(p.ServerIdentity(), "timed out while waiting for commits, got", len(commitments), "commitments and", NRefusal, "refusals")
+			log.Warn(p.ServerIdentity(), "timed out while waiting for commits, got", len(commitments), "commitments and", NRefusal, "refusals")
 
 			//sending commits received
 			err = p.sendAggregatedCommitments(commitments, NRefusal)
@@ -293,15 +292,32 @@ loop:
 
 	// Second half of our time budget for the responses.
 	timeout := time.After(p.Timeout / 2)
-	for range committedChildren {
+	for len(committedChildren) > 0{
 		select {
 		case response, channelOpen := <-p.ChannelResponse:
 			if !channelOpen {
 				return nil
 			}
+
+			//check if comes from a committed children
+			isCommittedChildren := false
+			for i, node := range committedChildren {
+				if node.Equal(response.TreeNode) {
+					isCommittedChildren = true
+
+					//contract finished, remove from committed children
+					committedChildren = append(committedChildren[:i],committedChildren[i+1:]...)
+				}
+			}
+			if !isCommittedChildren {
+				log.Lvl2(p.ServerIdentity(), "received a Response from node", response.ServerIdentity,
+					"that is not a committed children, ignored")
+				break
+			}
+
 			responses = append(responses, response)
 		case <-timeout:
-			log.Error(p.ServerIdentity(), "timeout while waiting for responses")
+			return fmt.Errorf("timeout while waiting for responses")
 		}
 	}
 	log.Lvl3(p.ServerIdentity(), "received all", len(responses), "response(s)")
