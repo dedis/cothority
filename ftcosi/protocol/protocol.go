@@ -94,6 +94,7 @@ func (p *FtCosi) Shutdown() error {
 		for _, subFtCosi := range p.subProtocols {
 			subFtCosi.Shutdown()
 		}
+		close(p.startChan)
 		close(p.FinalSignature)
 	})
 	return nil
