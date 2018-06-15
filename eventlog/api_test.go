@@ -27,9 +27,10 @@ func TestClient_Log(t *testing.T) {
 	require.Nil(t, err)
 
 	ids, err := c.Log(NewEvent("auth", "user alice logged out"),
-		NewEvent("auth", "user bob logged out"))
+		NewEvent("auth", "user bob logged out"),
+		NewEvent("auth", "user bob logged back in"))
 	require.Nil(t, err)
-	require.True(t, len(ids) == 2)
+	require.True(t, len(ids) == 3)
 
 	// Loop while we wait for the next block to be created.
 	found := false
@@ -54,7 +55,9 @@ func TestClient_Log(t *testing.T) {
 	if !found {
 		t.Fatal("timeout")
 	}
-	require.NoError(t, leader.checkBuckets(c.ID))
+
+	// Check consistency and # of events.
+	require.NoError(t, leader.checkBuckets(c.ID, 3))
 
 	// Fetch index, and check its length.
 	idx := checkProof(t, leader.omni, theEventLog.Slice(), c.ID)
@@ -65,8 +68,16 @@ func TestClient_Log(t *testing.T) {
 	bucketBuf := checkProof(t, leader.omni, idx, c.ID)
 	var b bucket
 	require.Nil(t, protobuf.Decode(bucketBuf, &b))
-	require.Equal(t, 2, len(b.EventRefs))
-	require.Equal(t, 0, len(b.Prev))
+	// The lead bucket's prev should point to the catch-all bucket.
+	require.Equal(t, 64, len(b.Prev))
+
+	// Check the catch-all bucket.
+	bucketBuf = checkProof(t, leader.omni, b.Prev, c.ID)
+	var b2 bucket
+	require.Nil(t, protobuf.Decode(bucketBuf, &b2))
+	require.Equal(t, int64(0), b2.Start)
+	// The lead bucket's prev should be nil.
+	require.Equal(t, 0, len(b2.Prev))
 
 	// Use the client API to get the event back
 	for _, key := range ids {
@@ -75,7 +86,7 @@ func TestClient_Log(t *testing.T) {
 	}
 }
 
-func TestClient_Log100(t *testing.T) {
+func TestClient_Log200(t *testing.T) {
 	if testing.Short() {
 		return
 	}
@@ -93,9 +104,18 @@ func TestClient_Log100(t *testing.T) {
 		_, err := c.Log(NewEvent("auth", fmt.Sprintf("user %v logged in", ct)))
 		require.Nil(t, err)
 	}
+
+	// Also, one call to log with a bunch of logs in it.
+	evs := make([]Event, logCount)
+	for i := range evs {
+		evs[i] = NewEvent("auth", fmt.Sprintf("user %v logged in", i))
+	}
+	_, err = c.Log(evs...)
+	require.Nil(t, err)
+
 	leader.waitForBlock(c.ID)
 	leader.waitForBlock(c.ID)
-	require.NoError(t, leader.checkBuckets(c.ID))
+	require.NoError(t, leader.checkBuckets(c.ID, 2*logCount))
 
 	// Fetch index, and check its length.
 	idx := checkProof(t, leader.omni, theEventLog.Slice(), c.ID)
@@ -118,7 +138,7 @@ func TestClient_Log100(t *testing.T) {
 		eventIDs = append(eventIDs, b.EventRefs...)
 		bucketID = b.Prev
 	}
-	require.Equal(t, logCount, eventCount)
+	require.Equal(t, 2*logCount, eventCount)
 
 	for _, eventID := range eventIDs {
 		eventBuf := checkProof(t, leader.omni, eventID, c.ID)
@@ -171,7 +191,8 @@ func TestClient_Search(t *testing.T) {
 		tm0--
 	}
 
-	for ct := int64(0); ct < 20; ct++ {
+	logCount := 20
+	for ct := int64(0); ct < int64(logCount); ct++ {
 		topic := "a"
 		if (ct & 1) == 0 {
 			topic = "b"
@@ -181,7 +202,7 @@ func TestClient_Search(t *testing.T) {
 	}
 	leader.waitForBlock(c.ID)
 	leader.waitForBlock(c.ID)
-	require.NoError(t, leader.checkBuckets(c.ID))
+	require.NoError(t, leader.checkBuckets(c.ID, logCount))
 
 	// Search for all.
 	req = &SearchRequest{ID: c.ID}

@@ -117,7 +117,7 @@ func newSer(t *testing.T) *ser {
 
 // checkBuckets walks all the buckets for a given eventlog
 // and returns an error if an event is in the wrong bucket.
-func (s *Service) checkBuckets(id skipchain.SkipBlockID) error {
+func (s *Service) checkBuckets(id skipchain.SkipBlockID, ct0 int) error {
 	v := s.omni.GetCollectionView(id)
 	el := &eventLog{ID: theEventLog.Slice(), v: v}
 
@@ -131,6 +131,7 @@ func (s *Service) checkBuckets(id skipchain.SkipBlockID) error {
 	bEnd := time.Now().UnixNano()
 	end := time.Unix(0, bEnd)
 
+	ct := 0
 	i := 0
 	for {
 		st := time.Unix(0, b.Start)
@@ -148,6 +149,7 @@ func (s *Service) checkBuckets(id skipchain.SkipBlockID) error {
 			if when.After(end) {
 				return fmt.Errorf("bucket %v, event %v after end (%v>%v)", i, j, when, end)
 			}
+			ct++
 		}
 
 		// advance to prev bucket
@@ -162,6 +164,9 @@ func (s *Service) checkBuckets(id skipchain.SkipBlockID) error {
 			return err
 		}
 		i++
+	}
+	if ct0 != 0 && ct0 != ct {
+		return fmt.Errorf("expected %v, found %v events", ct0, ct)
 	}
 	return nil
 }

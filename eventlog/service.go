@@ -28,7 +28,8 @@ func init() {
 // Service is the EventLog service.
 type Service struct {
 	*onet.ServiceProcessor
-	omni *omniledger.Service
+	omni         *omniledger.Service
+	bucketMaxAge time.Duration
 }
 
 const defaultBlockInterval = 5 * time.Second
@@ -260,67 +261,84 @@ func (s *Service) contractFunction(v omniledger.CollectionView, tx omniledger.In
 
 	scs = append(scs, omniledger.NewStateChange(omniledger.Create, tx.ObjectID, cid, eventBuf))
 
-	// Get the bucket either update the existing one or create a new one,
-	// depending on the bucket age of the latest bucket.
+	// Walk from latest bucket back towards beginning looking for the right bucket.
+	//
+	// If you don't find a bucket with b.Start <= ev.When,
+	// create a new bucket, put in the event, set the start, emit the bucket,
+	// update prev in the bucket before (and also possibly the index key).
+	//
+	// If you find an existing latest bucket, and b.Start is more than X seconds
+	// ago, make a new bucket anyway.
+	//
+	// If you find the right bucket, add the event and emit the updated bucket.
+	// For now: buckets are allowed to grow as big as needed (but the previous
+	// rule prevents buckets from getting too big by timing them out).
+
 	el := &eventLog{ID: theEventLog.Slice(), v: v}
 	bID, b, err := el.getLatestBucket()
 	if err != nil && err != errIndexMissing {
 		return nil, nil, err
 	}
+	isHead := true
 
-	noLatestYet := (err == errIndexMissing)
-
-	if noLatestYet {
-		bID = tx.DeriveID("bucket").Slice()
-
-		// This new bucket will start with this event.
-		st := event.When
-		if noLatestYet {
-			// Special case: The first bucket for an eventlog
-			// needs a Start as 0 to catch older events that arrive
-			// and squeak through decodeAndCheckEvent above.
-			st = 0
+	for b != nil && !b.isFirst() {
+		if b.Start <= event.When {
+			break
 		}
-
-		b = &bucket{
-			Start:     st,
-			Prev:      []byte{},
-			EventRefs: [][]byte{tx.ObjectID.Slice()},
-		}
-		bBuf, err := protobuf.Encode(b)
+		bID = b.Prev
+		b, err = el.getBucketByID(bID)
 		if err != nil {
 			return nil, nil, err
 		}
-		scs = append(scs, omniledger.StateChange{
-			StateAction: omniledger.Create,
-			ObjectID:    bID,
-			ContractID:  []byte(cid),
-			Value:       bBuf,
-		})
+		isHead = false
+	}
 
-		if noLatestYet {
-			scs = append(scs, omniledger.NewStateChange(omniledger.Create, theEventLog, cid, bID))
-		} else {
-			scs = append(scs, omniledger.NewStateChange(omniledger.Update, theEventLog, cid, bID))
+	// Make a new head bucket if:
+	//   No latest bucket: b == nil
+	//     or
+	//   Found a bucket, and it is head, and is too old
+	if b == nil || isHead && time.Duration(event.When-b.Start) > s.bucketMaxAge {
+		newBid := tx.DeriveID("bucket")
+
+		if b == nil {
+			// Special case: The first bucket for an eventlog
+			// needs a catch-all bucket before it, in case later
+			// events come in.
+			catchID := tx.DeriveID("catch-all")
+			newb := &bucket{
+				Start:     0,
+				Prev:      nil,
+				EventRefs: nil,
+			}
+			buf, err := protobuf.Encode(newb)
+			if err != nil {
+				return nil, nil, err
+			}
+			scs = append(scs, omniledger.NewStateChange(omniledger.Create, catchID, cid, buf))
+			bID = catchID.Slice()
 		}
-		// } else if len(b.EventRefs) >= s.bucketSize {
-		// 	// TODO which darc do we use for the buckets?
-		// 	var oldNonce [32]byte
-		// 	copy(oldNonce[:], bID[32:64])
-		// 	newNonce := incrementNonce(oldNonce)
 
-		// 	newbID := make([]byte, 64)
-		// 	copy(newbID[0:32], bID[0:32])
-		// 	copy(newbID[32:64], newNonce[:])
+		// This new bucket will start with this event.
+		newb := &bucket{
+			Start:     event.When,
+			Prev:      bID,
+			EventRefs: [][]byte{tx.ObjectID.Slice()},
+		}
+		buf, err := protobuf.Encode(newb)
+		if err != nil {
+			return nil, nil, err
+		}
+		scs = append(scs, omniledger.NewStateChange(omniledger.Create, newBid, cid, buf))
 
-		// 	scsNew, newBucket, err := b.newLink(bID, newbID, tx.ObjectID.Slice())
-		// 	if err != nil {
-		// 		return nil, nil, err
-		// 	}
-		// 	scs = append(scs, scsNew...)
-		// 	bID = newbID
-		// 	b = newBucket
+		// Create/Update the pointer to the latest bucket.
+		action := omniledger.Update
+		if b == nil {
+			action = omniledger.Create
+		}
+		scs = append(scs, omniledger.NewStateChange(action, theEventLog, cid, newBid.Slice()))
 	} else {
+		// Otherwise just add into whatever bucket we found, no matter how
+		// many are already there. (Splitting buckets is hard and not important to us.)
 		b.EventRefs = append(b.EventRefs, tx.ObjectID.Slice())
 		bucketBuf, err := protobuf.Encode(b)
 		if err != nil {
@@ -346,6 +364,11 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		omni:             c.Service(omniledger.ServiceName).(*omniledger.Service),
+		// Set a relatively low time for bucketMaxAge: during peak message arrival
+		// this will pretect the buckets from getting too big. During low message
+		// arrival (< 1 per 5 sec) it does not create extra buckets, because time
+		// periods with no events do not need buckets created for them.
+		bucketMaxAge: 5 * time.Second,
 	}
 	if err := s.RegisterHandlers(s.Init, s.Log, s.GetEvent, s.Search); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
