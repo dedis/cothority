@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
-const blockInterval = 100 * time.Millisecond
+const blockInterval = 1 * time.Second
 
 func Test(t *testing.T) {
 	dir, err := ioutil.TempDir("", "el-test")
