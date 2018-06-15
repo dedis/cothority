@@ -85,7 +85,7 @@ public class EventLog {
             EventLogProto.LogResponse.parseFrom(msg);
             List<byte[]> out = new ArrayList<>();
             for (Instruction instr : tx.getInstructions()) {
-                out.add(instr.getObjId().toByteArray());
+                out.add(instr.getInstId().getId());
             }
             return out;
         } catch (InvalidProtocolBufferException e) {
@@ -139,7 +139,7 @@ public class EventLog {
         List<Instruction> instrs = new ArrayList<>();
         int idx = 0;
         for (Event e : events) {
-            ObjectID objId = new ObjectID(darcID, EventLog.genNonce());
+            InstanceId objId = new InstanceId(darcID, SubId.random());
             List<Argument> args = new ArrayList<>();
             args.add(new Argument("event", e.toProto().toByteArray()));
             Spawn spawn = new Spawn("eventlog", args);

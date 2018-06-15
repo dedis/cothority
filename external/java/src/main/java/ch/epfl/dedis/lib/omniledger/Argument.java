@@ -3,6 +3,9 @@ package ch.epfl.dedis.lib.omniledger;
 import ch.epfl.dedis.proto.TransactionProto;
 import com.google.protobuf.ByteString;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Argument is used in an Instruction. It will end up as the input argument of the OmniLedger smart contract.
  */
@@ -45,5 +48,15 @@ public class Argument {
         b.setName(this.name);
         b.setValue(ByteString.copyFrom(this.value));
         return b.build();
+    }
+
+    public static List<Argument> NewList(String key, byte[] value){
+        List<Argument> ret = new ArrayList<>();
+        ret.add(new Argument(key, value));
+        return ret;
+    }
+
+    public static List<Argument> NewList(String key, String value) {
+        return NewList(key, value.getBytes());
     }
 }

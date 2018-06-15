@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"reflect"
 	"testing"
 	"time"
 
@@ -382,11 +381,11 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 
 	// first we create a bad request, i.e., with an invalid version number
 	d2.Version = 11
-	resp := s.testDarcEvolution(t, *d2)
+	pr := s.testDarcEvolution(t, *d2, true)
 
 	// parse the darc
-	require.True(t, resp.Proof.InclusionProof.Match())
-	_, vs, err := resp.Proof.KeyValue()
+	require.True(t, pr.InclusionProof.Match())
+	_, vs, err := pr.KeyValue()
 	require.Nil(t, err)
 	d22, err := darc.NewDarcFromProto(vs[0])
 	require.Nil(t, err)
@@ -401,15 +400,111 @@ func TestService_DarcEvolution(t *testing.T) {
 
 	d2 := s.darc.Copy()
 	require.Nil(t, d2.EvolveFrom(s.darc))
-	resp := s.testDarcEvolution(t, *d2)
+	pr := s.testDarcEvolution(t, *d2, false)
 
 	// parse the darc
-	require.True(t, resp.Proof.InclusionProof.Match())
-	_, vs, err := resp.Proof.KeyValue()
+	require.True(t, pr.InclusionProof.Match())
+	_, vs, err := pr.KeyValue()
 	require.Nil(t, err)
 	d22, err := darc.NewDarcFromProto(vs[0])
 	require.Nil(t, err)
 	require.True(t, d22.Equal(d2))
+}
+
+func TestService_DarcSpawn(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	id := []darc.Identity{s.signer.Identity()}
+	darc2 := darc.NewDarc(darc.InitRulesWith(id, id, invokeEvolve),
+		[]byte("next darc"))
+	darc2.Rules.AddRule("spawn:rain", darc2.Rules.GetSignExpr())
+	darc2Buf, err := darc2.ToProto()
+	require.Nil(t, err)
+	darc2Copy, err := darc.NewDarcFromProto(darc2Buf)
+	require.Nil(t, err)
+	require.True(t, darc2.Equal(darc2Copy))
+
+	ctx := ClientTransaction{
+		Instructions: []Instruction{{
+			ObjectID: ObjectID{
+				DarcID:     s.darc.GetBaseID(),
+				InstanceID: ZeroNonce,
+			},
+			Nonce:  GenNonce(),
+			Index:  0,
+			Length: 1,
+			Spawn: &Spawn{
+				ContractID: ContractDarcID,
+				Args: []Argument{{
+					Name:  "darc",
+					Value: darc2Buf,
+				}},
+			},
+		}},
+	}
+	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
+
+	s.sendTx(t, ctx)
+	pr := s.waitProof(t, ObjectID{darc2.GetBaseID(), ZeroNonce})
+	require.True(t, pr.InclusionProof.Match())
+}
+
+func TestService_ValueSpawn(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	darc2 := s.darc.Copy()
+	darc2.Rules.AddRule("spawn:value", darc2.Rules.GetSignExpr())
+	darc2.BaseID = s.darc.GetBaseID()
+	darc2.PrevID = s.darc.GetID()
+	darc2.Version++
+	ctx := darcToTx(t, *darc2, s.signer)
+	s.sendTx(t, ctx)
+	for {
+		pr := s.waitProof(t, ctx.Instructions[0].ObjectID)
+		require.True(t, pr.InclusionProof.Match())
+		values, err := pr.InclusionProof.RawValues()
+		require.Nil(t, err)
+		d, err := darc.NewDarcFromProto(values[0])
+		require.Nil(t, err)
+		if d.Version == darc2.Version {
+			break
+		}
+		time.Sleep(s.interval)
+	}
+	log.Lvl1("Updated darc")
+
+	myvalue := []byte("1234")
+	ctx = ClientTransaction{
+		Instructions: []Instruction{{
+			ObjectID: ObjectID{
+				DarcID:     s.darc.GetBaseID(),
+				InstanceID: ZeroNonce,
+			},
+			Nonce:  GenNonce(),
+			Index:  0,
+			Length: 1,
+			Spawn: &Spawn{
+				ContractID: ContractValueID,
+				Args: []Argument{{
+					Name:  "value",
+					Value: myvalue,
+				}},
+			},
+		}},
+	}
+	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
+
+	var subId Nonce
+	copy(subId[:], ctx.Instructions[0].Hash())
+	pr := s.sendTxAndWait(t, ctx, &ObjectID{darc2.GetBaseID(), subId})
+	require.True(t, pr.InclusionProof.Match())
+	values, err := pr.InclusionProof.RawValues()
+	require.Nil(t, err)
+	require.Equal(t, myvalue, values[0])
 }
 
 func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction {
@@ -457,9 +552,29 @@ func (s *ser) service() *Service {
 	return s.services[0]
 }
 
-// caller gives us a darc, and we try to make an evolution request.
-func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc) GetProofResponse {
-	ctx := darcToTx(t, d2, s.signer)
+func (s *ser) waitProof(t *testing.T, id ObjectID) Proof {
+	var pr Proof
+	for i := 0; i < 10; i++ {
+		// try to get the darc back, we should get the genesis back instead
+		resp, err := s.service().GetProof(&GetProof{
+			Version: CurrentVersion,
+			Key:     id.Slice(),
+			ID:      s.sb.SkipChainID(),
+		})
+		require.Nil(t, err)
+		pr = resp.Proof
+		if pr.InclusionProof.Match() {
+			break
+		}
+
+		// wait for the block to be processed
+		time.Sleep(s.interval)
+	}
+
+	return pr
+}
+
+func (s *ser) sendTx(t *testing.T, ctx ClientTransaction) {
 	_, err := s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
@@ -467,20 +582,46 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc) GetProofResponse {
 	})
 	require.Nil(t, err)
 
-	// wait for the block to be processed
-	time.Sleep(4 * s.interval)
+}
 
-	// try to get the darc back, we should get the genesis back instead
-	resp, err := s.service().GetProof(&GetProof{
-		Version: CurrentVersion,
-		Key: ObjectID{
+func (s *ser) sendTxAndWait(t *testing.T, ctx ClientTransaction, id *ObjectID) Proof {
+	s.sendTx(t, ctx)
+
+	if id == nil {
+		id = &ObjectID{
 			DarcID:     s.darc.GetBaseID(),
 			InstanceID: ZeroNonce,
-		}.Slice(),
-		ID: s.sb.SkipChainID(),
-	})
-	require.Nil(t, err)
-	return *resp
+		}
+	}
+
+	return s.waitProof(t, *id)
+}
+
+// caller gives us a darc, and we try to make an evolution request.
+func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proof) {
+	ctx := darcToTx(t, d2, s.signer)
+	s.sendTx(t, ctx)
+	for i := 0; i < 10; i++ {
+		resp, err := s.service().GetProof(&GetProof{
+			Version: CurrentVersion,
+			Key:     ObjectID{d2.GetBaseID(), ZeroNonce}.Slice(),
+			ID:      s.sb.SkipChainID(),
+		})
+		require.Nil(t, err)
+		pr = &resp.Proof
+		vs, err := pr.InclusionProof.Values()
+		require.Nil(t, err)
+		d, err := darc.NewDarcFromProto(vs[0].([]byte))
+		require.Nil(t, err)
+		if d.Equal(&d2) {
+			return
+		}
+		time.Sleep(s.interval)
+	}
+	if !fail {
+		t.Fatal("couldn't store new darc")
+	}
+	return
 }
 
 func newSer(t *testing.T, step int, interval time.Duration) *ser {
@@ -495,9 +636,10 @@ func newSer(t *testing.T, step int, interval time.Duration) *ser {
 		service := sv.(*Service)
 		s.services = append(s.services, service)
 	}
-	registerDummy(s.services)
+	registerDummy(s.hosts)
 
-	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"spawn:dummy", "spawn:invalid", "spawn:panic"}, s.signer.Identity())
+	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
+		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
@@ -554,11 +696,10 @@ func dummyContractFunc(cdb CollectionView, tx Instruction, c []Coin) ([]StateCha
 	}, nil, nil
 }
 
-func registerDummy(services interface{}) {
+func registerDummy(servers []*onet.Server) {
 	// For testing - there must be a better way to do that. But putting
 	// services []skipchain.GetService in the method signature doesn't work :(
-	for i := 0; i < reflect.ValueOf(services).Len(); i++ {
-		s := reflect.ValueOf(services).Index(i).Interface().(skipchain.GetService)
-		RegisterContract(s.(skipchain.GetService), dummyKind, dummyContractFunc)
+	for _, s := range servers {
+		RegisterContract(s, dummyKind, dummyContractFunc)
 	}
 }

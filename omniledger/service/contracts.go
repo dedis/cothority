@@ -35,6 +35,10 @@ var ContractConfigID = "config"
 // ContractDarcID denotes a darc-contract
 var ContractDarcID = "darc"
 
+// ContractValueID denotes a contract that can store and update
+// key values.
+var ContractValueID = "value"
+
 // CmdDarcEvolve is needed to evolve a darc.
 var CmdDarcEvolve = "evolve"
 
@@ -121,6 +125,7 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 // ContractConfig can only be instantiated once per skipchain, and only for
 // the genesis block.
 func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+	c = coins
 	if tx.getType() != spawnType {
 		return nil, nil, errors.New("Config can only be spawned")
 	}
@@ -163,7 +168,7 @@ func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coi
 				DarcID:     tx.ObjectID.DarcID,
 				InstanceID: OneNonce,
 			}, ContractConfigID, configBuf),
-	}, nil, nil
+	}, c, nil
 }
 
 // ContractDarc accepts the following instructions:
@@ -171,27 +176,72 @@ func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coi
 //   - Invoke.Evolve - evolves an existing darc
 func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 	coins []Coin) ([]StateChange, []Coin, error) {
-	if tx.getType() != invokeType {
-		return nil, nil, errors.New("Darc can only be invoked (evolved)")
+	switch {
+	case tx.Spawn != nil:
+		if tx.Spawn.ContractID == ContractDarcID {
+			darcBuf := tx.Spawn.Args.Search("darc")
+			d, err := darc.NewDarcFromProto(darcBuf)
+			if err != nil {
+				return nil, nil, errors.New("given darc could not be decoded: " + err.Error())
+			}
+			return []StateChange{
+				NewStateChange(Create, ObjectID{d.GetBaseID(), ZeroNonce}, ContractDarcID, darcBuf),
+			}, coins, nil
+		}
+		c, found := s.contracts[tx.Spawn.ContractID]
+		if !found {
+			return nil, nil, errors.New("couldn't find this contract type")
+		}
+		return c(coll, tx, coins)
+	case tx.Invoke != nil:
+		switch tx.Invoke.Command {
+		case "evolve":
+			darcBuf := tx.Invoke.Args.Search("darc")
+			newD, err := darc.NewDarcFromProto(darcBuf)
+			if err != nil {
+				return nil, nil, err
+			}
+			oldD, err := LoadDarcFromColl(coll, ObjectID{newD.BaseID, ZeroNonce}.Slice())
+			if err != nil {
+				return nil, nil, err
+			}
+			if err := newD.SanityCheck(oldD); err != nil {
+				return nil, nil, err
+			}
+			return []StateChange{
+				NewStateChange(Update, tx.ObjectID, ContractDarcID, darcBuf),
+			}, coins, nil
+		default:
+			return nil, nil, errors.New("invalid command: " + tx.Invoke.Command)
+		}
+	default:
+		return nil, nil, errors.New("Only invoke and spawn are defined yet")
 	}
-	if tx.Invoke.Command == "evolve" {
-		darcBuf := tx.Invoke.Args.Search("darc")
-		newD, err := darc.NewDarcFromProto(darcBuf)
-		if err != nil {
-			return nil, nil, err
-		}
-		oldD, err := LoadDarcFromColl(coll, ObjectID{newD.BaseID, ZeroNonce}.Slice())
-		if err != nil {
-			return nil, nil, err
-		}
-		if err := newD.SanityCheck(oldD); err != nil {
-			return nil, nil, err
+}
+
+// ContractValue is a simple key/value storage where you
+// can put any data inside as wished.
+func (s *Service) ContractValue(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	switch {
+	case tx.Spawn != nil:
+		var subID Nonce
+		copy(subID[:], tx.Hash())
+		return []StateChange{
+			NewStateChange(Create, ObjectID{tx.ObjectID.DarcID, subID},
+				ContractValueID, tx.Spawn.Args.Search("value")),
+		}, c, nil
+	case tx.Invoke != nil:
+		if tx.Invoke.Command != "update" {
+			return nil, nil, errors.New("Value contract can only update")
 		}
 		return []StateChange{
-			NewStateChange(Update, tx.ObjectID, ContractDarcID, darcBuf),
-		}, nil, nil
-	} else if tx.Invoke.Command == "add" {
-		return nil, nil, errors.New("not implemented")
+			NewStateChange(Update, tx.ObjectID,
+				ContractValueID, tx.Invoke.Args.Search("value")),
+		}, c, nil
+	case tx.Delete != nil:
+		return StateChanges{
+			NewStateChange(Remove, tx.ObjectID, ContractValueID, nil),
+		}, c, nil
 	}
-	return nil, nil, errors.New("invalid command: " + tx.Invoke.Command)
+	return nil, nil, errors.New("didn't find any instruction")
 }

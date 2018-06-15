@@ -3,6 +3,7 @@ package ch.epfl.dedis.lib.omniledger;
 import ch.epfl.dedis.lib.HashId;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.omniledger.darc.DarcId;
+import ch.epfl.dedis.proto.TransactionProto;
 import com.google.protobuf.ByteString;
 
 import javax.annotation.Nonnull;
@@ -69,7 +70,18 @@ public class InstanceId implements HashId {
         return DatatypeConverter.printHexBinary(id);
     }
 
-    public ByteString toProto(){
+    public ByteString toByteString(){
         return ByteString.copyFrom(id);
+    }
+
+    public TransactionProto.ObjectID toProto(){
+        try {
+            TransactionProto.ObjectID.Builder ret = TransactionProto.ObjectID.newBuilder();
+            ret.setDarcid(ByteString.copyFrom(getDarcId().getId()));
+            ret.setInstanceid(ByteString.copyFrom(getSubId().getId()));
+            return ret.build();
+        } catch (CothorityCryptoException e){
+            throw new RuntimeException(e);
+        }
     }
 }

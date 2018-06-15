@@ -84,6 +84,7 @@ public class OmniledgerRPC {
      * @param buf is the representation of the basic omniledger parameters
      */
     public OmniledgerRPC(byte[] buf) {
+        throw new RuntimeException("Not implemented yet");
     }
 
     /**
@@ -121,7 +122,7 @@ public class OmniledgerRPC {
                 OmniLedgerProto.GetProof.newBuilder();
         request.setVersion(1);
         request.setId(skipchain.getID().toProto());
-        request.setKey(id.toProto());
+        request.setKey(id.toByteString());
 
         ByteString msg = config.getRoster().sendMessage("OmniLedger/GetProof", request.build());
         try{

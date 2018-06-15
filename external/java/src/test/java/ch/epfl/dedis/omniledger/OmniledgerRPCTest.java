@@ -4,12 +4,11 @@ import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.omniledger.ClientTransaction;
-import ch.epfl.dedis.lib.omniledger.Configuration;
-import ch.epfl.dedis.lib.omniledger.Instruction;
-import ch.epfl.dedis.lib.omniledger.OmniledgerRPC;
+import ch.epfl.dedis.lib.omniledger.*;
 import ch.epfl.dedis.lib.omniledger.contracts.DarcInstance;
+import ch.epfl.dedis.lib.omniledger.contracts.ValueInstance;
 import ch.epfl.dedis.lib.omniledger.darc.Darc;
+import ch.epfl.dedis.lib.omniledger.darc.Identity;
 import ch.epfl.dedis.lib.omniledger.darc.Signer;
 import ch.epfl.dedis.lib.omniledger.darc.SignerEd25519;
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
@@ -37,7 +37,7 @@ public class OmniledgerRPCTest {
 
     @BeforeEach
     void initAll() throws Exception {
-        testInstanceController = TestServerInit.getInstance();
+        testInstanceController = TestServerInit.getInstanceManual();
         admin = new SignerEd25519();
         Map<String, byte[]> rules = Darc.initRules(Arrays.asList(admin.getIdentity()),
                 Arrays.asList(admin.getIdentity()));
@@ -90,6 +90,49 @@ public class OmniledgerRPCTest {
         dc.evolveDarcAndWait(newDarc, admin);
         logger.info("darc-version is: {}", dc.getDarc().getVersion());
         assertEquals(dc.getDarc().getVersion(), newDarc.getVersion());
+    }
+
+    @Test
+    void spawnDarc() throws Exception{
+        SkipBlock previous = ol.getLatest();
+        DarcInstance dc = new DarcInstance(ol, genesisDarc);
+        Darc darc2 = genesisDarc.copy();
+        darc2.setRule("spawn:darc", admin.getIdentity().toString().getBytes());
+        dc.evolveDarcAndWait(darc2, admin);
+
+        List<Identity> id = Arrays.asList(admin.getIdentity());
+        Darc newDarc = new Darc(id, id, "new darc".getBytes());
+
+        Proof p = dc.spawnContractAndWait("darc", admin,
+                Argument.NewList("darc", newDarc.toProto().toByteArray()));
+        assertTrue(p.matches());
+
+        logger.info("creating DarcInstance");
+        DarcInstance dc2 = new DarcInstance(ol, newDarc);
+        logger.info("ids: {} - {}", dc2.getDarc().getId(), newDarc.getId());
+        logger.info("ids: {} - {}", dc2.getDarc().getBaseId(), newDarc.getBaseId());
+        logger.info("darcs:\n{}\n{}", dc2.getDarc(), newDarc);
+        assertTrue(dc2.getDarc().getId().equals(newDarc.getId()));
+    }
+
+    @Test
+    void spawnValue() throws Exception{
+        SkipBlock previous = ol.getLatest();
+        DarcInstance dc = new DarcInstance(ol, genesisDarc);
+        Darc darc2 = genesisDarc.copy();
+        darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
+        darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
+        dc.evolveDarcAndWait(darc2, admin);
+
+        byte[] myvalue = "314159".getBytes();
+        Proof p = dc.spawnContractAndWait("value", admin, Argument.NewList("value", myvalue));
+        assertTrue(p.matches());
+
+        ValueInstance vi = new ValueInstance(ol, p);
+        assertArrayEquals(vi.getValue(), myvalue);
+        myvalue = "27".getBytes();
+        vi.evolveValueAndWait(myvalue, admin);
+        assertArrayEquals(vi.getValue(), myvalue);
     }
 
     @Test

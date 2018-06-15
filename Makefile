@@ -25,3 +25,8 @@ test_playground:
 
 proto:
 	awk -f proto.awk status/service/struct.go > external/proto/status.proto
+
+test_java:
+	cd conode/; make docker_dev
+	cd external/docker/; make docker_test
+	cd external/java; mvn test

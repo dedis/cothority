@@ -42,7 +42,7 @@ func GenNonce() (n Nonce) {
 	return n
 }
 
-// Service is our lleap-service
+// Service is our omniledger-service
 type Service struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
 	// are correctly handled.
@@ -723,6 +723,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 
 	s.registerContract(ContractConfigID, s.ContractConfig)
 	s.registerContract(ContractDarcID, s.ContractDarc)
+	s.registerContract(ContractValueID, s.ContractValue)
 	skipchain.RegisterVerification(c, verifyOmniLedger, s.verifySkipBlock)
 	return s, nil
 }
