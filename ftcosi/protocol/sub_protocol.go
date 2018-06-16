@@ -115,13 +115,27 @@ func (p *SubFtCosi) Shutdown() error {
 // Dispatch is the main method of the subprotocol, running on each node and handling the messages in order
 func (p *SubFtCosi) Dispatch() error {
 	defer p.Done()
+	var err error
+	var channelOpen bool
 
 	// ----- Announcement -----
-	announcement, channelOpen := <-p.ChannelAnnouncement
-	if !channelOpen {
-		return nil
+	var announcement StructAnnouncement
+	for {
+		announcement, channelOpen = <-p.ChannelAnnouncement
+		if !channelOpen {
+			return nil
+		}
+		if !isValidSender(announcement.TreeNode, p.Parent(), p.TreeNode()) {
+			log.Lvl2(p.ServerIdentity(), "received announcement from node", announcement.ServerIdentity,
+			"that is not its parent nor itself, ignored")
+		} else {
+			log.Lvl3(p.ServerIdentity(), "received announcement")
+			break
+		}
+
 	}
-	log.Lvl3(p.ServerIdentity(), "received announcement")
+
+	//get announcement parameters
 	p.Publics = announcement.Publics
 	p.Timeout = announcement.Timeout
 	if !p.IsRoot() {
@@ -133,12 +147,11 @@ func (p *SubFtCosi) Dispatch() error {
 	p.Data = announcement.Data
 	p.Threshold = announcement.Threshold
 
+	//verify that threshold is valid
 	maxThreshold := p.Tree().Size() - 1
 	if p.Threshold > maxThreshold {
 		return fmt.Errorf("threshold %d bigger than the maximum of commitments this subtree can gather (%d)", p.Threshold, maxThreshold)
 	}
-
-	var err error
 
 	// start the verification in background if I'm not the root because
 	// root does the verification in the main protocol
@@ -152,6 +165,8 @@ func (p *SubFtCosi) Dispatch() error {
 			secret, personalStructCommitment, err = p.getCommitment(verificationOk)
 			if err != nil {
 				log.Errorf("error while generating own commitment:", err)
+				p.Shutdown()
+				return
 			}
 			p.ChannelCommitment <- personalStructCommitment
 			log.Lvl3(p.ServerIdentity(), "verification done:", verificationOk)
@@ -189,7 +204,7 @@ loop:
 
 			isOwnCommitment := commitment.TreeNode.ID.Equal(p.TreeNode().ID)
 
-			if !commitment.TreeNode.Parent.Equal(p.TreeNode()) && !isOwnCommitment {
+			if !isValidSender(commitment.TreeNode, p.Children()...) && !isOwnCommitment {
 				log.Lvl2(p.ServerIdentity(), "received a Commitment from node", commitment.ServerIdentity,
 					"that is neither a children nor itself, ignored")
 				break //discards it
@@ -260,6 +275,11 @@ loop:
 			if !channelOpen {
 				return nil
 			}
+			if !isValidSender(challenge.TreeNode, p.Parent(), p.TreeNode()) {
+				log.Lvl2(p.ServerIdentity(), "received a Challenge from node", challenge.ServerIdentity,
+					"that is not its parent nor itself, ignored")
+				break //discards it
+			}
 			log.Lvl3(p.ServerIdentity(), "received challenge")
 
 			//send challenge to children
@@ -299,21 +319,12 @@ loop:
 				return nil
 			}
 
-			//check if comes from a committed children
-			isCommittedChildren := false
-			for i, node := range committedChildren {
-				if node.Equal(response.TreeNode) {
-					isCommittedChildren = true
-
-					//contract finished, remove from committed children
-					committedChildren = append(committedChildren[:i],committedChildren[i+1:]...)
-				}
-			}
-			if !isCommittedChildren {
+			if !isValidSender(response.TreeNode, committedChildren...) {
 				log.Lvl2(p.ServerIdentity(), "received a Response from node", response.ServerIdentity,
 					"that is not a committed children, ignored")
 				break
 			}
+			committedChildren = remove(committedChildren, response.TreeNode)
 
 			responses = append(responses, response)
 		case <-timeout:
@@ -458,4 +469,26 @@ func (p *SubFtCosi) getCommitment(accepts bool) (kyber.Scalar, StructCommitment,
 	}
 
 	return secret, structCommitment, nil
+}
+
+func isValidSender(node *onet.TreeNode, valids ...*onet.TreeNode) bool {
+	//check if comes from a committed children
+	isValid := false
+	for _, valid := range valids {
+		if valid != nil {
+			if valid.Equal(node) {
+				isValid = true
+			}
+		}
+	}
+	return isValid
+}
+
+func remove(nodesList []*onet.TreeNode, node *onet.TreeNode) []*onet.TreeNode {
+	for i, iNode := range nodesList {
+		if iNode.Equal(node) {
+			return append(nodesList[:i], nodesList[i+1:]...)
+		}
+	}
+	return nodesList
 }

@@ -53,44 +53,51 @@ func TestMain(m *testing.M) {
 
 // Tests various trees configurations
 func TestProtocol(t *testing.T) {
-	nodes := []int{1, 2, 5, 13, 24}
-	subtrees := []int{1, 2, 5, 9}
+	log.SetDebugVisible(2)
+	nodes := []int{4}//2, 5, 13, 24}
+	subtrees := []int{1}//1, 2, 5, 9}
 	proposal := []byte{0xFF}
 
-	for _, nNodes := range nodes {
-		for _, nSubtrees := range subtrees {
-			log.Lvl2("test asking for", nNodes, "nodes and", nSubtrees, "subtrees")
 
-			local := onet.NewLocalTest(testSuite)
-			_, _, tree := local.GenTree(nNodes, false)
-			publics := tree.Roster.Publics()
 
-			pi, err := local.CreateProtocol(DefaultProtocolName, tree)
-			if err != nil {
-				local.CloseAll()
-				t.Fatal("Error in creation of protocol:", err)
+	local := onet.NewLocalTest(testSuite)
+	_, _, tree := local.GenTree(4, false)
+	publics := tree.Roster.Publics()
+
+	for i:=0 ; i< 100 ; i++ {
+		for _, nNodes := range nodes {
+			for _, nSubtrees := range subtrees {
+				log.LLvl2("test asking for", nNodes, "nodes and", nSubtrees, "subtrees")
+
+				nNodes = 4
+
+				pi, err := local.CreateProtocol(DefaultProtocolName, tree)
+				if err != nil {
+					local.CloseAll()
+					t.Fatal("Error in creation of protocol:", err)
+				}
+				cosiProtocol := pi.(*FtCosi)
+				cosiProtocol.CreateProtocol = local.CreateProtocol
+				cosiProtocol.Msg = proposal
+				cosiProtocol.NSubtrees = nSubtrees
+				cosiProtocol.Timeout = defaultTimeout
+				cosiProtocol.Threshold = nNodes / 2
+
+				err = cosiProtocol.Start()
+				if err != nil {
+					local.CloseAll()
+					t.Fatal(err)
+				}
+
+				// get and verify signature
+				err = getAndVerifySignature(cosiProtocol, publics, proposal, cosi.NewThresholdPolicy(cosiProtocol.Threshold))
+				if err != nil {
+					local.CloseAll()
+					t.Fatal(err)
+				}
+
+				//local.CloseAll()
 			}
-			cosiProtocol := pi.(*FtCosi)
-			cosiProtocol.CreateProtocol = local.CreateProtocol
-			cosiProtocol.Msg = proposal
-			cosiProtocol.NSubtrees = nSubtrees
-			cosiProtocol.Timeout = defaultTimeout
-			cosiProtocol.Threshold = nNodes
-
-			err = cosiProtocol.Start()
-			if err != nil {
-				local.CloseAll()
-				t.Fatal(err)
-			}
-
-			// get and verify signature
-			err = getAndVerifySignature(cosiProtocol, publics, proposal, cosi.CompletePolicy{})
-			if err != nil {
-				local.CloseAll()
-				t.Fatal(err)
-			}
-
-			local.CloseAll()
 		}
 	}
 }

@@ -192,12 +192,11 @@ func (p *FtCosi) Dispatch() error {
 		p.FinalSignature <- nil
 		return err
 	}
-	structChallenge := StructChallenge{p.TreeNode(), Challenge{cosiChallenge}}
 
 	// send challenge to every subprotocol
 	for _, coSiProtocol := range runningSubProtocols {
 		subProtocol := coSiProtocol
-		subProtocol.ChannelChallenge <- structChallenge
+		subProtocol.ChannelChallenge <- StructChallenge{coSiProtocol.Root(), Challenge{cosiChallenge}}
 	}
 
 	// get response from all subprotocols
@@ -235,7 +234,7 @@ func (p *FtCosi) Dispatch() error {
 	}
 
 	// generate own response
-	personalResponse, err := cosi.Response(p.suite, p.Private(), secret, structChallenge.CoSiChallenge)
+	personalResponse, err := cosi.Response(p.suite, p.Private(), secret, cosiChallenge)
 	if err != nil {
 		p.FinalSignature <- nil
 		return fmt.Errorf("error while generating own response: %s", err)
