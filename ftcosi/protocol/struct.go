@@ -79,6 +79,7 @@ type StructCommitment struct {
 // Challenge is the ftcosi challenge message
 type Challenge struct {
 	CoSiChallenge kyber.Scalar
+	Mask          []byte `prootobuf:opt`
 }
 
 // StructChallenge just contains Challenge and the data necessary to identify and

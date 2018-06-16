@@ -46,7 +46,7 @@ type FtCosi struct {
 
 	publics         []kyber.Point
 	stoppedOnce     sync.Once
-	subProtocols	[]*SubFtCosi
+	subProtocols    []*SubFtCosi
 	startChan       chan bool
 	subProtocolName string
 	verificationFn  VerificationFn
@@ -196,7 +196,7 @@ func (p *FtCosi) Dispatch() error {
 	// send challenge to every subprotocol
 	for _, coSiProtocol := range runningSubProtocols {
 		subProtocol := coSiProtocol
-		subProtocol.ChannelChallenge <- StructChallenge{coSiProtocol.Root(), Challenge{cosiChallenge}}
+		subProtocol.ChannelChallenge <- StructChallenge{coSiProtocol.Root(), Challenge{cosiChallenge, finalMask.Mask()}}
 	}
 
 	// get response from all subprotocols
