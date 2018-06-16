@@ -405,6 +405,10 @@ func (p *SubFtCosi) sendAggregatedCommitments(commitments []StructCommitment, NR
 
 // HandleStop is called when a Stop message is send to this node. It stops the node.
 func (p *SubFtCosi) HandleStop(stop StructStop) error {
+	if !isValidSender(stop.TreeNode, p.Root()) {
+		log.Lvl2(p.ServerIdentity(), "received a Stop from node", stop.ServerIdentity,
+			"that is not the root, ignored")
+	}
 	p.Shutdown()
 	return nil
 }
