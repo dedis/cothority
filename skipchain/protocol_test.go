@@ -1,4 +1,4 @@
-package skipchain_test
+package skipchain
 
 import (
 	"sync"
@@ -6,7 +6,6 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoinx"
-	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -34,49 +33,49 @@ func TestGB(t *testing.T) {
 	ts1 := tss[1].(*testService)
 	ts2 := tss[2].(*testService)
 
-	sb0 := skipchain.NewSkipBlock()
+	sb0 := NewSkipBlock()
 	sb0.Roster = ro
 	sb0.Hash = sb0.CalculateHash()
-	sb1 := skipchain.NewSkipBlock()
+	sb1 := NewSkipBlock()
 	sb1.Roster = ro
-	sb1.BackLinkIDs = []skipchain.SkipBlockID{sb0.Hash}
+	sb1.BackLinkIDs = []SkipBlockID{sb0.Hash}
 	sb1.Hash = sb1.CalculateHash()
-	sig0 := skipchain.NewForwardLink(sb0, sb1)
+	sig0 := NewForwardLink(sb0, sb1)
 	sig0.Signature = byzcoinx.FinalSignature{Msg: sig0.Hash(), Sig: []byte{}}
-	sb0.ForwardLink = []*skipchain.ForwardLink{sig0}
+	sb0.ForwardLink = []*ForwardLink{sig0}
 
-	sb2 := skipchain.NewSkipBlock()
-	sb2.BackLinkIDs = []skipchain.SkipBlockID{sb1.Hash}
+	sb2 := NewSkipBlock()
+	sb2.BackLinkIDs = []SkipBlockID{sb1.Hash}
 	sb2.Hash = sb2.CalculateHash()
 
-	sb3 := skipchain.NewSkipBlock()
-	sb3.BackLinkIDs = []skipchain.SkipBlockID{sb2.Hash}
+	sb3 := NewSkipBlock()
+	sb3.BackLinkIDs = []SkipBlockID{sb2.Hash}
 	sb3.Hash = sb3.CalculateHash()
-	sig2 := skipchain.NewForwardLink(sb2, sb3)
+	sig2 := NewForwardLink(sb2, sb3)
 	sig2.Signature = byzcoinx.FinalSignature{Msg: sig2.Hash(), Sig: []byte{}}
-	sb2.ForwardLink = []*skipchain.ForwardLink{sig2}
+	sb2.ForwardLink = []*ForwardLink{sig2}
 
 	// and make sb1 forward[1] point to sb3 as well.
-	sig12 := skipchain.NewForwardLink(sb1, sb2)
+	sig12 := NewForwardLink(sb1, sb2)
 	sig12.Signature = byzcoinx.FinalSignature{Msg: sig12.Hash(), Sig: []byte{}}
 
-	sig13 := skipchain.NewForwardLink(sb1, sb3)
+	sig13 := NewForwardLink(sb1, sb3)
 	sig13.Signature = byzcoinx.FinalSignature{Msg: sig13.Hash(), Sig: []byte{}}
-	sb1.ForwardLink = []*skipchain.ForwardLink{sig12, sig13}
+	sb1.ForwardLink = []*ForwardLink{sig12, sig13}
 
 	db, bucket := ts0.GetAdditionalBucket([]byte("skipblocks"))
-	ts0.Db = skipchain.NewSkipBlockDB(db, bucket)
+	ts0.Db = NewSkipBlockDB(db, bucket)
 	ts0.Db.Store(sb0)
 	ts0.Db.Store(sb1)
 	ts0.Db.Store(sb2)
 	ts0.Db.Store(sb3)
 	db, bucket = ts1.GetAdditionalBucket([]byte("skipblocks"))
-	ts1.Db = skipchain.NewSkipBlockDB(db, bucket)
+	ts1.Db = NewSkipBlockDB(db, bucket)
 	ts1.Db.Store(sb0)
 	ts1.Db.Store(sb1)
 	ts1.Db.Store(sb2)
 	ts1.Db.Store(sb3)
-	ts2.Db = skipchain.NewSkipBlockDB(db, bucket)
+	ts2.Db = NewSkipBlockDB(db, bucket)
 	// do not save anything into ts2 so that
 	// it is totally out of date, and cannot answer anything
 
@@ -137,42 +136,18 @@ func TestER(t *testing.T) {
 	}
 }
 
-func TestFail(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Stress-test of localtest with premature close")
-	}
-	for i := 0; i < 50; i++ {
-		log.Lvl1("Starting test", i)
-		nbrNodes := 10
-		local := onet.NewLocalTest(cothority.Suite)
-		servers, roster, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
-		tss := local.GetServices(servers, tsID)
-
-		sb := &skipchain.SkipBlock{SkipBlockFix: &skipchain.SkipBlockFix{Roster: roster,
-			Data: []byte{}}}
-
-		// Check refusing of new chains
-		for _, t := range tss {
-			t.(*testService).FollowerIDs = []skipchain.SkipBlockID{[]byte{0}}
-		}
-		sigs := tss[0].(*testService).CallER(tree, sb)
-		require.Equal(t, 0, len(sigs))
-		local.CloseAll()
-	}
-}
-
 func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	log.Lvl1("Testing", nbrNodes, "nodes")
 	local := onet.NewLocalTest(cothority.Suite)
 	servers, roster, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	tss := local.GetServices(servers, tsid)
 
-	sb := &skipchain.SkipBlock{SkipBlockFix: &skipchain.SkipBlockFix{Roster: roster,
+	sb := &SkipBlock{SkipBlockFix: &SkipBlockFix{Roster: roster,
 		Data: []byte{}}}
 
 	// Check refusing of new chains
 	for _, t := range tss {
-		t.(*testService).FollowerIDs = []skipchain.SkipBlockID{[]byte{0}}
+		t.(*testService).FollowerIDs = []SkipBlockID{[]byte{0}}
 	}
 	sigs := tss[0].(*testService).CallER(tree, sb)
 	require.Equal(t, 0, len(sigs))
@@ -183,9 +158,9 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 	servers, roster, tree = local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	tss = local.GetServices(servers, tsid)
 	for _, t := range tss {
-		t.(*testService).Followers = &[]skipchain.FollowChainType{{
+		t.(*testService).Followers = &[]FollowChainType{{
 			Block:    sb,
-			NewChain: skipchain.NewChainAnyNode,
+			NewChain: NewChainAnyNode,
 		}}
 	}
 	sigs = tss[0].(*testService).CallER(tree, sb)
@@ -207,15 +182,15 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 		for i := 3; i < nbrNodes; i++ {
 			log.Lvl2("Checking failing signature at", i)
 			tss[i].(*testService).Lock()
-			tss[i].(*testService).FollowerIDs = []skipchain.SkipBlockID{[]byte{0}}
-			tss[i].(*testService).Followers = &[]skipchain.FollowChainType{}
+			tss[i].(*testService).FollowerIDs = []SkipBlockID{[]byte{0}}
+			tss[i].(*testService).Followers = &[]FollowChainType{}
 			tss[i].(*testService).Unlock()
 			sigs = tss[0].(*testService).CallER(tree, sb)
 			require.Equal(t, 0, len(sigs))
 			tss[i].(*testService).Lock()
-			tss[i].(*testService).Followers = &[]skipchain.FollowChainType{{
+			tss[i].(*testService).Followers = &[]FollowChainType{{
 				Block:    sb,
-				NewChain: skipchain.NewChainAnyNode,
+				NewChain: NewChainAnyNode,
 			}}
 			tss[i].(*testService).Unlock()
 		}
@@ -226,35 +201,35 @@ func testER(t *testing.T, tsid onet.ServiceID, nbrNodes int) {
 type testService struct {
 	*onet.ServiceProcessor
 	sync.Mutex
-	Followers   *[]skipchain.FollowChainType
-	FollowerIDs []skipchain.SkipBlockID
-	Db          *skipchain.SkipBlockDB
+	Followers   *[]FollowChainType
+	FollowerIDs []SkipBlockID
+	Db          *SkipBlockDB
 }
 
-func (ts *testService) CallER(t *onet.Tree, b *skipchain.SkipBlock) []skipchain.ProtoExtendSignature {
-	pi, err := ts.CreateProtocol(skipchain.ProtocolExtendRoster, t)
+func (ts *testService) CallER(t *onet.Tree, b *SkipBlock) []ProtoExtendSignature {
+	pi, err := ts.CreateProtocol(ProtocolExtendRoster, t)
 	if err != nil {
-		return []skipchain.ProtoExtendSignature{}
+		return []ProtoExtendSignature{}
 	}
-	pisc := pi.(*skipchain.ExtendRoster)
-	pisc.ExtendRoster = &skipchain.ProtoExtendRoster{Block: *b}
+	pisc := pi.(*ExtendRoster)
+	pisc.ExtendRoster = &ProtoExtendRoster{Block: *b}
 	if err := pi.Start(); err != nil {
 		log.ErrFatal(err)
 	}
 	return <-pisc.ExtendRosterReply
 }
 
-func (ts *testService) CallGB(sb *skipchain.SkipBlock, sk bool, n int) []*skipchain.SkipBlock {
+func (ts *testService) CallGB(sb *SkipBlock, sk bool, n int) []*SkipBlock {
 	t := sb.Roster.RandomSubset(ts.ServerIdentity(), 3).GenerateStar()
 	log.Lvl3("running on this tree", t.Dump())
 
-	pi, err := ts.CreateProtocol(skipchain.ProtocolGetBlocks, t)
+	pi, err := ts.CreateProtocol(ProtocolGetBlocks, t)
 	if err != nil {
 		log.Error(err)
 		return nil
 	}
-	pisc := pi.(*skipchain.GetBlocks)
-	pisc.GetBlocks = &skipchain.ProtoGetBlocks{
+	pisc := pi.(*GetBlocks)
+	pisc.GetBlocks = &ProtoGetBlocks{
 		Count:    n,
 		SBID:     sb.Hash,
 		Skipping: sk,
@@ -267,11 +242,11 @@ func (ts *testService) CallGB(sb *skipchain.SkipBlock, sk bool, n int) []*skipch
 }
 
 func (ts *testService) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.GenericConfig) (pi onet.ProtocolInstance, err error) {
-	if ti.ProtocolName() == skipchain.ProtocolExtendRoster {
+	if ti.ProtocolName() == ProtocolExtendRoster {
 		// Start by getting latest blocks of all followers
-		pi, err = skipchain.NewProtocolExtendRoster(ti)
+		pi, err = NewProtocolExtendRoster(ti)
 		if err == nil {
-			pier := pi.(*skipchain.ExtendRoster)
+			pier := pi.(*ExtendRoster)
 			ts.Lock()
 			pier.Followers = ts.Followers
 			pier.FollowerIDs = ts.FollowerIDs
@@ -279,10 +254,10 @@ func (ts *testService) NewProtocol(ti *onet.TreeNodeInstance, conf *onet.Generic
 			ts.Unlock()
 		}
 	}
-	if ti.ProtocolName() == skipchain.ProtocolGetBlocks {
-		pi, err = skipchain.NewProtocolGetBlocks(ti)
+	if ti.ProtocolName() == ProtocolGetBlocks {
+		pi, err = NewProtocolGetBlocks(ti)
 		if err == nil {
-			pigu := pi.(*skipchain.GetBlocks)
+			pigu := pi.(*GetBlocks)
 			pigu.DB = ts.Db
 		}
 	}

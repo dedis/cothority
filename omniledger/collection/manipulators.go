@@ -67,7 +67,8 @@ func (c *Collection) Add(key []byte, values ...interface{}) error {
 				return fmt.Errorf("key collision - %x", key)
 			}
 
-			collision := *cursor
+			collision := node{}
+			collision.overwrite(cursor)
 			collisionPath := sha256.Sum256(collision.key)
 			collisionStep := bit(collisionPath[:], depth)
 

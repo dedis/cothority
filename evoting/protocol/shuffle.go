@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 
 	"github.com/dedis/cothority/evoting/lib"
@@ -67,96 +68,154 @@ func (s *Shuffle) Start() error {
 }
 
 // HandlePrompt retrieves, shuffles and stores the mix back on the skipchain.
+// LG: rewrote the function to correctly call Done - probably should be
+// rewritten even further. There are three `func() error` now with different
+// error-handling. In case of error:
+//   1. we abort and stop processing
+//   2. will return the error, but first call 3.
+//   3. try to call it and abort if error found
 func (s *Shuffle) HandlePrompt(prompt MessagePrompt) error {
+	added := 0
+	var mixes []*lib.Mix
+	var target int
 	var ballots []*lib.Ballot
-	mixes, err := s.Election.Mixes(s.Skipchain)
-	if !s.IsRoot() {
-		defer s.Done()
-	}
 
-	if len(mixes) == 0 {
-		box, err := s.Election.Box(s.Skipchain)
+	// If this fails, we return and call `Done()`
+	err := func() error {
+		var err error
+		mixes, err = s.Election.Mixes(s.Skipchain)
 		if err != nil {
 			return err
 		}
-		ballots = box.Ballots
-	} else {
-		ballots = mixes[len(mixes)-1].Ballots
+
+		if len(mixes) == 0 {
+			box, err := s.Election.Box(s.Skipchain)
+			if err != nil {
+				return err
+			}
+			ballots = box.Ballots
+		} else {
+			ballots = mixes[len(mixes)-1].Ballots
+		}
+
+		// base condition
+		target = 2 * len(s.Election.Roster.List) / 3
+
+		if len(ballots) < 2 {
+			if err := s.SendTo(s.Root(), &TerminateShuffle{
+				Error: "shuffle error: not enough (> 2) ballots to shuffle",
+			}); err != nil {
+				log.Error(err)
+			}
+			return errors.New("not enough ballots to shuffle")
+		}
+
+		return nil
+	}()
+	if err != nil {
+		s.Done()
+		log.Error(err)
+		return err
 	}
 
-	// base condition
-	target := 2 * len(s.Election.Roster.List) / 3
+	// This may fail, but we want to call the next node if we do. So no `Done`
+	// when this fails.
+	var mix *lib.Mix
+	err = func() error {
+		if len(mixes) > target {
+			return s.SendTo(s.Root(), &TerminateShuffle{})
+		}
 
-	added := 0
-	continueProtocol := func() error {
+		if s.IsRoot() && !s.LeaderParticipates {
+			return nil
+		}
+
+		a, b := lib.Split(ballots)
+		g, d, prov := shuffle.Shuffle(cothority.Suite, nil, s.Election.Key, a, b, random.New())
+		proof, err := proof.HashProve(cothority.Suite, "", prov)
+		if err != nil {
+			return err
+		}
+		mix = &lib.Mix{
+			Ballots: lib.Combine(g, d),
+			Proof:   proof,
+			NodeID:  s.ServerIdentity().ID,
+		}
+		data, err := s.ServerIdentity().Public.MarshalBinary()
+		if err != nil {
+			return err
+		}
+		sig, err := schnorr.Sign(cothority.Suite, s.Private(), data)
+		if err != nil {
+			return err
+		}
+		mix.Signature = sig
+		added = 1
+		return nil
+	}()
+
+	// And send the result to the skipchain in case of success.
+	if err == nil && added == 1 {
+		transaction := lib.NewTransaction(mix, s.User, s.Signature)
+		log.Lvl3(s.ServerIdentity(), "sending transaction to websocket")
+		err = lib.StoreUsingWebsocket(s.Election.ID, s.Election.Roster, transaction)
+		if err != nil {
+			log.Lvl1(s.ServerIdentity(), "couldn't store new block - this is fatal:", err)
+			s.Done()
+			return s.SendTo(s.Root(), &TerminateShuffle{Error: err.Error()})
+		}
+	}
+
+	// This is the continuing branch that is called even if the previous one returned
+	// an error. If this fails on the root, we're done, too.
+	errContinue := func() error {
 		if len(s.Children()) > 0 && len(mixes)+added <= target {
 			child := s.Children()[0]
 			for {
 				// err here only checks for network errors while trying to
 				// send a message to the child
+				log.Lvl3(s.ServerIdentity(), "sending to", child.ServerIdentity)
 				err = s.SendTo(child, &PromptShuffle{})
 				if err != nil {
 					// retry with next one
+					log.Lvl2(s.ServerIdentity(), "Couldn't send to", child.ServerIdentity, err)
 					if len(child.Children) > 0 {
 						child = child.Children[0]
 					} else {
 						errString := "shuffle error: retried all nodes, couldn't shuffle required number of times"
-						return s.SendTo(s.Root(), &TerminateShuffle{Error: errString})
+						log.Lvl2(s.ServerIdentity(), errString)
+						err = s.SendTo(s.Root(), &TerminateShuffle{Error: errString})
+						return errors.New(errString)
 					}
 				} else {
 					return nil
 				}
 			}
 		}
-		return s.SendTo(s.Root(), &TerminateShuffle{})
-	}
-
-	defer continueProtocol()
-
-	if len(mixes) > target {
-		return s.SendTo(s.Root(), &TerminateShuffle{})
-	}
-
-	if len(ballots) < 2 {
-		return s.SendTo(s.Root(), &TerminateShuffle{
-			Error: "shuffle error: not enough (> 2) ballots to shuffle",
-		})
-	}
-
-	if s.IsRoot() && !s.LeaderParticipates {
+		if !s.IsRoot() {
+			return s.SendTo(s.Root(), &TerminateShuffle{})
+		}
 		return nil
+	}()
+
+	// For the root-node, if only 2. failed, we're not done yet.
+	if errContinue != nil || !s.IsRoot() {
+		log.Lvl3(s.ServerIdentity(), "done")
+		s.Done()
 	}
 
-	if len(ballots) < 2 {
-		return errors.New("cannot shuffle less than 2 ballots")
+	// Return a nice error string.
+	if errContinue != nil {
+		if err != nil {
+			errConc := errors.New(err.Error() + " :: " + errContinue.Error())
+			log.Error(errConc)
+			return errConc
+		}
+		log.Error(errContinue)
+		return errContinue
 	}
-	a, b := lib.Split(ballots)
-	g, d, prov := shuffle.Shuffle(cothority.Suite, nil, s.Election.Key, a, b, random.New())
-	proof, err := proof.HashProve(cothority.Suite, "", prov)
-	if err != nil {
-		return err
-	}
-	mix := &lib.Mix{
-		Ballots: lib.Combine(g, d),
-		Proof:   proof,
-		NodeID:  s.ServerIdentity().ID,
-	}
-	data, err := s.ServerIdentity().Public.MarshalBinary()
-	if err != nil {
-		return err
-	}
-	sig, err := schnorr.Sign(cothority.Suite, s.Private(), data)
-	if err != nil {
-		return err
-	}
-	mix.Signature = sig
-	transaction := lib.NewTransaction(mix, s.User, s.Signature)
-	err = lib.StoreUsingWebsocket(s.Election.ID, s.Election.Roster, transaction)
-	if err != nil {
-		return err
-	}
-	added = 1
-	return nil
+	log.Lvl3(s.ServerIdentity(), "Done", err)
+	return err
 }
 
 // finish terminates the protocol within onet.

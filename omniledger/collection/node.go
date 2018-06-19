@@ -1,9 +1,13 @@
 package collection
 
-import "crypto/sha256"
+import (
+	"crypto/sha256"
+	"sync"
+)
 
 //A node represents one element of the Merkle tree like data-structure.
 type node struct {
+	sync.Mutex
 	label [sha256.Size]byte
 
 	known bool
@@ -26,46 +30,69 @@ type node struct {
 // Getters
 
 func (n *node) root() bool {
+	n.Lock()
+	defer n.Unlock()
 	return n.parent == nil
 }
 
 func (n *node) leaf() bool {
+	n.Lock()
+	defer n.Unlock()
 	return n.children.left == nil
 }
 
 func (n *node) placeholder() bool {
-	return n.leaf() && (len(n.key) == 0)
+	isLeaf := n.leaf()
+	n.Lock()
+	defer n.Unlock()
+	return isLeaf && (len(n.key) == 0)
 }
 
 // Methods
 
 func (n *node) backup() {
+	n.Lock()
+	defer n.Unlock()
 	if n.transaction.backup == nil {
 		n.transaction.backup = new(node)
-
-		n.transaction.backup.label = n.label
-		n.transaction.backup.known = n.known
-		n.transaction.backup.transaction.inconsistent = n.transaction.inconsistent
-
-		n.transaction.backup.key = n.key
+		n.transaction.backup.overwrite(n)
+		// For the backup we create a deep copy of the values.
 		n.transaction.backup.values = make([][]byte, len(n.values))
-		copy(n.transaction.backup.values, n.values)
-
-		n.transaction.backup.parent = n.parent
-		n.transaction.backup.children.left = n.children.left
-		n.transaction.backup.children.right = n.children.right
+		for i, v := range n.values {
+			n.transaction.backup.values[i] = make([]byte, len(v))
+			copy(n.transaction.backup.values[i], v)
+		}
 	}
 }
 
+// overwrite copies the fields from other into n. This is needed because
+// node now has a mutex.
+func (n *node) overwrite(other *node) {
+	n.label = other.label
+	n.known = other.known
+	n.transaction.inconsistent = other.transaction.inconsistent
+
+	n.key = other.key
+	n.values = other.values
+
+	n.parent = other.parent
+	n.children.left = other.children.left
+	n.children.right = other.children.right
+}
+
 func (n *node) restore() {
+	n.Lock()
+	defer n.Unlock()
 	if n.transaction.backup != nil {
 		backup := n.transaction.backup
-		(*n) = (*backup)
+		n.overwrite(backup)
 		n.transaction.backup = nil
 	}
 }
 
 func (n *node) branch() {
+	n.Lock()
+	defer n.Unlock()
 	n.children.left = new(node)
 	n.children.right = new(node)
 
@@ -74,6 +101,8 @@ func (n *node) branch() {
 }
 
 func (n *node) prune() {
+	n.Lock()
+	defer n.Unlock()
 	n.children.left = nil
 	n.children.right = nil
 }

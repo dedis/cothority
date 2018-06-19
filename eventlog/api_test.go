@@ -57,7 +57,12 @@ func TestClient_Log(t *testing.T) {
 	}
 
 	// Check consistency and # of events.
-	require.NoError(t, leader.checkBuckets(c.ID, 3))
+	for i := 0; i < 10; i++ {
+		leader.waitForBlock(c.ID)
+		if err = leader.checkBuckets(c.ID, 3); err == nil {
+			break
+		}
+	}
 
 	// Fetch index, and check its length.
 	idx := checkProof(t, leader.omni, theEventLog.Slice(), c.ID)
@@ -113,9 +118,13 @@ func TestClient_Log200(t *testing.T) {
 	_, err = c.Log(evs...)
 	require.Nil(t, err)
 
-	leader.waitForBlock(c.ID)
-	leader.waitForBlock(c.ID)
-	require.NoError(t, leader.checkBuckets(c.ID, 2*logCount))
+	for i := 0; i < 10; i++ {
+		leader.waitForBlock(c.ID)
+		if err = leader.checkBuckets(c.ID, 2*logCount); err == nil {
+			break
+		}
+	}
+	require.Nil(t, err)
 
 	// Fetch index, and check its length.
 	idx := checkProof(t, leader.omni, theEventLog.Slice(), c.ID)
@@ -145,6 +154,7 @@ func TestClient_Log200(t *testing.T) {
 		var e Event
 		require.Nil(t, protobuf.Decode(eventBuf, &e))
 	}
+	require.Nil(t, s.local.WaitDone(10*time.Second))
 }
 
 func checkProof(t *testing.T, omni *omniledger.Service, key []byte, scID skipchain.SkipBlockID) []byte {
@@ -200,9 +210,12 @@ func TestClient_Search(t *testing.T) {
 		_, err := c.Log(Event{Topic: topic, Content: fmt.Sprintf("test event at time %v", ct), When: tm0 + ct})
 		require.Nil(t, err)
 	}
-	leader.waitForBlock(c.ID)
-	leader.waitForBlock(c.ID)
-	require.NoError(t, leader.checkBuckets(c.ID, logCount))
+	for i := 0; i < 10; i++ {
+		leader.waitForBlock(c.ID)
+		if err = leader.checkBuckets(c.ID, logCount); err == nil {
+			break
+		}
+	}
 
 	// Search for all.
 	req = &SearchRequest{ID: c.ID}

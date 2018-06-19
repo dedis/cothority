@@ -95,7 +95,7 @@ func (s *ser) check(t *testing.T, scID skipchain.SkipBlockID, what string, f fun
 		if f() == true {
 			return
 		}
-		t.Log("check failed, sleep and retry")
+		log.Lvl2("check failed, sleep and retry")
 		s.services[0].waitForBlock(scID)
 	}
 	t.Fatalf("check for %v failed", what)
