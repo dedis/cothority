@@ -618,6 +618,37 @@ func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
 	return result
 }
 
+// StoreStompFL stores the given SkipBlock in the service-list, unconditionally stomping on the previous ForwardLink
+// with the new one.
+func (db *SkipBlockDB) StoreStompFL(sb *SkipBlock) SkipBlockID {
+	var result SkipBlockID
+	err := db.Update(func(tx *bolt.Tx) error {
+		sbOld, err := db.getFromTx(tx, sb.Hash)
+		if err != nil {
+			return errors.New("failed to get skipblock with error: " + err.Error())
+		}
+		if sbOld != nil {
+			sbOld.ForwardLink = sb.ForwardLink
+
+			err := db.storeToTx(tx, sbOld)
+			if err != nil {
+				return err
+			}
+		} else {
+			return errors.New("StoreStompFL expected old block to exist")
+		}
+		result = sb.Hash
+		return nil
+	})
+
+	if err != nil {
+		log.Error(err.Error())
+		return nil
+	}
+
+	return result
+}
+
 // Length returns how many skip blocks there are in this SkipBlockDB.
 func (db *SkipBlockDB) Length() int {
 	var i int
@@ -722,9 +753,10 @@ func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
 	latest := sb
 	// TODO this can be optimised by using multiple bucket.Get in a single transaction
 	for latest.GetForwardLen() > 0 {
-		latest = db.GetByID(latest.GetForward(latest.GetForwardLen() - 1).To)
+		want := latest.GetForward(latest.GetForwardLen() - 1).To
+		latest = db.GetByID(want)
 		if latest == nil {
-			return nil, errors.New("missing block")
+			return nil, fmt.Errorf("missing block: want %x on chain %x", want, sb.Hash)
 		}
 	}
 	return latest, nil
@@ -835,4 +867,41 @@ func (db *SkipBlockDB) getAll() (map[string]*SkipBlock, error) {
 		return nil, err
 	}
 	return data, nil
+}
+
+// GetAllSkipchains returns each of the skipchains in the database
+// in the form of a map from skipblock ID to the latest block.
+//
+// Debug use only!
+func (db *SkipBlockDB) GetAllSkipchains() (map[string]*SkipBlock, error) {
+	gen := make(map[string]*SkipBlock)
+
+	// Loop over all blocks. If we see a new genesis block we
+	// have not seen, remember it. If we see a higher Index than what
+	// we have, replace it.
+	err := db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(db.bucketName))
+		return b.ForEach(func(k, v []byte) error {
+			_, sbMsg, err := network.Unmarshal(v, cothority.Suite)
+			if err != nil {
+				return err
+			}
+			sb, ok := sbMsg.(*SkipBlock)
+			if ok {
+				k := string(sb.SkipChainID())
+				if cur, ok := gen[k]; ok {
+					if cur.Index < sb.Index {
+						gen[k] = sb
+					}
+				} else {
+					gen[k] = sb
+				}
+			}
+			return nil
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	return gen, nil
 }
