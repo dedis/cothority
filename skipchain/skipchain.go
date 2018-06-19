@@ -1268,7 +1268,6 @@ func (s *Service) startPropagation(blocks []*SkipBlock) error {
 				}
 			}
 		}
-		// TODO: add all nodes in the forwardlink.NewRoster
 	}
 	siList := make([]*network.ServerIdentity, 0, len(siMap))
 	for _, si := range siMap {
