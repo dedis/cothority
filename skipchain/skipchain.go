@@ -399,6 +399,40 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 	return reply, nil
 }
 
+func (s *Service) GetUpdateChain2(guc *GetUpdateChain2) (*GetUpdateChainReply2, error) {
+	block := s.db.GetByID(guc.LatestID)
+	if block == nil {
+		return nil, errors.New("Couldn't find latest skipblock")
+	}
+
+	blocks := []*SkipBlock{block.Copy()}
+	log.Lvlf3("Starting to search chain at %s", s.Context.ServerIdentity())
+	for block.GetForwardLen() > 0 {
+		link := block.ForwardLink[0]
+		next := s.db.GetByID(link.To)
+		if next == nil {
+			// Next not found means that maybe the roster
+			// has evolved and we are no longer aware of
+			// this chain. The caller will be responsible
+			// to issue a new GetUpdateChain with the
+			// latest Roster to keep traversing.
+			break
+		} else {
+			if i, _ := next.Roster.Search(s.ServerIdentity().ID); i < 0 {
+				// Likewise for the case where we know the block,
+				// but we are no longer in the Roster, stop searching.
+				break
+			}
+		}
+		block = next
+		blocks = append(blocks, next.Copy())
+	}
+	log.Lvl3("Found", len(blocks), "blocks")
+	reply := &GetUpdateChainReply2{Update: blocks}
+
+	return reply, nil
+}
+
 // Search the local DB starting at bl and finding the latest block we know.
 func (s *Service) findLatest(bl *SkipBlock) *SkipBlock {
 	for {
@@ -1297,7 +1331,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 	if err := s.tryLoad(); err != nil {
 		return nil, err
 	}
-	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain,
+	log.ErrFatal(s.RegisterHandlers(s.StoreSkipBlock, s.GetUpdateChain, s.GetUpdateChain2,
 		s.GetSingleBlock, s.GetSingleBlockByIndex, s.GetAllSkipchains,
 		s.CreateLinkPrivate, s.Unlink, s.AddFollow, s.ListFollow,
 		s.DelFollow, s.Listlink))

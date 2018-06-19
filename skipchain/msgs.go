@@ -15,6 +15,8 @@ func init() {
 		// Requests for data
 		&GetUpdateChain{},
 		&GetUpdateChainReply{},
+		&GetUpdateChain2{},
+		&GetUpdateChainReply2{},
 		// Request updated block
 		&GetSingleBlock{},
 		// Fetch all skipchains
@@ -90,6 +92,13 @@ type GetUpdateChain struct {
 // GetUpdateChainReply - returns the shortest chain to the current SkipBlock,
 // starting from the SkipBlock the client sent
 type GetUpdateChainReply struct {
+	Update []*SkipBlock
+}
+
+type GetUpdateChain2 struct {
+	LatestID SkipBlockID
+}
+type GetUpdateChainReply2 struct {
 	Update []*SkipBlock
 }
 

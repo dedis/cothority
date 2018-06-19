@@ -2,6 +2,7 @@
 package service
 
 import (
+	"bytes"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -340,6 +341,10 @@ func (s *Service) Cast(req *evoting.Cast) (*evoting.CastReply, error) {
 func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElectionsReply, error) {
 	master, err := lib.GetMaster(s.skipchain, req.Master)
 	if err != nil {
+		log.LLvlf4("get master bad forward link: starting from %x", req.Master)
+		buf := &bytes.Buffer{}
+		lib.DebugDumpChain(s.skipchain, buf, req.Master)
+		log.LLvl4(string(buf.Bytes()))
 		return nil, err
 	}
 
@@ -370,6 +375,10 @@ func (s *Service) GetElections(req *evoting.GetElections) (*evoting.GetElections
 		for _, l := range links {
 			election, err := lib.GetElection(s.skipchain, l.ID, req.CheckVoted, req.User)
 			if err != nil {
+				log.LLvlf4("getelection bad forward link: starting from %x", l.ID)
+				buf := &bytes.Buffer{}
+				lib.DebugDumpChain(s.skipchain, buf, l.ID)
+				log.LLvl4(string(buf.Bytes()))
 				return nil, err
 			}
 			// Check if user is a voter or election creator.
@@ -784,6 +793,9 @@ func new(context *onet.Context) (onet.Service, error) {
 		rl:        recentLog{N: 100},
 	}
 
+	service.skipchain.SetBFTTimeout(5 * time.Minute)
+	service.skipchain.SetPropTimeout(5 * time.Minute)
+
 	service.RegisterHandlers(
 		service.Ping,
 		service.Link,
@@ -814,6 +826,54 @@ func new(context *onet.Context) (onet.Service, error) {
 	// so it does not get published.
 	log.RegisterListener(&service.rl)
 	service.RegisterStatusReporter("evoting", service)
+
+	// Fix dangling forward pointers: for each skipchain,
+	// for each block, check the forward links looking for
+	// a dangling one. Remove them.
+	db := service.db()
+	chains, err := db.GetAllSkipchains()
+	if err != nil {
+		log.Fatal("fix failed: getAllSkipchains %v", err)
+	}
+	for chid, b := range chains {
+		found := false
+		b = db.GetByID(b.GenesisID)
+		for b != nil {
+			fls := b.ForwardLink
+			write := false
+			for i, f := range fls {
+				if db.GetByID(f.To) == nil {
+					found = true
+					write = true
+					log.LLvlf1("  block %x: forward link to %x at level %v invalid, fixing it.", b.Hash, f.To, i)
+					if i == len(b.ForwardLink)-1 {
+						// This is the last one, so trim it.
+						if len(b.ForwardLink) == 1 {
+							// Don't leave a []SkipblockID{}, instead leave nil.
+							b.ForwardLink = nil
+						} else {
+							b.ForwardLink = b.ForwardLink[0:i]
+						}
+					} else {
+						b.ForwardLink[i] = nil
+					}
+				}
+			}
+			if write {
+				log.LLvlf1("  writing block %x", b.Hash)
+				db.StoreStompFL(b)
+			}
+
+			if len(b.ForwardLink) == 0 {
+				b = nil
+			} else {
+				b = db.GetByID(b.ForwardLink[0].To)
+			}
+		}
+		if found {
+			log.LLvlf1("chain %x had invalid forward links", chid)
+		}
+	}
 
 	return service, nil
 }
