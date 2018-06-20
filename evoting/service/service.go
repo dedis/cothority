@@ -860,6 +860,7 @@ func new(context *onet.Context) (onet.Service, error) {
 				}
 			}
 			if write {
+				db.Backup()
 				log.LLvlf1("  writing block %x", b.Hash)
 				db.StoreStompFL(b)
 			}

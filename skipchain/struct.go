@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -904,4 +905,33 @@ func (db *SkipBlockDB) GetAllSkipchains() (map[string]*SkipBlock, error) {
 		return nil, err
 	}
 	return gen, nil
+}
+
+// Backup creates a "before-evoting-5" backup, if it does not already exist.
+func (db *SkipBlockDB) Backup() {
+	// This is sneaky: it turns out that BoltDB exposes the path name
+	// via String(). So instead of trying to find the pathname from onet,
+	// we can just ask BoltDB for it.
+	path := db.DB.String() // returns something like DB<"/tmp/foo.db">
+	path = path[4 : len(path)-2]
+	path += ".before-evoting-5"
+	if _, err := os.Stat(path); err == nil {
+		// It already exists: nothing to do.
+		return
+	}
+
+	log.LLvl1("Backing up DB to", path)
+	err := db.View(func(tx *bolt.Tx) error {
+		w, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY, 0400)
+		if err != nil {
+			return err
+		}
+		defer w.Close()
+
+		_, err = tx.WriteTo(w)
+		return err
+	})
+	if err != nil {
+		log.Error("error while backing up:", err)
+	}
 }
