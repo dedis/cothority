@@ -1,7 +1,9 @@
 package eventlog
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"github.com/dedis/cothority/omniledger/darc"
 	omniledger "github.com/dedis/cothority/omniledger/service"
@@ -111,4 +113,60 @@ func newSer(t *testing.T) *ser {
 	}
 
 	return s
+}
+
+// checkBuckets walks all the buckets for a given eventlog
+// and returns an error if an event is in the wrong bucket.
+func (s *Service) checkBuckets(id skipchain.SkipBlockID, ct0 int) error {
+	v := s.omni.GetCollectionView(id)
+	el := &eventLog{ID: theEventLog.Slice(), v: v}
+
+	id, b, err := el.getLatestBucket()
+	if err != nil {
+		return err
+	}
+
+	// bEnd is normally updated from the last bucket's start. For the latest
+	// bucket, bEnd is now.
+	bEnd := time.Now().UnixNano()
+	end := time.Unix(0, bEnd)
+
+	ct := 0
+	i := 0
+	for {
+		st := time.Unix(0, b.Start)
+
+		// check each event
+		for j, e := range b.EventRefs {
+			ev, err := getEventByID(v, e)
+			if err != nil {
+				return err
+			}
+			when := time.Unix(0, ev.When)
+			if when.Before(st) {
+				return fmt.Errorf("bucket %v, event %v before start (%v<%v)", i, j, when, st)
+			}
+			if when.After(end) {
+				return fmt.Errorf("bucket %v, event %v after end (%v>%v)", i, j, when, end)
+			}
+			ct++
+		}
+
+		// advance to prev bucket
+		if b.isFirst() {
+			break
+		}
+		bEnd = b.Start
+		end = time.Unix(0, bEnd)
+		id = b.Prev
+		b, err = el.getBucketByID(id)
+		if err != nil {
+			return err
+		}
+		i++
+	}
+	if ct0 != 0 && ct0 != ct {
+		return fmt.Errorf("expected %v, found %v events", ct0, ct)
+	}
+	return nil
 }

@@ -26,6 +26,15 @@ type Client struct {
 	Darc *darc.Darc
 }
 
+// TODO: This is a placeholder, while we are waiting for an OmniLedger admin
+// tool that will let us connect a public key to the right to create new eventlogs.
+var theEventLog omniledger.ObjectID
+
+func init() {
+	theEventLog.DarcID = omniledger.ZeroDarc
+	copy(theEventLog.InstanceID[:], []byte("index"))
+}
+
 // NewClient creates a new client to talk to the eventlog service.
 func NewClient(r *onet.Roster) *Client {
 	return &Client{
@@ -160,4 +169,18 @@ func makeTx(msgs []Event, darcID darc.ID, signers []darc.Signer) (*omniledger.Cl
 		tx.Instructions[i].Signatures = darcSigs
 	}
 	return &tx, nil
+}
+
+// Search executes a search on the filter in req. See the definition of
+// type SearchRequest for additional details about how the filter is interpreted.
+// The ID field of the SearchRequest will be filled in from c, if it is null.
+func (c *Client) Search(req *SearchRequest) (*SearchResponse, error) {
+	if req.ID.IsNull() {
+		req.ID = c.ID
+	}
+	reply := &SearchResponse{}
+	if err := c.SendProtobuf(c.roster.List[0], req, reply); err != nil {
+		return nil, err
+	}
+	return reply, nil
 }

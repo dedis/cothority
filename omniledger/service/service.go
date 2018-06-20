@@ -150,7 +150,6 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	if err != nil {
 		return nil, err
 	}
-	s.save()
 
 	s.workersMu.Lock()
 	s.queueWorkers[string(sb.SkipChainID())] = s.createQueueWorker(sb.SkipChainID(), req.BlockInterval)
@@ -214,6 +213,7 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.storage.Lock()
 	s.storage.PropTimeout = p
 	s.storage.Unlock()
+	s.save()
 }
 
 func toObjectID(dID darc.ID) ObjectID {
@@ -409,6 +409,13 @@ func (s *Service) updateCollection(msg network.Message) {
 	if !bytes.Equal(cdb.RootHash(), data.CollectionRoot) {
 		log.Error("hash of collection doesn't correspond to root hash")
 	}
+}
+
+// GetCollectionView returns a read-only accessor to the collection
+// for the given skipchain.
+func (s *Service) GetCollectionView(id skipchain.SkipBlockID) CollectionView {
+	cdb := s.getCollection(id)
+	return &roCollection{c: cdb.coll}
 }
 
 func (s *Service) getCollection(id skipchain.SkipBlockID) *collectionDB {
@@ -686,7 +693,7 @@ func (s *Service) isOurChain(gen skipchain.SkipBlockID) bool {
 	return false
 }
 
-// saves all skipblocks.
+// saves this service's config information
 func (s *Service) save() {
 	s.storage.Lock()
 	defer s.storage.Unlock()
