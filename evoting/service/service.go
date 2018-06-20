@@ -41,7 +41,7 @@ func init() {
 }
 
 // timeout for protocol termination.
-var timeout = 120 * time.Second
+var timeout = 600 * time.Second
 
 // serviceID is the onet identifier.
 var serviceID onet.ServiceID
