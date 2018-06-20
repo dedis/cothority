@@ -113,6 +113,33 @@ public class EventLog {
         }
     }
 
+    /**
+     * Searches for events based on topic and a time range. If the topic is an empty string, all topics within that
+     * range are returned (from < when <= to). The query may not return all events, this is indicated by the truncated
+     * flag in the return value.
+     * @param topic The topic to search, if it is an empty string, all topics are included. We do not support regex yet.
+     * @param from The start of the search range (exclusive).
+     * @param to The end of the search range (inclusive).
+     * @return SearchResponse with a list of events and a flag indicating whether the result is truncated.
+     * @throws CothorityCommunicationException
+     */
+    public SearchResponse search(String topic, long from, long to) throws CothorityCommunicationException {
+        EventLogProto.SearchRequest.Builder b = EventLogProto.SearchRequest.newBuilder();
+        b.setId(this.genesis.toProto());
+        b.setTopic(topic);
+        b.setFrom(from);
+        b.setTo(to);
+
+        ByteString msg = this.roster.sendMessage("EventLog/SearchRequest", b.build());
+
+        try {
+            EventLogProto.SearchResponse resp = EventLogProto.SearchResponse.parseFrom(msg);
+            return new SearchResponse(resp);
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
     private byte[] init(Roster roster, Darc ownerDarc, long blockInterval) throws CothorityCommunicationException  {
         EventLogProto.InitRequest.Builder b = EventLogProto.InitRequest.newBuilder();
         b.setRoster(roster.toProto());

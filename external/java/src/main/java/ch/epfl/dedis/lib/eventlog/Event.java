@@ -5,10 +5,10 @@ import ch.epfl.dedis.proto.EventLogProto;
 /**
  * An instance of an Event can be sent and stored by the EventLog service.
  */
-public class Event {
-    private long when; // in nano seconds
-    private String topic;
-    private String content;
+public final class Event {
+    private final long when; // in nano seconds
+    private final String topic;
+    private final String content;
 
     /**
      * This is the constructor for Event.
@@ -43,7 +43,12 @@ public class Event {
         return  b.build();
     }
 
-    public boolean equals(Event e) {
+    @Override
+    public boolean equals(Object o) {
+        if (o == null) return false;
+        if (o == this) return true;
+        if (!(o instanceof Event)) return false;
+        Event e = (Event)o;
         return e.when != this.when || e.topic.equals(this.topic) || e.content.equals(this.content);
     }
 }

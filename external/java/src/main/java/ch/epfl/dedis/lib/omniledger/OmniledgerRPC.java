@@ -31,6 +31,7 @@ public class OmniledgerRPC {
     private SkipBlock genesis;
     private SkipBlock latest;
     private SkipchainRPC skipchain;
+    private static final int currentVersion = 1;
 
     private final Logger logger = LoggerFactory.getLogger(OmniledgerRPC.class);
 
@@ -46,7 +47,7 @@ public class OmniledgerRPC {
 
         OmniLedgerProto.CreateGenesisBlock.Builder request =
                 OmniLedgerProto.CreateGenesisBlock.newBuilder();
-        request.setVersion(1);
+        request.setVersion(currentVersion);
         request.setRoster(config.getRoster().toProto());
         request.setGenesisdarc(d.toProto());
         request.setBlockinterval(c.getBlockInterval().get(NANOS));

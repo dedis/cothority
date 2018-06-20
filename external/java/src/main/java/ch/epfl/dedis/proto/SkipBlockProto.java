@@ -213,6 +213,9 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2285,7 +2288,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SkipBlock(input, extensionRegistry);
+        return new SkipBlock(input, extensionRegistry);
       }
     };
 
@@ -2379,6 +2382,9 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3292,7 +3298,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ForwardLink(input, extensionRegistry);
+        return new ForwardLink(input, extensionRegistry);
       }
     };
 
@@ -3360,6 +3366,9 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3876,7 +3885,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ByzcoinSig(input, extensionRegistry);
+        return new ByzcoinSig(input, extensionRegistry);
       }
     };
 
@@ -3944,6 +3953,9 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4460,7 +4472,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SchnorrSig(input, extensionRegistry);
+        return new SchnorrSig(input, extensionRegistry);
       }
     };
 
@@ -4528,6 +4540,9 @@ public final class SkipBlockProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5041,7 +5056,7 @@ public final class SkipBlockProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Exception(input, extensionRegistry);
+        return new Exception(input, extensionRegistry);
       }
     };
 
@@ -5103,7 +5118,7 @@ public final class SkipBlockProto {
       "\014\022\035\n\007forward\030\014 \003(\0132\014.ForwardLink\022\020\n\010chil" +
       "dren\030\r \003(\014\022\017\n\007payload\030\016 \001(\014\"c\n\013ForwardLi" +
       "nk\022\014\n\004from\030\001 \002(\014\022\n\n\002to\030\002 \002(\014\022\032\n\tnewRoste" +
-      "r\030\003 \001(\0132\007.Roster\022\036\n\tsignature\030\004 \002(\0132\013.By",
+      "r\030\003 \001(\0132\007.Roster\022\036\n\tsignature\030\004 \002(\0132\013.By" +
       "zcoinSig\"&\n\nByzcoinSig\022\013\n\003msg\030\001 \002(\014\022\013\n\003s" +
       "ig\030\002 \002(\014\"1\n\nSchnorrSig\022\021\n\tchallenge\030\001 \002(" +
       "\014\022\020\n\010response\030\002 \002(\014\".\n\tException\022\r\n\005inde" +

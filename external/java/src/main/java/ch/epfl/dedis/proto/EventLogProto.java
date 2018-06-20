@@ -83,6 +83,9 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -914,7 +917,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new InitRequest(input, extensionRegistry);
+        return new InitRequest(input, extensionRegistry);
       }
     };
 
@@ -976,6 +979,9 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1409,7 +1415,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new InitResponse(input, extensionRegistry);
+        return new InitResponse(input, extensionRegistry);
       }
     };
 
@@ -1484,6 +1490,9 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2117,7 +2126,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new LogRequest(input, extensionRegistry);
+        return new LogRequest(input, extensionRegistry);
       }
     };
 
@@ -2209,6 +2218,9 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2954,7 +2966,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Event(input, extensionRegistry);
+        return new Event(input, extensionRegistry);
       }
     };
 
@@ -3006,6 +3018,9 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -3346,7 +3361,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new LogResponse(input, extensionRegistry);
+        return new LogResponse(input, extensionRegistry);
       }
     };
 
@@ -3418,6 +3433,9 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3938,7 +3956,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new GetEventRequest(input, extensionRegistry);
+        return new GetEventRequest(input, extensionRegistry);
       }
     };
 
@@ -4003,6 +4021,9 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4549,7 +4570,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new GetEventResponse(input, extensionRegistry);
+        return new GetEventResponse(input, extensionRegistry);
       }
     };
 
@@ -4563,6 +4584,1906 @@ public final class EventLogProto {
     }
 
     public ch.epfl.dedis.proto.EventLogProto.GetEventResponse getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface SearchRequestOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:SearchRequest)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    boolean hasId();
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    com.google.protobuf.ByteString getId();
+
+    /**
+     * <pre>
+     * Return events where Event.Topic == Topic, if Topic != "".
+     * </pre>
+     *
+     * <code>required string topic = 2;</code>
+     */
+    boolean hasTopic();
+    /**
+     * <pre>
+     * Return events where Event.Topic == Topic, if Topic != "".
+     * </pre>
+     *
+     * <code>required string topic = 2;</code>
+     */
+    java.lang.String getTopic();
+    /**
+     * <pre>
+     * Return events where Event.Topic == Topic, if Topic != "".
+     * </pre>
+     *
+     * <code>required string topic = 2;</code>
+     */
+    com.google.protobuf.ByteString
+        getTopicBytes();
+
+    /**
+     * <pre>
+     * Return events where When is &gt; From.
+     * </pre>
+     *
+     * <code>required sint64 from = 3;</code>
+     */
+    boolean hasFrom();
+    /**
+     * <pre>
+     * Return events where When is &gt; From.
+     * </pre>
+     *
+     * <code>required sint64 from = 3;</code>
+     */
+    long getFrom();
+
+    /**
+     * <pre>
+     * Return events where When is &lt;= To.
+     * </pre>
+     *
+     * <code>required sint64 to = 4;</code>
+     */
+    boolean hasTo();
+    /**
+     * <pre>
+     * Return events where When is &lt;= To.
+     * </pre>
+     *
+     * <code>required sint64 to = 4;</code>
+     */
+    long getTo();
+  }
+  /**
+   * <pre>
+   * SearchRequest includes all the search parameters (AND of all provided search
+   * parameters). Topic == "" means "any topic". From == 0 means "from the first
+   * event", and To == 0 means "until now". From and To should be set using the
+   * UnixNano() method in package time.
+   * </pre>
+   *
+   * Protobuf type {@code SearchRequest}
+   */
+  public  static final class SearchRequest extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:SearchRequest)
+      SearchRequestOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use SearchRequest.newBuilder() to construct.
+    private SearchRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private SearchRequest() {
+      id_ = com.google.protobuf.ByteString.EMPTY;
+      topic_ = "";
+      from_ = 0L;
+      to_ = 0L;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SearchRequest(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              id_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000002;
+              topic_ = bs;
+              break;
+            }
+            case 24: {
+              bitField0_ |= 0x00000004;
+              from_ = input.readSInt64();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              to_ = input.readSInt64();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.EventLogProto.internal_static_SearchRequest_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.EventLogProto.internal_static_SearchRequest_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.EventLogProto.SearchRequest.class, ch.epfl.dedis.proto.EventLogProto.SearchRequest.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int ID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString id_;
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    public boolean hasId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    public com.google.protobuf.ByteString getId() {
+      return id_;
+    }
+
+    public static final int TOPIC_FIELD_NUMBER = 2;
+    private volatile java.lang.Object topic_;
+    /**
+     * <pre>
+     * Return events where Event.Topic == Topic, if Topic != "".
+     * </pre>
+     *
+     * <code>required string topic = 2;</code>
+     */
+    public boolean hasTopic() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * Return events where Event.Topic == Topic, if Topic != "".
+     * </pre>
+     *
+     * <code>required string topic = 2;</code>
+     */
+    public java.lang.String getTopic() {
+      java.lang.Object ref = topic_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          topic_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <pre>
+     * Return events where Event.Topic == Topic, if Topic != "".
+     * </pre>
+     *
+     * <code>required string topic = 2;</code>
+     */
+    public com.google.protobuf.ByteString
+        getTopicBytes() {
+      java.lang.Object ref = topic_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        topic_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
+    public static final int FROM_FIELD_NUMBER = 3;
+    private long from_;
+    /**
+     * <pre>
+     * Return events where When is &gt; From.
+     * </pre>
+     *
+     * <code>required sint64 from = 3;</code>
+     */
+    public boolean hasFrom() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * Return events where When is &gt; From.
+     * </pre>
+     *
+     * <code>required sint64 from = 3;</code>
+     */
+    public long getFrom() {
+      return from_;
+    }
+
+    public static final int TO_FIELD_NUMBER = 4;
+    private long to_;
+    /**
+     * <pre>
+     * Return events where When is &lt;= To.
+     * </pre>
+     *
+     * <code>required sint64 to = 4;</code>
+     */
+    public boolean hasTo() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <pre>
+     * Return events where When is &lt;= To.
+     * </pre>
+     *
+     * <code>required sint64 to = 4;</code>
+     */
+    public long getTo() {
+      return to_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasTopic()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasFrom()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasTo()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, id_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 2, topic_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeSInt64(3, from_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeSInt64(4, to_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, id_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, topic_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(3, from_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(4, to_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.EventLogProto.SearchRequest)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.EventLogProto.SearchRequest other = (ch.epfl.dedis.proto.EventLogProto.SearchRequest) obj;
+
+      boolean result = true;
+      result = result && (hasId() == other.hasId());
+      if (hasId()) {
+        result = result && getId()
+            .equals(other.getId());
+      }
+      result = result && (hasTopic() == other.hasTopic());
+      if (hasTopic()) {
+        result = result && getTopic()
+            .equals(other.getTopic());
+      }
+      result = result && (hasFrom() == other.hasFrom());
+      if (hasFrom()) {
+        result = result && (getFrom()
+            == other.getFrom());
+      }
+      result = result && (hasTo() == other.hasTo());
+      if (hasTo()) {
+        result = result && (getTo()
+            == other.getTo());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasId()) {
+        hash = (37 * hash) + ID_FIELD_NUMBER;
+        hash = (53 * hash) + getId().hashCode();
+      }
+      if (hasTopic()) {
+        hash = (37 * hash) + TOPIC_FIELD_NUMBER;
+        hash = (53 * hash) + getTopic().hashCode();
+      }
+      if (hasFrom()) {
+        hash = (37 * hash) + FROM_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getFrom());
+      }
+      if (hasTo()) {
+        hash = (37 * hash) + TO_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getTo());
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.EventLogProto.SearchRequest prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * SearchRequest includes all the search parameters (AND of all provided search
+     * parameters). Topic == "" means "any topic". From == 0 means "from the first
+     * event", and To == 0 means "until now". From and To should be set using the
+     * UnixNano() method in package time.
+     * </pre>
+     *
+     * Protobuf type {@code SearchRequest}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:SearchRequest)
+        ch.epfl.dedis.proto.EventLogProto.SearchRequestOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.EventLogProto.internal_static_SearchRequest_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.EventLogProto.internal_static_SearchRequest_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.EventLogProto.SearchRequest.class, ch.epfl.dedis.proto.EventLogProto.SearchRequest.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.EventLogProto.SearchRequest.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        id_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        topic_ = "";
+        bitField0_ = (bitField0_ & ~0x00000002);
+        from_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        to_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.EventLogProto.internal_static_SearchRequest_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.EventLogProto.SearchRequest getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.EventLogProto.SearchRequest.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.EventLogProto.SearchRequest build() {
+        ch.epfl.dedis.proto.EventLogProto.SearchRequest result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.EventLogProto.SearchRequest buildPartial() {
+        ch.epfl.dedis.proto.EventLogProto.SearchRequest result = new ch.epfl.dedis.proto.EventLogProto.SearchRequest(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.id_ = id_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.topic_ = topic_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.from_ = from_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.to_ = to_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.EventLogProto.SearchRequest) {
+          return mergeFrom((ch.epfl.dedis.proto.EventLogProto.SearchRequest)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.EventLogProto.SearchRequest other) {
+        if (other == ch.epfl.dedis.proto.EventLogProto.SearchRequest.getDefaultInstance()) return this;
+        if (other.hasId()) {
+          setId(other.getId());
+        }
+        if (other.hasTopic()) {
+          bitField0_ |= 0x00000002;
+          topic_ = other.topic_;
+          onChanged();
+        }
+        if (other.hasFrom()) {
+          setFrom(other.getFrom());
+        }
+        if (other.hasTo()) {
+          setTo(other.getTo());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasId()) {
+          return false;
+        }
+        if (!hasTopic()) {
+          return false;
+        }
+        if (!hasFrom()) {
+          return false;
+        }
+        if (!hasTo()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.EventLogProto.SearchRequest parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.EventLogProto.SearchRequest) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public boolean hasId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public com.google.protobuf.ByteString getId() {
+        return id_;
+      }
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public Builder setId(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        id_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public Builder clearId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        id_ = getDefaultInstance().getId();
+        onChanged();
+        return this;
+      }
+
+      private java.lang.Object topic_ = "";
+      /**
+       * <pre>
+       * Return events where Event.Topic == Topic, if Topic != "".
+       * </pre>
+       *
+       * <code>required string topic = 2;</code>
+       */
+      public boolean hasTopic() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <pre>
+       * Return events where Event.Topic == Topic, if Topic != "".
+       * </pre>
+       *
+       * <code>required string topic = 2;</code>
+       */
+      public java.lang.String getTopic() {
+        java.lang.Object ref = topic_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            topic_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Return events where Event.Topic == Topic, if Topic != "".
+       * </pre>
+       *
+       * <code>required string topic = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getTopicBytes() {
+        java.lang.Object ref = topic_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          topic_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <pre>
+       * Return events where Event.Topic == Topic, if Topic != "".
+       * </pre>
+       *
+       * <code>required string topic = 2;</code>
+       */
+      public Builder setTopic(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        topic_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Return events where Event.Topic == Topic, if Topic != "".
+       * </pre>
+       *
+       * <code>required string topic = 2;</code>
+       */
+      public Builder clearTopic() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        topic_ = getDefaultInstance().getTopic();
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Return events where Event.Topic == Topic, if Topic != "".
+       * </pre>
+       *
+       * <code>required string topic = 2;</code>
+       */
+      public Builder setTopicBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        topic_ = value;
+        onChanged();
+        return this;
+      }
+
+      private long from_ ;
+      /**
+       * <pre>
+       * Return events where When is &gt; From.
+       * </pre>
+       *
+       * <code>required sint64 from = 3;</code>
+       */
+      public boolean hasFrom() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * Return events where When is &gt; From.
+       * </pre>
+       *
+       * <code>required sint64 from = 3;</code>
+       */
+      public long getFrom() {
+        return from_;
+      }
+      /**
+       * <pre>
+       * Return events where When is &gt; From.
+       * </pre>
+       *
+       * <code>required sint64 from = 3;</code>
+       */
+      public Builder setFrom(long value) {
+        bitField0_ |= 0x00000004;
+        from_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Return events where When is &gt; From.
+       * </pre>
+       *
+       * <code>required sint64 from = 3;</code>
+       */
+      public Builder clearFrom() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        from_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private long to_ ;
+      /**
+       * <pre>
+       * Return events where When is &lt;= To.
+       * </pre>
+       *
+       * <code>required sint64 to = 4;</code>
+       */
+      public boolean hasTo() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <pre>
+       * Return events where When is &lt;= To.
+       * </pre>
+       *
+       * <code>required sint64 to = 4;</code>
+       */
+      public long getTo() {
+        return to_;
+      }
+      /**
+       * <pre>
+       * Return events where When is &lt;= To.
+       * </pre>
+       *
+       * <code>required sint64 to = 4;</code>
+       */
+      public Builder setTo(long value) {
+        bitField0_ |= 0x00000008;
+        to_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Return events where When is &lt;= To.
+       * </pre>
+       *
+       * <code>required sint64 to = 4;</code>
+       */
+      public Builder clearTo() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        to_ = 0L;
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:SearchRequest)
+    }
+
+    // @@protoc_insertion_point(class_scope:SearchRequest)
+    private static final ch.epfl.dedis.proto.EventLogProto.SearchRequest DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.EventLogProto.SearchRequest();
+    }
+
+    public static ch.epfl.dedis.proto.EventLogProto.SearchRequest getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<SearchRequest>
+        PARSER = new com.google.protobuf.AbstractParser<SearchRequest>() {
+      public SearchRequest parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SearchRequest(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<SearchRequest> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SearchRequest> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.EventLogProto.SearchRequest getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface SearchResponseOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:SearchResponse)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated .Event events = 1;</code>
+     */
+    java.util.List<ch.epfl.dedis.proto.EventLogProto.Event> 
+        getEventsList();
+    /**
+     * <code>repeated .Event events = 1;</code>
+     */
+    ch.epfl.dedis.proto.EventLogProto.Event getEvents(int index);
+    /**
+     * <code>repeated .Event events = 1;</code>
+     */
+    int getEventsCount();
+    /**
+     * <code>repeated .Event events = 1;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.proto.EventLogProto.EventOrBuilder> 
+        getEventsOrBuilderList();
+    /**
+     * <code>repeated .Event events = 1;</code>
+     */
+    ch.epfl.dedis.proto.EventLogProto.EventOrBuilder getEventsOrBuilder(
+        int index);
+
+    /**
+     * <pre>
+     * Events does not contain all the results. The caller should formulate a new
+     * SearchRequest to continue searching, for instance by setting From to the
+     * time of the last received event.
+     * </pre>
+     *
+     * <code>required bool truncated = 2;</code>
+     */
+    boolean hasTruncated();
+    /**
+     * <pre>
+     * Events does not contain all the results. The caller should formulate a new
+     * SearchRequest to continue searching, for instance by setting From to the
+     * time of the last received event.
+     * </pre>
+     *
+     * <code>required bool truncated = 2;</code>
+     */
+    boolean getTruncated();
+  }
+  /**
+   * <pre>
+   * SearchResponse is the reply to LogRequest.
+   * </pre>
+   *
+   * Protobuf type {@code SearchResponse}
+   */
+  public  static final class SearchResponse extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:SearchResponse)
+      SearchResponseOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use SearchResponse.newBuilder() to construct.
+    private SearchResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private SearchResponse() {
+      events_ = java.util.Collections.emptyList();
+      truncated_ = false;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private SearchResponse(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                events_ = new java.util.ArrayList<ch.epfl.dedis.proto.EventLogProto.Event>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              events_.add(
+                  input.readMessage(ch.epfl.dedis.proto.EventLogProto.Event.PARSER, extensionRegistry));
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000001;
+              truncated_ = input.readBool();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          events_ = java.util.Collections.unmodifiableList(events_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.EventLogProto.internal_static_SearchResponse_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.EventLogProto.internal_static_SearchResponse_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.EventLogProto.SearchResponse.class, ch.epfl.dedis.proto.EventLogProto.SearchResponse.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int EVENTS_FIELD_NUMBER = 1;
+    private java.util.List<ch.epfl.dedis.proto.EventLogProto.Event> events_;
+    /**
+     * <code>repeated .Event events = 1;</code>
+     */
+    public java.util.List<ch.epfl.dedis.proto.EventLogProto.Event> getEventsList() {
+      return events_;
+    }
+    /**
+     * <code>repeated .Event events = 1;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.proto.EventLogProto.EventOrBuilder> 
+        getEventsOrBuilderList() {
+      return events_;
+    }
+    /**
+     * <code>repeated .Event events = 1;</code>
+     */
+    public int getEventsCount() {
+      return events_.size();
+    }
+    /**
+     * <code>repeated .Event events = 1;</code>
+     */
+    public ch.epfl.dedis.proto.EventLogProto.Event getEvents(int index) {
+      return events_.get(index);
+    }
+    /**
+     * <code>repeated .Event events = 1;</code>
+     */
+    public ch.epfl.dedis.proto.EventLogProto.EventOrBuilder getEventsOrBuilder(
+        int index) {
+      return events_.get(index);
+    }
+
+    public static final int TRUNCATED_FIELD_NUMBER = 2;
+    private boolean truncated_;
+    /**
+     * <pre>
+     * Events does not contain all the results. The caller should formulate a new
+     * SearchRequest to continue searching, for instance by setting From to the
+     * time of the last received event.
+     * </pre>
+     *
+     * <code>required bool truncated = 2;</code>
+     */
+    public boolean hasTruncated() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * Events does not contain all the results. The caller should formulate a new
+     * SearchRequest to continue searching, for instance by setting From to the
+     * time of the last received event.
+     * </pre>
+     *
+     * <code>required bool truncated = 2;</code>
+     */
+    public boolean getTruncated() {
+      return truncated_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasTruncated()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      for (int i = 0; i < getEventsCount(); i++) {
+        if (!getEvents(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < events_.size(); i++) {
+        output.writeMessage(1, events_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBool(2, truncated_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < events_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, events_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBoolSize(2, truncated_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.EventLogProto.SearchResponse)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.EventLogProto.SearchResponse other = (ch.epfl.dedis.proto.EventLogProto.SearchResponse) obj;
+
+      boolean result = true;
+      result = result && getEventsList()
+          .equals(other.getEventsList());
+      result = result && (hasTruncated() == other.hasTruncated());
+      if (hasTruncated()) {
+        result = result && (getTruncated()
+            == other.getTruncated());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getEventsCount() > 0) {
+        hash = (37 * hash) + EVENTS_FIELD_NUMBER;
+        hash = (53 * hash) + getEventsList().hashCode();
+      }
+      if (hasTruncated()) {
+        hash = (37 * hash) + TRUNCATED_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(
+            getTruncated());
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.EventLogProto.SearchResponse prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * SearchResponse is the reply to LogRequest.
+     * </pre>
+     *
+     * Protobuf type {@code SearchResponse}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:SearchResponse)
+        ch.epfl.dedis.proto.EventLogProto.SearchResponseOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.EventLogProto.internal_static_SearchResponse_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.EventLogProto.internal_static_SearchResponse_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.EventLogProto.SearchResponse.class, ch.epfl.dedis.proto.EventLogProto.SearchResponse.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.EventLogProto.SearchResponse.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getEventsFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        if (eventsBuilder_ == null) {
+          events_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          eventsBuilder_.clear();
+        }
+        truncated_ = false;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.EventLogProto.internal_static_SearchResponse_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.EventLogProto.SearchResponse getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.EventLogProto.SearchResponse.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.EventLogProto.SearchResponse build() {
+        ch.epfl.dedis.proto.EventLogProto.SearchResponse result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.EventLogProto.SearchResponse buildPartial() {
+        ch.epfl.dedis.proto.EventLogProto.SearchResponse result = new ch.epfl.dedis.proto.EventLogProto.SearchResponse(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (eventsBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            events_ = java.util.Collections.unmodifiableList(events_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.events_ = events_;
+        } else {
+          result.events_ = eventsBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.truncated_ = truncated_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.EventLogProto.SearchResponse) {
+          return mergeFrom((ch.epfl.dedis.proto.EventLogProto.SearchResponse)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.EventLogProto.SearchResponse other) {
+        if (other == ch.epfl.dedis.proto.EventLogProto.SearchResponse.getDefaultInstance()) return this;
+        if (eventsBuilder_ == null) {
+          if (!other.events_.isEmpty()) {
+            if (events_.isEmpty()) {
+              events_ = other.events_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureEventsIsMutable();
+              events_.addAll(other.events_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.events_.isEmpty()) {
+            if (eventsBuilder_.isEmpty()) {
+              eventsBuilder_.dispose();
+              eventsBuilder_ = null;
+              events_ = other.events_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              eventsBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getEventsFieldBuilder() : null;
+            } else {
+              eventsBuilder_.addAllMessages(other.events_);
+            }
+          }
+        }
+        if (other.hasTruncated()) {
+          setTruncated(other.getTruncated());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasTruncated()) {
+          return false;
+        }
+        for (int i = 0; i < getEventsCount(); i++) {
+          if (!getEvents(i).isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.EventLogProto.SearchResponse parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.EventLogProto.SearchResponse) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<ch.epfl.dedis.proto.EventLogProto.Event> events_ =
+        java.util.Collections.emptyList();
+      private void ensureEventsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          events_ = new java.util.ArrayList<ch.epfl.dedis.proto.EventLogProto.Event>(events_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.proto.EventLogProto.Event, ch.epfl.dedis.proto.EventLogProto.Event.Builder, ch.epfl.dedis.proto.EventLogProto.EventOrBuilder> eventsBuilder_;
+
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public java.util.List<ch.epfl.dedis.proto.EventLogProto.Event> getEventsList() {
+        if (eventsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(events_);
+        } else {
+          return eventsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public int getEventsCount() {
+        if (eventsBuilder_ == null) {
+          return events_.size();
+        } else {
+          return eventsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public ch.epfl.dedis.proto.EventLogProto.Event getEvents(int index) {
+        if (eventsBuilder_ == null) {
+          return events_.get(index);
+        } else {
+          return eventsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public Builder setEvents(
+          int index, ch.epfl.dedis.proto.EventLogProto.Event value) {
+        if (eventsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureEventsIsMutable();
+          events_.set(index, value);
+          onChanged();
+        } else {
+          eventsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public Builder setEvents(
+          int index, ch.epfl.dedis.proto.EventLogProto.Event.Builder builderForValue) {
+        if (eventsBuilder_ == null) {
+          ensureEventsIsMutable();
+          events_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          eventsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public Builder addEvents(ch.epfl.dedis.proto.EventLogProto.Event value) {
+        if (eventsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureEventsIsMutable();
+          events_.add(value);
+          onChanged();
+        } else {
+          eventsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public Builder addEvents(
+          int index, ch.epfl.dedis.proto.EventLogProto.Event value) {
+        if (eventsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureEventsIsMutable();
+          events_.add(index, value);
+          onChanged();
+        } else {
+          eventsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public Builder addEvents(
+          ch.epfl.dedis.proto.EventLogProto.Event.Builder builderForValue) {
+        if (eventsBuilder_ == null) {
+          ensureEventsIsMutable();
+          events_.add(builderForValue.build());
+          onChanged();
+        } else {
+          eventsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public Builder addEvents(
+          int index, ch.epfl.dedis.proto.EventLogProto.Event.Builder builderForValue) {
+        if (eventsBuilder_ == null) {
+          ensureEventsIsMutable();
+          events_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          eventsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public Builder addAllEvents(
+          java.lang.Iterable<? extends ch.epfl.dedis.proto.EventLogProto.Event> values) {
+        if (eventsBuilder_ == null) {
+          ensureEventsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, events_);
+          onChanged();
+        } else {
+          eventsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public Builder clearEvents() {
+        if (eventsBuilder_ == null) {
+          events_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          eventsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public Builder removeEvents(int index) {
+        if (eventsBuilder_ == null) {
+          ensureEventsIsMutable();
+          events_.remove(index);
+          onChanged();
+        } else {
+          eventsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public ch.epfl.dedis.proto.EventLogProto.Event.Builder getEventsBuilder(
+          int index) {
+        return getEventsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public ch.epfl.dedis.proto.EventLogProto.EventOrBuilder getEventsOrBuilder(
+          int index) {
+        if (eventsBuilder_ == null) {
+          return events_.get(index);  } else {
+          return eventsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.proto.EventLogProto.EventOrBuilder> 
+           getEventsOrBuilderList() {
+        if (eventsBuilder_ != null) {
+          return eventsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(events_);
+        }
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public ch.epfl.dedis.proto.EventLogProto.Event.Builder addEventsBuilder() {
+        return getEventsFieldBuilder().addBuilder(
+            ch.epfl.dedis.proto.EventLogProto.Event.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public ch.epfl.dedis.proto.EventLogProto.Event.Builder addEventsBuilder(
+          int index) {
+        return getEventsFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.proto.EventLogProto.Event.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .Event events = 1;</code>
+       */
+      public java.util.List<ch.epfl.dedis.proto.EventLogProto.Event.Builder> 
+           getEventsBuilderList() {
+        return getEventsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.proto.EventLogProto.Event, ch.epfl.dedis.proto.EventLogProto.Event.Builder, ch.epfl.dedis.proto.EventLogProto.EventOrBuilder> 
+          getEventsFieldBuilder() {
+        if (eventsBuilder_ == null) {
+          eventsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.proto.EventLogProto.Event, ch.epfl.dedis.proto.EventLogProto.Event.Builder, ch.epfl.dedis.proto.EventLogProto.EventOrBuilder>(
+                  events_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          events_ = null;
+        }
+        return eventsBuilder_;
+      }
+
+      private boolean truncated_ ;
+      /**
+       * <pre>
+       * Events does not contain all the results. The caller should formulate a new
+       * SearchRequest to continue searching, for instance by setting From to the
+       * time of the last received event.
+       * </pre>
+       *
+       * <code>required bool truncated = 2;</code>
+       */
+      public boolean hasTruncated() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <pre>
+       * Events does not contain all the results. The caller should formulate a new
+       * SearchRequest to continue searching, for instance by setting From to the
+       * time of the last received event.
+       * </pre>
+       *
+       * <code>required bool truncated = 2;</code>
+       */
+      public boolean getTruncated() {
+        return truncated_;
+      }
+      /**
+       * <pre>
+       * Events does not contain all the results. The caller should formulate a new
+       * SearchRequest to continue searching, for instance by setting From to the
+       * time of the last received event.
+       * </pre>
+       *
+       * <code>required bool truncated = 2;</code>
+       */
+      public Builder setTruncated(boolean value) {
+        bitField0_ |= 0x00000002;
+        truncated_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Events does not contain all the results. The caller should formulate a new
+       * SearchRequest to continue searching, for instance by setting From to the
+       * time of the last received event.
+       * </pre>
+       *
+       * <code>required bool truncated = 2;</code>
+       */
+      public Builder clearTruncated() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        truncated_ = false;
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:SearchResponse)
+    }
+
+    // @@protoc_insertion_point(class_scope:SearchResponse)
+    private static final ch.epfl.dedis.proto.EventLogProto.SearchResponse DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.EventLogProto.SearchResponse();
+    }
+
+    public static ch.epfl.dedis.proto.EventLogProto.SearchResponse getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<SearchResponse>
+        PARSER = new com.google.protobuf.AbstractParser<SearchResponse>() {
+      public SearchResponse parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new SearchResponse(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<SearchResponse> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<SearchResponse> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.EventLogProto.SearchResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -4603,6 +6524,16 @@ public final class EventLogProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_GetEventResponse_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_SearchRequest_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_SearchRequest_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_SearchResponse_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_SearchResponse_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -4621,9 +6552,12 @@ public final class EventLogProto {
       "ransaction\"5\n\005Event\022\014\n\004when\030\001 \002(\022\022\r\n\005top" +
       "ic\030\002 \002(\t\022\017\n\007content\030\003 \002(\t\"\r\n\013LogResponse" +
       "\"3\n\017GetEventRequest\022\023\n\013skipchainid\030\001 \002(\014" +
-      "\022\013\n\003key\030\002 \002(\014\")\n\020GetEventResponse\022\025\n\005eve",
-      "nt\030\001 \002(\0132\006.EventB$\n\023ch.epfl.dedis.protoB" +
-      "\rEventLogProto"
+      "\022\013\n\003key\030\002 \002(\014\")\n\020GetEventResponse\022\025\n\005eve" +
+      "nt\030\001 \002(\0132\006.Event\"D\n\rSearchRequest\022\n\n\002id\030" +
+      "\001 \002(\014\022\r\n\005topic\030\002 \002(\t\022\014\n\004from\030\003 \002(\022\022\n\n\002to" +
+      "\030\004 \002(\022\";\n\016SearchResponse\022\026\n\006events\030\001 \003(\013" +
+      "2\006.Event\022\021\n\ttruncated\030\002 \002(\010B$\n\023ch.epfl.d" +
+      "edis.protoB\rEventLogProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -4682,6 +6616,18 @@ public final class EventLogProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_GetEventResponse_descriptor,
         new java.lang.String[] { "Event", });
+    internal_static_SearchRequest_descriptor =
+      getDescriptor().getMessageTypes().get(7);
+    internal_static_SearchRequest_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_SearchRequest_descriptor,
+        new java.lang.String[] { "Id", "Topic", "From", "To", });
+    internal_static_SearchResponse_descriptor =
+      getDescriptor().getMessageTypes().get(8);
+    internal_static_SearchResponse_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_SearchResponse_descriptor,
+        new java.lang.String[] { "Events", "Truncated", });
     ch.epfl.dedis.proto.RosterProto.getDescriptor();
     ch.epfl.dedis.proto.DarcProto.getDescriptor();
     ch.epfl.dedis.proto.TransactionProto.getDescriptor();

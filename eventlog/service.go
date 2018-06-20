@@ -3,6 +3,7 @@ package eventlog
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"time"
 
 	omniledger "github.com/dedis/cothority/omniledger/service"
@@ -208,7 +209,8 @@ const contractName = "eventlog"
 func (s *Service) decodeAndCheckEvent(coll omniledger.CollectionView, eventBuf []byte) (*Event, error) {
 	// Check the timestamp of the event: it should never be in the future,
 	// and it should not be more than 5 seconds in the past. (Why 5?
-	// Because a #of blocks limit is too fragile when using fast blocks for tests.)
+	// Because a #of blocks limit is too fragile when using fast blocks for
+	// tests.)
 	event := &Event{}
 	err := protobuf.Decode(eventBuf, event)
 	if err != nil {
@@ -217,7 +219,7 @@ func (s *Service) decodeAndCheckEvent(coll omniledger.CollectionView, eventBuf [
 	when := time.Unix(0, event.When)
 	now := time.Now()
 	if when.Before(now.Add(-5 * time.Second)) {
-		return nil, errors.New("event timestamp too long ago")
+		return nil, fmt.Errorf("event timestamp too long ago - when=%v, now=%v", when, now)
 	}
 	if when.After(now) {
 		return nil, errors.New("event timestamp is in the future")
