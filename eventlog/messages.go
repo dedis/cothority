@@ -53,9 +53,10 @@ type LogRequest struct {
 type LogResponse struct {
 }
 
-// SearchRequest includes all the search parameters (AND of all provided search parameters).
-// Topic == "" means "any topic". From == 0 means "from the first event", and To == 0
-// means "until now". From and To should be set using the UnixNano() method in package time.
+// SearchRequest includes all the search parameters (AND of all provided search
+// parameters). Topic == "" means "any topic". From == 0 means "from the first
+// event", and To == 0 means "until now". From and To should be set using the
+// UnixNano() method in package time.
 type SearchRequest struct {
 	ID    skipchain.SkipBlockID
 	Topic string // Return events where Event.Topic == Topic, if Topic != "".
