@@ -66,17 +66,14 @@ func TestGB(t *testing.T) {
 
 	db, bucket := ts0.GetAdditionalBucket([]byte("skipblocks"))
 	ts0.Db = skipchain.NewSkipBlockDB(db, bucket)
-	ts0.Db.Store(sb0)
-	ts0.Db.Store(sb1)
-	ts0.Db.Store(sb2)
-	ts0.Db.Store(sb3)
 	db, bucket = ts1.GetAdditionalBucket([]byte("skipblocks"))
 	ts1.Db = skipchain.NewSkipBlockDB(db, bucket)
-	ts1.Db.Store(sb0)
-	ts1.Db.Store(sb1)
-	ts1.Db.Store(sb2)
-	ts1.Db.Store(sb3)
 	ts2.Db = skipchain.NewSkipBlockDB(db, bucket)
+	blocks := []*skipchain.SkipBlock{sb0, sb1, sb2, sb3}
+	_, err := ts0.Db.StoreBlocks(blocks)
+	require.Nil(t, err)
+	_, err = ts1.Db.StoreBlocks(blocks)
+	require.Nil(t, err)
 	// do not save anything into ts2 so that
 	// it is totally out of date, and cannot answer anything
 
