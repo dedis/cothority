@@ -963,7 +963,20 @@ func (s *Service) bftForwardLinkLevel0(msg, data []byte) bool {
 				log.Lvlf2("Found no user verification for %x", ver)
 				return false
 			}
-			if !f(fl.To, fs.Newest) {
+			// Now we call the verification function. Wrap up f() inside of
+			// g(), so that we can recover panics from f().
+			g := func(to []byte, newest *SkipBlock) (out bool) {
+				defer func() {
+					if re := recover(); re != nil {
+						log.Error("verification function panic: " + re.(string))
+						out = false
+					}
+				}()
+				out = f(to, newest)
+				return
+			}
+
+			if !g(fl.To, fs.Newest) {
 				fname := runtime.FuncForPC(reflect.ValueOf(f).Pointer()).Name()
 				log.Lvlf2("verification function failed: %v %s", fname, ver)
 				return false

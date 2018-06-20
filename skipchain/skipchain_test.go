@@ -344,6 +344,32 @@ func TestService_ProtocolVerification(t *testing.T) {
 	}
 }
 
+func TestService_ProtocolVerificationPanic(t *testing.T) {
+	// Testing whether we sign correctly the SkipBlocks
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	_, el, s := local.MakeSRS(cothority.Suite, 3, skipchainSID)
+	s1 := s.(*Service)
+	verifyFunc := func(newID []byte, newSB *SkipBlock) bool {
+		panic("nope")
+	}
+	verifyID := VerifierID(uuid.NewV1())
+	for _, s := range local.Services {
+		s[skipchainSID].(*Service).registerVerification(verifyID, verifyFunc)
+	}
+
+	sbRoot, err := makeGenesisRosterArgs(s1, el, nil, []VerifierID{verifyID}, 1, 1)
+	require.NoError(t, err)
+	sbNext := sbRoot.Copy()
+	sbNext.BackLinkIDs = []SkipBlockID{sbRoot.Hash}
+	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sbNext})
+	require.Error(t, err)
+
+	// We expect a failure here, because the verification function is panicing.
+	require.Contains(t, err.Error(), "couldn't sign forward-link")
+}
+
 func TestService_RegisterVerification(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
 	onet.RegisterNewService("ServiceVerify", newServiceVerify)
