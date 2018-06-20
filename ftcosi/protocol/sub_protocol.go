@@ -64,18 +64,14 @@ func NewSubFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite)
 		c.subResponse = make(chan StructResponse)
 	}
 
-	for _, channel := range []interface{}{
-		&c.ChannelAnnouncement,
+	err := c.RegisterChannels(&c.ChannelAnnouncement,
 		&c.ChannelCommitment,
 		&c.ChannelChallenge,
-		&c.ChannelResponse,
-	} {
-		err := c.RegisterChannel(channel)
-		if err != nil {
-			return nil, errors.New("couldn't register channel: " + err.Error())
-		}
+		&c.ChannelResponse)
+	if err != nil {
+		return nil, errors.New("couldn't register channels: " + err.Error())
 	}
-	err := c.RegisterHandler(c.HandleStop)
+	err = c.RegisterHandler(c.HandleStop)
 	if err != nil {
 		return nil, errors.New("couldn't register stop handler: " + err.Error())
 	}
@@ -220,6 +216,9 @@ func (p *SubFtCosi) Dispatch() error {
 	if !channelOpen || challenge.TreeNode == nil {
 		return nil
 	}
+	if challenge.AggregateCommit == nil {
+		log.Warn("Got an old, insecure challenge from", p.ServerIdentity())
+	}
 
 	log.Lvl3(p.ServerIdentity(), "received challenge")
 	go func() {
@@ -260,6 +259,19 @@ func (p *SubFtCosi) Dispatch() error {
 		p.subResponse <- responses[0]
 	} else {
 		// generate own response and send to parent
+		if challenge.AggregateCommit == nil || challenge.Mask == nil {
+			log.Warn("Only have pre-calculated challange - this is dangerous!")
+		} else {
+			cosiChallenge, err := cosi.Challenge(p.suite, challenge.AggregateCommit,
+				challenge.Mask.AggregatePublic, p.Msg)
+			if err != nil {
+				return err
+			}
+			if !cosiChallenge.Equal(challenge.CoSiChallenge) {
+				log.Warn("Pre-calculated challange is not the same as ours!")
+				challenge.CoSiChallenge = cosiChallenge
+			}
+		}
 		response, err := generateResponse(
 			p.suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge, ok)
 		if err != nil {
