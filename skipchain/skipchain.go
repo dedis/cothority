@@ -169,7 +169,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 		}
 	}
 	var prev *SkipBlock
-	var changed []*SkipBlock
 
 	// If TargetSkipChainID is not given, it is a genesis block.
 	if psbd.TargetSkipChainID.IsNull() {
@@ -189,6 +188,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			return nil, err
 		}
 
+		var changed []*SkipBlock
 		if !prop.ParentBlockID.IsNull() {
 			parent := s.db.GetByID(prop.ParentBlockID)
 			if parent == nil {
@@ -199,7 +199,12 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			changed = append(changed, parent)
 		}
 		changed = append(changed, prop)
+		log.Lvlf3("Propagate %d blocks", len(changed))
+		if err := s.startPropagation(changed); err != nil {
+			return nil, errors.New(
+				"Couldn't propagate new blocks: " + err.Error())
 
+		}
 	} else {
 
 		// We're appending a block to an existing chain.
@@ -325,7 +330,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			return nil, errors.New(
 				"Couldn't get forward signature on block: " + err.Error())
 		}
-		changed = append(changed, prev, prop)
 		log.Lvl3("Asking forward-links from all linked blocks")
 		for i, bl := range prop.BackLinkIDs[1:] {
 			back := s.db.GetByID(bl)
@@ -345,12 +349,6 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 				log.Lvl1("Couldn't get old block to sign: " + err.Error())
 			}
 		}
-	}
-	log.Lvlf3("Propagate %d blocks", len(changed))
-	if err := s.startPropagation(changed); err != nil {
-		return nil, errors.New(
-			"Couldn't propagate new blocks: " + err.Error())
-
 	}
 	reply := &StoreSkipBlockReply{
 		Previous: prev,
@@ -887,7 +885,7 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	if err = src.VerifyForwardSignatures(); err != nil {
 		return errors.New("Wrong BFT-signature: " + err.Error())
 	}
-	s.startPropagation([]*SkipBlock{src})
+	s.startPropagation([]*SkipBlock{src, dst})
 	return nil
 }
 
