@@ -470,6 +470,9 @@ func (p *SubFtCosi) multicastParallel(msg interface{}, nodes ...*onet.TreeNode) 
 	return errs
 }
 
+// generates a commitment.
+// the boolean indicates whether the commitment is a proposal acceptance or a proposal refusal.
+// Returns the generated secret, the commitment and an error if there was a problem in the process.
 func (p *SubFtCosi) getCommitment(accepts bool) (kyber.Scalar, StructCommitment, error) {
 
 	emptyMask, err := cosi.NewMask(p.suite, p.Publics, nil)
@@ -496,6 +499,7 @@ func (p *SubFtCosi) getCommitment(accepts bool) (kyber.Scalar, StructCommitment,
 	return secret, structCommitment, nil
 }
 
+// checks if a node is in a list of nodes
 func isValidSender(node *onet.TreeNode, valids ...*onet.TreeNode) bool {
 	//check if comes from a committed children
 	isValid := false
@@ -509,6 +513,7 @@ func isValidSender(node *onet.TreeNode, valids ...*onet.TreeNode) bool {
 	return isValid
 }
 
+// removes a node from a slice
 func remove(nodesList []*onet.TreeNode, node *onet.TreeNode) []*onet.TreeNode {
 	for i, iNode := range nodesList {
 		if iNode.Equal(node) {

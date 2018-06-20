@@ -118,7 +118,8 @@ func TestBftCoSi(t *testing.T) {
 	require.Nil(t, err)
 
 	for _, n := range []int{1, 2, 4, 9, 20} {
-		runProtocol(t, n, 0, 0, protoName)
+		nbrFault := FaultThreshold(n)
+		runProtocol(t, n, nbrFault, 0, protoName)
 	}
 }
 
