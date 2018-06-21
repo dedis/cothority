@@ -241,35 +241,6 @@ var VerificationData = []VerifierID{VerifyBase, VerifyData}
 // block to be appended.
 var VerificationNone = []VerifierID{}
 
-// SkipBlockFix represents the fixed part of a SkipBlock that will be hashed
-// and signed.
-type SkipBlockFix struct {
-	// Index of the block in the chain. Index == 0 -> genesis-block.
-	Index int
-	// Height of that SkipBlock, starts at 1.
-	Height int
-	// The max height determines the height of the next block
-	MaximumHeight int
-	// For deterministic SkipChains, chose a value >= 1 - higher
-	// bases mean more 'height = 1' SkipBlocks
-	// For random SkipChains, chose a value of 0
-	BaseHeight int
-	// BackLink is a slice of hashes to previous SkipBlocks
-	BackLinkIDs []SkipBlockID
-	// VerifierID is a SkipBlock-protocol verifying new SkipBlocks
-	VerifierIDs []VerifierID
-	// SkipBlockParent points to the SkipBlock of the responsible Roster -
-	// is nil if this is the Root-roster
-	ParentBlockID SkipBlockID
-	// GenesisID is the ID of the genesis-block. For the genesis-block, this
-	// is null. The SkipBlockID() method returns the correct ID both for
-	// the genesis block and for later blocks.
-	GenesisID SkipBlockID
-	// Data is any data to be stored in that SkipBlock
-	Data []byte
-	// Roster holds the roster-definition of that SkipBlock
-	Roster *onet.Roster
-}
 
 // Copy returns a deep copy of SkipBlockFix
 func (sbf *SkipBlockFix) Copy() *SkipBlockFix {
@@ -330,27 +301,6 @@ func (sbf *SkipBlockFix) CalculateHash() SkipBlockID {
 	return buf
 }
 
-// SkipBlock represents a SkipBlock of any type - the fields that won't
-// be hashed (yet).
-type SkipBlock struct {
-	*SkipBlockFix
-	// Hash is our Block-hash of the SkipBlockFix part.
-	Hash SkipBlockID
-
-	// ForwardLink will be calculated once future SkipBlocks are
-	// available
-	ForwardLink []*ForwardLink
-	// SkipLists that depend on us, given as the first SkipBlock - can
-	// be a Data or a Roster SkipBlock
-	ChildSL []SkipBlockID
-
-	// Payload is additional data that needs to be hashed by the application
-	// itself into SkipBlockFix.Data. A normal usecase is to set
-	// SkipBlockFix.Data to the sha256 of this payload. Then the proofs
-	// using the skipblocks can return simply the SkipBlockFix, as long as they
-	// don't need the payload.
-	Payload []byte `protobuf:"opt"`
-}
 
 // NewSkipBlock pre-initialises the block so it can be sent over
 // the network
@@ -455,24 +405,6 @@ func (sb *SkipBlock) GetForwardLen() int {
 func (sb *SkipBlock) updateHash() SkipBlockID {
 	sb.Hash = sb.CalculateHash()
 	return sb.Hash
-}
-
-// ForwardLink can be used to jump from old blocks to newer
-// blocks. Depending on the BaseHeight and MaximumHeight, older
-// rosters are asked to sign direct links to new blocks.
-type ForwardLink struct {
-	// From - where this forward link comes from
-	From SkipBlockID
-	// To - where this forward link points to
-	To SkipBlockID
-	// NewRoster is only set to non-nil if the From block has a
-	// different roster from the To-block.
-	NewRoster *onet.Roster
-	// Signature is calculated on the
-	// sha256(From.Hash()|To.Hash()|NewRoster)
-	// In the case that NewRoster is nil, the signature is
-	// calculated on the sha256(From.Hash()|To.Hash())
-	Signature byzcoinx.FinalSignature
 }
 
 // NewForwardLink creates a new forwardlink structure with

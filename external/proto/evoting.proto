@@ -18,55 +18,77 @@ message LookupSciperReply {
 
 // Link message.
 message Link {
-  // 	Pin       string Pin of the running service.
-  // 	Roster    *onet.Roster Roster that handles elections.
-  // 	Key       kyber.Point Key is a front-end public key.
-  // 	Admins    []uint32 Admins is a list of election administrators.
-  // 	ID        *skipchain.SkipBlockID ID of the master skipchain to update; optional.
-  // 	User      *uint32 User identifier; optional (required with ID).
-  // 	Signature *[]byte Signature authenticating the message; optional (required with ID).
+  required string pin = 1;
+  // 	 Pin of the running service.
+  optional Roster roster = 2;
+  // 	 Roster that handles elections.
+  required bytes key = 3;
+  // 	 Key is a front-end public key.
+  repeated uint32 admins = 4;
+  // 	 Admins is a list of election administrators.
+  optional bytes id = 5;
+  // 	 ID of the master skipchain to update; optional.
+  optional uint32 user = 6;
+  // 	 User identifier; optional (required with ID).
+  optional bytes signature = 7;
+  // 	 Signature authenticating the message; optional (required with ID).
 }
 
 // LinkReply message.
 message LinkReply {
-  // 	ID skipchain.SkipBlockID ID of the master skipchain.
+  required bytes id = 1;
+  // 	 ID of the master skipchain.
 }
 
 // Open message.
 message Open {
-  // 	ID       skipchain.SkipBlockID ID of the master skipchain.
-  // 	Election *lib.Election Election object.
-  required   = 1;
-  // 	User      uint32 User identifier.
-  // 	Signature []byte Signature authenticating the message.
+  required bytes id = 1;
+  // 	 ID of the master skipchain.
+  optional Election election = 2;
+  // 	 Election object.
+  required   = 3;
+  required uint32 user = 4;
+  // 	 User identifier.
+  required bytes signature = 5;
+  // 	 Signature authenticating the message.
 }
 
 // OpenReply message.
 message OpenReply {
-  // 	ID  skipchain.SkipBlockID ID of the election skipchain.
-  // 	Key kyber.Point Key assigned by the DKG.
+  required bytes id = 1;
+  // 	 ID of the election skipchain.
+  required bytes key = 2;
+  // 	 Key assigned by the DKG.
 }
 
 // Cast message.
 message Cast {
-  // 	ID     skipchain.SkipBlockID ID of the election skipchain.
-  // 	Ballot *lib.Ballot Ballot to be casted.
-  required   = 1;
-  // 	User      uint32 User identifier.
-  // 	Signature []byte Signature authenticating the message.
+  required bytes id = 1;
+  // 	 ID of the election skipchain.
+  optional Ballot ballot = 2;
+  // 	 Ballot to be casted.
+  required   = 3;
+  required uint32 user = 4;
+  // 	 User identifier.
+  required bytes signature = 5;
+  // 	 Signature authenticating the message.
 }
 
 // CastReply message.
 message CastReply {
-  // 	ID skipchain.SkipBlockID Hash of the block storing the transaction
+  required bytes id = 1;
+  // 	 Hash of the block storing the transaction
 }
 
 // Shuffle message.
 message Shuffle {
-  // 	ID skipchain.SkipBlockID ID of the election skipchain.
-  required   = 1;
-  // 	User      uint32 User identifier.
-  // 	Signature []byte Signature authenticating the message.
+  required bytes id = 1;
+  // 	 ID of the election skipchain.
+  required   = 2;
+  required uint32 user = 3;
+  // 	 User identifier.
+  required bytes signature = 4;
+  // 	 Signature authenticating the message.
 }
 
 // ShuffleReply message.
@@ -74,10 +96,13 @@ message ShuffleReply {
   required   = 1;
   //  Decrypt message.
   required Decrypt type = 2;
-  // 	ID skipchain.SkipBlockID ID of the election skipchain.
-  required   = 3;
-  // 	User      uint32 User identifier.
-  // 	Signature []byte Signature authenticating the message.
+  required bytes id = 3;
+  // 	 ID of the election skipchain.
+  required   = 4;
+  required uint32 user = 5;
+  // 	 User identifier.
+  required bytes signature = 6;
+  // 	 Signature authenticating the message.
 }
 
 // DecryptReply message.
@@ -85,61 +110,79 @@ message DecryptReply {
   required   = 1;
   //  GetElections message.
   required GetElections type = 2;
-  // 	User       uint32 User identifier.
-  // 	Master     skipchain.SkipBlockID Master skipchain ID.
-  // 	Stage      lib.ElectionState Election Stage filter. 0 for all elections.
-  // 	Signature  []byte Signature authenticating the message.
-  // 	CheckVoted bool Check if user has voted in the elections.
+  required uint32 user = 3;
+  // 	 User identifier.
+  required bytes master = 4;
+  // 	 Master skipchain ID.
+  required ElectionState stage = 5;
+  // 	 Election Stage filter. 0 for all elections.
+  required bytes signature = 6;
+  // 	 Signature authenticating the message.
+  required bool checkvoted = 7;
+  // 	 Check if user has voted in the elections.
 }
 
 // GetElectionsReply message.
 message GetElectionsReply {
-  // 	Elections []*lib.Election Elections is the retrieved list of elections.
-  // 	IsAdmin   bool Is the user in the list of admins in the master?
-  required Master master = 1;
+  repeated Election elections = 1;
+  // 	 Elections is the retrieved list of elections.
+  required bool isadmin = 2;
+  // 	 Is the user in the list of admins in the master?
+  required Master master = 3;
 }
 
 // GetBox message.
 message GetBox {
-  // 	ID skipchain.SkipBlockID ID of the election skipchain.
+  required bytes id = 1;
+  // 	 ID of the election skipchain.
 }
 
 // GetBoxReply message.
 message GetBoxReply {
-  // 	Box *lib.Box Box of encrypted ballots.
+  optional Box box = 1;
+  // 	 Box of encrypted ballots.
 }
 
 // GetMixes message.
 message GetMixes {
-  // 	ID skipchain.SkipBlockID ID of the election skipchain.
+  required bytes id = 1;
+  // 	 ID of the election skipchain.
 }
 
 // GetMixesReply message.
 message GetMixesReply {
-  // 	Mixes []*lib.Mix Mixes from all conodes.
+  repeated Mix mixes = 1;
+  // 	 Mixes from all conodes.
 }
 
 // GetPartials message.
 message GetPartials {
-  // 	ID skipchain.SkipBlockID ID of the election skipchain.
+  required bytes id = 1;
+  // 	 ID of the election skipchain.
 }
 
 // GetPartialsReply message.
 message GetPartialsReply {
-  // 	Partials []*lib.Partial Partials from all conodes.
+  repeated Partial partials = 1;
+  // 	 Partials from all conodes.
 }
 
 // Reconstruct message.
 message Reconstruct {
-  // 	ID skipchain.SkipBlockID ID of the election skipchain.
+  required bytes id = 1;
+  // 	 ID of the election skipchain.
 }
 
 // ReconstructReply message.
 message ReconstructReply {
-  // 	Points []kyber.Point Points are the decrypted plaintexts.
+  repeated bytes points = 1;
+  // 	 Points are the decrypted plaintexts.
 }
 
 // Ping message.
 message Ping {
-  // 	Nonce uint32 Nonce can be any integer.
+  required uint32 nonce = 1;
+  // 	 Nonce can be any integer.
 }
+
+

@@ -27,21 +27,6 @@ var TransactionVerifierID = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "
 // TransactionVerifiers is a list of accepted skipchain verification functions.
 var TransactionVerifiers = []skipchain.VerifierID{TransactionVerifierID}
 
-// Transaction is the sole data structure withing the blocks of an election
-// skipchain, it holds all the other containers.
-type Transaction struct {
-	Master *Master
-	Link   *Link
-
-	Election *Election
-	Ballot   *Ballot
-	Mix      *Mix
-	Partial  *Partial
-
-	User      uint32
-	Signature []byte
-}
-
 // UnmarshalTransaction decodes a data blob to a transaction structure.
 func UnmarshalTransaction(data []byte) *Transaction {
 	transaction := &Transaction{}

@@ -1,1 +1,177 @@
 syntax = "proto2";
+
+// CheckConfig asks whether the pop-config and the attendees are available.
+message CheckConfig {
+  required bytes pophash = 1;
+  repeated bytes attendees = 2;
+}
+
+// CheckConfigReply sends back an integer for the Pop. 0 means no config yet,
+// other values are defined as constants.
+// If PopStatus == PopStatusOK, then the Attendees will be the common attendees between
+// the two nodes.
+message CheckConfigReply {
+  required sint32 popstatus = 1;
+  required bytes pophash = 2;
+  repeated bytes attendees = 3;
+}
+
+// MergeConfig asks if party is ready to merge
+message MergeConfig {
+  // 	 FinalStatement of current party
+  optional FinalStatement final = 1;
+  // 	 Hash of PopDesc party to merge with
+  required bytes id = 2;
+}
+
+// MergeConfigReply responds with info of asked party
+message MergeConfigReply {
+  // 	 status of merging process
+  required sint32 popstatus = 1;
+  // 	 hash of party was asking to merge
+  required bytes pophash = 2;
+  // 	 FinalStatement of party was asked to merge
+  optional FinalStatement final = 3;
+}
+
+
+// PinRequest will print a random pin on stdout if the pin is empty. If
+// the pin is given and is equal to the random pin chosen before, the
+// public-key is stored as a reference to the allowed client.
+message PinRequest {
+  required string pin = 1;
+  required bytes public = 2;
+}
+
+// StoreConfig presents a config to store
+message StoreConfig {
+  optional PopDesc desc = 1;
+  required bytes signature = 2;
+}
+
+// StoreConfigReply gives back the hash.
+// TODO: StoreConfigReply will give in a later version a handler that can be used to
+// identify that config.
+message StoreConfigReply {
+  required bytes id = 1;
+}
+
+
+// FinalizeRequest asks to finalize on the given descid-popconfig.
+message FinalizeRequest {
+  required bytes descid = 1;
+  repeated bytes attendees = 2;
+  required bytes signature = 3;
+}
+
+
+// FinalizeResponse returns the FinalStatement if all conodes already received
+// a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
+// pruned attendees-public-key-list and the collective signature.
+message FinalizeResponse {
+  optional FinalStatement final = 1;
+}
+
+// FetchRequest asks to get FinalStatement
+message FetchRequest {
+  required bytes id = 1;
+  optional bool returnuncomplete = 2;
+}
+
+// MergeRequest asks to start merging process for given Party
+message MergeRequest {
+  required bytes id = 1;
+  required bytes signature = 2;
+}
+
+// GetProposals asks the conode to return a list of all waiting proposals. A waiting
+// proposal is either deleted after 1h or if it has been confirmed using
+// StoreConfig.
+message GetProposals {
+}
+
+// GetProposalsReply returns the list of all waiting proposals on that node.
+message GetProposalsReply {
+  repeated PopDesc proposals = 1;
+}
+
+
+// VerifyLink returns if a given public key is linked.
+message VerifyLink {
+  required bytes public = 1;
+}
+
+// VerifyLinkReply returns true if the public key is in the admin-list.
+message VerifyLinkReply {
+  required bool exists = 1;
+}
+
+// FinalStatement is the final configuration holding all data necessary
+// for a verifier.
+message FinalStatement {
+  // 	 Desc is the description of the pop-party.
+  optional PopDesc desc = 1;
+  // 	 Attendees holds a slice of all public keys of the attendees.
+  repeated bytes attendees = 2;
+  // 	 Signature is created by all conodes responsible for that pop-party
+  required bytes signature = 3;
+  // 	 Flag indicates, that party was merged
+  required bool merged = 4;
+}
+
+// The toml-structure for (un)marshaling with toml
+message finalStatementToml {
+  optional popDescToml desc = 1;
+  repeated string attendees = 2;
+  required string signature = 3;
+  required bool merged = 4;
+}
+
+// PopDesc holds the name, date and a roster of all involved conodes.
+message PopDesc {
+  // 	 Name and purpose of the party.
+  required string name = 1;
+  // 	 DateTime of the party. It is in the following format, following UTC:
+  // 	   YYYY-MM-DD HH:mm
+  required string datetime = 2;
+  // 	 Location of the party
+  required string location = 3;
+  // 	 Roster of all responsible conodes for that party.
+  optional Roster roster = 4;
+  // 	 List of parties to be merged
+  repeated ShortDesc parties = 5;
+}
+
+// represents a PopDesc in string-version for toml.
+message popDescToml {
+  required string name = 1;
+  required string datetime = 2;
+  required string location = 3;
+  repeated []string roster = 4;
+  repeated shortDescToml parties = 5;
+}
+
+// ShortDesc represents Short Description of Pop party
+// Used in merge configuration
+message ShortDesc {
+  required string location = 1;
+  optional Roster roster = 2;
+}
+
+message shortDescToml {
+  required string location = 1;
+  repeated []string roster = 2;
+}
+
+// PopToken represents pop-token
+message PopToken {
+  optional FinalStatement final = 1;
+  required bytes private = 2;
+  required bytes public = 3;
+}
+
+message popTokenToml {
+  optional finalStatementToml final = 1;
+  required string private = 2;
+  required string public = 3;
+}

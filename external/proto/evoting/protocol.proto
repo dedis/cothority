@@ -1,0 +1,42 @@
+syntax = "proto2";
+
+// Decrypt is the core structure of the protocol.
+message Decrypt {
+  optional  *onet.treenodeinstance = 1;
+  required   = 2;
+  required uint32 user = 3;
+  required bytes signature = 4;
+  required   = 5;
+  optional SharedSecret secret = 6;
+  // 	 Secret is the private key share from the DKG.
+  optional Election election = 7;
+  // 	 Election to be decrypted.
+  required   = 8;
+  required chan finished = 9;
+  // 	 Flag to signal protocol termination.
+  required bool leaderparticipates = 10;
+  // 	 LeaderParticipates is a flag to denote if leader should calculate the partial.
+  required sint32 successreplies = 11;
+  required Mutex mutex = 12;
+  required   = 13;
+  optional Service skipchain = 14;
+}
+
+// Shuffle is the core structure of the protocol.
+message Shuffle {
+  optional  *onet.treenodeinstance = 1;
+  required   = 2;
+  required uint32 user = 3;
+  required bytes signature = 4;
+  optional Election election = 5;
+  // 	 Election to be shuffled.
+  required   = 6;
+  required chan finished = 7;
+  // 	 Flag to signal protocol termination.
+  required   = 8;
+  optional Service skipchain = 9;
+  required bool leaderparticipates = 10;
+  // 	 LeaderParticipates is a flag that denotes if leader should participate in the shuffle
+}
+
+

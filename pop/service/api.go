@@ -144,27 +144,6 @@ func (c *Client) Merge(dst network.Address, p *PopDesc, priv kyber.Scalar) (
 	return res.Final, nil
 }
 
-// FinalStatement is the final configuration holding all data necessary
-// for a verifier.
-type FinalStatement struct {
-	// Desc is the description of the pop-party.
-	Desc *PopDesc
-	// Attendees holds a slice of all public keys of the attendees.
-	Attendees []kyber.Point
-	// Signature is created by all conodes responsible for that pop-party
-	Signature []byte
-	// Flag indicates, that party was merged
-	Merged bool
-}
-
-// The toml-structure for (un)marshaling with toml
-type finalStatementToml struct {
-	Desc      *popDescToml
-	Attendees []string
-	Signature string
-	Merged    bool
-}
-
 func newFinalStatementFromTomlStruct(fsToml *finalStatementToml) (*FinalStatement, error) {
 	desc, err := newPopDescFromTomlStruct(fsToml.Desc)
 	if err != nil {
@@ -401,42 +380,6 @@ func (fs *FinalStatement) Verify() error {
 	return eddsa.Verify(fs.Desc.Roster.Aggregate, h, fs.Signature)
 }
 
-// PopDesc holds the name, date and a roster of all involved conodes.
-type PopDesc struct {
-	// Name and purpose of the party.
-	Name string
-	// DateTime of the party. It is in the following format, following UTC:
-	//   YYYY-MM-DD HH:mm
-	DateTime string
-	// Location of the party
-	Location string
-	// Roster of all responsible conodes for that party.
-	Roster *onet.Roster
-	// List of parties to be merged
-	Parties []*ShortDesc
-}
-
-// represents a PopDesc in string-version for toml.
-type popDescToml struct {
-	Name     string
-	DateTime string
-	Location string
-	Roster   [][]string
-	Parties  []shortDescToml
-}
-
-// ShortDesc represents Short Description of Pop party
-// Used in merge configuration
-type ShortDesc struct {
-	Location string
-	Roster   *onet.Roster
-}
-
-type shortDescToml struct {
-	Location string
-	Roster   [][]string
-}
-
 // Hash of this structure - calculated by hand instead of using network.Marshal.
 func (desc *PopDesc) Hash() []byte {
 	hash := cothority.Suite.Hash()
@@ -494,19 +437,6 @@ func toToml(r *onet.Roster) ([][]string, error) {
 		rostr[i] = sistr
 	}
 	return rostr, nil
-}
-
-// PopToken represents pop-token
-type PopToken struct {
-	Final   *FinalStatement
-	Private kyber.Scalar
-	Public  kyber.Point
-}
-
-type popTokenToml struct {
-	Final   *finalStatementToml
-	Private string
-	Public  string
 }
 
 func newPopTokenFromTomlStruct(t *popTokenToml) (*PopToken, error) {

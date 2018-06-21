@@ -2,8 +2,6 @@ package protocol
 
 import (
 	"errors"
-	"sync"
-
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -11,7 +9,6 @@ import (
 	"github.com/dedis/onet/network"
 
 	"github.com/dedis/cothority/evoting/lib"
-	"github.com/dedis/cothority/skipchain"
 )
 
 /*
@@ -32,24 +29,6 @@ The protocol can only be started by the election's creator and is non-repeatable
 
 // NameDecrypt is the protocol identifier string.
 const NameDecrypt = "decrypt"
-
-// Decrypt is the core structure of the protocol.
-type Decrypt struct {
-	*onet.TreeNodeInstance
-
-	User      uint32
-	Signature []byte
-
-	Secret   *lib.SharedSecret // Secret is the private key share from the DKG.
-	Election *lib.Election     // Election to be decrypted.
-
-	Finished           chan bool // Flag to signal protocol termination.
-	LeaderParticipates bool      // LeaderParticipates is a flag to denote if leader should calculate the partial.
-	successReplies     int
-	mutex              sync.Mutex
-
-	Skipchain *skipchain.Service
-}
 
 func init() {
 	network.RegisterMessages(PromptDecrypt{}, TerminateDecrypt{})

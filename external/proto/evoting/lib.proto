@@ -1,0 +1,136 @@
+syntax = "proto2";
+
+// Election is the base object for a voting procedure. It is stored
+// in the second skipblock right after the (empty) genesis block. A reference
+// to the election skipchain is appended to the master skipchain upon opening.
+message Election {
+  required map[string]string name = 1;
+  // 	 Name of the election. lang-code, value pair
+  required uint32 creator = 2;
+  // 	 Creator is the election responsible.
+  repeated uint32 users = 3;
+  // 	 Users is the list of registered voters.
+  required   = 4;
+  required bytes id = 5;
+  // 	 ID is the hash of the genesis block.
+  required bytes master = 6;
+  // 	 Master is the hash of the master skipchain.
+  optional Roster roster = 7;
+  // 	 Roster is the set of responsible nodes.
+  required bytes key = 8;
+  // 	 Key is the DKG public key.
+  required bytes masterkey = 9;
+  // 	 MasterKey is the front-end public key.
+  required ElectionState stage = 10;
+  // 	 Stage indicates the phase of election and is used for filtering in frontend
+  required   = 11;
+  repeated uint32 candidates = 12;
+  // 	 Candidates is the list of candidate scipers.
+  required sint32 maxchoices = 13;
+  // 	 MaxChoices is the max votes in allowed in a ballot.
+  required map[string]string subtitle = 14;
+  // 	 Description in string format. lang-code, value pair
+  required string moreinfo = 15;
+  // 	 MoreInfo is the url to AE Website for the given election.
+  required sint64 start = 16;
+  // 	 Start denotes the election start unix timestamp
+  required sint64 end = 17;
+  // 	 End (termination) datetime as unix timestamp.
+  required   = 18;
+  required string theme = 19;
+  // 	 Theme denotes the CSS class for selecting background color of card title.
+  required footer footer = 20;
+  // 	 Footer denotes the Election footer
+  required   = 21;
+  required bytes voted = 22;
+  // 	 Voted denotes if a user has already cast a ballot for this election.
+}
+
+
+// footer denotes the fields for the election footer
+message footer {
+  required string text = 1;
+  // 	 Text is for storing footer content.
+  required string contacttitle = 2;
+  // 	 ContactTitle stores the title of the Contact person.
+  required string contactphone = 3;
+  // 	 ContactPhone stores the phone number of the Contact person.
+  required string contactemail = 4;
+  // 	 ContactEmail stores the email address of the Contact person.
+}
+
+
+// Ballot represents an encrypted vote.
+message Ballot {
+  required uint32 user = 1;
+  // 	 User identifier.
+  required   = 2;
+  // 	 ElGamal ciphertext pair.
+  required bytes alpha = 3;
+  required bytes beta = 4;
+}
+
+// Mix contains the shuffled ballots.
+message Mix {
+  repeated Ballot ballots = 1;
+  // 	 Ballots are permuted and re-encrypted.
+  required bytes proof = 2;
+  // 	 Proof of the shuffle.
+  required   = 3;
+  required ServerIdentityID nodeid = 4;
+  // 	 Node signifies the creator of the mix.
+  required bytes signature = 5;
+  // 	 Signature of the public key
+}
+
+// Partial contains the partially decrypted ballots.
+message Partial {
+  repeated bytes points = 1;
+  // 	 Points are the partially decrypted plaintexts.
+  required   = 2;
+  required ServerIdentityID nodeid = 3;
+  // 	 NodeID is the node having signed the partial
+  required bytes signature = 4;
+  // 	 Signature of the public key
+}
+
+// Master is the foundation object of the entire service.
+// It contains mission critical information that can only be accessed and
+// set by an administrators.
+message Master {
+  required bytes id = 1;
+  // 	 ID is the hash of the genesis skipblock.
+  optional Roster roster = 2;
+  // 	 Roster is the set of responsible conodes.
+  required   = 3;
+  repeated uint32 admins = 4;
+  // 	 Admins is the list of administrators.
+  required   = 5;
+  required bytes key = 6;
+  // 	 Key is the front-end public key.
+}
+
+// Link is a wrapper around the genesis Skipblock identifier of an
+// election. Every newly created election adds a new link to the master Skipchain.
+message Link {
+  required bytes id = 1;
+}
+
+
+// Transaction is the sole data structure withing the blocks of an election
+// skipchain, it holds all the other containers.
+message Transaction {
+  optional Master master = 1;
+  optional Link link = 2;
+  required   = 3;
+  optional Election election = 4;
+  optional Ballot ballot = 5;
+  optional Mix mix = 6;
+  optional Partial partial = 7;
+  required   = 8;
+  required uint32 user = 9;
+  required bytes signature = 10;
+}
+
+
+

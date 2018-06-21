@@ -1,1 +1,167 @@
 syntax = "proto2";
+
+
+// SkipBlock represents a SkipBlock of any type - the fields that won't
+// be hashed (yet).
+message SkipBlock {
+  optional  *skipblockfix = 1;
+  // 	 Hash is our Block-hash of the SkipBlockFix part.
+  required bytes hash = 2;
+  required   = 3;
+  // 	 ForwardLink will be calculated once future SkipBlocks are
+  // 	 available
+  repeated ForwardLink forwardlink = 4;
+  // 	 SkipLists that depend on us, given as the first SkipBlock - can
+  // 	 be a Data or a Roster SkipBlock
+  repeated bytes childsl = 5;
+  required   = 6;
+  // 	 Payload is additional data that needs to be hashed by the application
+  // 	 itself into SkipBlockFix.Data. A normal usecase is to set
+  // 	 SkipBlockFix.Data to the sha256 of this payload. Then the proofs
+  // 	 using the skipblocks can return simply the SkipBlockFix, as long as they
+  // 	 don't need the payload.
+  required bytes payload = 7;
+}
+
+// SkipBlockFix represents the fixed part of a SkipBlock that will be hashed
+// and signed.
+message SkipBlockFix {
+  // 	 Index of the block in the chain. Index == 0 -> genesis-block.
+  required sint32 index = 1;
+  // 	 Height of that SkipBlock, starts at 1.
+  required sint32 height = 2;
+  // 	 The max height determines the height of the next block
+  required sint32 maximumheight = 3;
+  // 	 For deterministic SkipChains, chose a value >= 1 - higher
+  // 	 bases mean more 'height = 1' SkipBlocks
+  // 	 For random SkipChains, chose a value of 0
+  required sint32 baseheight = 4;
+  // 	 BackLink is a slice of hashes to previous SkipBlocks
+  repeated bytes backlinkids = 5;
+  // 	 VerifierID is a SkipBlock-protocol verifying new SkipBlocks
+  repeated VerifierID verifierids = 6;
+  // 	 SkipBlockParent points to the SkipBlock of the responsible Roster -
+  // 	 is nil if this is the Root-roster
+  required bytes parentblockid = 7;
+  // 	 GenesisID is the ID of the genesis-block. For the genesis-block, this
+  // 	 is null. The SkipBlockID() method returns the correct ID both for
+  // 	 the genesis block and for later blocks.
+  required bytes genesisid = 8;
+  // 	 Data is any data to be stored in that SkipBlock
+  required bytes data = 9;
+  // 	 Roster holds the roster-definition of that SkipBlock
+  optional Roster roster = 10;
+}
+
+// ForwardLink can be used to jump from old blocks to newer
+// blocks. Depending on the BaseHeight and MaximumHeight, older
+// rosters are asked to sign direct links to new blocks.
+message ForwardLink {
+  // 	 From - where this forward link comes from
+  required bytes from = 1;
+  // 	 To - where this forward link points to
+  required bytes to = 2;
+  // 	 NewRoster is only set to non-nil if the From block has a
+  // 	 different roster from the To-block.
+  optional Roster newroster = 3;
+  // 	 Signature is calculated on the
+  // 	 sha256(From.Hash()|To.Hash()|NewRoster)
+  // 	 In the case that NewRoster is nil, the signature is
+  // 	 calculated on the sha256(From.Hash()|To.Hash())
+  required FinalSignature signature = 4;
+}
+
+// GetUpdateChain - the client sends the hash of the last known
+// Skipblock and will get back a list of all necessary SkipBlocks
+// to get to the latest.
+message GetUpdateChain {
+  required bytes latestid = 1;
+}
+
+// GetUpdateChainReply - returns the shortest chain to the current SkipBlock,
+// starting from the SkipBlock the client sent
+message GetUpdateChainReply {
+  repeated SkipBlock update = 1;
+}
+
+
+// GetAllSkipchains - returns all known last blocks of skipchains.
+message GetAllSkipchains {
+}
+
+// GetAllSkipchainsReply - returns all known last blocks of skipchains.
+message GetAllSkipchainsReply {
+  repeated SkipBlock skipchains = 1;
+}
+
+
+// PropagateSkipBlocks sends a newly signed SkipBlock to all members of
+// the Cothority
+message PropagateSkipBlocks {
+  repeated SkipBlock skipblocks = 1;
+}
+
+
+// Internal calls
+
+// ForwardSignature is called once a new skipblock has been accepted by
+// signing the forward-link, and then the older skipblocks need to
+// update their forward-links. Each cothority needs to get the necessary
+// blocks and propagate the skipblocks itself.
+message ForwardSignature {
+  // 	 TargetHeight is the index in the backlink-slice of the skipblock
+  // 	 to update
+  required sint32 targetheight = 1;
+  // 	 Previous is the second-newest skipblock
+  required bytes previous = 2;
+  // 	 Newest is the newest skipblock, signed by previous
+  optional SkipBlock newest = 3;
+}
+
+// GetSingleBlock asks for a single block.
+message GetSingleBlock {
+  required bytes id = 1;
+}
+
+// GetSingleBlockByIndex asks for a single block at a certain index. If Index == -1,
+// the last block on the skipchain is returned.
+message GetSingleBlockByIndex {
+  required bytes genesis = 1;
+  required sint32 index = 2;
+}
+
+
+// GetBlock asks for an updated block, in case for a conode that is not
+// in the roster-list of that block.
+message GetBlock {
+  required bytes id = 1;
+}
+
+// PropagateSkipBlock sends a newly signed SkipBlock to all members of
+// the Cothority
+message PropagateSkipBlock {
+  optional SkipBlock skipblock = 1;
+}
+
+// GetBlockReply returns the requested block.
+message GetBlockReply {
+  optional SkipBlock skipblock = 1;
+}
+
+// External calls
+
+// StoreSkipBlock - Requests a new skipblock to be appended to the given
+// SkipBlock. If the given TargetSkipChainID is an empty slice, then a genesis
+// block is created.  Otherwise, the new block is added to the skipchain
+// specified by TargetSkipChainID.
+message StoreSkipBlock {
+  required bytes targetskipchainid = 1;
+  optional SkipBlock newblock = 2;
+  optional bytes signature = 3;
+}
+
+// StoreSkipBlockReply - returns the signed SkipBlock with updated backlinks
+message StoreSkipBlockReply {
+  optional SkipBlock previous = 1;
+  optional SkipBlock latest = 2;
+}

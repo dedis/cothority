@@ -1,6 +1,14 @@
 syntax = "proto2";
 Messages between the Client-API and the Service
 
+// Device is represented by a public key.
+message Device {
+  // 	 Point is the public key of that device
+  required bytes point = 1;
+}
+
+// !!! Definitions of SchorrSig and ID structs cannot be found in any go file. !!!
+
 // PinRequest used for admin autentification
 message PinRequest {
   required string pin = 1;
@@ -100,3 +108,4 @@ message Authenticate {
   required bytes nonce = 1;
   required bytes ctx = 2;
 }
+

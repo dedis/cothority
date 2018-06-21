@@ -35,20 +35,6 @@ The protocol can only be started by the election's creator and is non-repeatable
 // NameShuffle is the protocol identifier string.
 const NameShuffle = "shuffle"
 
-// Shuffle is the core structure of the protocol.
-type Shuffle struct {
-	*onet.TreeNodeInstance
-
-	User      uint32
-	Signature []byte
-	Election  *lib.Election // Election to be shuffled.
-
-	Finished chan error // Flag to signal protocol termination.
-
-	Skipchain          *skipchain.Service
-	LeaderParticipates bool // LeaderParticipates is a flag that denotes if leader should participate in the shuffle
-}
-
 func init() {
 	network.RegisterMessages(PromptShuffle{}, TerminateShuffle{})
 	onet.GlobalProtocolRegister(NameShuffle, NewShuffle)
