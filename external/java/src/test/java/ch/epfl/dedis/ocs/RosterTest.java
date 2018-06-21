@@ -50,7 +50,7 @@ class RosterTest {
 
     @Test
     void testProto() throws Exception {
-        RosterProto.Roster r_proto = r.getProto();
+        RosterProto.Roster r_proto = r.toProto();
         assertEquals(4, r_proto.getListList().size());
         assertArrayEquals(r_proto.getAggregate().toByteArray(), agg.toBytes());
         assertEquals(16, r_proto.getId().toByteArray().length);

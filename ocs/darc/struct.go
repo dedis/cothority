@@ -45,7 +45,7 @@ func (id *Identity) Copy() *Identity {
 // PROTOSTART
 //
 // option java_package = "ch.epfl.dedis.proto";
-// option java_outer_classname = "DarcProto";
+// option java_outer_classname = "DarcOCSProto";
 
 // ***
 // These are the messages used in the API-calls

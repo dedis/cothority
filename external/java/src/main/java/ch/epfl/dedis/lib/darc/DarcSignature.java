@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.proto.DarcProto;
+import ch.epfl.dedis.proto.DarcOCSProto;
 import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,7 +48,7 @@ public class DarcSignature {
     /**
      * Recreates a darc from a protobuf representation.
      */
-    public DarcSignature(DarcProto.Signature proto) throws CothorityCryptoException{
+    public DarcSignature(DarcOCSProto.Signature proto) throws CothorityCryptoException{
         signature = proto.getSignature().toByteArray();
         path = new SignaturePath(proto.getSignaturepath());
     }
@@ -86,8 +86,8 @@ public class DarcSignature {
      *
      * @return
      */
-    public DarcProto.Signature toProto() {
-        DarcProto.Signature.Builder b = DarcProto.Signature.newBuilder();
+    public DarcOCSProto.Signature toProto() {
+        DarcOCSProto.Signature.Builder b = DarcOCSProto.Signature.newBuilder();
         b.setSignature(ByteString.copyFrom(signature));
         b.setSignaturepath(path.toProto());
         return b.build();

@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.proto.DarcProto;
+import ch.epfl.dedis.proto.DarcOCSProto;
 import com.google.protobuf.ByteString;
 
 import java.security.InvalidKeyException;
@@ -25,7 +25,7 @@ public class IdentityX509EC implements Identity {
      * Creates an IdentityX509EC from a protobuf representation.
      * @param proto
      */
-    public IdentityX509EC(DarcProto.IdentityX509EC proto) throws CothorityCryptoException {
+    public IdentityX509EC(DarcOCSProto.IdentityX509EC proto) throws CothorityCryptoException {
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("EC");
             X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(proto.getPublic().toByteArray());
@@ -75,9 +75,9 @@ public class IdentityX509EC implements Identity {
      * identity implementations.
      * @return
      */
-    public DarcProto.Identity toProto(){
-        DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();
-        DarcProto.IdentityX509EC.Builder bed = DarcProto.IdentityX509EC.newBuilder();
+    public DarcOCSProto.Identity toProto(){
+        DarcOCSProto.Identity.Builder bid = DarcOCSProto.Identity.newBuilder();
+        DarcOCSProto.IdentityX509EC.Builder bed = DarcOCSProto.IdentityX509EC.newBuilder();
         bed.setPublic(ByteString.copyFrom(pubKey.getEncoded()));
         bid.setX509Ec(bed);
         return bid.build();

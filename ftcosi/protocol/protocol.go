@@ -196,7 +196,11 @@ func (p *FtCosi) Dispatch() error {
 	// send challenge to every subprotocol
 	for _, coSiProtocol := range runningSubProtocols {
 		subProtocol := coSiProtocol
-		subProtocol.ChannelChallenge <- StructChallenge{coSiProtocol.Root(), Challenge{cosiChallenge, finalMask.Mask()}}
+		subProtocol.ChannelChallenge <- StructChallenge{coSiProtocol.Root(), Challenge{
+			CoSiChallenge:   cosiChallenge,
+			AggregateCommit: commitment,
+			Mask:            finalMask.Mask(),
+		}}
 	}
 
 	// get response from all subprotocols

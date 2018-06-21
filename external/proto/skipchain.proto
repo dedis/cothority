@@ -3,6 +3,25 @@ syntax = "proto2";
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "SkipchainProto";
 
+import "skipblock.proto";
+
+// GetSingleBlock asks for a single block.
 message GetSingleBlock {
     required bytes id = 1;
+}
+
+// GetUpdateChain - the client sends the hash of the last known
+// Skipblock and will get back a list of all necessary SkipBlocks
+// to get to the latest.
+message GetUpdateChain {
+  // latest known id of a block.
+	required bytes latestID = 1;
+}
+
+// GetUpdateChainReply - returns the shortest chain to the current SkipBlock,
+// starting from the SkipBlock the client sent
+message GetUpdateChainReply {
+  // update is the shortest path from the requested block to the latest
+  // block.
+	repeated SkipBlock update = 1;
 }

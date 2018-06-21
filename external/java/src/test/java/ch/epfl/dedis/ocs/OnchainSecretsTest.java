@@ -58,8 +58,9 @@ class OnchainSecretsTest {
             logger.info("Admin darc: " + adminDarc.getId().toString());
             ocs = new OnchainSecrets(testInstanceController.getRoster(), adminDarc);
         } catch (Exception e){
-            logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
-            logger.error("cd $(go env GOPATH)/src/github.com/dedis/onchain-secrets/conode");
+            logger.error("Couldn't start skipchain - perhaps you need to run the following commands.");
+            logger.error("But make sure to use the same public keys as the ones in TestServerController.");
+            logger.error("cd $(go env GOPATH)/src/github.com/dedis/cothority/conode");
             logger.error("./run_conode.sh local 4 2");
         }
     }
@@ -196,7 +197,7 @@ class OnchainSecretsTest {
                 darcs.add(new Darc(transaction.getDarc()));
             }
             if (sb.getForwardCount() > 0) {
-                latest = new SkipblockId(sb.getForward(0).getMsg().toByteArray());
+                latest = new SkipblockId(sb.getForward(0).getTo().toByteArray());
             } else {
                 latest = null;
             }

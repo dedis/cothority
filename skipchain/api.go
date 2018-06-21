@@ -215,7 +215,9 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 		// the forward links, and that they link correctly backwards.
 		for j, b := range r2.Update {
 			if j == 0 && len(reply.Update) > 0 {
-				continue
+				if reply.Update[len(reply.Update)-1].Hash.Equal(b.Hash) {
+					continue
+				}
 			}
 
 			if err := b.VerifyForwardSignatures(); err != nil {
@@ -260,17 +262,29 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 
 		// Otherwise update the roster and contact the new servers
 		// to continue following the chain.
-		latest = last.Hash
-		roster = last.Roster
+		highestFL := last.ForwardLink[len(last.ForwardLink)-1]
+		latest = highestFL.To
+		roster = highestFL.NewRoster
+		if roster == nil {
+			roster = last.Roster
+		}
 	}
 }
 
-// GetAllSkipchains returns all skipchains known to that conode. If none are
-// known, an empty slice is returned.
+// GetAllSkipchains is deprecated and should no longer be used. See GetAllSkipChainIDs.
 func (c *Client) GetAllSkipchains(si *network.ServerIdentity) (reply *GetAllSkipchainsReply,
 	err error) {
 	reply = &GetAllSkipchainsReply{}
 	err = c.SendProtobuf(si, &GetAllSkipchains{}, reply)
+	return
+}
+
+// GetAllSkipChainIDs returns the SkipBlockIDs of all of the genesis
+// blocks of all skipchains known to that conode.
+func (c *Client) GetAllSkipChainIDs(si *network.ServerIdentity) (reply *GetAllSkipChainIDsReply,
+	err error) {
+	reply = &GetAllSkipChainIDsReply{}
+	err = c.SendProtobuf(si, &GetAllSkipChainIDs{}, reply)
 	return
 }
 

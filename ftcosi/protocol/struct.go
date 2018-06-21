@@ -78,8 +78,12 @@ type StructCommitment struct {
 
 // Challenge is the ftcosi challenge message
 type Challenge struct {
+	// CoSiChallenge is deprecated and should not be used anymore!
 	CoSiChallenge kyber.Scalar
-	Mask          []byte `prootobuf:opt`
+	// AggregateCommit should be used by all nodes.
+	AggregateCommit kyber.Point
+	// Mask represents the nodes that participated in the signature.
+	Mask []byte
 }
 
 // StructChallenge just contains Challenge and the data necessary to identify and

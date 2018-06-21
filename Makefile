@@ -11,7 +11,13 @@ EXCLUDE_LINT = "should be.*UI|_test.go"
 test_playground:
 	cd skipchain; \
 	for a in $$( seq 100 ); do \
-	  go test -race -short || exit 1 ; \
+		if DEBUG_TIME=true go test -v -race -run TestRosterAddCausesSync > log.txt 2>&1; then \
+			echo Successfully ran \#$$a at $$(date); \
+		else \
+			echo Failed at $$(date); \
+			cat log.txt; \
+			exit 1; \
+		fi; \
 	done;
 
 # Other targets are:
@@ -19,3 +25,8 @@ test_playground:
 
 proto:
 	awk -f proto.awk status/service/struct.go > external/proto/status.proto
+
+test_java:
+	cd conode/; make docker_dev
+	cd external/docker/; make docker_test
+	cd external/java; mvn test

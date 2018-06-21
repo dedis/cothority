@@ -76,18 +76,14 @@ func NewSubFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite)
 		c.subResponse = make(chan StructResponse, 1)
 	}
 
-	for _, channel := range []interface{}{
-		&c.ChannelAnnouncement,
+	err := c.RegisterChannels(&c.ChannelAnnouncement,
 		&c.ChannelCommitment,
 		&c.ChannelChallenge,
-		&c.ChannelResponse,
-	} {
-		err := c.RegisterChannel(channel)
-		if err != nil {
-			return nil, errors.New("couldn't register channel: " + err.Error())
-		}
+		&c.ChannelResponse)
+	if err != nil {
+		return nil, errors.New("couldn't register channels: " + err.Error())
 	}
-	err := c.RegisterHandler(c.HandleStop)
+	err = c.RegisterHandler(c.HandleStop)
 	if err != nil {
 		return nil, errors.New("couldn't register stop handler: " + err.Error())
 	}
@@ -165,7 +161,6 @@ func (p *SubFtCosi) Dispatch() error {
 			secret, personalStructCommitment, err = p.getCommitment(verificationOk)
 			if err != nil {
 				log.Errorf("error while generating own commitment:", err)
-				p.Shutdown()
 				return
 			}
 			p.ChannelCommitment <- personalStructCommitment
@@ -184,10 +179,11 @@ func (p *SubFtCosi) Dispatch() error {
 
 	// ----- Commitment & Challenge -----
 
-	var commitments = make([]StructCommitment, 0)                      // list of received commitments
-	var challenge StructChallenge                                      // the challenge that will be received
-	var childrenCommitting = make([]*onet.TreeNode, len(p.Children())) // the list of children that can commit. Children that commits will be removed from it.
-	copy(childrenCommitting, p.Children())
+	var commitments = make([]StructCommitment, 0)                     // list of received commitments
+	var challenge StructChallenge                                     // the challenge that will be received
+	var childrenCanCommit = make([]*onet.TreeNode, len(p.Children())) // the list of children that can commit. Children that commits will be removed from it.
+	copy(childrenCanCommit, p.Children())
+	var childrenCanResponse = make([]*onet.TreeNode, 0) // the list of children that can send a response. That is the list of children present in the challenge mask.
 
 	var NRefusal = 0                  // number of refusal received. Will be used only for the subleader
 	var firstCommitmentSent = false   // to avoid sending the quick commitment multiple times
@@ -208,12 +204,12 @@ loop:
 			isOwnCommitment := commitment.TreeNode.ID.Equal(p.TreeNode().ID)
 
 			if !isOwnCommitment {
-				if !isValidSender(commitment.TreeNode, childrenCommitting...) {
+				if !isValidSender(commitment.TreeNode, childrenCanCommit...) {
 					log.Lvl2(p.ServerIdentity(), "received a Commitment from node", commitment.ServerIdentity,
 						"that is neither a children nor itself, ignored")
 					break //discards it
 				}
-				remove(childrenCommitting, commitment.TreeNode)
+				remove(childrenCanCommit, commitment.TreeNode)
 			}
 
 			if p.IsRoot() {
@@ -223,7 +219,8 @@ loop:
 				//deactivate timeout
 				t = make(chan time.Time)
 
-				childrenCommitting = []*onet.TreeNode{commitment.TreeNode}
+				//set the children as a node we can send the challenge to
+				childrenCanResponse = []*onet.TreeNode{commitment.TreeNode}
 			} else {
 
 				//verify mask of received commitment
@@ -245,7 +242,6 @@ loop:
 					NRefusal++
 					if isOwnCommitment {
 						log.Warn(p.ServerIdentity(), "refused Commitment, stopping protocol")
-						defer p.Shutdown()
 
 						err = p.sendAggregatedCommitments(nil, NRefusal)
 						if err != nil {
@@ -298,14 +294,17 @@ loop:
 			}
 			log.Lvl3(p.ServerIdentity(), "received challenge")
 
-			childrenCommitting, err = p.getChildrenInMask(challenge.Mask)
+			if challenge.AggregateCommit == nil {
+				log.Warn(p.ServerIdentity(), "got an old, insecure challenge from", p.ServerIdentity())
+			}
+
+			childrenCanResponse, err = p.getChildrenInMask(challenge.Mask)
 			if err != nil {
 				return fmt.Errorf("error in handling challenge mask: %s", err)
 			}
-
 			//send challenge to children
 			go func() {
-				if errs := p.multicastParallel(&challenge.Challenge, childrenCommitting...); len(errs) > 0 {
+				if errs := p.multicastParallel(&challenge.Challenge, childrenCanResponse...); len(errs) > 0 {
 					log.Lvl3(p.ServerIdentity(), errs)
 				}
 			}()
@@ -333,19 +332,19 @@ loop:
 
 	// Second half of our time budget for the responses.
 	timeout := time.After(p.Timeout / 2)
-	for len(childrenCommitting) > 0 {
+	for len(childrenCanResponse) > 0 {
 		select {
 		case response, channelOpen := <-p.ChannelResponse:
 			if !channelOpen {
 				return nil
 			}
 
-			if !isValidSender(response.TreeNode, childrenCommitting...) {
+			if !isValidSender(response.TreeNode, childrenCanResponse...) {
 				log.Lvl2(p.ServerIdentity(), "received a Response from node", response.ServerIdentity,
 					"that is not a committed children, ignored")
 				break
 			}
-			childrenCommitting = remove(childrenCommitting, response.TreeNode)
+			childrenCanResponse = remove(childrenCanResponse, response.TreeNode)
 
 			responses = append(responses, response)
 		case <-timeout:
@@ -363,6 +362,30 @@ loop:
 		}
 		p.subResponse <- responses[0]
 	} else {
+
+		//check challenge
+		if challenge.AggregateCommit == nil || challenge.Mask == nil {
+			log.Warn("Only have pre-calculated challenge - this is dangerous!")
+		} else {
+			mask, err := cosi.NewMask(p.suite, p.Publics, nil)
+			if err != nil {
+				return fmt.Errorf("error, while creating empty mask: %s", err)
+			}
+			err = mask.SetMask(challenge.Mask)
+			if err != nil {
+				return fmt.Errorf("error while setting challenge mask: %s", err)
+			}
+			cosiChallenge, err := cosi.Challenge(p.suite, challenge.AggregateCommit,
+				mask.AggregatePublic, p.Msg)
+			if err != nil {
+				return err
+			}
+			if !cosiChallenge.Equal(challenge.CoSiChallenge) {
+				log.Warn("Pre-calculated challenge is not the same as ours!")
+				challenge.CoSiChallenge = cosiChallenge
+			}
+		}
+
 		if secret != nil {
 			// add own response
 			personalResponse, err := cosi.Response(p.suite, p.Private(), secret, challenge.CoSiChallenge)
@@ -448,28 +471,6 @@ func (p *SubFtCosi) Start() error {
 	return nil
 }
 
-// multicastParallel can be moved to onet.TreeNodeInstance once it shows
-// promise.
-func (p *SubFtCosi) multicastParallel(msg interface{}, nodes ...*onet.TreeNode) []error {
-	var errs []error
-	eMut := sync.Mutex{}
-	wg := sync.WaitGroup{}
-	for _, node := range nodes {
-		name := node.Name()
-		wg.Add(1)
-		go func(n2 *onet.TreeNode) {
-			if err := p.SendTo(n2, msg); err != nil {
-				eMut.Lock()
-				errs = append(errs, errors.New(name+": "+err.Error()))
-				eMut.Unlock()
-			}
-			wg.Done()
-		}(node)
-	}
-	wg.Wait()
-	return errs
-}
-
 // generates a commitment.
 // the boolean indicates whether the commitment is a proposal acceptance or a proposal refusal.
 // Returns the generated secret, the commitment and an error if there was a problem in the process.
@@ -497,6 +498,28 @@ func (p *SubFtCosi) getCommitment(accepts bool) (kyber.Scalar, StructCommitment,
 	}
 
 	return secret, structCommitment, nil
+}
+
+// multicastParallel can be moved to onet.TreeNodeInstance once it shows
+// promise.
+func (p *SubFtCosi) multicastParallel(msg interface{}, nodes ...*onet.TreeNode) []error {
+	var errs []error
+	eMut := sync.Mutex{}
+	wg := sync.WaitGroup{}
+	for _, node := range nodes {
+		name := node.Name()
+		wg.Add(1)
+		go func(n2 *onet.TreeNode) {
+			if err := p.SendTo(n2, msg); err != nil {
+				eMut.Lock()
+				errs = append(errs, errors.New(name+": "+err.Error()))
+				eMut.Unlock()
+			}
+			wg.Done()
+		}(node)
+	}
+	wg.Wait()
+	return errs
 }
 
 // checks if a node is in a list of nodes

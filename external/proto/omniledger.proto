@@ -1,0 +1,114 @@
+syntax = "proto2";
+import "skipblock.proto";
+import "roster.proto";
+import "darc.proto";
+import "transaction.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "OmniLedgerProto";
+
+// ***
+// These are the messages used in the API-calls
+// ***
+
+// CreateGenesisBlock asks the cisc-service to set up a new skipchain.
+message CreateGenesisBlock {
+  // 	 Version of the protocol
+  required sint64 version = 1;
+  // 	 Roster defines which nodes participate in the skipchain.
+  required Roster roster = 2;
+  // 	 GenesisDarc defines who is allowed to write to this skipchain.
+  required Darc genesisdarc = 3;
+  // 	 BlockInterval in int64.
+  required sint64 blockinterval = 4;
+}
+
+// CreateGenesisBlockResponse holds the genesis-block of the new skipchain.
+message CreateGenesisBlockResponse {
+  // 	 Version of the protocol
+  required sint64 version = 1;
+  // 	 Skipblock of the created skipchain or empty if there was an error.
+  optional SkipBlock skipblock = 2;
+}
+
+// AddTxRequest requests to apply a new transaction to the ledger.
+message AddTxRequest {
+  // 	 Version of the protocol
+  required sint64 version = 1;
+  // 	 SkipchainID is the hash of the first skipblock
+  required bytes skipchainid = 2;
+  // 	 Transaction to be applied to the kv-store
+  required ClientTransaction transaction = 3;
+}
+
+// AddTxResponse is the reply after an AddTxRequest is finished.
+message AddTxResponse {
+  // 	 Version of the protocol
+  required sint64 version = 1;
+}
+
+// Configuration is the representation of the genesis configuration data.
+message Configuration {
+	// Roster is the set of nodes responsible for omniledger
+	required Roster roster = 1;
+  // BlockInterval is the time in nanoseconds between two blocks
+  optional sint64 blockInterval = 2;
+}
+
+// GetProof returns the proof that the given key is in the collection.
+message GetProof {
+  // 	 Version of the protocol
+  required sint64 version = 1;
+  // 	 Key is the key we want to look up
+  required bytes key = 2;
+  // 	 ID is any block that is known to us in the skipchain, can be the genesis
+  // 	 block or any later block. The proof returned will be starting at this block.
+  required bytes id = 3;
+}
+
+// GetProofResponse can be used together with the Genesis block to proof that
+// the returned key/value pair is in the collection.
+message GetProofResponse {
+  // 	 Version of the protocol
+  required sint64 version = 1;
+  // 	 Proof contains everything necessary to prove the inclusion
+  // 	 of the included key/value pair given a genesis skipblock.
+  required Proof proof = 2;
+}
+
+// This Structure could later be moved to cothority/skipchain.
+message Proof {
+	// InclusionProof is the deserialized InclusionProof
+	required CollectionProof inclusionProof = 1;
+	// Providing the latest skipblock to retrieve the Merkle tree root.
+	required SkipBlock latest = 2;
+	// Proving the path to the latest skipblock. The first ForwardLink has an
+	// empty-sliced `From` and the genesis-block in `To`, together with the
+	// roster of the genesis-block in the `NewRoster`.
+	repeated ForwardLink links = 3;
+}
+
+// CollectionProof can be checked against the hash of the root
+// node and also contains the key and the data.
+message CollectionProof {
+  required bytes key = 1;
+  required Node root = 2;
+  repeated Step steps = 3;
+
+  message Step{
+    required Node left = 1;
+    required Node right = 2;
+  }
+  
+  message Node {
+    optional bytes key = 1;
+    repeated bytes values = 2;
+    optional Children children = 3;
+    optional bytes label = 4;
+
+    message Children {
+      required bytes left = 1;
+      required bytes right = 2;
+    }
+  }
+}

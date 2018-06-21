@@ -165,7 +165,6 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	servers, roster, tree := local.GenTree(nbrHosts, false)
 	require.NotNil(t, roster)
 
-
 	pi, err := local.CreateProtocol(protoName, tree)
 	require.Nil(t, err)
 
