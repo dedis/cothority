@@ -174,7 +174,11 @@ func (p *FtCosi) Dispatch() error {
 	if err != nil {
 		return err
 	}
-	structChallenge := StructChallenge{p.TreeNode(), Challenge{cosiChallenge}}
+	structChallenge := StructChallenge{p.TreeNode(), Challenge{
+		CoSiChallenge:   cosiChallenge,
+		AggregateCommit: commitment,
+		Mask:            finalMask,
+	}}
 
 	// send challenge to every subprotocol
 	for _, coSiProtocol := range runningSubProtocols {
