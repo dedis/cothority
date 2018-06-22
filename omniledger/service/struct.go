@@ -72,6 +72,15 @@ func (r *roCollection) GetValues(key []byte) (value []byte, contractID string, e
 	return
 }
 
+func (r *roCollection) GetValue(key []byte) ([]byte, error) {
+	v, _, err := r.GetValues(key)
+	return v, err
+}
+func (r *roCollection) GetContractID(key []byte) (string, error) {
+	_, c, err := r.GetValues(key)
+	return c, err
+}
+
 // OmniLedgerContract is the type signature of the class functions
 // which can be registered with the OmniLedger service.
 // Since the outcome of the verification depends on the state of the collection
