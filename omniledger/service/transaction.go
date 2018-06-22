@@ -85,6 +85,8 @@ func NewInstanceID(buf []byte) InstanceID {
 	}
 	return InstanceID{buf[0:32], NewSubID(buf[32:64])}
 }
+// SubID is a 32-byte id.
+type SubID [32]byte
 
 // Slice returns concatenated DarcID and InstanceID.
 func (iID InstanceID) Slice() []byte {
@@ -110,6 +112,25 @@ func NewSubID(buf []byte) SubID {
 		return SubID{}
 	}
 	n := SubID{}
+	copy(n[:], buf)
+	return n
+}
+
+// Equal returns if both objectIDs point to the same instance.
+func (oid ObjectID) Equal(other ObjectID) bool {
+	return bytes.Compare(oid.DarcID, other.DarcID) == 0 &&
+		bytes.Compare(oid.InstanceID[:], other.InstanceID[:]) == 0
+}
+
+// Nonce is used to prevent replay attacks in instructions.
+type Nonce [32]byte
+
+// NewNonce returns a nonce given a slice of bytes.
+func NewNonce(buf []byte) Nonce {
+	if len(buf) != 32 {
+		return Nonce{}
+	}
+	n := Nonce{}
 	copy(n[:], buf)
 	return n
 }
