@@ -52,7 +52,7 @@ type Announcement struct {
 	Data      []byte
 	Publics   []kyber.Point
 	Timeout   time.Duration
-	Threshold int `prootobuf:opt`
+	Threshold int
 }
 
 // StructAnnouncement just contains Announcement and the data necessary to identify and
@@ -66,7 +66,7 @@ type StructAnnouncement struct {
 type Commitment struct {
 	CoSiCommitment kyber.Point
 	Mask           []byte
-	NRefusal       int `prootobuf:opt`
+	NRefusal       int
 }
 
 // StructCommitment just contains Commitment and the data necessary to identify and
