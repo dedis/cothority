@@ -26,6 +26,9 @@ type collectionDB struct {
 // on a collection.
 type CollectionView interface {
 	Get(key []byte) collection.Getter
+	GetValues(key []byte) (value []byte, contractID string, err error)
+	GetValue(key []byte) ([]byte, error)
+	GetContractID(key []byte) (string, error)
 }
 
 // roCollection is a wrapper for a collection that satisfies interface
@@ -40,6 +43,37 @@ type roCollection struct {
 
 func (r *roCollection) Get(key []byte) collection.Getter {
 	return r.c.Get(key)
+}
+
+func (r *roCollection) GetValues(key []byte) (value []byte, contractID string, err error) {
+	record, err := r.c.Get(key).Record()
+	if err != nil {
+		return
+	}
+	values, err := record.Values()
+	if err != nil {
+		return
+	}
+	var ok bool
+	value, ok = values[0].([]byte)
+	if !ok {
+		err = errors.New("first value is not a slice of bytes")
+		return
+	}
+	contractID, ok = values[1].(string)
+	if !ok {
+		err = errors.New("second value is not a string")
+	}
+	return
+}
+
+func (r *roCollection) GetValue(key []byte) ([]byte, error) {
+	v, _, err := r.GetValues(key)
+	return v, err
+}
+func (r *roCollection) GetContractID(key []byte) (string, error) {
+	_, c, err := r.GetValues(key)
+	return c, err
 }
 
 // OmniLedgerContract is the type signature of the class functions
