@@ -31,6 +31,13 @@ var ContractConfigID = "config"
 // ContractDarcID denotes a darc-contract
 var ContractDarcID = "darc"
 
+// ContractValueID denotes a contract that can store and update
+// key values.
+var ContractValueID = "value"
+
+// ContractCoinID denotes a contract that can store and transfer coins.
+var ContractCoinID = "coin"
+
 // CmdDarcEvolve is needed to evolve a darc.
 var CmdDarcEvolve = "evolve"
 
