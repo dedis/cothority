@@ -53,33 +53,6 @@ func TestClient_CreateRootControl(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-func TestClient_ParallelGetUpdateChain(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Long run not good for Travis")
-	}
-	l := onet.NewTCPTest(cothority.Suite)
-	_, ro, _ := l.GenTree(5, true)
-	defer l.CloseAll()
-
-	clients := make(map[int]*Client)
-	for i := range [8]byte{} {
-		clients[i] = newTestClient(l)
-	}
-	_, inter, err := clients[0].CreateRootControl(ro, ro, nil, 1, 1, 1)
-	log.ErrFatal(err)
-
-	wg := sync.WaitGroup{}
-	for i := range [128]byte{} {
-		wg.Add(1)
-		go func(i int) {
-			_, err := clients[i%8].GetUpdateChain(inter.Roster, inter.Hash)
-			log.ErrFatal(err)
-			wg.Done()
-		}(i)
-	}
-	wg.Wait()
-}
-
 func TestClient_CreateRootInter(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	_, ro, _ := l.GenTree(5, true)

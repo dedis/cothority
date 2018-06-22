@@ -218,7 +218,7 @@ func (s *Service) decodeAndCheckEvent(coll omniledger.CollectionView, eventBuf [
 	}
 	when := time.Unix(0, event.When)
 	now := time.Now()
-	if when.Before(now.Add(-5 * time.Second)) {
+	if when.Before(now.Add(-30 * time.Second)) {
 		return nil, fmt.Errorf("event timestamp too long ago - when=%v, now=%v", when, now)
 	}
 	if when.After(now) {

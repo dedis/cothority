@@ -178,7 +178,6 @@ func TestService(t *testing.T) {
 		require.Nil(t, err)
 		return cast
 	}
-
 	// User votes
 	log.Lvl1("Casting votes for correct users")
 	vote(idUser1, bufCand1)
@@ -210,7 +209,7 @@ func TestService(t *testing.T) {
 		User:      idAdmin,
 		Signature: idAdminSig,
 	})
-	require.Equal(t, err, errOnlyLeader)
+	require.Equal(t, errOnlyLeader, err)
 
 	// Decrypt all votes
 	_, err = s0.Decrypt(&evoting.Decrypt{
@@ -219,6 +218,7 @@ func TestService(t *testing.T) {
 		Signature: idAdminSig,
 	})
 	require.Nil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
 
 	// Reconstruct on non-leader
 	reconstructReply, err := s1.Reconstruct(&evoting.Reconstruct{
@@ -237,7 +237,7 @@ func TestService(t *testing.T) {
 	}
 }
 
-func runAnElection(t *testing.T, s *Service, replyLink *evoting.LinkReply, nodeKP *key.Pair, admin uint32) {
+func runAnElection(t *testing.T, local *onet.LocalTest, s *Service, replyLink *evoting.LinkReply, nodeKP *key.Pair, admin uint32) {
 	adminSig := generateSignature(nodeKP.Private, replyLink.ID, admin)
 
 	log.Lvl1("Opening")
@@ -252,6 +252,7 @@ func runAnElection(t *testing.T, s *Service, replyLink *evoting.LinkReply, nodeK
 		Signature: adminSig,
 	})
 	require.Nil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
 
 	// Prepare a helper for testing voting.
 	vote := func(user uint32, bufCand []byte) *evoting.CastReply {
@@ -268,6 +269,7 @@ func runAnElection(t *testing.T, s *Service, replyLink *evoting.LinkReply, nodeK
 			Signature: generateSignature(nodeKP.Private, replyLink.ID, user),
 		})
 		require.Nil(t, err)
+		require.Nil(t, local.WaitDone(time.Second))
 		return cast
 	}
 
@@ -285,6 +287,7 @@ func runAnElection(t *testing.T, s *Service, replyLink *evoting.LinkReply, nodeK
 		Signature: adminSig,
 	})
 	require.Nil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
 
 	// Decrypt all votes
 	log.Lvl1("Decrypt")
@@ -294,6 +297,7 @@ func runAnElection(t *testing.T, s *Service, replyLink *evoting.LinkReply, nodeK
 		Signature: adminSig,
 	})
 	require.Nil(t, err)
+	require.Nil(t, local.WaitDone(defaultTimeout))
 
 	// Reconstruct votes
 	log.Lvl1("Reconstruct")
@@ -301,6 +305,7 @@ func runAnElection(t *testing.T, s *Service, replyLink *evoting.LinkReply, nodeK
 		ID: replyOpen.ID,
 	})
 	require.Nil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
 }
 
 func TestEvolveRoster(t *testing.T) {
@@ -328,7 +333,7 @@ func TestEvolveRoster(t *testing.T) {
 	require.Nil(t, err)
 	log.Lvl2("Wrote 1st roster")
 
-	runAnElection(t, s0, rl, nodeKP, idAdmin)
+	runAnElection(t, local, s0, rl, nodeKP, idAdmin)
 
 	// Try to change master as idAdmin2: it should not be allowed.
 	log.Lvl1("Check rejection of invalid admin")
@@ -359,11 +364,13 @@ func TestEvolveRoster(t *testing.T) {
 		Admins:    []uint32{idAdmin, idAdmin2},
 	})
 	require.Nil(t, err)
+	require.Nil(t, local.WaitDone(time.Second))
 
 	// Run an election on the new set of conodes, the new nodeKP, and the new
 	// election admin.
 	log.Lvl1("Running an election")
-	runAnElection(t, s0, rl, nodeKP, idAdmin2)
+	runAnElection(t, local, s0, rl, nodeKP, idAdmin2)
+	require.Nil(t, local.WaitDone(time.Second))
 
 	// There was a test here before to try to replace the leader.
 	// It didn't work. For the time being, that is not supported.
@@ -457,6 +464,10 @@ func TestShuffleCatastrophicNodeFailure(t *testing.T) {
 	}
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
+	oldTimeout := timeout
+	defer func() {
+		timeout = oldTimeout
+	}()
 	timeout = defaultTimeout
 
 	nodeKP := key.NewKeyPair(cothority.Suite)
@@ -518,18 +529,22 @@ func TestShuffleCatastrophicNodeFailure(t *testing.T) {
 	nodes[6].Pause()
 
 	// Shuffle all votes
+	log.Lvl1("Shuffling with too many nodes down - should fail!")
 	_, err = s0.Shuffle(&evoting.Shuffle{
 		ID:        electionID,
 		User:      idAdmin,
 		Signature: adminSig,
 	})
 	require.NotNil(t, err)
+	log.Lvl2("Verifying lingering protocols")
+	require.Nil(t, local.WaitDone(timeout))
 
 	// Unpause the nodes and retry shuffling
 	nodes[2].Unpause()
 	nodes[5].Unpause()
 	nodes[6].Unpause()
 
+	log.Lvl1("Shuffling with nodes back up - should pass")
 	_, err = s0.Shuffle(&evoting.Shuffle{
 		ID:        electionID,
 		User:      idAdmin,
@@ -593,6 +608,10 @@ func TestDecryptCatastrophicNodeFailure(t *testing.T) {
 	}
 	local := onet.NewLocalTest(cothority.Suite)
 	defer local.CloseAll()
+	oldTimeout := timeout
+	defer func() {
+		timeout = oldTimeout
+	}()
 	timeout = defaultTimeout
 
 	nodeKP := key.NewKeyPair(cothority.Suite)
@@ -630,14 +649,15 @@ func TestDecryptCatastrophicNodeFailure(t *testing.T) {
 	nodes[5].Pause()
 
 	// Try a decrypt now. It should timeout because no blocks can be stored
+	log.Lvl1("Decrypting with too many nodes down - this will fail")
 	_, err = s0.Decrypt(&evoting.Decrypt{
 		ID:        electionID,
 		User:      idAdmin,
 		Signature: adminSig,
 	})
 	require.NotNil(t, err)
-
-	log.Lvl2("Decrypt timed out on 3 nodes failing")
+	log.Lvl2("Waiting for protocols to finish")
+	require.Nil(t, local.WaitDone(time.Second))
 
 	// Unpause the nodes
 	nodes[2].Unpause()
@@ -645,6 +665,7 @@ func TestDecryptCatastrophicNodeFailure(t *testing.T) {
 	nodes[5].Unpause()
 
 	// Try a decrypt now. It should succeed
+	log.Lvl1("Decrypting with all nodes up again")
 	_, err = s0.Decrypt(&evoting.Decrypt{
 		ID:        electionID,
 		User:      idAdmin,
@@ -665,7 +686,7 @@ func TestCastNodeFailureShuffleAllOk(t *testing.T) {
 	s0 := local.GetServices(nodes, serviceID)[0].(*Service)
 	sc0 := local.GetServices(nodes, onet.ServiceFactory.ServiceID(skipchain.ServiceName))[0].(*skipchain.Service)
 	// Set a lower timeout for the tests
-	sc0.SetPropTimeout(5 * time.Second)
+	sc0.SetPropTimeout(defaultTimeout)
 
 	// Create the master skipchain
 	ro := onet.NewRoster(roster.List)
@@ -710,9 +731,12 @@ func TestCastNodeFailureShuffleAllOk(t *testing.T) {
 		return cast
 	}
 
+	log.Lvl1("Voting with all nodes")
 	vote(idUser1, bufCand1)
 	nodes[5].Pause()
+	log.Lvl1("Voting with one node paused")
 	vote(idUser2, bufCand1)
+	log.Lvl1("Unpausing node again")
 	nodes[5].Unpause()
 
 	electionID := replyOpen.ID
