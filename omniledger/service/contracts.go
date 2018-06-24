@@ -122,11 +122,22 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 	return d, nil
 }
 
+// BytesToObjID converts a byte slice to an ObjectID, it expects the byte slice
+// to be 64 bytes.
+func BytesToObjID(x []byte) ObjectID {
+	var nonce Nonce
+	copy(nonce[:], x[32:64])
+	return ObjectID{
+		DarcID:     x[0:32],
+		InstanceID: nonce,
+	}
+}
+
 // ContractConfig can only be instantiated once per skipchain, and only for
 // the genesis block.
 func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	c = coins
-	if tx.getType() != spawnType {
+	if tx.GetType() != SpawnType {
 		return nil, nil, errors.New("Config can only be spawned")
 	}
 	darcBuf := tx.Spawn.Args.Search("darc")
@@ -188,11 +199,15 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 				NewStateChange(Create, ObjectID{d.GetBaseID(), ZeroNonce}, ContractDarcID, darcBuf),
 			}, coins, nil
 		}
-		c, found := s.contracts[tx.Spawn.ContractID]
-		if !found {
-			return nil, nil, errors.New("couldn't find this contract type")
-		}
-		return c(coll, tx, coins)
+		// TODO this will never get called
+		panic("noo")
+		/*
+			c, found := s.contracts[tx.Spawn.ContractID]
+			if !found {
+				return nil, nil, errors.New("couldn't find this contract type")
+			}
+			return c(coll, tx, coins)
+		*/
 	case tx.Invoke != nil:
 		switch tx.Invoke.Command {
 		case "evolve":

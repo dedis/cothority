@@ -154,6 +154,10 @@ func (instr Instruction) DeriveID(what string) ObjectID {
 	h := sha256.New()
 	h.Write([]byte(what))
 	h.Write(instr.Hash())
+	for _, s := range instr.Signatures {
+		// h.Write(s.Signer)
+		h.Write(s.Signature)
+	}
 	sum := h.Sum(nil)
 
 	var iid Nonce
@@ -188,6 +192,7 @@ func (instr Instruction) GetContractState(coll CollectionView) (contractID strin
 	if err != nil {
 		return
 	}
+	// TODO cast might panic
 	contractID = string(cv[1].([]byte))
 	state = cv[0].([]byte)
 	return
@@ -225,6 +230,12 @@ func (instr *Instruction) SignBy(signers ...darc.Signer) error {
 	// Create the request and populate it with the right identities.  We
 	// need to do this prior to signing because identities are a part of
 	// the digest.
+	sigs := make([]darc.Signature, len(signers))
+	for i, signer := range signers {
+		sigs[i].Signer = signer.Identity()
+	}
+	instr.Signatures = sigs
+
 	req, err := instr.ToDarcRequest()
 	if err != nil {
 		return err
@@ -386,21 +397,21 @@ func (sc StateAction) String() string {
 type instrType int
 
 const (
-	invalidInstrType instrType = iota
-	spawnType
-	invokeType
-	deleteType
+	InvalidInstrType instrType = iota
+	SpawnType
+	InvokeType
+	DeleteType
 )
 
-func (instr Instruction) getType() instrType {
+func (instr Instruction) GetType() instrType {
 	if instr.Spawn != nil && instr.Invoke == nil && instr.Delete == nil {
-		return spawnType
+		return SpawnType
 	} else if instr.Spawn == nil && instr.Invoke != nil && instr.Delete == nil {
-		return invokeType
+		return InvokeType
 	} else if instr.Spawn == nil && instr.Invoke == nil && instr.Delete != nil {
-		return deleteType
+		return DeleteType
 	} else {
-		return invalidInstrType
+		return InvalidInstrType
 	}
 }
 

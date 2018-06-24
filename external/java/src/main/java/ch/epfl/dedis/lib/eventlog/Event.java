@@ -23,6 +23,14 @@ public final class Event {
     }
 
     /**
+     * Constructs an event from the protobuf Event type.
+     * @param e The event of the protobuf type.
+     */
+    public Event(EventLogProto.Event e) {
+        this(e.getWhen(), e.getTopic(), e.getContent());
+    }
+
+    /**
      * This is the constructor for Event, the timestamp is set to the current time.
      * @param topic The topic of the event, which can be used to filter events on retrieval.
      * @param content The content of the event.

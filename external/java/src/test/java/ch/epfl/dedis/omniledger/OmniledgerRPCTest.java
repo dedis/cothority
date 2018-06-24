@@ -37,24 +37,16 @@ public class OmniledgerRPCTest {
 
     @BeforeEach
     void initAll() throws Exception {
-        testInstanceController = TestServerInit.getInstanceManual();
+        testInstanceController = TestServerInit.getInstance();
         admin = new SignerEd25519();
         Map<String, byte[]> rules = Darc.initRules(Arrays.asList(admin.getIdentity()),
                 Arrays.asList(admin.getIdentity()));
         genesisDarc = new Darc(rules, "genesis".getBytes());
 
-        try {
-            config = new Configuration(testInstanceController.getRoster(), Duration.of(100, MILLIS));
-            ol = new OmniledgerRPC(genesisDarc, config);
-            if (!ol.checkLiveness()){
-                throw new CothorityCommunicationException("liveness check failed");
-            }
-        } catch (CothorityCommunicationException e) {
-            logger.info("Error is: " + e.toString());
-            logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
-            logger.error("cd $(go env GOPATH)/src/github.com/dedis/onchain-secrets/conode");
-            logger.error("./run_conode.sh local 4 2");
-            fail("Couldn't start ocs!");
+        config = new Configuration(testInstanceController.getRoster(), Duration.of(100, MILLIS));
+        ol = new OmniledgerRPC(genesisDarc, config);
+        if (!ol.checkLiveness()){
+            throw new CothorityCommunicationException("liveness check failed");
         }
     }
 

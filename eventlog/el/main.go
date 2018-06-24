@@ -14,6 +14,7 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/eventlog"
 	"github.com/dedis/cothority/omniledger/darc"
+	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
@@ -24,11 +25,12 @@ import (
 )
 
 type config struct {
-	Name   string
-	ID     skipchain.SkipBlockID
-	Roster *onet.Roster
-	Owner  darc.Signer
-	Darc   *darc.Darc
+	Name       string
+	ID         skipchain.SkipBlockID
+	Roster     *onet.Roster
+	Owner      darc.Signer
+	Darc       *darc.Darc
+	EventLogID omniledger.ObjectID
 }
 
 func (c *config) newClient() *eventlog.Client {
@@ -41,6 +43,7 @@ func (c *config) newClient() *eventlog.Client {
 	// privs to a given private/public key.
 	cl.Signers = []darc.Signer{c.Owner}
 	cl.Darc = c.Darc
+	cl.InstanceID = c.EventLogID
 	return cl
 }
 
@@ -191,17 +194,18 @@ func create(c *cli.Context) error {
 func doCreate(name string, r *onet.Roster, interval time.Duration) (*config, error) {
 	owner := darc.NewSignerEd25519(nil, nil)
 	c := eventlog.NewClient(r)
-	err := c.Init(owner, interval)
+	eventlogID, err := c.Init(owner, interval)
 	if err != nil {
 		return nil, err
 	}
 
 	cfg := &config{
-		Name:   name,
-		ID:     c.ID,
-		Roster: r,
-		Owner:  owner,
-		Darc:   c.Darc,
+		Name:       name,
+		ID:         c.ID,
+		Roster:     r,
+		Owner:      owner,
+		Darc:       c.Darc,
+		EventLogID: *eventlogID,
 	}
 	err = cfg.save()
 	return cfg, err
@@ -304,7 +308,8 @@ func search(c *cli.Context) error {
 	cl := cfg.newClient()
 
 	req := &eventlog.SearchRequest{
-		Topic: c.String("topic"),
+		EventLogID: cfg.EventLogID,
+		Topic:      c.String("topic"),
 	}
 
 	f := c.String("from")

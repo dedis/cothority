@@ -45,73 +45,6 @@ func (s *Service) waitForBlock(scID skipchain.SkipBlockID) {
 	time.Sleep(5 * dur)
 }
 
-// Init will create a new event log. Logs will be accepted
-// from the signers mentioned in the request.
-func (s *Service) Init(req *InitRequest) (*InitResponse, error) {
-	cg := &omniledger.CreateGenesisBlock{
-		Version:       omniledger.CurrentVersion,
-		GenesisDarc:   req.Owner,
-		Roster:        req.Roster,
-		BlockInterval: req.BlockInterval,
-	}
-	cgr, err := s.omni.CreateGenesisBlock(cg)
-	if err != nil {
-		return nil, err
-	}
-
-	return &InitResponse{
-		ID: cgr.Skipblock.Hash,
-	}, nil
-}
-
-// Log will create a new event log entry.
-func (s *Service) Log(req *LogRequest) (*LogResponse, error) {
-	req2 := &omniledger.AddTxRequest{
-		Version:     omniledger.CurrentVersion,
-		SkipchainID: req.SkipchainID,
-		Transaction: req.Transaction,
-	}
-	_, err := s.omni.AddTransaction(req2)
-	if err != nil {
-		return nil, err
-	}
-	return &LogResponse{}, nil
-}
-
-// GetEvent asks omniledger for a stored event.
-func (s *Service) GetEvent(req *GetEventRequest) (*GetEventResponse, error) {
-	req2 := omniledger.GetProof{
-		Version: omniledger.CurrentVersion,
-		Key:     req.Key,
-		ID:      req.SkipchainID,
-	}
-	reply, err := s.omni.GetProof(&req2)
-	if err != nil {
-		return nil, err
-	}
-	if !reply.Proof.InclusionProof.Match() {
-		return nil, errors.New("not an inclusion proof")
-	}
-	k, vs, err := reply.Proof.KeyValue()
-	if err != nil {
-		return nil, err
-	}
-	if !bytes.Equal(k, req2.Key) {
-		return nil, errors.New("wrong key")
-	}
-	if len(vs) < 2 {
-		return nil, errors.New("not enough values")
-	}
-	e := Event{}
-	err = protobuf.Decode(vs[0], &e)
-	if err != nil {
-		return nil, err
-	}
-	return &GetEventResponse{
-		Event: e,
-	}, nil
-}
-
 // This should be a const, but we want to be able to hack it from tests.
 var searchMax = 10000
 
@@ -126,7 +59,7 @@ func (s *Service) Search(req *SearchRequest) (*SearchResponse, error) {
 	}
 
 	v := s.omni.GetCollectionView(req.ID)
-	el := &eventLog{ID: theEventLog.Slice(), v: v}
+	el := &eventLog{ID: req.EventLogID.Slice(), v: v}
 
 	id, b, err := el.getLatestBucket()
 	if err == errIndexMissing {
@@ -227,19 +160,8 @@ func (s *Service) decodeAndCheckEvent(coll omniledger.CollectionView, eventBuf [
 	return event, nil
 }
 
-// contractFunction is the function that runs to process a transaction of
-// type "eventlog"
-func (s *Service) contractFunction(v omniledger.CollectionView, tx omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
-	if tx.Delete != nil {
-		return nil, nil, errors.New("delete tx not allowed")
-	}
-	if tx.Invoke != nil {
-		return nil, nil, errors.New("invoke tx not allowed")
-	}
-	if tx.Spawn == nil {
-		return nil, nil, errors.New("expected a spawn tx")
-	}
-
+// invoke will add an event and update the corresponding indices.
+func (s *Service) invoke(v omniledger.CollectionView, tx omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
 	// This is not strictly required, because since we know we are
 	// a spawn, we know the contract comes directly from
 	// tx.Spawn.ContractID.
@@ -247,21 +169,37 @@ func (s *Service) contractFunction(v omniledger.CollectionView, tx omniledger.In
 	if err != nil {
 		return nil, nil, err
 	}
+	if cid != contractName {
+		return nil, nil, fmt.Errorf("expected contract ID to bd %s but got %s", contractName, cid)
+	}
 
 	// All the state changes, at every step, go in here.
 	scs := []omniledger.StateChange{}
 
-	eventBuf := tx.Spawn.Args.Search("event")
+	eventBuf := tx.Invoke.Args.Search("event")
 	if eventBuf == nil {
 		return nil, nil, errors.New("expected a named argument of \"event\"")
 	}
+
+	// TODO use DeriveID
+	eventKey := tx.Invoke.Args.Search("key")
+	if eventKey == nil {
+		return nil, nil, errors.New("expected a named argument of \"key\"")
+	}
+	if len(eventKey) != 64 {
+		return nil, nil, fmt.Errorf("event key has an incorrect length, got %d but need 64", len(eventKey))
+	}
+	if !bytes.Equal(eventKey[0:32], tx.ObjectID.DarcID) {
+		return nil, nil, errors.New("event key must begin with the darc ID")
+	}
+	eventID := omniledger.BytesToObjID(eventKey)
 
 	event, err := s.decodeAndCheckEvent(v, eventBuf)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	scs = append(scs, omniledger.NewStateChange(omniledger.Create, tx.ObjectID, cid, eventBuf))
+	scs = append(scs, omniledger.NewStateChange(omniledger.Create, eventID, cid, eventBuf))
 
 	// Walk from latest bucket back towards beginning looking for the right bucket.
 	//
@@ -276,9 +214,9 @@ func (s *Service) contractFunction(v omniledger.CollectionView, tx omniledger.In
 	// For now: buckets are allowed to grow as big as needed (but the previous
 	// rule prevents buckets from getting too big by timing them out).
 
-	el := &eventLog{ID: theEventLog.Slice(), v: v}
+	el := &eventLog{ID: tx.ObjectID.Slice(), v: v}
 	bID, b, err := el.getLatestBucket()
-	if err != nil && err != errIndexMissing {
+	if err != nil {
 		return nil, nil, err
 	}
 	isHead := true
@@ -324,7 +262,7 @@ func (s *Service) contractFunction(v omniledger.CollectionView, tx omniledger.In
 		newb := &bucket{
 			Start:     event.When,
 			Prev:      bID,
-			EventRefs: [][]byte{tx.ObjectID.Slice()},
+			EventRefs: [][]byte{eventKey},
 		}
 		buf, err := protobuf.Encode(newb)
 		if err != nil {
@@ -332,16 +270,12 @@ func (s *Service) contractFunction(v omniledger.CollectionView, tx omniledger.In
 		}
 		scs = append(scs, omniledger.NewStateChange(omniledger.Create, newBid, cid, buf))
 
-		// Create/Update the pointer to the latest bucket.
-		action := omniledger.Update
-		if b == nil {
-			action = omniledger.Create
-		}
-		scs = append(scs, omniledger.NewStateChange(action, theEventLog, cid, newBid.Slice()))
+		// Update the pointer to the latest bucket.
+		scs = append(scs, omniledger.NewStateChange(omniledger.Update, tx.ObjectID, cid, newBid.Slice()))
 	} else {
 		// Otherwise just add into whatever bucket we found, no matter how
 		// many are already there. (Splitting buckets is hard and not important to us.)
-		b.EventRefs = append(b.EventRefs, tx.ObjectID.Slice())
+		b.EventRefs = append(b.EventRefs, eventKey)
 		bucketBuf, err := protobuf.Encode(b)
 		if err != nil {
 			return nil, nil, err
@@ -354,8 +288,99 @@ func (s *Service) contractFunction(v omniledger.CollectionView, tx omniledger.In
 				Value:       bucketBuf,
 			})
 	}
-
 	return scs, nil, nil
+}
+
+func (s *Service) spawn(v omniledger.CollectionView, instr omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
+	cid, _, err := instr.GetContractState(v)
+	if err != nil {
+		return nil, nil, err
+	}
+	if cid != contractName {
+		return nil, nil, errors.New("invalid contract ID: " + cid)
+	}
+
+	var subID omniledger.Nonce
+	copy(subID[:], instr.Hash())
+	objID := omniledger.ObjectID{
+		DarcID:     instr.ObjectID.DarcID,
+		InstanceID: subID,
+	}
+	// We just need to store the key, because we make a Create state change
+	// here and all the following changes are Update.
+	scs := []omniledger.StateChange{omniledger.NewStateChange(omniledger.Create, objID, cid, make([]byte, 64))}
+	return scs, []omniledger.Coin{}, nil
+}
+
+// contractFunction is the function that runs to process a transaction of
+// type "eventlog"
+func (s *Service) contractFunction(v omniledger.CollectionView, tx omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
+	if tx.GetType() == omniledger.InvokeType {
+		return s.invoke(v, tx, c)
+	} else if tx.GetType() == omniledger.SpawnType {
+		return s.spawn(v, tx, c)
+	}
+	return nil, nil, errors.New("invalid action")
+}
+
+// checkBuckets walks all the buckets for a given eventlog and returns an error
+// if an event is in the wrong bucket. This function is useful to check the
+// correctness of buckets.
+func (s *Service) checkBuckets(objID omniledger.ObjectID, id skipchain.SkipBlockID, ct0 int) error {
+	v := s.omni.GetCollectionView(id)
+	el := eventLog{ID: objID.Slice(), v: v}
+
+	id, b, err := el.getLatestBucket()
+	if err != nil {
+		return err
+	}
+	if b == nil {
+		return errors.New("nil bucket")
+	}
+
+	// bEnd is normally updated from the last bucket's start. For the latest
+	// bucket, bEnd is now.
+	bEnd := time.Now().UnixNano()
+	end := time.Unix(0, bEnd)
+
+	ct := 0
+	i := 0
+	for {
+		st := time.Unix(0, b.Start)
+
+		// check each event
+		for j, e := range b.EventRefs {
+			ev, err := getEventByID(v, e)
+			if err != nil {
+				return err
+			}
+			when := time.Unix(0, ev.When)
+			if when.Before(st) {
+				return fmt.Errorf("bucket %v, event %v before start (%v<%v)", i, j, when, st)
+			}
+			if when.After(end) {
+				return fmt.Errorf("bucket %v, event %v after end (%v>%v)", i, j, when, end)
+			}
+			ct++
+		}
+
+		// advance to prev bucket
+		if b.isFirst() {
+			break
+		}
+		bEnd = b.Start
+		end = time.Unix(0, bEnd)
+		id = b.Prev
+		b, err = el.getBucketByID(id)
+		if err != nil {
+			return err
+		}
+		i++
+	}
+	if ct0 != 0 && ct0 != ct {
+		return fmt.Errorf("expected %v, found %v events", ct0, ct)
+	}
+	return nil
 }
 
 // newService receives the context that holds information about the node it's
@@ -372,7 +397,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		// periods with no events do not need buckets created for them.
 		bucketMaxAge: 5 * time.Second,
 	}
-	if err := s.RegisterHandlers(s.Init, s.Log, s.GetEvent, s.Search); err != nil {
+	if err := s.RegisterHandlers(s.Search); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 

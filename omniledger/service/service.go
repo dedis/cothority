@@ -483,7 +483,7 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID, interval time.Du
 			select {
 			case t := <-c:
 				ts = append(ts, t)
-				log.Lvlf2("%x: Stored transaction. Next block length: %v, New Tx: %+v", scID, len(ts), t)
+				log.Lvlf2("%x: Added transaction to queue. Next block length: %v, New Tx: %+v", scID, len(ts), t)
 			case <-to:
 				if len(ts) > 0 {
 					log.Lvlf2("%x: New epoch and transaction-length: %d", scID, len(ts))
@@ -578,7 +578,7 @@ clientTransactions:
 		for _, instr := range ct.Instructions {
 			contract, _, err := instr.GetContractState(cdbI)
 			if err != nil {
-				log.Error("Couldn't get contract type of instruction")
+				log.Error("Couldn't get contract type of instruction:", err)
 				continue clientTransactions
 			}
 

@@ -30,7 +30,7 @@ public class DarcInstance {
      * Instantiates a new DarcInstance given a working omniledger instance and
      * an instanceId. This instantiator will contact omniledger and try to get
      * the current darcInstance. If the instance is not found, or is not of
-     * contractId "Darc", an exception will be thrown.
+     * contractId "darc", an exception will be thrown.
      *
      * @param ol is a link to an omniledger instance that is running
      * @param id of the darc-instance to connect to

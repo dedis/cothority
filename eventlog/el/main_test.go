@@ -52,6 +52,9 @@ func Test(t *testing.T) {
 	_, err = doCreate("test2", roster, blockInterval)
 	require.Nil(t, err)
 
+	// Make sure the eventlogs are in the blockchain.
+	time.Sleep(2 * blockInterval)
+
 	c, err := loadConfigs(getDataPath("el"))
 	require.Nil(t, err)
 	require.Equal(t, 2, len(c))

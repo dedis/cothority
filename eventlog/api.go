@@ -1,6 +1,8 @@
 package eventlog
 
 import (
+	"bytes"
+	"errors"
 	"time"
 
 	"github.com/dedis/cothority/omniledger/darc"
@@ -15,64 +17,117 @@ import (
 
 // Client is a structure to communicate with the eventlog service
 type Client struct {
-	*onet.Client
-	roster *onet.Roster
+	olClient *onet.Client // TODO use omniledger.NewClient
+	elClient *onet.Client
+	roster   *onet.Roster
 	// ID is the skipchain where events will be logged.
 	ID skipchain.SkipBlockID
 	// Signers are the Darc signers that will sign events sent with this client.
 	Signers []darc.Signer
 	// Darc is the current Darc associated with this skipchain. Use it as a base
 	// in case you need to evolve the permissions on the EventLog.
-	Darc *darc.Darc
-}
-
-// TODO: This is a placeholder, while we are waiting for an OmniLedger admin
-// tool that will let us connect a public key to the right to create new eventlogs.
-var theEventLog omniledger.ObjectID
-
-func init() {
-	theEventLog.DarcID = omniledger.ZeroDarc
-	copy(theEventLog.InstanceID[:], []byte("index"))
+	Darc       *darc.Darc
+	InstanceID omniledger.ObjectID
 }
 
 // NewClient creates a new client to talk to the eventlog service.
 func NewClient(r *onet.Roster) *Client {
 	return &Client{
-		Client: onet.NewClient(cothority.Suite, ServiceName),
-		roster: r,
+		olClient: onet.NewClient(cothority.Suite, omniledger.ServiceName),
+		elClient: onet.NewClient(cothority.Suite, ServiceName),
+		roster:   r,
 	}
 }
 
 // AddWriter modifies the given darc.Rules to use expr as the authorized writer
-// to add new Event Logs. If expr is nil, the current evolution expression is used instead.
+// to add new Event Logs. If expr is nil, the current evolution expression is
+// used instead.
 func AddWriter(r darc.Rules, expr expression.Expr) darc.Rules {
 	if expr == nil {
 		expr = r.GetEvolutionExpr()
 	}
 	r["spawn:eventlog"] = expr
+	r["invoke:eventlog"] = expr
 	return r
 }
 
-// Init initialises an event logging skipchain. A sucessful call
-// updates the ID, Signer and Darc fields of the Client. The new
-// skipchain has a Darc that requires one signature from owner.
-func (c *Client) Init(owner darc.Signer, blockInterval time.Duration) error {
+// Init initialises an event logging skipchain. A sucessful call updates the
+// ID, Signer and Darc fields of the Client. The new skipchain has a Darc that
+// requires one signature from owner.
+// TODO this is a hack, usually this is *not* how you'd initialise event logs.
+// The proper way would be to initialise the genesis block on omniledger and
+// have omniledger evolve/add darcs to grant the "spawn:eventlog" and
+// "invoke:eventlog" permissions.
+func (c *Client) Init(owner darc.Signer, blockInterval time.Duration) (*omniledger.ObjectID, error) {
 	rules := darc.InitRules([]darc.Identity{owner.Identity()}, []darc.Identity{})
 	d := darc.NewDarc(AddWriter(rules, nil), []byte("eventlog owner"))
 
-	msg := &InitRequest{
-		Owner:         *d,
+	req := &omniledger.CreateGenesisBlock{
+		Version:       omniledger.CurrentVersion,
 		Roster:        *c.roster,
+		GenesisDarc:   *d,
 		BlockInterval: blockInterval,
 	}
-	reply := &InitResponse{}
-	if err := c.SendProtobuf(c.roster.List[0], msg, reply); err != nil {
-		return err
+	reply := &omniledger.CreateGenesisBlockResponse{}
+	if err := c.olClient.SendProtobuf(c.roster.List[0], req, reply); err != nil {
+		return nil, err
 	}
 	c.Darc = d
 	c.Signers = []darc.Signer{owner}
-	c.ID = reply.ID
-	return nil
+	c.ID = reply.Skipblock.SkipChainID()
+
+	// When we have a genesis block, we need to initialise one eventlog and
+	// store its ID.
+	var err error
+	var instID *omniledger.ObjectID
+	instID, err = c.initEventLog()
+	if err != nil {
+		return nil, err
+	}
+	c.InstanceID = *instID
+	return &c.InstanceID, nil
+}
+
+func (c *Client) initEventLog() (*omniledger.ObjectID, error) {
+	instr := omniledger.Instruction{
+		ObjectID: omniledger.ObjectID{
+			DarcID:     c.Darc.GetBaseID(),
+			InstanceID: omniledger.ZeroNonce,
+		},
+		Nonce:  omniledger.GenNonce(),
+		Index:  0,
+		Length: 1,
+		Spawn:  &omniledger.Spawn{ContractID: contractName},
+	}
+	if err := instr.SignBy(c.Signers...); err != nil {
+		return nil, err
+	}
+	tx := omniledger.ClientTransaction{
+		Instructions: []omniledger.Instruction{instr},
+	}
+	req := &omniledger.AddTxRequest{
+		Version:     omniledger.CurrentVersion,
+		SkipchainID: c.ID,
+		Transaction: tx,
+	}
+	reply := &omniledger.AddTxResponse{}
+	if err := c.olClient.SendProtobuf(c.roster.List[0], req, reply); err != nil {
+		return nil, err
+	}
+	var subID omniledger.Nonce
+	copy(subID[:], instr.Hash())
+	objID := omniledger.ObjectID{
+		DarcID:     c.Darc.GetBaseID(),
+		InstanceID: subID,
+	}
+	return &objID, nil
+}
+
+// LoadFromExisting expects the omniledger to already be initialised and the
+// instance ID should refer to an eventlog contract.
+func (c *Client) LoadFromExisting(owner darc.Signer, ol *omniledger.Client, instanceID omniledger.ObjectID) error {
+	// we need to load a eventlog index...
+	return errors.New("not implemented")
 }
 
 // A LogID is an opaque unique identifier useful to find a given log message later.
@@ -80,39 +135,55 @@ type LogID []byte
 
 // Log asks the service to log events.
 func (c *Client) Log(ev ...Event) ([]LogID, error) {
-	reply := &LogResponse{}
-	tx, err := makeTx(ev, c.Darc.GetBaseID(), c.Signers)
+	reply := &omniledger.AddTxResponse{}
+	tx, keys, err := makeTx(c.InstanceID, ev, c.Darc.GetBaseID(), c.Signers)
 	if err != nil {
 		return nil, err
 	}
-	req := &LogRequest{
+	req := &omniledger.AddTxRequest{
+		Version:     omniledger.CurrentVersion,
 		SkipchainID: c.ID,
 		Transaction: *tx,
 	}
-	if err := c.SendProtobuf(c.roster.List[0], req, reply); err != nil {
+	if err := c.olClient.SendProtobuf(c.roster.List[0], req, reply); err != nil {
 		return nil, err
 	}
-	out := make([]LogID, len(tx.Instructions))
-	for i := range tx.Instructions {
-		out[i] = tx.Instructions[i].ObjectID.Slice()
-	}
-	return out, nil
+	return keys, nil
 }
 
 // GetEvent asks the service to retrieve an event.
 func (c *Client) GetEvent(id []byte) (*Event, error) {
-	reply := &GetEventResponse{}
-	req := &GetEventRequest{
-		SkipchainID: c.ID,
-		Key:         id,
+	reply := &omniledger.GetProofResponse{}
+	req := &omniledger.GetProof{
+		Version: omniledger.CurrentVersion,
+		Key:     id,
+		ID:      c.ID,
 	}
-	if err := c.SendProtobuf(c.roster.List[0], req, reply); err != nil {
+	if err := c.olClient.SendProtobuf(c.roster.List[0], req, reply); err != nil {
 		return nil, err
 	}
-	return &reply.Event, nil
+	if !reply.Proof.InclusionProof.Match() {
+		return nil, errors.New("not an inclusion proof")
+	}
+	k, vs, err := reply.Proof.KeyValue()
+	if err != nil {
+		return nil, err
+	}
+	if !bytes.Equal(k, req.Key) {
+		return nil, errors.New("wrong key")
+	}
+	if len(vs) < 2 {
+		return nil, errors.New("not enough values")
+	}
+	e := Event{}
+	err = protobuf.Decode(vs[0], &e)
+	if err != nil {
+		return nil, err
+	}
+	return &e, nil
 }
 
-func makeTx(msgs []Event, darcID darc.ID, signers []darc.Signer) (*omniledger.ClientTransaction, error) {
+func makeTx(eventlogID omniledger.ObjectID, msgs []Event, darcID darc.ID, signers []darc.Signer) (*omniledger.ClientTransaction, []LogID, error) {
 	// We need the identity part of the signatures before
 	// calling ToDarcRequest() below, because the identities
 	// go into the message digest.
@@ -121,6 +192,8 @@ func makeTx(msgs []Event, darcID darc.ID, signers []darc.Signer) (*omniledger.Cl
 		sigs[i].Signer = x.Identity()
 	}
 
+	keys := make([]LogID, len(msgs))
+
 	instrNonce := omniledger.GenNonce()
 	tx := omniledger.ClientTransaction{
 		Instructions: make([]omniledger.Instruction, len(msgs)),
@@ -128,23 +201,29 @@ func makeTx(msgs []Event, darcID darc.ID, signers []darc.Signer) (*omniledger.Cl
 	for i, msg := range msgs {
 		eventBuf, err := protobuf.Encode(&msg)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		arg := omniledger.Argument{
+		argEvent := omniledger.Argument{
 			Name:  "event",
 			Value: eventBuf,
 		}
+		// TODO remove
+		keys[i] = omniledger.ObjectID{
+			DarcID:     eventlogID.DarcID,
+			InstanceID: omniledger.GenNonce(),
+		}.Slice()
+		argKey := omniledger.Argument{
+			Name:  "key",
+			Value: keys[i],
+		}
 		tx.Instructions[i] = omniledger.Instruction{
-			ObjectID: omniledger.ObjectID{
-				DarcID:     darcID,
-				InstanceID: omniledger.GenNonce(), // TODO figure out how to do the nonce property
-			},
-			Nonce:  instrNonce,
-			Index:  i,
-			Length: len(msgs),
-			Spawn: &omniledger.Spawn{
-				Args:       []omniledger.Argument{arg},
-				ContractID: contractName,
+			ObjectID: eventlogID,
+			Nonce:    instrNonce,
+			Index:    i,
+			Length:   len(msgs),
+			Invoke: &omniledger.Invoke{
+				Command: contractName,
+				Args:    []omniledger.Argument{argEvent, argKey},
 			},
 			Signatures: append([]darc.Signature{}, sigs...),
 		}
@@ -154,12 +233,12 @@ func makeTx(msgs []Event, darcID darc.ID, signers []darc.Signer) (*omniledger.Cl
 		for j, signer := range signers {
 			dr, err := tx.Instructions[i].ToDarcRequest()
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 
 			sig, err := signer.Sign(dr.Hash())
 			if err != nil {
-				return nil, err
+				return nil, nil, err
 			}
 			darcSigs[j] = darc.Signature{
 				Signature: sig,
@@ -168,7 +247,7 @@ func makeTx(msgs []Event, darcID darc.ID, signers []darc.Signer) (*omniledger.Cl
 		}
 		tx.Instructions[i].Signatures = darcSigs
 	}
-	return &tx, nil
+	return &tx, keys, nil
 }
 
 // Search executes a search on the filter in req. See the definition of
@@ -179,7 +258,7 @@ func (c *Client) Search(req *SearchRequest) (*SearchResponse, error) {
 		req.ID = c.ID
 	}
 	reply := &SearchResponse{}
-	if err := c.SendProtobuf(c.roster.List[0], req, reply); err != nil {
+	if err := c.elClient.SendProtobuf(c.roster.List[0], req, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil
