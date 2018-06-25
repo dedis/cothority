@@ -85,6 +85,7 @@ func NewInstanceID(buf []byte) InstanceID {
 	}
 	return InstanceID{buf[0:32], NewSubID(buf[32:64])}
 }
+
 // SubID is a 32-byte id.
 type SubID [32]byte
 
