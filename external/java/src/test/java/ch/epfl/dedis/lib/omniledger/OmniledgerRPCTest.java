@@ -1,10 +1,9 @@
-package ch.epfl.dedis.omniledger;
+package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.omniledger.*;
 import ch.epfl.dedis.lib.omniledger.contracts.DarcInstance;
 import ch.epfl.dedis.lib.omniledger.contracts.ValueInstance;
 import ch.epfl.dedis.lib.omniledger.darc.Darc;
@@ -56,7 +55,7 @@ public class OmniledgerRPCTest {
     }
 
     @Test
-    void updateDarc() throws Exception{
+    void updateDarc() throws Exception {
         SkipBlock previous = ol.getLatest();
         logger.info("Previous skipblock is: {}", previous.getIndex());
         DarcInstance dc = new DarcInstance(ol, genesisDarc);
@@ -138,7 +137,7 @@ public class OmniledgerRPCTest {
         ol.update();
         SkipBlock latest = ol.getLatest();
         assertNotNull(latest);
-        assertFalse(previous.equals(latest));
+        assertNotEquals(previous, latest);
         assertFalse(previous.getIndex() == latest.getIndex());
     }
 

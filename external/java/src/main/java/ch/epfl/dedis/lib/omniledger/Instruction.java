@@ -1,9 +1,7 @@
 package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.omniledger.darc.Identity;
-import ch.epfl.dedis.lib.omniledger.darc.Request;
-import ch.epfl.dedis.lib.omniledger.darc.Signature;
+import ch.epfl.dedis.lib.omniledger.darc.*;
 import ch.epfl.dedis.proto.TransactionProto;
 import com.google.protobuf.ByteString;
 
@@ -178,6 +176,49 @@ public class Instruction {
         try {
             return new Request(this.instId.getDarcId(), this.action(), this.hash(), ids, sigs);
         } catch (CothorityCryptoException e){
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Have a list of signers sign the instruction. The instruction will *not* be accepted by omniledger if it is not
+     * signed. The signature will not be valid if the instruction is modified after signing.
+     * @param signers - the list of signers.
+     * @throws CothorityCryptoException
+     */
+    public void signBy(List<Signer> signers) throws CothorityCryptoException {
+        this.signatures = new ArrayList<>();
+        for (Signer signer : signers) {
+            this.signatures.add(new Signature(null, signer.getIdentity()));
+        }
+
+        byte[] msg = this.toDarcRequest().hash();
+        for (int i = 0; i < this.signatures.size(); i++) {
+            try {
+                this.signatures.set(i, new Signature(signers.get(i).sign(msg), signers.get(i).getIdentity()));
+            } catch (Signer.SignRequestRejectedException e) {
+                throw new CothorityCryptoException(e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * This function derives an instance ID from the instruction with the given string. The derived instance ID if
+     * useful as a key to this instruction.
+     * @param what - the string that gets mixed into the derived instance ID
+     * @return the instance ID
+     * @throws CothorityCryptoException
+     */
+    public InstanceId deriveId(String what) throws CothorityCryptoException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(what.getBytes());
+            digest.update(this.hash());
+            for (Signature sig : this.signatures) {
+                digest.update(sig.signature);
+            }
+            return new InstanceId(this.instId.getDarcId(), new SubId(digest.digest()));
+        } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     }

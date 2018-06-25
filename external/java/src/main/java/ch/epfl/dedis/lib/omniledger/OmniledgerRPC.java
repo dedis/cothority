@@ -31,7 +31,7 @@ public class OmniledgerRPC {
     private SkipBlock genesis;
     private SkipBlock latest;
     private SkipchainRPC skipchain;
-    private static final int currentVersion = 1;
+    public static final int currentVersion = 1;
 
     private final Logger logger = LoggerFactory.getLogger(OmniledgerRPC.class);
 
@@ -195,5 +195,9 @@ public class OmniledgerRPC {
      */
     public SkipBlock getLatest() {
         return latest;
+    }
+
+    public SkipBlock getGenesis() {
+        return genesis;
     }
 }
