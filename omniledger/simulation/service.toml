@@ -5,7 +5,8 @@ Hosts = 10
 Rounds = 1
 RunWait = "6000s"
 Suite = "Ed25519"
-BlockInterval = 1
+BlockInterval = "1s"
+Keep = false
 
 Transactions, Batch
 1000, true
