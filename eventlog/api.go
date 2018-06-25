@@ -130,7 +130,8 @@ func (c *Client) LoadFromExisting(owner darc.Signer, ol *omniledger.Client, inst
 	return errors.New("not implemented")
 }
 
-// A LogID is an opaque unique identifier useful to find a given log message later.
+// A LogID is an opaque unique identifier useful to find a given log message later
+// via omniledger.GetProof.
 type LogID []byte
 
 // Log asks the service to log events.
@@ -207,15 +208,6 @@ func makeTx(eventlogID omniledger.ObjectID, msgs []Event, darcID darc.ID, signer
 			Name:  "event",
 			Value: eventBuf,
 		}
-		// TODO remove
-		keys[i] = omniledger.ObjectID{
-			DarcID:     eventlogID.DarcID,
-			InstanceID: omniledger.GenNonce(),
-		}.Slice()
-		argKey := omniledger.Argument{
-			Name:  "key",
-			Value: keys[i],
-		}
 		tx.Instructions[i] = omniledger.Instruction{
 			ObjectID: eventlogID,
 			Nonce:    instrNonce,
@@ -223,7 +215,7 @@ func makeTx(eventlogID omniledger.ObjectID, msgs []Event, darcID darc.ID, signer
 			Length:   len(msgs),
 			Invoke: &omniledger.Invoke{
 				Command: contractName,
-				Args:    []omniledger.Argument{argEvent, argKey},
+				Args:    []omniledger.Argument{argEvent},
 			},
 			Signatures: append([]darc.Signature{}, sigs...),
 		}
@@ -246,6 +238,7 @@ func makeTx(eventlogID omniledger.ObjectID, msgs []Event, darcID darc.ID, signer
 			}
 		}
 		tx.Instructions[i].Signatures = darcSigs
+		keys[i] = LogID(tx.Instructions[i].DeriveID("event").Slice())
 	}
 	return &tx, keys, nil
 }

@@ -469,7 +469,7 @@ func (s *Service) loadLatestDarc(sid skipchain.SkipBlockID, dID darc.ID) (*darc.
 	if string(contract) != "darc" {
 		return nil, fmt.Errorf("for darc %x, expected Kind to be 'darc' but got '%v'", dID, string(contract))
 	}
-	return darc.NewDarcFromProto(value)
+	return darc.NewFromProtobuf(value)
 }
 
 // createQueueWorker sets up a worker that will listen on a channel for

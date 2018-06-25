@@ -346,7 +346,7 @@ func search(c *cli.Context) error {
 
 	for _, x := range resp.Events {
 		const tsFormat = "2006-01-02 15:04:05"
-		fmt.Fprintf(out(), "%v\t%v\t%v\n", time.Unix(0, x.When).Format(tsFormat), x.Topic, x.Content)
+		fmt.Fprintf(c.App.Writer, "%v\t%v\t%v\n", time.Unix(0, x.When).Format(tsFormat), x.Topic, x.Content)
 
 		if ct != 0 {
 			ct--
@@ -360,15 +360,6 @@ func search(c *cli.Context) error {
 		return cli.NewExitError("", 1)
 	}
 	return nil
-}
-
-// This is so that main_test.go can set where the output goes.
-func out() io.Writer {
-	var out io.Writer = os.Stdout
-	if cliApp.Metadata["stdout"] != nil {
-		out = cliApp.Metadata["stdout"].(io.Writer)
-	}
-	return out
 }
 
 func loadConfigs(dir string) ([]config, error) {
@@ -385,12 +376,12 @@ func loadConfigs(dir string) ([]config, error) {
 		}
 		v, err := ioutil.ReadFile(fn)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "read %v: %v\n", fn, err)
+			fmt.Fprintf(cliApp.ErrWriter, "read %v: %v\n", fn, err)
 			continue
 		}
 		_, val, err := network.Unmarshal(v, cothority.Suite)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "unmarshal %v: %v\n", fn, err)
+			fmt.Fprintf(cliApp.ErrWriter, "unmarshal %v: %v\n", fn, err)
 			continue
 		}
 		c[ct] = *(val.(*config))

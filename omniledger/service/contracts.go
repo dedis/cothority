@@ -115,7 +115,7 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 	if !ok {
 		return nil, errors.New("cannot cast value to byte slice")
 	}
-	d, err := darc.NewDarcFromProto(darcBuf)
+	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +141,7 @@ func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coi
 		return nil, nil, errors.New("Config can only be spawned")
 	}
 	darcBuf := tx.Spawn.Args.Search("darc")
-	d, err := darc.NewDarcFromProto(darcBuf)
+	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {
 		log.Error("couldn't decode darc")
 		return
@@ -191,7 +191,7 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 	case tx.Spawn != nil:
 		if tx.Spawn.ContractID == ContractDarcID {
 			darcBuf := tx.Spawn.Args.Search("darc")
-			d, err := darc.NewDarcFromProto(darcBuf)
+			d, err := darc.NewFromProtobuf(darcBuf)
 			if err != nil {
 				return nil, nil, errors.New("given darc could not be decoded: " + err.Error())
 			}
@@ -212,7 +212,7 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 		switch tx.Invoke.Command {
 		case "evolve":
 			darcBuf := tx.Invoke.Args.Search("darc")
-			newD, err := darc.NewDarcFromProto(darcBuf)
+			newD, err := darc.NewFromProtobuf(darcBuf)
 			if err != nil {
 				return nil, nil, err
 			}

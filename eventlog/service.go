@@ -1,7 +1,6 @@
 package eventlog
 
 import (
-	"bytes"
 	"errors"
 	"fmt"
 	"time"
@@ -181,23 +180,13 @@ func (s *Service) invoke(v omniledger.CollectionView, tx omniledger.Instruction,
 		return nil, nil, errors.New("expected a named argument of \"event\"")
 	}
 
-	// TODO use DeriveID
-	eventKey := tx.Invoke.Args.Search("key")
-	if eventKey == nil {
-		return nil, nil, errors.New("expected a named argument of \"key\"")
-	}
-	if len(eventKey) != 64 {
-		return nil, nil, fmt.Errorf("event key has an incorrect length, got %d but need 64", len(eventKey))
-	}
-	if !bytes.Equal(eventKey[0:32], tx.ObjectID.DarcID) {
-		return nil, nil, errors.New("event key must begin with the darc ID")
-	}
-	eventID := omniledger.BytesToObjID(eventKey)
-
 	event, err := s.decodeAndCheckEvent(v, eventBuf)
 	if err != nil {
 		return nil, nil, err
 	}
+
+	// Get a new instance ID for storing this event.
+	eventID := tx.DeriveID("event")
 
 	scs = append(scs, omniledger.NewStateChange(omniledger.Create, eventID, cid, eventBuf))
 
@@ -234,9 +223,9 @@ func (s *Service) invoke(v omniledger.CollectionView, tx omniledger.Instruction,
 	}
 
 	// Make a new head bucket if:
-	//   No latest bucket: b == nil
+	//   No latest bucket (b == nil).
 	//     or
-	//   Found a bucket, and it is head, and is too old
+	//   Found a bucket, and it is head, and it is too old.
 	if b == nil || isHead && time.Duration(event.When-b.Start) > s.bucketMaxAge {
 		newBid := tx.DeriveID("bucket")
 
@@ -244,7 +233,7 @@ func (s *Service) invoke(v omniledger.CollectionView, tx omniledger.Instruction,
 			// Special case: The first bucket for an eventlog
 			// needs a catch-all bucket before it, in case later
 			// events come in.
-			catchID := tx.DeriveID("catch-all")
+			catchID := tx.DeriveID("bucket-catch-all")
 			newb := &bucket{
 				Start:     0,
 				Prev:      nil,
@@ -258,11 +247,13 @@ func (s *Service) invoke(v omniledger.CollectionView, tx omniledger.Instruction,
 			bID = catchID.Slice()
 		}
 
-		// This new bucket will start with this event.
 		newb := &bucket{
-			Start:     event.When,
+			// This new bucket will start with this event.
+			Start: event.When,
+			// It links to the previous latest bucket, or to the catch-all bucket
+			// if there was no previous bucket.
 			Prev:      bID,
-			EventRefs: [][]byte{eventKey},
+			EventRefs: [][]byte{eventID.Slice()},
 		}
 		buf, err := protobuf.Encode(newb)
 		if err != nil {
@@ -275,7 +266,7 @@ func (s *Service) invoke(v omniledger.CollectionView, tx omniledger.Instruction,
 	} else {
 		// Otherwise just add into whatever bucket we found, no matter how
 		// many are already there. (Splitting buckets is hard and not important to us.)
-		b.EventRefs = append(b.EventRefs, eventKey)
+		b.EventRefs = append(b.EventRefs, eventID.Slice())
 		bucketBuf, err := protobuf.Encode(b)
 		if err != nil {
 			return nil, nil, err
@@ -323,66 +314,6 @@ func (s *Service) contractFunction(v omniledger.CollectionView, tx omniledger.In
 	return nil, nil, errors.New("invalid action")
 }
 
-// checkBuckets walks all the buckets for a given eventlog and returns an error
-// if an event is in the wrong bucket. This function is useful to check the
-// correctness of buckets.
-func (s *Service) checkBuckets(objID omniledger.ObjectID, id skipchain.SkipBlockID, ct0 int) error {
-	v := s.omni.GetCollectionView(id)
-	el := eventLog{ID: objID.Slice(), v: v}
-
-	id, b, err := el.getLatestBucket()
-	if err != nil {
-		return err
-	}
-	if b == nil {
-		return errors.New("nil bucket")
-	}
-
-	// bEnd is normally updated from the last bucket's start. For the latest
-	// bucket, bEnd is now.
-	bEnd := time.Now().UnixNano()
-	end := time.Unix(0, bEnd)
-
-	ct := 0
-	i := 0
-	for {
-		st := time.Unix(0, b.Start)
-
-		// check each event
-		for j, e := range b.EventRefs {
-			ev, err := getEventByID(v, e)
-			if err != nil {
-				return err
-			}
-			when := time.Unix(0, ev.When)
-			if when.Before(st) {
-				return fmt.Errorf("bucket %v, event %v before start (%v<%v)", i, j, when, st)
-			}
-			if when.After(end) {
-				return fmt.Errorf("bucket %v, event %v after end (%v>%v)", i, j, when, end)
-			}
-			ct++
-		}
-
-		// advance to prev bucket
-		if b.isFirst() {
-			break
-		}
-		bEnd = b.Start
-		end = time.Unix(0, bEnd)
-		id = b.Prev
-		b, err = el.getBucketByID(id)
-		if err != nil {
-			return err
-		}
-		i++
-	}
-	if ct0 != 0 && ct0 != ct {
-		return fmt.Errorf("expected %v, found %v events", ct0, ct)
-	}
-	return nil
-}
-
 // newService receives the context that holds information about the node it's
 // running on. Saving and loading can be done using the context. The data will
 // be stored in memory for tests and simulations, and on disk for real
@@ -405,8 +336,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 	return s, nil
 }
 
-func getEventByID(coll omniledger.CollectionView, objID []byte) (*Event, error) {
-	r, err := coll.Get(objID).Record()
+func getEventByID(view omniledger.CollectionView, eid []byte) (*Event, error) {
+	r, err := view.Get(eid).Record()
 	if err != nil {
 		return nil, err
 	}

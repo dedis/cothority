@@ -387,7 +387,7 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 	require.True(t, pr.InclusionProof.Match())
 	_, vs, err := pr.KeyValue()
 	require.Nil(t, err)
-	d22, err := darc.NewDarcFromProto(vs[0])
+	d22, err := darc.NewFromProtobuf(vs[0])
 	require.Nil(t, err)
 	require.False(t, d22.Equal(d2))
 	require.True(t, d22.Equal(s.darc))
@@ -406,7 +406,7 @@ func TestService_DarcEvolution(t *testing.T) {
 	require.True(t, pr.InclusionProof.Match())
 	_, vs, err := pr.KeyValue()
 	require.Nil(t, err)
-	d22, err := darc.NewDarcFromProto(vs[0])
+	d22, err := darc.NewFromProtobuf(vs[0])
 	require.Nil(t, err)
 	require.True(t, d22.Equal(d2))
 }
@@ -422,7 +422,7 @@ func TestService_DarcSpawn(t *testing.T) {
 	darc2.Rules.AddRule("spawn:rain", darc2.Rules.GetSignExpr())
 	darc2Buf, err := darc2.ToProto()
 	require.Nil(t, err)
-	darc2Copy, err := darc.NewDarcFromProto(darc2Buf)
+	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
 	require.Nil(t, err)
 	require.True(t, darc2.Equal(darc2Copy))
 
@@ -468,7 +468,7 @@ func TestService_ValueSpawn(t *testing.T) {
 		require.True(t, pr.InclusionProof.Match())
 		values, err := pr.InclusionProof.RawValues()
 		require.Nil(t, err)
-		d, err := darc.NewDarcFromProto(values[0])
+		d, err := darc.NewFromProtobuf(values[0])
 		require.Nil(t, err)
 		if d.Version == darc2.Version {
 			break
@@ -611,7 +611,7 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 		pr = &resp.Proof
 		vs, err := pr.InclusionProof.Values()
 		require.Nil(t, err)
-		d, err := darc.NewDarcFromProto(vs[0].([]byte))
+		d, err := darc.NewFromProtobuf(vs[0].([]byte))
 		require.Nil(t, err)
 		if d.Equal(&d2) {
 			return

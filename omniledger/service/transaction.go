@@ -67,7 +67,9 @@ type ObjectID struct {
 
 // Slice returns concatenated DarcID and InstanceID.
 func (oid ObjectID) Slice() []byte {
-	return append(oid.DarcID[:], oid.InstanceID[:]...)
+	var out []byte
+	out = append(out, oid.DarcID[:]...)
+	return append(out, oid.InstanceID[:]...)
 }
 
 // Nonce is used to prevent replay attacks in instructions.
@@ -277,7 +279,7 @@ func (instr Instruction) ToDarcRequest() (*darc.Request, error) {
 		// part of the request must be the darc ID for verification to
 		// pass.
 		darcBuf := instr.Invoke.Args.Search("darc")
-		d, err := darc.NewDarcFromProto(darcBuf)
+		d, err := darc.NewFromProtobuf(darcBuf)
 		if err != nil {
 			return nil, err
 		}

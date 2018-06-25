@@ -97,9 +97,9 @@ func (d *Darc) ToProto() ([]byte, error) {
 	return b, nil
 }
 
-// NewDarcFromProto interprets a protobuf-representation of the darc and
+// NewFromProtobuf interprets a protobuf-representation of the darc and
 // returns a created Darc.
-func NewDarcFromProto(protoDarc []byte) *Darc {
+func NewFromProtobuf(protoDarc []byte) *Darc {
 	d := &Darc{}
 	protobuf.Decode(protoDarc, d)
 	return d

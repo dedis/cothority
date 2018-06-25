@@ -1,6 +1,7 @@
 package eventlog
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -34,16 +35,21 @@ func TestClient_Log(t *testing.T) {
 	c := NewClient(s.roster)
 	eventlogID, err := c.Init(owner, testBlockInterval)
 	require.Nil(t, err)
-	waitForKey(t, leader.omni, c.ID, eventlogID.Slice(), testBlockInterval)
+
+	key := eventlogID.Slice()
+	require.Equal(t, 64, len(key))
+
+	waitForKey(t, leader.omni, c.ID, key, testBlockInterval)
 
 	ids, err := c.Log(NewEvent("auth", "user alice logged out"),
 		NewEvent("auth", "user bob logged out"),
 		NewEvent("auth", "user bob logged back in"))
 	require.Nil(t, err)
-	require.True(t, len(ids) == 3)
+	require.Equal(t, 3, len(ids))
+	require.Equal(t, 64, len(ids[2]))
 
 	// Loop while we wait for the next block to be created.
-	waitForKey(t, leader.omni, c.ID, ids[1], testBlockInterval)
+	waitForKey(t, leader.omni, c.ID, ids[2], testBlockInterval)
 
 	// Check consistency and # of events.
 	for i := 0; i < 10; i++ {
@@ -274,6 +280,9 @@ func TestClient_Search(t *testing.T) {
 }
 
 func waitForKey(t *testing.T, s *omniledger.Service, scID skipchain.SkipBlockID, key []byte, interval time.Duration) [][]byte {
+	if len(key) == 0 {
+		t.Fatal("key len", len(key))
+	}
 	var found bool
 	var resp *omniledger.GetProofResponse
 	for ct := 0; ct < 10; ct++ {
@@ -340,4 +349,64 @@ func newSer(t *testing.T) *ser {
 	}
 
 	return s
+}
+
+// checkBuckets walks all the buckets for a given eventlog and returns an error
+// if an event is in the wrong bucket. This function is useful to check the
+// correctness of buckets.
+func (s *Service) checkBuckets(objID omniledger.ObjectID, id skipchain.SkipBlockID, ct0 int) error {
+	v := s.omni.GetCollectionView(id)
+	el := eventLog{ID: objID.Slice(), v: v}
+
+	id, b, err := el.getLatestBucket()
+	if err != nil {
+		return err
+	}
+	if b == nil {
+		return errors.New("nil bucket")
+	}
+
+	// bEnd is normally updated from the last bucket's start. For the latest
+	// bucket, bEnd is now.
+	bEnd := time.Now().UnixNano()
+	end := time.Unix(0, bEnd)
+
+	ct := 0
+	i := 0
+	for {
+		st := time.Unix(0, b.Start)
+
+		// check each event
+		for j, e := range b.EventRefs {
+			ev, err := getEventByID(v, e)
+			if err != nil {
+				return err
+			}
+			when := time.Unix(0, ev.When)
+			if when.Before(st) {
+				return fmt.Errorf("bucket %v, event %v before start (%v<%v)", i, j, when, st)
+			}
+			if when.After(end) {
+				return fmt.Errorf("bucket %v, event %v after end (%v>%v)", i, j, when, end)
+			}
+			ct++
+		}
+
+		// advance to prev bucket
+		if b.isFirst() {
+			break
+		}
+		bEnd = b.Start
+		end = time.Unix(0, bEnd)
+		id = b.Prev
+		b, err = el.getBucketByID(id)
+		if err != nil {
+			return err
+		}
+		i++
+	}
+	if ct0 != 0 && ct0 != ct {
+		return fmt.Errorf("expected %v, found %v events", ct0, ct)
+	}
+	return nil
 }
