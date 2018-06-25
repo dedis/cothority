@@ -1,0 +1,12 @@
+Simulation = "TransferCoins"
+Servers = 8
+Bf = 4
+Hosts = 10
+Rounds = 1
+RunWait = "6000s"
+Suite = "Ed25519"
+BlockInterval = 1
+
+Transactions, Batch
+1000, true
+1000, false
