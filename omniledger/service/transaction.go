@@ -85,6 +85,7 @@ func NewInstanceID(buf []byte) InstanceID {
 	}
 	return InstanceID{buf[0:32], NewSubID(buf[32:64])}
 }
+
 // SubID is a 32-byte id.
 type SubID [32]byte
 
@@ -166,6 +167,11 @@ type Argument struct {
 
 // Arguments is a searchable list of arguments.
 type Arguments []Argument
+
+// NewArguments is a convenience method to create Arguments.
+func NewArguments(args ...Argument) Arguments {
+	return Arguments(args)
+}
 
 // Search returns the value of a given argument. If it is not found, nil
 // is returned.
