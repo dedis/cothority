@@ -731,6 +731,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.registerContract(ContractConfigID, s.ContractConfig)
 	s.registerContract(ContractDarcID, s.ContractDarc)
 	s.registerContract(ContractValueID, s.ContractValue)
+	s.registerContract(ContractCoinID, s.ContractCoin)
 	skipchain.RegisterVerification(c, verifyOmniLedger, s.verifySkipBlock)
 	return s, nil
 }

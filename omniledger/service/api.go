@@ -223,3 +223,28 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 	}
 	return &m, nil
 }
+
+// SignInstruction takes an instruction and one or more signers and adds
+// a Signature to the instruction.
+func SignInstruction(inst *Instruction, signers ...darc.Signer) error {
+	inst.Signatures = make([]darc.Signature, 0)
+	var action string
+	switch {
+	case inst.Spawn != nil:
+		action = "spawn:" + inst.Spawn.ContractID
+	case inst.Invoke != nil:
+		action = "invoke:" + inst.Invoke.Command
+	case inst.Delete != nil:
+		action = "delete"
+	}
+	req, err := darc.InitAndSignRequest(inst.ObjectID.DarcID, darc.Action(action),
+		inst.Hash(), signers...)
+	if err != nil {
+		return err
+	}
+	inst.Signatures = make([]darc.Signature, len(req.Signatures))
+	for i, sig := range req.Signatures {
+		inst.Signatures[i] = darc.Signature{sig, signers[i].Identity()}
+	}
+	return nil
+}

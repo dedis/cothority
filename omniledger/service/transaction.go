@@ -67,18 +67,15 @@ type InstanceID struct {
 	SubID SubID
 }
 
-<<<<<<< HEAD
 // SubID is a 32-byte id.
 type SubID [32]byte
-=======
 // NewObjectID returns a new ObjectID given a slice of bytes.
 func NewObjectID(buf []byte) ObjectID {
 	if len(buf) != 64 {
-		return ObjectID{}
+		return ObjectID{ZeroDarc, ZeroNonce}
 	}
 	return ObjectID{buf[0:32], NewNonce(buf[32:64])}
 }
->>>>>>> wip
 
 // Slice returns concatenated DarcID and InstanceID.
 func (oid InstanceID) Slice() []byte {
@@ -137,6 +134,11 @@ type Argument struct {
 
 // Arguments is a searchable list of arguments.
 type Arguments []Argument
+
+// NewArguments is a convenience method to create Arguments.
+func NewArguments(args ...Argument) Arguments {
+	return Arguments(args)
+}
 
 // Search returns the value of a given argument. If it is not found, nil
 // is returned.

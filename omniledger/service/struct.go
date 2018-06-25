@@ -62,7 +62,7 @@ func (r *roCollection) GetValues(key []byte) (value []byte, contractID string, e
 	}
 	contractID, ok = values[1].(string)
 	if !ok {
-		err = errors.New("second value is not a string")
+		contractID = string(values[1].([]byte))
 	}
 	return
 }
