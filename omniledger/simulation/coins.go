@@ -25,8 +25,9 @@ func init() {
 type SimulationService struct {
 	onet.SimulationBFTree
 	Transactions  int
-	BlockInterval int
+	BlockInterval string
 	Batch         bool
+	Keep bool
 }
 
 // NewSimulationService returns the new simulation, where all fields are
@@ -70,7 +71,12 @@ func (s *SimulationService) Node(config *onet.SimulationConfig) error {
 func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	size := config.Tree.Size()
 	log.Lvl2("Size is:", size, "rounds:", s.Rounds, "transactions:", s.Transactions)
-	c := service.NewClient()
+	var c *service.Client
+	if s.Keep {
+	    c = service.NewClientKeep()
+	} else {
+	    c = service.NewClient()
+	}
 	signer := darc.NewSignerEd25519(nil, nil)
 
 	// Create omniledger
@@ -79,7 +85,12 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
-	gm.BlockInterval = time.Second
+	// gm.BlockInterval = time.Second
+	duration, err := time.ParseDuration(s.BlockInterval)
+	if err != nil {
+		return err
+	}
+	gm.BlockInterval = duration
 	rep, err := c.CreateGenesisBlock(config.Roster, gm)
 	if err != nil {
 		return err
