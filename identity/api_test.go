@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/kyber"
@@ -19,7 +20,6 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/dedis/cothority/byzcoinx"
 )
 
 var tSuite = cothority.Suite
