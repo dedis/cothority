@@ -187,7 +187,7 @@ func (p *SubFtCosi) Dispatch() error {
 
 	var NRefusal = 0                  // number of refusal received. Will be used only for the subleader
 	var firstCommitmentSent = false   // to avoid sending the quick commitment multiple times
-	var hasCommitted = false          // to send the aggregate commitment only once this node has committed
+	var verificationDone = false      // to send the aggregate commitment only once this node has done its verification
 	var timedOut = false              // to refuse new commitments once it times out
 	var t = time.After(p.Timeout / 2) // the timeout
 loop:
@@ -203,7 +203,9 @@ loop:
 
 			isOwnCommitment := commitment.TreeNode.ID.Equal(p.TreeNode().ID)
 
-			if !isOwnCommitment {
+			if isOwnCommitment {
+				verificationDone = true
+			} else {
 				if !isValidSender(commitment.TreeNode, childrenCanCommit...) {
 					log.Lvl2(p.ServerIdentity(), "received a Commitment from node", commitment.ServerIdentity,
 						"that is neither a children nor itself, ignored")
@@ -238,10 +240,11 @@ loop:
 					break
 				}
 
+				//checks if commitment is a refusal or acceptance
 				if commitment.CoSiCommitment.Equal(p.suite.Point().Null()) { //refusal
 					NRefusal++
-					if isOwnCommitment {
-						log.Warn(p.ServerIdentity(), "refused Commitment, stopping protocol")
+					if p.IsLeaf() {
+						log.Warn(p.ServerIdentity(), " leaf refused Commitment, stopping node")
 
 						err = p.sendAggregatedCommitments(nil, NRefusal)
 						if err != nil {
@@ -250,19 +253,20 @@ loop:
 						return nil
 					}
 				} else { //accepted
-					if isOwnCommitment {
-						hasCommitted = true
-					}
 					commitments = append(commitments, commitment)
 				}
 
 				thresholdRefusal := (1 + len(p.Children()) - p.Threshold) + 1
+
+				//checks if threshold is reached or unreachable
 				quickAnswer := !firstCommitmentSent &&
 					(len(commitments) >= p.Threshold || // quick valid answer
 						NRefusal >= thresholdRefusal) // quick refusal answer
+
+				// checks if every child and himself committed
 				finalAnswer := len(commitments)+NRefusal == len(p.Children())+1
 
-				if (quickAnswer || finalAnswer || p.IsLeaf()) && hasCommitted {
+				if (quickAnswer || finalAnswer) && verificationDone {
 
 					err = p.sendAggregatedCommitments(commitments, NRefusal)
 					if err != nil {
@@ -270,7 +274,7 @@ loop:
 					}
 
 					//deactivate timeout if final commitment
-					if firstCommitmentSent || p.IsLeaf() {
+					if finalAnswer {
 						t = make(chan time.Time)
 					}
 
@@ -302,6 +306,7 @@ loop:
 			if err != nil {
 				return fmt.Errorf("error in handling challenge mask: %s", err)
 			}
+
 			//send challenge to children
 			go func() {
 				if errs := p.multicastParallel(&challenge.Challenge, childrenCanResponse...); len(errs) > 0 {
