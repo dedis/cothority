@@ -138,8 +138,8 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	// reference to the actual genesis transaction.
 	transaction := []ClientTransaction{{
 		Instructions: []Instruction{{
-			ObjectID: ObjectID{DarcID: req.GenesisDarc.GetID()},
-			Nonce:    ZeroNonce,
+			InstanceID: InstanceID{DarcID: req.GenesisDarc.GetID()},
+			Nonce:    zeroNonce,
 			Index:    0,
 			Length:   1,
 			Spawn:    spawn,
@@ -216,10 +216,10 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.save()
 }
 
-func toObjectID(dID darc.ID) ObjectID {
-	return ObjectID{
-		DarcID:     dID,
-		InstanceID: ZeroNonce,
+func toInstanceID(dID darc.ID) InstanceID {
+	return InstanceID{
+		DarcID: dID,
+		SubID:  zeroSubID,
 	}
 }
 
@@ -245,7 +245,7 @@ func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransactio
 }
 
 func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
-	d, err := s.loadLatestDarc(scID, instr.ObjectID.DarcID)
+	d, err := s.loadLatestDarc(scID, instr.InstanceID.DarcID)
 	if err != nil {
 		return errors.New("darc not found: " + err.Error())
 	}
@@ -462,7 +462,7 @@ func (s *Service) loadLatestDarc(sid skipchain.SkipBlockID, dID darc.ID) (*darc.
 	if colldb == nil {
 		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", sid.Short())
 	}
-	value, contract, err := colldb.GetValueContract(toObjectID(dID).Slice())
+	value, contract, err := colldb.GetValueContract(toInstanceID(dID).Slice())
 	if err != nil {
 		return nil, err
 	}

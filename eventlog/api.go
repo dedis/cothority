@@ -27,7 +27,7 @@ type Client struct {
 	// Darc is the current Darc associated with this skipchain. Use it as a base
 	// in case you need to evolve the permissions on the EventLog.
 	Darc       *darc.Darc
-	InstanceID omniledger.ObjectID
+	InstanceID omniledger.InstanceID
 }
 
 // NewClient creates a new client to talk to the eventlog service.
@@ -58,7 +58,7 @@ func AddWriter(r darc.Rules, expr expression.Expr) darc.Rules {
 // The proper way would be to initialise the genesis block on omniledger and
 // have omniledger evolve/add darcs to grant the "spawn:eventlog" and
 // "invoke:eventlog" permissions.
-func (c *Client) Init(owner darc.Signer, blockInterval time.Duration) (*omniledger.ObjectID, error) {
+func (c *Client) Init(owner darc.Signer, blockInterval time.Duration) (*omniledger.InstanceID, error) {
 	rules := darc.InitRules([]darc.Identity{owner.Identity()}, []darc.Identity{})
 	d := darc.NewDarc(AddWriter(rules, nil), []byte("eventlog owner"))
 
@@ -79,7 +79,7 @@ func (c *Client) Init(owner darc.Signer, blockInterval time.Duration) (*omniledg
 	// When we have a genesis block, we need to initialise one eventlog and
 	// store its ID.
 	var err error
-	var instID *omniledger.ObjectID
+	var instID *omniledger.InstanceID
 	instID, err = c.initEventLog()
 	if err != nil {
 		return nil, err
@@ -88,11 +88,10 @@ func (c *Client) Init(owner darc.Signer, blockInterval time.Duration) (*omniledg
 	return &c.InstanceID, nil
 }
 
-func (c *Client) initEventLog() (*omniledger.ObjectID, error) {
+func (c *Client) initEventLog() (*omniledger.InstanceID, error) {
 	instr := omniledger.Instruction{
-		ObjectID: omniledger.ObjectID{
-			DarcID:     c.Darc.GetBaseID(),
-			InstanceID: omniledger.ZeroNonce,
+		InstanceID: omniledger.InstanceID{
+			DarcID: c.Darc.GetBaseID(),
 		},
 		Nonce:  omniledger.GenNonce(),
 		Index:  0,
@@ -114,18 +113,18 @@ func (c *Client) initEventLog() (*omniledger.ObjectID, error) {
 	if err := c.olClient.SendProtobuf(c.roster.List[0], req, reply); err != nil {
 		return nil, err
 	}
-	var subID omniledger.Nonce
+	var subID omniledger.SubID
 	copy(subID[:], instr.Hash())
-	objID := omniledger.ObjectID{
-		DarcID:     c.Darc.GetBaseID(),
-		InstanceID: subID,
+	objID := omniledger.InstanceID{
+		DarcID: c.Darc.GetBaseID(),
+		SubID:  subID,
 	}
 	return &objID, nil
 }
 
 // LoadFromExisting expects the omniledger to already be initialised and the
 // instance ID should refer to an eventlog contract.
-func (c *Client) LoadFromExisting(owner darc.Signer, ol *omniledger.Client, instanceID omniledger.ObjectID) error {
+func (c *Client) LoadFromExisting(owner darc.Signer, ol *omniledger.Client, instanceID omniledger.InstanceID) error {
 	// we need to load a eventlog index...
 	return errors.New("not implemented")
 }
@@ -184,7 +183,7 @@ func (c *Client) GetEvent(id []byte) (*Event, error) {
 	return &e, nil
 }
 
-func makeTx(eventlogID omniledger.ObjectID, msgs []Event, darcID darc.ID, signers []darc.Signer) (*omniledger.ClientTransaction, []LogID, error) {
+func makeTx(eventlogID omniledger.InstanceID, msgs []Event, darcID darc.ID, signers []darc.Signer) (*omniledger.ClientTransaction, []LogID, error) {
 	// We need the identity part of the signatures before
 	// calling ToDarcRequest() below, because the identities
 	// go into the message digest.
@@ -209,7 +208,7 @@ func makeTx(eventlogID omniledger.ObjectID, msgs []Event, darcID darc.ID, signer
 			Value: eventBuf,
 		}
 		tx.Instructions[i] = omniledger.Instruction{
-			ObjectID: eventlogID,
+			InstanceID: eventlogID,
 			Nonce:    instrNonce,
 			Index:    i,
 			Length:   len(msgs),

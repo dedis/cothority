@@ -10,16 +10,17 @@ import (
 	"github.com/dedis/protobuf"
 )
 
-// Here we give a definition of pre-defined contracts.
+// zeroNonce is 32 bytes of zeroes.
+var zeroNonce = Nonce([32]byte{})
 
-// ZeroNonce is 32 bytes of zeroes and can have a special meaning.
-var ZeroNonce = Nonce([32]byte{})
+// zeroSubID is 32 bytes of zeroes as a subid for storing Darcs.
+var zeroSubID = SubID([32]byte{})
 
-// OneNonce has 32 bytes of zeros except the LSB is set to one.
-var OneNonce = Nonce(func() [32]byte {
-	var nonce [32]byte
-	nonce[31] = 1
-	return nonce
+// one is the subid for storing the omniledger config.
+var one = SubID(func() [32]byte {
+	var one [32]byte
+	one[31] = 1
+	return one
 }())
 
 // ZeroDarc is a DarcID with all zeroes.
@@ -27,7 +28,7 @@ var ZeroDarc = darc.ID(make([]byte, 32))
 
 // GenesisReferenceID is 64 bytes of zeroes. Its value is a reference to the
 // genesis-darc.
-var GenesisReferenceID = ObjectID{ZeroDarc, ZeroNonce}
+var GenesisReferenceID = InstanceID{ZeroDarc, zeroSubID}
 
 // ContractConfigID denotes a config-contract
 var ContractConfigID = "config"
@@ -63,9 +64,9 @@ func LoadConfigFromColl(coll CollectionView) (*Config, error) {
 		return nil, errors.New("value has a invalid length")
 	}
 	// Use the genesis-darc ID to create the config key and read the config.
-	configID := ObjectID{
-		DarcID:     darc.ID(val),
-		InstanceID: OneNonce,
+	configID := InstanceID{
+		DarcID: darc.ID(val),
+		SubID:  one,
 	}
 	val, contract, err = getValueContract(coll, configID.Slice())
 	if err != nil {
@@ -122,14 +123,14 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 	return d, nil
 }
 
-// BytesToObjID converts a byte slice to an ObjectID, it expects the byte slice
+// BytesToObjID converts a byte slice to an InstanceID, it expects the byte slice
 // to be 64 bytes.
-func BytesToObjID(x []byte) ObjectID {
-	var nonce Nonce
-	copy(nonce[:], x[32:64])
-	return ObjectID{
-		DarcID:     x[0:32],
-		InstanceID: nonce,
+func BytesToObjID(x []byte) InstanceID {
+	var sub SubID
+	copy(sub[:], x[32:64])
+	return InstanceID{
+		DarcID: x[0:32],
+		SubID:  sub,
 	}
 }
 
@@ -172,12 +173,12 @@ func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coi
 	}
 
 	return []StateChange{
-		NewStateChange(Create, GenesisReferenceID, ContractConfigID, tx.ObjectID.DarcID),
-		NewStateChange(Create, tx.ObjectID, ContractDarcID, darcBuf),
+		NewStateChange(Create, GenesisReferenceID, ContractConfigID, tx.InstanceID.DarcID),
+		NewStateChange(Create, tx.InstanceID, ContractDarcID, darcBuf),
 		NewStateChange(Create,
-			ObjectID{
-				DarcID:     tx.ObjectID.DarcID,
-				InstanceID: OneNonce,
+			InstanceID{
+				DarcID: tx.InstanceID.DarcID,
+				SubID:  one,
 			}, ContractConfigID, configBuf),
 	}, c, nil
 }
@@ -196,7 +197,7 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 				return nil, nil, errors.New("given darc could not be decoded: " + err.Error())
 			}
 			return []StateChange{
-				NewStateChange(Create, ObjectID{d.GetBaseID(), ZeroNonce}, ContractDarcID, darcBuf),
+				NewStateChange(Create, InstanceID{d.GetBaseID(), zeroSubID}, ContractDarcID, darcBuf),
 			}, coins, nil
 		}
 		// TODO this will never get called
@@ -216,7 +217,7 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 			if err != nil {
 				return nil, nil, err
 			}
-			oldD, err := LoadDarcFromColl(coll, ObjectID{newD.BaseID, ZeroNonce}.Slice())
+			oldD, err := LoadDarcFromColl(coll, InstanceID{newD.BaseID, zeroSubID}.Slice())
 			if err != nil {
 				return nil, nil, err
 			}
@@ -224,7 +225,7 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 				return nil, nil, err
 			}
 			return []StateChange{
-				NewStateChange(Update, tx.ObjectID, ContractDarcID, darcBuf),
+				NewStateChange(Update, tx.InstanceID, ContractDarcID, darcBuf),
 			}, coins, nil
 		default:
 			return nil, nil, errors.New("invalid command: " + tx.Invoke.Command)
@@ -239,10 +240,10 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 func (s *Service) ContractValue(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	switch {
 	case tx.Spawn != nil:
-		var subID Nonce
+		var subID SubID
 		copy(subID[:], tx.Hash())
 		return []StateChange{
-			NewStateChange(Create, ObjectID{tx.ObjectID.DarcID, subID},
+			NewStateChange(Create, InstanceID{tx.InstanceID.DarcID, subID},
 				ContractValueID, tx.Spawn.Args.Search("value")),
 		}, c, nil
 	case tx.Invoke != nil:
@@ -250,12 +251,12 @@ func (s *Service) ContractValue(cdb CollectionView, tx Instruction, c []Coin) ([
 			return nil, nil, errors.New("Value contract can only update")
 		}
 		return []StateChange{
-			NewStateChange(Update, tx.ObjectID,
+			NewStateChange(Update, tx.InstanceID,
 				ContractValueID, tx.Invoke.Args.Search("value")),
 		}, c, nil
 	case tx.Delete != nil:
 		return StateChanges{
-			NewStateChange(Remove, tx.ObjectID, ContractValueID, nil),
+			NewStateChange(Remove, tx.InstanceID, ContractValueID, nil),
 		}, c, nil
 	}
 	return nil, nil, errors.New("didn't find any instruction")

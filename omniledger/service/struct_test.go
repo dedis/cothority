@@ -27,7 +27,7 @@ func TestCollectionDBStrange(t *testing.T) {
 	contract := []byte("mycontract")
 	err = cdb.Store(&StateChange{
 		StateAction: Create,
-		ObjectID:    key,
+		InstanceID:    key,
 		Value:       value,
 		ContractID:  contract,
 	})
@@ -60,7 +60,7 @@ func TestCollectionDB(t *testing.T) {
 	for k, v := range pairs {
 		sc := &StateChange{
 			StateAction: Create,
-			ObjectID:    []byte(k),
+			InstanceID:    []byte(k),
 			Value:       []byte(v),
 			ContractID:  myContract,
 		}
@@ -92,7 +92,7 @@ func TestCollectionDB(t *testing.T) {
 	for k, v := range pairs {
 		sc := &StateChange{
 			StateAction: Update,
-			ObjectID:    []byte(k),
+			InstanceID:    []byte(k),
 			Value:       []byte(v),
 			ContractID:  myContract,
 		}
@@ -109,7 +109,7 @@ func TestCollectionDB(t *testing.T) {
 	for c := range pairs {
 		sc := &StateChange{
 			StateAction: Remove,
-			ObjectID:    []byte(c),
+			InstanceID:    []byte(c),
 			ContractID:  myContract,
 		}
 		require.Nil(t, cdb2.Store(sc))
@@ -133,13 +133,13 @@ func TestCollectionDBtryHash(t *testing.T) {
 	cdb := newCollectionDB(db, testName)
 	scs := []StateChange{{
 		StateAction: Create,
-		ObjectID:    []byte("key1"),
+		InstanceID:    []byte("key1"),
 		ContractID:  []byte("kind1"),
 		Value:       []byte("value1"),
 	},
 		{
 			StateAction: Create,
-			ObjectID:    []byte("key2"),
+			InstanceID:    []byte("key2"),
 			ContractID:  []byte("kind2"),
 			Value:       []byte("value2"),
 		},

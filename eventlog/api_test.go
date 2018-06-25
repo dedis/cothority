@@ -354,7 +354,7 @@ func newSer(t *testing.T) *ser {
 // checkBuckets walks all the buckets for a given eventlog and returns an error
 // if an event is in the wrong bucket. This function is useful to check the
 // correctness of buckets.
-func (s *Service) checkBuckets(objID omniledger.ObjectID, id skipchain.SkipBlockID, ct0 int) error {
+func (s *Service) checkBuckets(objID omniledger.InstanceID, id skipchain.SkipBlockID, ct0 int) error {
 	v := s.omni.GetCollectionView(id)
 	el := eventLog{ID: objID.Slice(), v: v}
 

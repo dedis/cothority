@@ -203,7 +203,7 @@ func (s *Service) invoke(v omniledger.CollectionView, tx omniledger.Instruction,
 	// For now: buckets are allowed to grow as big as needed (but the previous
 	// rule prevents buckets from getting too big by timing them out).
 
-	el := &eventLog{ID: tx.ObjectID.Slice(), v: v}
+	el := &eventLog{ID: tx.InstanceID.Slice(), v: v}
 	bID, b, err := el.getLatestBucket()
 	if err != nil {
 		return nil, nil, err
@@ -262,7 +262,7 @@ func (s *Service) invoke(v omniledger.CollectionView, tx omniledger.Instruction,
 		scs = append(scs, omniledger.NewStateChange(omniledger.Create, newBid, cid, buf))
 
 		// Update the pointer to the latest bucket.
-		scs = append(scs, omniledger.NewStateChange(omniledger.Update, tx.ObjectID, cid, newBid.Slice()))
+		scs = append(scs, omniledger.NewStateChange(omniledger.Update, tx.InstanceID, cid, newBid.Slice()))
 	} else {
 		// Otherwise just add into whatever bucket we found, no matter how
 		// many are already there. (Splitting buckets is hard and not important to us.)
@@ -274,7 +274,7 @@ func (s *Service) invoke(v omniledger.CollectionView, tx omniledger.Instruction,
 		scs = append(scs,
 			omniledger.StateChange{
 				StateAction: omniledger.Update,
-				ObjectID:    bID,
+				InstanceID:    bID,
 				ContractID:  []byte(contractName),
 				Value:       bucketBuf,
 			})
@@ -291,11 +291,11 @@ func (s *Service) spawn(v omniledger.CollectionView, instr omniledger.Instructio
 		return nil, nil, errors.New("invalid contract ID: " + cid)
 	}
 
-	var subID omniledger.Nonce
+	var subID omniledger.SubID
 	copy(subID[:], instr.Hash())
-	objID := omniledger.ObjectID{
-		DarcID:     instr.ObjectID.DarcID,
-		InstanceID: subID,
+	objID := omniledger.InstanceID{
+		DarcID: instr.InstanceID.DarcID,
+		SubID:  subID,
 	}
 	// We just need to store the key, because we make a Create state change
 	// here and all the following changes are Update.

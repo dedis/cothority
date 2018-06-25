@@ -30,7 +30,7 @@ type config struct {
 	Roster     *onet.Roster
 	Owner      darc.Signer
 	Darc       *darc.Darc
-	EventLogID omniledger.ObjectID
+	EventLogID omniledger.InstanceID
 }
 
 func (c *config) newClient() *eventlog.Client {
