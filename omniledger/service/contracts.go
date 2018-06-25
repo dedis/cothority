@@ -1,6 +1,7 @@
 package service
 
 import (
+	"bytes"
 	"encoding/binary"
 	"errors"
 	"time"
@@ -207,3 +208,4 @@ func (s *Service) ContractDarc(coll CollectionView, inst Instruction,
 		return nil, nil, errors.New("Only invoke and spawn are defined yet")
 	}
 }
+
