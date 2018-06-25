@@ -941,7 +941,10 @@ func addBlockToChain(s *Service, scid SkipBlockID, sb *SkipBlock) (latest *SkipB
 		&StoreSkipBlock{TargetSkipChainID: scid,
 			NewBlock: sb,
 		})
-	return reply.Latest, err
+	if err != nil {
+		return nil, err
+	}
+	return reply.Latest, nil
 }
 
 func waitForwardLinks(s *Service, sb *SkipBlock, num int) error {

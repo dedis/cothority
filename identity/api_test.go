@@ -19,6 +19,7 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/dedis/cothority/byzcoinx"
 )
 
 var tSuite = cothority.Suite
@@ -97,6 +98,7 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	c.Msg = hash
 	c.CreateProtocol = local.CreateProtocol
 	c.Timeout = time.Second * 5
+	c.Threshold = len(tree.List()) - byzcoinx.FaultThreshold(len(tree.List()))
 
 	err = node.Start()
 	require.Nil(t, err)

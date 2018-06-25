@@ -795,7 +795,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	tree := rooted.GenerateNaryTree(len(final.Desc.Roster.List))
 	if tree == nil {
 		return errors.New(
-			"Root does not exist")
+			"root does not exist")
 	}
 
 	node, err := s.CreateProtocol(protoName, tree)
@@ -818,6 +818,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	root.Data = data
 	root.Timeout = 15 * time.Second
 	root.CreateProtocol = s.CreateProtocol
+	root.Threshold = len(tree.List()) - byzcoinx.FaultThreshold(len(tree.List()))
 
 	final.Signature = []byte{}
 
@@ -842,7 +843,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	if len(final.Signature) <= 0 {
 		log.Error("Signing failed")
 		return errors.New(
-			"Signing failed")
+			"signing failed")
 
 	}
 
