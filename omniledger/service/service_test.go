@@ -297,7 +297,7 @@ func TestService_StateChange(t *testing.T) {
 			return []StateChange{
 				StateChange{
 					StateAction: Create,
-					InstanceID:    tx.InstanceID.Slice(),
+					InstanceID:  tx.InstanceID.Slice(),
 					ContractID:  []byte(cid),
 					Value:       zeroBuf,
 				},
@@ -324,7 +324,7 @@ func TestService_StateChange(t *testing.T) {
 		return []StateChange{
 			StateChange{
 				StateAction: Update,
-				InstanceID:    tx.InstanceID.Slice(),
+				InstanceID:  tx.InstanceID.Slice(),
 				ContractID:  []byte(cid),
 				Value:       vBuf,
 			},
@@ -499,9 +499,9 @@ func TestService_ValueSpawn(t *testing.T) {
 	}
 	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
 
-	var subId SubID
-	copy(subId[:], ctx.Instructions[0].Hash())
-	pr := s.sendTxAndWait(t, ctx, &InstanceID{darc2.GetBaseID(), subId})
+	var subID SubID
+	copy(subID[:], ctx.Instructions[0].Hash())
+	pr := s.sendTxAndWait(t, ctx, &InstanceID{darc2.GetBaseID(), subID})
 	require.True(t, pr.InclusionProof.Match())
 	values, err := pr.InclusionProof.RawValues()
 	require.Nil(t, err)

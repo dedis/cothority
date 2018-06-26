@@ -209,9 +209,9 @@ func makeTx(eventlogID omniledger.InstanceID, msgs []Event, darcID darc.ID, sign
 		}
 		tx.Instructions[i] = omniledger.Instruction{
 			InstanceID: eventlogID,
-			Nonce:    instrNonce,
-			Index:    i,
-			Length:   len(msgs),
+			Nonce:      instrNonce,
+			Index:      i,
+			Length:     len(msgs),
 			Invoke: &omniledger.Invoke{
 				Command: contractName,
 				Args:    []omniledger.Argument{argEvent},

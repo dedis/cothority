@@ -274,7 +274,7 @@ func (s *Service) invoke(v omniledger.CollectionView, tx omniledger.Instruction,
 		scs = append(scs,
 			omniledger.StateChange{
 				StateAction: omniledger.Update,
-				InstanceID:    bID,
+				InstanceID:  bID,
 				ContractID:  []byte(contractName),
 				Value:       bucketBuf,
 			})

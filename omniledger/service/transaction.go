@@ -339,7 +339,7 @@ type StateChange struct {
 func NewStateChange(sa StateAction, objectID InstanceID, contractID string, value []byte) StateChange {
 	return StateChange{
 		StateAction: sa,
-		InstanceID:    objectID.Slice(),
+		InstanceID:  objectID.Slice(),
 		ContractID:  []byte(contractID),
 		Value:       value,
 	}
@@ -398,16 +398,22 @@ func (sc StateAction) String() string {
 	}
 }
 
-type instrType int
+// InstrType is the instruction type, which can be spawn, invoke or delete.
+type InstrType int
 
 const (
-	InvalidInstrType instrType = iota
+	// InvalidInstrType represents an error in the instruction type.
+	InvalidInstrType InstrType = iota
+	// SpawnType represents the spawn instruction type.
 	SpawnType
+	// InvokeType represents the invoke instruction type.
 	InvokeType
+	// DeleteType represents the delete instruction type.
 	DeleteType
 )
 
-func (instr Instruction) GetType() instrType {
+// GetType returns the type of the instruction.
+func (instr Instruction) GetType() InstrType {
 	if instr.Spawn != nil && instr.Invoke == nil && instr.Delete == nil {
 		return SpawnType
 	} else if instr.Spawn == nil && instr.Invoke != nil && instr.Delete == nil {

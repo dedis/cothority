@@ -139,10 +139,10 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	transaction := []ClientTransaction{{
 		Instructions: []Instruction{{
 			InstanceID: InstanceID{DarcID: req.GenesisDarc.GetID()},
-			Nonce:    zeroNonce,
-			Index:    0,
-			Length:   1,
-			Spawn:    spawn,
+			Nonce:      zeroNonce,
+			Index:      0,
+			Length:     1,
+			Spawn:      spawn,
 		}},
 	}}
 
