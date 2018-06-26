@@ -331,7 +331,6 @@ func TestProtocolErrors(t *testing.T) {
 }
 
 func TestProtocolRefusalAll(t *testing.T) {
-	t.Skip("doesn't work with new onet")
 	nodes := []int{4, 5, 13}
 	subtrees := []int{1, 2, 5, 9}
 	proposal := []byte{0xFF}
@@ -371,7 +370,7 @@ func TestProtocolRefusalAll(t *testing.T) {
 			case <-time.After(defaultTimeout * 2):
 				// wait a bit longer than the protocol timeout
 				local.CloseAll()
-				t.Fatal("didn't get commitment in time")
+				t.Fatal("didn't get signature in time")
 			}
 
 			err = verifySignature(signature, publics, proposal, cosi.CompletePolicy{})
@@ -398,7 +397,6 @@ func TestProtocolRefusalAll(t *testing.T) {
 }
 
 func TestProtocolRefuseOne(t *testing.T) {
-	t.Skip("doesn't work with new onet")
 	nodes := []int{4, 5, 13}
 	subtrees := []int{1, 2, 5, 9}
 	proposal := []byte{0xFF}
@@ -440,7 +438,7 @@ func TestProtocolRefuseOne(t *testing.T) {
 				case <-time.After(defaultTimeout * 2):
 					// wait a bit longer than the protocol timeout
 					local.CloseAll()
-					t.Fatal("didn't get commitment in time")
+					t.Fatal("didn't get signature in time")
 				}
 
 				err = verifySignature(signature, publics, proposal, cosi.CompletePolicy{})
@@ -474,7 +472,7 @@ func getAndVerifySignature(cosiProtocol *FtCosi, publics []kyber.Point,
 		log.Lvl3("Instance is done")
 	case <-time.After(defaultTimeout * 2):
 		// wait a bit longer than the protocol timeout
-		return fmt.Errorf("didn't get commitment in time")
+		return fmt.Errorf("didn't get signature in time")
 	}
 
 	return verifySignature(signature, publics, proposal, policy)

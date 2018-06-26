@@ -179,17 +179,22 @@ func (p *SubFtCosi) Dispatch() error {
 
 	// ----- Commitment & Challenge -----
 
-	var commitments = make([]StructCommitment, 0)                     // list of received commitments
-	var challenge StructChallenge                                     // the challenge that will be received
-	var childrenCanCommit = make([]*onet.TreeNode, len(p.Children())) // the list of children that can commit. Children that commits will be removed from it.
-	copy(childrenCanCommit, p.Children())
-	var childrenCanResponse = make([]*onet.TreeNode, 0) // the list of children that can send a response. That is the list of children present in the challenge mask.
+	var commitments = make([]StructCommitment, 0)                  // list of received commitments
+	var challenge StructChallenge                                  // the challenge that will be received
+	var nodesCanCommit = make([]*onet.TreeNode, len(p.Children())) // the list of nodes that can commit. Nodes will be removed from the list once they commit.
+	var childrenCanResponse = make([]*onet.TreeNode, 0)            // the list of children that can send a response. That is the list of children present in the challenge mask.
 
 	var NRefusal = 0                  // number of refusal received. Will be used only for the subleader
 	var firstCommitmentSent = false   // to avoid sending the quick commitment multiple times
 	var verificationDone = false      // to send the aggregate commitment only once this node has done its verification
 	var timedOut = false              // to refuse new commitments once it times out
 	var t = time.After(p.Timeout / 2) // the timeout
+
+	copy(nodesCanCommit, p.Children())
+	if !p.IsRoot() {
+		nodesCanCommit = append(nodesCanCommit, p.TreeNode())
+	}
+
 loop:
 	for {
 		select {
@@ -201,17 +206,16 @@ loop:
 				break
 			}
 
-			isOwnCommitment := commitment.TreeNode.ID.Equal(p.TreeNode().ID)
+			if !isValidSender(commitment.TreeNode, nodesCanCommit...) {
+				log.Lvl2(p.ServerIdentity(), "received a Commitment from node", commitment.ServerIdentity,
+					"that is neither a children nor itself, ignored")
+				break //discards it
+			}
+			remove(nodesCanCommit, commitment.TreeNode)
 
-			if isOwnCommitment {
+			//if is own commitment
+			if commitment.TreeNode.ID.Equal(p.TreeNode().ID) {
 				verificationDone = true
-			} else {
-				if !isValidSender(commitment.TreeNode, childrenCanCommit...) {
-					log.Lvl2(p.ServerIdentity(), "received a Commitment from node", commitment.ServerIdentity,
-						"that is neither a children nor itself, ignored")
-					break //discards it
-				}
-				remove(childrenCanCommit, commitment.TreeNode)
 			}
 
 			if p.IsRoot() {
@@ -220,9 +224,6 @@ loop:
 
 				//deactivate timeout
 				t = make(chan time.Time)
-
-				//set the children as a node we can send the challenge to
-				childrenCanResponse = []*onet.TreeNode{commitment.TreeNode}
 			} else {
 
 				//verify mask of received commitment
@@ -246,7 +247,7 @@ loop:
 					if p.IsLeaf() {
 						log.Warn(p.ServerIdentity(), " leaf refused Commitment, stopping node")
 
-						err = p.sendAggregatedCommitments(nil, NRefusal)
+						err = p.sendAggregatedCommitments([]StructCommitment{}, 1)
 						if err != nil {
 							return err
 						}
@@ -302,9 +303,13 @@ loop:
 				log.Warn(p.ServerIdentity(), "got an old, insecure challenge from", p.ServerIdentity())
 			}
 
-			childrenCanResponse, err = p.getChildrenInMask(challenge.Mask)
-			if err != nil {
-				return fmt.Errorf("error in handling challenge mask: %s", err)
+			if p.IsRoot() {
+				childrenCanResponse = p.Children()
+			} else {
+				childrenCanResponse, err = p.getChildrenInMask(challenge.Mask)
+				if err != nil {
+					return fmt.Errorf("error in handling challenge mask: %s", err)
+				}
 			}
 
 			//send challenge to children
@@ -358,56 +363,59 @@ loop:
 	}
 	log.Lvl3(p.ServerIdentity(), "received all", len(responses), "response(s)")
 
+	// if root, send response to super-protocol and finish
 	if p.IsRoot() {
-		// send response to super-protocol
 		if len(responses) != 1 {
 			return fmt.Errorf(
 				"root node in subprotocol should have received 1 response, but received %d",
 				len(responses))
 		}
 		p.subResponse <- responses[0]
+		return nil
+	}
+
+	//check challenge
+	if challenge.AggregateCommit == nil || challenge.Mask == nil {
+		log.Warn("Only have pre-calculated challenge - this is dangerous!")
 	} else {
-
-		//check challenge
-		if challenge.AggregateCommit == nil || challenge.Mask == nil {
-			log.Warn("Only have pre-calculated challenge - this is dangerous!")
-		} else {
-			mask, err := cosi.NewMask(p.suite, p.Publics, nil)
-			if err != nil {
-				return fmt.Errorf("error, while creating empty mask: %s", err)
-			}
-			err = mask.SetMask(challenge.Mask)
-			if err != nil {
-				return fmt.Errorf("error while setting challenge mask: %s", err)
-			}
-			cosiChallenge, err := cosi.Challenge(p.suite, challenge.AggregateCommit,
-				mask.AggregatePublic, p.Msg)
-			if err != nil {
-				return err
-			}
-			if !cosiChallenge.Equal(challenge.CoSiChallenge) {
-				log.Warn("Pre-calculated challenge is not the same as ours!")
-				challenge.CoSiChallenge = cosiChallenge
-			}
+		mask, err := cosi.NewMask(p.suite, p.Publics, nil)
+		if err != nil {
+			return fmt.Errorf("error, while creating empty mask: %s", err)
 		}
-
-		if secret != nil {
-			// add own response
-			personalResponse, err := cosi.Response(p.suite, p.Private(), secret, challenge.CoSiChallenge)
-			if err != nil {
-				return fmt.Errorf("error while generating own response: %s", err)
-			}
-			responses = append(responses, StructResponse{p.TreeNode(), Response{personalResponse}})
+		err = mask.SetMask(challenge.Mask)
+		if err != nil {
+			return fmt.Errorf("error while setting challenge mask: %s", err)
 		}
-
-		aggResponse, err := aggregateResponses(p.suite, responses)
+		cosiChallenge, err := cosi.Challenge(p.suite, challenge.AggregateCommit,
+			mask.AggregatePublic, p.Msg)
 		if err != nil {
 			return err
 		}
-		err = p.SendToParent(&Response{aggResponse})
-		if err != nil {
-			return err
+		if !cosiChallenge.Equal(challenge.CoSiChallenge) {
+			log.Warn("Pre-calculated challenge is not the same as ours!")
+			challenge.CoSiChallenge = cosiChallenge
 		}
+	}
+
+	// add own response if verification succeeded
+	if secret != nil {
+		personalResponse, err := cosi.Response(p.suite, p.Private(), secret, challenge.CoSiChallenge)
+		if err != nil {
+			return fmt.Errorf("error while generating own response: %s", err)
+		}
+		responses = append(responses, StructResponse{p.TreeNode(), Response{personalResponse}})
+	}
+
+	//aggregate all responses
+	aggResponse, err := aggregateResponses(p.suite, responses)
+	if err != nil {
+		return err
+	}
+
+	//send to parents
+	err = p.SendToParent(&Response{aggResponse})
+	if err != nil {
+		return err
 	}
 	return nil
 }
