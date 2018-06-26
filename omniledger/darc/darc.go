@@ -799,17 +799,17 @@ func (idkc IdentityX509EC) Verify(msg, s []byte) error {
 	return errors.New("Wrong signature")
 }
 
-// NewSignerEd25519 initializes a new SignerEd25519 signer given a public and
-// private keys. If any of the given values is nil or both are nil, then a new
-// key pair is generated.
-func NewSignerEd25519(point kyber.Point, secret kyber.Scalar) Signer {
-	if point == nil || secret == nil {
+// NewSignerEd25519 initializes a new SignerEd25519 signer given public and
+// private keys. If either of the given keys is nil, then a new key pair is
+// generated.
+func NewSignerEd25519(public kyber.Point, private kyber.Scalar) Signer {
+	if public == nil || private == nil {
 		kp := key.NewKeyPair(cothority.Suite)
-		point, secret = kp.Public, kp.Private
+		public, private = kp.Public, kp.Private
 	}
 	return Signer{Ed25519: &SignerEd25519{
-		Point:  point,
-		Secret: secret,
+		Point:  public,
+		Secret: private,
 	}}
 }
 

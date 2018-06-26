@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -13,9 +14,8 @@ import (
 	"github.com/dedis/cothority/eventlog"
 	"github.com/dedis/cothority/omniledger/darc"
 	omniledger "github.com/dedis/cothority/omniledger/service"
-	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/kyber/util/key"
-	"github.com/dedis/onet"
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -24,25 +24,7 @@ import (
 
 type config struct {
 	Name       string
-	ID         skipchain.SkipBlockID
-	Roster     *onet.Roster
-	Owner      darc.Signer
-	Darc       *darc.Darc
 	EventLogID omniledger.InstanceID
-}
-
-func (c *config) newClient() *eventlog.Client {
-	ol := omniledger.NewClient()
-	ol.Roster = c.Roster
-	ol.ID = c.ID
-	cl := eventlog.NewClient(ol)
-	// TODO: It should be possible to send logs, signing them with a different
-	// key. But first, we need to implement something like "el grant" to grant write
-	// privs to a given private/public key.
-	cl.Signers = []darc.Signer{c.Owner}
-	cl.Darc = c.Darc
-	cl.InstanceID = c.EventLogID
-	return cl
 }
 
 var cmds = cli.Commands{
@@ -76,9 +58,18 @@ var cmds = cli.Commands{
 		Aliases: []string{"l"},
 		Flags: []cli.Flag{
 			cli.StringFlag{
+				Name:   "priv",
+				EnvVar: "PRIVATE_KEY",
+				Usage:  "the ed25519 private key that will sign transactions",
+			},
+			cli.StringFlag{
 				Name:   "ol",
 				EnvVar: "OL",
 				Usage:  "the OmniLedger config",
+			},
+			cli.StringFlag{
+				Name:  "eid",
+				Usage: "the eventlog id (64 hex bytes)",
 			},
 			cli.StringFlag{
 				Name:  "topic, t",
@@ -197,25 +188,56 @@ func show(c *cli.Context) error {
 }
 
 func doLog(c *cli.Context) error {
-	// cl := cfg.newClient()
+	fn := c.String("ol")
+	if fn == "" {
+		return errors.New("--ol is required")
+	}
+	ol, err := omniledger.NewClientFromConfig(fn)
+	if err != nil {
+		return err
+	}
+	cl := eventlog.NewClient(ol)
+	cl.Signers = make([]darc.Signer, 1)
 
-	// t := c.String("topic")
-	// content := c.String("content")
+	privStr := c.String("priv")
+	if privStr == "" {
+		return errors.New("--priv is required")
+	}
+	priv, err := encoding.StringHexToScalar(cothority.Suite, privStr)
+	if err != nil {
+		return err
+	}
+	pub := cothority.Suite.Point().Mul(priv, nil)
 
-	// // Content is set, so one shot log.
-	// if content != "" {
-	// 	_, err := cl.Log(eventlog.NewEvent(t, content))
-	// 	return err
-	// }
+	cl.Signers[0] = darc.NewSignerEd25519(pub, priv)
 
-	// // Content is empty, so read from stdin.
-	// s := bufio.NewScanner(os.Stdin)
-	// for s.Scan() {
-	// 	_, err := cl.Log(eventlog.NewEvent(t, s.Text()))
-	// 	if err != nil {
-	// 		return err
-	// 	}
-	// }
+	e := c.String("eid")
+	if e == "" {
+		return errors.New("--eid is required")
+	}
+	eb, err := hex.DecodeString(e)
+	if err != nil {
+		return err
+	}
+	cl.InstanceID = omniledger.BytesToObjID(eb)
+
+	t := c.String("topic")
+	content := c.String("content")
+
+	// Content is set, so one shot log.
+	if content != "" {
+		_, err := cl.Log(eventlog.NewEvent(t, content))
+		return err
+	}
+
+	// Content is empty, so read from stdin.
+	s := bufio.NewScanner(os.Stdin)
+	for s.Scan() {
+		_, err := cl.Log(eventlog.NewEvent(t, s.Text()))
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
@@ -242,6 +264,10 @@ func search(c *cli.Context) error {
 	fn := c.String("ol")
 	if fn == "" {
 		return errors.New("--ol is required")
+	}
+	ol, err := omniledger.NewClientFromConfig(fn)
+	if err != nil {
+		return err
 	}
 
 	e := c.String("eid")
@@ -284,10 +310,6 @@ func search(c *cli.Context) error {
 		req.To = time.Unix(0, req.From).Add(forDur).UnixNano()
 	}
 
-	ol, err := omniledger.NewClientFromConfig(fn)
-	if err != nil {
-		return err
-	}
 	cl := eventlog.NewClient(ol)
 	resp, err := cl.Search(req)
 	if err != nil {
