@@ -196,9 +196,19 @@ func (instr Instruction) GetContractState(coll CollectionView) (contractID strin
 	if err != nil {
 		return
 	}
-	// TODO cast might panic
-	contractID = string(cv[1].([]byte))
-	state = cv[0].([]byte)
+	var ok bool
+	var contractIDBuf []byte
+	contractIDBuf, ok = cv[1].([]byte)
+	if !ok {
+		err = errors.New("failed to cast value to bytes")
+		return
+	}
+	contractID = string(contractIDBuf)
+	state, ok = cv[0].([]byte)
+	if !ok {
+		err = errors.New("failed to cast value to bytes")
+		return
+	}
 	return
 }
 

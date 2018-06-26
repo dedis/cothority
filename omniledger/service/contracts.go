@@ -200,15 +200,16 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 				NewStateChange(Create, InstanceID{d.GetBaseID(), zeroSubID}, ContractDarcID, darcBuf),
 			}, coins, nil
 		}
-		// TODO this will never get called
-		panic("noo")
-		/*
-			c, found := s.contracts[tx.Spawn.ContractID]
-			if !found {
-				return nil, nil, errors.New("couldn't find this contract type")
-			}
-			return c(coll, tx, coins)
-		*/
+		// TODO The code below will never get called because this
+		// contract is used only when tx.Spawn.ContractID is "darc", so
+		// the if statement above gets executed and this contract
+		// returns. Why do we need this part, if we do, how should we
+		// fix it?
+		c, found := s.contracts[tx.Spawn.ContractID]
+		if !found {
+			return nil, nil, errors.New("couldn't find this contract type")
+		}
+		return c(coll, tx, coins)
 	case tx.Invoke != nil:
 		switch tx.Invoke.Command {
 		case "evolve":

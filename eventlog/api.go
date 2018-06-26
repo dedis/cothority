@@ -17,7 +17,7 @@ import (
 
 // Client is a structure to communicate with the eventlog service
 type Client struct {
-	olClient *onet.Client // TODO use omniledger.NewClient
+	olClient *omniledger.Client
 	elClient *onet.Client
 	roster   *onet.Roster
 	// ID is the skipchain where events will be logged.
@@ -33,7 +33,7 @@ type Client struct {
 // NewClient creates a new client to talk to the eventlog service.
 func NewClient(r *onet.Roster) *Client {
 	return &Client{
-		olClient: onet.NewClient(cothority.Suite, omniledger.ServiceName),
+		olClient: omniledger.NewClient(),
 		elClient: onet.NewClient(cothority.Suite, ServiceName),
 		roster:   r,
 	}
@@ -68,8 +68,8 @@ func (c *Client) Init(owner darc.Signer, blockInterval time.Duration) (*omniledg
 		GenesisDarc:   *d,
 		BlockInterval: blockInterval,
 	}
-	reply := &omniledger.CreateGenesisBlockResponse{}
-	if err := c.olClient.SendProtobuf(c.roster.List[0], req, reply); err != nil {
+	reply, err := c.olClient.CreateGenesisBlock(c.roster, req)
+	if err != nil {
 		return nil, err
 	}
 	c.Darc = d
@@ -78,7 +78,6 @@ func (c *Client) Init(owner darc.Signer, blockInterval time.Duration) (*omniledg
 
 	// When we have a genesis block, we need to initialise one eventlog and
 	// store its ID.
-	var err error
 	var instID *omniledger.InstanceID
 	instID, err = c.initEventLog()
 	if err != nil {
@@ -104,13 +103,7 @@ func (c *Client) initEventLog() (*omniledger.InstanceID, error) {
 	tx := omniledger.ClientTransaction{
 		Instructions: []omniledger.Instruction{instr},
 	}
-	req := &omniledger.AddTxRequest{
-		Version:     omniledger.CurrentVersion,
-		SkipchainID: c.ID,
-		Transaction: tx,
-	}
-	reply := &omniledger.AddTxResponse{}
-	if err := c.olClient.SendProtobuf(c.roster.List[0], req, reply); err != nil {
+	if _, err := c.olClient.AddTransaction(c.roster, c.ID, tx); err != nil {
 		return nil, err
 	}
 	var subID omniledger.SubID
@@ -135,31 +128,20 @@ type LogID []byte
 
 // Log asks the service to log events.
 func (c *Client) Log(ev ...Event) ([]LogID, error) {
-	reply := &omniledger.AddTxResponse{}
 	tx, keys, err := makeTx(c.InstanceID, ev, c.Darc.GetBaseID(), c.Signers)
 	if err != nil {
 		return nil, err
 	}
-	req := &omniledger.AddTxRequest{
-		Version:     omniledger.CurrentVersion,
-		SkipchainID: c.ID,
-		Transaction: *tx,
-	}
-	if err := c.olClient.SendProtobuf(c.roster.List[0], req, reply); err != nil {
+	if _, err := c.olClient.AddTransaction(c.roster, c.ID, *tx); err != nil {
 		return nil, err
 	}
 	return keys, nil
 }
 
 // GetEvent asks the service to retrieve an event.
-func (c *Client) GetEvent(id []byte) (*Event, error) {
-	reply := &omniledger.GetProofResponse{}
-	req := &omniledger.GetProof{
-		Version: omniledger.CurrentVersion,
-		Key:     id,
-		ID:      c.ID,
-	}
-	if err := c.olClient.SendProtobuf(c.roster.List[0], req, reply); err != nil {
+func (c *Client) GetEvent(key []byte) (*Event, error) {
+	reply, err := c.olClient.GetProof(c.roster, c.ID, key)
+	if err != nil {
 		return nil, err
 	}
 	if !reply.Proof.InclusionProof.Match() {
@@ -169,7 +151,7 @@ func (c *Client) GetEvent(id []byte) (*Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !bytes.Equal(k, req.Key) {
+	if !bytes.Equal(k, key) {
 		return nil, errors.New("wrong key")
 	}
 	if len(vs) < 2 {
