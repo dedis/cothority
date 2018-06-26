@@ -11,7 +11,6 @@ import (
 	"github.com/dedis/protobuf"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 )
 
@@ -19,9 +18,6 @@ import (
 type Client struct {
 	olClient *omniledger.Client
 	elClient *onet.Client
-	roster   *onet.Roster
-	// ID is the skipchain where events will be logged.
-	ID skipchain.SkipBlockID
 	// Signers are the Darc signers that will sign events sent with this client.
 	Signers []darc.Signer
 	// Darc is the current Darc associated with this skipchain. Use it as a base
@@ -31,11 +27,10 @@ type Client struct {
 }
 
 // NewClient creates a new client to talk to the eventlog service.
-func NewClient(r *onet.Roster) *Client {
+func NewClient(ol *omniledger.Client) *Client {
 	return &Client{
-		olClient: omniledger.NewClient(),
+		olClient: ol,
 		elClient: onet.NewClient(cothority.Suite, ServiceName),
-		roster:   r,
 	}
 }
 
@@ -64,17 +59,17 @@ func (c *Client) Init(owner darc.Signer, blockInterval time.Duration) (*omniledg
 
 	req := &omniledger.CreateGenesisBlock{
 		Version:       omniledger.CurrentVersion,
-		Roster:        *c.roster,
+		Roster:        *c.olClient.Roster,
 		GenesisDarc:   *d,
 		BlockInterval: blockInterval,
 	}
-	reply, err := c.olClient.CreateGenesisBlock(c.roster, req)
+	reply, err := c.olClient.CreateGenesisBlock(c.olClient.Roster, req)
 	if err != nil {
 		return nil, err
 	}
 	c.Darc = d
 	c.Signers = []darc.Signer{owner}
-	c.ID = reply.Skipblock.SkipChainID()
+	c.olClient.ID = reply.Skipblock.SkipChainID()
 
 	// When we have a genesis block, we need to initialise one eventlog and
 	// store its ID.
@@ -103,7 +98,7 @@ func (c *Client) initEventLog() (*omniledger.InstanceID, error) {
 	tx := omniledger.ClientTransaction{
 		Instructions: []omniledger.Instruction{instr},
 	}
-	if _, err := c.olClient.AddTransaction(c.roster, c.ID, tx); err != nil {
+	if _, err := c.olClient.AddTransaction(tx); err != nil {
 		return nil, err
 	}
 	var subID omniledger.SubID
@@ -132,7 +127,7 @@ func (c *Client) Log(ev ...Event) ([]LogID, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, err := c.olClient.AddTransaction(c.roster, c.ID, *tx); err != nil {
+	if _, err := c.olClient.AddTransaction(*tx); err != nil {
 		return nil, err
 	}
 	return keys, nil
@@ -140,7 +135,7 @@ func (c *Client) Log(ev ...Event) ([]LogID, error) {
 
 // GetEvent asks the service to retrieve an event.
 func (c *Client) GetEvent(key []byte) (*Event, error) {
-	reply, err := c.olClient.GetProof(c.roster, c.ID, key)
+	reply, err := c.olClient.GetProof(key)
 	if err != nil {
 		return nil, err
 	}
@@ -229,10 +224,10 @@ func makeTx(eventlogID omniledger.InstanceID, msgs []Event, darcID darc.ID, sign
 // The ID field of the SearchRequest will be filled in from c, if it is null.
 func (c *Client) Search(req *SearchRequest) (*SearchResponse, error) {
 	if req.ID.IsNull() {
-		req.ID = c.ID
+		req.ID = c.olClient.ID
 	}
 	reply := &SearchResponse{}
-	if err := c.elClient.SendProtobuf(c.roster.List[0], req, reply); err != nil {
+	if err := c.elClient.SendProtobuf(c.olClient.Roster.List[0], req, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

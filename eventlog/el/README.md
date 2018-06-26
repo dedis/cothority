@@ -2,32 +2,25 @@
 
 Here are some examples of how to use el.
 
-## Create a new EventLog, saving the config
+## Make a new key pair
 
 ```
-$ el create -roster roster.toml
+$ el create -keys
 ```
 
-The `roster.toml` file is a list of servers what form the cothority that will
-log the events. After running `run_conode.sh local 3` for example, the file `public.toml`
-will have the 3 conodes in it. For a larger production deployment, you will construct
-the `roster.toml` file by collecting the `public.toml` files from each of the servers.
+The keys are printed on the stdout. You will give the public key to the
+OmniLedger administrator to use with the "ol add" command to give your
+private key the right to make new event logs.
 
-The event log config info (the skipchain ID and the private key for the owner
-Darc) are stored in the local config directory (~/.config/el).
+```
+$ PRIVATE_KEY=$priv el create -ol $file
+```
 
-To see the confige you just made, use `el show`, which in fact shows all the configs you have available.
+The OmniLedger admin will give you an OmniLedger config file, which you will
+use with the -ol argument. A new event log will be spawned.
 
-You can choose a config with the `-config #` command, where `#` is the number of the config
-from `el show`.
-
-Because config files are named after their skipchain ID in ~/.config/el, you can copy
-them to another server if you need to. *Remember* that there is the Darc owner's private key inside
-it, and anyone who has the file can evolve the access control on the EventLog.
-
-TODO: The behavior of init is wrong. It needs to take as input a config
-for an existing skipchain and then create as output a new owner Darc on that
-skipchain. (The skipchain config will come from the Omniledger tool.)
+You need to give the private key from above, using the PRIVATE_KEY environment
+variable.
 
 ## Logging
 

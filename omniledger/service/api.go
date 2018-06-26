@@ -1,16 +1,15 @@
 package service
 
-/*
-* The Sicpa service uses a CISC (https://github.com/dedis/cothority/cisc) to store
-* key/value pairs on a skipchain.
- */
-
 import (
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"strings"
 
-	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/onet/network"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 )
@@ -21,11 +20,28 @@ const ServiceName = "OmniLedger"
 // Client is a structure to communicate with the OmniLedger service.
 type Client struct {
 	*onet.Client
+	ID      skipchain.SkipBlockID
+	Roster  *onet.Roster
+	OwnerID darc.Identity
 }
 
-// NewClient instantiates a new cosi.Client
+// NewClient instantiates a new Omniledger client.
 func NewClient() *Client {
 	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
+}
+
+// NewClientFromConfig instantiates a new Omniledger client.
+func NewClientFromConfig(fn string) (*Client, error) {
+	cfg, err := loadConfig(fn)
+	if err != nil {
+		return nil, err
+	}
+
+	c := NewClient()
+	c.Roster = &cfg.Roster
+	c.ID = cfg.ID
+	c.OwnerID = cfg.OwnerID
+	return c, nil
 }
 
 // CreateGenesisBlock sets up a new skipchain to hold the key/value pairs. If
@@ -40,13 +56,13 @@ func (c *Client) CreateGenesisBlock(r *onet.Roster, msg *CreateGenesisBlock) (*C
 
 // AddTransaction adds a transaction. It does not return any feedback
 // on the transaction. Use GetProof to find out if the transaction
-// was committed.
-func (c *Client) AddTransaction(r *onet.Roster, id skipchain.SkipBlockID,
-	tx ClientTransaction) (*AddTxResponse, error) {
+// was committed. The Client's Roster and ID should be initialized before
+// calling this method (see NewClientFromConfig).
+func (c *Client) AddTransaction(tx ClientTransaction) (*AddTxResponse, error) {
 	reply := &AddTxResponse{}
-	err := c.SendProtobuf(r.List[0], &AddTxRequest{
+	err := c.SendProtobuf(c.Roster.List[0], &AddTxRequest{
 		Version:     CurrentVersion,
-		SkipchainID: id,
+		SkipchainID: c.ID,
 		Transaction: tx,
 	}, reply)
 	if err != nil {
@@ -55,14 +71,15 @@ func (c *Client) AddTransaction(r *onet.Roster, id skipchain.SkipBlockID,
 	return reply, nil
 }
 
-// GetProof returns a proof for the key stored in the skipchain.
-// The proof can be verified with the genesis skipblock and
-// can prove the existence or the absence of the key.
-func (c *Client) GetProof(r *onet.Roster, id skipchain.SkipBlockID, key []byte) (*GetProofResponse, error) {
+// GetProof returns a proof for the key stored in the skipchain.  The proof can
+// be verified with the genesis skipblock and can prove the existence or the
+// absence of the key. The Client's Roster and ID should be initialized before
+// calling this method (see NewClientFromConfig).
+func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 	reply := &GetProofResponse{}
-	err := c.SendProtobuf(r.List[0], &GetProof{
+	err := c.SendProtobuf(c.Roster.List[0], &GetProof{
 		Version: CurrentVersion,
-		ID:      id,
+		ID:      c.ID,
 		Key:     key,
 	}, reply)
 	if err != nil {
@@ -71,8 +88,45 @@ func (c *Client) GetProof(r *onet.Roster, id skipchain.SkipBlockID, key []byte) 
 	return reply, nil
 }
 
+// A Config gathers all the information a client needs to know to talk to
+// an OmniLedger instance.
+type Config struct {
+	ID     skipchain.SkipBlockID
+	Roster onet.Roster
+	// OwnerID is the identity that can sign evolutions of the genesis Darc.
+	OwnerID darc.Identity
+}
+
+func init() { network.RegisterMessages(&Config{}) }
+
+func loadConfig(fn string) (*Config, error) {
+	buf, err := ioutil.ReadFile(fn)
+	if err != nil {
+		return nil, err
+	}
+
+	_, val, err := network.Unmarshal(buf, cothority.Suite)
+	if err != nil {
+		return nil, err
+	}
+	if cfg, ok := val.(*Config); ok {
+		return cfg, nil
+	}
+
+	return nil, fmt.Errorf("unexpected config format: %T", val)
+}
+
+func (c *Config) String() string {
+	var r []string
+	for _, x := range c.Roster.List {
+		r = append(r, x.Address.NetworkAddress())
+	}
+
+	return fmt.Sprintf("ID: %x\nRoster: %v", c.ID, strings.Join(r, ", "))
+}
+
 // DefaultGenesisMsg creates the message that is used to for creating the
-// genesis darc and block.
+// genesis Darc and block.
 func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Identity) (*CreateGenesisBlock, error) {
 	if len(ids) == 0 {
 		return nil, errors.New("no identities ")

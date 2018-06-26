@@ -1,11 +1,9 @@
 package main
 
 import (
-	"bufio"
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,8 +14,8 @@ import (
 	"github.com/dedis/cothority/omniledger/darc"
 	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -34,10 +32,10 @@ type config struct {
 }
 
 func (c *config) newClient() *eventlog.Client {
-	cl := eventlog.NewClient(c.Roster)
-	// TODO: The skipchain should be created by and configured by some generic
-	// omniledger tool.
-	cl.ID = c.ID
+	ol := omniledger.NewClient()
+	ol.Roster = c.Roster
+	ol.ID = c.ID
+	cl := eventlog.NewClient(ol)
 	// TODO: It should be possible to send logs, signing them with a different
 	// key. But first, we need to implement something like "el grant" to grant write
 	// privs to a given private/public key.
@@ -53,13 +51,9 @@ var cmds = cli.Commands{
 		Usage:   "create an event log",
 		Aliases: []string{"c"},
 		Flags: []cli.Flag{
-			cli.StringFlag{
-				Name:  "roster, r",
-				Usage: "the roster of the cothority that will host the event log",
-			},
-			cli.StringFlag{
-				Name:  "name, n",
-				Usage: "the name of this config (for display only)",
+			cli.BoolFlag{
+				Name:  "keys",
+				Usage: "make a key pair",
 			},
 		},
 		Action: create,
@@ -81,11 +75,10 @@ var cmds = cli.Commands{
 		Usage:   "log one or more messages",
 		Aliases: []string{"l"},
 		Flags: []cli.Flag{
-			cli.IntFlag{
-				Name:   "config",
-				Value:  1,
-				EnvVar: "EL_CONFIG",
-				Usage:  "config number to use",
+			cli.StringFlag{
+				Name:   "ol",
+				EnvVar: "OL",
+				Usage:  "the OmniLedger config",
 			},
 			cli.StringFlag{
 				Name:  "topic, t",
@@ -103,11 +96,14 @@ var cmds = cli.Commands{
 		Usage:   "search for messages",
 		Aliases: []string{"s"},
 		Flags: []cli.Flag{
-			cli.IntFlag{
-				Name:   "config",
-				Value:  1,
-				EnvVar: "EL_CONFIG",
-				Usage:  "config number to use",
+			cli.StringFlag{
+				Name:   "ol",
+				EnvVar: "OL",
+				Usage:  "the OmniLedger config",
+			},
+			cli.StringFlag{
+				Name:  "eid",
+				Usage: "the eventlog id (64 hex bytes)",
 			},
 			cli.StringFlag{
 				Name:  "topic, t",
@@ -168,115 +164,58 @@ func main() {
 }
 
 func create(c *cli.Context) error {
-	fn := c.String("roster")
-	if fn == "" {
-		return errors.New("-roster flag is required")
+	if c.Bool("keys") {
+		kp := key.NewKeyPair(cothority.Suite)
+		fmt.Println("Private: ", kp.Private)
+		fmt.Println(" Public: ", kp.Public)
+		return nil
 	}
 
-	in, err := os.Open(fn)
-	if err != nil {
-		return fmt.Errorf("Could not open roster %v: %v", fn, err)
-	}
-	r, err := readRoster(in)
-	if err != nil {
-		return err
-	}
-
-	n := c.String("name")
-	cfg, err := doCreate(n, r, 5*time.Second)
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Created event log chain with ID %x.\n", cfg.ID)
-	return err
-}
-
-func doCreate(name string, r *onet.Roster, interval time.Duration) (*config, error) {
-	owner := darc.NewSignerEd25519(nil, nil)
-	c := eventlog.NewClient(r)
-	eventlogID, err := c.Init(owner, interval)
-	if err != nil {
-		return nil, err
-	}
-
-	cfg := &config{
-		Name:       name,
-		ID:         c.ID,
-		Roster:     r,
-		Owner:      owner,
-		Darc:       c.Darc,
-		EventLogID: *eventlogID,
-	}
-	err = cfg.save()
-	return cfg, err
+	return errors.New("not implemented")
 }
 
 func show(c *cli.Context) error {
-	long := c.Bool("long")
-	dir := getDataPath("el")
-	cfgs, err := loadConfigs(dir)
-	if err != nil {
-		return err
-	}
-	for i, x := range cfgs {
-		name := x.Name
-		// Write the owner private key and the ID into the config file.
-		if name == "" {
-			name = "(none)"
-		}
-		if long {
-			fmt.Printf("%2v: Name: %v, ID: %x\n", i+1, name, x.ID)
-		} else {
-			fmt.Printf("%2v: Name: %v, ID: %x\n", i+1, name, x.ID[0:8])
-		}
-	}
-	return nil
-}
-
-func findConfig(c *cli.Context) (*config, error) {
-	cfg := c.Int("config")
-
-	// In the UI they are 1-based, but in cfg[] they are 0-based.
-	cfg = cfg - 1
-
-	cfgs, err := loadConfigs(getDataPath("el"))
-	if err != nil {
-		return nil, err
-	}
-	if cfg < 0 {
-		return nil, fmt.Errorf("config number less than 1 is not allowed")
-	}
-	if cfg > len(cfgs)-1 {
-		return nil, fmt.Errorf("config number %v is too big", cfg+1)
-	}
-	return &cfgs[cfg], nil
+	return errors.New("not implemented")
+	// long := c.Bool("long")
+	// dir := getDataPath("el")
+	// cfgs, err := loadConfigs(dir)
+	// if err != nil {
+	// 	return err
+	// }
+	// for i, x := range cfgs {
+	// 	name := x.Name
+	// 	if name == "" {
+	// 		name = "(none)"
+	// 	}
+	// 	if long {
+	// 		fmt.Printf("%2v: Name: %v, ID: %x\n", i+1, name, x.ID)
+	// 	} else {
+	// 		fmt.Printf("%2v: Name: %v, ID: %x\n", i+1, name, x.ID[0:8])
+	// 	}
+	// }
+	// return nil
 }
 
 func doLog(c *cli.Context) error {
-	cfg, err := findConfig(c)
-	if err != nil {
-		return err
-	}
+	// cl := cfg.newClient()
 
-	cl := cfg.newClient()
+	// t := c.String("topic")
+	// content := c.String("content")
 
-	t := c.String("topic")
-	content := c.String("content")
+	// // Content is set, so one shot log.
+	// if content != "" {
+	// 	_, err := cl.Log(eventlog.NewEvent(t, content))
+	// 	return err
+	// }
 
-	// Content is set, so one shot log.
-	if content != "" {
-		_, err := cl.Log(eventlog.NewEvent(t, content))
-		return err
-	}
-
-	// Content is empty, so read from stdin.
-	s := bufio.NewScanner(os.Stdin)
-	for s.Scan() {
-		_, err := cl.Log(eventlog.NewEvent(t, s.Text()))
-		if err != nil {
-			return err
-		}
-	}
+	// // Content is empty, so read from stdin.
+	// s := bufio.NewScanner(os.Stdin)
+	// for s.Scan() {
+	// 	_, err := cl.Log(eventlog.NewEvent(t, s.Text()))
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 	return nil
 }
 
@@ -300,15 +239,23 @@ func parseTime(in string) (time.Time, error) {
 }
 
 func search(c *cli.Context) error {
-	cfg, err := findConfig(c)
+	fn := c.String("ol")
+	if fn == "" {
+		return errors.New("--ol is required")
+	}
+
+	e := c.String("eid")
+	if e == "" {
+		return errors.New("--eid is required")
+	}
+	eb, err := hex.DecodeString(e)
 	if err != nil {
 		return err
 	}
-
-	cl := cfg.newClient()
+	eid := omniledger.BytesToObjID(eb)
 
 	req := &eventlog.SearchRequest{
-		EventLogID: cfg.EventLogID,
+		EventLogID: eid,
 		Topic:      c.String("topic"),
 	}
 
@@ -337,6 +284,11 @@ func search(c *cli.Context) error {
 		req.To = time.Unix(0, req.From).Add(forDur).UnixNano()
 	}
 
+	ol, err := omniledger.NewClientFromConfig(fn)
+	if err != nil {
+		return err
+	}
+	cl := eventlog.NewClient(ol)
 	resp, err := cl.Search(req)
 	if err != nil {
 		return err
@@ -360,49 +312,6 @@ func search(c *cli.Context) error {
 		return cli.NewExitError("", 1)
 	}
 	return nil
-}
-
-func loadConfigs(dir string) ([]config, error) {
-	files, err := ioutil.ReadDir(dir)
-	if err != nil {
-		return nil, err
-	}
-	c := make([]config, len(files))
-	ct := 0
-	for _, f := range files {
-		fn := filepath.Join(dir, f.Name())
-		if filepath.Ext(fn) != ".cfg" {
-			continue
-		}
-		v, err := ioutil.ReadFile(fn)
-		if err != nil {
-			fmt.Fprintf(cliApp.ErrWriter, "read %v: %v\n", fn, err)
-			continue
-		}
-		_, val, err := network.Unmarshal(v, cothority.Suite)
-		if err != nil {
-			fmt.Fprintf(cliApp.ErrWriter, "unmarshal %v: %v\n", fn, err)
-			continue
-		}
-		c[ct] = *(val.(*config))
-		ct++
-	}
-	if ct == 0 {
-		return nil, nil
-	}
-	return c[0:ct], nil
-}
-
-func readRoster(r io.Reader) (*onet.Roster, error) {
-	group, err := app.ReadGroupDescToml(r)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(group.Roster.List) == 0 {
-		return nil, errors.New("empty roster")
-	}
-	return group.Roster, nil
 }
 
 // getDataPath is a function pointer so that tests can hook and modify this.

@@ -7,13 +7,11 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/omniledger/darc"
 	omniledger "github.com/dedis/cothority/omniledger/service"
-	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"
@@ -99,7 +97,7 @@ func main() {
 func create(c *cli.Context) error {
 	fn := c.String("roster")
 	if fn == "" {
-		return errors.New("-roster flag is required")
+		return errors.New("--roster flag is required")
 	}
 
 	in, err := os.Open(fn)
@@ -129,12 +127,12 @@ func create(c *cli.Context) error {
 		return err
 	}
 
-	cfg := &config{
+	cfg := &omniledger.Config{
 		ID:      resp.Skipblock.SkipChainID(),
 		Roster:  *r,
 		OwnerID: owner.Identity(),
 	}
-	fn, err = cfg.save()
+	fn, err = save(cfg)
 	if err != nil {
 		return err
 	}
@@ -159,16 +157,16 @@ func create(c *cli.Context) error {
 func show(c *cli.Context) error {
 	ol := c.String("ol")
 	if ol == "" {
-		return errors.New("-ol flag is required")
+		return errors.New("--ol flag is required")
 	}
-	cfg, err := loadConfig(ol)
+	cl, err := omniledger.NewClientFromConfig(ol)
 	if err != nil {
 		return err
 	}
 
-	// This should NOT happen.
-	if cfg.private != nil {
-		return errors.New("private info stored in public file")
+	cfg := &omniledger.Config{
+		ID:     cl.ID,
+		Roster: *cl.Roster,
 	}
 
 	fmt.Fprintln(c.App.Writer, cfg)
@@ -178,13 +176,18 @@ func show(c *cli.Context) error {
 func add(c *cli.Context) error {
 	ol := c.String("ol")
 	if ol == "" {
-		return errors.New("-ol flag is required")
+		return errors.New("--ol flag is required")
 	}
-	cfg, err := loadConfig(ol)
+
+	cl, err := omniledger.NewClientFromConfig(ol)
 	if err != nil {
 		return err
 	}
-	cfg.loadKey()
+
+	private, err := loadKey(cl.OwnerID)
+	if err != nil {
+		return err
+	}
 
 	arg := c.Args()
 	if len(arg) == 0 {
@@ -193,8 +196,11 @@ func add(c *cli.Context) error {
 	action := arg[0]
 
 	identity := c.String("identity")
+	if identity == "" {
+		return errors.New("--identity flag is required")
+	}
 
-	d, err := cfg.getGenDarc()
+	d, err := getGenDarc(cl)
 	if err != nil {
 		return err
 	}
@@ -219,34 +225,24 @@ func add(c *cli.Context) error {
 		},
 	}
 	instr := omniledger.Instruction{
-		ObjectID: omniledger.ObjectID{
+		InstanceID: omniledger.InstanceID{
 			DarcID: d2.GetBaseID(),
 		},
 		Index:  0,
 		Length: 1,
 		Invoke: &invoke,
 		Signatures: []darc.Signature{
-			darc.Signature{Signer: cfg.private.Owner.Identity()},
+			darc.Signature{Signer: private.Owner.Identity()},
 		},
 	}
-	err = instr.SignBy(cfg.private.Owner)
+	err = instr.SignBy(private.Owner)
 	if err != nil {
 		return err
 	}
 
-	ct := omniledger.ClientTransaction{
+	_, err = cl.AddTransaction(omniledger.ClientTransaction{
 		Instructions: []omniledger.Instruction{instr},
-	}
-
-	req := &omniledger.AddTxRequest{
-		Version:     omniledger.CurrentVersion,
-		SkipchainID: cfg.ID,
-		Transaction: ct,
-	}
-
-	var resp omniledger.AddTxResponse
-	cl := onet.NewClient(cothority.Suite, omniledger.ServiceName)
-	err = cl.SendProtobuf(cfg.Roster.List[0], req, &resp)
+	})
 	if err != nil {
 		return err
 	}
@@ -254,20 +250,12 @@ func add(c *cli.Context) error {
 	return nil
 }
 
-type config struct {
-	ID      skipchain.SkipBlockID
-	Roster  onet.Roster
-	OwnerID darc.Identity
-	// This is not exported so it won't be written to disk.
-	private *configPrivate
-}
-
 type configPrivate struct {
 	Owner darc.Signer
 }
 
 func init() {
-	network.RegisterMessages(&config{}, &configPrivate{})
+	network.RegisterMessages(&configPrivate{})
 }
 
 func readRoster(r io.Reader) (*onet.Roster, error) {
@@ -285,34 +273,12 @@ func readRoster(r io.Reader) (*onet.Roster, error) {
 // getDataPath is a function pointer so that tests can hook and modify this.
 var getDataPath = cfgpath.GetDataPath
 
-func loadConfig(fn string) (*config, error) {
-	buf, err := ioutil.ReadFile(fn)
-	if err != nil {
-		return nil, err
-	}
-
-	_, val, err := network.Unmarshal(buf, cothority.Suite)
-	if err != nil {
-		return nil, err
-	}
-	if cfg, ok := val.(*config); ok {
-		return cfg, nil
-	}
-
-	return nil, errors.New("unexpected config format")
-}
-
-func (c *config) loadKey() {
+func loadKey(id darc.Identity) (*configPrivate, error) {
 	// Find private key file.
 	cfgDir := getDataPath(cliApp.Name)
-	fn := fmt.Sprintf("key-%x.cfg", c.OwnerID)
+	fn := fmt.Sprintf("key-%x.cfg", id)
 	fn = filepath.Join(cfgDir, fn)
-
-	// This might fail, no problem. Just cannot use tools that need to sign.
-	p, _ := loadPrivate(fn)
-	c.private = p
-
-	return
+	return loadPrivate(fn)
 }
 
 func loadPrivate(fn string) (*configPrivate, error) {
@@ -331,7 +297,7 @@ func loadPrivate(fn string) (*configPrivate, error) {
 	return nil, errors.New("unexpected private config format")
 }
 
-func (cfg *config) save() (string, error) {
+func save(cfg *omniledger.Config) (string, error) {
 	cfgDir := getDataPath(cliApp.Name)
 	os.MkdirAll(cfgDir, 0755)
 
@@ -376,9 +342,8 @@ func (cfg *configPrivate) save() error {
 
 // getGenDarc uses omniledger's GetProof method to fetch the latest version of the darc
 // from OmniLedger and parses it.
-func (c *config) getGenDarc() (*darc.Darc, error) {
-	cl := omniledger.NewClient()
-	p, err := cl.GetProof(&c.Roster, c.ID, omniledger.GenesisReferenceID.Slice())
+func getGenDarc(cl *omniledger.Client) (*darc.Darc, error) {
+	p, err := cl.GetProof(omniledger.GenesisReferenceID.Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -400,7 +365,7 @@ func (c *config) getGenDarc() (*darc.Darc, error) {
 		return nil, errors.New("genesis darc ID is wrong length")
 	}
 
-	p, err = cl.GetProof(&c.Roster, c.ID, omniledger.ObjectID{DarcID: darcBuf}.Slice())
+	p, err = cl.GetProof(omniledger.InstanceID{DarcID: darcBuf}.Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -417,20 +382,11 @@ func (c *config) getGenDarc() (*darc.Darc, error) {
 	if string(contractBuf) != "darc" {
 		return nil, errors.New("expected contract to be darc but got: " + string(contractBuf))
 	}
-	d, err := darc.NewDarcFromProto(vs[0])
+	d, err := darc.NewFromProtobuf(vs[0])
 	if err != nil {
 		return nil, err
 	}
 	return d, nil
-}
-
-func (c *config) String() string {
-	var r []string
-	for _, x := range c.Roster.List {
-		r = append(r, x.Address.NetworkAddress())
-	}
-
-	return fmt.Sprintf("ID: %x\nRoster: %v", c.ID, strings.Join(r, ", "))
 }
 
 func rosterToServers(r *onet.Roster) []network.Address {
