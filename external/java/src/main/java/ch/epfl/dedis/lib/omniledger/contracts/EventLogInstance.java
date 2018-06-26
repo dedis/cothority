@@ -87,9 +87,7 @@ public class EventLogInstance {
      * @throws CothorityException
      */
     public InstanceId log(Event event, List<Signer> signers) throws CothorityException {
-        List<Event> events = new ArrayList<>();
-        events.add(event);
-        return this.log(events, signers).get(0);
+        return this.log(Arrays.asList(event), signers).get(0);
     }
 
     /**

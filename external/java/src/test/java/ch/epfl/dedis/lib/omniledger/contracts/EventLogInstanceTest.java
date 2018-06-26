@@ -3,6 +3,7 @@ package ch.epfl.dedis.lib.omniledger.contracts;
 import ch.epfl.dedis.lib.eventlog.Event;
 import ch.epfl.dedis.lib.eventlog.SearchResponse;
 import ch.epfl.dedis.lib.omniledger.InstanceId;
+import ch.epfl.dedis.lib.omniledger.SecureKG;
 import org.junit.jupiter.api.Test;
 
 import ch.epfl.dedis.integration.TestServerController;
@@ -27,33 +28,42 @@ import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.*;
 
 class EventLogInstanceTest {
-    static OmniledgerRPC ol;
-    EventLogInstance el;
-
-    static Signer admin;
-    static Darc genesisDarc;
-    static Configuration config;
+    private static OmniledgerRPC ol;
+    private static EventLogInstance el;
+    private static Signer admin;
 
     private final static Logger logger = LoggerFactory.getLogger(EventLogInstanceTest.class);
     private TestServerController testInstanceController;
 
     @BeforeEach
     void initAll() throws Exception {
-        testInstanceController = TestServerInit.getInstance();
-        admin = new SignerEd25519();
-        Map<String, byte[]> rules = Darc.initRules(Arrays.asList(admin.getIdentity()),
-                Arrays.asList(admin.getIdentity()));
-        rules.put("spawn:eventlog", admin.getIdentity().toString().getBytes());
-        rules.put("invoke:eventlog", admin.getIdentity().toString().getBytes());
-        genesisDarc = new Darc(rules, "genesis".getBytes());
+        // Change this flag to true if you wish to test against the secure KG server. We do not test it by default
+        // because it might overwhelm the server if the tests are executed repeatedly.
+        boolean useSecureKGServer = false;
+        if (useSecureKGServer) {
+            ol = SecureKG.getOmniledgerRPC();
+            if (!ol.checkLiveness()) {
+                throw new CothorityCommunicationException("liveness check failed");
+            }
+            admin = SecureKG.getSigner();
+            el = new EventLogInstance(ol, SecureKG.getEventlogId());
+        } else {
+            testInstanceController = TestServerInit.getInstance();
+            admin = new SignerEd25519();
+            Map<String, byte[]> rules = Darc.initRules(Arrays.asList(admin.getIdentity()),
+                    Arrays.asList(admin.getIdentity()));
+            rules.put("spawn:eventlog", admin.getIdentity().toString().getBytes());
+            rules.put("invoke:eventlog", admin.getIdentity().toString().getBytes());
+            Darc genesisDarc = new Darc(rules, "genesis".getBytes());
 
-        config = new Configuration(testInstanceController.getRoster(), Duration.of(100, MILLIS));
-        ol = new OmniledgerRPC(genesisDarc, config);
-        if (!ol.checkLiveness()) {
-            throw new CothorityCommunicationException("liveness check failed");
+            Configuration config = new Configuration(testInstanceController.getRoster(), Duration.of(100, MILLIS));
+            ol = new OmniledgerRPC(genesisDarc, config);
+            if (!ol.checkLiveness()) {
+                throw new CothorityCommunicationException("liveness check failed");
+            }
+
+            el = new EventLogInstance(ol, Arrays.asList(admin), genesisDarc.getId());
         }
-
-        el = new EventLogInstance(ol, Arrays.asList(admin), genesisDarc.getId());
     }
 
     @Test
@@ -73,11 +83,11 @@ class EventLogInstanceTest {
         for (int i = 0; i < n; i++) {
             // The timestamps in these event are all the same, but doing el.log takes time and it may not be possible to
             // add all the events. So we have to limit the number of events that we add.
-            keys.add(this.el.log(event, Arrays.asList(admin)));
+            keys.add(el.log(event, Arrays.asList(admin)));
         }
         Thread.sleep(5 * ol.getConfig().getBlockInterval().toMillis());
         for (InstanceId key : keys) {
-            Event event2 = this.el.get(key);
+            Event event2 = el.get(key);
             assertEquals(event, event2);
         }
     }
@@ -86,7 +96,7 @@ class EventLogInstanceTest {
     void testSearch() throws Exception {
         long now = System.currentTimeMillis() * 1000 * 1000;
         Event event = new Event(now, "login", "alice");
-        this.el.log(event, Arrays.asList(admin));
+        el.log(event, Arrays.asList(admin));
 
         Thread.sleep(5 * ol.getConfig().getBlockInterval().toMillis());
 

@@ -3,9 +3,12 @@ package ch.epfl.dedis.lib.omniledger;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
+import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.omniledger.darc.Darc;
+import ch.epfl.dedis.lib.omniledger.darc.DarcId;
 import ch.epfl.dedis.lib.skipchain.SkipchainRPC;
 import ch.epfl.dedis.proto.OmniLedgerProto;
 import com.google.protobuf.ByteString;
@@ -16,6 +19,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 
 import static java.time.temporal.ChronoUnit.NANOS;
+import static java.time.temporal.ChronoUnit.SECONDS;
 
 /**
  * Class OmniledgerRPC interacts with the omniledger service of a conode. It can either start a new omniledger service
@@ -76,6 +80,45 @@ public class OmniledgerRPC {
      */
     public OmniledgerRPC(Roster r, Darc d, Duration blockInterval) throws CothorityException {
         this(d, new Configuration(r, blockInterval));
+    }
+
+    /**
+     * Constructs an OmniLedgerRPC from known configuration. The constructor will communicate with the service to
+     * populate other fields and perform verification.
+     *
+     * @param roster - the roster to talk to
+     * @param skipchainId - the ID of the genesis skipblock, aka skipchain ID
+     * @throws CothorityException
+     */
+    public OmniledgerRPC(Roster roster, SkipblockId skipchainId) throws CothorityException {
+        // find the darc ID
+        Proof proof = OmniledgerRPC.getProof(roster, skipchainId, InstanceId.zero());
+        OmniledgerRPC.checkProof(proof, "config");
+        DarcId darcId = new DarcId(proof.getValues().get(0));
+
+        // find the actual darc
+        InstanceId darcInstanceId = new InstanceId(darcId, SubId.zero());
+        proof = OmniledgerRPC.getProof(roster, skipchainId, darcInstanceId);
+        OmniledgerRPC.checkProof(proof, "darc");
+        try {
+            genesisDarc = new Darc(proof.getValues().get(0));
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+
+        // find the config info
+        InstanceId configInstanceId = new InstanceId(darcId, SubId.one());
+        proof = OmniledgerRPC.getProof(roster, skipchainId, configInstanceId);
+        OmniledgerRPC.checkProof(proof, "config");
+        // TODO properly parse the configuration information
+        // we cannot do it at the moment because the Configuration protobuf type is different form Config struct in go
+        // for now we just use the default
+        config = new Configuration(roster, Duration.of(1, SECONDS));
+
+        // find the skipchain info
+        skipchain = new SkipchainRPC(roster, skipchainId);
+        genesis = skipchain.getSkipblock(skipchainId);
+        latest = skipchain.getLatestSkipblock();
     }
 
     /**
@@ -199,5 +242,34 @@ public class OmniledgerRPC {
 
     public SkipBlock getGenesis() {
         return genesis;
+    }
+
+    private static void checkProof(Proof proof, String expectedContract) throws CothorityNotFoundException {
+        if (!proof.matches()) {
+            throw new CothorityNotFoundException("couldn't find darc");
+        }
+        if (proof.getValues().size() != 2) {
+            throw new CothorityNotFoundException("incorrect number of values in proof");
+        }
+        String contract = new String(proof.getValues().get(1));
+        if (!contract.equals(expectedContract)) {
+            throw new CothorityNotFoundException("contract name is not " + expectedContract + ", got " + contract);
+        }
+    }
+
+    private static Proof getProof(Roster roster, SkipblockId skipchainId, InstanceId key) throws CothorityCommunicationException {
+        OmniLedgerProto.GetProof.Builder configBuilder = OmniLedgerProto.GetProof.newBuilder();
+        configBuilder.setVersion(currentVersion);
+        configBuilder.setId(skipchainId.toProto());
+        configBuilder.setKey(key.toByteString());
+
+        ByteString msg = roster.sendMessage("OmniLedger/GetProof", configBuilder.build());
+
+        try {
+            OmniLedgerProto.GetProofResponse reply = OmniLedgerProto.GetProofResponse.parseFrom(msg);
+            return new Proof(reply.getProof());
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
     }
 }
