@@ -67,6 +67,7 @@ func Test(t *testing.T) {
 	cliApp.ErrWriter = b
 	args := []string{"ol", "create", "-roster", rf}
 	err = cliApp.Run(args)
+	require.NoError(t, err)
 	require.Contains(t, string(b.Bytes()), "Created")
 	ol := cliApp.Metadata["OL"]
 	require.IsType(t, "", ol)
@@ -78,5 +79,6 @@ func Test(t *testing.T) {
 	cliApp.ErrWriter = b
 	args = []string{"ol", "show"}
 	err = cliApp.Run(args)
+	require.NoError(t, err)
 	require.Contains(t, string(b.Bytes()), "Roster: 127.0.0.1")
 }

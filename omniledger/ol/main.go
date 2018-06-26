@@ -40,7 +40,7 @@ var cmds = cli.Commands{
 	},
 	{
 		Name:    "show",
-		Usage:   "show a config",
+		Usage:   "show the config, contact OmniLedger to get Genesis Darc ID",
 		Aliases: []string{"s"},
 		Flags: []cli.Flag{
 			cli.StringFlag{
@@ -170,7 +170,18 @@ func show(c *cli.Context) error {
 	}
 
 	fmt.Fprintln(c.App.Writer, cfg)
-	return nil
+
+	fmt.Fprintln(c.App.Writer)
+	fmt.Fprintln(c.App.Writer, "Genesis Darc:")
+
+	gd, err := getGenDarc(cl)
+	if err == nil {
+		fmt.Fprintln(c.App.Writer, gd)
+	} else {
+		fmt.Fprintln(c.App.ErrWriter, "could not fetch darc:", err)
+	}
+
+	return err
 }
 
 func add(c *cli.Context) error {
@@ -254,9 +265,7 @@ type configPrivate struct {
 	Owner darc.Signer
 }
 
-func init() {
-	network.RegisterMessages(&configPrivate{})
-}
+func init() { network.RegisterMessages(&configPrivate{}) }
 
 func readRoster(r io.Reader) (*onet.Roster, error) {
 	group, err := app.ReadGroupDescToml(r)

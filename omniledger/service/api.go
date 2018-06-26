@@ -122,7 +122,7 @@ func (c *Config) String() string {
 		r = append(r, x.Address.NetworkAddress())
 	}
 
-	return fmt.Sprintf("ID: %x\nRoster: %v", c.ID, strings.Join(r, ", "))
+	return fmt.Sprintf("Skipchain ID: %x\nRoster: %v", c.ID, strings.Join(r, ", "))
 }
 
 // DefaultGenesisMsg creates the message that is used to for creating the
