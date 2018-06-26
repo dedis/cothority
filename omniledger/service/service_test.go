@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/suites"
+	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/assert"
@@ -127,7 +128,7 @@ func TestService_AddTransaction(t *testing.T) {
 				pr, err := s.service().GetProof(&GetProof{
 					Version: CurrentVersion,
 					ID:      s.sb.SkipChainID(),
-					Key:     tx.Instructions[0].ObjectID.Slice(),
+					Key:     tx.Instructions[0].InstanceID.Slice(),
 				})
 				if err != nil {
 					log.Error(err)
@@ -152,7 +153,7 @@ func TestService_GetProof(t *testing.T) {
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
-	serKey := s.tx.Instructions[0].ObjectID.Slice()
+	serKey := s.tx.Instructions[0].InstanceID.Slice()
 
 	var rep *GetProofResponse
 	var i int
@@ -241,7 +242,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	pr, err := s.service().GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
-		Key:     tx1.Instructions[0].ObjectID.Slice(),
+		Key:     tx1.Instructions[0].InstanceID.Slice(),
 	})
 	require.Nil(t, err)
 	match := pr.Proof.InclusionProof.Match()
@@ -251,7 +252,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	pr, err = s.service().GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
-		Key:     tx2.Instructions[0].ObjectID.Slice(),
+		Key:     tx2.Instructions[0].InstanceID.Slice(),
 	})
 	require.Nil(t, err)
 	match = pr.Proof.InclusionProof.Match()
@@ -281,7 +282,7 @@ func TestService_StateChange(t *testing.T) {
 			return nil, nil, err
 		}
 
-		rec, err := cdb.Get(tx.ObjectID.Slice()).Record()
+		rec, err := cdb.Get(tx.InstanceID.Slice()).Record()
 		if err != nil {
 			return nil, nil, err
 		}
@@ -296,7 +297,7 @@ func TestService_StateChange(t *testing.T) {
 			return []StateChange{
 				StateChange{
 					StateAction: Create,
-					ObjectID:    tx.ObjectID.Slice(),
+					InstanceID:  tx.InstanceID.Slice(),
 					ContractID:  []byte(cid),
 					Value:       zeroBuf,
 				},
@@ -323,7 +324,7 @@ func TestService_StateChange(t *testing.T) {
 		return []StateChange{
 			StateChange{
 				StateAction: Update,
-				ObjectID:    tx.ObjectID.Slice(),
+				InstanceID:  tx.InstanceID.Slice(),
 				ContractID:  []byte(cid),
 				Value:       vBuf,
 			},
@@ -336,14 +337,14 @@ func TestService_StateChange(t *testing.T) {
 	require.NotNil(t, cdb)
 
 	n := 5
-	inst := GenNonce()
+	inst := genSubID()
 	nonce := GenNonce()
 	instrs := make([]Instruction, n)
 	for i := range instrs {
 		instrs[i] = Instruction{
-			ObjectID: ObjectID{
-				DarcID:     s.darc.GetBaseID(),
-				InstanceID: inst,
+			InstanceID: InstanceID{
+				DarcID: s.darc.GetBaseID(),
+				SubID:  inst,
 			},
 			Nonce:  nonce,
 			Index:  i,
@@ -387,7 +388,7 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 	require.True(t, pr.InclusionProof.Match())
 	_, vs, err := pr.KeyValue()
 	require.Nil(t, err)
-	d22, err := darc.NewDarcFromProto(vs[0])
+	d22, err := darc.NewFromProtobuf(vs[0])
 	require.Nil(t, err)
 	require.False(t, d22.Equal(d2))
 	require.True(t, d22.Equal(s.darc))
@@ -406,7 +407,7 @@ func TestService_DarcEvolution(t *testing.T) {
 	require.True(t, pr.InclusionProof.Match())
 	_, vs, err := pr.KeyValue()
 	require.Nil(t, err)
-	d22, err := darc.NewDarcFromProto(vs[0])
+	d22, err := darc.NewFromProtobuf(vs[0])
 	require.Nil(t, err)
 	require.True(t, d22.Equal(d2))
 }
@@ -422,15 +423,15 @@ func TestService_DarcSpawn(t *testing.T) {
 	darc2.Rules.AddRule("spawn:rain", darc2.Rules.GetSignExpr())
 	darc2Buf, err := darc2.ToProto()
 	require.Nil(t, err)
-	darc2Copy, err := darc.NewDarcFromProto(darc2Buf)
+	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
 	require.Nil(t, err)
 	require.True(t, darc2.Equal(darc2Copy))
 
 	ctx := ClientTransaction{
 		Instructions: []Instruction{{
-			ObjectID: ObjectID{
-				DarcID:     s.darc.GetBaseID(),
-				InstanceID: ZeroNonce,
+			InstanceID: InstanceID{
+				DarcID: s.darc.GetBaseID(),
+				SubID:  zeroSubID,
 			},
 			Nonce:  GenNonce(),
 			Index:  0,
@@ -447,7 +448,7 @@ func TestService_DarcSpawn(t *testing.T) {
 	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
 
 	s.sendTx(t, ctx)
-	pr := s.waitProof(t, ObjectID{darc2.GetBaseID(), ZeroNonce})
+	pr := s.waitProof(t, InstanceID{darc2.GetBaseID(), zeroSubID})
 	require.True(t, pr.InclusionProof.Match())
 }
 
@@ -464,11 +465,11 @@ func TestService_ValueSpawn(t *testing.T) {
 	ctx := darcToTx(t, *darc2, s.signer)
 	s.sendTx(t, ctx)
 	for {
-		pr := s.waitProof(t, ctx.Instructions[0].ObjectID)
+		pr := s.waitProof(t, ctx.Instructions[0].InstanceID)
 		require.True(t, pr.InclusionProof.Match())
 		values, err := pr.InclusionProof.RawValues()
 		require.Nil(t, err)
-		d, err := darc.NewDarcFromProto(values[0])
+		d, err := darc.NewFromProtobuf(values[0])
 		require.Nil(t, err)
 		if d.Version == darc2.Version {
 			break
@@ -480,9 +481,9 @@ func TestService_ValueSpawn(t *testing.T) {
 	myvalue := []byte("1234")
 	ctx = ClientTransaction{
 		Instructions: []Instruction{{
-			ObjectID: ObjectID{
-				DarcID:     s.darc.GetBaseID(),
-				InstanceID: ZeroNonce,
+			InstanceID: InstanceID{
+				DarcID: s.darc.GetBaseID(),
+				SubID:  zeroSubID,
 			},
 			Nonce:  GenNonce(),
 			Index:  0,
@@ -498,9 +499,9 @@ func TestService_ValueSpawn(t *testing.T) {
 	}
 	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
 
-	var subId Nonce
-	copy(subId[:], ctx.Instructions[0].Hash())
-	pr := s.sendTxAndWait(t, ctx, &ObjectID{darc2.GetBaseID(), subId})
+	var subID SubID
+	copy(subID[:], ctx.Instructions[0].Hash())
+	pr := s.sendTxAndWait(t, ctx, &InstanceID{darc2.GetBaseID(), subID})
 	require.True(t, pr.InclusionProof.Match())
 	values, err := pr.InclusionProof.RawValues()
 	require.Nil(t, err)
@@ -520,9 +521,9 @@ func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction 
 		},
 	}
 	instr := Instruction{
-		ObjectID: ObjectID{
-			DarcID:     d2.GetBaseID(),
-			InstanceID: ZeroNonce,
+		InstanceID: InstanceID{
+			DarcID: d2.GetBaseID(),
+			SubID:  zeroSubID,
 		},
 		Nonce:  GenNonce(),
 		Index:  0,
@@ -552,7 +553,7 @@ func (s *ser) service() *Service {
 	return s.services[0]
 }
 
-func (s *ser) waitProof(t *testing.T, id ObjectID) Proof {
+func (s *ser) waitProof(t *testing.T, id InstanceID) Proof {
 	var pr Proof
 	for i := 0; i < 10; i++ {
 		// try to get the darc back, we should get the genesis back instead
@@ -584,13 +585,13 @@ func (s *ser) sendTx(t *testing.T, ctx ClientTransaction) {
 
 }
 
-func (s *ser) sendTxAndWait(t *testing.T, ctx ClientTransaction, id *ObjectID) Proof {
+func (s *ser) sendTxAndWait(t *testing.T, ctx ClientTransaction, id *InstanceID) Proof {
 	s.sendTx(t, ctx)
 
 	if id == nil {
-		id = &ObjectID{
-			DarcID:     s.darc.GetBaseID(),
-			InstanceID: ZeroNonce,
+		id = &InstanceID{
+			DarcID: s.darc.GetBaseID(),
+			SubID:  zeroSubID,
 		}
 	}
 
@@ -604,14 +605,14 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 	for i := 0; i < 10; i++ {
 		resp, err := s.service().GetProof(&GetProof{
 			Version: CurrentVersion,
-			Key:     ObjectID{d2.GetBaseID(), ZeroNonce}.Slice(),
+			Key:     InstanceID{d2.GetBaseID(), zeroSubID}.Slice(),
 			ID:      s.sb.SkipChainID(),
 		})
 		require.Nil(t, err)
 		pr = &resp.Proof
 		vs, err := pr.InclusionProof.Values()
 		require.Nil(t, err)
-		d, err := darc.NewDarcFromProto(vs[0].([]byte))
+		d, err := darc.NewFromProtobuf(vs[0].([]byte))
 		require.Nil(t, err)
 		if d.Equal(&d2) {
 			return
@@ -692,7 +693,7 @@ func dummyContractFunc(cdb CollectionView, tx Instruction, c []Coin) ([]StateCha
 		return nil, nil, err
 	}
 	return []StateChange{
-		NewStateChange(Create, tx.ObjectID, cid, args),
+		NewStateChange(Create, tx.InstanceID, cid, args),
 	}, nil, nil
 }
 
@@ -702,4 +703,9 @@ func registerDummy(servers []*onet.Server) {
 	for _, s := range servers {
 		RegisterContract(s, dummyKind, dummyContractFunc)
 	}
+}
+
+func genSubID() (n SubID) {
+	random.Bytes(n[:], random.New())
+	return n
 }

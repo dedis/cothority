@@ -138,11 +138,11 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	// reference to the actual genesis transaction.
 	transaction := []ClientTransaction{{
 		Instructions: []Instruction{{
-			ObjectID: ObjectID{DarcID: req.GenesisDarc.GetID()},
-			Nonce:    ZeroNonce,
-			Index:    0,
-			Length:   1,
-			Spawn:    spawn,
+			InstanceID: InstanceID{DarcID: req.GenesisDarc.GetID()},
+			Nonce:      zeroNonce,
+			Index:      0,
+			Length:     1,
+			Spawn:      spawn,
 		}},
 	}}
 
@@ -216,10 +216,10 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.save()
 }
 
-func toObjectID(dID darc.ID) ObjectID {
-	return ObjectID{
-		DarcID:     dID,
-		InstanceID: ZeroNonce,
+func toInstanceID(dID darc.ID) InstanceID {
+	return InstanceID{
+		DarcID: dID,
+		SubID:  zeroSubID,
 	}
 }
 
@@ -245,7 +245,7 @@ func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransactio
 }
 
 func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
-	d, err := s.loadLatestDarc(scID, instr.ObjectID.DarcID)
+	d, err := s.loadLatestDarc(scID, instr.InstanceID.DarcID)
 	if err != nil {
 		return errors.New("darc not found: " + err.Error())
 	}
@@ -462,14 +462,14 @@ func (s *Service) loadLatestDarc(sid skipchain.SkipBlockID, dID darc.ID) (*darc.
 	if colldb == nil {
 		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", sid.Short())
 	}
-	value, contract, err := colldb.GetValueContract(toObjectID(dID).Slice())
+	value, contract, err := colldb.GetValueContract(toInstanceID(dID).Slice())
 	if err != nil {
 		return nil, err
 	}
 	if string(contract) != "darc" {
 		return nil, fmt.Errorf("for darc %x, expected Kind to be 'darc' but got '%v'", dID, string(contract))
 	}
-	return darc.NewDarcFromProto(value)
+	return darc.NewFromProtobuf(value)
 }
 
 // createQueueWorker sets up a worker that will listen on a channel for
@@ -483,7 +483,7 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID, interval time.Du
 			select {
 			case t := <-c:
 				ts = append(ts, t)
-				log.Lvlf2("%x: Stored transaction. Next block length: %v, New Tx: %+v", scID, len(ts), t)
+				log.Lvlf2("%x: Added transaction to queue. Next block length: %v, New Tx: %+v", scID, len(ts), t)
 			case <-to:
 				if len(ts) > 0 {
 					log.Lvlf2("%x: New epoch and transaction-length: %d", scID, len(ts))
@@ -578,7 +578,7 @@ clientTransactions:
 		for _, instr := range ct.Instructions {
 			contract, _, err := instr.GetContractState(cdbI)
 			if err != nil {
-				log.Error("Couldn't get contract type of instruction")
+				log.Error("Couldn't get contract type of instruction:", err)
 				continue clientTransactions
 			}
 

@@ -107,11 +107,11 @@ func (c *collectionDB) loadAll() error {
 func storeInColl(coll collection.Collection, t *StateChange) error {
 	switch t.StateAction {
 	case Create:
-		return coll.Add(t.ObjectID, t.Value, t.ContractID)
+		return coll.Add(t.InstanceID, t.Value, t.ContractID)
 	case Update:
-		return coll.Set(t.ObjectID, t.Value, t.ContractID)
+		return coll.Set(t.InstanceID, t.Value, t.ContractID)
 	case Remove:
-		return coll.Remove(t.ObjectID)
+		return coll.Remove(t.InstanceID)
 	default:
 		return errors.New("invalid state action")
 	}
@@ -125,18 +125,18 @@ func (c *collectionDB) Store(t *StateChange) error {
 		bucket := tx.Bucket([]byte(c.bucketName))
 
 		// The contract type is stored in a key starting with C
-		keyC := make([]byte, 1+len(t.ObjectID))
+		keyC := make([]byte, 1+len(t.InstanceID))
 		keyC[0] = byte('C')
-		copy(keyC[1:], t.ObjectID)
+		copy(keyC[1:], t.InstanceID)
 
 		switch t.StateAction {
 		case Create, Update:
-			if err := bucket.Put(t.ObjectID, t.Value); err != nil {
+			if err := bucket.Put(t.InstanceID, t.Value); err != nil {
 				return err
 			}
 			return bucket.Put(keyC, t.ContractID)
 		case Remove:
-			if err := bucket.Delete(t.ObjectID); err != nil {
+			if err := bucket.Delete(t.InstanceID); err != nil {
 				return err
 			}
 			return bucket.Delete(keyC)
@@ -186,7 +186,7 @@ func (c *collectionDB) RootHash() []byte {
 // in the transactions had been added, without actually adding it.
 func (c *collectionDB) tryHash(ts []StateChange) (mr []byte, rerr error) {
 	for _, sc := range ts {
-		err := c.coll.Add(sc.ObjectID, sc.Value, sc.ContractID)
+		err := c.coll.Add(sc.InstanceID, sc.Value, sc.ContractID)
 		if err != nil {
 			rerr = err
 			return
@@ -198,7 +198,7 @@ func (c *collectionDB) tryHash(ts []StateChange) (mr []byte, rerr error) {
 				rerr = err
 				mr = nil
 			}
-		}(sc.ObjectID)
+		}(sc.InstanceID)
 	}
 	mr = c.coll.GetRoot()
 	return

@@ -1,10 +1,9 @@
-package ch.epfl.dedis.omniledger;
+package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.omniledger.*;
 import ch.epfl.dedis.lib.omniledger.contracts.DarcInstance;
 import ch.epfl.dedis.lib.omniledger.contracts.ValueInstance;
 import ch.epfl.dedis.lib.omniledger.darc.Darc;
@@ -37,24 +36,16 @@ public class OmniledgerRPCTest {
 
     @BeforeEach
     void initAll() throws Exception {
-        testInstanceController = TestServerInit.getInstanceManual();
+        testInstanceController = TestServerInit.getInstance();
         admin = new SignerEd25519();
         Map<String, byte[]> rules = Darc.initRules(Arrays.asList(admin.getIdentity()),
                 Arrays.asList(admin.getIdentity()));
         genesisDarc = new Darc(rules, "genesis".getBytes());
 
-        try {
-            config = new Configuration(testInstanceController.getRoster(), Duration.of(100, MILLIS));
-            ol = new OmniledgerRPC(genesisDarc, config);
-            if (!ol.checkLiveness()){
-                throw new CothorityCommunicationException("liveness check failed");
-            }
-        } catch (CothorityCommunicationException e) {
-            logger.info("Error is: " + e.toString());
-            logger.error("Couldn't start skipchain - perhaps you need to run the following commands:");
-            logger.error("cd $(go env GOPATH)/src/github.com/dedis/onchain-secrets/conode");
-            logger.error("./run_conode.sh local 4 2");
-            fail("Couldn't start ocs!");
+        config = new Configuration(testInstanceController.getRoster(), Duration.of(100, MILLIS));
+        ol = new OmniledgerRPC(genesisDarc, config);
+        if (!ol.checkLiveness()){
+            throw new CothorityCommunicationException("liveness check failed");
         }
     }
 
@@ -64,7 +55,7 @@ public class OmniledgerRPCTest {
     }
 
     @Test
-    void updateDarc() throws Exception{
+    void updateDarc() throws Exception {
         SkipBlock previous = ol.getLatest();
         logger.info("Previous skipblock is: {}", previous.getIndex());
         DarcInstance dc = new DarcInstance(ol, genesisDarc);
@@ -146,7 +137,7 @@ public class OmniledgerRPCTest {
         ol.update();
         SkipBlock latest = ol.getLatest();
         assertNotNull(latest);
-        assertFalse(previous.equals(latest));
+        assertNotEquals(previous, latest);
         assertFalse(previous.getIndex() == latest.getIndex());
     }
 

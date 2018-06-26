@@ -3,7 +3,7 @@ package ch.epfl.dedis.lib.eventlog;
 import ch.epfl.dedis.proto.EventLogProto;
 
 /**
- * An instance of an Event can be sent and stored by the EventLog service.
+ * An instance of an Event can be sent and stored by OmniLedger.
  */
 public final class Event {
     private final long when; // in nano seconds
@@ -20,6 +20,14 @@ public final class Event {
         this.when = when;
         this.topic = topic;
         this.content = content;
+    }
+
+    /**
+     * Constructs an event from the protobuf Event type.
+     * @param e The event of the protobuf type.
+     */
+    public Event(EventLogProto.Event e) {
+        this(e.getWhen(), e.getTopic(), e.getContent());
     }
 
     /**

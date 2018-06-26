@@ -153,9 +153,9 @@ func (d *Darc) ToProto() ([]byte, error) {
 	return b, nil
 }
 
-// NewDarcFromProto interprets a protobuf-representation of the darc and
+// NewFromProtobuf interprets a protobuf-representation of the darc and
 // returns it.
-func NewDarcFromProto(protoDarc []byte) (*Darc, error) {
+func NewFromProtobuf(protoDarc []byte) (*Darc, error) {
 	d := &Darc{}
 	if err := protobuf.Decode(protoDarc, d); err != nil {
 		return nil, err
@@ -849,7 +849,7 @@ func (r Request) GetIdentityStrings() []string {
 // function should *not* be used as a way to verify the darc, it only checks
 // that darcBuf can be decoded and matches with the Msg part of the request.
 func (r Request) MsgToDarc(darcBuf []byte) (*Darc, error) {
-	d, err := NewDarcFromProto(darcBuf)
+	d, err := NewFromProtobuf(darcBuf)
 	if err != nil {
 		return nil, err
 	}

@@ -31,7 +31,7 @@ public class OmniledgerRPC {
     private SkipBlock genesis;
     private SkipBlock latest;
     private SkipchainRPC skipchain;
-    private static final int currentVersion = 1;
+    public static final int currentVersion = 1;
 
     private final Logger logger = LoggerFactory.getLogger(OmniledgerRPC.class);
 
@@ -97,7 +97,7 @@ public class OmniledgerRPC {
     public void sendTransaction(ClientTransaction t) throws CothorityException {
         OmniLedgerProto.AddTxRequest.Builder request =
                 OmniLedgerProto.AddTxRequest.newBuilder();
-        request.setVersion(1);
+        request.setVersion(currentVersion);
         request.setSkipchainid(ByteString.copyFrom(skipchain.getID().getId()));
         request.setTransaction(t.toProto());
 
@@ -105,6 +105,7 @@ public class OmniledgerRPC {
         try{
             OmniLedgerProto.AddTxResponse reply =
                     OmniLedgerProto.AddTxResponse.parseFrom(msg);
+            // TODO do something with the reply?
             logger.info("Successfully stored request - waiting for inclusion");
         } catch (InvalidProtocolBufferException e){
             throw new CothorityCommunicationException(e);
@@ -121,7 +122,7 @@ public class OmniledgerRPC {
     public Proof getProof(InstanceId id) throws CothorityException {
         OmniLedgerProto.GetProof.Builder request =
                 OmniLedgerProto.GetProof.newBuilder();
-        request.setVersion(1);
+        request.setVersion(currentVersion);
         request.setId(skipchain.getID().toProto());
         request.setKey(id.toByteString());
 
@@ -194,5 +195,9 @@ public class OmniledgerRPC {
      */
     public SkipBlock getLatest() {
         return latest;
+    }
+
+    public SkipBlock getGenesis() {
+        return genesis;
     }
 }
