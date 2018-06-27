@@ -29,11 +29,12 @@ public key with you, the OmniLedger admin. You grant access to a given contract
 for instructions signed by the given secret key like this:
 
 ```
-$ ol add -ol $file spawn:eventlog -pub ed25519:dd6419b01b49e3ffd18696c93884dc244b4688d95f55d6c2a4639f2b0ce40710
+$ ol add -ol $file spawn:eventlog -identity ed25519:dd6419b01b49e3ffd18696c93884dc244b4688d95f55d6c2a4639f2b0ce40710
 ```
 
-Using the OmniLedger config file you give them and their private key to sign transactions,
-they will now be able to use their application to send transactions.
+Using the OmniLedger config file you give them and their private key to sign
+transactions, they will now be able to use their application to send
+transactions.
 
 ## Environmnet variables
 
