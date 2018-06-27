@@ -10,16 +10,17 @@ import (
 	"github.com/dedis/protobuf"
 )
 
-// Here we give a definition of pre-defined contracts.
+// zeroNonce is 32 bytes of zeroes.
+var zeroNonce = Nonce([32]byte{})
 
-// ZeroNonce is 32 bytes of zeroes and can have a special meaning.
-var ZeroNonce = Nonce([32]byte{})
+// zeroSubID is 32 bytes of zeroes as a subid for storing Darcs.
+var zeroSubID = SubID([32]byte{})
 
-// OneNonce has 32 bytes of zeros except the LSB is set to one.
-var OneNonce = Nonce(func() [32]byte {
-	var nonce [32]byte
-	nonce[31] = 1
-	return nonce
+// one is the subid for storing the omniledger config.
+var one = SubID(func() [32]byte {
+	var one [32]byte
+	one[31] = 1
+	return one
 }())
 
 // ZeroDarc is a DarcID with all zeroes.
@@ -27,7 +28,7 @@ var ZeroDarc = darc.ID(make([]byte, 32))
 
 // GenesisReferenceID is 64 bytes of zeroes. Its value is a reference to the
 // genesis-darc.
-var GenesisReferenceID = ObjectID{ZeroDarc, ZeroNonce}
+var GenesisReferenceID = InstanceID{ZeroDarc, zeroSubID}
 
 // ContractConfigID denotes a config-contract
 var ContractConfigID = "config"
@@ -63,9 +64,9 @@ func LoadConfigFromColl(coll CollectionView) (*Config, error) {
 		return nil, errors.New("value has a invalid length")
 	}
 	// Use the genesis-darc ID to create the config key and read the config.
-	configID := ObjectID{
-		DarcID:     darc.ID(val),
-		InstanceID: OneNonce,
+	configID := InstanceID{
+		DarcID: darc.ID(val),
+		SubID:  one,
 	}
 	val, contract, err = getValueContract(coll, configID.Slice())
 	if err != nil {
@@ -115,22 +116,33 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 	if !ok {
 		return nil, errors.New("cannot cast value to byte slice")
 	}
-	d, err := darc.NewDarcFromProto(darcBuf)
+	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {
 		return nil, err
 	}
 	return d, nil
 }
 
+// BytesToObjID converts a byte slice to an InstanceID, it expects the byte slice
+// to be 64 bytes.
+func BytesToObjID(x []byte) InstanceID {
+	var sub SubID
+	copy(sub[:], x[32:64])
+	return InstanceID{
+		DarcID: x[0:32],
+		SubID:  sub,
+	}
+}
+
 // ContractConfig can only be instantiated once per skipchain, and only for
 // the genesis block.
 func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	c = coins
-	if tx.getType() != spawnType {
+	if tx.GetType() != SpawnType {
 		return nil, nil, errors.New("Config can only be spawned")
 	}
 	darcBuf := tx.Spawn.Args.Search("darc")
-	d, err := darc.NewDarcFromProto(darcBuf)
+	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {
 		log.Error("couldn't decode darc")
 		return
@@ -161,12 +173,12 @@ func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coi
 	}
 
 	return []StateChange{
-		NewStateChange(Create, GenesisReferenceID, ContractConfigID, tx.ObjectID.DarcID),
-		NewStateChange(Create, tx.ObjectID, ContractDarcID, darcBuf),
+		NewStateChange(Create, GenesisReferenceID, ContractConfigID, tx.InstanceID.DarcID),
+		NewStateChange(Create, tx.InstanceID, ContractDarcID, darcBuf),
 		NewStateChange(Create,
-			ObjectID{
-				DarcID:     tx.ObjectID.DarcID,
-				InstanceID: OneNonce,
+			InstanceID{
+				DarcID: tx.InstanceID.DarcID,
+				SubID:  one,
 			}, ContractConfigID, configBuf),
 	}, c, nil
 }
@@ -180,14 +192,19 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 	case tx.Spawn != nil:
 		if tx.Spawn.ContractID == ContractDarcID {
 			darcBuf := tx.Spawn.Args.Search("darc")
-			d, err := darc.NewDarcFromProto(darcBuf)
+			d, err := darc.NewFromProtobuf(darcBuf)
 			if err != nil {
 				return nil, nil, errors.New("given darc could not be decoded: " + err.Error())
 			}
 			return []StateChange{
-				NewStateChange(Create, ObjectID{d.GetBaseID(), ZeroNonce}, ContractDarcID, darcBuf),
+				NewStateChange(Create, InstanceID{d.GetBaseID(), zeroSubID}, ContractDarcID, darcBuf),
 			}, coins, nil
 		}
+		// TODO The code below will never get called because this
+		// contract is used only when tx.Spawn.ContractID is "darc", so
+		// the if statement above gets executed and this contract
+		// returns. Why do we need this part, if we do, how should we
+		// fix it?
 		c, found := s.contracts[tx.Spawn.ContractID]
 		if !found {
 			return nil, nil, errors.New("couldn't find this contract type")
@@ -197,11 +214,11 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 		switch tx.Invoke.Command {
 		case "evolve":
 			darcBuf := tx.Invoke.Args.Search("darc")
-			newD, err := darc.NewDarcFromProto(darcBuf)
+			newD, err := darc.NewFromProtobuf(darcBuf)
 			if err != nil {
 				return nil, nil, err
 			}
-			oldD, err := LoadDarcFromColl(coll, ObjectID{newD.BaseID, ZeroNonce}.Slice())
+			oldD, err := LoadDarcFromColl(coll, InstanceID{newD.BaseID, zeroSubID}.Slice())
 			if err != nil {
 				return nil, nil, err
 			}
@@ -209,7 +226,7 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 				return nil, nil, err
 			}
 			return []StateChange{
-				NewStateChange(Update, tx.ObjectID, ContractDarcID, darcBuf),
+				NewStateChange(Update, tx.InstanceID, ContractDarcID, darcBuf),
 			}, coins, nil
 		default:
 			return nil, nil, errors.New("invalid command: " + tx.Invoke.Command)
@@ -224,10 +241,10 @@ func (s *Service) ContractDarc(coll CollectionView, tx Instruction,
 func (s *Service) ContractValue(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	switch {
 	case tx.Spawn != nil:
-		var subID Nonce
+		var subID SubID
 		copy(subID[:], tx.Hash())
 		return []StateChange{
-			NewStateChange(Create, ObjectID{tx.ObjectID.DarcID, subID},
+			NewStateChange(Create, InstanceID{tx.InstanceID.DarcID, subID},
 				ContractValueID, tx.Spawn.Args.Search("value")),
 		}, c, nil
 	case tx.Invoke != nil:
@@ -235,12 +252,12 @@ func (s *Service) ContractValue(cdb CollectionView, tx Instruction, c []Coin) ([
 			return nil, nil, errors.New("Value contract can only update")
 		}
 		return []StateChange{
-			NewStateChange(Update, tx.ObjectID,
+			NewStateChange(Update, tx.InstanceID,
 				ContractValueID, tx.Invoke.Args.Search("value")),
 		}, c, nil
 	case tx.Delete != nil:
 		return StateChanges{
-			NewStateChange(Remove, tx.ObjectID, ContractValueID, nil),
+			NewStateChange(Remove, tx.InstanceID, ContractValueID, nil),
 		}, c, nil
 	}
 	return nil, nil, errors.New("didn't find any instruction")

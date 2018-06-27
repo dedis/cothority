@@ -45,7 +45,7 @@ func TestClient_GetProof(t *testing.T) {
 	for i = 0; i < 10; i++ {
 		time.Sleep(4 * msg.BlockInterval)
 		var err error
-		p, err = c.GetProof(roster, csr.Skipblock.SkipChainID(), tx.Instructions[0].ObjectID.Slice())
+		p, err = c.GetProof(roster, csr.Skipblock.SkipChainID(), tx.Instructions[0].InstanceID.Slice())
 		if err != nil {
 			continue
 		}
@@ -57,6 +57,6 @@ func TestClient_GetProof(t *testing.T) {
 	require.Nil(t, p.Proof.Verify(csr.Skipblock.SkipChainID()))
 	k, vs, err := p.Proof.KeyValue()
 	require.Nil(t, err)
-	require.Equal(t, k, tx.Instructions[0].ObjectID.Slice())
+	require.Equal(t, k, tx.Instructions[0].InstanceID.Slice())
 	require.Equal(t, value, vs[0])
 }

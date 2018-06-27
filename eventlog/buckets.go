@@ -1,6 +1,7 @@
 package eventlog
 
 import (
+	"bytes"
 	"errors"
 
 	omniledger "github.com/dedis/cothority/omniledger/service"
@@ -15,7 +16,7 @@ type bucket struct {
 	EventRefs [][]byte
 }
 
-func (b *bucket) isFirst() bool {
+func (b bucket) isFirst() bool {
 	return len(b.Prev) == 0
 }
 
@@ -24,13 +25,18 @@ type eventLog struct {
 	v  omniledger.CollectionView
 }
 
-func (e *eventLog) getLatestBucket() ([]byte, *bucket, error) {
+func (e eventLog) getLatestBucket() ([]byte, *bucket, error) {
 	bucketID, err := e.getIndexValue()
 	if err != nil {
 		return nil, nil, err
 	}
 	if len(bucketID) != 64 {
 		return nil, nil, errors.New("wrong length")
+	}
+	// The eventLog index has been initialised, but not used yet, so we
+	// return an empty bucketID and an empty bucket.
+	if bytes.Equal(bucketID, make([]byte, 64)) {
+		return nil, nil, nil
 	}
 	b, err := e.getBucketByID(bucketID)
 	if err != nil {
@@ -39,7 +45,7 @@ func (e *eventLog) getLatestBucket() ([]byte, *bucket, error) {
 	return bucketID, b, nil
 }
 
-func (e *eventLog) getBucketByID(objID []byte) (*bucket, error) {
+func (e eventLog) getBucketByID(objID []byte) (*bucket, error) {
 	r, err := e.v.Get(objID).Record()
 	if err != nil {
 		return nil, err

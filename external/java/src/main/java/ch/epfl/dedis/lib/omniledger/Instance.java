@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
+import ch.epfl.dedis.proto.TransactionProto;
 
 import java.util.List;
 
@@ -49,5 +50,4 @@ public class Instance {
     public byte[] getData() {
         return data;
     }
-
 }

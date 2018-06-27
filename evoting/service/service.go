@@ -476,26 +476,27 @@ func (s *Service) Shuffle(req *evoting.Shuffle) (*evoting.ShuffleReply, error) {
 
 	hasParticipated, _ := participated[election.Roster.List[0].ID.String()]
 	instance, _ := s.CreateProtocol(protocol.NameShuffle, tree)
-	protocol := instance.(*protocol.Shuffle)
-	protocol.User = req.User
-	protocol.Signature = req.Signature
-	protocol.Election = election
-	protocol.Skipchain = s.skipchain
-	protocol.LeaderParticipates = !hasParticipated
+	protoShuffle := instance.(*protocol.Shuffle)
+	protoShuffle.User = req.User
+	protoShuffle.Signature = req.Signature
+	protoShuffle.Election = election
+	protoShuffle.Skipchain = s.skipchain
+	protoShuffle.LeaderParticipates = !hasParticipated
 
 	config, _ := network.Marshal(&synchronizer{
 		ID:        req.ID,
 		User:      req.User,
 		Signature: req.Signature,
 	})
-	protocol.SetConfig(&onet.GenericConfig{Data: config})
-	if err = protocol.Start(); err != nil {
+	protoShuffle.SetConfig(&onet.GenericConfig{Data: config})
+	if err = protoShuffle.Start(); err != nil {
 		return nil, err
 	}
 	select {
-	case err := <-protocol.Finished:
+	case err := <-protoShuffle.Finished:
 		return &evoting.ShuffleReply{}, err
 	case <-time.After(timeout):
+		protoShuffle.HandleTerminate(protocol.MessageTerminate{})
 		return nil, errors.New("shuffle error, protocol timeout")
 	}
 }
@@ -551,28 +552,30 @@ func (s *Service) Decrypt(req *evoting.Decrypt) (*evoting.DecryptReply, error) {
 	if tree == nil {
 		return nil, errors.New("error while generating tree")
 	}
+
 	instance, _ := s.CreateProtocol(protocol.NameDecrypt, tree)
-	protocol := instance.(*protocol.Decrypt)
-	protocol.User = req.User
-	protocol.Signature = req.Signature
-	protocol.Secret = s.secret(election.ID)
-	protocol.Election = election
-	protocol.Skipchain = s.skipchain
-	protocol.LeaderParticipates = !participated[s.ServerIdentity().ID.String()]
+	protoDecrypt := instance.(*protocol.Decrypt)
+	protoDecrypt.User = req.User
+	protoDecrypt.Signature = req.Signature
+	protoDecrypt.Secret = s.secret(election.ID)
+	protoDecrypt.Election = election
+	protoDecrypt.Skipchain = s.skipchain
+	protoDecrypt.LeaderParticipates = !participated[s.ServerIdentity().ID.String()]
 
 	config, _ := network.Marshal(&synchronizer{
 		ID:        req.ID,
 		User:      req.User,
 		Signature: req.Signature,
 	})
-	protocol.SetConfig(&onet.GenericConfig{Data: config})
-	if err = protocol.Start(); err != nil {
+	protoDecrypt.SetConfig(&onet.GenericConfig{Data: config})
+	if err = protoDecrypt.Start(); err != nil {
 		return nil, err
 	}
 	select {
-	case <-protocol.Finished:
+	case <-protoDecrypt.Finished:
 		return &evoting.DecryptReply{}, nil
 	case <-time.After(timeout):
+		protoDecrypt.HandleTerminate(protocol.MessageTerminateDecrypt{})
 		return nil, errors.New("decrypt error, protocol timeout")
 	}
 }

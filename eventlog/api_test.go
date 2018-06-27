@@ -1,6 +1,7 @@
 package eventlog
 
 import (
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -8,13 +9,22 @@ import (
 	"github.com/dedis/cothority/omniledger/darc"
 	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber/suites"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
 )
 
+var tSuite = suites.MustFind("Ed25519")
+
 // Use this block interval for logic tests. Stress test often use a different
 // block interval.
 var testBlockInterval = 100 * time.Millisecond
+
+func TestMain(m *testing.M) {
+	log.MainTest(m)
+}
 
 func TestClient_Log(t *testing.T) {
 	s := newSer(t)
@@ -23,44 +33,34 @@ func TestClient_Log(t *testing.T) {
 
 	owner := darc.NewSignerEd25519(nil, nil)
 	c := NewClient(s.roster)
-	err := c.Init(owner, testBlockInterval)
+	eventlogID, err := c.Init(owner, testBlockInterval)
 	require.Nil(t, err)
+
+	key := eventlogID.Slice()
+	require.Equal(t, 64, len(key))
+
+	waitForKey(t, leader.omni, c.ID, key, testBlockInterval)
 
 	ids, err := c.Log(NewEvent("auth", "user alice logged out"),
 		NewEvent("auth", "user bob logged out"),
 		NewEvent("auth", "user bob logged back in"))
 	require.Nil(t, err)
-	require.True(t, len(ids) == 3)
+	require.Equal(t, 3, len(ids))
+	require.Equal(t, 64, len(ids[2]))
 
 	// Loop while we wait for the next block to be created.
-	found := false
-	for ct := 0; ct < 10; ct++ {
-		req := &omniledger.GetProof{
-			Version: omniledger.CurrentVersion,
-			Key:     ids[1],
-			ID:      c.ID,
-		}
-		resp, err := leader.omni.GetProof(req)
-		if err == nil {
-			p := resp.Proof.InclusionProof
-			if p.Match() {
-				found = true
-				break
-			}
-		} else {
-			t.Log("err", err)
-		}
-		time.Sleep(testBlockInterval)
-	}
-	if !found {
-		t.Fatal("timeout")
-	}
+	waitForKey(t, leader.omni, c.ID, ids[2], testBlockInterval)
 
 	// Check consistency and # of events.
-	require.NoError(t, leader.checkBuckets(c.ID, 3))
+	for i := 0; i < 10; i++ {
+		leader.waitForBlock(c.ID)
+		if err = leader.checkBuckets(*eventlogID, c.ID, 3); err == nil {
+			break
+		}
+	}
 
 	// Fetch index, and check its length.
-	idx := checkProof(t, leader.omni, theEventLog.Slice(), c.ID)
+	idx := checkProof(t, leader.omni, eventlogID.Slice(), c.ID)
 	expected := 64
 	require.Equal(t, len(idx), expected, fmt.Sprintf("index key content is %v, expected %v", len(idx), expected))
 
@@ -96,8 +96,9 @@ func TestClient_Log200(t *testing.T) {
 
 	owner := darc.NewSignerEd25519(nil, nil)
 	c := NewClient(s.roster)
-	err := c.Init(owner, time.Second)
+	eventlogID, err := c.Init(owner, time.Second)
 	require.Nil(t, err)
+	waitForKey(t, leader.omni, c.ID, eventlogID.Slice(), time.Second)
 
 	logCount := 100
 	for ct := 0; ct < logCount; ct++ {
@@ -113,12 +114,16 @@ func TestClient_Log200(t *testing.T) {
 	_, err = c.Log(evs...)
 	require.Nil(t, err)
 
-	leader.waitForBlock(c.ID)
-	leader.waitForBlock(c.ID)
-	require.NoError(t, leader.checkBuckets(c.ID, 2*logCount))
+	for i := 0; i < 10; i++ {
+		leader.waitForBlock(c.ID)
+		if err = leader.checkBuckets(*eventlogID, c.ID, 2*logCount); err == nil {
+			break
+		}
+	}
+	require.Nil(t, err)
 
 	// Fetch index, and check its length.
-	idx := checkProof(t, leader.omni, theEventLog.Slice(), c.ID)
+	idx := checkProof(t, leader.omni, eventlogID.Slice(), c.ID)
 	expected := 64
 	require.Equal(t, len(idx), expected, fmt.Sprintf("index key content is %v, expected %v", len(idx), expected))
 
@@ -145,6 +150,7 @@ func TestClient_Log200(t *testing.T) {
 		var e Event
 		require.Nil(t, protobuf.Decode(eventBuf, &e))
 	}
+	require.Nil(t, s.local.WaitDone(10*time.Second))
 }
 
 func checkProof(t *testing.T, omni *omniledger.Service, key []byte, scID skipchain.SkipBlockID) []byte {
@@ -172,8 +178,9 @@ func TestClient_Search(t *testing.T) {
 
 	owner := darc.NewSignerEd25519(nil, nil)
 	c := NewClient(s.roster)
-	err := c.Init(owner, testBlockInterval)
+	eventlogID, err := c.Init(owner, testBlockInterval)
 	require.Nil(t, err)
+	waitForKey(t, leader.omni, c.ID, eventlogID.Slice(), testBlockInterval)
 
 	// Search before any events are logged.
 	req := &SearchRequest{ID: c.ID}
@@ -200,19 +207,29 @@ func TestClient_Search(t *testing.T) {
 		_, err := c.Log(Event{Topic: topic, Content: fmt.Sprintf("test event at time %v", ct), When: tm0 + ct})
 		require.Nil(t, err)
 	}
-	leader.waitForBlock(c.ID)
-	leader.waitForBlock(c.ID)
-	require.NoError(t, leader.checkBuckets(c.ID, logCount))
+	for i := 0; i < 10; i++ {
+		leader.waitForBlock(c.ID)
+		if err = leader.checkBuckets(*eventlogID, c.ID, logCount); err == nil {
+			break
+		}
+	}
+
+	// Without EventLogID, we should get nothing
+	req = &SearchRequest{ID: c.ID}
+	resp, err = c.Search(req)
+	require.Nil(t, err)
+	require.NotNil(t, resp)
+	require.Equal(t, 0, len(resp.Events))
 
 	// Search for all.
-	req = &SearchRequest{ID: c.ID}
+	req = &SearchRequest{EventLogID: *eventlogID, ID: c.ID}
 	resp, err = c.Search(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
 	require.Equal(t, 20, len(resp.Events))
 
 	// Search by time range.
-	req = &SearchRequest{ID: c.ID, From: tm0 + 3, To: tm0 + 8}
+	req = &SearchRequest{EventLogID: *eventlogID, ID: c.ID, From: tm0 + 3, To: tm0 + 8}
 	resp, err = c.Search(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
@@ -220,7 +237,7 @@ func TestClient_Search(t *testing.T) {
 	require.Equal(t, 5, len(resp.Events))
 
 	// Search by topic, should find half of them.
-	req = &SearchRequest{ID: c.ID, Topic: "a"}
+	req = &SearchRequest{EventLogID: *eventlogID, ID: c.ID, Topic: "a"}
 	resp, err = c.Search(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
@@ -228,7 +245,7 @@ func TestClient_Search(t *testing.T) {
 	require.Equal(t, 10, len(resp.Events))
 
 	// Search by time range and topic.
-	req = &SearchRequest{ID: c.ID, Topic: "a", From: tm0 + 3, To: tm0 + 8}
+	req = &SearchRequest{EventLogID: *eventlogID, ID: c.ID, Topic: "a", From: tm0 + 3, To: tm0 + 8}
 	resp, err = c.Search(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
@@ -238,7 +255,7 @@ func TestClient_Search(t *testing.T) {
 	// Cause truncation.
 	sm := searchMax
 	searchMax = 5
-	req = &SearchRequest{ID: c.ID}
+	req = &SearchRequest{EventLogID: *eventlogID, ID: c.ID}
 	resp, err = c.Search(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
@@ -254,10 +271,142 @@ func TestClient_Search(t *testing.T) {
 	leader.waitForBlock(c.ID)
 
 	// Search from the last event, expect only it, not previous ones.
-	req = &SearchRequest{ID: c.ID, From: tm}
+	req = &SearchRequest{EventLogID: *eventlogID, ID: c.ID, From: tm}
 	resp, err = c.Search(req)
 	require.Nil(t, err)
 	require.NotNil(t, resp)
 	require.Equal(t, 1, len(resp.Events))
 	require.False(t, resp.Truncated)
+}
+
+func waitForKey(t *testing.T, s *omniledger.Service, scID skipchain.SkipBlockID, key []byte, interval time.Duration) [][]byte {
+	if len(key) == 0 {
+		t.Fatal("key len", len(key))
+	}
+	var found bool
+	var resp *omniledger.GetProofResponse
+	for ct := 0; ct < 10; ct++ {
+		req := &omniledger.GetProof{
+			Version: omniledger.CurrentVersion,
+			Key:     key,
+			ID:      scID,
+		}
+		var err error
+		resp, err = s.GetProof(req)
+		if err == nil {
+			p := resp.Proof.InclusionProof
+			if p.Match() {
+				found = true
+				break
+			}
+		} else {
+			t.Log("err", err)
+		}
+		time.Sleep(interval)
+	}
+	if !found {
+		t.Fatal("timeout")
+	}
+	_, vs, err := resp.Proof.KeyValue()
+	require.NoError(t, err)
+	return vs
+}
+
+type ser struct {
+	local    *onet.LocalTest
+	hosts    []*onet.Server
+	roster   *onet.Roster
+	services []*Service
+}
+
+func (s *ser) close() {
+	for _, x := range s.services {
+		close(x.omni.CloseQueues)
+	}
+	s.local.CloseAll()
+}
+
+func (s *ser) check(t *testing.T, scID skipchain.SkipBlockID, what string, f func() bool) {
+	for ct := 0; ct < 10; ct++ {
+		if f() == true {
+			return
+		}
+		t.Log("check failed, sleep and retry")
+		s.services[0].waitForBlock(scID)
+	}
+	t.Fatalf("check for %v failed", what)
+}
+
+func newSer(t *testing.T) *ser {
+	s := &ser{
+		local: onet.NewTCPTest(tSuite),
+	}
+	s.hosts, s.roster, _ = s.local.GenTree(2, true)
+
+	for _, sv := range s.local.GetServices(s.hosts, sid) {
+		service := sv.(*Service)
+		s.services = append(s.services, service)
+	}
+
+	return s
+}
+
+// checkBuckets walks all the buckets for a given eventlog and returns an error
+// if an event is in the wrong bucket. This function is useful to check the
+// correctness of buckets.
+func (s *Service) checkBuckets(objID omniledger.InstanceID, id skipchain.SkipBlockID, ct0 int) error {
+	v := s.omni.GetCollectionView(id)
+	el := eventLog{ID: objID.Slice(), v: v}
+
+	id, b, err := el.getLatestBucket()
+	if err != nil {
+		return err
+	}
+	if b == nil {
+		return errors.New("nil bucket")
+	}
+
+	// bEnd is normally updated from the last bucket's start. For the latest
+	// bucket, bEnd is now.
+	bEnd := time.Now().UnixNano()
+	end := time.Unix(0, bEnd)
+
+	ct := 0
+	i := 0
+	for {
+		st := time.Unix(0, b.Start)
+
+		// check each event
+		for j, e := range b.EventRefs {
+			ev, err := getEventByID(v, e)
+			if err != nil {
+				return err
+			}
+			when := time.Unix(0, ev.When)
+			if when.Before(st) {
+				return fmt.Errorf("bucket %v, event %v before start (%v<%v)", i, j, when, st)
+			}
+			if when.After(end) {
+				return fmt.Errorf("bucket %v, event %v after end (%v>%v)", i, j, when, end)
+			}
+			ct++
+		}
+
+		// advance to prev bucket
+		if b.isFirst() {
+			break
+		}
+		bEnd = b.Start
+		end = time.Unix(0, bEnd)
+		id = b.Prev
+		b, err = el.getBucketByID(id)
+		if err != nil {
+			return err
+		}
+		i++
+	}
+	if ct0 != 0 && ct0 != ct {
+		return fmt.Errorf("expected %v, found %v events", ct0, ct)
+	}
+	return nil
 }

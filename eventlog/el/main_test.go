@@ -52,10 +52,13 @@ func Test(t *testing.T) {
 	_, err = doCreate("test2", roster, blockInterval)
 	require.Nil(t, err)
 
+	// Make sure the eventlogs are in the blockchain.
+	time.Sleep(2 * blockInterval)
+
 	c, err := loadConfigs(getDataPath("el"))
 	require.Nil(t, err)
 	require.Equal(t, 2, len(c))
-	// No need to check the order here, because iotuil.ReadDir returns them
+	// No need to check the order here, because ioutil.ReadDir returns them
 	// sorted by filename = sorted by ID. We don't know which ID will be lower,
 	// but for this test we don't care.
 	require.True(t, c[0].Name == "test" || c[1].Name == "test")
@@ -81,7 +84,8 @@ func Test(t *testing.T) {
 
 	t.Log("search: get all")
 	b := &bytes.Buffer{}
-	cliApp.Metadata["stdout"] = b
+	cliApp.Writer = b
+	cliApp.ErrWriter = b
 	args = []string{"el", "search"}
 	err = cliApp.Run(args)
 	require.Contains(t, string(b.Bytes()), "Test Message")
@@ -89,7 +93,8 @@ func Test(t *testing.T) {
 
 	t.Log("search: limit by topic")
 	b = &bytes.Buffer{}
-	cliApp.Metadata["stdout"] = b
+	cliApp.Writer = b
+	cliApp.ErrWriter = b
 	args = []string{"el", "search", "-topic", "testTopic1"}
 	err = cliApp.Run(args)
 	require.Contains(t, string(b.Bytes()), "Test Message")
@@ -97,7 +102,8 @@ func Test(t *testing.T) {
 
 	t.Log("search: limit by count")
 	b = &bytes.Buffer{}
-	cliApp.Metadata["stdout"] = b
+	cliApp.Writer = b
+	cliApp.ErrWriter = b
 	args = []string{"el", "search", "-count", "1"}
 	err = cliApp.Run(args)
 	require.Contains(t, string(b.Bytes()), "Test Message")

@@ -615,59 +615,85 @@ func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 	return result
 }
 
-// Store stores the given SkipBlock in the service-list
-func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
-	var result SkipBlockID
+// StoreBlocks stores the set of blocks in the boltdb in a transaction,
+// so that the db is consistent at every moment.
+func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
+	var result []SkipBlockID
 	err := db.Update(func(tx *bolt.Tx) error {
-		sbOld, err := db.getFromTx(tx, sb.Hash)
-		if err != nil {
-			return errors.New("failed to get skipblock with error: " + err.Error())
+		fl := blocks[len(blocks)-1].ForwardLink
+		if len(fl) > 0 {
+			if db.GetByID(fl[len(fl)-1].To) == nil {
+				return errors.New("can't have last block pointing into empty space")
+			}
 		}
-		if sbOld != nil {
-			// If this skipblock already exists, only copy forward-links and
-			// new children.
-			if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
-				for i, fl := range sb.ForwardLink {
-					if i < len(sbOld.ForwardLink) || fl.IsEmpty() {
-						// Don't overwrite existing forwardlinks and ignore empty links
-						continue
-					}
-					if err := fl.Verify(cothority.Suite, sbOld.Roster.Publics()); err != nil {
-						return errors.New("Got a known block with wrong signature in forward-link with error: " + err.Error())
-					}
-					if err := sbOld.AddForwardLink(fl, i); err != nil {
-						log.Error(err)
-						return nil
+		for i, sb := range blocks {
+			sbOld, err := db.getFromTx(tx, sb.Hash)
+			if err != nil {
+				return errors.New("failed to get skipblock with error: " + err.Error())
+			}
+			if sbOld != nil {
+				// If this skipblock already exists, only copy forward-links and
+				// new children.
+				if len(sb.ForwardLink) > len(sbOld.ForwardLink) {
+					for i, fl := range sb.ForwardLink {
+						if i < len(sbOld.ForwardLink) || fl.IsEmpty() {
+							// Don't overwrite existing forwardlinks and ignore empty links
+							continue
+						}
+						if err := fl.Verify(cothority.Suite, sbOld.Roster.Publics()); err != nil {
+							return errors.New("Got a known block with wrong signature in forward-link with error: " + err.Error())
+						}
+						if err := sbOld.AddForwardLink(fl, i); err != nil {
+							log.Error(err)
+							return nil
+						}
 					}
 				}
+				if len(sb.ChildSL) > len(sbOld.ChildSL) {
+					sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
+				}
+				err := db.storeToTx(tx, sbOld)
+				if err != nil {
+					return err
+				}
+			} else {
+				if !db.HasForwardLink(sb) {
+					found := false
+					for j := 0; j < i; j++ {
+						for _, fl := range blocks[j].ForwardLink {
+							if fl.To.Equal(sb.Hash) {
+								found = true
+							}
+						}
+					}
+					if !found {
+						return fmt.Errorf("Tried to store unlinkable block: %+v", sb.SkipBlockFix)
+					}
+				}
+				err := db.storeToTx(tx, sb)
+				if err != nil {
+					return err
+				}
+				db.latestUpdate(sb)
 			}
-			if len(sb.ChildSL) > len(sbOld.ChildSL) {
-				sbOld.ChildSL = append(sbOld.ChildSL, sb.ChildSL[len(sbOld.ChildSL):]...)
-			}
-			err := db.storeToTx(tx, sbOld)
-			if err != nil {
-				return err
-			}
-		} else {
-			if !db.HasForwardLink(sb) {
-				return fmt.Errorf("Tried to store unlinkable block: %+v", sb.SkipBlockFix)
-			}
-			err := db.storeToTx(tx, sb)
-			if err != nil {
-				return err
-			}
-			db.latestUpdate(sb)
+			result = append(result, sb.Hash)
 		}
-		result = sb.Hash
 		return nil
 	})
 
-	if err != nil {
-		log.Error(err.Error())
-		return nil
-	}
+	return result, err
+}
 
-	return result
+// Store stores the given SkipBlock in the service-list
+func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
+	ids, err := db.StoreBlocks([]*SkipBlock{sb})
+	if err != nil {
+		log.Error(err)
+	}
+	if len(ids) > 0 {
+		return ids[0]
+	}
+	return nil
 }
 
 // HasForwardLink verififes if sb can be accepted in the database by searching

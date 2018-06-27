@@ -6,13 +6,11 @@ import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.omniledger.*;
 import ch.epfl.dedis.lib.omniledger.darc.*;
-import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * ValueInstance represents a simple value store on omniledger.
@@ -120,9 +118,8 @@ public class ValueInstance {
 
     /**
      * @return the id of the instance
-     * @throws CothorityCryptoException
      */
-    public InstanceId getId() throws CothorityCryptoException {
+    public InstanceId getId() {
         return instance.getId();
     }
 

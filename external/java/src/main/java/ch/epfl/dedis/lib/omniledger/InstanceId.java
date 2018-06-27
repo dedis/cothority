@@ -84,4 +84,13 @@ public class InstanceId implements HashId {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Creates an instance ID of all zeros.
+     * @return the zero instance ID
+     * @throws CothorityCryptoException
+     */
+    public static InstanceId zero() throws CothorityCryptoException {
+        return new InstanceId(DarcId.zero(), SubId.zero());
+    }
 }

@@ -70,67 +70,91 @@ func (d *Decrypt) Start() error {
 
 // HandlePrompt retrieves the mixes, verifies them and performs a partial decryption
 // on the last mix before appending it to the election skipchain.
+// LG: rewrote this part to correctly call `Done` even if something fails.
+// There are three parts now:
+//  1. Verification of state - if this fails, it's over and `Done` is called
+//  2. Create decryption block and send it to the leader - if it fails,
+//   `Done` is called
+//  3. Send the decryption block to the skipchain - also will have `Done`
+//   called if it fails
 func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
-	mixes, err := d.Election.Mixes(d.Skipchain)
+	var mixes []*lib.Mix
+	var partials []*lib.Partial
+	err := func() error {
+		var err error
+		mixes, err = d.Election.Mixes(d.Skipchain)
+		if err != nil {
+			return err
+		}
+		target := 2 * len(d.Election.Roster.List) / 3
+		if len(mixes) <= target {
+			return errors.New("Not enough mixes")
+		}
+		partials, err = d.Election.Partials(d.Skipchain)
+		return err
+	}()
 	if err != nil {
+		d.Done()
 		return err
 	}
-	target := 2 * len(d.Election.Roster.List) / 3
-	if len(mixes) <= target {
-		return errors.New("Not enough mixes")
-	}
-	partials, err := d.Election.Partials(d.Skipchain)
-	delegate := func() error {
-		if d.IsRoot() {
-			d.successReplies = len(partials)
-			if d.LeaderParticipates {
-				d.successReplies++
+
+	var partial *lib.Partial
+	if !d.IsRoot() || d.LeaderParticipates {
+		err := func() error {
+			mix := mixes[len(mixes)-1]
+			points := make([]kyber.Point, len(mix.Ballots))
+			for i := range points {
+				points[i] = lib.Decrypt(d.Secret.V, mix.Ballots[i].Alpha, mix.Ballots[i].Beta)
 			}
-			d.Broadcast(&PromptDecrypt{})
+			index := -1
+			for i, node := range d.Election.Roster.List {
+				if node.Public.Equal(d.Public()) {
+					index = i
+					break
+				}
+			}
+			if index == -1 {
+				return d.SendTo(d.Root(), &TerminateDecrypt{Error: "couldn't find index in Roster"})
+			}
+
+			partial = &lib.Partial{
+				Points: points,
+				NodeID: d.ServerIdentity().ID,
+			}
+			data, err := d.ServerIdentity().Public.MarshalBinary()
+			if err != nil {
+				return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})
+			}
+			sig, err := schnorr.Sign(cothority.Suite, d.Private(), data)
+			if err != nil {
+				return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})
+			}
+			partial.Signature = sig
 			return nil
-		}
-		// report to root
-		defer d.Done()
-		return d.SendTo(d.Root(), &TerminateDecrypt{})
-	}
-	if d.IsRoot() && !d.LeaderParticipates {
-		return delegate()
-	}
-
-	mix := mixes[len(mixes)-1]
-	points := make([]kyber.Point, len(mix.Ballots))
-	for i := range points {
-		points[i] = lib.Decrypt(d.Secret.V, mix.Ballots[i].Alpha, mix.Ballots[i].Beta)
-	}
-	index := -1
-	for i, node := range d.Election.Roster.List {
-		if node.Public.Equal(d.Public()) {
-			index = i
-			break
+		}()
+		if err == nil {
+			transaction := lib.NewTransaction(partial, d.User, d.Signature)
+			if err = lib.StoreUsingWebsocket(d.Election.ID, d.Election.Roster, transaction); err != nil {
+				d.Done()
+				return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})
+			}
+		} else {
+			d.Done()
+			return err
 		}
 	}
-	if index == -1 {
-		return d.SendTo(d.Root(), &TerminateDecrypt{Error: "couldn't find index in Roster"})
-	}
 
-	partial := &lib.Partial{
-		Points: points,
-		NodeID: d.ServerIdentity().ID,
+	if d.IsRoot() {
+		d.successReplies = len(partials)
+		if d.LeaderParticipates {
+			d.successReplies++
+		}
+		d.Broadcast(&PromptDecrypt{})
+		return nil
 	}
-	data, err := d.ServerIdentity().Public.MarshalBinary()
-	if err != nil {
-		return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})
-	}
-	sig, err := schnorr.Sign(cothority.Suite, d.Private(), data)
-	if err != nil {
-		return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})
-	}
-	partial.Signature = sig
-	transaction := lib.NewTransaction(partial, d.User, d.Signature)
-	if err = lib.StoreUsingWebsocket(d.Election.ID, d.Election.Roster, transaction); err != nil {
-		return d.SendTo(d.Root(), &TerminateDecrypt{Error: err.Error()})
-	}
-	return delegate()
+	// report to root
+	d.Done()
+	return d.SendTo(d.Root(), &TerminateDecrypt{})
 }
 
 // finish terminates the protocol within onet.

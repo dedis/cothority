@@ -46,8 +46,24 @@ public class SubId implements HashId {
         return DatatypeConverter.printHexBinary(id);
     }
 
+    /**
+     * Creates a sub ID with all bytes set to 0.
+     * @return the sub ID
+     * @throws CothorityCryptoException
+     */
     public static SubId zero() throws CothorityCryptoException {
         return new SubId(new byte[32]);
+    }
+
+    /**
+     * Creates a sub ID with the first byte set to 1.
+     * @return the sub ID
+     * @throws CothorityCryptoException
+     */
+    public static SubId one() throws CothorityCryptoException {
+        byte[] buf  = new byte[32];
+        buf[31] = 1;
+        return new SubId(buf);
     }
 
     public static SubId random() throws CothorityCryptoException{

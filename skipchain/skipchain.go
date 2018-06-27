@@ -410,6 +410,7 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 // the database when SyncChain returns!
 func (s *Service) SyncChain(roster *onet.Roster, latest SkipBlockID) error {
 	// loop on getBlocks, fetching 10 at a time
+	var allBlocks []*SkipBlock
 	for {
 		blocks, err := s.getBlocks(roster, latest, 10)
 		if err != nil {
@@ -419,24 +420,24 @@ func (s *Service) SyncChain(roster *onet.Roster, latest SkipBlockID) error {
 			return errors.New("didn't find any corresponding blocks")
 		}
 
-		for _, sb := range blocks {
-			if err := sb.VerifyForwardSignatures(); err != nil {
-				return err
+		fBlock := blocks[0]
+		if !s.db.HasForwardLink(fBlock) {
+			if latest.Equal(fBlock.SkipChainID()) {
+				return errors.New("synching failed even when trying to start at the genesis block")
 			}
-			if !s.db.HasForwardLink(sb) {
-				if latest.Equal(sb.SkipChainID()) {
-					return errors.New("synching failed even when trying to start at the genesis block")
-				}
-				log.Lvl3("couldn't store synched block - synching from genesis block")
-				return s.SyncChain(sb.Roster, sb.SkipChainID())
-			}
-			s.db.Store(sb)
-			if len(sb.ForwardLink) == 0 {
-				return nil
-			}
-			latest = sb.Hash
+			log.Lvl3("couldn't store synched block - synching from genesis block")
+			return s.SyncChain(fBlock.Roster, fBlock.SkipChainID())
 		}
+		allBlocks = append(allBlocks, blocks...)
+
+		lBlock := blocks[len(blocks)-1]
+		if len(lBlock.ForwardLink) == 0 {
+			break
+		}
+		latest = lBlock.Hash
 	}
+	_, err := s.db.StoreBlocks(allBlocks)
+	return err
 }
 
 // getBlocks uses ProtocolGetBlocks to return up to n blocks, traversing the
@@ -883,11 +884,8 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	if err = src.VerifyForwardSignatures(); err != nil {
 		return errors.New("Wrong BFT-signature: " + err.Error())
 	}
-	if s.db.Store(src).IsNull() {
-		return errors.New("couldn't store new forward link")
-	}
-	if s.db.Store(dst).IsNull() {
-		return errors.New("couldn't store new block")
+	if _, err := s.db.StoreBlocks([]*SkipBlock{src, dst}); err != nil {
+		return errors.New("couldn't store new forward link or new block: " + err.Error())
 	}
 	var proof []*SkipBlock
 	pointer := s.db.GetByID(dst.SkipChainID())
@@ -1212,21 +1210,14 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 		return
 	}
 	for _, sb := range sbs.SkipBlocks {
-		if err := sb.VerifyForwardSignatures(); err != nil {
-			log.Error(err)
-			return
-		}
 		if !s.blockIsFriendly(sb) {
 			log.Lvlf2("%s: block is not friendly: %x", s.ServerIdentity(), sb.Hash)
 			return
 		}
-		// We trust the db.Store to make sure that some block is correctly
-		// forward-linking to this block.
-		if !s.db.HasForwardLink(sb) {
-			log.Errorf("%s: couldn't store block %+v", s.ServerIdentity(), sb.SkipBlockFix)
-			continue
-		}
-		s.db.Store(sb)
+	}
+	_, err := s.db.StoreBlocks(sbs.SkipBlocks)
+	if err != nil {
+		log.Error(err)
 	}
 }
 

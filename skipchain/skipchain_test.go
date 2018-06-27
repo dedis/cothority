@@ -570,60 +570,6 @@ func TestService_ParallelGenesis(t *testing.T) {
 	}
 }
 
-func TestService_ParallelStoreBlock(t *testing.T) {
-	local := onet.NewLocalTest(cothority.Suite)
-	defer waitPropagationFinished(t, local)
-	defer local.CloseAll()
-	_, roster, s1 := makeHELS(local, 5)
-	ssb := &StoreSkipBlock{
-		NewBlock: &SkipBlock{
-			SkipBlockFix: &SkipBlockFix{
-				MaximumHeight: 1,
-				BaseHeight:    1,
-				Roster:        roster,
-				Data:          []byte{},
-			},
-		},
-	}
-	reply, err := s1.StoreSkipBlock(ssb)
-	if err != nil {
-		t.Error(err)
-	}
-
-	const nbrRoutines = 20
-	const numBlocks = 100
-	errs := make(chan error, nbrRoutines*numBlocks)
-
-	wg := &sync.WaitGroup{}
-	wg.Add(nbrRoutines)
-	for i := 0; i < nbrRoutines; i++ {
-		go func(sb *SkipBlock) {
-			for j := 0; j < numBlocks; j++ {
-				_, err := s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: []byte{}, NewBlock: sb})
-				if err != nil {
-					errs <- err
-					break
-				}
-			}
-			wg.Done()
-		}(reply.Latest.Copy())
-	}
-	wg.Wait()
-
-	select {
-	case err := <-errs:
-		t.Error("got an error", err)
-	default:
-		t.Log("congratulations, no errors")
-	}
-
-	n := s1.db.Length()
-	// plus 1 for the genesis block
-	if n != numBlocks*nbrRoutines+1 {
-		t.Error("num blocks is wrong:", n)
-	}
-}
-
 func TestService_Propagation(t *testing.T) {
 	nbrNodes := 60
 	if testing.Short() {
