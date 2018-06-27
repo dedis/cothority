@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
-func Test(t *testing.T) {
+func TestCli(t *testing.T) {
 	dir, err := ioutil.TempDir("", "ol-test")
 	if err != nil {
 		t.Fatal(err)
@@ -61,7 +61,7 @@ func Test(t *testing.T) {
 	err = g.Save(rf)
 	require.NoError(t, err)
 
-	t.Log("create: ")
+	log.Lvl1("create: ")
 	b := &bytes.Buffer{}
 	cliApp.Writer = b
 	cliApp.ErrWriter = b
@@ -73,7 +73,7 @@ func Test(t *testing.T) {
 	require.IsType(t, "", ol)
 	os.Setenv("OL", ol.(string))
 
-	t.Log("show: ")
+	log.Lvl1("show: ")
 	b = &bytes.Buffer{}
 	cliApp.Writer = b
 	cliApp.ErrWriter = b

@@ -32,8 +32,8 @@ func init() {
 // event", and To == 0 means "until now". From and To should be set using the
 // UnixNano() method in package time.
 type SearchRequest struct {
-	EventLogID omniledger.InstanceID
 	ID         skipchain.SkipBlockID
+	EventLogID omniledger.InstanceID
 	Topic      string // Return events where Event.Topic == Topic, if Topic != "".
 	From       int64  // Return events where When is > From.
 	To         int64  // Return events where When is <= To.

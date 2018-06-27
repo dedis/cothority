@@ -3,7 +3,6 @@ package eventlog
 import (
 	"bytes"
 	"errors"
-	"time"
 
 	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/omniledger/darc/expression"
@@ -18,9 +17,9 @@ import (
 type Client struct {
 	olClient *omniledger.Client
 	elClient *onet.Client
-	// Signers are the Darc signers that will sign events sent with this client.
+	// Signers are the Darc signers that will sign transactions sent with this client.
 	Signers    []darc.Signer
-	InstanceID omniledger.InstanceID
+	EventlogID omniledger.InstanceID
 }
 
 // NewClient creates a new client to talk to the eventlog service.
@@ -43,44 +42,38 @@ func AddWriter(r darc.Rules, expr expression.Expr) darc.Rules {
 	return r
 }
 
-// Init is broken right now.
-func (c *Client) Init(owner darc.Signer, blockInterval time.Duration) (*omniledger.InstanceID, error) {
-	return nil, errors.New("not impl")
-}
-
-func (c *Client) initEventLog(baseID darc.ID) (*omniledger.InstanceID, error) {
+// Create creates a new event log. Upon return, c.EventlogID will be correctly
+// set. This method is synchronous: it will only return once the new eventlog has
+// been committed into the OmniLedger (or after a timeout).
+func (c *Client) Create(baseID darc.ID) error {
 	instr := omniledger.Instruction{
 		InstanceID: omniledger.InstanceID{
 			DarcID: baseID,
 		},
-		Nonce:  omniledger.GenNonce(),
 		Index:  0,
 		Length: 1,
 		Spawn:  &omniledger.Spawn{ContractID: contractName},
 	}
 	if err := instr.SignBy(c.Signers...); err != nil {
-		return nil, err
+		return err
 	}
 	tx := omniledger.ClientTransaction{
 		Instructions: []omniledger.Instruction{instr},
 	}
 	if _, err := c.olClient.AddTransaction(tx); err != nil {
-		return nil, err
+		return err
 	}
+
 	var subID omniledger.SubID
 	copy(subID[:], instr.Hash())
-	objID := omniledger.InstanceID{
+	c.EventlogID = omniledger.InstanceID{
 		DarcID: baseID,
 		SubID:  subID,
 	}
-	return &objID, nil
-}
 
-// LoadFromExisting expects the omniledger to already be initialised and the
-// instance ID should refer to an eventlog contract.
-func (c *Client) LoadFromExisting(owner darc.Signer, ol *omniledger.Client, instanceID omniledger.InstanceID) error {
-	// we need to load a eventlog index...
-	return errors.New("not implemented")
+	// Wait for GetProof to see it. (and timeout)
+
+	return nil
 }
 
 // A LogID is an opaque unique identifier useful to find a given log message later
@@ -89,7 +82,7 @@ type LogID []byte
 
 // Log asks the service to log events.
 func (c *Client) Log(ev ...Event) ([]LogID, error) {
-	tx, keys, err := makeTx(c.InstanceID, ev, c.Signers)
+	tx, keys, err := makeTx(c.EventlogID, ev, c.Signers)
 	if err != nil {
 		return nil, err
 	}

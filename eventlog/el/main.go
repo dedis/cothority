@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -16,9 +15,7 @@ import (
 	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/kyber/util/key"
-	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -41,18 +38,6 @@ var cmds = cli.Commands{
 		Action: create,
 	},
 	{
-		Name:    "show",
-		Usage:   "show the known configs",
-		Aliases: []string{"s"},
-		Action:  show,
-		Flags: []cli.Flag{
-			cli.BoolFlag{
-				Name:  "long, l",
-				Usage: "long listing",
-			},
-		},
-	},
-	{
 		Name:    "log",
 		Usage:   "log one or more messages",
 		Aliases: []string{"l"},
@@ -68,8 +53,9 @@ var cmds = cli.Commands{
 				Usage:  "the OmniLedger config",
 			},
 			cli.StringFlag{
-				Name:  "eid",
-				Usage: "the eventlog id (64 hex bytes)",
+				Name:   "el",
+				EnvVar: "EL",
+				Usage:  "the eventlog id (64 hex bytes), from \"el create\"",
 			},
 			cli.StringFlag{
 				Name:  "topic, t",
@@ -124,8 +110,6 @@ var cmds = cli.Commands{
 var cliApp = cli.NewApp()
 
 func init() {
-	network.RegisterMessages(&config{})
-
 	cliApp.Name = "el"
 	cliApp.Usage = "Create and work with OmniLedger event logs."
 	cliApp.Version = "0.1"
@@ -135,13 +119,6 @@ func init() {
 			Name:  "debug, d",
 			Value: 0,
 			Usage: "debug-level: 1 for terse, 5 for maximal",
-		},
-		cli.StringFlag{
-			Name: "config, c",
-			// we use GetDataPath because only non-human-readable
-			// data files are stored here
-			Value: cfgpath.GetDataPath("scmgr"),
-			Usage: "path to config-file",
 		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
@@ -163,28 +140,6 @@ func create(c *cli.Context) error {
 	}
 
 	return errors.New("not implemented")
-}
-
-func show(c *cli.Context) error {
-	return errors.New("not implemented")
-	// long := c.Bool("long")
-	// dir := getDataPath("el")
-	// cfgs, err := loadConfigs(dir)
-	// if err != nil {
-	// 	return err
-	// }
-	// for i, x := range cfgs {
-	// 	name := x.Name
-	// 	if name == "" {
-	// 		name = "(none)"
-	// 	}
-	// 	if long {
-	// 		fmt.Printf("%2v: Name: %v, ID: %x\n", i+1, name, x.ID)
-	// 	} else {
-	// 		fmt.Printf("%2v: Name: %v, ID: %x\n", i+1, name, x.ID[0:8])
-	// 	}
-	// }
-	// return nil
 }
 
 func doLog(c *cli.Context) error {
@@ -334,31 +289,4 @@ func search(c *cli.Context) error {
 		return cli.NewExitError("", 1)
 	}
 	return nil
-}
-
-// getDataPath is a function pointer so that tests can hook and modify this.
-var getDataPath = cfgpath.GetDataPath
-
-func (c *config) save() error {
-	cfgDir := getDataPath("el")
-	os.MkdirAll(cfgDir, 0755)
-
-	fn := fmt.Sprintf("%x.cfg", c.ID[0:8])
-	fn = filepath.Join(cfgDir, fn)
-
-	// perms = 0400 because there is key material inside this file.
-	f, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE, 0400)
-	if err != nil {
-		return fmt.Errorf("could not write %v: %v", fn, err)
-	}
-
-	buf, err := network.Marshal(c)
-	if err != nil {
-		return err
-	}
-	_, err = f.Write(buf)
-	if err != nil {
-		return err
-	}
-	return f.Close()
 }

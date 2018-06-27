@@ -2,8 +2,6 @@ package main
 
 import (
 	"bytes"
-	"io/ioutil"
-	"os"
 	"testing"
 	"time"
 
@@ -22,18 +20,9 @@ func TestMain(m *testing.M) {
 
 const blockInterval = 1 * time.Second
 
-func Test(t *testing.T) {
+func TestCli(t *testing.T) {
 	// TODO: Fix this test.
 	t.Skip("Disabled for now.")
-
-	dir, err := ioutil.TempDir("", "el-test")
-	if err != nil {
-		t.Fatal(err)
-	}
-	getDataPath = func(in string) string {
-		return dir
-	}
-	defer os.RemoveAll(dir)
 
 	l := onet.NewTCPTest(cothority.Suite)
 	_, _, _ = l.GenTree(2, true)
@@ -52,7 +41,7 @@ func Test(t *testing.T) {
 
 	// TODO: Make this correct args?
 	args := []string{"el", "create"}
-	err = cliApp.Run(args)
+	err := cliApp.Run(args)
 	require.Nil(t, err)
 
 	// Make sure the eventlogs are in the blockchain.
