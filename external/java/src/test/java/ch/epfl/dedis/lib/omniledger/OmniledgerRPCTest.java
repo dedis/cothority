@@ -29,7 +29,6 @@ public class OmniledgerRPCTest {
 
     static Signer admin;
     static Darc genesisDarc;
-    static Configuration config;
 
     private final static Logger logger = LoggerFactory.getLogger(OmniledgerRPCTest.class);
     private TestServerController testInstanceController;
@@ -42,8 +41,7 @@ public class OmniledgerRPCTest {
                 Arrays.asList(admin.getIdentity()));
         genesisDarc = new Darc(rules, "genesis".getBytes());
 
-        config = new Configuration(testInstanceController.getRoster(), Duration.of(100, MILLIS));
-        ol = new OmniledgerRPC(genesisDarc, config);
+        ol = new OmniledgerRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(100, MILLIS));
         if (!ol.checkLiveness()){
             throw new CothorityCommunicationException("liveness check failed");
         }
@@ -143,5 +141,17 @@ public class OmniledgerRPCTest {
 
     @Test
     void updateOL() throws Exception{
+    }
+
+    /**
+     * We only give the client the roster and the genesis ID. It should be able to find the configuration, latest block
+     * and the genesis darc.
+     */
+    @Test
+    void reconnect() throws Exception {
+        OmniledgerRPC ol2 = new OmniledgerRPC(ol.getRoster(), ol.getGenesis().getSkipchainId());
+        assertEquals(ol.getConfig(), ol2.getConfig());
+        assertEquals(ol.getLatest().getId(), ol2.getLatest().getId());
+        assertEquals(ol.getGenesisDarc().getBaseId(), ol2.getGenesisDarc().getBaseId());
     }
 }

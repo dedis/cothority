@@ -9,7 +9,6 @@ import org.junit.jupiter.api.Test;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.omniledger.Configuration;
 import ch.epfl.dedis.lib.omniledger.OmniledgerRPC;
 import ch.epfl.dedis.lib.omniledger.darc.Darc;
 import ch.epfl.dedis.lib.omniledger.darc.Signer;
@@ -56,8 +55,7 @@ class EventLogInstanceTest {
             rules.put("invoke:eventlog", admin.getIdentity().toString().getBytes());
             Darc genesisDarc = new Darc(rules, "genesis".getBytes());
 
-            Configuration config = new Configuration(testInstanceController.getRoster(), Duration.of(100, MILLIS));
-            ol = new OmniledgerRPC(genesisDarc, config);
+            ol = new OmniledgerRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(100, MILLIS));
             if (!ol.checkLiveness()) {
                 throw new CothorityCommunicationException("liveness check failed");
             }

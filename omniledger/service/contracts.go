@@ -43,13 +43,6 @@ var ContractValueID = "value"
 // CmdDarcEvolve is needed to evolve a darc.
 var CmdDarcEvolve = "evolve"
 
-// Config stores all the configuration information for one skipchain. It will
-// be stored under the key "GenesisDarcID || OneNonce", in the collections. The
-// GenesisDarcID is the value of GenesisReferenceID.
-type Config struct {
-	BlockInterval time.Duration
-}
-
 // LoadConfigFromColl loads the configuration data from the collections.
 func LoadConfigFromColl(coll CollectionView) (*Config, error) {
 	// Find the genesis-darc ID.

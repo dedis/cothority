@@ -3471,41 +3471,16 @@ public final class OmniLedgerProto {
 
   }
 
-  public interface ConfigurationOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Configuration)
+  public interface ConfigOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:Config)
       com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <pre>
-     * Roster is the set of nodes responsible for omniledger
-     * </pre>
-     *
-     * <code>required .Roster roster = 1;</code>
-     */
-    boolean hasRoster();
-    /**
-     * <pre>
-     * Roster is the set of nodes responsible for omniledger
-     * </pre>
-     *
-     * <code>required .Roster roster = 1;</code>
-     */
-    ch.epfl.dedis.proto.RosterProto.Roster getRoster();
-    /**
-     * <pre>
-     * Roster is the set of nodes responsible for omniledger
-     * </pre>
-     *
-     * <code>required .Roster roster = 1;</code>
-     */
-    ch.epfl.dedis.proto.RosterProto.RosterOrBuilder getRosterOrBuilder();
 
     /**
      * <pre>
      * BlockInterval is the time in nanoseconds between two blocks
      * </pre>
      *
-     * <code>optional sint64 blockInterval = 2;</code>
+     * <code>required sint64 blockInterval = 1;</code>
      */
     boolean hasBlockInterval();
     /**
@@ -3513,27 +3488,29 @@ public final class OmniLedgerProto {
      * BlockInterval is the time in nanoseconds between two blocks
      * </pre>
      *
-     * <code>optional sint64 blockInterval = 2;</code>
+     * <code>required sint64 blockInterval = 1;</code>
      */
     long getBlockInterval();
   }
   /**
    * <pre>
-   * Configuration is the representation of the genesis configuration data.
+   * Config stores all the configuration information for one skipchain. It will
+   * be stored under the key "GenesisDarcID || OneNonce", in the collections. The
+   * GenesisDarcID is the value of GenesisReferenceID.
    * </pre>
    *
-   * Protobuf type {@code Configuration}
+   * Protobuf type {@code Config}
    */
-  public  static final class Configuration extends
+  public  static final class Config extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Configuration)
-      ConfigurationOrBuilder {
+      // @@protoc_insertion_point(message_implements:Config)
+      ConfigOrBuilder {
   private static final long serialVersionUID = 0L;
-    // Use Configuration.newBuilder() to construct.
-    private Configuration(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+    // Use Config.newBuilder() to construct.
+    private Config(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
       super(builder);
     }
-    private Configuration() {
+    private Config() {
       blockInterval_ = 0L;
     }
 
@@ -3542,7 +3519,7 @@ public final class OmniLedgerProto {
     getUnknownFields() {
       return this.unknownFields;
     }
-    private Configuration(
+    private Config(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
@@ -3568,21 +3545,8 @@ public final class OmniLedgerProto {
               }
               break;
             }
-            case 10: {
-              ch.epfl.dedis.proto.RosterProto.Roster.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                subBuilder = roster_.toBuilder();
-              }
-              roster_ = input.readMessage(ch.epfl.dedis.proto.RosterProto.Roster.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(roster_);
-                roster_ = subBuilder.buildPartial();
-              }
+            case 8: {
               bitField0_ |= 0x00000001;
-              break;
-            }
-            case 16: {
-              bitField0_ |= 0x00000002;
               blockInterval_ = input.readSInt64();
               break;
             }
@@ -3600,68 +3564,35 @@ public final class OmniLedgerProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Configuration_descriptor;
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Config_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Configuration_fieldAccessorTable
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Config_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.proto.OmniLedgerProto.Configuration.class, ch.epfl.dedis.proto.OmniLedgerProto.Configuration.Builder.class);
+              ch.epfl.dedis.proto.OmniLedgerProto.Config.class, ch.epfl.dedis.proto.OmniLedgerProto.Config.Builder.class);
     }
 
     private int bitField0_;
-    public static final int ROSTER_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.proto.RosterProto.Roster roster_;
-    /**
-     * <pre>
-     * Roster is the set of nodes responsible for omniledger
-     * </pre>
-     *
-     * <code>required .Roster roster = 1;</code>
-     */
-    public boolean hasRoster() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <pre>
-     * Roster is the set of nodes responsible for omniledger
-     * </pre>
-     *
-     * <code>required .Roster roster = 1;</code>
-     */
-    public ch.epfl.dedis.proto.RosterProto.Roster getRoster() {
-      return roster_ == null ? ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
-    }
-    /**
-     * <pre>
-     * Roster is the set of nodes responsible for omniledger
-     * </pre>
-     *
-     * <code>required .Roster roster = 1;</code>
-     */
-    public ch.epfl.dedis.proto.RosterProto.RosterOrBuilder getRosterOrBuilder() {
-      return roster_ == null ? ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
-    }
-
-    public static final int BLOCKINTERVAL_FIELD_NUMBER = 2;
+    public static final int BLOCKINTERVAL_FIELD_NUMBER = 1;
     private long blockInterval_;
     /**
      * <pre>
      * BlockInterval is the time in nanoseconds between two blocks
      * </pre>
      *
-     * <code>optional sint64 blockInterval = 2;</code>
+     * <code>required sint64 blockInterval = 1;</code>
      */
     public boolean hasBlockInterval() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
+      return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
      * <pre>
      * BlockInterval is the time in nanoseconds between two blocks
      * </pre>
      *
-     * <code>optional sint64 blockInterval = 2;</code>
+     * <code>required sint64 blockInterval = 1;</code>
      */
     public long getBlockInterval() {
       return blockInterval_;
@@ -3673,11 +3604,7 @@ public final class OmniLedgerProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasRoster()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!getRoster().isInitialized()) {
+      if (!hasBlockInterval()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -3688,10 +3615,7 @@ public final class OmniLedgerProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeMessage(1, getRoster());
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeSInt64(2, blockInterval_);
+        output.writeSInt64(1, blockInterval_);
       }
       unknownFields.writeTo(output);
     }
@@ -3703,11 +3627,7 @@ public final class OmniLedgerProto {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, getRoster());
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeSInt64Size(2, blockInterval_);
+          .computeSInt64Size(1, blockInterval_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -3719,17 +3639,12 @@ public final class OmniLedgerProto {
       if (obj == this) {
        return true;
       }
-      if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.Configuration)) {
+      if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.Config)) {
         return super.equals(obj);
       }
-      ch.epfl.dedis.proto.OmniLedgerProto.Configuration other = (ch.epfl.dedis.proto.OmniLedgerProto.Configuration) obj;
+      ch.epfl.dedis.proto.OmniLedgerProto.Config other = (ch.epfl.dedis.proto.OmniLedgerProto.Config) obj;
 
       boolean result = true;
-      result = result && (hasRoster() == other.hasRoster());
-      if (hasRoster()) {
-        result = result && getRoster()
-            .equals(other.getRoster());
-      }
       result = result && (hasBlockInterval() == other.hasBlockInterval());
       if (hasBlockInterval()) {
         result = result && (getBlockInterval()
@@ -3746,10 +3661,6 @@ public final class OmniLedgerProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasRoster()) {
-        hash = (37 * hash) + ROSTER_FIELD_NUMBER;
-        hash = (53 * hash) + getRoster().hashCode();
-      }
       if (hasBlockInterval()) {
         hash = (37 * hash) + BLOCKINTERVAL_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
@@ -3760,69 +3671,69 @@ public final class OmniLedgerProto {
       return hash;
     }
 
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config parseFrom(
         java.nio.ByteBuffer data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config parseFrom(
         java.nio.ByteBuffer data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config parseFrom(
         com.google.protobuf.ByteString data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config parseFrom(
         com.google.protobuf.ByteString data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(byte[] data)
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config parseFrom(byte[] data)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data);
     }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config parseFrom(
         byte[] data,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       return PARSER.parseFrom(data, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config parseFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config parseFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseDelimitedFrom(java.io.InputStream input)
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config parseDelimitedFrom(java.io.InputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseDelimitedFrom(
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config parseDelimitedFrom(
         java.io.InputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
     }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config parseFrom(
         com.google.protobuf.CodedInputStream input)
         throws java.io.IOException {
       return com.google.protobuf.GeneratedMessageV3
           .parseWithIOException(PARSER, input);
     }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration parseFrom(
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config parseFrom(
         com.google.protobuf.CodedInputStream input,
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws java.io.IOException {
@@ -3834,7 +3745,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
     }
-    public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.Configuration prototype) {
+    public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.Config prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
@@ -3850,28 +3761,30 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Configuration is the representation of the genesis configuration data.
+     * Config stores all the configuration information for one skipchain. It will
+     * be stored under the key "GenesisDarcID || OneNonce", in the collections. The
+     * GenesisDarcID is the value of GenesisReferenceID.
      * </pre>
      *
-     * Protobuf type {@code Configuration}
+     * Protobuf type {@code Config}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Configuration)
-        ch.epfl.dedis.proto.OmniLedgerProto.ConfigurationOrBuilder {
+        // @@protoc_insertion_point(builder_implements:Config)
+        ch.epfl.dedis.proto.OmniLedgerProto.ConfigOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Configuration_descriptor;
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Config_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Configuration_fieldAccessorTable
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Config_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.proto.OmniLedgerProto.Configuration.class, ch.epfl.dedis.proto.OmniLedgerProto.Configuration.Builder.class);
+                ch.epfl.dedis.proto.OmniLedgerProto.Config.class, ch.epfl.dedis.proto.OmniLedgerProto.Config.Builder.class);
       }
 
-      // Construct using ch.epfl.dedis.proto.OmniLedgerProto.Configuration.newBuilder()
+      // Construct using ch.epfl.dedis.proto.OmniLedgerProto.Config.newBuilder()
       private Builder() {
         maybeForceBuilderInitialization();
       }
@@ -3884,53 +3797,38 @@ public final class OmniLedgerProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
-          getRosterFieldBuilder();
         }
       }
       public Builder clear() {
         super.clear();
-        if (rosterBuilder_ == null) {
-          roster_ = null;
-        } else {
-          rosterBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000001);
         blockInterval_ = 0L;
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000001);
         return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Configuration_descriptor;
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_Config_descriptor;
       }
 
-      public ch.epfl.dedis.proto.OmniLedgerProto.Configuration getDefaultInstanceForType() {
-        return ch.epfl.dedis.proto.OmniLedgerProto.Configuration.getDefaultInstance();
+      public ch.epfl.dedis.proto.OmniLedgerProto.Config getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.Config.getDefaultInstance();
       }
 
-      public ch.epfl.dedis.proto.OmniLedgerProto.Configuration build() {
-        ch.epfl.dedis.proto.OmniLedgerProto.Configuration result = buildPartial();
+      public ch.epfl.dedis.proto.OmniLedgerProto.Config build() {
+        ch.epfl.dedis.proto.OmniLedgerProto.Config result = buildPartial();
         if (!result.isInitialized()) {
           throw newUninitializedMessageException(result);
         }
         return result;
       }
 
-      public ch.epfl.dedis.proto.OmniLedgerProto.Configuration buildPartial() {
-        ch.epfl.dedis.proto.OmniLedgerProto.Configuration result = new ch.epfl.dedis.proto.OmniLedgerProto.Configuration(this);
+      public ch.epfl.dedis.proto.OmniLedgerProto.Config buildPartial() {
+        ch.epfl.dedis.proto.OmniLedgerProto.Config result = new ch.epfl.dedis.proto.OmniLedgerProto.Config(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
-        }
-        if (rosterBuilder_ == null) {
-          result.roster_ = roster_;
-        } else {
-          result.roster_ = rosterBuilder_.build();
-        }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
         }
         result.blockInterval_ = blockInterval_;
         result.bitField0_ = to_bitField0_;
@@ -3965,19 +3863,16 @@ public final class OmniLedgerProto {
         return (Builder) super.addRepeatedField(field, value);
       }
       public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.Configuration) {
-          return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.Configuration)other);
+        if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.Config) {
+          return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.Config)other);
         } else {
           super.mergeFrom(other);
           return this;
         }
       }
 
-      public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.Configuration other) {
-        if (other == ch.epfl.dedis.proto.OmniLedgerProto.Configuration.getDefaultInstance()) return this;
-        if (other.hasRoster()) {
-          mergeRoster(other.getRoster());
-        }
+      public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.Config other) {
+        if (other == ch.epfl.dedis.proto.OmniLedgerProto.Config.getDefaultInstance()) return this;
         if (other.hasBlockInterval()) {
           setBlockInterval(other.getBlockInterval());
         }
@@ -3987,10 +3882,7 @@ public final class OmniLedgerProto {
       }
 
       public final boolean isInitialized() {
-        if (!hasRoster()) {
-          return false;
-        }
-        if (!getRoster().isInitialized()) {
+        if (!hasBlockInterval()) {
           return false;
         }
         return true;
@@ -4000,11 +3892,11 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws java.io.IOException {
-        ch.epfl.dedis.proto.OmniLedgerProto.Configuration parsedMessage = null;
+        ch.epfl.dedis.proto.OmniLedgerProto.Config parsedMessage = null;
         try {
           parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
         } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.Configuration) e.getUnfinishedMessage();
+          parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.Config) e.getUnfinishedMessage();
           throw e.unwrapIOException();
         } finally {
           if (parsedMessage != null) {
@@ -4015,177 +3907,23 @@ public final class OmniLedgerProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.proto.RosterProto.Roster roster_ = null;
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.RosterProto.Roster, ch.epfl.dedis.proto.RosterProto.Roster.Builder, ch.epfl.dedis.proto.RosterProto.RosterOrBuilder> rosterBuilder_;
-      /**
-       * <pre>
-       * Roster is the set of nodes responsible for omniledger
-       * </pre>
-       *
-       * <code>required .Roster roster = 1;</code>
-       */
-      public boolean hasRoster() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <pre>
-       * Roster is the set of nodes responsible for omniledger
-       * </pre>
-       *
-       * <code>required .Roster roster = 1;</code>
-       */
-      public ch.epfl.dedis.proto.RosterProto.Roster getRoster() {
-        if (rosterBuilder_ == null) {
-          return roster_ == null ? ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
-        } else {
-          return rosterBuilder_.getMessage();
-        }
-      }
-      /**
-       * <pre>
-       * Roster is the set of nodes responsible for omniledger
-       * </pre>
-       *
-       * <code>required .Roster roster = 1;</code>
-       */
-      public Builder setRoster(ch.epfl.dedis.proto.RosterProto.Roster value) {
-        if (rosterBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          roster_ = value;
-          onChanged();
-        } else {
-          rosterBuilder_.setMessage(value);
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <pre>
-       * Roster is the set of nodes responsible for omniledger
-       * </pre>
-       *
-       * <code>required .Roster roster = 1;</code>
-       */
-      public Builder setRoster(
-          ch.epfl.dedis.proto.RosterProto.Roster.Builder builderForValue) {
-        if (rosterBuilder_ == null) {
-          roster_ = builderForValue.build();
-          onChanged();
-        } else {
-          rosterBuilder_.setMessage(builderForValue.build());
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <pre>
-       * Roster is the set of nodes responsible for omniledger
-       * </pre>
-       *
-       * <code>required .Roster roster = 1;</code>
-       */
-      public Builder mergeRoster(ch.epfl.dedis.proto.RosterProto.Roster value) {
-        if (rosterBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
-              roster_ != null &&
-              roster_ != ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance()) {
-            roster_ =
-              ch.epfl.dedis.proto.RosterProto.Roster.newBuilder(roster_).mergeFrom(value).buildPartial();
-          } else {
-            roster_ = value;
-          }
-          onChanged();
-        } else {
-          rosterBuilder_.mergeFrom(value);
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <pre>
-       * Roster is the set of nodes responsible for omniledger
-       * </pre>
-       *
-       * <code>required .Roster roster = 1;</code>
-       */
-      public Builder clearRoster() {
-        if (rosterBuilder_ == null) {
-          roster_ = null;
-          onChanged();
-        } else {
-          rosterBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000001);
-        return this;
-      }
-      /**
-       * <pre>
-       * Roster is the set of nodes responsible for omniledger
-       * </pre>
-       *
-       * <code>required .Roster roster = 1;</code>
-       */
-      public ch.epfl.dedis.proto.RosterProto.Roster.Builder getRosterBuilder() {
-        bitField0_ |= 0x00000001;
-        onChanged();
-        return getRosterFieldBuilder().getBuilder();
-      }
-      /**
-       * <pre>
-       * Roster is the set of nodes responsible for omniledger
-       * </pre>
-       *
-       * <code>required .Roster roster = 1;</code>
-       */
-      public ch.epfl.dedis.proto.RosterProto.RosterOrBuilder getRosterOrBuilder() {
-        if (rosterBuilder_ != null) {
-          return rosterBuilder_.getMessageOrBuilder();
-        } else {
-          return roster_ == null ?
-              ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
-        }
-      }
-      /**
-       * <pre>
-       * Roster is the set of nodes responsible for omniledger
-       * </pre>
-       *
-       * <code>required .Roster roster = 1;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.RosterProto.Roster, ch.epfl.dedis.proto.RosterProto.Roster.Builder, ch.epfl.dedis.proto.RosterProto.RosterOrBuilder> 
-          getRosterFieldBuilder() {
-        if (rosterBuilder_ == null) {
-          rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.RosterProto.Roster, ch.epfl.dedis.proto.RosterProto.Roster.Builder, ch.epfl.dedis.proto.RosterProto.RosterOrBuilder>(
-                  getRoster(),
-                  getParentForChildren(),
-                  isClean());
-          roster_ = null;
-        }
-        return rosterBuilder_;
-      }
-
       private long blockInterval_ ;
       /**
        * <pre>
        * BlockInterval is the time in nanoseconds between two blocks
        * </pre>
        *
-       * <code>optional sint64 blockInterval = 2;</code>
+       * <code>required sint64 blockInterval = 1;</code>
        */
       public boolean hasBlockInterval() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
+        return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
        * <pre>
        * BlockInterval is the time in nanoseconds between two blocks
        * </pre>
        *
-       * <code>optional sint64 blockInterval = 2;</code>
+       * <code>required sint64 blockInterval = 1;</code>
        */
       public long getBlockInterval() {
         return blockInterval_;
@@ -4195,10 +3933,10 @@ public final class OmniLedgerProto {
        * BlockInterval is the time in nanoseconds between two blocks
        * </pre>
        *
-       * <code>optional sint64 blockInterval = 2;</code>
+       * <code>required sint64 blockInterval = 1;</code>
        */
       public Builder setBlockInterval(long value) {
-        bitField0_ |= 0x00000002;
+        bitField0_ |= 0x00000001;
         blockInterval_ = value;
         onChanged();
         return this;
@@ -4208,10 +3946,10 @@ public final class OmniLedgerProto {
        * BlockInterval is the time in nanoseconds between two blocks
        * </pre>
        *
-       * <code>optional sint64 blockInterval = 2;</code>
+       * <code>required sint64 blockInterval = 1;</code>
        */
       public Builder clearBlockInterval() {
-        bitField0_ = (bitField0_ & ~0x00000002);
+        bitField0_ = (bitField0_ & ~0x00000001);
         blockInterval_ = 0L;
         onChanged();
         return this;
@@ -4227,39 +3965,39 @@ public final class OmniLedgerProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Configuration)
+      // @@protoc_insertion_point(builder_scope:Config)
     }
 
-    // @@protoc_insertion_point(class_scope:Configuration)
-    private static final ch.epfl.dedis.proto.OmniLedgerProto.Configuration DEFAULT_INSTANCE;
+    // @@protoc_insertion_point(class_scope:Config)
+    private static final ch.epfl.dedis.proto.OmniLedgerProto.Config DEFAULT_INSTANCE;
     static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.Configuration();
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.Config();
     }
 
-    public static ch.epfl.dedis.proto.OmniLedgerProto.Configuration getDefaultInstance() {
+    public static ch.epfl.dedis.proto.OmniLedgerProto.Config getDefaultInstance() {
       return DEFAULT_INSTANCE;
     }
 
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<Configuration>
-        PARSER = new com.google.protobuf.AbstractParser<Configuration>() {
-      public Configuration parsePartialFrom(
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<Config>
+        PARSER = new com.google.protobuf.AbstractParser<Config>() {
+      public Config parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Configuration(input, extensionRegistry);
+        return new Config(input, extensionRegistry);
       }
     };
 
-    public static com.google.protobuf.Parser<Configuration> parser() {
+    public static com.google.protobuf.Parser<Config> parser() {
       return PARSER;
     }
 
     @java.lang.Override
-    public com.google.protobuf.Parser<Configuration> getParserForType() {
+    public com.google.protobuf.Parser<Config> getParserForType() {
       return PARSER;
     }
 
-    public ch.epfl.dedis.proto.OmniLedgerProto.Configuration getDefaultInstanceForType() {
+    public ch.epfl.dedis.proto.OmniLedgerProto.Config getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -10825,10 +10563,10 @@ public final class OmniLedgerProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_AddTxResponse_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Configuration_descriptor;
+    internal_static_Config_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Configuration_fieldAccessorTable;
+      internal_static_Config_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_GetProof_descriptor;
   private static final 
@@ -10883,23 +10621,22 @@ public final class OmniLedgerProto {
       "TxRequest\022\017\n\007version\030\001 \002(\022\022\023\n\013skipchaini" +
       "d\030\002 \002(\014\022\'\n\013transaction\030\003 \002(\0132\022.ClientTra" +
       "nsaction\" \n\rAddTxResponse\022\017\n\007version\030\001 \002" +
-      "(\022\"?\n\rConfiguration\022\027\n\006roster\030\001 \002(\0132\007.Ro" +
-      "ster\022\025\n\rblockInterval\030\002 \001(\022\"4\n\010GetProof\022" +
-      "\017\n\007version\030\001 \002(\022\022\013\n\003key\030\002 \002(\014\022\n\n\002id\030\003 \002(" +
-      "\014\":\n\020GetProofResponse\022\017\n\007version\030\001 \002(\022\022\025" +
-      "\n\005proof\030\002 \002(\0132\006.Proof\"j\n\005Proof\022(\n\016inclus" +
-      "ionProof\030\001 \002(\0132\020.CollectionProof\022\032\n\006late" +
-      "st\030\002 \002(\0132\n.SkipBlock\022\033\n\005links\030\003 \003(\0132\014.Fo" +
-      "rwardLink\"\314\002\n\017CollectionProof\022\013\n\003key\030\001 \002" +
-      "(\014\022#\n\004root\030\002 \002(\0132\025.CollectionProof.Node\022" +
-      "$\n\005steps\030\003 \003(\0132\025.CollectionProof.Step\032Q\n" +
-      "\004Step\022#\n\004left\030\001 \002(\0132\025.CollectionProof.No" +
-      "de\022$\n\005right\030\002 \002(\0132\025.CollectionProof.Node" +
-      "\032\215\001\n\004Node\022\013\n\003key\030\001 \001(\014\022\016\n\006values\030\002 \003(\014\0220" +
-      "\n\010children\030\003 \001(\0132\036.CollectionProof.Node." +
-      "Children\022\r\n\005label\030\004 \001(\014\032\'\n\010Children\022\014\n\004l" +
-      "eft\030\001 \002(\014\022\r\n\005right\030\002 \002(\014B&\n\023ch.epfl.dedi" +
-      "s.protoB\017OmniLedgerProto"
+      "(\022\"\037\n\006Config\022\025\n\rblockInterval\030\001 \002(\022\"4\n\010G" +
+      "etProof\022\017\n\007version\030\001 \002(\022\022\013\n\003key\030\002 \002(\014\022\n\n" +
+      "\002id\030\003 \002(\014\":\n\020GetProofResponse\022\017\n\007version" +
+      "\030\001 \002(\022\022\025\n\005proof\030\002 \002(\0132\006.Proof\"j\n\005Proof\022(" +
+      "\n\016inclusionProof\030\001 \002(\0132\020.CollectionProof" +
+      "\022\032\n\006latest\030\002 \002(\0132\n.SkipBlock\022\033\n\005links\030\003 " +
+      "\003(\0132\014.ForwardLink\"\314\002\n\017CollectionProof\022\013\n" +
+      "\003key\030\001 \002(\014\022#\n\004root\030\002 \002(\0132\025.CollectionPro" +
+      "of.Node\022$\n\005steps\030\003 \003(\0132\025.CollectionProof" +
+      ".Step\032Q\n\004Step\022#\n\004left\030\001 \002(\0132\025.Collection" +
+      "Proof.Node\022$\n\005right\030\002 \002(\0132\025.CollectionPr" +
+      "oof.Node\032\215\001\n\004Node\022\013\n\003key\030\001 \001(\014\022\016\n\006values" +
+      "\030\002 \003(\014\0220\n\010children\030\003 \001(\0132\036.CollectionPro" +
+      "of.Node.Children\022\r\n\005label\030\004 \001(\014\032\'\n\010Child" +
+      "ren\022\014\n\004left\030\001 \002(\014\022\r\n\005right\030\002 \002(\014B&\n\023ch.e" +
+      "pfl.dedis.protoB\017OmniLedgerProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -10941,12 +10678,12 @@ public final class OmniLedgerProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_AddTxResponse_descriptor,
         new java.lang.String[] { "Version", });
-    internal_static_Configuration_descriptor =
+    internal_static_Config_descriptor =
       getDescriptor().getMessageTypes().get(4);
-    internal_static_Configuration_fieldAccessorTable = new
+    internal_static_Config_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Configuration_descriptor,
-        new java.lang.String[] { "Roster", "BlockInterval", });
+        internal_static_Config_descriptor,
+        new java.lang.String[] { "BlockInterval", });
     internal_static_GetProof_descriptor =
       getDescriptor().getMessageTypes().get(5);
     internal_static_GetProof_fieldAccessorTable = new

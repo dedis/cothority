@@ -97,3 +97,10 @@ type GetProofResponse struct {
 	// of the included key/value pair given a genesis skipblock.
 	Proof Proof
 }
+
+// Config stores all the configuration information for one skipchain. It will
+// be stored under the key "GenesisDarcID || OneNonce", in the collections. The
+// GenesisDarcID is the value of GenesisReferenceID.
+type Config struct {
+	BlockInterval time.Duration
+}
