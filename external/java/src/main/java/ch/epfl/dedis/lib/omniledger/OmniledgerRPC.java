@@ -76,8 +76,8 @@ public class OmniledgerRPC {
      * Constructs an OmniLedgerRPC from known configuration. The constructor will communicate with the service to
      * populate other fields and perform verification.
      *
-     * @param roster - the roster to talk to
-     * @param skipchainId - the ID of the genesis skipblock, aka skipchain ID
+     * @param roster the roster to talk to
+     * @param skipchainId the ID of the genesis skipblock, aka skipchain ID
      * @throws CothorityException
      */
     public OmniledgerRPC(Roster roster, SkipblockId skipchainId) throws CothorityException {
