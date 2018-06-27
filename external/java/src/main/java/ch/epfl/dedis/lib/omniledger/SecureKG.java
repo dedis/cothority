@@ -19,18 +19,18 @@ public final class SecureKG {
         return Roster.FromToml("[[servers]]\n" +
                 "  Address = \"tls://securekg.dedis.ch:18002\"\n" +
                 "  Suite = \"Ed25519\"\n" +
-                "  Public = \"fcf9492de37b1115637206f3bc6ace77e6d8e7ae29b0b40dd7a0f18bdd2eb7db\"\n" +
+                "  Public = \"13dc1a4f714422e7952cef38efd527925341efaa3a992398cb52fa3e0e6dd2b8\"\n" +
                 "  Description = \"Conode_1\"\n" +
                 "[[servers]]\n" +
                 "  Address = \"tls://securekg.dedis.ch:18004\"\n" +
                 "  Suite = \"Ed25519\"\n" +
-                "  Public = \"11c7c22112328f151e6d853f47bb3b404bbcbcaf1bc1ab30a25eedd3d7682324\"\n" +
+                "  Public = \"705f2877119a39f366ea53f381e37234f9678dee5f17c9f20b11df7c6cdc0e64\"\n" +
                 "  Description = \"Conode_2\"\n" +
                 "[[servers]]\n" +
                 "  Address = \"tls://securekg.dedis.ch:18006\"\n" +
                 "  Suite = \"Ed25519\"\n" +
-                "  Public = \"2aec81a7d16891c4806fb73f7e247eca311415fc21a54193e84e6c73f6df9b3f\"\n" +
-                "  Description = \"Conode_3\"");
+                "  Public = \"1084f8f919112931b18a545e14e4cb668ba0b6d4884f64b463fe3fa4493b8f0e\"\n" +
+                "  Description = \"Conode_3\"\n");
     }
 
     /**
@@ -38,15 +38,17 @@ public final class SecureKG {
      * @return the genesis skipblock ID
      */
     public static SkipblockId getSkipchainId() throws CothorityCryptoException {
-        return new SkipblockId(DatatypeConverter.parseHexBinary("30cdbf5b5acc0e4dd227d8ee7fa845d419f79d43e824a3523a30d921a895838e"));
+        return new SkipblockId(DatatypeConverter.parseHexBinary("77671f623cb3471b756f5ff88b66b1b10c8cbfee2740fba52368565d2b48c7a9"));
     }
 
     /**
      * Gets the signer that has "invoke:eventlog" and "spawn:eventlog" permissions.
      */
     public static Signer getSigner() {
-        // public is 73cfc340c552145a8d8619cbbc0e788379c7a261764afd1d81fa0f971442140f
-        return new SignerEd25519(DatatypeConverter.parseHexBinary("022f59c145d4863d72cfd541628da08f4c907fb34f921dfeca8a1f35b3c0310a"));
+        // output of "el create --keys"
+        // Identity: ed25519:c903f5a3c6388254fb401184ce46a8b3db544b820bbe9eebb7c2c0a9bdfc07a3
+        // export PRIVATE_KEY=e70318856e0e9ced0840db6fff6f9296f52e36dc262dc388fa443bf1c6a07e0a
+        return new SignerEd25519(DatatypeConverter.parseHexBinary("e70318856e0e9ced0840db6fff6f9296f52e36dc262dc388fa443bf1c6a07e0a"));
     }
 
     /**
@@ -54,7 +56,7 @@ public final class SecureKG {
      * @return the darc ID
      */
     public static DarcId getDarcId() throws CothorityCryptoException {
-        return new DarcId(DatatypeConverter.parseHexBinary("b880482b89fba327e36fbb27b482d883a9e4354ae72078b37592ae86c8219580"));
+        return new DarcId(DatatypeConverter.parseHexBinary("f058943d96072c13a09031dcdec9e99c2972ec1cc9b1e7979ceb988d1978c580"));
     }
 
     /**
@@ -62,7 +64,9 @@ public final class SecureKG {
      * @return the instance ID.
      */
     public static InstanceId getEventlogId() throws CothorityCryptoException {
-        return new InstanceId(DatatypeConverter.parseHexBinary("b880482b89fba327e36fbb27b482d883a9e4354ae72078b37592ae86c8219580eeca4910a865c9fc246d1933a79ef1b44f776029b213ad6541f0f5b5025da2f1"));
+        // output of ./el create
+        //export EL=f058943d96072c13a09031dcdec9e99c2972ec1cc9b1e7979ceb988d1978c580e36393071922a3ff58ba58ffc0b728967d7c25267ace6755d3f1e69e038f4de0
+        return new InstanceId(DatatypeConverter.parseHexBinary("f058943d96072c13a09031dcdec9e99c2972ec1cc9b1e7979ceb988d1978c580e36393071922a3ff58ba58ffc0b728967d7c25267ace6755d3f1e69e038f4de0"));
     }
 
     /**

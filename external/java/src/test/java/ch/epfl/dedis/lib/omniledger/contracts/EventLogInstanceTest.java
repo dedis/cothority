@@ -68,7 +68,7 @@ class EventLogInstanceTest {
     void log() throws Exception {
         Event e = new Event("hello", "goodbye");
         InstanceId key = el.log(e, Arrays.asList(admin));
-        Thread.sleep(5 * ol.getConfig().getBlockInterval().toMillis());
+        Thread.sleep(2 * ol.getConfig().getBlockInterval().toMillis());
         Event loggedEvent = el.get(key);
         assertEquals(loggedEvent, e);
     }
@@ -83,7 +83,7 @@ class EventLogInstanceTest {
             // add all the events. So we have to limit the number of events that we add.
             keys.add(el.log(event, Arrays.asList(admin)));
         }
-        Thread.sleep(5 * ol.getConfig().getBlockInterval().toMillis());
+        Thread.sleep(2 * ol.getConfig().getBlockInterval().toMillis());
         for (InstanceId key : keys) {
             Event event2 = el.get(key);
             assertEquals(event, event2);
@@ -96,7 +96,7 @@ class EventLogInstanceTest {
         Event event = new Event(now, "login", "alice");
         el.log(event, Arrays.asList(admin));
 
-        Thread.sleep(5 * ol.getConfig().getBlockInterval().toMillis());
+        Thread.sleep(2 * ol.getConfig().getBlockInterval().toMillis());
 
         // finds the event under any topic
         SearchResponse resp = el.search("", now - 1000, now + 1000);

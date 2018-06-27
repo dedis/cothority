@@ -104,6 +104,7 @@ public class OmniledgerRPC {
 
         // find the skipchain info
         skipchain = new SkipchainRPC(roster, skipchainId);
+        this.roster = roster;
         genesis = skipchain.getSkipblock(skipchainId);
         latest = skipchain.getLatestSkipblock();
     }
