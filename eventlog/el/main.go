@@ -14,7 +14,6 @@ import (
 	"github.com/dedis/cothority/omniledger/darc"
 	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber/util/encoding"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet/log"
 	"gopkg.in/urfave/cli.v1"
 )
@@ -33,6 +32,16 @@ var cmds = cli.Commands{
 			cli.BoolFlag{
 				Name:  "keys",
 				Usage: "make a key pair",
+			},
+			cli.StringFlag{
+				Name:   "priv",
+				EnvVar: "PRIVATE_KEY",
+				Usage:  "the ed25519 private key that will sign the create transaction",
+			},
+			cli.StringFlag{
+				Name:   "ol",
+				EnvVar: "OL",
+				Usage:  "the OmniLedger config",
 			},
 		},
 		Action: create,
@@ -79,8 +88,9 @@ var cmds = cli.Commands{
 				Usage:  "the OmniLedger config",
 			},
 			cli.StringFlag{
-				Name:  "eid",
-				Usage: "the eventlog id (64 hex bytes)",
+				Name:   "el",
+				EnvVar: "EL",
+				Usage:  "the eventlog id (64 hex bytes), from \"el create\"",
 			},
 			cli.StringFlag{
 				Name:  "topic, t",
@@ -131,50 +141,69 @@ func main() {
 	log.ErrFatal(cliApp.Run(os.Args))
 }
 
-func create(c *cli.Context) error {
-	if c.Bool("keys") {
-		kp := key.NewKeyPair(cothority.Suite)
-		fmt.Println("Private: ", kp.Private)
-		fmt.Println(" Public: ", kp.Public)
-		return nil
-	}
-
-	return errors.New("not implemented")
-}
-
-func doLog(c *cli.Context) error {
+func getClient(c *cli.Context) (*eventlog.Client, error) {
 	fn := c.String("ol")
 	if fn == "" {
-		return errors.New("--ol is required")
+		return nil, errors.New("--ol is required")
 	}
 	ol, err := omniledger.NewClientFromConfig(fn)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	cl := eventlog.NewClient(ol)
-	cl.Signers = make([]darc.Signer, 1)
 
 	privStr := c.String("priv")
 	if privStr == "" {
-		return errors.New("--priv is required")
+		return nil, errors.New("--priv is required")
 	}
 	priv, err := encoding.StringHexToScalar(cothority.Suite, privStr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	pub := cothority.Suite.Point().Mul(priv, nil)
 
-	cl.Signers[0] = darc.NewSignerEd25519(pub, priv)
+	cl.Signers = []darc.Signer{darc.NewSignerEd25519(pub, priv)}
+	return cl, nil
+}
 
-	e := c.String("eid")
+func create(c *cli.Context) error {
+	if c.Bool("keys") {
+		s := darc.NewSignerEd25519(nil, nil)
+		fmt.Println("Identity:", s.Identity())
+		fmt.Printf("export PRIVATE_KEY=%v\n", s.Ed25519.Secret)
+		return nil
+	}
+
+	cl, err := getClient(c)
+	if err != nil {
+		return err
+	}
+
+	genDarc, err := cl.OmniLedger.GetGenDarc()
+	err = cl.Create(genDarc.GetBaseID())
+	if err != nil {
+		return err
+	}
+
+	fmt.Fprintf(c.App.Writer, "export EL=%x\n", cl.EventlogID.Slice())
+	return nil
+}
+
+func doLog(c *cli.Context) error {
+	cl, err := getClient(c)
+	if err != nil {
+		return err
+	}
+
+	e := c.String("el")
 	if e == "" {
-		return errors.New("--eid is required")
+		return errors.New("--el is required")
 	}
 	eb, err := hex.DecodeString(e)
 	if err != nil {
 		return err
 	}
-	cl.InstanceID = omniledger.BytesToObjID(eb)
+	cl.EventlogID = omniledger.BytesToObjID(eb)
 
 	t := c.String("topic")
 	content := c.String("content")
@@ -225,18 +254,17 @@ func search(c *cli.Context) error {
 		return err
 	}
 
-	e := c.String("eid")
+	e := c.String("el")
 	if e == "" {
-		return errors.New("--eid is required")
+		return errors.New("--el is required")
 	}
 	eb, err := hex.DecodeString(e)
 	if err != nil {
 		return err
 	}
-	eid := omniledger.BytesToObjID(eb)
 
 	req := &eventlog.SearchRequest{
-		EventLogID: eid,
+		EventLogID: omniledger.BytesToObjID(eb),
 		Topic:      c.String("topic"),
 	}
 

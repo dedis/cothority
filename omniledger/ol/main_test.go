@@ -6,6 +6,7 @@ import (
 	"os"
 	"path"
 	"testing"
+	"time"
 
 	"github.com/dedis/cothority"
 	omniledger "github.com/dedis/cothority/omniledger/service"
@@ -61,14 +62,19 @@ func TestCli(t *testing.T) {
 	err = g.Save(rf)
 	require.NoError(t, err)
 
+	interval := 100 * time.Millisecond
+
 	log.Lvl1("create: ")
 	b := &bytes.Buffer{}
 	cliApp.Writer = b
 	cliApp.ErrWriter = b
-	args := []string{"ol", "create", "-roster", rf}
+	args := []string{"ol", "create", "-roster", rf, "--interval", interval.String()}
 	err = cliApp.Run(args)
 	require.NoError(t, err)
 	require.Contains(t, string(b.Bytes()), "Created")
+
+	// Collect the OL config filename that create() left for us,
+	// and make it available for the next tests.
 	ol := cliApp.Metadata["OL"]
 	require.IsType(t, "", ol)
 	os.Setenv("OL", ol.(string))
@@ -81,4 +87,25 @@ func TestCli(t *testing.T) {
 	err = cliApp.Run(args)
 	require.NoError(t, err)
 	require.Contains(t, string(b.Bytes()), "Roster: 127.0.0.1")
+	require.Contains(t, string(b.Bytes()), "spawn:darc")
+
+	log.Lvl1("add: ")
+	b = &bytes.Buffer{}
+	cliApp.Writer = b
+	cliApp.ErrWriter = b
+	args = []string{"ol", "add", "--identity", "ed25519:XXX", "spawn:xxx"}
+	err = cliApp.Run(args)
+	require.NoError(t, err)
+
+	time.Sleep(2 * interval)
+
+	log.Lvl1("show after add: ")
+	b = &bytes.Buffer{}
+	cliApp.Writer = b
+	cliApp.ErrWriter = b
+	args = []string{"ol", "show"}
+	err = cliApp.Run(args)
+	require.NoError(t, err)
+	require.Contains(t, string(b.Bytes()), "Roster: 127.0.0.1")
+	require.Contains(t, string(b.Bytes()), "spawn:xxx - \"ed25519:XXX\"")
 }

@@ -146,7 +146,7 @@ func create(c *cli.Context) error {
 	}
 
 	fmt.Fprintf(c.App.Writer, "Created OmniLedger with ID %x.\n", cfg.ID)
-	fmt.Fprintf(c.App.Writer, "Config file to give to clients: %v\n", fn)
+	fmt.Fprintf(c.App.Writer, "export OL=\"%v\"\n", fn)
 
 	// For the tests to use.
 	c.App.Metadata["OL"] = fn
@@ -174,7 +174,7 @@ func show(c *cli.Context) error {
 	fmt.Fprintln(c.App.Writer)
 	fmt.Fprintln(c.App.Writer, "Genesis Darc:")
 
-	gd, err := getGenDarc(cl)
+	gd, err := cl.GetGenDarc()
 	if err == nil {
 		fmt.Fprintln(c.App.Writer, gd)
 	} else {
@@ -211,7 +211,7 @@ func add(c *cli.Context) error {
 		return errors.New("--identity flag is required")
 	}
 
-	d, err := getGenDarc(cl)
+	d, err := cl.GetGenDarc()
 	if err != nil {
 		return err
 	}
@@ -347,55 +347,6 @@ func (cfg *configPrivate) save() error {
 		return err
 	}
 	return f.Close()
-}
-
-// getGenDarc uses omniledger's GetProof method to fetch the latest version of the darc
-// from OmniLedger and parses it.
-func getGenDarc(cl *omniledger.Client) (*darc.Darc, error) {
-	p, err := cl.GetProof(omniledger.GenesisReferenceID.Slice())
-	if err != nil {
-		return nil, err
-	}
-	if !p.Proof.InclusionProof.Match() {
-		return nil, errors.New("cannot find genesis Darc ID")
-	}
-
-	_, vs, err := p.Proof.KeyValue()
-
-	if len(vs) < 2 {
-		return nil, errors.New("not enough records")
-	}
-	contractBuf := vs[1]
-	if string(contractBuf) != "config" {
-		return nil, errors.New("expected contract to be config but got: " + string(contractBuf))
-	}
-	darcBuf := vs[0]
-	if len(darcBuf) != 32 {
-		return nil, errors.New("genesis darc ID is wrong length")
-	}
-
-	p, err = cl.GetProof(omniledger.InstanceID{DarcID: darcBuf}.Slice())
-	if err != nil {
-		return nil, err
-	}
-	if !p.Proof.InclusionProof.Match() {
-		return nil, errors.New("cannot find genesis Darc")
-	}
-
-	_, vs, err = p.Proof.KeyValue()
-
-	if len(vs) < 2 {
-		return nil, errors.New("not enough records")
-	}
-	contractBuf = vs[1]
-	if string(contractBuf) != "darc" {
-		return nil, errors.New("expected contract to be darc but got: " + string(contractBuf))
-	}
-	d, err := darc.NewFromProtobuf(vs[0])
-	if err != nil {
-		return nil, err
-	}
-	return d, nil
 }
 
 func rosterToServers(r *onet.Roster) []network.Address {

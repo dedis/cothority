@@ -3,6 +3,7 @@ package eventlog
 import (
 	"bytes"
 	"errors"
+	"time"
 
 	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/omniledger/darc/expression"
@@ -15,18 +16,18 @@ import (
 
 // Client is a structure to communicate with the eventlog service
 type Client struct {
-	olClient *omniledger.Client
-	elClient *onet.Client
+	OmniLedger *omniledger.Client
 	// Signers are the Darc signers that will sign transactions sent with this client.
 	Signers    []darc.Signer
 	EventlogID omniledger.InstanceID
+	c          *onet.Client
 }
 
 // NewClient creates a new client to talk to the eventlog service.
 func NewClient(ol *omniledger.Client) *Client {
 	return &Client{
-		olClient: ol,
-		elClient: onet.NewClient(cothority.Suite, ServiceName),
+		OmniLedger: ol,
+		c:          onet.NewClient(cothority.Suite, ServiceName),
 	}
 }
 
@@ -45,10 +46,10 @@ func AddWriter(r darc.Rules, expr expression.Expr) darc.Rules {
 // Create creates a new event log. Upon return, c.EventlogID will be correctly
 // set. This method is synchronous: it will only return once the new eventlog has
 // been committed into the OmniLedger (or after a timeout).
-func (c *Client) Create(baseID darc.ID) error {
+func (c *Client) Create(d darc.ID) error {
 	instr := omniledger.Instruction{
 		InstanceID: omniledger.InstanceID{
-			DarcID: baseID,
+			DarcID: d,
 		},
 		Index:  0,
 		Length: 1,
@@ -60,18 +61,37 @@ func (c *Client) Create(baseID darc.ID) error {
 	tx := omniledger.ClientTransaction{
 		Instructions: []omniledger.Instruction{instr},
 	}
-	if _, err := c.olClient.AddTransaction(tx); err != nil {
+	if _, err := c.OmniLedger.AddTransaction(tx); err != nil {
 		return err
 	}
 
 	var subID omniledger.SubID
 	copy(subID[:], instr.Hash())
 	c.EventlogID = omniledger.InstanceID{
-		DarcID: baseID,
+		DarcID: d,
 		SubID:  subID,
 	}
 
-	// Wait for GetProof to see it. (and timeout)
+	// Wait for GetProof to see it or timeout.
+	cfg, err := c.OmniLedger.GetChainConfig()
+	if err != nil {
+		return err
+	}
+
+	found := false
+	for ct := 0; ct < 10; ct++ {
+		resp, err := c.OmniLedger.GetProof(c.EventlogID.Slice())
+		if err == nil {
+			if resp.Proof.InclusionProof.Match() {
+				found = true
+				break
+			}
+		}
+		time.Sleep(cfg.BlockInterval)
+	}
+	if !found {
+		return errors.New("timeout waiting for creation")
+	}
 
 	return nil
 }
@@ -86,7 +106,7 @@ func (c *Client) Log(ev ...Event) ([]LogID, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, err := c.olClient.AddTransaction(*tx); err != nil {
+	if _, err := c.OmniLedger.AddTransaction(*tx); err != nil {
 		return nil, err
 	}
 	return keys, nil
@@ -94,7 +114,7 @@ func (c *Client) Log(ev ...Event) ([]LogID, error) {
 
 // GetEvent asks the service to retrieve an event.
 func (c *Client) GetEvent(key []byte) (*Event, error) {
-	reply, err := c.olClient.GetProof(key)
+	reply, err := c.OmniLedger.GetProof(key)
 	if err != nil {
 		return nil, err
 	}
@@ -183,10 +203,10 @@ func makeTx(eventlogID omniledger.InstanceID, msgs []Event, signers []darc.Signe
 // The ID field of the SearchRequest will be filled in from c, if it is null.
 func (c *Client) Search(req *SearchRequest) (*SearchResponse, error) {
 	if req.ID.IsNull() {
-		req.ID = c.olClient.ID
+		req.ID = c.OmniLedger.ID
 	}
 	reply := &SearchResponse{}
-	if err := c.elClient.SendProtobuf(c.olClient.Roster.List[0], req, reply); err != nil {
+	if err := c.c.SendProtobuf(c.OmniLedger.Roster.List[0], req, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

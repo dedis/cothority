@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/omniledger/darc"
@@ -86,6 +87,85 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 		return nil, err
 	}
 	return reply, nil
+}
+
+// GetGenDarc uses the GetProof method to fetch the latest version of the
+// Genesis Darc from OmniLedger and parses it.
+func (c *Client) GetGenDarc() (*darc.Darc, error) {
+	p, err := c.GetProof(GenesisReferenceID.Slice())
+	if err != nil {
+		return nil, err
+	}
+	if !p.Proof.InclusionProof.Match() {
+		return nil, errors.New("cannot find genesis Darc ID")
+	}
+
+	_, vs, err := p.Proof.KeyValue()
+
+	if len(vs) < 2 {
+		return nil, errors.New("not enough records")
+	}
+	contractBuf := vs[1]
+	if string(contractBuf) != "config" {
+		return nil, errors.New("expected contract to be config but got: " + string(contractBuf))
+	}
+	darcBuf := vs[0]
+	if len(darcBuf) != 32 {
+		return nil, errors.New("genesis darc ID is wrong length")
+	}
+
+	p, err = c.GetProof(InstanceID{DarcID: darcBuf}.Slice())
+	if err != nil {
+		return nil, err
+	}
+	if !p.Proof.InclusionProof.Match() {
+		return nil, errors.New("cannot find genesis Darc")
+	}
+
+	_, vs, err = p.Proof.KeyValue()
+
+	if len(vs) < 2 {
+		return nil, errors.New("not enough records")
+	}
+	contractBuf = vs[1]
+	if string(contractBuf) != "darc" {
+		return nil, errors.New("expected contract to be darc but got: " + string(contractBuf))
+	}
+	d, err := darc.NewFromProtobuf(vs[0])
+	if err != nil {
+		return nil, err
+	}
+	return d, nil
+}
+
+// GetChainConfig uses the GetProof method to fetch the chain config
+// from OmniLedger.
+func (c *Client) GetChainConfig() (*ChainConfig, error) {
+	d, err := c.GetGenDarc()
+
+	cfid := InstanceID{d.GetBaseID(), one}
+	p, err := c.GetProof(cfid.Slice())
+	if err != nil {
+		return nil, err
+	}
+	if !p.Proof.InclusionProof.Match() {
+		return nil, errors.New("cannot find config")
+	}
+
+	_, vs, err := p.Proof.KeyValue()
+	if len(vs) < 2 {
+		return nil, errors.New("not enough records")
+	}
+	contractBuf := vs[1]
+	if string(contractBuf) != "config" {
+		return nil, errors.New("expected contract to be config but got: " + string(contractBuf))
+	}
+	config := &ChainConfig{}
+	err = protobuf.Decode(vs[0], config)
+	if err != nil {
+		return nil, err
+	}
+	return config, nil
 }
 
 // A Config gathers all the information a client needs to know to talk to
