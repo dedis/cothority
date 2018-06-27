@@ -92,7 +92,7 @@ func NewSubFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite)
 
 // Dispatch is the main method of the subprotocol, running on each node and handling the messages in order
 func (p *SubFtCosi) Dispatch() error {
-	defer func (){
+	defer func() {
 		if p.IsRoot() {
 			err := p.Broadcast(&Stop{})
 			if err != nil {
@@ -100,7 +100,7 @@ func (p *SubFtCosi) Dispatch() error {
 			}
 		}
 		p.Done()
-		}()
+	}()
 	var err error
 	var channelOpen bool
 
@@ -150,7 +150,7 @@ func (p *SubFtCosi) Dispatch() error {
 			var personalStructCommitment StructCommitment
 			secret, personalStructCommitment, err = p.getCommitment(verificationOk)
 			if err != nil {
-				log.Errorf("error while generating own commitment:", err)
+				log.Error("error while generating own commitment:", err)
 				return
 			}
 			p.ChannelCommitment <- personalStructCommitment
