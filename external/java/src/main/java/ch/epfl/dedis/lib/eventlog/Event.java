@@ -47,8 +47,8 @@ public final class Event {
         EventLogProto.Event.Builder b = EventLogProto.Event.newBuilder();
         b.setWhen(this.when);
         b.setTopic(this.topic);
-        b.setContent(this.topic);
-        return  b.build();
+        b.setContent(this.content);
+        return b.build();
     }
 
     @Override
