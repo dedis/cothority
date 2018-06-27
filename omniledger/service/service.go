@@ -440,7 +440,7 @@ func (s *Service) db() *skipchain.SkipBlockDB {
 }
 
 // LoadConfig loads the configuration from a skipchain ID.
-func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*Config, error) {
+func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
 	collDb := s.getCollection(scID)
 	if collDb == nil {
 		return nil, errors.New("nil collection DB")

@@ -44,7 +44,7 @@ var ContractValueID = "value"
 var CmdDarcEvolve = "evolve"
 
 // LoadConfigFromColl loads the configuration data from the collections.
-func LoadConfigFromColl(coll CollectionView) (*Config, error) {
+func LoadConfigFromColl(coll CollectionView) (*ChainConfig, error) {
 	// Find the genesis-darc ID.
 	val, contract, err := getValueContract(coll, GenesisReferenceID.Slice())
 	if err != nil {
@@ -68,7 +68,7 @@ func LoadConfigFromColl(coll CollectionView) (*Config, error) {
 	if string(contract) != ContractConfigID {
 		return nil, errors.New("did not get " + ContractConfigID)
 	}
-	config := Config{}
+	config := ChainConfig{}
 	err = protobuf.Decode(val, &config)
 	if err != nil {
 		return nil, err
@@ -119,6 +119,9 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 // BytesToObjID converts a byte slice to an InstanceID, it expects the byte slice
 // to be 64 bytes.
 func BytesToObjID(x []byte) InstanceID {
+	if len(x) < 64 {
+		return InstanceID{}
+	}
 	var sub SubID
 	copy(sub[:], x[32:64])
 	return InstanceID{
@@ -157,7 +160,7 @@ func (s *Service) ContractConfig(cdb CollectionView, tx Instruction, coins []Coi
 	}
 
 	// create the config to be stored by state changes
-	config := Config{
+	config := ChainConfig{
 		BlockInterval: time.Duration(interval),
 	}
 	configBuf, err := protobuf.Encode(&config)

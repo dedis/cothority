@@ -26,6 +26,12 @@ VERSION="$VERSION_ONET-$VERSION_SUB"
 #   TAGS="-tags vartime" ./run_conode.sh
 # Note: TAGS is also used by the integration tests.
 
+# This will allow you to put the servers on a different range if you want.
+#   $ export PORTBASE=18000
+#   $ ./run_conode.sh local 3
+# Results in the servers being on 18002-18007.
+[ -z "$PORTBASE" ] && PORTBASE=7000
+
 main(){
 	if [ ! "$1" ]; then
 		showHelp
@@ -142,7 +148,7 @@ runLocal(){
 		fi
 
 		if [ ! -d $co ]; then
-			echo -e "localhost:$((7000 + 2 * $n))\nConode_$n\n$co" | conode setup
+			echo -e "localhost:$(($PORTBASE + 2 * $n))\nConode_$n\n$co" | conode setup
 		fi
 		conode -d $DEBUG -c $co/private.toml server &
 		cat $co/public.toml >> public.toml

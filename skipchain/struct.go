@@ -842,10 +842,6 @@ func (db *SkipBlockDB) GetLatestByID(genID SkipBlockID) (*SkipBlock, error) {
 
 // GetLatest searches for the latest available block for that skipblock.
 func (db *SkipBlockDB) GetLatest(sb *SkipBlock) (*SkipBlock, error) {
-	start := time.Now()
-	defer func() {
-		log.Lvl3("Time to get latest:", time.Since(start))
-	}()
 	if sb == nil {
 		return nil, errors.New("got nil skipblock")
 	}
