@@ -818,7 +818,7 @@ func (s *Service) signAndPropagate(final *FinalStatement, protoName string,
 	root.Data = data
 	root.Timeout = 15 * time.Second
 	root.CreateProtocol = s.CreateProtocol
-	root.Threshold = len(tree.List()) - byzcoinx.FaultThreshold(len(tree.List()))
+	root.Threshold = len(tree.List()) //TODO: add lower threshold and fix verification function (FinalStatement.Verify())
 
 	final.Signature = []byte{}
 

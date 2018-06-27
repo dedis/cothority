@@ -92,7 +92,7 @@ func NewFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, subProtocolName stri
 func (p *FtCosi) Shutdown() error {
 	p.stoppedOnce.Do(func() {
 		for _, subFtCosi := range p.subProtocols {
-			subFtCosi.Shutdown()
+			subFtCosi.HandleStop(StructStop{subFtCosi.TreeNode(), Stop{}})
 		}
 		close(p.startChan)
 		close(p.FinalSignature)

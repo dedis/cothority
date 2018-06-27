@@ -121,7 +121,7 @@ func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.FtCosi, error) {
 	cosiProto.NSubtrees = bft.nSubtrees
 	cosiProto.Msg = bft.Msg
 	cosiProto.Data = bft.Data
-	cosiProto.Threshold = len(bft.List()) - FaultThreshold(len(bft.List()))
+	cosiProto.Threshold = bft.Threshold
 	// For each of the prepare and commit phase we get half of the time.
 	cosiProto.Timeout = bft.Timeout / 2
 

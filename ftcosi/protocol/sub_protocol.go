@@ -90,27 +90,17 @@ func NewSubFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite)
 	return c, nil
 }
 
-// Shutdown stops the protocol
-// If the node is the root node, it broadcasts a Stop message to all the nodes in the tree.
-func (p *SubFtCosi) Shutdown() error {
-	p.stoppedOnce.Do(func() {
+// Dispatch is the main method of the subprotocol, running on each node and handling the messages in order
+func (p *SubFtCosi) Dispatch() error {
+	defer func (){
 		if p.IsRoot() {
 			err := p.Broadcast(&Stop{})
 			if err != nil {
 				log.Error("error while broadcasting stopping message:", err)
 			}
 		}
-		close(p.ChannelAnnouncement)
-		//close(p.ChannelCommitment) // Channel left open to allow verification function to safely return
-		close(p.ChannelChallenge)
-		close(p.ChannelResponse)
-	})
-	return nil
-}
-
-// Dispatch is the main method of the subprotocol, running on each node and handling the messages in order
-func (p *SubFtCosi) Dispatch() error {
-	defer p.Done()
+		p.Done()
+		}()
 	var err error
 	var channelOpen bool
 
@@ -445,7 +435,10 @@ func (p *SubFtCosi) HandleStop(stop StructStop) error {
 		log.Lvl2(p.ServerIdentity(), "received a Stop from node", stop.ServerIdentity,
 			"that is not the root, ignored")
 	}
-	p.Shutdown()
+	close(p.ChannelAnnouncement)
+	//close(p.ChannelCommitment) // Channel left open to allow verification function to safely return
+	close(p.ChannelChallenge)
+	close(p.ChannelResponse)
 	return nil
 }
 
