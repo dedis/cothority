@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 
 import static java.time.temporal.ChronoUnit.NANOS;
-import static java.time.temporal.ChronoUnit.SECONDS;
 
 /**
  * Class OmniledgerRPC interacts with the omniledger service of a conode. It can either start a new omniledger service
@@ -30,7 +29,8 @@ import static java.time.temporal.ChronoUnit.SECONDS;
  * algorithm.
  */
 public class OmniledgerRPC {
-    private Configuration config;
+    private Config config;
+    private Roster roster;
     private Darc genesisDarc;
     private SkipBlock genesis;
     private SkipBlock latest;
@@ -42,21 +42,19 @@ public class OmniledgerRPC {
     /**
      * This instantiates a new omniledger object by asking the cothority to set up a new omniledger.
      *
-     * @param d is the genesis-darc that defines the basic access control to this omniledger
-     * @param c is the genesis configuration stored in omniledger
+     * @param r             is the roster to be used
+     * @param d             is the genesis darc
+     * @param blockInterval is the block interval between two blocks
      */
-    public OmniledgerRPC(Darc d, Configuration c) throws CothorityException {
-        genesisDarc = d;
-        config = c;
-
+    public OmniledgerRPC(Roster r, Darc d, Duration blockInterval) throws CothorityException {
         OmniLedgerProto.CreateGenesisBlock.Builder request =
                 OmniLedgerProto.CreateGenesisBlock.newBuilder();
         request.setVersion(currentVersion);
-        request.setRoster(config.getRoster().toProto());
+        request.setRoster(r.toProto());
         request.setGenesisdarc(d.toProto());
-        request.setBlockinterval(c.getBlockInterval().get(NANOS));
+        request.setBlockinterval(blockInterval.get(NANOS));
 
-        ByteString msg = config.getRoster().sendMessage("OmniLedger/CreateGenesisBlock",
+        ByteString msg = r.sendMessage("OmniLedger/CreateGenesisBlock",
                 request.build());
 
         try {
@@ -68,18 +66,10 @@ public class OmniledgerRPC {
         }
         latest = genesis;
         logger.info("Created new OmniLedger: {}", genesis.getId().toString());
-        skipchain = new SkipchainRPC(config.getRoster(), genesis.getId());
-    }
-
-    /**
-     * Convenience method for instantiating a new OmniledgerRPC.
-     *
-     * @param r             is the roster to be used
-     * @param d             is the genesis darc
-     * @param blockInterval is the block interval between two blocks
-     */
-    public OmniledgerRPC(Roster r, Darc d, Duration blockInterval) throws CothorityException {
-        this(d, new Configuration(r, blockInterval));
+        skipchain = new SkipchainRPC(r, genesis.getId());
+        config = new Config(blockInterval);
+        roster = r;
+        genesisDarc = d;
     }
 
     /**
@@ -110,10 +100,7 @@ public class OmniledgerRPC {
         InstanceId configInstanceId = new InstanceId(darcId, SubId.one());
         proof = OmniledgerRPC.getProof(roster, skipchainId, configInstanceId);
         OmniledgerRPC.checkProof(proof, "config");
-        // TODO properly parse the configuration information
-        // we cannot do it at the moment because the Configuration protobuf type is different form Config struct in go
-        // for now we just use the default
-        config = new Configuration(roster, Duration.of(1, SECONDS));
+        config = new Config(proof.getValues().get(0));
 
         // find the skipchain info
         skipchain = new SkipchainRPC(roster, skipchainId);
@@ -125,7 +112,7 @@ public class OmniledgerRPC {
      * Instantiates an omniledger object given the byte representation. The omniledger must already have been
      * initialized on the cothority.
      *
-     * @param buf is the representation of the basic omniledger parameters
+     * @param buf is the representation of the basic omniledger parameters, it should have a Roster and a skipchain ID.
      */
     public OmniledgerRPC(byte[] buf) {
         throw new RuntimeException("Not implemented yet");
@@ -144,7 +131,7 @@ public class OmniledgerRPC {
         request.setSkipchainid(ByteString.copyFrom(skipchain.getID().getId()));
         request.setTransaction(t.toProto());
 
-        ByteString msg = config.getRoster().sendMessage("OmniLedger/AddTxRequest", request.build());
+        ByteString msg = roster.sendMessage("OmniLedger/AddTxRequest", request.build());
         try{
             OmniLedgerProto.AddTxResponse reply =
                     OmniLedgerProto.AddTxResponse.parseFrom(msg);
@@ -169,7 +156,7 @@ public class OmniledgerRPC {
         request.setId(skipchain.getID().toProto());
         request.setKey(id.toByteString());
 
-        ByteString msg = config.getRoster().sendMessage("OmniLedger/GetProof", request.build());
+        ByteString msg = roster.sendMessage("OmniLedger/GetProof", request.build());
         try{
             OmniLedgerProto.GetProofResponse reply =
                     OmniLedgerProto.GetProofResponse.parseFrom(msg);
@@ -199,7 +186,7 @@ public class OmniledgerRPC {
      * @throws CothorityException if something failed.
      */
     public boolean checkLiveness() throws CothorityException {
-        for (ServerIdentity si : config.getRoster().getNodes()) {
+        for (ServerIdentity si : roster.getNodes()) {
             try {
                 logger.info("Checking status of {}", si.getAddress());
                 si.GetStatus();
@@ -221,7 +208,7 @@ public class OmniledgerRPC {
     /**
      * @return current configuration
      */
-    public Configuration getConfig() {
+    public Config getConfig() {
         return config;
     }
 
@@ -242,6 +229,10 @@ public class OmniledgerRPC {
 
     public SkipBlock getGenesis() {
         return genesis;
+    }
+
+    public Roster getRoster() {
+        return roster;
     }
 
     private static void checkProof(Proof proof, String expectedContract) throws CothorityNotFoundException {

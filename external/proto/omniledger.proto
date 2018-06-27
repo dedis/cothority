@@ -47,12 +47,12 @@ message AddTxResponse {
   required sint64 version = 1;
 }
 
-// Configuration is the representation of the genesis configuration data.
-message Configuration {
-	// Roster is the set of nodes responsible for omniledger
-	required Roster roster = 1;
+// Config stores all the configuration information for one skipchain. It will
+// be stored under the key "GenesisDarcID || OneNonce", in the collections. The
+// GenesisDarcID is the value of GenesisReferenceID.
+message Config {
   // BlockInterval is the time in nanoseconds between two blocks
-  optional sint64 blockInterval = 2;
+  required sint64 blockInterval = 1;
 }
 
 // GetProof returns the proof that the given key is in the collection.

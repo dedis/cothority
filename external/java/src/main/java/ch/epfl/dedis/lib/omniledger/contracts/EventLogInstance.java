@@ -135,7 +135,7 @@ public class EventLogInstance {
         b.setFrom(from);
         b.setTo(to);
 
-        ByteString msg =  this.ol.getConfig().getRoster().sendMessage("EventLog/SearchRequest", b.build());
+        ByteString msg =  this.ol.getRoster().sendMessage("EventLog/SearchRequest", b.build());
 
         try {
             EventLogProto.SearchResponse resp = EventLogProto.SearchResponse.parseFrom(msg);
