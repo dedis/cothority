@@ -26,8 +26,7 @@ not a part of the `cothority.v2` release, please use the `master` branch.
 We offer three ways for clients to connect to the event log service. All the
 APIs expect an existing OmniLedger object that has a darc with "spawn:eventlog"
 and "invoke:eventlog" in its rules. The eventlog signer (which we will create
-below) *must* be authorised to use these rules. For testing SecureKG, this step
-is not needed, please see [below](#SecureKG).
+below) *must* be authorised to use these rules.
 
 ### Go API
 To get started, you need a signer and a roster, then we can initialise the
@@ -85,19 +84,6 @@ SearchResponse resp = el.search("", now - 1000, now + 1000);
 Please refer to the javadocs for more information. The javadocs are not hosted
 anywhere unfortunately, but it is possible to generate them from the
 [source](https://github.com/dedis/cothority/blob/master/external/java/src/main/java/ch/epfl/dedis/lib/omniledger/contracts/EventLogInstance.java).
-
-#### SecureKG
-For testing SecureKG, you may use the information in the
-[`SecureKG`](https://github.com/dedis/cothority/blob/master/external/java/src/main/java/ch/epfl/dedis/lib/omniledger/SecureKG.java)
-class to initialise OmniLedger and EventLogInstance. Here is an example.
-```java
-OmniLedgerRPC ol = SecureKG.getOmniledgerRPC();
-Signer admin = SecureKG.getSigner();
-EventLogInstance el = new EventLogInstance(ol, SecureKG.getEventlogId());
-InstanceId key = el.log(new Event("hello", "goodbye"), Arrays.asList(admin))
-// wait for the event to be stored
-el.get(key)
-```
 
 ### CLI
 Please see the `el` documentation [here](el/README.md).
