@@ -201,7 +201,7 @@ loop:
 
 			if !isValidSender(commitment.TreeNode, nodesCanCommit...) {
 				log.Warn(p.ServerIdentity(), "received a Commitment from node", commitment.ServerIdentity,
-					"that is neither a children nor itself, ignored")
+					"that is not in the list of nodes that can still commit, ignored")
 				break //discards it
 			}
 			nodesCanCommit = remove(nodesCanCommit, commitment.TreeNode)
@@ -361,7 +361,7 @@ loop:
 
 			if !isValidSender(response.TreeNode, childrenCanResponse...) {
 				log.Warn(p.ServerIdentity(), "received a Response from node", response.ServerIdentity,
-					"that is not a committed children, ignored")
+					"that is not in the list of nodes that cna still send a response, ignored")
 				break
 			}
 			childrenCanResponse = remove(childrenCanResponse, response.TreeNode)
