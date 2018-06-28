@@ -28,6 +28,7 @@ type SimulationService struct {
 	BlockInterval string
 	Batch         bool
 	Keep bool
+	Delay int
 }
 
 // NewSimulationService returns the new simulation, where all fields are
