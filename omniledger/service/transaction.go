@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"sync"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/onet/log"
@@ -369,6 +370,16 @@ func (cts ClientTransactions) Hash() []byte {
 	return h.Sum(nil)
 }
 
+// IsEmpty checks whether the ClientTransactions is empty.
+func (cts ClientTransactions) IsEmpty() bool {
+	for _, ct := range cts {
+		for range ct.Instructions {
+			return false
+		}
+	}
+	return true
+}
+
 // StateChange is one new state that will be applied to the collection.
 type StateChange struct {
 	// StateAction can be any of Create, Update, Remove
@@ -417,6 +428,20 @@ func (scs StateChanges) Hash() []byte {
 		h.Write(scBuf)
 	}
 	return h.Sum(nil)
+}
+
+func (scs StateChanges) isGenesisConfig() bool {
+	if len(scs) != 3 {
+		return false
+	}
+	if !bytes.Equal(scs[0].InstanceID, GenesisReferenceID.Slice()) {
+		return false
+	}
+	if !bytes.Equal(scs[0].ContractID, []byte(ContractConfigID)) {
+		return false
+	}
+	// TODO check other state changes
+	return true
 }
 
 // StateAction describes how the collectionDB will be modified.
@@ -479,6 +504,42 @@ type Coin struct {
 	Name InstanceID
 	// Value is the total number of coins of that type.
 	Value uint64
+}
+
+// txBuffer is thread-safe data structure that store client transactions.
+type txBuffer struct {
+	sync.Mutex
+	txsMap map[string]ClientTransactions
+}
+
+func newTxBuffer() txBuffer {
+	return txBuffer{
+		txsMap: make(map[string]ClientTransactions),
+	}
+}
+
+func (r *txBuffer) take(key string) ClientTransactions {
+	r.Lock()
+	defer r.Unlock()
+
+	txs, ok := r.txsMap[key]
+	if !ok {
+		return []ClientTransaction{}
+	}
+	delete(r.txsMap, key)
+	return txs
+}
+
+func (r *txBuffer) add(key string, newTx ClientTransaction) {
+	r.Lock()
+	defer r.Unlock()
+
+	if txs, ok := r.txsMap[key]; !ok {
+		r.txsMap[key] = []ClientTransaction{newTx}
+	} else {
+		txs = append(txs, newTx)
+		r.txsMap[key] = txs
+	}
 }
 
 // sortWithSalt sorts transactions according to their salted hash:

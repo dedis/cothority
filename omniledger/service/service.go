@@ -11,15 +11,14 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/messaging"
+	"github.com/dedis/cothority/omniledger/collection"
+	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"gopkg.in/satori/go.uuid.v1"
-
-	"github.com/dedis/cothority/omniledger/collection"
-	"github.com/dedis/cothority/omniledger/darc"
 )
 
 const darcIDLen int = 32
@@ -28,6 +27,9 @@ const invokeEvolve darc.Action = darc.Action("invoke:evolve")
 
 // OmniledgerID can be used to refer to this service
 var OmniledgerID onet.ServiceID
+
+const collectTxProtocol = "CollectTxProtocol"
+
 var verifyOmniLedger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OmniLedger"))
 
 func init() {
@@ -56,11 +58,18 @@ type Service struct {
 	workersMu sync.Mutex
 	// queueWorkers is a map that points to channels that handle queueing and
 	// starting of new blocks.
-	queueWorkers map[string]chan ClientTransaction
+	// queueWorkers map[string]chan ClientTransaction
 
-	// CloseQueues should be closed when the queues should be stopped. This
-	// should only be needed for testing.
-	CloseQueues chan bool
+	// pollChan maintains a map of channels that can be used to stop the
+	// polling go-routing.
+	pollChan    map[string]chan bool
+	pollChanMut sync.Mutex
+
+	// NOTE: when we have a lot of skipchains, then using mutex most likely
+	// will slow down our service, an improvement is to go-routines to
+	// store transactions. But there is more management overhead, e.g.,
+	// restarting after shutdown, answer getTxs requests and so on.
+	txBuffer txBuffer
 
 	// contracts map kinds to kind specific verification functions
 	contracts map[string]OmniLedgerContract
@@ -70,6 +79,8 @@ type Service struct {
 	storage *storage
 
 	createSkipChainMut sync.Mutex
+
+	leaderMap leaderMap
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -152,9 +163,10 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		return nil, err
 	}
 
-	s.workersMu.Lock()
-	s.queueWorkers[string(sb.SkipChainID())] = s.createQueueWorker(sb.SkipChainID(), req.BlockInterval)
-	s.workersMu.Unlock()
+	s.pollChanMut.Lock()
+	s.pollChan[string(sb.SkipChainID())] = s.startPolling(sb.SkipChainID(), req.BlockInterval)
+	s.pollChanMut.Unlock()
+	// s.createQueueWorker(sb.SkipChainID(), req.BlockInterval)
 
 	return &CreateGenesisBlockResponse{
 		Version:   CurrentVersion,
@@ -168,18 +180,16 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		return nil, errors.New("version mismatch")
 	}
 
-	s.workersMu.Lock()
-	c, ok := s.queueWorkers[string(req.SkipchainID)]
-	s.workersMu.Unlock()
-	if !ok {
-		return nil, fmt.Errorf("we don't know skipchain ID %x", req.SkipchainID)
-	}
-
 	if len(req.Transaction.Instructions) == 0 {
 		return nil, errors.New("no transactions to add")
 	}
 
-	c <- req.Transaction
+	gen := s.db().GetByID(req.SkipchainID)
+	if gen == nil || gen.Index != 0 {
+		return nil, errors.New("skipchain ID is does not exist")
+	}
+
+	s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 
 	return &AddTxResponse{
 		Version: CurrentVersion,
@@ -193,7 +203,7 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		return nil, errors.New("version mismatch")
 	}
 	log.Lvlf2("%s: Getting proof for key %x on sc %x", s.ServerIdentity(), req.Key, req.ID)
-	latest, err := s.db().GetLatest(s.db().GetByID(req.ID))
+	latest, err := s.db().GetLatestByID(req.ID)
 	if err != nil && latest == nil {
 		return
 	}
@@ -368,6 +378,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 func (s *Service) updateCollection(msg network.Message) {
 	uc, ok := msg.(*updateCollection)
 	if !ok {
+		log.Error("updateCollection cast failure")
 		return
 	}
 
@@ -396,6 +407,18 @@ func (s *Service) updateCollection(msg network.Message) {
 		log.Error("Couldn't recreate state changes:", err.Error())
 		return
 	}
+
+	// Check whether we are storing a genesis config, if we are, also set
+	// the leaderMap.
+	if scs.isGenesisConfig() {
+		// TODO we need to rotate the leader
+		leader := sb.Roster.List[0]
+		if err := s.leaderMap.add(string(sb.SkipChainID()), leader); err != nil {
+			log.Error("failed to add entry in leaderMap", err)
+			return
+		}
+	}
+
 	if i, _ := sb.Roster.Search(s.ServerIdentity().ID); i == 0 {
 		log.Lvlf2("%s: Storing state changes %v", s.ServerIdentity(), scs)
 	} else {
@@ -473,53 +496,71 @@ func (s *Service) loadLatestDarc(sid skipchain.SkipBlockID, dID darc.ID) (*darc.
 	return darc.NewFromProtobuf(value)
 }
 
-// createQueueWorker sets up a worker that will listen on a channel for
-// incoming requests and then create a new block every epoch.
-func (s *Service) createQueueWorker(scID skipchain.SkipBlockID, interval time.Duration) chan ClientTransaction {
-	c := make(chan ClientTransaction)
+func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duration) chan bool {
+	closeSignal := make(chan bool)
 	go func() {
-		ts := []ClientTransaction{}
 		to := time.After(interval)
 		for {
 			select {
-			case t := <-c:
-				ts = append(ts, t)
-				log.Lvlf2("%x: Stored transaction. Next block length: %v, New Tx: %+v", scID, len(ts), t)
 			case <-to:
-				if len(ts) > 0 {
-					log.Lvlf2("%x: New epoch and transaction-length: %d", scID, len(ts))
-					sb, err := s.db().GetLatest(s.db().GetByID(scID))
-					if err != nil {
-						panic("DB is in bad state and cannot find skipchain anymore: " + err.Error())
-					}
+				if b := s.db().GetByID(scID); b == nil {
+					to = time.After(interval)
+					continue
+				}
+				sb, err := s.db().GetLatestByID(scID)
+				if err != nil {
+					panic("DB is in bad state and cannot find skipchain anymore: " + err.Error())
+				}
+				// The node that start polling should be the
+				// roster, which is not always the 0th node in
+				// the roster.
+				tree := sb.Roster.GenerateNaryTreeWithRoot(len(sb.Roster.List), s.ServerIdentity())
+				proto, err := s.CreateProtocol(collectTxProtocol, tree)
+				if err != nil {
+					panic("cannot create protocol: " + err.Error())
+				}
+				root := proto.(*CollectTxProtocol)
+				root.SkipchainID = scID
+				if err := root.Start(); err != nil {
+					panic("cannot start protocol: " + err.Error())
+				}
 
-					_, err = s.createNewBlock(scID, sb.Roster, ts)
-
-					// TODO: In createNewBlock, we need to
-					// limit how many tx we consume
-					// according the final size of the
-					// block. Thus createNewBlock needs to
-					// return how many it took.
-
-					// (The maximum size of a block is
-					// currently fixed by (at least) the
-					// maximum message size allowed in
-					// onet.)
-					ts = []ClientTransaction{}
-					if err != nil {
-						log.Error("couldn't create new block: " + err.Error())
-						to = time.After(interval)
-						continue
+				// TODO set the right timeout
+				innerTo := time.After(time.Second)
+				var txs ClientTransactions
+			collectTxLoop:
+				for {
+					select {
+					case newTxs, more := <-root.TxsChan:
+						if more {
+							txs = append(txs, newTxs...)
+						} else {
+							break collectTxLoop
+						}
+					case <-innerTo:
+						log.Lvl2(s.ServerIdentity(), "timeout while collecting transactions from other nodes")
+						break collectTxLoop
 					}
 				}
+
+				if txs.IsEmpty() {
+					log.Lvl3(s.ServerIdentity(), "no new transactions, not creating new block")
+					to = time.After(interval)
+					continue
+				}
+
+				_, err = s.createNewBlock(scID, sb.Roster, txs)
+				if err != nil {
+					log.Error("couldn't create new block: " + err.Error())
+				}
 				to = time.After(interval)
-			case <-s.CloseQueues:
-				log.Lvlf2("closing queues...")
+			case <-closeSignal:
+				log.Lvl2(s.ServerIdentity(), "stopping polling")
 				return
 			}
 		}
 	}()
-	return c
+	return closeSignal
 }
 
 // We use the OmniLedger as a receiver (as is done in the identity service),
@@ -622,6 +663,17 @@ clientTransactions:
 	return cdbTemp.GetRoot(), ctsOK, states, nil
 }
 
+func (s *Service) getTxs(scID skipchain.SkipBlockID) ClientTransactions {
+	return s.txBuffer.take(string(scID))
+}
+
+// ClosePolling closes the go-routines that are polling for transactions.
+func (s *Service) ClosePolling() {
+	for _, c := range s.pollChan {
+		close(c)
+	}
+}
+
 // registerContract stores the contract in a map and will
 // call it whenever a contract needs to be done.
 func (s *Service) registerContract(contractID string, c OmniLedgerContract) error {
@@ -650,7 +702,14 @@ func (s *Service) tryLoad() error {
 		s.storage = &storage{}
 	}
 	s.collectionDB = map[string]*collectionDB{}
-	s.queueWorkers = map[string]chan ClientTransaction{}
+
+	// NOTE: Usually tryLoad is only called when services start up. but for
+	// testing, we might re-initialise the service. So we need to clean up
+	// the go-routines.
+	for k := range s.pollChan {
+		close(s.pollChan[k])
+	}
+	s.pollChan = make(map[string]chan bool)
 
 	gas := &skipchain.GetAllSkipChainIDs{}
 	gasr, err := s.skService().GetAllSkipChainIDs(gas)
@@ -668,11 +727,11 @@ func (s *Service) tryLoad() error {
 		}
 		// At this point the service is not yet up, so no need to
 		// protect access to queueWorkers with a mutex.
-		if s.queueWorkers[string(gen)] != nil {
+		if s.pollChan[string(gen)] != nil {
 			panic("double worker")
 		}
 
-		s.queueWorkers[string(gen)] = s.createQueueWorker(gen, interval)
+		s.pollChan[string(gen)] = s.startPolling(gen, interval)
 	}
 
 	return nil
@@ -711,8 +770,9 @@ func (s *Service) save() {
 func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		CloseQueues:      make(chan bool),
 		contracts:        make(map[string]OmniLedgerContract),
+		leaderMap:        newLeaderMap(c.ServerIdentity()),
+		txBuffer:         newTxBuffer(),
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
 		s.GetProof); err != nil {
@@ -732,5 +792,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.registerContract(ContractConfigID, s.ContractConfig)
 	s.registerContract(ContractDarcID, s.ContractDarc)
 	skipchain.RegisterVerification(c, verifyOmniLedger, s.verifySkipBlock)
+	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {
+		return nil, err
+	}
 	return s, nil
 }
