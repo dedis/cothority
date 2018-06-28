@@ -21,7 +21,31 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * EventLogInstance is for interacting with the eventlog contract.
+ * EventLogInstance is for interacting with the eventlog contract on OmniLedger.
+ * <p>
+ * Contrary to ordinary event logging services, we offer better security and auditability. Below are some of the main
+ * features that sets us apart.
+ * <p>
+ * <ul>
+ *  <li>
+ *      Collective witness - a collection of nodes, or conodes, indepdently observe the logging of an event. The event
+ *      will only be accepted if a 2/3-majority think it is valid, e.g., the timestamp is reasonable, the client is
+ *      authorised and so on.
+ *  </li>
+ *  <li>
+ *      Distributed access control - fine-grained client access control with delegation support is configured using
+ *      DARC.
+ *  </li>
+ *  <li>
+ *     Configurable acceptance criteria - we execute a smart-contract on all nodes, nodes only accept the event if the
+ *     smart-contract returns a positive result.
+ *  </li>
+ *
+ *  <li>
+ *     Existance proof - once an event is logged, an authorised client can request a cryptographic proof (powered by
+ *     collection) that the event is indeed stored in the blockchain and has not been tampered.
+ *  </li>
+ * </ul>
  */
 public class EventLogInstance {
     private Instance instance;
@@ -32,9 +56,9 @@ public class EventLogInstance {
     /**
      * Constructor for when do you not know the eventlog instance, use this constructor when constructing for the first
      * time. This constructor expects the omniledger RPC to be initialised with a darc that contains "spawn:eventlog".
-     * @param ol - the omniledger RPC
-     * @param signers - a list of signers that has the "spawn:eventlog" permission
-     * @param darcId - the darc ID that has the "spawn:eventlog" permission
+     * @param ol the omniledger RPC
+     * @param signers a list of signers that has the "spawn:eventlog" permission
+     * @param darcId the darc ID that has the "spawn:eventlog" permission
      * @throws CothorityException
      */
     public EventLogInstance(OmniledgerRPC ol, List<Signer> signers, DarcId darcId) throws CothorityException {
@@ -53,8 +77,8 @@ public class EventLogInstance {
 
     /**
      * Constructor for when the caller already knows the eventlog instance.
-     * @param ol - the omniledger RPC
-     * @param id - the instance ID, it must be already initialised and stored on omniledger
+     * @param ol the omniledger RPC
+     * @param id the instance ID, it must be already initialised and stored on omniledger
      * @throws CothorityException
      */
     public EventLogInstance(OmniledgerRPC ol, InstanceId id) throws CothorityException {
@@ -66,8 +90,8 @@ public class EventLogInstance {
      * Logs a list of events, the returned value is a list of ID for every event which can be used to retrieve events
      * later. Note that when the function returns, it does not mean the event is stored successfully in a block, use the
      * get function to verify that the event is actually stored.
-     * @param events - a list of events to log
-     * @param signers - a list of signers with the permission "invoke:eventlog"
+     * @param events a list of events to log
+     * @param signers a list of signers with the permission "invoke:eventlog"
      * @return a list of keys which can be used to retrieve the logged events
      * @throws CothorityException
      */
@@ -81,8 +105,8 @@ public class EventLogInstance {
      * Logs an event, the returned value is the ID of the event which can be retrieved later. Note that when this
      * function returns, it does not mean the event is stored successfully in a block, use the get function to verify
      * that the event is actually stored.
-     * @param event - the event to log
-     * @param signers - a list of signers that has the "invoke:eventlog" permission
+     * @param event the event to log
+     * @param signers a list of signers that has the "invoke:eventlog" permission
      * @return the key which can be used to retrieve the event later
      * @throws CothorityException
      */
@@ -92,7 +116,7 @@ public class EventLogInstance {
 
     /**
      * Retrieves the stored event by key. An exception is thrown when if the event does not exist.
-     * @param key - the key for which the event is stored
+     * @param key the key for which the event is stored
      * @return The event if it is found.
      * @throws CothorityException
      */
@@ -119,9 +143,9 @@ public class EventLogInstance {
      * Searches for events based on topic and a time range. If the topic is an empty string, all topics within that
      * range are returned (from < when <= to). The query may not return all events, this is indicated by the truncated
      * flag in the return value.
-     * @param topic - the topic to search, if it is an empty string, all topics are included, we do not support regex
-     * @param from - the start of the search range (exclusive).
-     * @param to - the end of the search range (inclusive).
+     * @param topic the topic to search, if it is an empty string, all topics are included, we do not support regex
+     * @param from the start of the search range (exclusive).
+     * @param to the end of the search range (inclusive).
      * @return a list of events and a flag indicating whether the result is truncated
      * @throws CothorityException
      */
@@ -143,6 +167,14 @@ public class EventLogInstance {
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
+    }
+
+    /**
+     * Gets the instance ID which can be stored to re-connect to the same eventlog instance in the future.
+     * @return the instance ID
+     */
+    public InstanceId getInstanceId() {
+        return instance.getId();
     }
 
     private InstanceId initEventlogInstance(List<Signer> signers, DarcId darcId) throws CothorityException {

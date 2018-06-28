@@ -22,12 +22,11 @@ For the general information about running a conode, or conodes, please see the
 [conode documentation](../conode/README.md). EventLog is not stable, so it is
 not a part of the `cothority.v2` release, please use the `master` branch.
 
-Alternatively, you can try to use the conodes hosted by us. However, we do not
-guarantee that they'll always be up to date.
-TODO: add more info about how to connect to our conodes.
-
 ## Client API
-We offer three ways for clients to connect to the event log service.
+We offer three ways for clients to connect to the event log service. All the
+APIs expect an existing OmniLedger object that has a darc with "spawn:eventlog"
+and "invoke:eventlog" in its rules. The eventlog signer (which we will create
+below) *must* be authorised to use these rules.
 
 ### Go API
 To get started, you need a signer and a roster, then we can initialise the
@@ -49,22 +48,42 @@ The detailed API can be found on
 [godoc](https://godoc.org/github.com/dedis/cothority/eventlog).
 
 ### Java API
-The Java API is nearly identical to the Go API. To start, initialise the
-EventLog class like so:
+In java, you need to construct a `EventLogInstance` class. There are two ways
+to initialise it, the first for when you do not have an existing eventlog
+instance on omniledger to connect to, the other when you do.
+
 ```java
-long blockInterval = 1000000000; // 1 second, blockInterval is in nanoseconds
-EventLog el = new EventLog(roster, signers, blockInterval);
+// Create the eventlog instance. It expects an omniledger RPC, a list of 
+// signers that have the "spawn:eventlog" permission and the darcID for where
+// the permission is stored.
+EventLogInstance el = new EventLogInstance(olRPC, admins, darcID);
 ```
-See the class documentation for how to initialise a roster, usually we parse it
-from a TOML file. If no exceptions are thrown, we can log and read events using
-`log` and `get`.
+
+If you would like to connect to the same instance, you need to save the result
+of `el.getInstanceId()` and of course the omniledger RPC. The constructor
+`EventLogInstance(OmniledgerRPC ol, InstanceId id)` connects to an existing
+instance.
+
+It's straightforward to log events, as long as the event is correctly signed.
+The signer must be the one with the "invoke:eventlog" permission.
 ```java
 Event event = new Event("login", "alice");
-byte[] key = this.el.log(event);
+InstanceId key = this.el.log(event, signers);
 // wait for the block to be added
 Event event2 = this.el.get(key);
 assertTrue(event.equals(event2));
 ```
+
+We also have a search API, which allows searching for a particular topic within
+a time-range.
+```java
+long now = System.currentTimeMillis() * 1000 * 1000;
+SearchResponse resp = el.search("", now - 1000, now + 1000);
+```
+
+Please refer to the javadocs for more information. The javadocs are not hosted
+anywhere unfortunately, but it is possible to generate them from the
+[source](https://github.com/dedis/cothority/blob/master/external/java/src/main/java/ch/epfl/dedis/lib/omniledger/contracts/EventLogInstance.java).
 
 ### CLI
 Please see the `el` documentation [here](el/README.md).

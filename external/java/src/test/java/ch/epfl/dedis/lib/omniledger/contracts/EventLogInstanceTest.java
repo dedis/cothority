@@ -3,7 +3,6 @@ package ch.epfl.dedis.lib.omniledger.contracts;
 import ch.epfl.dedis.lib.eventlog.Event;
 import ch.epfl.dedis.lib.eventlog.SearchResponse;
 import ch.epfl.dedis.lib.omniledger.InstanceId;
-import ch.epfl.dedis.lib.omniledger.SecureKG;
 import org.junit.jupiter.api.Test;
 
 import ch.epfl.dedis.integration.TestServerController;
@@ -36,32 +35,20 @@ class EventLogInstanceTest {
 
     @BeforeEach
     void initAll() throws Exception {
-        // Change this flag to true if you wish to test against the secure KG server. We do not test it by default
-        // because it might overwhelm the server if the tests are executed repeatedly.
-        boolean useSecureKGServer = false;
-        if (useSecureKGServer) {
-            ol = SecureKG.getOmniledgerRPC();
-            if (!ol.checkLiveness()) {
-                throw new CothorityCommunicationException("liveness check failed");
-            }
-            admin = SecureKG.getSigner();
-            el = new EventLogInstance(ol, SecureKG.getEventlogId());
-        } else {
-            testInstanceController = TestServerInit.getInstance();
-            admin = new SignerEd25519();
-            Map<String, byte[]> rules = Darc.initRules(Arrays.asList(admin.getIdentity()),
-                    Arrays.asList(admin.getIdentity()));
-            rules.put("spawn:eventlog", admin.getIdentity().toString().getBytes());
-            rules.put("invoke:eventlog", admin.getIdentity().toString().getBytes());
-            Darc genesisDarc = new Darc(rules, "genesis".getBytes());
+        testInstanceController = TestServerInit.getInstance();
+        admin = new SignerEd25519();
+        Map<String, byte[]> rules = Darc.initRules(Arrays.asList(admin.getIdentity()),
+                Arrays.asList(admin.getIdentity()));
+        rules.put("spawn:eventlog", admin.getIdentity().toString().getBytes());
+        rules.put("invoke:eventlog", admin.getIdentity().toString().getBytes());
+        Darc genesisDarc = new Darc(rules, "genesis".getBytes());
 
-            ol = new OmniledgerRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(100, MILLIS));
-            if (!ol.checkLiveness()) {
-                throw new CothorityCommunicationException("liveness check failed");
-            }
-
-            el = new EventLogInstance(ol, Arrays.asList(admin), genesisDarc.getId());
+        ol = new OmniledgerRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(100, MILLIS));
+        if (!ol.checkLiveness()) {
+            throw new CothorityCommunicationException("liveness check failed");
         }
+
+        el = new EventLogInstance(ol, Arrays.asList(admin), genesisDarc.getId());
     }
 
     @Test
