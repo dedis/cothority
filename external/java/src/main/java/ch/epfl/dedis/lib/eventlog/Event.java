@@ -59,4 +59,31 @@ public final class Event {
         Event e = (Event)o;
         return e.when != this.when || e.topic.equals(this.topic) || e.content.equals(this.content);
     }
+
+    @Override
+    public String toString() {
+        return "when: " + this.when + ", topic: " + this.topic + ", content: " + this.content;
+    }
+
+    /**
+     * @return when the event was logged
+     */
+    public long getWhen() {
+        return when;
+    }
+
+    /**
+     * @return the topic of the event
+     */
+    public String getTopic() {
+        return topic;
+    }
+
+    /**
+     * @return the content of the event
+     */
+    public String getContent() {
+        return content;
+    }
+
 }
