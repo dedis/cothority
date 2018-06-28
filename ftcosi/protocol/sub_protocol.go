@@ -202,7 +202,7 @@ loop:
 					"that is neither a children nor itself, ignored")
 				break //discards it
 			}
-			remove(nodesCanCommit, commitment.TreeNode)
+			nodesCanCommit = remove(nodesCanCommit, commitment.TreeNode)
 
 			//if is own commitment
 			if commitment.TreeNode.ID.Equal(p.TreeNode().ID) {
@@ -319,8 +319,10 @@ loop:
 			}
 
 			//send challenge to children
+			var childrenToSendChallenge []*onet.TreeNode
+			copy(childrenToSendChallenge, childrenCanResponse) // copy to avoid data race
 			go func() {
-				if errs := p.multicastParallel(&challenge.Challenge, childrenCanResponse...); len(errs) > 0 {
+				if errs := p.multicastParallel(&challenge.Challenge, childrenToSendChallenge...); len(errs) > 0 {
 					log.Error(p.ServerIdentity(), errs)
 				}
 			}()
