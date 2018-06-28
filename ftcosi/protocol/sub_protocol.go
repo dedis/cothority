@@ -182,8 +182,10 @@ func (p *SubFtCosi) Dispatch() error {
 	var t = time.After(p.Timeout / 2) // the timeout
 
 	copy(nodesCanCommit, p.Children())
-	if !p.IsRoot() {
-		nodesCanCommit = append(nodesCanCommit, p.TreeNode())
+	if p.IsRoot() {
+		nodesCanCommit = append(nodesCanCommit, p.Children()...) // every node can send quick and final answer
+	} else {
+		nodesCanCommit = append(nodesCanCommit, p.TreeNode()) // can have its own commitment
 	}
 
 loop:
@@ -319,7 +321,7 @@ loop:
 			}
 
 			//send challenge to children
-			var childrenToSendChallenge []*onet.TreeNode
+			childrenToSendChallenge := make([]*onet.TreeNode, len(childrenCanResponse))
 			copy(childrenToSendChallenge, childrenCanResponse) // copy to avoid data race
 			go func() {
 				if errs := p.multicastParallel(&challenge.Challenge, childrenToSendChallenge...); len(errs) > 0 {
@@ -562,7 +564,7 @@ func isValidSender(node *onet.TreeNode, valids ...*onet.TreeNode) bool {
 	return isValid
 }
 
-// removes a node from a slice
+// removes the first instance of a node from a slice
 func remove(nodesList []*onet.TreeNode, node *onet.TreeNode) []*onet.TreeNode {
 	for i, iNode := range nodesList {
 		if iNode.Equal(node) {
