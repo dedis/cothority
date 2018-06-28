@@ -633,7 +633,7 @@ func (s *Service) registerContract(contractID string, c OmniLedgerContract) erro
 // if it finds a valid config-file.
 func (s *Service) tryLoad() error {
 	s.storage = &storage{
-		PropTimeout: 10 * time.Second,
+		PropTimeout: 30 * time.Second,
 	}
 	msg, err := s.Load([]byte(storageID))
 	if err != nil {
@@ -732,5 +732,15 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.registerContract(ContractConfigID, s.ContractConfig)
 	s.registerContract(ContractDarcID, s.ContractDarc)
 	skipchain.RegisterVerification(c, verifyOmniLedger, s.verifySkipBlock)
+	bftDuration, err := time.ParseDuration("10m")
+	if err != nil {
+		return nil, err
+	}
+	propDuration, err := time.ParseDuration("10m")
+	if err != nil {
+		return nil, err
+	}
+	s.skService().SetBFTTimeout(bftDuration)
+	s.skService().SetPropTimeout(propDuration)
 	return s, nil
 }
