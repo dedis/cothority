@@ -112,7 +112,7 @@ func (p *SubFtCosi) Dispatch() error {
 			return nil
 		}
 		if !isValidSender(announcement.TreeNode, p.Parent(), p.TreeNode()) {
-			log.Lvl2(p.ServerIdentity(), "received announcement from node", announcement.ServerIdentity,
+			log.Warn(p.ServerIdentity(), "received announcement from node", announcement.ServerIdentity,
 				"that is not its parent nor itself, ignored")
 		} else {
 			log.Lvl3(p.ServerIdentity(), "received announcement")
@@ -162,7 +162,7 @@ func (p *SubFtCosi) Dispatch() error {
 		// Only send commits if the node has children
 		go func() {
 			if errs := p.SendToChildrenInParallel(&announcement.Announcement); len(errs) > 0 {
-				log.Lvl3(p.ServerIdentity(), "failed to send announcement to all children")
+				log.Error(p.ServerIdentity(), "failed to send announcement to all children, trying to continue")
 			}
 		}()
 	}
@@ -172,6 +172,7 @@ func (p *SubFtCosi) Dispatch() error {
 	var commitments = make([]StructCommitment, 0)                  // list of received commitments
 	var challenge StructChallenge                                  // the challenge that will be received
 	var nodesCanCommit = make([]*onet.TreeNode, len(p.Children())) // the list of nodes that can commit. Nodes will be removed from the list once they commit.
+	var challengeMask *cosi.Mask                                   // the mask received in the challenge, set only if not root.
 	var childrenCanResponse = make([]*onet.TreeNode, 0)            // the list of children that can send a response. That is the list of children present in the challenge mask.
 
 	var NRefusal = 0                  // number of refusal received. Will be used only for the subleader
@@ -197,7 +198,7 @@ loop:
 			}
 
 			if !isValidSender(commitment.TreeNode, nodesCanCommit...) {
-				log.Lvl2(p.ServerIdentity(), "received a Commitment from node", commitment.ServerIdentity,
+				log.Warn(p.ServerIdentity(), "received a Commitment from node", commitment.ServerIdentity,
 					"that is neither a children nor itself, ignored")
 				break //discards it
 			}
@@ -226,8 +227,8 @@ loop:
 					return err
 				}
 				if verificationMask.CountEnabled() > 1 {
-					log.Lvl2(p.ServerIdentity(), "received commitment with ill-formed mask in non-root node: has",
-						verificationMask.CountEnabled(), "nodes enabled instead of 0 or 1")
+					log.Warn(p.ServerIdentity(), "received commitment with ill-formed mask in non-root node: has",
+						verificationMask.CountEnabled(), "nodes enabled instead of 0 or 1, ignored")
 					break
 				}
 
@@ -283,7 +284,7 @@ loop:
 				return nil
 			}
 			if !isValidSender(challenge.TreeNode, p.Parent(), p.TreeNode()) {
-				log.Lvl2(p.ServerIdentity(), "received a Challenge from node", challenge.ServerIdentity,
+				log.Warn(p.ServerIdentity(), "received a Challenge from node", challenge.ServerIdentity,
 					"that is not its parent nor itself, ignored")
 				break //discards it
 			}
@@ -296,16 +297,31 @@ loop:
 			if p.IsRoot() {
 				childrenCanResponse = p.Children()
 			} else {
-				childrenCanResponse, err = p.getChildrenInMask(challenge.Mask)
+
+				//get children present in challenge mask
+				challengeMask, err = cosi.NewMask(p.suite, p.Publics, nil)
 				if err != nil {
-					return fmt.Errorf("error in handling challenge mask: %s", err)
+					return fmt.Errorf("error in creating new mask: %s", err)
+				}
+				err = challengeMask.SetMask(challenge.Mask)
+				if err != nil {
+					return fmt.Errorf("error in setting challenge mask: %s", err)
+				}
+				for _, child := range p.Children() {
+					isEnabled, err := challengeMask.KeyEnabled(child.ServerIdentity.Public)
+					if err != nil {
+						return fmt.Errorf("error in checking a child presence in challenge mask: %s", err)
+					}
+					if isEnabled {
+						childrenCanResponse = append(childrenCanResponse, child)
+					}
 				}
 			}
 
 			//send challenge to children
 			go func() {
 				if errs := p.multicastParallel(&challenge.Challenge, childrenCanResponse...); len(errs) > 0 {
-					log.Lvl3(p.ServerIdentity(), errs)
+					log.Error(p.ServerIdentity(), errs)
 				}
 			}()
 
@@ -340,7 +356,7 @@ loop:
 			}
 
 			if !isValidSender(response.TreeNode, childrenCanResponse...) {
-				log.Lvl2(p.ServerIdentity(), "received a Response from node", response.ServerIdentity,
+				log.Warn(p.ServerIdentity(), "received a Response from node", response.ServerIdentity,
 					"that is not a committed children, ignored")
 				break
 			}
@@ -387,8 +403,12 @@ loop:
 		}
 	}
 
-	// add own response if verification succeeded
-	if secret != nil {
+	// add own response if in mask
+	isInMask, err := challengeMask.KeyEnabled(p.Public())
+	if err != nil {
+		return fmt.Errorf("error in checking a key presence in the challenge mask: %s", err)
+	}
+	if isInMask {
 		personalResponse, err := cosi.Response(p.suite, p.Private(), secret, challenge.CoSiChallenge)
 		if err != nil {
 			return fmt.Errorf("error while generating own response: %s", err)
@@ -424,7 +444,7 @@ func (p *SubFtCosi) sendAggregatedCommitments(commitments []StructCommitment, NR
 		return err
 	}
 
-	log.Lvl2(p.ServerIdentity(), "commitment sent with", mask.CountEnabled(), "accepted and", NRefusal, "refusals")
+	log.Lvl3(p.ServerIdentity(), "commitment sent with", mask.CountEnabled(), "accepted and", NRefusal, "refusals")
 
 	return nil
 }
@@ -432,7 +452,7 @@ func (p *SubFtCosi) sendAggregatedCommitments(commitments []StructCommitment, NR
 // HandleStop is called when a Stop message is send to this node. It stops the node.
 func (p *SubFtCosi) HandleStop(stop StructStop) error {
 	if !isValidSender(stop.TreeNode, p.Root()) {
-		log.Lvl2(p.ServerIdentity(), "received a Stop from node", stop.ServerIdentity,
+		log.Warn(p.ServerIdentity(), "received a Stop from node", stop.ServerIdentity,
 			"that is not the root, ignored")
 	}
 	close(p.ChannelAnnouncement)
@@ -460,13 +480,11 @@ func (p *SubFtCosi) Start() error {
 	if p.Timeout < 10*time.Nanosecond {
 		return errors.New("unrealistic timeout")
 	}
-
 	if p.Threshold > p.Tree().Size() {
 		return errors.New("threshold bigger than number of nodes in subtree")
 	}
-
-	if p.Threshold == 0 {
-		log.Lvl3("no threshold specified, using \"as much as possible\" policy")
+	if p.Threshold < 1 {
+		return fmt.Errorf("threshold of %d smaller than one node", p.Threshold)
 	}
 
 	announcement := StructAnnouncement{
@@ -550,28 +568,4 @@ func remove(nodesList []*onet.TreeNode, node *onet.TreeNode) []*onet.TreeNode {
 		}
 	}
 	return nodesList
-}
-
-// returns the list of children present in a given mask
-func (p *SubFtCosi) getChildrenInMask(byteMask []byte) ([]*onet.TreeNode, error) {
-	mask, err := cosi.NewMask(p.suite, p.Publics, nil)
-	if err != nil {
-		return nil, err
-	}
-	err = mask.SetMask(byteMask)
-	if err != nil {
-		return nil, err
-	}
-
-	childrenInMask := make([]*onet.TreeNode, 0)
-	for _, child := range p.Children() {
-		isEnabled, err := mask.KeyEnabled(child.ServerIdentity.Public)
-		if err != nil {
-			return nil, err
-		}
-		if isEnabled {
-			childrenInMask = append(childrenInMask, child)
-		}
-	}
-	return childrenInMask, nil
 }
