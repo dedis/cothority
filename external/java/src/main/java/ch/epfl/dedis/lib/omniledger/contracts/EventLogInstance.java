@@ -141,7 +141,7 @@ public class EventLogInstance {
 
     /**
      * Searches for events based on topic and a time range. If the topic is an empty string, all topics within that
-     * range are returned (from < when <= to). The query may not return all events, this is indicated by the truncated
+     * range are returned (from &lt; when &lt;= to). The query may not return all events, this is indicated by the truncated
      * flag in the return value.
      * @param topic the topic to search, if it is an empty string, all topics are included, we do not support regex
      * @param from the start of the search range (exclusive).

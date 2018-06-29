@@ -6,7 +6,29 @@
 
     <groupId>ch.epfl.dedis</groupId>
     <artifactId>cothority</artifactId>
-    <version>v2.0.0-dev</version>
+    <version>2.0.1</version>
+    <name>Cothority client library for Java</name>
+    <description>A client library for communicating with cothorities (a collective authority).</description>
+    <url>https://github.com/dedis/cothority</url>
+    <licenses>
+        <license>
+            <name>GNU Affero General Public License version 3</name>
+            <url>https://opensource.org/licenses/AGPL-3.0</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>DEDIS Sofware Engineers</name>
+            <email>cothority@googlegroups.com</email>
+            <organization>DEDIS Lab, EPFL</organization>
+            <organizationUrl>https://dedis.epfl.ch/</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git://github.com/dedis/cothority.git</connection>
+        <developerConnection>scm:git:ssh://github.com:dedis/cothority.git</developerConnection>
+        <url>http://github.com/dedis/cothority/tree/master</url>
+    </scm>
     <build>
         <plugins>
             <plugin>
@@ -46,6 +68,44 @@
                         <version>5.0.1</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.sonatype.plugins</groupId>
+                <artifactId>nexus-staging-maven-plugin</artifactId>
+                <version>1.6.7</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <serverId>ossrh</serverId>
+                    <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>1.5</version>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -133,8 +193,14 @@
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-	<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>
 

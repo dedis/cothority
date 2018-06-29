@@ -51,7 +51,7 @@ public class SignaturePath {
      * @param darc
      * @param signer
      * @param role
-     * @throws Exception
+     * @throws CothorityCryptoException
      */
     public SignaturePath(Darc darc, Signer signer, int role) throws CothorityCryptoException {
         path = new ArrayList<>();
@@ -65,7 +65,7 @@ public class SignaturePath {
      * but that need the path to be verified by the verifier itself.
      * @param signer
      * @param role
-     * @throws Exception
+     * @throws CothorityCryptoException
      */
     public SignaturePath(Signer signer, int role) throws CothorityCryptoException {
         path = new ArrayList<>();

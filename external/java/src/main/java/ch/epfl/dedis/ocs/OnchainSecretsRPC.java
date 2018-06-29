@@ -27,7 +27,6 @@ import java.util.List;
  * Purpose: Implementing all communication with the cothority to set-up,
  * check, write and read documents from the skipchain.
  *
- * @author Linus Gasser <linus.gasser@epfl.ch>
  * @version 0.3 2017/11/13
  */
 

@@ -16,7 +16,6 @@ import java.util.List;
  * OnchainSecrets interfaces the OnchainSecretsRPC class and offers convenience methods for
  * easier handling.
  *
- * @author Linus Gasser <linus.gasser@epfl.ch>
  * @version 0.3 17/11/07
  */
 public class OnchainSecrets extends OnchainSecretsRPC {

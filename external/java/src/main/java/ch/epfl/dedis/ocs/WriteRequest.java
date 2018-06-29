@@ -118,8 +118,9 @@ public class WriteRequest {
      * darc however will be stored in clear.
      *
      * @param X - the public symmetricKey of the ocs-shard
+     * @param scid - the id of the skipchain
      * @return - OCSWrite to be sent to the cothority
-     * @throws Exception
+     * @throws CothorityCommunicationException
      */
     public OCSProto.Write toProto(Point X, SkipblockId scid) throws CothorityCommunicationException {
         OCSProto.Write.Builder write = OCSProto.Write.newBuilder();
