@@ -332,7 +332,7 @@ func TestProtocolErrors(t *testing.T) {
 
 func TestProtocolRefusalAll(t *testing.T) {
 	nodes := []int{4, 5, 13}
-	subtrees := []int{1, 2, 5, 9}
+	subtrees := []int{1, 2, 5}
 	proposal := []byte{0xFF}
 
 	for _, nNodes := range nodes {
@@ -341,7 +341,6 @@ func TestProtocolRefusalAll(t *testing.T) {
 
 			local := onet.NewLocalTest(testSuite)
 			_, _, tree := local.GenTree(nNodes, false)
-			publics := tree.Roster.Publics()
 
 			pi, err := local.CreateProtocol(FailureProtocolName, tree)
 			if err != nil {
@@ -353,7 +352,7 @@ func TestProtocolRefusalAll(t *testing.T) {
 			cosiProtocol.Msg = proposal
 			cosiProtocol.NSubtrees = nSubtrees
 			cosiProtocol.Timeout = defaultTimeout
-			cosiProtocol.Threshold = 1
+			cosiProtocol.Threshold = nNodes / 2
 
 			err = cosiProtocol.Start()
 			if err != nil {
@@ -373,23 +372,7 @@ func TestProtocolRefusalAll(t *testing.T) {
 				t.Fatal("didn't get signature in time")
 			}
 
-			err = verifySignature(signature, publics, proposal, cosi.CompletePolicy{})
-			if err == nil {
-				local.CloseAll()
-				t.Fatal("verification should fail")
-			}
-
-			err = verifySignature(signature, publics, proposal, cosi.NewThresholdPolicy(2))
-			if err == nil {
-				local.CloseAll()
-				t.Fatal("verification should fail")
-			}
-
-			err = verifySignature(signature, publics, proposal, cosi.NewThresholdPolicy(1))
-			if err != nil {
-				local.CloseAll()
-				t.Fatal(err)
-			}
+			require.Nil(t, signature)
 
 			local.CloseAll()
 		}
