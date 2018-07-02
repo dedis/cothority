@@ -276,20 +276,20 @@ func TestService_StateChange(t *testing.T) {
 	defer closeQueues(s.local)
 
 	var latest int64
-	f := func(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
-		cid, _, err := tx.GetContractState(cdb)
+	f := func(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+		cid, _, err := inst.GetContractState(cdb)
 		if err != nil {
 			return nil, nil, err
 		}
 
-		rec, err := cdb.Get(tx.InstanceID.Slice()).Record()
+		rec, err := cdb.Get(inst.InstanceID.Slice()).Record()
 		if err != nil {
 			return nil, nil, err
 		}
 
 		// create the object if it doesn't exist
 		if !rec.Match() {
-			if tx.Spawn == nil {
+			if inst.Spawn == nil {
 				return nil, nil, errors.New("expected spawn")
 			}
 			zeroBuf := make([]byte, 8)
@@ -297,14 +297,14 @@ func TestService_StateChange(t *testing.T) {
 			return []StateChange{
 				StateChange{
 					StateAction: Create,
-					InstanceID:  tx.InstanceID.Slice(),
+					InstanceID:  inst.InstanceID.Slice(),
 					ContractID:  []byte(cid),
 					Value:       zeroBuf,
 				},
 			}, nil, nil
 		}
 
-		if tx.Invoke == nil {
+		if inst.Invoke == nil {
 			return nil, nil, errors.New("expected invoke")
 		}
 
@@ -324,7 +324,7 @@ func TestService_StateChange(t *testing.T) {
 		return []StateChange{
 			StateChange{
 				StateAction: Update,
-				InstanceID:  tx.InstanceID.Slice(),
+				InstanceID:  inst.InstanceID.Slice(),
 				ContractID:  []byte(cid),
 				Value:       vBuf,
 			},
@@ -431,7 +431,7 @@ func TestService_DarcSpawn(t *testing.T) {
 		Instructions: []Instruction{{
 			InstanceID: InstanceID{
 				DarcID: s.darc.GetBaseID(),
-				SubID:  zeroSubID,
+				SubID:  SubID{},
 			},
 			Nonce:  GenNonce(),
 			Index:  0,
@@ -448,64 +448,8 @@ func TestService_DarcSpawn(t *testing.T) {
 	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
 
 	s.sendTx(t, ctx)
-	pr := s.waitProof(t, InstanceID{darc2.GetBaseID(), zeroSubID})
+	pr := s.waitProof(t, InstanceID{darc2.GetBaseID(), SubID{}})
 	require.True(t, pr.InclusionProof.Match())
-}
-
-func TestService_ValueSpawn(t *testing.T) {
-	s := newSer(t, 1, testInterval)
-	defer s.local.CloseAll()
-	defer closeQueues(s.local)
-
-	darc2 := s.darc.Copy()
-	darc2.Rules.AddRule("spawn:value", darc2.Rules.GetSignExpr())
-	darc2.BaseID = s.darc.GetBaseID()
-	darc2.PrevID = s.darc.GetID()
-	darc2.Version++
-	ctx := darcToTx(t, *darc2, s.signer)
-	s.sendTx(t, ctx)
-	for {
-		pr := s.waitProof(t, ctx.Instructions[0].InstanceID)
-		require.True(t, pr.InclusionProof.Match())
-		values, err := pr.InclusionProof.RawValues()
-		require.Nil(t, err)
-		d, err := darc.NewFromProtobuf(values[0])
-		require.Nil(t, err)
-		if d.Version == darc2.Version {
-			break
-		}
-		time.Sleep(s.interval)
-	}
-	log.Lvl1("Updated darc")
-
-	myvalue := []byte("1234")
-	ctx = ClientTransaction{
-		Instructions: []Instruction{{
-			InstanceID: InstanceID{
-				DarcID: s.darc.GetBaseID(),
-				SubID:  zeroSubID,
-			},
-			Nonce:  GenNonce(),
-			Index:  0,
-			Length: 1,
-			Spawn: &Spawn{
-				ContractID: ContractValueID,
-				Args: []Argument{{
-					Name:  "value",
-					Value: myvalue,
-				}},
-			},
-		}},
-	}
-	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
-
-	var subID SubID
-	copy(subID[:], ctx.Instructions[0].Hash())
-	pr := s.sendTxAndWait(t, ctx, &InstanceID{darc2.GetBaseID(), subID})
-	require.True(t, pr.InclusionProof.Match())
-	values, err := pr.InclusionProof.RawValues()
-	require.Nil(t, err)
-	require.Equal(t, myvalue, values[0])
 }
 
 func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction {
@@ -523,7 +467,7 @@ func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction 
 	instr := Instruction{
 		InstanceID: InstanceID{
 			DarcID: d2.GetBaseID(),
-			SubID:  zeroSubID,
+			SubID:  SubID{},
 		},
 		Nonce:  GenNonce(),
 		Index:  0,
@@ -582,7 +526,6 @@ func (s *ser) sendTx(t *testing.T, ctx ClientTransaction) {
 		Transaction: ctx,
 	})
 	require.Nil(t, err)
-
 }
 
 func (s *ser) sendTxAndWait(t *testing.T, ctx ClientTransaction, id *InstanceID) Proof {
@@ -591,7 +534,7 @@ func (s *ser) sendTxAndWait(t *testing.T, ctx ClientTransaction, id *InstanceID)
 	if id == nil {
 		id = &InstanceID{
 			DarcID: s.darc.GetBaseID(),
-			SubID:  zeroSubID,
+			SubID:  SubID{},
 		}
 	}
 
@@ -605,7 +548,7 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 	for i := 0; i < 10; i++ {
 		resp, err := s.service().GetProof(&GetProof{
 			Version: CurrentVersion,
-			Key:     InstanceID{d2.GetBaseID(), zeroSubID}.Slice(),
+			Key:     InstanceID{d2.GetBaseID(), SubID{}}.Slice(),
 			ID:      s.sb.SkipChainID(),
 		})
 		require.Nil(t, err)
@@ -633,7 +576,7 @@ func newSer(t *testing.T, step int, interval time.Duration) *ser {
 	}
 	s.hosts, s.roster, _ = s.local.GenTree(2, true)
 
-	for _, sv := range s.local.GetServices(s.hosts, omniledgerID) {
+	for _, sv := range s.local.GetServices(s.hosts, OmniledgerID) {
 		service := sv.(*Service)
 		s.services = append(s.services, service)
 	}
@@ -673,27 +616,27 @@ func newSer(t *testing.T, step int, interval time.Duration) *ser {
 
 func closeQueues(local *onet.LocalTest) {
 	for _, server := range local.Servers {
-		services := local.GetServices([]*onet.Server{server}, omniledgerID)
+		services := local.GetServices([]*onet.Server{server}, OmniledgerID)
 		close(services[0].(*Service).CloseQueues)
 	}
 }
 
-func invalidContractFunc(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func invalidContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	return nil, nil, errors.New("this invalid contract always returns an error")
 }
 
-func panicContractFunc(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func panicContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	panic("this contract panics")
 }
 
-func dummyContractFunc(cdb CollectionView, tx Instruction, c []Coin) ([]StateChange, []Coin, error) {
-	args := tx.Spawn.Args[0].Value
-	cid, _, err := tx.GetContractState(cdb)
+func dummyContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	args := inst.Spawn.Args[0].Value
+	cid, _, err := inst.GetContractState(cdb)
 	if err != nil {
 		return nil, nil, err
 	}
 	return []StateChange{
-		NewStateChange(Create, tx.InstanceID, cid, args),
+		NewStateChange(Create, inst.InstanceID, cid, args),
 	}, nil, nil
 }
 

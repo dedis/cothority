@@ -203,7 +203,7 @@ func doLog(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	cl.EventlogID = omniledger.BytesToObjID(eb)
+	cl.EventlogID = omniledger.NewInstanceID(eb)
 
 	t := c.String("topic")
 	content := c.String("content")
@@ -264,7 +264,7 @@ func search(c *cli.Context) error {
 	}
 
 	req := &eventlog.SearchRequest{
-		EventLogID: omniledger.BytesToObjID(eb),
+		EventLogID: omniledger.NewInstanceID(eb),
 		Topic:      c.String("topic"),
 	}
 
