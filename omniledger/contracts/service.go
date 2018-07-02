@@ -23,6 +23,5 @@ func newService(c *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
 	service.RegisterContract(c, ContractValueID, ContractValue)
-	service.RegisterContract(c, ContractCoinID, ContractCoin)
 	return s, nil
 }
