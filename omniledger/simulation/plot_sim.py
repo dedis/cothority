@@ -65,7 +65,6 @@ for delay in delays:
 
             ax.set_yscale('log')
 
- 
             plt.xlabel('number of hosts')
             plt.ylabel('logarithm of time in seconds')
             plt.title(titlestring)
