@@ -52,11 +52,6 @@ func NewClientFromConfig(fn string) (*Client, error) {
 	return c, nil
 }
 
-// NewClientKeep instantiates a new cosi.Client, keeping the connection
-func NewClientKeep() *Client {
-	return &Client{Client: onet.NewClientKeep(cothority.Suite, ServiceName)}
-}
-
 // CreateGenesisBlock sets up a new skipchain to hold the key/value pairs. If
 // a key is given, it is used to authenticate towards the cothority.
 func (c *Client) CreateGenesisBlock(msg *CreateGenesisBlock) (*CreateGenesisBlockResponse, error) {
