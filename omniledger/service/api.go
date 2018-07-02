@@ -46,6 +46,7 @@ func NewClientFromConfig(fn string) (*Client, error) {
 	c.ID = cfg.ID
 	c.OwnerID = cfg.OwnerID
 	return c, nil
+}
 
 // NewClientKeep instantiates a new cosi.Client, keeping the connection
 func NewClientKeep() *Client {
