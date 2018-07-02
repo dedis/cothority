@@ -43,6 +43,7 @@ func NewClientFromConfig(fn string) (*Client, error) {
 	c.ID = cfg.ID
 	c.OwnerID = cfg.OwnerID
 	return c, nil
+}
 
 // NewClientKeep instantiates a new cosi.Client, keeping the connection
 func NewClientKeep() *Client {
@@ -241,7 +242,7 @@ func SignInstruction(inst *Instruction, signers ...darc.Signer) error {
 	case inst.Delete != nil:
 		action = "delete"
 	}
-	req, err := darc.InitAndSignRequest(inst.ObjectID.DarcID, darc.Action(action),
+	req, err := darc.InitAndSignRequest(inst.InstanceID.DarcID, darc.Action(action),
 		inst.Hash(), signers...)
 	if err != nil {
 		return err

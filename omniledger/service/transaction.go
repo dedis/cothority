@@ -69,29 +69,26 @@ type InstanceID struct {
 
 // SubID is a 32-byte id.
 type SubID [32]byte
-// NewObjectID returns a new ObjectID given a slice of bytes.
-func NewObjectID(buf []byte) ObjectID {
+// NewInstanceID returns a new InstanceID given a slice of bytes.
+func NewInstanceID(buf []byte) InstanceID {
 	if len(buf) != 64 {
-		return ObjectID{ZeroDarc, ZeroNonce}
+		return InstanceID{ZeroDarc, ZeroNonce}
 	}
-	return ObjectID{buf[0:32], NewNonce(buf[32:64])}
+	return InstanceID{buf[0:32], NewSubID(buf[32:64])}
 }
 
 // Slice returns concatenated DarcID and InstanceID.
-func (oid InstanceID) Slice() []byte {
+func (instID InstanceID) Slice() []byte {
 	var out []byte
-	out = append(out, oid.DarcID[:]...)
-	return append(out, oid.SubID[:]...)
+	out = append(out, instID.DarcID[:]...)
+	return append(out, instID.SubID[:]...)
 }
 
 // Equal returns if both objectIDs point to the same instance.
-func (oid ObjectID) Equal(other ObjectID) bool {
-	return bytes.Compare(oid.DarcID, other.DarcID) == 0 &&
-		bytes.Compare(oid.InstanceID[:], other.InstanceID[:]) == 0
+func (instID InstanceID) Equal(other InstanceID) bool {
+	return bytes.Compare(instID.DarcID, other.DarcID) == 0 &&
+		bytes.Compare(instID.SubID[:], other.SubID[:]) == 0
 }
-
-// Nonce is used to prevent replay attacks in instructions.
-type Nonce [32]byte
 
 // NewNonce returns a nonce given a slice of bytes.
 func NewNonce(buf []byte) Nonce {
@@ -101,6 +98,10 @@ func NewNonce(buf []byte) Nonce {
 	n := Nonce{}
 	copy(n[:], buf)
 	return n
+}
+
+func NewSubID(buf []byte) SubID {
+	return SubID(NewNonce(buf))
 }
 
 // Spawn is called upon an existing object that will spawn a new object.

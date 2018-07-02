@@ -26,6 +26,7 @@ var one = SubID(func() [32]byte {
 
 // ZeroDarc is a DarcID with all zeroes.
 var ZeroDarc = darc.ID(make([]byte, 32))
+var ZeroNonce [32]byte
 
 // GenesisReferenceID is 64 bytes of zeroes. Its value is a reference to the
 // genesis-darc.
@@ -263,7 +264,7 @@ func (s *Service) ContractValue(cdb CollectionView, tx Instruction, c []Coin) ([
 	return nil, nil, errors.New("didn't find any instruction")
 }
 
-var olCoin = NewObjectID([]byte("olCoin"))
+var olCoin = NewInstanceID([]byte("olCoin"))
 
 // ContractCoin is a coin implementation that holds one instance per coin.
 // If you spawn a new ContractCoin, it will create an account with a value
@@ -285,16 +286,16 @@ func (s *Service) ContractCoin(cdb CollectionView, inst Instruction, c []Coin) (
 	case inst.Spawn != nil:
 		// Spawn creates a new coin account as a separate instance. The subID is
 		// taken from the hash of the instruction.
-		var subID Nonce
+		var subID SubID
 		copy(subID[:], inst.Hash())
-		ca := ObjectID{inst.ObjectID.DarcID, subID}
+		ca := InstanceID{inst.InstanceID.DarcID, subID}
 		log.Lvlf2("Spawing coin to %x", ca)
 		return []StateChange{
 			NewStateChange(Create, ca, ContractCoinID, make([]byte, 8)),
 		}, c, nil
 	case inst.Invoke != nil:
 		// Invoke is one of "mint", "transfer", "fetch", or "store".
-		value, err := cdb.GetValue(inst.ObjectID.Slice())
+		value, err := cdb.GetValue(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -328,7 +329,7 @@ func (s *Service) ContractCoin(cdb CollectionView, inst Instruction, c []Coin) (
 			var w bytes.Buffer
 			binary.Write(&w, binary.LittleEndian, targetCoin+coinsArg)
 			log.Lvlf2("transferring %d to %x", coinsArg, target)
-			sc = append(sc, NewStateChange(Update, NewObjectID(target),
+			sc = append(sc, NewStateChange(Update, NewInstanceID(target),
 				ContractCoinID, w.Bytes()))
 		case "fetch":
 			// fetch removes coins from the account and passes it on to the next
@@ -355,11 +356,11 @@ func (s *Service) ContractCoin(cdb CollectionView, inst Instruction, c []Coin) (
 		// the system.
 		var w bytes.Buffer
 		binary.Write(&w, binary.LittleEndian, coinsCurrent)
-		return append(sc, NewStateChange(Update, inst.ObjectID,
+		return append(sc, NewStateChange(Update, inst.InstanceID,
 			ContractCoinID, w.Bytes())), c, nil
 	case inst.Delete != nil:
 		// Delete our coin address, but only if the current coin is empty.
-		value, err := cdb.GetValue(inst.ObjectID.Slice())
+		value, err := cdb.GetValue(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -368,7 +369,7 @@ func (s *Service) ContractCoin(cdb CollectionView, inst Instruction, c []Coin) (
 			return nil, nil, errors.New("cannot destroy a coinInstance that still has coins in it")
 		}
 		return StateChanges{
-			NewStateChange(Remove, inst.ObjectID, ContractCoinID, nil),
+			NewStateChange(Remove, inst.InstanceID, ContractCoinID, nil),
 		}, c, nil
 	}
 	return nil, nil, errors.New("didn't find any instruction")
