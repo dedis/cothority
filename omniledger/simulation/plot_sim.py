@@ -64,6 +64,7 @@ for delay in delays:
             data.plot(y='round_wall_avg', marker='o', ax=ax)
 
             ax.set_yscale('log')
+
  
             plt.xlabel('number of hosts')
             plt.ylabel('logarithm of time in seconds')
