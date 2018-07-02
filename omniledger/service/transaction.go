@@ -118,13 +118,10 @@ func NewSubID(buf []byte) SubID {
 }
 
 // Equal returns if both objectIDs point to the same instance.
-func (oid ObjectID) Equal(other ObjectID) bool {
-	return bytes.Compare(oid.DarcID, other.DarcID) == 0 &&
-		bytes.Compare(oid.InstanceID[:], other.InstanceID[:]) == 0
+func (instID InstanceID) Equal(other InstanceID) bool {
+	return bytes.Compare(instID.DarcID, other.DarcID) == 0 &&
+		bytes.Compare(instID.SubID[:], other.SubID[:]) == 0
 }
-
-// Nonce is used to prevent replay attacks in instructions.
-type Nonce [32]byte
 
 // NewNonce returns a nonce given a slice of bytes.
 func NewNonce(buf []byte) Nonce {
@@ -134,6 +131,10 @@ func NewNonce(buf []byte) Nonce {
 	n := Nonce{}
 	copy(n[:], buf)
 	return n
+}
+
+func NewSubID(buf []byte) SubID {
+	return SubID(NewNonce(buf))
 }
 
 // Spawn is called upon an existing object that will spawn a new object.
