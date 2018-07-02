@@ -6,23 +6,23 @@ Data Structures
 
 # Data Structures
 
-This document gives an overview of the basic data structures used in omniledger:
+This document gives an overview of the basic data structures used in OmniLedger:
 
 - [ClientTransaction](#clienttransaction) is sent by a client to one or more
 nodes and holds one or more Instructions:
 - [Instruction](#instruction) is a basic building block that will be executed
-in omniledger. It has either a `Spawn`, `Invoke`, or a `Delete` command. Once
+in OmniLedger. It has either a `Spawn`, `Invoke`, or a `Delete` command. Once
 accepted, every instruction creates zero or more `StateChanges`:
 - [StateChange](#statechange) are collected and define how the global state will
 change.
 - [Darc](#darc) control access to executing Instructions. The signers of an
 Instruction must satisfy one of the rules in the associated Darc.
 - [Proof](#proof) shows to a client that his instruction has been accepted by
-omniledger.
+OmniLedger.
 
 ## ClientTransaction
 
-If a client needs a set of instructions to be applied atomically by omniledger,
+If a client needs a set of instructions to be applied atomically by OmniLedger,
 it can send more than one instruction in a ClientTransaction. This structure
 has the following format:
 
@@ -130,7 +130,7 @@ further Instructions sent by the client.
 
 ## Proof
 
-The proof in omniledger proves the absence or the presence of a key in the state
+The proof in OmniLedger proves the absence or the presence of a key in the state
 of the given skipchain. If the key is present, the proof also contains the kind
 and the value of that key.
 
