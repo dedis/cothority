@@ -6,12 +6,12 @@ Contracts and Instances
 
 # Contracts and Instances
 
-A contract in omniledger is similar to a smart contract in Ethereum, except that
+A contract in OmniLedger is similar to a smart contract in Ethereum, except that
 it is pre-compiled in the code and all nodes need to have the same version of
 the contract available in order to reach consensus.
 
 A contract can spawn new instances that are tied to another contract type. All
-instances are stored in the global state of omniledger. Every instance points
+instances are stored in the global state of OmniLedger. Every instance points
 to exactly one contract. An easy interpretation is to think of a contract as
 a class and the instance as an object instantiated from that class. Or, in Go,
 as the instance being the values of the `struct` and the contract being all
@@ -42,7 +42,7 @@ clarity):
   - `Args`: `{"Roster": NewRoster}`
 - `Signatures`: `[Sig1]`
 
-omniledger will do the following:
+OmniLedger will do the following:
 
 1. find the Darc instance by looking at the first 32 bytes of the `InstanceID` given in
 the instruction, here the `GenesisDarc`, and adding 32 x 0x00 bytes
@@ -90,7 +90,7 @@ in the second `ClientTransaction` will see all changes applied from the first
 
 ## Instance Structure
 
-Every instance in omniledger is stored with the following information in the
+Every instance in OmniLedger is stored with the following information in the
 global state:
 
 - `InstanceID` is a globally unique identifier of that instance, composed of:
@@ -106,7 +106,7 @@ receives an instruction from the client
 ## Interaction between Instructions and Instances
 
 Every instruction sent by a client indicates the `InstanceID` it is sent to.
-Omniledger will start by verifying the authorization as described above, then
+OmniLedger will start by verifying the authorization as described above, then
 use the `InstanceID` to look up the responsible contract for this instance and
 then send the instruction to that contract. A client can call an instance with
 one of the following three basic instructions:
@@ -119,21 +119,21 @@ spawn new instances.
 
 # Existing Contracts
 
-In the omniledger service, the following contracts are pre-defined:
+In the OmniLedger service, the following contracts are pre-defined:
 
 - `GenesisReference` - points to the genesis configuration
-- `Config` - holds the configuration of omniledger
+- `Config` - holds the configuration of OmniLedger
 - `Darc` - defines the access control
 
-To extend omniledger, you will have to create a new service that defines new
-contracts that will have to be registered with omniledger. An example is
+To extend OmniLedger, you will have to create a new service that defines new
+contracts that will have to be registered with OmniLedger. An example is
 [EventLog](../../eventlog) that defines a contract.
 
 ## Genesis Configuration
 
 The special `InstanceID` with 64 x 0x00 bytes is the genesis configuration
 pointer that has as the data the `DarcID` of the genesis Darc. This instance
-is unique as it defines the basic running configuration of omniledger. The
+is unique as it defines the basic running configuration of OmniLedger. The
 Darc it points to will delegate authorizations to spawn new instances to
 other Darcs, who can themselves delegate further.
 
@@ -141,13 +141,13 @@ The following two contracts can only be instantiated once in the whole system:
 
 - `GenesisReference`, which has the `InstanceID` of 64 x 0x00 and points to the
 genesis Darc
-- `Config`, which defines the basic configuration of omniledger:
+- `Config`, which defines the basic configuration of OmniLedger:
   - `Roster` is the list of all nodes participating in the consensus
 
 ### Spawn
 
 The `Config` contract can spawn new Darcs or any other type of instances that
-are available to omniledger.
+are available to OmniLedger.
 
 ### Invoke
 
@@ -155,8 +155,8 @@ are available to omniledger.
 
 ## Darc Contract
 
-The most basic contract in omniledger is the `Darc` contract that defines the
-access rules for all clients. When creating a new omniledger blockchain, a
+The most basic contract in OmniLedger is the `Darc` contract that defines the
+access rules for all clients. When creating a new OmniLedger blockchain, a
 genesis Darc instance is created, which indicates what instructions need which
 signatures to be accepted.
 
@@ -170,7 +170,7 @@ the Darc itself. The client must be able to authenticate against a
 ### Invoke
 
 The only method that a client can invoke on a Darc instance is `Evolve`, which
-asks omniledger to store a new version of the Darc in the global state.
+asks OmniLedger to store a new version of the Darc in the global state.
 
 ### Delete
 

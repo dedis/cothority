@@ -11,7 +11,7 @@ As the paper is only describing the network interaction and very few of the
 details of how the transactions themselves are handled, we will include
 them as seem fit.
 
-This document describes the part of omniledger that are implemented and how to
+This document describes the part of OmniLedger that are implemented and how to
 use them. It should grow over time as more parts of the system are implemented.
 
 ## Overview
@@ -19,11 +19,11 @@ use them. It should grow over time as more parts of the system are implemented.
 Here is a graphical overview of the current implementation in the cothority
 framework:
 
-![Omniledger Implementation](Omniledger.png?raw=true "Omniledger")
-As an svg: [Omniledger Implementation](Omniledger.svg). This image has been
+![OmniLedger Implementation](Omniledger.png?raw=true "OmniLedger")
+As an svg: [OmniLedger Implementation](Omniledger.svg). This image has been
 created with https://draw.io and can be imported there.
 
-Our omniledger service currently implements:
+Our OmniLedger service currently implements:
 
 1. multiple transactions per block
 2. queuing of transactions at each node and periodical creation of a new
@@ -37,7 +37,7 @@ The following points are scheduled to be done before end of '18:
 6. inter-shard transactions
 
 1-4 are issues that should've been included in skipchains for a long time, but
-never got in. Only 5-6 are 'real' omniledger improvements as described in the
+never got in. Only 5-6 are 'real' OmniLedger improvements as described in the
 [OmniLedger Paper](https://eprint.iacr.org/2017/406.pdf).
 
 The current implementation is doing 1-3.
@@ -97,7 +97,7 @@ existing object
 * _StateChange_ is calculated at the leader and verified by every node. It
 contains the new key/contractID/value triplets to create/update/delete.
 
-A block in omniledger contains zero or more OmniLedgerTransactions. Every
+A block in OmniLedger contains zero or more OmniLedgerTransactions. Every
 one of these transactions can be valid or not and will be marked as such by
 the leader. Every node has to verify whether it accepts or refuses the
 decisions made by the leader.
