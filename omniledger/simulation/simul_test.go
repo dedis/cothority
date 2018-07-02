@@ -12,5 +12,5 @@ func TestMain(m *testing.M) {
 }
 
 func TestSimulation(t *testing.T) {
-	simul.Start("protocol.toml", "service.toml")
+	simul.Start("service.toml")
 }
