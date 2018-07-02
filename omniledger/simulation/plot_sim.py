@@ -36,7 +36,7 @@ batch = list(set(df['batch']))
 for delay in delays:
     for k in keep:
         for b in batch:
-            titlestring = 'delay: {}, keep: {}, batch: {}'.format(delay, k, b)
+            titlestring = 'Transactions: 1000, delay: {}, keep: {}, batch: {}'.format(delay, k, b)
             # No whitespace, colons or commata in filenames
             namestring = titlestring.replace(' ','').replace(':','-').replace(',','_') 
             data = df.ix[df['delay'] == delay].sort_values('hosts')
@@ -62,6 +62,8 @@ for delay in delays:
                     y=['prepare_wall_sum','send_wall_sum','confirm_wall_avg'],\
                     stacked=True)
             data.plot(y='round_wall_avg', marker='o', ax=ax)
+
+            ax.set_yscale('log')
  
             plt.xlabel('number of hosts')
             plt.ylabel('logarithm of time in seconds')
