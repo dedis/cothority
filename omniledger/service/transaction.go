@@ -100,6 +100,8 @@ func NewNonce(buf []byte) Nonce {
 	return n
 }
 
+// Since none and SubID alias to both to [32]byte,
+// we just use a wrapper here for more consistent code.
 func NewSubID(buf []byte) SubID {
 	return SubID(NewNonce(buf))
 }
