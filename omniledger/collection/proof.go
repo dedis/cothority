@@ -34,8 +34,12 @@ func dumpNode(node *node) (dump dump) {
 	if node.children.left == nil {
 		dump.Key = node.key
 	} else {
+		node.children.left.Lock()
+		node.children.right.Lock()
 		dump.Children.Left = node.children.left.label
 		dump.Children.Right = node.children.right.label
+		node.children.left.Unlock()
+		node.children.right.Unlock()
 	}
 
 	return
