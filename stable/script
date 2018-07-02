@@ -1,0 +1,5 @@
+SRC="$1"
+DST="$2"
+
+# Make sure the correct docker image is created.
+perl -pi -e "s:VERSION = dev:VERSION = latest:" $DST/conode/Makefile
