@@ -96,6 +96,8 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	if err != nil {
 		return err
 	}
+	c.ID = rep.Skipblock.SkipChainID()
+	c.Roster = config.Roster
 
 	// Create two accounts and mint 'Transaction' coins on first account.
 	coins := make([]byte, 8)
@@ -194,7 +196,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 			}
 			prepare.Record()
 			send := monitor.NewTimeMeasure("send")
-			_, err = c.AddTransaction(config.Roster, rep.Skipblock.SkipChainID(), tx)
+			_, err = c.AddTransaction(tx)
 			if err != nil {
 				return err
 			}
@@ -203,7 +205,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		confirm := monitor.NewTimeMeasure("confirm")
 		var i int
 		for {
-			proof, err := c.GetProof(config.Roster, rep.Skipblock.SkipChainID(), coinAddr2.Slice())
+			proof, err := c.GetProof(coinAddr2.Slice())
 			if err != nil {
 				return err
 			}
