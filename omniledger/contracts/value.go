@@ -19,26 +19,28 @@ var ContractValueID = "value"
 // It can spawn new value instances and will store the "value" argument in these
 // new instances.
 // Existing value instances can be "update"d and deleted.
-func ContractValue(cdb service.CollectionView, tx service.Instruction, c []service.Coin) ([]service.StateChange, []service.Coin, error) {
+func ContractValue(cdb service.CollectionView, inst service.Instruction, c []service.Coin) ([]service.StateChange, []service.Coin, error) {
 	switch {
-	case tx.Spawn != nil:
-		var subID service.SubID
-		copy(subID[:], tx.Hash())
+	case inst.Spawn != nil:
+		iid := service.InstanceID{
+			DarcID: inst.InstanceID.DarcID,
+			SubID:  service.NewSubID(inst.Hash()),
+		}
 		return []service.StateChange{
-			service.NewStateChange(service.Create, service.InstanceID{tx.InstanceID.DarcID, subID},
-				ContractValueID, tx.Spawn.Args.Search("value")),
+			service.NewStateChange(service.Create, iid,
+				ContractValueID, inst.Spawn.Args.Search("value")),
 		}, c, nil
-	case tx.Invoke != nil:
-		if tx.Invoke.Command != "update" {
+	case inst.Invoke != nil:
+		if inst.Invoke.Command != "update" {
 			return nil, nil, errors.New("Value contract can only update")
 		}
 		return []service.StateChange{
-			service.NewStateChange(service.Update, tx.InstanceID,
-				ContractValueID, tx.Invoke.Args.Search("value")),
+			service.NewStateChange(service.Update, inst.InstanceID,
+				ContractValueID, inst.Invoke.Args.Search("value")),
 		}, c, nil
-	case tx.Delete != nil:
+	case inst.Delete != nil:
 		return service.StateChanges{
-			service.NewStateChange(service.Remove, tx.InstanceID, ContractValueID, nil),
+			service.NewStateChange(service.Remove, inst.InstanceID, ContractValueID, nil),
 		}, c, nil
 	}
 	return nil, nil, errors.New("didn't find any instruction")
