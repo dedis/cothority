@@ -26,12 +26,13 @@ const darcIDLen int = 32
 
 const invokeEvolve darc.Action = darc.Action("invoke:evolve")
 
-var omniledgerID onet.ServiceID
+// OmniledgerID can be used to refer to this service
+var OmniledgerID onet.ServiceID
 var verifyOmniLedger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OmniLedger"))
 
 func init() {
 	var err error
-	omniledgerID, err = onet.RegisterNewService(ServiceName, newService)
+	OmniledgerID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
 	network.RegisterMessages(&storage{}, &DataHeader{}, &updateCollection{})
 }
@@ -42,7 +43,7 @@ func GenNonce() (n Nonce) {
 	return n
 }
 
-// Service is our omniledger-service
+// Service is our OmniLedger-service
 type Service struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
 	// are correctly handled.
@@ -139,7 +140,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	transaction := []ClientTransaction{{
 		Instructions: []Instruction{{
 			InstanceID: InstanceID{DarcID: req.GenesisDarc.GetID()},
-			Nonce:      zeroNonce,
+			Nonce:      Nonce{},
 			Index:      0,
 			Length:     1,
 			Spawn:      spawn,
@@ -219,7 +220,7 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 func toInstanceID(dID darc.ID) InstanceID {
 	return InstanceID{
 		DarcID: dID,
-		SubID:  zeroSubID,
+		SubID:  SubID{},
 	}
 }
 
@@ -483,7 +484,7 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID, interval time.Du
 			select {
 			case t := <-c:
 				ts = append(ts, t)
-				log.Lvlf2("%x: Added transaction to queue. Next block length: %v, New Tx: %+v", scID, len(ts), t)
+				log.LLvlf2("%x: Stored transaction. Next block length: %v, New Tx: %+v", scID, len(ts), t)
 			case <-to:
 				if len(ts) > 0 {
 					log.Lvlf2("%x: New epoch and transaction-length: %d", scID, len(ts))
@@ -521,7 +522,7 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID, interval time.Du
 	return c
 }
 
-// We use the omniledger as a receiver (as is done in the identity service),
+// We use the OmniLedger as a receiver (as is done in the identity service),
 // so we can access e.g. the collectionDBs of the service.
 func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
 	_, headerI, err := network.Unmarshal(newSB.Data, cothority.Suite)
@@ -593,13 +594,13 @@ clientTransactions:
 			// Wrap up f() inside of g(), so that we can recover panics
 			// from f().
 			log.Lvlf3("%s: Calling contract %s", s.ServerIdentity(), contract)
-			g := func(cdb CollectionView, tx Instruction, c []Coin) (sc []StateChange, cout []Coin, err error) {
+			g := func(cdb CollectionView, inst Instruction, c []Coin) (sc []StateChange, cout []Coin, err error) {
 				defer func() {
 					if re := recover(); re != nil {
 						err = errors.New(re.(string))
 					}
 				}()
-				sc, cout, err = f(cdb, tx, c)
+				sc, cout, err = f(cdb, inst, c)
 				return
 			}
 			scs, _, err := g(cdbI, instr, nil)
@@ -730,7 +731,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 
 	s.registerContract(ContractConfigID, s.ContractConfig)
 	s.registerContract(ContractDarcID, s.ContractDarc)
-	s.registerContract(ContractValueID, s.ContractValue)
 	skipchain.RegisterVerification(c, verifyOmniLedger, s.verifySkipBlock)
 	return s, nil
 }
