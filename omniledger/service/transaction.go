@@ -69,6 +69,7 @@ type InstanceID struct {
 
 // SubID is a 32-byte id.
 type SubID [32]byte
+
 // NewInstanceID returns a new InstanceID given a slice of bytes.
 func NewInstanceID(buf []byte) InstanceID {
 	if len(buf) != 64 {
