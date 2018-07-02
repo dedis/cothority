@@ -163,7 +163,6 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		log.Lvl1("Starting round", round)
 		roundM := monitor.NewTimeMeasure("round")
 
-		prepare := monitor.NewTimeMeasure("prepare")
 		txs := int(s.Transactions)
 		insts := 1
 		if s.Batch {
@@ -173,6 +172,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		log.LLvlf2("Sending %d transactions with %d instructions each", txs, insts)
 		for t := 0; t < txs; t++ {
 			tx := service.ClientTransaction{}
+			prepare := monitor.NewTimeMeasure("prepare")
 			for i := 0; i < insts; i++ {
 				var buf bytes.Buffer
 				binary.Write(&buf, binary.LittleEndian, i+1)
