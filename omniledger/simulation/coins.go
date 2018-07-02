@@ -104,7 +104,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	coinOne[0] = byte(1)
 	tx := service.ClientTransaction{
 		Instructions: []service.Instruction{{
-			ObjectID: service.ObjectID{gm.GenesisDarc.GetID(), service.ZeroNonce},
+			InstanceID: service.InstanceID{gm.GenesisDarc.GetID(), service.ZeroNonce},
 			Nonce:    service.ZeroNonce,
 			Index:    0,
 			Length:   3,
@@ -113,7 +113,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 			},
 		},
 			{
-				ObjectID: service.ObjectID{gm.GenesisDarc.GetID(), service.ZeroNonce},
+				InstanceID: service.InstanceID{gm.GenesisDarc.GetID(), service.ZeroNonce},
 				Nonce:    service.ZeroNonce,
 				Index:    1,
 				Length:   3,
@@ -137,11 +137,11 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	// The first instruction will create an account with the SubID equal to the
 	// hash of the first instruction. So we can mint directly on the hash of this
 	// instruction. Theoretically...
-	coinAddr1 := service.ObjectID{gm.GenesisDarc.GetBaseID(),
-		service.NewNonce(tx.Instructions[0].Hash())}
-	coinAddr2 := service.ObjectID{gm.GenesisDarc.GetBaseID(),
-		service.NewNonce(tx.Instructions[1].Hash())}
-	tx.Instructions[2].ObjectID = coinAddr1
+	coinAddr1 := service.InstanceID{gm.GenesisDarc.GetBaseID(),
+		service.NewSubID(tx.Instructions[0].Hash())}
+	coinAddr2 := service.InstanceID{gm.GenesisDarc.GetBaseID(),
+		service.NewSubID(tx.Instructions[1].Hash())}
+	tx.Instructions[2].InstanceID = coinAddr1
 
 	// Now sign all the instructions
 	for i := range tx.Instructions {
@@ -151,7 +151,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	}
 
 	// And send the instructions to omniledger
-	_, err = c.AddTransaction(config.Roster, rep.Skipblock.SkipChainID(), tx)
+	_, err = c.AddTransaction(tx)
 	if err != nil {
 		return err
 	}
@@ -177,7 +177,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 				var buf bytes.Buffer
 				binary.Write(&buf, binary.LittleEndian, i+1)
 				tx.Instructions = append(tx.Instructions, service.Instruction{
-					ObjectID: coinAddr1,
+					InstanceID: coinAddr1,
 					Nonce:    service.NewNonce(buf.Bytes()),
 					Index:    i,
 					Length:   insts,

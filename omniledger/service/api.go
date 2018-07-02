@@ -31,6 +31,10 @@ func NewClient() *Client {
 	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
 }
 
+func NewClientKeep() *Client {
+	return &Client{Client: onet.NewClientKeep(cothority.Suite, ServiceName)}
+}
+
 // NewClientFromConfig instantiates a new Omniledger client.
 func NewClientFromConfig(fn string) (*Client, error) {
 	cfg, err := loadConfig(fn)
@@ -43,11 +47,6 @@ func NewClientFromConfig(fn string) (*Client, error) {
 	c.ID = cfg.ID
 	c.OwnerID = cfg.OwnerID
 	return c, nil
-}
-
-// NewClientKeep instantiates a new cosi.Client, keeping the connection
-func NewClientKeep() *Client {
-	return &Client{Client: onet.NewClientKeep(cothority.Suite, ServiceName)}
 }
 
 // CreateGenesisBlock sets up a new skipchain to hold the key/value pairs. If
