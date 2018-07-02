@@ -1,13 +1,21 @@
 Simulation = "TransferCoins"
-Servers = 8
+Servers = 2
 Bf = 4
-Hosts = 10
 Rounds = 1
 RunWait = "6000s"
 Suite = "Ed25519"
 BlockInterval = "1s"
-Keep = false
+Keep = true
+Transactions = 1000
+Batch = false
 
-Transactions, Batch
-1000, true
-1000, false
+Hosts,Delay
+10,10
+10,50
+10,100
+50,10
+50,50
+50,100
+100,10
+100,50
+100,100
