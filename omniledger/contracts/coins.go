@@ -1,229 +1,122 @@
-package coins
+package contracts
 
 import (
 	"bytes"
 	"encoding/binary"
-	"time"
+	"errors"
 
-	"github.com/BurntSushi/toml"
-	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/omniledger/service"
-	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/simul/monitor"
 )
 
-/*
- * Defines the simulation for the service-template
- */
+// ContractCoinID denotes a contract that can store and transfer coins.
+var ContractCoinID = "coin"
 
-func init() {
-	onet.SimulationRegister("TransferCoins", NewSimulationService)
-}
+var olCoin = service.NewInstanceID([]byte("olCoin"))
 
-// SimulationService only holds the BFTree simulation
-type SimulationService struct {
-	onet.SimulationBFTree
-	Transactions  int
-	BlockInterval string
-	Batch         bool
-	Keep bool
-	Delay int
-}
-
-// NewSimulationService returns the new simulation, where all fields are
-// initialised using the config-file
-func NewSimulationService(config string) (onet.Simulation, error) {
-	es := &SimulationService{}
-	_, err := toml.Decode(config, es)
-	if err != nil {
-		return nil, err
-	}
-	return es, nil
-}
-
-// Setup creates the tree used for that simulation
-func (s *SimulationService) Setup(dir string, hosts []string) (
-	*onet.SimulationConfig, error) {
-	sc := &onet.SimulationConfig{}
-	s.CreateRoster(sc, hosts, 2000)
-	err := s.CreateTree(sc)
-	if err != nil {
-		return nil, err
-	}
-	return sc, nil
-}
-
-// Node can be used to initialize each node before it will be run
-// by the server. Here we call the 'Node'-method of the
-// SimulationBFTree structure which will load the roster- and the
-// tree-structure to speed up the first round.
-func (s *SimulationService) Node(config *onet.SimulationConfig) error {
-	index, _ := config.Roster.Search(config.Server.ServerIdentity.ID)
-	if index < 0 {
-		log.Fatal("Didn't find this node in roster")
-	}
-	log.Lvl3("Initializing node-index", index)
-	return s.SimulationBFTree.Node(config)
-}
-
-// Run is used on the destination machines and runs a number of
-// rounds
-func (s *SimulationService) Run(config *onet.SimulationConfig) error {
-	size := config.Tree.Size()
-	log.Lvl2("Size is:", size, "rounds:", s.Rounds, "transactions:", s.Transactions)
-	var c *service.Client
-	if s.Keep {
-	    c = service.NewClientKeep()
-	} else {
-	    c = service.NewClient()
-	}
-	signer := darc.NewSignerEd25519(nil, nil)
-
-	// Create omniledger
-	gm, err := service.DefaultGenesisMsg(service.CurrentVersion, config.Roster,
-		[]string{"spawn:coin", "invoke:mint", "invoke:transfer"}, signer.Identity())
-	if err != nil {
-		return err
-	}
-	// gm.BlockInterval = time.Second
-	duration, err := time.ParseDuration(s.BlockInterval)
-	if err != nil {
-		return err
-	}
-	gm.BlockInterval = duration
-	rep, err := c.CreateGenesisBlock(config.Roster, gm)
-	if err != nil {
-		return err
-	}
-	c.ID = rep.Skipblock.SkipChainID()
-	c.Roster = config.Roster
-
-	// Create two accounts and mint 'Transaction' coins on first account.
-	coins := make([]byte, 8)
-	coins[7] = byte(1)
-	coinOne := make([]byte, 8)
-	coinOne[0] = byte(1)
-	tx := service.ClientTransaction{
-		Instructions: []service.Instruction{{
-			InstanceID: service.InstanceID{gm.GenesisDarc.GetID(), service.ZeroNonce},
-			Nonce:    service.ZeroNonce,
-			Index:    0,
-			Length:   3,
-			Spawn: &service.Spawn{
-				ContractID: service.ContractCoinID,
-			},
-		},
-			{
-				InstanceID: service.InstanceID{gm.GenesisDarc.GetID(), service.ZeroNonce},
-				Nonce:    service.ZeroNonce,
-				Index:    1,
-				Length:   3,
-				Spawn: &service.Spawn{
-					ContractID: service.ContractCoinID,
-				},
-			},
-			{
-				Nonce:  service.ZeroNonce,
-				Index:  2,
-				Length: 3,
-				Invoke: &service.Invoke{
-					Command: "mint",
-					Args: service.NewArguments(
-						service.Argument{"coins", coins},
-					),
-				},
-			}},
-	}
-
-	// The first instruction will create an account with the SubID equal to the
-	// hash of the first instruction. So we can mint directly on the hash of this
-	// instruction. Theoretically...
-	coinAddr1 := service.InstanceID{gm.GenesisDarc.GetBaseID(),
-		service.NewSubID(tx.Instructions[0].Hash())}
-	coinAddr2 := service.InstanceID{gm.GenesisDarc.GetBaseID(),
-		service.NewSubID(tx.Instructions[1].Hash())}
-	tx.Instructions[2].InstanceID = coinAddr1
-
-	// Now sign all the instructions
-	for i := range tx.Instructions {
-		if err = service.SignInstruction(&tx.Instructions[i], signer); err != nil {
-			return err
+// ContractCoin is a coin implementation that holds one instance per coin.
+// If you spawn a new ContractCoin, it will create an account with a value
+// of 0 coins.
+// The following methods are available:
+//  - mint will add the number of coins in the argument "coins" to the
+//    current coin instance. The argument must be a 64-bit uint in LittleEndian
+//  - transfer will send the coins given in the argument "coins" to the
+//    instance given in the argument "destination". The "coins"-argument must
+//    be a 64-bit uint in LittleEndian. The "destination" must be a 64-bit
+//    instanceID
+//  - fetch takes "coins" out of the account and returns it as an output
+//    parameter for the next instruction to interpret.
+//  - store puts the coins given to the instance back into the account.
+// You can only delete a contractCoin instance if the account is empty.
+func ContractCoin(cdb service.CollectionView, inst service.Instruction, c []service.Coin) (sc []service.StateChange, cOut []service.Coin, err error) {
+	cOut = c
+	switch {
+	case inst.Spawn != nil:
+		// Spawn creates a new coin account as a separate instance. The subID is
+		// taken from the hash of the instruction.
+		ca := service.InstanceID{inst.InstanceID.DarcID, service.NewSubID(inst.Hash())}
+		log.LLvlf2("Spawing coin to %x", ca.Slice())
+		return []service.StateChange{
+			service.NewStateChange(service.Create, ca, ContractCoinID, make([]byte, 8)),
+		}, c, nil
+	case inst.Invoke != nil:
+		// Invoke is one of "mint", "transfer", "fetch", or "store".
+		value, err := cdb.GetValue(inst.InstanceID.Slice())
+		if err != nil {
+			return nil, nil, err
 		}
-	}
-
-	// And send the instructions to omniledger
-	_, err = c.AddTransaction(tx)
-	if err != nil {
-		return err
-	}
-
-	// Wait for the instructions to be included
-	time.Sleep(2 * time.Second)
-
-	for round := 0; round < s.Rounds; round++ {
-		log.Lvl1("Starting round", round)
-		roundM := monitor.NewTimeMeasure("round")
-
-		txs := int(s.Transactions)
-		insts := 1
-		if s.Batch {
-			txs = 1
-			insts = int(s.Transactions)
+		coinsCurrent := binary.LittleEndian.Uint64(value)
+		coinsBuf := inst.Invoke.Args.Search("coins")
+		if coinsBuf == nil {
+			return nil, nil, errors.New("please give coins")
 		}
-		log.LLvlf2("Sending %d transactions with %d instructions each", txs, insts)
-		for t := 0; t < txs; t++ {
-			tx := service.ClientTransaction{}
-			prepare := monitor.NewTimeMeasure("prepare")
-			for i := 0; i < insts; i++ {
-				var buf bytes.Buffer
-				binary.Write(&buf, binary.LittleEndian, i+1)
-				tx.Instructions = append(tx.Instructions, service.Instruction{
-					InstanceID: coinAddr1,
-					Nonce:    service.NewNonce(buf.Bytes()),
-					Index:    i,
-					Length:   insts,
-					Invoke: &service.Invoke{
-						Command: "transfer",
-						Args: service.NewArguments(service.Argument{"coins", coinOne},
-							service.Argument{"destination", coinAddr2.Slice()}),
-					},
-				})
-				err = service.SignInstruction(&tx.Instructions[i], signer)
-				if err != nil {
-					return err
+		coinsArg := binary.LittleEndian.Uint64(coinsBuf)
+		var sc []service.StateChange
+		switch inst.Invoke.Command {
+		case "mint":
+			// mint simply adds this amount of coins to the account.
+			log.Lvl2("minting", coinsArg)
+			coinsCurrent += coinsArg
+		case "transfer":
+			// transfer sends a given amount of coins to another account.
+			if coinsArg > coinsCurrent {
+				return nil, nil, errors.New("not enough coins in instance")
+			}
+			coinsCurrent -= coinsArg
+			target := inst.Invoke.Args.Search("destination")
+			v, cid, err := cdb.GetValues(target)
+			if err == nil && cid != ContractCoinID {
+				err = errors.New("destination is not a coin contract")
+			}
+			if err != nil {
+				return nil, nil, err
+			}
+			targetCoin := binary.LittleEndian.Uint64(v)
+			var w bytes.Buffer
+			binary.Write(&w, binary.LittleEndian, targetCoin+coinsArg)
+			log.Lvlf2("transferring %d to %x", coinsArg, target)
+			sc = append(sc, service.NewStateChange(service.Update, service.NewInstanceID(target),
+				ContractCoinID, w.Bytes()))
+		case "fetch":
+			// fetch removes coins from the account and passes it on to the next
+			// instruction.
+			if coinsArg > coinsCurrent {
+				return nil, nil, errors.New("not enough coins in instance")
+			}
+			coinsCurrent -= coinsArg
+			cOut = append(cOut, service.Coin{Name: olCoin, Value: coinsArg})
+		case "store":
+			// store moves all coins from the last instruction into the account.
+			cOut = []service.Coin{}
+			for _, co := range c {
+				if co.Name.Equal(olCoin) {
+					coinsCurrent += co.Value
+				} else {
+					cOut = append(cOut, co)
 				}
 			}
-			prepare.Record()
-			send := monitor.NewTimeMeasure("send")
-			_, err = c.AddTransaction(tx)
-			if err != nil {
-				return err
-			}
-			send.Record()
+		default:
+			return nil, nil, errors.New("Coin contract can only mine and transfer")
 		}
-		confirm := monitor.NewTimeMeasure("confirm")
-		var i int
-		for {
-			proof, err := c.GetProof(coinAddr2.Slice())
-			if err != nil {
-				return err
-			}
-			_, v, err := proof.Proof.KeyValue()
-			if err != nil {
-				return err
-			}
-			account := int(binary.LittleEndian.Uint64(v[0]))
-			log.Printf("[%03d] account has %d", i, account)
-			if account == s.Transactions*(round+1) {
-				break
-			}
-			time.Sleep(time.Second / 10)
-			i++
+		// Finally update our own coin value and send one or two stateChanges to
+		// the system.
+		var w bytes.Buffer
+		binary.Write(&w, binary.LittleEndian, coinsCurrent)
+		return append(sc, service.NewStateChange(service.Update, inst.InstanceID,
+			ContractCoinID, w.Bytes())), c, nil
+	case inst.Delete != nil:
+		// Delete our coin address, but only if the current coin is empty.
+		value, err := cdb.GetValue(inst.InstanceID.Slice())
+		if err != nil {
+			return nil, nil, err
 		}
-		confirm.Record()
-		roundM.Record()
+		coinsCurrent := binary.LittleEndian.Uint64(value)
+		if coinsCurrent > 0 {
+			return nil, nil, errors.New("cannot destroy a coinInstance that still has coins in it")
+		}
+		return service.StateChanges{
+			service.NewStateChange(service.Remove, inst.InstanceID, ContractCoinID, nil),
+		}, c, nil
 	}
-	time.Sleep(time.Second * 2)
-	return nil
+	return nil, nil, errors.New("didn't find any instruction")
 }
