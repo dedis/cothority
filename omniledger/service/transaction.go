@@ -80,9 +80,6 @@ type InstanceID struct {
 // SubID is a 32-byte id.
 type SubID [32]byte
 
-// SubID is a 32-byte id.
-type SubID [32]byte
-
 // Slice returns concatenated DarcID and InstanceID.
 func (iID InstanceID) Slice() []byte {
 	var out []byte
