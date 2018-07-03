@@ -3,6 +3,7 @@ package ch.epfl.dedis.byzgen;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.darc.Identity;
@@ -21,7 +22,6 @@ import ch.epfl.dedis.ocs.WriteRequestId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -137,7 +137,7 @@ public class GrantAccessTest {
         return new OcsFactory()
                 .addConodes(testServerController.getConodes())
                 .initialiseNewSkipchain(new SignerEd25519(
-                        DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR)));
+                        Hex.parseHexBinary(SUPERADMIN_SCALAR)));
     }
 
     private static Darc createUser(OnchainSecrets ocs, Identity user) throws Exception {
@@ -147,7 +147,7 @@ public class GrantAccessTest {
     }
 
     private static void grantSystemWriteAccess(OnchainSecrets ocs, Darc userDarc) throws Exception {
-        SignerEd25519 admin = new SignerEd25519(DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR));
+        SignerEd25519 admin = new SignerEd25519(Hex.parseHexBinary(SUPERADMIN_SCALAR));
         ocs.addIdentityToDarc(ocs.getAdminDarc(), IdentityFactory.New(userDarc), admin, SignaturePath.USER);
         ocs.addIdentityToDarc(ocs.getAdminDarc(), IdentityFactory.New(userDarc), admin, SignaturePath.OWNER);
     }

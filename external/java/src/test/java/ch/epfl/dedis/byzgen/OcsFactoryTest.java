@@ -3,13 +3,13 @@ package ch.epfl.dedis.byzgen;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.ocs.OnchainSecretsRPC;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.xml.bind.DatatypeConverter;
 import java.net.URI;
 
 import static org.hamcrest.CoreMatchers.containsString;
@@ -53,7 +53,7 @@ class OcsFactoryTest {
     public void shouldFailWhenServersAreNotSpecified() {
         OcsFactory ocsFactory = new OcsFactory();
         Throwable exception = assertThrows(IllegalStateException.class, () -> {
-            ocsFactory.setGenesis(new SkipblockId(DatatypeConverter.parseHexBinary(SAMPLE_GENESIS_ID)));
+            ocsFactory.setGenesis(new SkipblockId(Hex.parseHexBinary(SAMPLE_GENESIS_ID)));
             ocsFactory.createConnection();
         });
         assertThat(exception.getMessage(), containsString("No cothority server"));
@@ -77,7 +77,7 @@ class OcsFactoryTest {
 
         // when
         SkipblockId genesis = ocsFactory.initialiseNewSkipchain(
-                new SignerEd25519(DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")));
+                new SignerEd25519(Hex.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")));
 
         // then
         assertNotNull(genesis);
@@ -103,6 +103,6 @@ class OcsFactoryTest {
         return new OcsFactory()
                 .addConodes(testServerController.getConodes())
                 .initialiseNewSkipchain(new SignerEd25519(
-                        DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")));
+                        Hex.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")));
     }
 }

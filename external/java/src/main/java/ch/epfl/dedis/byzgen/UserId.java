@@ -1,6 +1,5 @@
 package ch.epfl.dedis.byzgen;
 
-import javax.annotation.Nonnull;
 import java.util.Arrays;
 
 public final class UserId {
@@ -10,11 +9,11 @@ public final class UserId {
         return Arrays.copyOf(id, id.length);
     }
 
-    public UserId(@Nonnull UserId userId) {
+    public UserId(UserId userId) {
         this(userId.id);
     }
 
-    public UserId(@Nonnull byte id[]) {
+    public UserId(byte id[]) {
         if (id.length != 32) {
             throw new IllegalArgumentException("Expected size of getId of user is 32 bytes");
         }

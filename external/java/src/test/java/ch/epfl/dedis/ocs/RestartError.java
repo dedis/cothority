@@ -4,6 +4,7 @@ import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.darc.Signer;
@@ -13,8 +14,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.xml.bind.DatatypeConverter;
 
 public class RestartError {
     Roster roster;
@@ -39,7 +38,7 @@ public class RestartError {
 
     @Test
     void Step2() throws CothorityException {
-        SkipblockId ocsid = new SkipblockId(DatatypeConverter.parseHexBinary(ocsStr));
+        SkipblockId ocsid = new SkipblockId(Hex.parseHexBinary(ocsStr));
         OnchainSecretsRPC ocs = new OnchainSecretsRPC(roster, ocsid);
         ocs.verify();
         listBlocks(ocs);
@@ -48,7 +47,7 @@ public class RestartError {
     void listBlocks(OnchainSecretsRPC ocs) throws CothorityException {
         SkipBlockProto.SkipBlock sb = ocs.getSkipblock(ocs.ocsID);
         for (;;){
-            logger.info(DatatypeConverter.printHexBinary(sb.getHash().toByteArray()));
+            logger.info(Hex.printHexBinary(sb.getHash().toByteArray()));
             if (sb.getForwardCount() == 0){
                 break;
             }

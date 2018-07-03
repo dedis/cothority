@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import javax.xml.bind.DatatypeConverter;
 
 import java.security.SecureRandom;
 
@@ -26,7 +25,7 @@ class Ed25519Test {
         assertEquals(32, ed25519Point2.toBytes().length);
         assertTrue(new Ed25519Point(ed25519Point2.toBytes()).equals(ed25519Point2));
 
-        byte[] point_bytes = DatatypeConverter.parseHexBinary("3B6A27BCCEB6A42D62A3A8D02A6F0D73653215771DE243A63AC048A18B59DA29");
+        byte[] point_bytes = Hex.parseHexBinary("3B6A27BCCEB6A42D62A3A8D02A6F0D73653215771DE243A63AC048A18B59DA29");
         assertTrue(new Ed25519Point(point_bytes).equals(ed25519Point2));
     }
 
@@ -137,7 +136,7 @@ class Ed25519Test {
     @Test
     void schnorrVerify() {
         byte[] msg = "Hello Schnorr".getBytes();
-        byte[] sigBuf = DatatypeConverter.parseHexBinary("b95fc52a5fd2e18aa7ace5b2250c2a25e368f75c148ea3403c8f32b5f100781b" +
+        byte[] sigBuf = Hex.parseHexBinary("b95fc52a5fd2e18aa7ace5b2250c2a25e368f75c148ea3403c8f32b5f100781b" +
                 "362c668aab4cf50eafdc2fcf45214c0dfbe86fce72e4632158c02c571e977306");
         SchnorrSig sig = new SchnorrSig(sigBuf);
         Point pub = new Ed25519Point("59d7fd947fc88e47d3f878e82e26629dea7a28e8d4233f11068a6b464e195bfd");

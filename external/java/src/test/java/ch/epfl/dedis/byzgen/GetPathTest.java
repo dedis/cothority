@@ -3,6 +3,7 @@ package ch.epfl.dedis.byzgen;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.darc.IdentityDarc;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
@@ -14,7 +15,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -48,7 +48,7 @@ public class GetPathTest {
         // given
         WriteRequestId documentId = publishDocumentAndGrantAccessToGroup();
 
-        SignerEd25519 consumer = new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR));
+        SignerEd25519 consumer = new SignerEd25519(Hex.parseHexBinary(CONSUMER_SCALAR));
 
         OCSProto.Write document = ocs.getWrite(documentId);
         Darc documentDarc = new Darc(document.getReader());
@@ -114,7 +114,7 @@ public class GetPathTest {
 
     private WriteRequestId publishDocumentAndGrantAccessToGroup() throws Exception {
         WriteRequestId documentId;
-        SignerEd25519 publisherSigner = new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR));
+        SignerEd25519 publisherSigner = new SignerEd25519(Hex.parseHexBinary(PUBLISHER_SCALAR));
         documentId = publishTestDocument(publisherSigner, publisherId, readersGroupId);
         return documentId;
     }
@@ -134,7 +134,7 @@ public class GetPathTest {
     }
 
     private DarcId createUserGroup(OnchainSecrets ocs, DarcId... members) throws Exception {
-        SignerEd25519 admin = new SignerEd25519(DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR));
+        SignerEd25519 admin = new SignerEd25519(Hex.parseHexBinary(SUPERADMIN_SCALAR));
 
         Darc groupDarc = new Darc(admin, Collections.emptyList(), "group".getBytes());
         for (DarcId id : members) {
@@ -145,7 +145,7 @@ public class GetPathTest {
     }
 
     private DarcId createConsumer(OnchainSecrets ocs) throws Exception {
-        Darc user = createUser(ocs, new IdentityEd25519(new SignerEd25519(DatatypeConverter.parseHexBinary(CONSUMER_SCALAR))));
+        Darc user = createUser(ocs, new IdentityEd25519(new SignerEd25519(Hex.parseHexBinary(CONSUMER_SCALAR))));
         return new DarcId(user.getId().getId());
     }
 
@@ -157,7 +157,7 @@ public class GetPathTest {
     }
 
     private DarcId createPublisher(OnchainSecrets ocs) throws Exception {
-        Darc user = createUser(ocs, new IdentityEd25519(new SignerEd25519(DatatypeConverter.parseHexBinary(PUBLISHER_SCALAR))));
+        Darc user = createUser(ocs, new IdentityEd25519(new SignerEd25519(Hex.parseHexBinary(PUBLISHER_SCALAR))));
         grantSystemWriteAccess(ocs, user);
         return new DarcId(user.getId().getId()); // copy to be sure that it is not the same object
     }
@@ -166,7 +166,7 @@ public class GetPathTest {
         return new OcsFactory()
                 .addConodes(testServerController.getConodes())
                 .initialiseNewSkipchain(new SignerEd25519(
-                        DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR)));
+                        Hex.parseHexBinary(SUPERADMIN_SCALAR)));
     }
 
     private static Darc createUser(OnchainSecrets ocs, IdentityEd25519 user) throws Exception {
@@ -176,7 +176,7 @@ public class GetPathTest {
     }
 
     private static void grantSystemWriteAccess(OnchainSecrets ocs, Darc userDarc) throws Exception {
-        SignerEd25519 admin = new SignerEd25519(DatatypeConverter.parseHexBinary(SUPERADMIN_SCALAR));
+        SignerEd25519 admin = new SignerEd25519(Hex.parseHexBinary(SUPERADMIN_SCALAR));
         ocs.addIdentityToDarc(ocs.getAdminDarc(), IdentityFactory.New(userDarc), admin, SignaturePath.USER);
         ocs.addIdentityToDarc(ocs.getAdminDarc(), IdentityFactory.New(userDarc), admin, SignaturePath.OWNER);
     }

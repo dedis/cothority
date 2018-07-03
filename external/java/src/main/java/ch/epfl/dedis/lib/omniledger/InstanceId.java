@@ -1,13 +1,12 @@
 package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.lib.HashId;
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.omniledger.darc.DarcId;
 import ch.epfl.dedis.proto.TransactionProto;
 import com.google.protobuf.ByteString;
 
-import javax.annotation.Nonnull;
-import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
 
 /**
@@ -31,7 +30,6 @@ public class InstanceId implements HashId {
     }
 
     @Override
-    @Nonnull
     public byte[] getId() {
         return Arrays.copyOf(id, id.length);
     }
@@ -67,7 +65,7 @@ public class InstanceId implements HashId {
 
     @Override
     public String toString(){
-        return DatatypeConverter.printHexBinary(id);
+        return Hex.printHexBinary(id);
     }
 
     public ByteString toByteString(){

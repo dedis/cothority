@@ -1,6 +1,5 @@
 package ch.epfl.dedis.byzgen;
 
-import javax.annotation.Nonnull;
 import java.security.PublicKey;
 import java.security.Signature;
 
@@ -10,7 +9,6 @@ public interface UserSignature {
      * @return signature body
      * @see Signature#sign()
      */
-    @Nonnull
     byte [] getSignature();
 
     /**
@@ -20,13 +18,11 @@ public interface UserSignature {
      *
      * @return algorithm used for signature
      */
-    @Nonnull
     String getAlgorithm();
 
     /**
      * Returns public key used for signing document
      * @return public key used for signing document
      */
-    @Nonnull
     PublicKey getPublicKey();
 }

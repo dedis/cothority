@@ -1,10 +1,9 @@
 package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.lib.HashId;
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
-import javax.annotation.Nonnull;
-import javax.xml.bind.DatatypeConverter;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
@@ -23,7 +22,6 @@ public class SubId implements HashId {
     }
 
     @Override
-    @Nonnull
     public byte[] getId() {
         return Arrays.copyOf(id, id.length);
     }
@@ -43,7 +41,7 @@ public class SubId implements HashId {
 
     @Override
     public String toString() {
-        return DatatypeConverter.printHexBinary(id);
+        return Hex.printHexBinary(id);
     }
 
     /**

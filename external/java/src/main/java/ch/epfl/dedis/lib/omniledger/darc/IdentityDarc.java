@@ -1,10 +1,9 @@
 package ch.epfl.dedis.lib.omniledger.darc;
 
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
-
-import javax.xml.bind.DatatypeConverter;
 
 public class IdentityDarc implements Identity {
     private DarcId darcID;
@@ -87,7 +86,7 @@ public class IdentityDarc implements Identity {
     }
 
     public String toString() {
-        return String.format("%s:%s", this.typeString(), DatatypeConverter.printHexBinary(this.darcID.getId()).toLowerCase());
+        return String.format("%s:%s", this.typeString(), Hex.printHexBinary(this.darcID.getId()).toLowerCase());
     }
 
     public String typeString() {

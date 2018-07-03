@@ -8,7 +8,6 @@ import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
-import javax.annotation.Nonnull;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -79,7 +78,7 @@ public class OcsFactory {
      *
      * @return skipblock ID of a new genesis block
      */
-    public SkipblockId initialiseNewSkipchain(@Nonnull Signer admin) throws CothorityCommunicationException {
+    public SkipblockId initialiseNewSkipchain(Signer admin) throws CothorityCommunicationException {
         try {
             Roster roster = createRoster();
 
@@ -98,7 +97,7 @@ public class OcsFactory {
         }
         return new Roster(servers);
     }
-    private Darc createAdminDarc(@Nonnull Signer admin) throws CothorityCommunicationException {
+    private Darc createAdminDarc(Signer admin) throws CothorityCommunicationException {
         try {
             return new Darc(admin, null, null);
         } catch (CothorityCryptoException e) {

@@ -1,10 +1,10 @@
 package ch.epfl.dedis.lib.omniledger.darc;
 
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
-import javax.xml.bind.DatatypeConverter;
 import java.security.InvalidKeyException;
 import java.security.KeyFactory;
 import java.security.NoSuchAlgorithmException;
@@ -85,7 +85,7 @@ public class IdentityX509EC implements Identity {
     }
 
     public String toString(){
-        return String.format("%s:%s", this.typeString(), DatatypeConverter.printHexBinary(this.pubKey.getEncoded()).toLowerCase());
+        return String.format("%s:%s", this.typeString(), Hex.printHexBinary(this.pubKey.getEncoded()).toLowerCase());
     }
 
     @Override
