@@ -48,8 +48,11 @@ func (r *roCollection) Get(key []byte) collection.Getter {
 	return r.c.Get(key)
 }
 
+<<<<<<< HEAD
 // GetValues returns the value of the key and the contractID. If the key
 // does not exist, it returns an error.
+=======
+>>>>>>> b737c8f25ab111b75e71fa057ede877a25edec6e
 func (r *roCollection) GetValues(key []byte) (value []byte, contractID string, err error) {
 	record, err := r.c.Get(key).Record()
 	if err != nil {

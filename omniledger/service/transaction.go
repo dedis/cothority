@@ -89,6 +89,14 @@ func NewInstanceID(buf []byte) InstanceID {
 // SubID is a 32-byte id.
 type SubID [32]byte
 
+// NewInstanceID returns a new InstanceID given a slice of bytes.
+func NewInstanceID(buf []byte) InstanceID {
+	if len(buf) != 64 {
+		return InstanceID{ZeroDarc, ZeroNonce}
+	}
+	return InstanceID{buf[0:32], NewSubID(buf[32:64])}
+}
+
 // Slice returns concatenated DarcID and InstanceID.
 func (iID InstanceID) Slice() []byte {
 	var out []byte
