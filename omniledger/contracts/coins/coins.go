@@ -92,7 +92,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		return err
 	}
 	gm.BlockInterval = duration
-	rep, err := c.CreateGenesisBlock(config.Roster, gm)
+	rep, err := c.CreateGenesisBlock(gm)
 	if err != nil {
 		return err
 	}
@@ -106,8 +106,8 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	coinOne[0] = byte(1)
 	tx := service.ClientTransaction{
 		Instructions: []service.Instruction{{
-			InstanceID: service.InstanceID{gm.GenesisDarc.GetID(), service.ZeroNonce},
-			Nonce:    service.ZeroNonce,
+			InstanceID: service.InstanceID{gm.GenesisDarc.GetID(), service.SubID{}},
+			Nonce:    service.Nonce{},
 			Index:    0,
 			Length:   3,
 			Spawn: &service.Spawn{
@@ -115,8 +115,8 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 			},
 		},
 			{
-				InstanceID: service.InstanceID{gm.GenesisDarc.GetID(), service.ZeroNonce},
-				Nonce:    service.ZeroNonce,
+				InstanceID: service.InstanceID{gm.GenesisDarc.GetID(), service.SubID{}},
+				Nonce:    service.Nonce{},
 				Index:    1,
 				Length:   3,
 				Spawn: &service.Spawn{
@@ -124,7 +124,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 				},
 			},
 			{
-				Nonce:  service.ZeroNonce,
+				Nonce:  service.Nonce{},
 				Index:  2,
 				Length: 3,
 				Invoke: &service.Invoke{
