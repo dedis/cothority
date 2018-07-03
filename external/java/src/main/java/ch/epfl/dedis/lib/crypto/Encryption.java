@@ -58,7 +58,7 @@ public class Encryption {
      *                    The first ivLength bytes are taken as iv, the
      *                    rest is taken as the symmetric symmetricKey.
      * @return a combined
-     * @throws Exception
+     * @throws CothorityCryptoException
      */
     public static byte[] encryptData(byte[] data, byte[] keyMaterial) throws CothorityCryptoException{
         keyIv key = new keyIv(keyMaterial);
@@ -90,7 +90,7 @@ public class Encryption {
      * @param dataEnc the encrypted data from the skipchain
      * @param keyMaterial the decrypted keyMaterial
      * @return decrypted data
-     * @throws Exception
+     * @throws CothorityCryptoException
      */
     public static byte[] decryptData(byte[] dataEnc, byte[] keyMaterial) throws CothorityCryptoException{
         keyIv key = new keyIv(keyMaterial);
@@ -119,7 +119,7 @@ public class Encryption {
      * @param dataEnc as google protobuf bytestring
      * @param keyMaterial the decrypted keyMaterial
      * @return decypted data
-     * @throws Exception
+     * @throws CothorityCryptoException
      */
     public static byte[] decryptData(ByteString dataEnc, byte[] keyMaterial) throws CothorityCryptoException{
         return decryptData(dataEnc.toByteArray(), keyMaterial);
