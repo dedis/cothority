@@ -65,7 +65,7 @@ func TestValue_Spawn(t *testing.T) {
 
 	services := local.GetServices(servers, service.OmniledgerID)
 	for _, s := range services {
-		close(s.(*service.Service).CloseQueues)
+		s.(*service.Service).ClosePolling()
 	}
 	local.WaitDone(genesisMsg.BlockInterval)
 }

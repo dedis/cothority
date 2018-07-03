@@ -440,7 +440,12 @@ func (scs StateChanges) isGenesisConfig() bool {
 	if !bytes.Equal(scs[0].ContractID, []byte(ContractConfigID)) {
 		return false
 	}
-	// TODO check other state changes
+	if !bytes.Equal(scs[1].ContractID, []byte(ContractDarcID)) {
+		return false
+	}
+	if !bytes.Equal(scs[2].ContractID, []byte(ContractConfigID)) {
+		return false
+	}
 	return true
 }
 

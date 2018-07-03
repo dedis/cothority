@@ -20,7 +20,7 @@ type CollectTxProtocol struct {
 	SkipchainID  skipchain.SkipBlockID
 	requestChan  chan structCollectTxRequest
 	responseChan chan structCollectTxResponse
-	getTxs       func(skipchain.SkipBlockID) ClientTransactions
+	getTxs       func(*network.ServerIdentity, skipchain.SkipBlockID) ClientTransactions
 }
 
 // CollectTxRequest is the request message that asks the receiver to send their
@@ -46,7 +46,7 @@ type structCollectTxResponse struct {
 }
 
 // NewCollectTxProtocol is used for registering the protocol.
-func NewCollectTxProtocol(getTxs func(skipchain.SkipBlockID) ClientTransactions) func(*onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+func NewCollectTxProtocol(getTxs func(*network.ServerIdentity, skipchain.SkipBlockID) ClientTransactions) func(*onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	return func(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		c := &CollectTxProtocol{
 			TreeNodeInstance: node,
@@ -82,10 +82,9 @@ func (p *CollectTxProtocol) Start() error {
 func (p *CollectTxProtocol) Dispatch() error {
 	defer p.Done()
 
-	var scID skipchain.SkipBlockID
+	var req structCollectTxRequest
 	select {
-	case msg := <-p.requestChan:
-		scID = msg.SkipchainID
+	case req = <-p.requestChan:
 	case <-time.After(time.Second):
 		// This timeout checks whether the root started the protocol,
 		// it is not like our usual timeout that detect failures.
@@ -94,7 +93,7 @@ func (p *CollectTxProtocol) Dispatch() error {
 
 	// send the result of the callback to the root
 	resp := &CollectTxResponse{
-		Txs: p.getTxs(scID),
+		Txs: p.getTxs(req.ServerIdentity, req.SkipchainID),
 	}
 	if p.IsRoot() {
 		if err := p.SendTo(p.TreeNode(), resp); err != nil {

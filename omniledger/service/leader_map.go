@@ -49,12 +49,3 @@ func (m *leaderMap) get(k string) *network.ServerIdentity {
 	}
 	return nil
 }
-
-func (m *leaderMap) isMe(k string) bool {
-	m.Lock()
-	defer m.Unlock()
-	if v, ok := m.mapping[k]; ok {
-		return m.me.Equal(v)
-	}
-	return false
-}

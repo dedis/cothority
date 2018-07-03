@@ -7,6 +7,7 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/require"
 )
 
@@ -14,7 +15,7 @@ var testSuite = cothority.Suite
 
 func TestCollectTx(t *testing.T) {
 	protoPrefix := "TestCollectTx"
-	getTx := func(scID skipchain.SkipBlockID) ClientTransactions {
+	getTx := func(leader *network.ServerIdentity, scID skipchain.SkipBlockID) ClientTransactions {
 		tx := ClientTransaction{
 			Instructions: []Instruction{Instruction{}},
 		}
