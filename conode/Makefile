@@ -1,16 +1,9 @@
 CONTAINER = conode
 IMAGE_NAME = dedis/$(CONTAINER)
 DATA_DIR = $(shell pwd)/conode_data
-TAG=$(shell git describe --tags)
-OUTPUT_DIR=conode-$(TAG)
-# dev is the master branch, which will get automatic date tagging for
-# distribution files.
-STRIPPED_TAG = $(shell echo $(TAG) | cut -d '-' -f 1)
-VERSION := $(STRIPPED_TAG)
-ifeq ($(findstring v2,$(STRIPPED_TAG)),v2)
-	VERSION = latest
-endif
-TAG := $(STRIPPED_TAG)-$(shell date +%y%m%d)
+VERSION = dev
+OUTPUT_DIR = conode-$(VERSION)
+TAG = $(VERSION)-$(shell date +%y%m%d)
 
 GITUNTRACKEDCHANGES := $(shell git status --porcelain --untracked-files=no)
 ifneq ($(GITUNTRACKEDCHANGES),)

@@ -28,7 +28,7 @@ func TestClient_GetProof(t *testing.T) {
 	require.Nil(t, d.Verify(true))
 
 	c := NewClient()
-	csr, err := c.CreateGenesisBlock(roster, msg)
+	csr, err := c.CreateGenesisBlock(msg)
 	require.Nil(t, err)
 	c.Roster = roster
 	c.ID = csr.Skipblock.SkipChainID()

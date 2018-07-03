@@ -64,7 +64,7 @@ message PollTxResponse {
 The transactions are combined on the subleader nodes.
 
 However, before sending the `PollTxResponse` message, the conodes must check that
-the state of omniledger does include the transactions in the latest block
+the state of OmniLedger does include the transactions in the latest block
 given by the id in `PollTxRequest`. If the state is not
 up-to-date, then the nodes must do an update to ensure it is. Then, the nodes
 verify `Transaction.Signature` to make sure that all transaction in their queue are
@@ -97,7 +97,7 @@ The new block, with a collective signature, is propagated back to all nodes.
 Then every node updates their queue and removes the transactions that are in the
 new block. For the transactions that were not added to the new block, they need
 to be moved to the front of the queue and marked as "New" because the state
-of omniledger may have changed and the old transactions may become invalid. All the
+of OmniLedger may have changed and the old transactions may become invalid. All the
 "Verified" transactions must also be changed back to "New".
 
 ### Additional blocks

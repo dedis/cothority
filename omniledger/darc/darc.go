@@ -876,6 +876,7 @@ func (r Request) MsgToDarc(darcBuf []byte) (*Darc, error) {
 // InitRequest initialises a request, the caller must provide all the fields of
 // the request. There is no guarantee that this request is valid, please see
 // InitAndSignRequest is a valid request needs to be created.
+// TODO: rename to NewRequest
 func InitRequest(baseID ID, action Action, msg []byte, ids []Identity, sigs [][]byte) Request {
 	inner := innerRequest{
 		BaseID:     baseID,

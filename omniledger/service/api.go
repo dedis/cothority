@@ -1,10 +1,12 @@
 package service
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"strings"
+	"time"
 
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
@@ -27,6 +29,7 @@ type Client struct {
 }
 
 // NewClient instantiates a new Omniledger client.
+// TODO: this needs to be changed to avoid having an invalid Client.
 func NewClient() *Client {
 	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
 }
@@ -47,11 +50,13 @@ func NewClientFromConfig(fn string) (*Client, error) {
 
 // CreateGenesisBlock sets up a new skipchain to hold the key/value pairs. If
 // a key is given, it is used to authenticate towards the cothority.
-func (c *Client) CreateGenesisBlock(r *onet.Roster, msg *CreateGenesisBlock) (*CreateGenesisBlockResponse, error) {
+func (c *Client) CreateGenesisBlock(msg *CreateGenesisBlock) (*CreateGenesisBlockResponse, error) {
 	reply := &CreateGenesisBlockResponse{}
-	if err := c.SendProtobuf(r.List[0], msg, reply); err != nil {
+	if err := c.SendProtobuf(msg.Roster.List[0], msg, reply); err != nil {
 		return nil, err
 	}
+	c.Roster = &msg.Roster
+	c.ID = reply.Skipblock.CalculateHash()
 	return reply, nil
 }
 
@@ -143,7 +148,7 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 func (c *Client) GetChainConfig() (*ChainConfig, error) {
 	d, err := c.GetGenDarc()
 
-	cfid := InstanceID{d.GetBaseID(), one}
+	cfid := InstanceID{d.GetBaseID(), oneSubID}
 	p, err := c.GetProof(cfid.Slice())
 	if err != nil {
 		return nil, err
@@ -166,6 +171,42 @@ func (c *Client) GetChainConfig() (*ChainConfig, error) {
 		return nil, err
 	}
 	return config, nil
+}
+
+// WaitProof will poll OmniLedger until a given instanceID exists.
+// It will return the proof of the instance created. If value is
+// non-nil, it will wait for the value of the proof to be equal to
+// the value.
+// If the timeout is reached before the proof returns 'Match' or matches
+// the value, it will return an error.
+// TODO: remove interval and take it directly from the Client-structure.
+func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) (*Proof, error) {
+	var pr Proof
+	for i := 0; i < 10; i++ {
+		// try to get the darc back, we should get the genesis back instead
+		resp, err := c.GetProof(id.Slice())
+		if err != nil {
+			return nil, err
+		}
+		pr = resp.Proof
+		if pr.InclusionProof.Match() {
+			if value == nil {
+				return &pr, nil
+			}
+			vs, err := pr.InclusionProof.RawValues()
+			if err != nil {
+				return nil, err
+			}
+			if bytes.Compare(vs[0], value) == 0 {
+				return &pr, nil
+			}
+		}
+
+		// wait for the block to be processed
+		time.Sleep(interval / 5)
+	}
+
+	return nil, errors.New("timeout reached and inclusion not found")
 }
 
 // A Config gathers all the information a client needs to know to talk to
@@ -222,4 +263,32 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 		BlockInterval: defaultInterval,
 	}
 	return &m, nil
+}
+
+// SignInstruction takes an instruction and one or more signers and adds
+// a Signature to the instruction.
+func SignInstruction(inst *Instruction, signers ...darc.Signer) error {
+	inst.Signatures = make([]darc.Signature, 0)
+	var action string
+	switch {
+	case inst.Spawn != nil:
+		action = "spawn:" + inst.Spawn.ContractID
+	case inst.Invoke != nil:
+		action = "invoke:" + inst.Invoke.Command
+	case inst.Delete != nil:
+		action = "delete"
+	}
+	req, err := darc.InitAndSignRequest(inst.InstanceID.DarcID, darc.Action(action),
+		inst.Hash(), signers...)
+	if err != nil {
+		return err
+	}
+	inst.Signatures = make([]darc.Signature, len(req.Signatures))
+	for i, sig := range req.Signatures {
+		inst.Signatures[i] = darc.Signature{
+			Signature: sig,
+			Signer:    signers[i].Identity(),
+		}
+	}
+	return nil
 }
