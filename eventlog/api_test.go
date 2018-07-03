@@ -126,8 +126,9 @@ func TestClient_Log200(t *testing.T) {
 	bucketID := idx
 	var eventCount int
 	var eventIDs [][]byte
-	for {
-		if len(bucketID) == 0 {
+	for i := 0; i < 10; i++ {
+		if len(bucketID) == 0 && eventCount == 2*logCount {
+			err = nil
 			break
 		}
 		bucketBuf := checkProof(t, leader.omni, bucketID, c.OmniLedger.ID)
@@ -137,8 +138,9 @@ func TestClient_Log200(t *testing.T) {
 		eventCount += len(b.EventRefs)
 		eventIDs = append(eventIDs, b.EventRefs...)
 		bucketID = b.Prev
+		err = fmt.Errorf("Didn't finish in time. Got %d instead of %d events", eventCount, 2*logCount)
 	}
-	require.Equal(t, 2*logCount, eventCount)
+	require.Nil(t, err)
 
 	for _, eventID := range eventIDs {
 		eventBuf := checkProof(t, leader.omni, eventID, c.OmniLedger.ID)
