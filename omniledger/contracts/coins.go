@@ -41,7 +41,7 @@ func ContractCoin(cdb service.CollectionView, inst service.Instruction, c []serv
 		}, c, nil
 	case inst.Invoke != nil:
 		// Invoke is one of "mint", "transfer", "fetch", or "store".
-		value, err := cdb.GetValue(inst.InstanceID.Slice())
+		value, _, err := cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -106,7 +106,7 @@ func ContractCoin(cdb service.CollectionView, inst service.Instruction, c []serv
 			ContractCoinID, w.Bytes())), c, nil
 	case inst.Delete != nil:
 		// Delete our coin address, but only if the current coin is empty.
-		value, err := cdb.GetValue(inst.InstanceID.Slice())
+		value, _, err := cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, err
 		}

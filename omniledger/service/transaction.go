@@ -77,8 +77,14 @@ type InstanceID struct {
 	SubID SubID
 }
 
-// SubID is a 32-byte id.
-type SubID [32]byte
+// NewInstanceID returns a new InstanceID given a slice of bytes. If the length
+// of the slice is not 64 bytes, it will return an all zero InstanceID.
+func NewInstanceID(buf []byte) InstanceID {
+	if len(buf) != 64 {
+		return InstanceID{zeroDarc, SubID{}}
+	}
+	return InstanceID{buf[0:32], NewSubID(buf[32:64])}
+}
 
 // Slice returns concatenated DarcID and InstanceID.
 func (iID InstanceID) Slice() []byte {
@@ -92,6 +98,9 @@ func (iID InstanceID) Equal(other InstanceID) bool {
 	return bytes.Compare(iID.DarcID, other.DarcID) == 0 &&
 		bytes.Compare(iID.SubID[:], other.SubID[:]) == 0
 }
+
+// SubID is a 32-byte id.
+type SubID [32]byte
 
 // NewSubID returns a SubID given a slice of bytes. If buf is of
 // length 32 bytes it will copy it to a new SubID, else it will return
