@@ -1,12 +1,12 @@
 package ch.epfl.dedis.lib.darc;
 
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcOCSProto;
 import com.google.protobuf.ByteString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -96,8 +96,8 @@ public class DarcSignature {
     private byte[] getHash(byte[] msg) throws CothorityCryptoException {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            logger.debug("path: " + DatatypeConverter.printHexBinary(path.getPathMsg()));
-            logger.debug("msg: " + DatatypeConverter.printHexBinary(msg));
+            logger.debug("path: " + Hex.printHexBinary(path.getPathMsg()));
+            logger.debug("msg: " + Hex.printHexBinary(msg));
             digest.update(path.getPathMsg());
             digest.update(msg);
             return digest.digest();

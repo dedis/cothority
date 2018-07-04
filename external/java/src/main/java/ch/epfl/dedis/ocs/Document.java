@@ -1,10 +1,10 @@
 package ch.epfl.dedis.ocs;
 
 import ch.epfl.dedis.lib.crypto.Encryption;
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
 
 import static ch.epfl.dedis.lib.crypto.Encryption.encryptData;
@@ -139,9 +139,9 @@ public class Document {
         }
         return String.format("dataEncrypted: %s\ndataPublic: %s\nkeyMaterial: %s\n" +
                         "readers: %s\nwriteRequestId: %s",
-                DatatypeConverter.printHexBinary(dataEncrypted),
-                DatatypeConverter.printHexBinary(dataPublic),
-                DatatypeConverter.printHexBinary(keyMaterial),
+                Hex.printHexBinary(dataEncrypted),
+                Hex.printHexBinary(dataPublic),
+                Hex.printHexBinary(keyMaterial),
                 readers.toString(),
                 wrid);
     }

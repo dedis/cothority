@@ -2,6 +2,7 @@ package ch.epfl.dedis.ocs;
 
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.Encryption;
 import ch.epfl.dedis.lib.darc.*;
@@ -14,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -86,7 +86,7 @@ class OnchainSecretsRPCTest {
     void darcID() throws Exception {
         logger.info("Admin darc after: " + adminDarc.getId().toString());
         logger.info("Admin-darc prot: " +
-                DatatypeConverter.printHexBinary(adminDarc.toProto().toByteArray()));
+                Hex.printHexBinary(adminDarc.toProto().toByteArray()));
     }
 
     @Test
@@ -233,7 +233,7 @@ class OnchainSecretsRPCTest {
 
     @Test
     void createDarcForTheSameUserInDifferentSkipchain() throws Exception {
-        Darc userDarc = new Darc(new SignerEd25519(DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")), null, null);
+        Darc userDarc = new Darc(new SignerEd25519(Hex.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")), null, null);
         ocs.updateDarc(userDarc);
 
         OnchainSecretsRPC ocs2 = new OnchainSecretsRPC(testInstanceController.getRoster(), adminDarc);
@@ -244,7 +244,7 @@ class OnchainSecretsRPCTest {
             logger.info("correctly refusing to save again");
         }
 
-        Darc userDarc2 = new Darc(new SignerEd25519(DatatypeConverter.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")), null, null);
+        Darc userDarc2 = new Darc(new SignerEd25519(Hex.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")), null, null);
         ocs2.updateDarc(userDarc2);
         logger.info("new user darc created and stored");
     }

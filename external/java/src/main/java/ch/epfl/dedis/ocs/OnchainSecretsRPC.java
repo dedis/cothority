@@ -4,6 +4,7 @@ import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
@@ -17,7 +18,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -158,7 +158,7 @@ public class OnchainSecretsRPC {
             logger.debug("received reply: {}", reply.toString());
             logger.info("Updated darc {} stored in block: {}",
                     newAccount.getId().toString(),
-                    DatatypeConverter.printHexBinary(reply.getSb().getHash().toByteArray()));
+                    Hex.printHexBinary(reply.getSb().getHash().toByteArray()));
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }

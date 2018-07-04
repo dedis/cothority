@@ -6,7 +6,6 @@ import net.i2p.crypto.eddsa.math.FieldElement;
 import net.i2p.crypto.eddsa.math.ed25519.Ed25519ScalarOps;
 import net.i2p.crypto.eddsa.spec.EdDSAPrivateKeySpec;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
 
 public class Ed25519Scalar implements Scalar {
@@ -17,7 +16,7 @@ public class Ed25519Scalar implements Scalar {
     }
 
     public Ed25519Scalar(String str, boolean reduce) {
-        this(DatatypeConverter.parseHexBinary(str), reduce);
+        this(Hex.parseHexBinary(str), reduce);
     }
 
     public Ed25519Scalar(byte[] b) {
@@ -38,7 +37,7 @@ public class Ed25519Scalar implements Scalar {
     }
 
     public String toString() {
-        return DatatypeConverter.printHexBinary(getLittleEndian());
+        return Hex.printHexBinary(getLittleEndian());
     }
 
     public ByteString toProto() {

@@ -1,7 +1,6 @@
 package ch.epfl.dedis.byzgen;
 
 
-import javax.annotation.Nonnull;
 import java.security.SignatureException;
 
 /**
@@ -12,7 +11,6 @@ public interface User {
      * Return immutable getId of skipchain user.
      * @return getId of user
      */
-    @Nonnull
     UserId getUserId();
 
     /**
@@ -23,7 +21,6 @@ public interface User {
      * @throws SignatureException can be thrown in case of internal processing problems and also when user decide to
      * reject request.
      */
-    @Nonnull
-    UserSignature sign(@Nonnull byte[] signRequest) throws SignatureException;
+    UserSignature sign(byte[] signRequest) throws SignatureException;
 
 }

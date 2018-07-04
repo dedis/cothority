@@ -1,5 +1,6 @@
 package ch.epfl.dedis.lib.omniledger.darc;
 
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.proto.DarcProto;
@@ -8,7 +9,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
@@ -242,19 +242,19 @@ public class Darc {
 
     public String toString() {
         try {
-            String base = DatatypeConverter.printHexBinary(getBaseId().getId());
+            String base = Hex.printHexBinary(getBaseId().getId());
             if (baseID != null) {
-                base = String.format("stored: %s", DatatypeConverter.printHexBinary(baseID.getId()));
+                base = String.format("stored: %s", Hex.printHexBinary(baseID.getId()));
             }
             String ret = String.format("Base: %s\nId: %s\nPrevId: %s\nVersion: %d\nRules:",
                     base,
-                    DatatypeConverter.printHexBinary(getId().getId()),
-                    DatatypeConverter.printHexBinary(getPrevID().getId()),
+                    Hex.printHexBinary(getId().getId()),
+                    Hex.printHexBinary(getPrevID().getId()),
                     version);
             for (String r : rules.keySet()) {
-                ret += String.format("\n%s - %s", r, DatatypeConverter.printHexBinary(rules.get(r)));
+                ret += String.format("\n%s - %s", r, Hex.printHexBinary(rules.get(r)));
             }
-            ret += String.format("\nDescription: %s", DatatypeConverter.printHexBinary(description));
+            ret += String.format("\nDescription: %s", Hex.printHexBinary(description));
             return ret;
         } catch (CothorityException e) {
             throw new RuntimeException(e);

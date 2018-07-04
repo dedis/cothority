@@ -8,7 +8,6 @@ import net.i2p.crypto.eddsa.spec.EdDSAPublicKeySpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.security.PublicKey;
 import java.util.Arrays;
 
@@ -26,7 +25,7 @@ public class Ed25519Point implements Point {
     }
 
     public Ed25519Point(String str) {
-        this(DatatypeConverter.parseHexBinary(str));
+        this(Hex.parseHexBinary(str));
     }
 
     public Ed25519Point(byte[] b) {
@@ -73,7 +72,7 @@ public class Ed25519Point implements Point {
     }
 
     public String toString() {
-        return DatatypeConverter.printHexBinary(toBytes());
+        return Hex.printHexBinary(toBytes());
     }
 
     public EdDSAPublicKey toEdDSAPub() {
@@ -89,7 +88,7 @@ public class Ed25519Point implements Point {
         byte[] bytes = toBytes();
         int len = bytes[0];
         if (len > Ed25519.pubLen || len < 0) {
-            logger.info(DatatypeConverter.printHexBinary(bytes));
+            logger.info(Hex.printHexBinary(bytes));
             throw new CothorityCryptoException("doesn't seem to be a valid point");
         }
         return Arrays.copyOfRange(bytes, 1, len + 1);

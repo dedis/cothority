@@ -1,5 +1,6 @@
 package ch.epfl.dedis.lib.omniledger.contracts;
 
+import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
@@ -9,7 +10,6 @@ import ch.epfl.dedis.lib.omniledger.darc.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.DatatypeConverter;
 import java.util.Arrays;
 
 /**
@@ -71,7 +71,7 @@ public class ValueInstance {
         try {
             Request r = new Request(instance.getId().getDarcId(), "invoke:update", inst.hash(),
                     Arrays.asList(owner.getIdentity()), null);
-            logger.info("Signing: {}", DatatypeConverter.printHexBinary(r.hash()));
+            logger.info("Signing: {}", Hex.printHexBinary(r.hash()));
             Signature sign = new Signature(owner.sign(r.hash()), owner.getIdentity());
             inst.setSignatures(Arrays.asList(sign));
         } catch (Signer.SignRequestRejectedException e) {
@@ -101,8 +101,8 @@ public class ValueInstance {
         for (int i = 0; i < 10; i++) {
             Proof p = ol.getProof(instance.getId());
             Instance inst = new Instance(p);
-            logger.info("Values are: {} - {}", DatatypeConverter.printHexBinary(inst.getData()),
-                    DatatypeConverter.printHexBinary(newValue));
+            logger.info("Values are: {} - {}", Hex.printHexBinary(inst.getData()),
+                    Hex.printHexBinary(newValue));
             if (Arrays.equals(inst.getData(), newValue)){
                 value = newValue;
                 return;
