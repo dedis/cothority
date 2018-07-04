@@ -99,9 +99,9 @@ func (n *node) overwrite(other *node) {
 	n.children.right = other.children.right
 }
 
-func (n *node) copyTo(ne *node) {
+func (n *node) copyTo(dst *node) {
 	n.Lock()
-	ne.overwrite(n)
+	dst.overwrite(n)
 	n.Unlock()
 }
 

@@ -33,8 +33,7 @@ func dumpNode(n *node) (d dump) {
 
 	// NOTE: this is the same as node.leaf() without the locks.
 	if nodeCopy.children.left == nil {
-		nodeCopy.key = make([]byte, len(d.Key))
-		copy(nodeCopy.key, d.Key)
+		d.Key = nodeCopy.key
 	} else {
 		// Do we still need locking when we copy?
 		nodeCopy.children.left.Lock()
