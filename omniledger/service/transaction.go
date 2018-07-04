@@ -430,25 +430,6 @@ func (scs StateChanges) Hash() []byte {
 	return h.Sum(nil)
 }
 
-func (scs StateChanges) isGenesisConfig() bool {
-	if len(scs) != 3 {
-		return false
-	}
-	if !bytes.Equal(scs[0].InstanceID, GenesisReferenceID.Slice()) {
-		return false
-	}
-	if !bytes.Equal(scs[0].ContractID, []byte(ContractConfigID)) {
-		return false
-	}
-	if !bytes.Equal(scs[1].ContractID, []byte(ContractDarcID)) {
-		return false
-	}
-	if !bytes.Equal(scs[2].ContractID, []byte(ContractConfigID)) {
-		return false
-	}
-	return true
-}
-
 // StateAction describes how the collectionDB will be modified.
 type StateAction int
 

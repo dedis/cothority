@@ -467,7 +467,8 @@ func TestService_SetLeader(t *testing.T) {
 
 	for _, service := range s.services {
 		// everyone should have the same leader after the genesis block is stored
-		leader := service.leaderMap.get(string(s.sb.SkipChainID()))
+		leader, err := service.getLeader(s.sb.SkipChainID())
+		require.NoError(t, err)
 		require.NotNil(t, leader)
 		require.True(t, leader.Equal(s.services[0].ServerIdentity()))
 	}

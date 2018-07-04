@@ -73,8 +73,6 @@ type Service struct {
 	storage *storage
 
 	createSkipChainMut sync.Mutex
-
-	leaderMap leaderMap
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -401,17 +399,6 @@ func (s *Service) updateCollection(msg network.Message) {
 		return
 	}
 
-	// Check whether we are storing a genesis config, if we are, also set
-	// the leaderMap.
-	if scs.isGenesisConfig() {
-		// The leader starts as the first one in the roster.
-		leader := sb.Roster.List[0]
-		if err := s.leaderMap.add(string(sb.SkipChainID()), leader); err != nil {
-			log.Error("failed to add entry in leaderMap", err)
-			return
-		}
-	}
-
 	if i, _ := sb.Roster.Search(s.ServerIdentity().ID); i == 0 {
 		log.Lvlf2("%s: Storing state changes %v", s.ServerIdentity(), scs)
 	} else {
@@ -527,6 +514,9 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 					case <-protocolTimeout:
 						log.Lvl2(s.ServerIdentity(), "timeout while collecting transactions from other nodes")
 						break collectTxLoop
+					case <-closeSignal:
+						log.Lvl2(s.ServerIdentity(), "stopping polling")
+						return
 					}
 				}
 
@@ -648,8 +638,23 @@ clientTransactions:
 	return cdbTemp.GetRoot(), ctsOK, states, nil
 }
 
+func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity, error) {
+	sb, err := s.db().GetLatestByID(scID)
+	if err != nil {
+		return nil, err
+	}
+	if sb.Roster == nil || len(sb.Roster.List) < 1 {
+		return nil, errors.New("roster is empty")
+	}
+	return sb.Roster.List[0], nil
+}
+
 func (s *Service) getTxs(leader *network.ServerIdentity, scID skipchain.SkipBlockID) ClientTransactions {
-	actualLeader := s.leaderMap.get(string(scID))
+	actualLeader, err := s.getLeader(scID)
+	if err != nil {
+		log.Lvlf1("could not find a leader on %x with error %s", scID, err)
+		return []ClientTransaction{}
+	}
 	if !leader.Equal(actualLeader) {
 		log.Lvl1("getTxs came from a wrong leader")
 		return []ClientTransaction{}
@@ -755,7 +760,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		contracts:        make(map[string]OmniLedgerContract),
-		leaderMap:        newLeaderMap(c.ServerIdentity()),
 		txBuffer:         newTxBuffer(),
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
