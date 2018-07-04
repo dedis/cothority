@@ -731,7 +731,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 
 	s.registerContract(ContractConfigID, s.ContractConfig)
 	s.registerContract(ContractDarcID, s.ContractDarc)
-	
+
 	skipchain.RegisterVerification(c, verifyOmniLedger, s.verifySkipBlock)
 	bftDuration, err := time.ParseDuration("10m")
 	if err != nil {
