@@ -101,3 +101,20 @@ func (p Proof) KeyValue() (key []byte, values [][]byte, err error) {
 	values, err = p.InclusionProof.RawValues()
 	return
 }
+
+// ContractValue verifies the contractID of the proof and tries to
+// protobuf-decode the value to the given interface. It takes as an input
+// the ContractID the instance should be a part of and a pre-allocated
+// structure where the data of the instance is decoded into.
+// It returns an error if the instance is not of type cid or if the
+// decoding failed.
+func (p *Proof) ContractValue(suite network.Suite, cid string, value interface{}) error {
+	values, err := p.InclusionProof.RawValues()
+	if err != nil {
+		return err
+	}
+	if bytes.Compare(values[1], []byte(cid)) != 0 {
+		return errors.New("not an instance of this contract")
+	}
+	return protobuf.DecodeWithConstructors(values[0], value, network.DefaultConstructors(suite))
+}

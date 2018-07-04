@@ -16,6 +16,7 @@ import (
 // type :Instructions:[]Instruction
 // type :TxResults:[]TxResult
 // type :InstanceID:bytes
+// type :Version:sint32
 // package omniledger;
 // import "skipchain.proto";
 // import "onet.proto";
