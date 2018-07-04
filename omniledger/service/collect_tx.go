@@ -6,6 +6,7 @@ import (
 
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 )
 
@@ -50,8 +51,11 @@ func NewCollectTxProtocol(getTxs func(*network.ServerIdentity, skipchain.SkipBlo
 	return func(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		c := &CollectTxProtocol{
 			TreeNodeInstance: node,
-			TxsChan:          make(chan ClientTransactions),
-			getTxs:           getTxs,
+			// If we do not buffer this channel then the protocol
+			// might be blocked from stopping when the receiver
+			// stops reading from this channel.
+			TxsChan: make(chan ClientTransactions, len(node.List())),
+			getTxs:  getTxs,
 		}
 		if err := node.RegisterChannels(&c.requestChan, &c.responseChan); err != nil {
 			return c, err
@@ -75,7 +79,13 @@ func (p *CollectTxProtocol) Start() error {
 	if err := p.SendTo(p.TreeNode(), req); err != nil {
 		return err
 	}
-	return p.SendToChildren(req)
+	// do not return an error if we fail to send to some children
+	if errs := p.SendToChildrenInParallel(req); len(errs) > 0 {
+		for _, err := range errs {
+			log.Error(err)
+		}
+	}
+	return nil
 }
 
 // Dispatch runs the protocol.

@@ -484,7 +484,8 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 			case <-time.After(interval):
 				sb, err := s.db().GetLatestByID(scID)
 				if err != nil {
-					panic("DB is in bad state and cannot find skipchain anymore: " + err.Error())
+					panic("DB is in bad state and cannot find skipchain anymore: " + err.Error() +
+						" This function should never be called on a skipchain that does not exist.")
 				}
 				// We assume the caller of this function is the
 				// current leader. So we generate a tree with
@@ -492,12 +493,19 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 				tree := sb.Roster.GenerateNaryTreeWithRoot(len(sb.Roster.List), s.ServerIdentity())
 				proto, err := s.CreateProtocol(collectTxProtocol, tree)
 				if err != nil {
-					panic("cannot create protocol: " + err.Error())
+					panic("Protocol creation failed with error: " + err.Error() +
+						" This panic indicates that there is most likely a programmer error," +
+						" e.g., the protocol does not exist." +
+						" Hence, we cannot recover from this failure without putting" +
+						" the server in a strange state, so we panic.")
 				}
 				root := proto.(*CollectTxProtocol)
 				root.SkipchainID = scID
 				if err := root.Start(); err != nil {
-					panic("cannot start protocol: " + err.Error())
+					panic("Failed to start the protocol with error: " + err.Error() +
+						" Start() only returns an error when the protocol is not initialised correctly," +
+						" e.g., not all the required fields are set." +
+						" If you see this message then there may be a programmer error.")
 				}
 
 				protocolTimeout := time.After(s.skService().GetPropTimeout())
