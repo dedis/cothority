@@ -65,7 +65,9 @@ func (g Getter) Proof() (Proof, error) {
 	var proof Proof
 
 	proof.collection = g.collection
-	proof.Key = g.key
+	// To avoid race conditions, we need deep copies here.
+	proof.Key = make([]byte, len(g.key))
+	copy(proof.Key, g.key)
 
 	proof.Root = dumpNode(g.collection.root)
 

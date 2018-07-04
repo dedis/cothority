@@ -146,6 +146,11 @@ type Argument struct {
 // Arguments is a searchable list of arguments.
 type Arguments []Argument
 
+// NewArguments is a convenience method to create Arguments.
+func NewArguments(args ...Argument) Arguments {
+	return Arguments(args)
+}
+
 // Search returns the value of a given argument. If it is not found, nil
 // is returned.
 // TODO: An argument with nil value cannot be distinguished from

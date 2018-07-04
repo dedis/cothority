@@ -1,15 +1,4 @@
-// Package service implements the OmniLedger service.
-package service
-
-import (
-	"bytes"
-	"encoding/binary"
-	"errors"
-	"fmt"
-	"sync"
-	"time"
-
-	"github.com/dedis/cothority"
+thub.com/dedis/cothority"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/util/random"
@@ -26,13 +15,12 @@ const darcIDLen int = 32
 
 const invokeEvolve darc.Action = darc.Action("invoke:evolve")
 
-// OmniledgerID can be used to refer to this service
-var OmniledgerID onet.ServiceID
+var omniledgerID onet.ServiceID
 var verifyOmniLedger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OmniLedger"))
 
 func init() {
 	var err error
-	OmniledgerID, err = onet.RegisterNewService(ServiceName, newService)
+	omniledgerID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
 	network.RegisterMessages(&storage{}, &DataHeader{}, &updateCollection{})
 }
@@ -43,7 +31,7 @@ func GenNonce() (n Nonce) {
 	return n
 }
 
-// Service is our OmniLedger-service
+// Service is our omniledger-service
 type Service struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
 	// are correctly handled.
@@ -139,11 +127,11 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	// reference to the actual genesis transaction.
 	transaction := []ClientTransaction{{
 		Instructions: []Instruction{{
-			InstanceID: InstanceID{DarcID: req.GenesisDarc.GetID()},
-			Nonce:      Nonce{},
-			Index:      0,
-			Length:     1,
-			Spawn:      spawn,
+			ObjectID: ObjectID{DarcID: req.GenesisDarc.GetID()},
+			Nonce:    ZeroNonce,
+			Index:    0,
+			Length:   1,
+			Spawn:    spawn,
 		}},
 	}}
 
@@ -217,10 +205,10 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.save()
 }
 
-func toInstanceID(dID darc.ID) InstanceID {
-	return InstanceID{
-		DarcID: dID,
-		SubID:  SubID{},
+func toObjectID(dID darc.ID) ObjectID {
+	return ObjectID{
+		DarcID:     dID,
+		InstanceID: ZeroNonce,
 	}
 }
 
@@ -246,7 +234,7 @@ func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransactio
 }
 
 func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
-	d, err := s.loadLatestDarc(scID, instr.InstanceID.DarcID)
+	d, err := s.loadLatestDarc(scID, instr.ObjectID.DarcID)
 	if err != nil {
 		return errors.New("darc not found: " + err.Error())
 	}
@@ -441,7 +429,7 @@ func (s *Service) db() *skipchain.SkipBlockDB {
 }
 
 // LoadConfig loads the configuration from a skipchain ID.
-func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
+func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*Config, error) {
 	collDb := s.getCollection(scID)
 	if collDb == nil {
 		return nil, errors.New("nil collection DB")
@@ -463,14 +451,14 @@ func (s *Service) loadLatestDarc(sid skipchain.SkipBlockID, dID darc.ID) (*darc.
 	if colldb == nil {
 		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", sid.Short())
 	}
-	value, contract, err := colldb.GetValueContract(toInstanceID(dID).Slice())
+	value, contract, err := colldb.GetValueContract(toObjectID(dID).Slice())
 	if err != nil {
 		return nil, err
 	}
 	if string(contract) != "darc" {
 		return nil, fmt.Errorf("for darc %x, expected Kind to be 'darc' but got '%v'", dID, string(contract))
 	}
-	return darc.NewFromProtobuf(value)
+	return darc.NewDarcFromProto(value)
 }
 
 // createQueueWorker sets up a worker that will listen on a channel for
@@ -484,7 +472,7 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID, interval time.Du
 			select {
 			case t := <-c:
 				ts = append(ts, t)
-				log.Lvlf2("%x: Stored transaction. Next block length: %v, New Tx: %+v", scID, len(ts), t)
+				// log.LLvlf2("%x: Stored transaction. Next block length: %v, New Tx: %+v", scID, len(ts), t)
 			case <-to:
 				if len(ts) > 0 {
 					log.Lvlf2("%x: New epoch and transaction-length: %d", scID, len(ts))
@@ -522,7 +510,7 @@ func (s *Service) createQueueWorker(scID skipchain.SkipBlockID, interval time.Du
 	return c
 }
 
-// We use the OmniLedger as a receiver (as is done in the identity service),
+// We use the omniledger as a receiver (as is done in the identity service),
 // so we can access e.g. the collectionDBs of the service.
 func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
 	_, headerI, err := network.Unmarshal(newSB.Data, cothority.Suite)
@@ -594,13 +582,13 @@ clientTransactions:
 			// Wrap up f() inside of g(), so that we can recover panics
 			// from f().
 			log.Lvlf3("%s: Calling contract %s", s.ServerIdentity(), contract)
-			g := func(cdb CollectionView, inst Instruction, c []Coin) (sc []StateChange, cout []Coin, err error) {
+			g := func(cdb CollectionView, tx Instruction, c []Coin) (sc []StateChange, cout []Coin, err error) {
 				defer func() {
 					if re := recover(); re != nil {
 						err = errors.New(re.(string))
 					}
 				}()
-				sc, cout, err = f(cdb, inst, c)
+				sc, cout, err = f(cdb, tx, c)
 				return
 			}
 			scs, _, err := g(cdbI, instr, nil)
@@ -633,7 +621,7 @@ func (s *Service) registerContract(contractID string, c OmniLedgerContract) erro
 // if it finds a valid config-file.
 func (s *Service) tryLoad() error {
 	s.storage = &storage{
-		PropTimeout: 30 * time.Second,
+		PropTimeout: 10 * time.Second,
 	}
 	msg, err := s.Load([]byte(storageID))
 	if err != nil {
@@ -731,17 +719,13 @@ func newService(c *onet.Context) (onet.Service, error) {
 
 	s.registerContract(ContractConfigID, s.ContractConfig)
 	s.registerContract(ContractDarcID, s.ContractDarc)
-
+	s.registerContract(ContractValueID, s.ContractValue)
+	s.registerContract(ContractCoinID, s.ContractCoin)
 	skipchain.RegisterVerification(c, verifyOmniLedger, s.verifySkipBlock)
-	bftDuration, err := time.ParseDuration("10m")
+	duration, err := time.ParseDuration("5m")
 	if err != nil {
 		return nil, err
 	}
-	propDuration, err := time.ParseDuration("10m")
-	if err != nil {
-		return nil, err
-	}
-	s.skService().SetBFTTimeout(bftDuration)
-	s.skService().SetPropTimeout(propDuration)
+	s.skService().SetBFTTimeout(duration)
 	return s, nil
 }

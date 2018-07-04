@@ -34,6 +34,11 @@ func NewClient() *Client {
 	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
 }
 
+// NewClientKeep is like NewClient, but does not close the connection.
+func NewClientKeep() *Client {
+	return &Client{Client: onet.NewClientKeep(cothority.Suite, ServiceName)}
+}
+
 // NewClientFromConfig instantiates a new Omniledger client.
 func NewClientFromConfig(fn string) (*Client, error) {
 	cfg, err := loadConfig(fn)
