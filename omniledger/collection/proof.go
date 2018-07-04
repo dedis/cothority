@@ -23,22 +23,26 @@ type dump struct {
 
 // Constructors
 
-func dumpNode(node *node) (dump dump) {
+func dumpNode(n *node) (d dump) {
 	// To avoid race conditions, we want a deep copy here.
-	nodeCopy := node.copy()
+	var nodeCopy node
+	n.copyTo(&nodeCopy)
 
-	dump.Label = nodeCopy.label
-	dump.Values = nodeCopy.values
+	d.Label = nodeCopy.label
+	d.Values = nodeCopy.values
 
 	// NOTE: this is the same as node.leaf() without the locks.
 	if nodeCopy.children.left == nil {
-		dump.Key = nodeCopy.key
+		nodeCopy.key = make([]byte, len(d.Key))
+		copy(nodeCopy.key, d.Key)
 	} else {
 		// Do we still need locking when we copy?
 		nodeCopy.children.left.Lock()
 		nodeCopy.children.right.Lock()
-		dump.Children.Left = nodeCopy.children.left.label
-		dump.Children.Right = nodeCopy.children.right.label
+		// label is an array, not a slice, so we don't need
+		// do explicitly do a deep copy here.
+		d.Children.Left = nodeCopy.children.left.label
+		d.Children.Right = nodeCopy.children.right.label
 		nodeCopy.children.left.Unlock()
 		nodeCopy.children.right.Unlock()
 	}
