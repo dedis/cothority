@@ -27,8 +27,8 @@ type SimulationService struct {
 	Transactions  int
 	BlockInterval string
 	Batch         bool
-	Keep bool
-	Delay int
+	Keep          bool
+	Delay         int
 }
 
 // NewSimulationService returns the new simulation, where all fields are
@@ -74,9 +74,9 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	log.Lvl2("Size is:", size, "rounds:", s.Rounds, "transactions:", s.Transactions)
 	var c *service.Client
 	if s.Keep {
-	    c = service.NewClientKeep()
+		c = service.NewClientKeep()
 	} else {
-	    c = service.NewClient()
+		c = service.NewClient()
 	}
 	signer := darc.NewSignerEd25519(nil, nil)
 
@@ -107,18 +107,18 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	tx := service.ClientTransaction{
 		Instructions: []service.Instruction{{
 			InstanceID: service.InstanceID{gm.GenesisDarc.GetID(), service.SubID{}},
-			Nonce:    service.Nonce{},
-			Index:    0,
-			Length:   3,
+			Nonce:      service.Nonce{},
+			Index:      0,
+			Length:     3,
 			Spawn: &service.Spawn{
 				ContractID: service.ContractCoinID,
 			},
 		},
 			{
 				InstanceID: service.InstanceID{gm.GenesisDarc.GetID(), service.SubID{}},
-				Nonce:    service.Nonce{},
-				Index:    1,
-				Length:   3,
+				Nonce:      service.Nonce{},
+				Index:      1,
+				Length:     3,
 				Spawn: &service.Spawn{
 					ContractID: service.ContractCoinID,
 				},
@@ -180,9 +180,9 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 				binary.Write(&buf, binary.LittleEndian, i+1)
 				tx.Instructions = append(tx.Instructions, service.Instruction{
 					InstanceID: coinAddr1,
-					Nonce:    service.NewNonce(buf.Bytes()),
-					Index:    i,
-					Length:   insts,
+					Nonce:      service.NewNonce(buf.Bytes()),
+					Index:      i,
+					Length:     insts,
 					Invoke: &service.Invoke{
 						Command: "transfer",
 						Args: service.NewArguments(service.Argument{"coins", coinOne},
