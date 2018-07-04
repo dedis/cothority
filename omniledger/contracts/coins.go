@@ -34,7 +34,10 @@ func ContractCoin(cdb service.CollectionView, inst service.Instruction, c []serv
 	case inst.Spawn != nil:
 		// Spawn creates a new coin account as a separate instance. The subID is
 		// taken from the hash of the instruction.
-		ca := service.InstanceID{inst.InstanceID.DarcID, service.NewSubID(inst.Hash())}
+		ca := service.InstanceID{
+			DarcID: inst.InstanceID.DarcID,
+			SubID:  service.NewSubID(inst.Hash()),
+		}
 		log.LLvlf2("Spawing coin to %x", ca.Slice())
 		return []service.StateChange{
 			service.NewStateChange(service.Create, ca, ContractCoinID, make([]byte, 8)),
