@@ -77,7 +77,7 @@ func (n *node) copyVal() [][]byte {
 		return nil
 	}
 	cv := make([][]byte, len(n.values))
-	for i := 0;  i < len(n.values); i++ {
+	for i := 0; i < len(n.values); i++ {
 		cv[i] = make([]byte, len(n.values[i]))
 		copy(cv[i], n.values[i])
 	}
@@ -99,16 +99,12 @@ func (n *node) overwrite(other *node) {
 	n.children.right = other.children.right
 }
 
-
-
 func (n *node) copy() (ne node) {
 	n.Lock()
 	ne.overwrite(n)
 	n.Unlock()
 	return ne
 }
-
-
 
 func (n *node) restore() {
 	n.Lock()
