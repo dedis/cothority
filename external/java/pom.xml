@@ -6,7 +6,7 @@
 
     <groupId>ch.epfl.dedis</groupId>
     <artifactId>cothority</artifactId>
-    <version>2.0.2</version>
+    <version>master-180704</version>
     <name>Cothority client library for Java</name>
     <description>A client library for communicating with cothorities (a collective authority).</description>
     <url>https://github.com/dedis/cothority</url>
@@ -90,7 +90,7 @@
                 <configuration>
                     <serverId>ossrh</serverId>
                     <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
                 </configuration>
             </plugin>
             <plugin>
