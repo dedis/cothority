@@ -106,19 +106,25 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	coinOne[0] = byte(1)
 	tx := service.ClientTransaction{
 		Instructions: []service.Instruction{{
-			InstanceID: service.InstanceID{gm.GenesisDarc.GetID(), service.SubID{}},
-			Nonce:      service.Nonce{},
-			Index:      0,
-			Length:     3,
+			InstanceID: service.InstanceID{
+				DarcID: gm.GenesisDarc.GetID(),
+				SubID:  service.SubID{},
+			},
+			Nonce:  service.Nonce{},
+			Index:  0,
+			Length: 3,
 			Spawn: &service.Spawn{
 				ContractID: service.ContractCoinID,
 			},
 		},
 			{
-				InstanceID: service.InstanceID{gm.GenesisDarc.GetID(), service.SubID{}},
-				Nonce:      service.Nonce{},
-				Index:      1,
-				Length:     3,
+				InstanceID: service.InstanceID{
+					DarcID: gm.GenesisDarc.GetID(),
+					SubID:  service.SubID{},
+				},
+				Nonce:  service.Nonce{},
+				Index:  1,
+				Length: 3,
 				Spawn: &service.Spawn{
 					ContractID: service.ContractCoinID,
 				},
@@ -130,7 +136,9 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 				Invoke: &service.Invoke{
 					Command: "mint",
 					Args: service.NewArguments(
-						service.Argument{"coins", coins},
+						service.Argument{
+							Name:  "coins",
+							Value: coins},
 					),
 				},
 			}},
@@ -139,10 +147,14 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	// The first instruction will create an account with the SubID equal to the
 	// hash of the first instruction. So we can mint directly on the hash of this
 	// instruction. Theoretically...
-	coinAddr1 := service.InstanceID{gm.GenesisDarc.GetBaseID(),
-		service.NewSubID(tx.Instructions[0].Hash())}
-	coinAddr2 := service.InstanceID{gm.GenesisDarc.GetBaseID(),
-		service.NewSubID(tx.Instructions[1].Hash())}
+	coinAddr1 := service.InstanceID{
+		DarcID: gm.GenesisDarc.GetBaseID(),
+		SubID:  service.NewSubID(tx.Instructions[0].Hash()),
+	}
+	coinAddr2 := service.InstanceID{
+		DarcID: gm.GenesisDarc.GetBaseID(),
+		SubID:  service.NewSubID(tx.Instructions[1].Hash()),
+	}
 	tx.Instructions[2].InstanceID = coinAddr1
 
 	// Now sign all the instructions
@@ -185,8 +197,14 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 					Length:     insts,
 					Invoke: &service.Invoke{
 						Command: "transfer",
-						Args: service.NewArguments(service.Argument{"coins", coinOne},
-							service.Argument{"destination", coinAddr2.Slice()}),
+						Args: service.NewArguments(service.Argument{
+							Name:  "coins",
+							Value: coinOne,
+						},
+							service.Argument{
+								Name:  "destination",
+								Value: coinAddr2.Slice(),
+							}),
 					},
 				})
 				err = service.SignInstruction(&tx.Instructions[i], signer)
