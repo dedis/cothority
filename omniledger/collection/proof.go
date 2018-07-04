@@ -25,7 +25,8 @@ type dump struct {
 
 func dumpNode(node *node) (dump dump) {
 	// To avoid race conditions, we want a deep copy here.
-	nodeCopy := node.copy()
+	var nodeCopy = node
+	node.copyTo(nodeCopy)
 
 	dump.Label = nodeCopy.label
 	dump.Values = nodeCopy.values
