@@ -23,11 +23,7 @@ type dump struct {
 
 // Constructors
 
-
-
 func dumpNode(node *node) (dump dump) {
-	node.Lock()
-	defer node.Unlock()
 	// To avoid race conditions, we want a deep copy here.
 	nodeCopy := node.copy()
 

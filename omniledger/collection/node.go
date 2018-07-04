@@ -65,6 +65,25 @@ func (n *node) backup() {
 	}
 }
 
+func (n *node) copyKey() []byte {
+	key := make([]byte, len(n.key))
+	copy(key, n.key)
+	return key
+}
+
+func (n *node) copyVal() [][]byte {
+	// n.values == nil | n.Values[0]: []byte
+	if n.values == nil {
+		return nil
+	}
+	cv := make([][]byte, len(n.values))
+	for i := 0;  i < len(n.values); i++ {
+		cv[i] = make([]byte, len(n.values[i]))
+		copy(cv[i], n.values[i])
+	}
+	return cv
+}
+
 // overwrite copies the fields from other into n. This is needed because
 // node now has a mutex.
 func (n *node) overwrite(other *node) {
@@ -72,8 +91,8 @@ func (n *node) overwrite(other *node) {
 	n.known = other.known
 	n.transaction.inconsistent = other.transaction.inconsistent
 
-	n.key = other.key
-	n.values = other.values
+	n.key = other.copyKey()
+	n.values = other.copyVal()
 
 	n.parent = other.parent
 	n.children.left = other.children.left
