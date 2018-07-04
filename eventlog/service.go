@@ -140,9 +140,13 @@ const contractName = "eventlog"
 
 func (s *Service) decodeAndCheckEvent(coll omniledger.CollectionView, eventBuf []byte) (*Event, error) {
 	// Check the timestamp of the event: it should never be in the future,
-	// and it should not be more than 5 seconds in the past. (Why 5?
-	// Because a #of blocks limit is too fragile when using fast blocks for
+	// and it should not be more than 30 seconds in the past. (Why 30 sec
+	// and not something more auto-scaling like blockInterval * 30?
+	// Because a # of blocks limit is too fragile when using fast blocks for
 	// tests.)
+	//
+	// Also: An event a few seconds into the future is OK because there might be
+	// time skew between a legitimate event producer and the network. See issue #1331.
 	event := &Event{}
 	err := protobuf.Decode(eventBuf, event)
 	if err != nil {
@@ -153,23 +157,20 @@ func (s *Service) decodeAndCheckEvent(coll omniledger.CollectionView, eventBuf [
 	if when.Before(now.Add(-30 * time.Second)) {
 		return nil, fmt.Errorf("event timestamp too long ago - when=%v, now=%v", when, now)
 	}
-	if when.After(now) {
-		return nil, errors.New("event timestamp is in the future")
+	if when.After(now.Add(5 * time.Second)) {
+		return nil, errors.New("event timestamp is too far in the future")
 	}
 	return event, nil
 }
 
 // invoke will add an event and update the corresponding indices.
 func (s *Service) invoke(v omniledger.CollectionView, tx omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
-	// This is not strictly required, because since we know we are
-	// a spawn, we know the contract comes directly from
-	// tx.Spawn.ContractID.
 	cid, _, err := tx.GetContractState(v)
 	if err != nil {
 		return nil, nil, err
 	}
 	if cid != contractName {
-		return nil, nil, fmt.Errorf("expected contract ID to bd %s but got %s", contractName, cid)
+		return nil, nil, fmt.Errorf("expected contract ID to be %s but got %s", contractName, cid)
 	}
 
 	// All the state changes, at every step, go in here.

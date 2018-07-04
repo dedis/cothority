@@ -62,7 +62,7 @@ clean:
 exe/conode.Linux.x86_64:
 	GOOS=linux GOARCH=amd64 go build $(flags) -o $@
 
-bindist: exe/conode.Linux.x86_64
+bindist: clean exe/conode.Linux.x86_64
 	rm -rf $(OUTPUT_DIR)
 	mkdir $(OUTPUT_DIR)
 	cp exe/conode.Linux.x86_64 $(OUTPUT_DIR)
