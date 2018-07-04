@@ -23,23 +23,28 @@ type dump struct {
 
 // Constructors
 
+
+
 func dumpNode(node *node) (dump dump) {
 	node.Lock()
 	defer node.Unlock()
+	// To avoid race conditions, we want a deep copy here.
+	nodeCopy := node.copy()
 
-	dump.Label = node.label
-	dump.Values = node.values
+	dump.Label = nodeCopy.label
+	dump.Values = nodeCopy.values
 
 	// NOTE: this is the same as node.leaf() without the locks.
-	if node.children.left == nil {
-		dump.Key = node.key
+	if nodeCopy.children.left == nil {
+		dump.Key = nodeCopy.key
 	} else {
-		node.children.left.Lock()
-		node.children.right.Lock()
-		dump.Children.Left = node.children.left.label
-		dump.Children.Right = node.children.right.label
-		node.children.left.Unlock()
-		node.children.right.Unlock()
+		// Do we still need locking when we copy?
+		nodeCopy.children.left.Lock()
+		nodeCopy.children.right.Lock()
+		dump.Children.Left = nodeCopy.children.left.label
+		dump.Children.Right = nodeCopy.children.right.label
+		nodeCopy.children.left.Unlock()
+		nodeCopy.children.right.Unlock()
 	}
 
 	return

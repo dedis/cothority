@@ -80,6 +80,17 @@ func (n *node) overwrite(other *node) {
 	n.children.right = other.children.right
 }
 
+
+
+func (n *node) copy() (ne node) {
+	n.Lock()
+	ne.overwrite(n)
+	n.Unlock()
+	return ne
+}
+
+
+
 func (n *node) restore() {
 	n.Lock()
 	defer n.Unlock()
