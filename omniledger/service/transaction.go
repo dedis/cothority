@@ -403,15 +403,26 @@ func NewStateChange(sa StateAction, iID InstanceID, contractID string, value []b
 	}
 }
 
-// String can be used in print.
-func (sc StateChange) String() string {
+func (sc StateChange) toString(withValue bool) string {
 	var out string
 	out += "\nstatechange\n"
 	out += fmt.Sprintf("\taction: %s\n", sc.StateAction)
 	out += fmt.Sprintf("\tcontractID: %s\n", string(sc.ContractID))
 	out += fmt.Sprintf("\tkey: %x\n", sc.InstanceID)
-	out += fmt.Sprintf("\tvalue: %x", sc.Value)
+	if withValue {
+		out += fmt.Sprintf("\tvalue: %x", sc.Value)
+	}
 	return out
+}
+
+// String can be used in print.
+func (sc StateChange) String() string {
+	return sc.toString(true)
+}
+
+// ShortString is the same as String but excludes the value part.
+func (sc StateChange) ShortString() string {
+	return sc.toString(false)
 }
 
 // StateChanges hold a slice of StateChange
@@ -428,6 +439,15 @@ func (scs StateChanges) Hash() []byte {
 		h.Write(scBuf)
 	}
 	return h.Sum(nil)
+}
+
+// ShortStrings outputs the ShortString of every state change.
+func (scs StateChanges) ShortStrings() []string {
+	out := make([]string, len(scs))
+	for i, sc := range scs {
+		out[i] = sc.ShortString()
+	}
+	return out
 }
 
 // StateAction describes how the collectionDB will be modified.

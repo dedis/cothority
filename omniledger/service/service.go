@@ -400,9 +400,9 @@ func (s *Service) updateCollection(msg network.Message) {
 	}
 
 	if i, _ := sb.Roster.Search(s.ServerIdentity().ID); i == 0 {
-		log.Lvlf2("%s: Storing state changes %v", s.ServerIdentity(), scs)
+		log.Lvlf2("%s: Storing state changes %v", s.ServerIdentity(), scs.ShortStrings())
 	} else {
-		log.Lvlf3("%s: Storing state changes %v", s.ServerIdentity(), scs)
+		log.Lvlf3("%s: Storing state changes %v", s.ServerIdentity(), scs.ShortStrings())
 	}
 	for _, sc := range scs {
 		err = cdb.Store(&sc)
