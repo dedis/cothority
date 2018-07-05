@@ -3,9 +3,10 @@ package collection
 import (
 	"crypto/sha256"
 	"encoding/binary"
-	"github.com/stretchr/testify/require"
 	"math/rand"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestManipulatorsAdd(test *testing.T) {
@@ -22,14 +23,14 @@ func TestManipulatorsAdd(test *testing.T) {
 		binary.BigEndian.PutUint64(key, uint64(index))
 
 		collection.Add(key, uint64(rand.Uint32()))
-		ctx.verify.tree("[stakecollection]", &collection)
+		ctx.verify.tree("[stakecollection]", collection)
 	}
 
 	for index := 0; index < 512; index++ {
 		key := make([]byte, 8)
 		binary.BigEndian.PutUint64(key, uint64(index))
 
-		ctx.verify.key("[stakecollection]", &collection, key)
+		ctx.verify.key("[stakecollection]", collection, key)
 	}
 
 	unknownRoot := New()
@@ -70,7 +71,7 @@ func TestManipulatorsAdd(test *testing.T) {
 	for index := 0; index < 512; index++ {
 		key := make([]byte, 8)
 		binary.BigEndian.PutUint64(key, uint64(index))
-		ctx.verify.key("[transactioncollection]", &transaction, key)
+		ctx.verify.key("[transactioncollection]", transaction, key)
 	}
 
 	ctx.shouldPanic("[wrongvalues]", func() {
@@ -110,14 +111,14 @@ func TestManipulatorsSet(test *testing.T) {
 		binary.BigEndian.PutUint64(key, uint64(index))
 
 		collection.Set(key, uint64(2*index))
-		ctx.verify.tree("[stakecollection]", &collection)
+		ctx.verify.tree("[stakecollection]", collection)
 	}
 
 	for index := 0; index < 512; index++ {
 		key := make([]byte, 8)
 		binary.BigEndian.PutUint64(key, uint64(index))
 
-		ctx.verify.values("[set]", &collection, key, uint64(index*2))
+		ctx.verify.values("[set]", collection, key, uint64(index*2))
 	}
 
 	unknownRoot := New(stake64)
@@ -162,7 +163,7 @@ func TestManipulatorsSet(test *testing.T) {
 	for index := 0; index < 512; index++ {
 		key := make([]byte, 8)
 		binary.BigEndian.PutUint64(key, uint64(index))
-		ctx.verify.values("[transactioncollection]", &transaction, key, uint64(2*index))
+		ctx.verify.values("[transactioncollection]", transaction, key, uint64(2*index))
 	}
 
 	ctx.shouldPanic("[wrongvalues]", func() {
@@ -199,9 +200,9 @@ func TestManipulatorsSetField(test *testing.T) {
 		binary.BigEndian.PutUint64(key, uint64(index))
 
 		if index%2 == 0 {
-			ctx.verify.values("[setfield]", &collection, key, []byte("x"), []byte{})
+			ctx.verify.values("[setfield]", collection, key, []byte("x"), []byte{})
 		} else {
-			ctx.verify.values("[setfield]", &collection, key, []byte{}, []byte("x"))
+			ctx.verify.values("[setfield]", collection, key, []byte{}, []byte("x"))
 		}
 	}
 
@@ -234,7 +235,7 @@ func TestManipulatorsRemove(test *testing.T) {
 		binary.BigEndian.PutUint64(key, uint64(index))
 
 		collection.Remove(key)
-		ctx.verify.tree("[remove]", &collection)
+		ctx.verify.tree("[remove]", collection)
 	}
 
 	if collection.root.label != reference.root.label {
@@ -284,13 +285,13 @@ func TestManipulatorsRemove(test *testing.T) {
 	for index := 0; index < 512; index += 2 {
 		key := make([]byte, 8)
 		binary.BigEndian.PutUint64(key, uint64(index))
-		ctx.verify.noKey("[transactioncollection]", &transaction, key)
+		ctx.verify.noKey("[transactioncollection]", transaction, key)
 	}
 
 	for index := 1; index < 512; index += 2 {
 		key := make([]byte, 8)
 		binary.BigEndian.PutUint64(key, uint64(index))
-		ctx.verify.key("[transactioncollection]", &transaction, key)
+		ctx.verify.key("[transactioncollection]", transaction, key)
 	}
 
 	for index := 1; index < 512; index += 2 {

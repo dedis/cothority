@@ -16,7 +16,7 @@ func TestNavigatorsConstructors(test *testing.T) {
 	collection := New(stake64, data, stake64)
 	navigator := collection.Navigate(2, uint64(14))
 
-	if navigator.collection != &collection {
+	if navigator.collection != collection {
 		test.Error("[navigators.go]", "[constructors]", "Navigator constructor sets wrong collection pointer.")
 	}
 

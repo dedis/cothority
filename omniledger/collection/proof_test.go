@@ -189,11 +189,11 @@ func TestProofDumpTo(test *testing.T) {
 		test.Error("[proof.go]", "[to]", "Fixing a collection expanded from dumps has a non-null effect on the root label.")
 	}
 
-	ctx.verify.tree("[to]", &unknown)
+	ctx.verify.tree("[to]", unknown)
 
 	leftDump.to(unknown.root.children.right)
 	unknown.fix()
-	ctx.verify.tree("[to]", &unknown)
+	ctx.verify.tree("[to]", unknown)
 
 	if unknown.root.label != collection.root.label {
 		test.Error("[proof.go]", "[to]", "Method to() has non-null effect when used on node with non-matching label.")
@@ -234,7 +234,7 @@ func TestProofMatchValues(test *testing.T) {
 	collection.Add(secondKey, uint64(99), []byte("secondvalue"))
 
 	proof := Proof{}
-	proof.collection = &collection
+	proof.collection = collection
 	proof.Key = firstKey
 	proof.Root = dumpNode(collection.root)
 
@@ -511,7 +511,7 @@ func TestProofSerialization(test *testing.T) {
 			test.Error("[proof.go]", "[serialization]", "Serialize() / Deserialize() yields an error on a valid proof.")
 		}
 
-		if otherProof.collection != &collection {
+		if otherProof.collection != collection {
 			test.Error("[proof.go]", "[serialization]", "Deserialize() does not properly set the collection pointer.")
 		}
 

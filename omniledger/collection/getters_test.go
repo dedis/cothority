@@ -10,7 +10,7 @@ func TestGettersConstructors(test *testing.T) {
 	collection := New()
 	getter := collection.Get([]byte("mykey"))
 
-	if getter.collection != &collection {
+	if getter.collection != collection {
 		test.Error("[getters.go]", "[constructors]", "Getter constructor sets wrong collection pointer.")
 	}
 
@@ -94,7 +94,7 @@ func TestGettersProof(test *testing.T) {
 			test.Error("[getters.go]", "[proof]", "Proof() yields a matching record on non-existing key.")
 		}
 
-		if proof.collection != &collection {
+		if proof.collection != collection {
 			test.Error("[getters.go]", "[proof]", "Proof() returns proof with wrong collection pointer.")
 		}
 

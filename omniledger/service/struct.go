@@ -19,7 +19,7 @@ func init() {
 type collectionDB struct {
 	db         *bolt.DB
 	bucketName []byte
-	coll       collection.Collection
+	coll       *collection.Collection
 }
 
 // A CollectionView is an interface that defines the read-only operations
@@ -40,7 +40,7 @@ type CollectionView interface {
 // CollectionView chooses to use package unsafe, then it's all over;
 // they can get write access.
 type roCollection struct {
-	c collection.Collection
+	c *collection.Collection
 }
 
 // Get returns the collection.Getter for the key.
@@ -134,7 +134,7 @@ func (c *collectionDB) loadAll() error {
 	})
 }
 
-func storeInColl(coll collection.Collection, t *StateChange) error {
+func storeInColl(coll *collection.Collection, t *StateChange) error {
 	switch t.StateAction {
 	case Create:
 		return coll.Add(t.InstanceID, t.Value, t.ContractID)

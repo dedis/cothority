@@ -34,7 +34,7 @@ func TestCollectionEmptyCollection(test *testing.T) {
 		test.Error("[collection.go]", "[values]", "Nodes of a collection without fields have values.")
 	}
 
-	ctx.verify.tree("[baseCollection]", &baseCollection)
+	ctx.verify.tree("[baseCollection]", baseCollection)
 
 	stake64 := Stake64{}
 	stakeCollection := New(stake64)
@@ -65,7 +65,7 @@ func TestCollectionEmptyCollection(test *testing.T) {
 		test.Error("[collection.go]", "[stake]", "Nodes of an empty stake collection don't have zero stake.")
 	}
 
-	ctx.verify.tree("[stakeCollection]", &stakeCollection)
+	ctx.verify.tree("[stakeCollection]", stakeCollection)
 
 	data := Data{}
 	stakeDataCollection := New(stake64, data)
@@ -78,7 +78,7 @@ func TestCollectionEmptyCollection(test *testing.T) {
 		test.Error("[collection.go]", "[values]", "Nodes of a data and stake collection don't have empty data value.")
 	}
 
-	ctx.verify.tree("[stakeDataCollection]", &stakeDataCollection)
+	ctx.verify.tree("[stakeDataCollection]", stakeDataCollection)
 }
 
 func TestCollectionEmptyVerifier(test *testing.T) {
@@ -153,13 +153,13 @@ func TestCollectionClone(test *testing.T) {
 
 	clone := collection.Clone()
 
-	ctx.verify.tree("[clone]", &clone)
+	ctx.verify.tree("[clone]", clone)
 
 	for index := 0; index < 512; index++ {
 		key := make([]byte, 8)
 		binary.BigEndian.PutUint64(key, uint64(index))
 
-		ctx.verify.values("[clone]", &clone, key, uint64(index), key)
+		ctx.verify.values("[clone]", clone, key, uint64(index), key)
 	}
 
 	ctx.shouldPanic("[clone]", func() {

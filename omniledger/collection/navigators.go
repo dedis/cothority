@@ -14,6 +14,8 @@ type Navigator struct {
 
 // Navigate creates a Navigator associated with a given field and value.
 func (c *Collection) Navigate(field int, value interface{}) Navigator {
+	c.Lock()
+	defer c.Unlock()
 	if (field < 0) || (field >= len(c.fields)) {
 		panic("Field unknown.")
 	}
@@ -26,6 +28,8 @@ func (c *Collection) Navigate(field int, value interface{}) Navigator {
 // Record returns the Record obtained by navigating the tree to the searched field's value.
 // It returns an error if the value in question is in an unknown subtree or if the Navigate function of the field returns an error.
 func (n Navigator) Record() (Record, error) {
+	n.collection.Lock()
+	defer n.collection.Unlock()
 	cursor := n.collection.root
 
 	for {
