@@ -13,8 +13,7 @@ import (
 // Each generated tree have a root with one child (the subleader)
 // and all other nodes in the tree will be the subleader children.
 // NOTE: register being not implementable with the current API could hurt the scalability tests
-// TODO: we may be able to simplify the code here to make sure the existing onet
-// tree generation functions.
+// TODO: we may be able to simplify the code here to make sure the existing onet tree generation functions.
 func genTrees(roster *onet.Roster, nNodes, nSubtrees int) ([]*onet.Tree, error) {
 
 	// parameter verification

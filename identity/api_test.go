@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/pop/service"
 	"github.com/dedis/kyber"
@@ -97,6 +98,7 @@ func TestIdentity_StoreKeys(t *testing.T) {
 	c.Msg = hash
 	c.CreateProtocol = local.CreateProtocol
 	c.Timeout = time.Second * 5
+	c.Threshold = len(tree.List()) - byzcoinx.FaultThreshold(len(tree.List()))
 
 	err = node.Start()
 	require.Nil(t, err)

@@ -68,13 +68,14 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 	p := pi.(*protocol.FtCosi)
 	p.CreateProtocol = s.CreateProtocol
 	p.Msg = req.Message
-	// We set NSubtrees to the cube root of n to evenly distribute the load,
-	// i.e. depth (=3) = log_f n, where f is the fan-out (branching factor).
-	p.NSubtrees = int(math.Pow(float64(nNodes), 1.0/3.0))
+	// We set NSubtrees to the square root of n to evenly distribute the load
+	p.NSubtrees = int(math.Sqrt(float64(nNodes)))
 	p.Timeout = time.Second * 5
 	if p.NSubtrees < 1 {
 		p.NSubtrees = 1
 	}
+	// Complete Threshold
+	p.Threshold = len(p.List())
 
 	// start the protocol
 	log.Lvl3("Cosi Service starting up root protocol")
