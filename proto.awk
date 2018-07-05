@@ -6,17 +6,28 @@ BEGIN {
 	print "syntax = \"proto2\";"
 }
 
+
+# a is the state
+
+# state 0: look for proto start
 a == 0 && /PROTOSTART/{ a = 1; next }
 
-a == 1 && /^\/\// { sub( "^\/\/ *", "" ); print; next }
+# state 1: in a protostart block
+a == 1 && /^\/\// { sub( "^// *", "" ); print; next }
 a == 1 { a = 2; print; next }
 
+# state 2: looking for a type structure, start it.
 a == 2 && /^type.*struct/ { print "message", $2, "{"; a = 3; i = 1; next }
 a == 2 { print; next }
 
+# state 3: processing fields of the struct
+
+#   detect end of struct -> state 2
 a == 3 && /^\}/ { print; a = 2; next }
+#   detect "// optional" tag in Go -> state 4
 a == 3 && / *\/\/ optional/ { a = 4; next }
-a == 3 && / *\/\// { sub( " *\/\/\s*", "" ); print "  //", $0; next }
+#   copy comments through
+a == 3 && / *\/\// { sub( " *//\\s*", "" ); print "  //", $0; next }
 a == 3 && /\*/ {    sub( "\\*", "", $2 )
 					print_field("optional", $2, $1, i)
 					i = i + 1
@@ -27,6 +38,7 @@ a == 3 { 	print_field("required", $2, $1, i)
 			next
 		}
 
+# state 4: manual optional
 a == 4 { print_field("optional", $2, $1, i)
 			i = i + 1
 			a = 3
