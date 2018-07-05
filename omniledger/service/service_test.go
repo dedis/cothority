@@ -65,6 +65,14 @@ func padDarc(key []byte) []byte {
 }
 
 func TestService_AddTransaction(t *testing.T) {
+	testAddTransaction(t, 0)
+}
+
+func TestService_AddTransactionToFollower(t *testing.T) {
+	testAddTransaction(t, 1)
+}
+
+func testAddTransaction(t *testing.T, sendToIdx int) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
@@ -105,7 +113,7 @@ func TestService_AddTransaction(t *testing.T) {
 	value2 := []byte("value2")
 	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, value2, s.signer)
 	require.Nil(t, err)
-	akvresp, err = s.service().AddTransaction(&AddTxRequest{
+	akvresp, err = s.services[sendToIdx].AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 		Transaction: tx2,
@@ -452,6 +460,20 @@ func TestService_DarcSpawn(t *testing.T) {
 	require.True(t, pr.InclusionProof.Match())
 }
 
+func TestService_SetLeader(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	for _, service := range s.services {
+		// everyone should have the same leader after the genesis block is stored
+		leader, err := service.getLeader(s.sb.SkipChainID())
+		require.NoError(t, err)
+		require.NotNil(t, leader)
+		require.True(t, leader.Equal(s.services[0].ServerIdentity()))
+	}
+}
+
 func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction {
 	d2Buf, err := d2.ToProto()
 	require.Nil(t, err)
@@ -520,25 +542,16 @@ func (s *ser) waitProof(t *testing.T, id InstanceID) Proof {
 }
 
 func (s *ser) sendTx(t *testing.T, ctx ClientTransaction) {
-	_, err := s.service().AddTransaction(&AddTxRequest{
+	s.sendTxTo(t, ctx, 0)
+}
+
+func (s *ser) sendTxTo(t *testing.T, ctx ClientTransaction, idx int) {
+	_, err := s.services[idx].AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 		Transaction: ctx,
 	})
 	require.Nil(t, err)
-}
-
-func (s *ser) sendTxAndWait(t *testing.T, ctx ClientTransaction, id *InstanceID) Proof {
-	s.sendTx(t, ctx)
-
-	if id == nil {
-		id = &InstanceID{
-			DarcID: s.darc.GetBaseID(),
-			SubID:  SubID{},
-		}
-	}
-
-	return s.waitProof(t, *id)
 }
 
 // caller gives us a darc, and we try to make an evolution request.
@@ -617,7 +630,7 @@ func newSer(t *testing.T, step int, interval time.Duration) *ser {
 func closeQueues(local *onet.LocalTest) {
 	for _, server := range local.Servers {
 		services := local.GetServices([]*onet.Server{server}, OmniledgerID)
-		close(services[0].(*Service).CloseQueues)
+		services[0].(*Service).ClosePolling()
 	}
 }
 

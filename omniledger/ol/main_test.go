@@ -41,7 +41,7 @@ func TestCli(t *testing.T) {
 		for _, x := range l.Services {
 			for _, y := range x {
 				if z, ok := y.(*omniledger.Service); ok {
-					close(z.CloseQueues)
+					z.ClosePolling()
 				}
 			}
 		}

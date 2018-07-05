@@ -319,7 +319,7 @@ type ser struct {
 
 func (s *ser) close() {
 	for _, x := range s.services {
-		close(x.omni.CloseQueues)
+		x.omni.ClosePolling()
 	}
 	s.local.CloseAll()
 }

@@ -821,9 +821,14 @@ func (s *Service) SetBFTTimeout(t time.Duration) {
 	s.bftTimeout = t
 }
 
-// SetPropTimeout is used to set the propagation timeout
+// SetPropTimeout is used to set the propagation timeout.
 func (s *Service) SetPropTimeout(t time.Duration) {
 	s.propTimeout = t
+}
+
+// GetPropTimeout retrieves the current propagation timeout.
+func (s *Service) GetPropTimeout() time.Duration {
+	return s.propTimeout
 }
 
 func (s *Service) verifySigs(msg, sig []byte) bool {
