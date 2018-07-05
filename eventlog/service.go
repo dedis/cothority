@@ -306,7 +306,7 @@ func (s *Service) spawn(v omniledger.CollectionView, instr omniledger.Instructio
 
 // contractFunction is the function that runs to process a transaction of
 // type "eventlog"
-func (s *Service) contractFunction(v omniledger.CollectionView, tx omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
+func (s *Service) contractFunction(v omniledger.CollectionView, scID skipchain.SkipBlockID, tx omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
 	if tx.GetType() == omniledger.InvokeType {
 		return s.invoke(v, tx, c)
 	} else if tx.GetType() == omniledger.SpawnType {

@@ -13,6 +13,7 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/darc/expression"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 )
@@ -256,6 +257,16 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 	for _, r := range rules {
 		d.Rules.AddRule(darc.Action(r), d.Rules.GetSignExpr())
 	}
+
+	// Add an additional rules that allows nodes in the roster to update
+	// the genesis configuration, this is so that we can change the leader
+	// if one fails.
+	rosterPubs := make([]string, len(r.List))
+	for i, sid := range r.List {
+		rosterPubs[i] = darc.NewIdentityEd25519(sid.Public).String()
+	}
+	d.Rules.AddRule(darc.Action("invoke:view_change"), expression.InitOrExpr(rosterPubs...))
+
 	m := CreateGenesisBlock{
 		Version:       v,
 		Roster:        *r,

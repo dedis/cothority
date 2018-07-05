@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/skipchain"
 )
 
 // The value contract can simply store a value in an instance and serves
@@ -19,7 +20,7 @@ var ContractValueID = "value"
 // It can spawn new value instances and will store the "value" argument in these
 // new instances.
 // Existing value instances can be "update"d and deleted.
-func ContractValue(cdb service.CollectionView, inst service.Instruction, c []service.Coin) ([]service.StateChange, []service.Coin, error) {
+func ContractValue(cdb service.CollectionView, scID skipchain.SkipBlockID, inst service.Instruction, c []service.Coin) ([]service.StateChange, []service.Coin, error) {
 	switch {
 	case inst.Spawn != nil:
 		return []service.StateChange{

@@ -21,6 +21,7 @@ type collectionDB struct {
 	db         *bolt.DB
 	bucketName []byte
 	coll       *collection.Collection
+	scID       skipchain.SkipBlockID
 }
 
 // A CollectionView is an interface that defines the read-only operations
@@ -56,28 +57,14 @@ func (r *roCollection) GetValues(key []byte) (value []byte, contractID string, e
 	if err != nil {
 		return
 	}
-	values, err := record.Values()
-	if err != nil {
-		return
-	}
-	var ok bool
-	value, ok = values[0].([]byte)
-	if !ok {
-		err = errors.New("first value is not a slice of bytes")
-		return
-	}
-	contractID, ok = values[1].(string)
-	if !ok {
-		contractID = string(values[1].([]byte))
-	}
-	return
+	return getValuesFromRecord(record, key)
 }
 
 // OmniLedgerContract is the type signature of the class functions
 // which can be registered with the OmniLedger service.
 // Since the outcome of the verification depends on the state of the collection
 // which is to be modified, we pass it as a pointer here.
-type OmniLedgerContract func(coll CollectionView, inst Instruction, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
+type OmniLedgerContract func(coll CollectionView, scID skipchain.SkipBlockID, inst Instruction, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
 
 // newCollectionDB initialises a structure and reads all key/value pairs to store
 // it in the collection.
@@ -148,6 +135,18 @@ func storeInColl(coll *collection.Collection, t *StateChange) error {
 	}
 }
 
+func (c *collectionDB) Get(key []byte) collection.Getter {
+	return c.coll.Get(key)
+}
+
+func (c *collectionDB) GetValues(key []byte) (value []byte, contractID string, err error) {
+	record, err := c.coll.Get(key).Record()
+	if err != nil {
+		return
+	}
+	return getValuesFromRecord(record, key)
+}
+
 func (c *collectionDB) Store(t *StateChange) error {
 	if err := storeInColl(c.coll, t); err != nil {
 		return err
@@ -179,9 +178,10 @@ func (c *collectionDB) Store(t *StateChange) error {
 }
 
 func (c *collectionDB) GetValueContract(key []byte) ([]byte, []byte, error) {
-	return getValueContract(&roCollection{c.coll}, key)
+	return getValueContract(c, key)
 }
 
+// TODO this function can be merged with getValuesFromRecord
 func getValueContract(coll CollectionView, key []byte) (value, contract []byte, err error) {
 	proof, err := coll.Get(key).Record()
 	if err != nil {
@@ -211,6 +211,24 @@ func getValueContract(coll CollectionView, key []byte) (value, contract []byte, 
 // RootHash returns the hash of the root node in the merkle tree.
 func (c *collectionDB) RootHash() []byte {
 	return c.coll.GetRoot()
+}
+
+func getValuesFromRecord(record collection.Record, key []byte) (value []byte, contractID string, err error) {
+	values, err := record.Values()
+	if err != nil {
+		return
+	}
+	var ok bool
+	value, ok = values[0].([]byte)
+	if !ok {
+		err = errors.New("first value is not a slice of bytes")
+		return
+	}
+	contractID, ok = values[1].(string)
+	if !ok {
+		contractID = string(values[1].([]byte))
+	}
+	return
 }
 
 // tryHash returns the merkle root of the collection as if the key value pairs
