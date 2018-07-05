@@ -1,6 +1,6 @@
 package ch.epfl.dedis.lib.omniledger;
 
-import ch.epfl.dedis.proto.TransactionProto;
+import ch.epfl.dedis.proto.OmniLedgerProto;
 
 import java.util.List;
 
@@ -41,8 +41,8 @@ public class Spawn {
      * Converts this object to the protobuf representation.
      * @return The protobuf representation.
      */
-    public TransactionProto.Spawn toProto() {
-        TransactionProto.Spawn.Builder b = TransactionProto.Spawn.newBuilder();
+    public OmniLedgerProto.Spawn toProto() {
+        OmniLedgerProto.Spawn.Builder b = OmniLedgerProto.Spawn.newBuilder();
         b.setContractid(this.contractId);
         for (Argument a : this.arguments) {
             b.addArgs(a.toProto());

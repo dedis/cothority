@@ -4,7 +4,7 @@ import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
-import ch.epfl.dedis.proto.RosterProto;
+import ch.epfl.dedis.proto.OnetProto;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
@@ -50,7 +50,7 @@ class RosterTest {
 
     @Test
     void testProto() throws Exception {
-        RosterProto.Roster r_proto = r.toProto();
+        OnetProto.Roster r_proto = r.toProto();
         assertEquals(4, r_proto.getListList().size());
         assertArrayEquals(r_proto.getAggregate().toByteArray(), agg.toBytes());
         assertEquals(16, r_proto.getId().toByteArray().length);

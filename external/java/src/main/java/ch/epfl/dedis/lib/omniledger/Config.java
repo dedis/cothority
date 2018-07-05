@@ -1,15 +1,11 @@
 package ch.epfl.dedis.lib.omniledger;
 
 
-import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.OmniLedgerProto;
 import com.google.protobuf.InvalidProtocolBufferException;
 
-import java.net.URISyntaxException;
 import java.time.Duration;
-import java.util.Objects;
 
 import static java.time.temporal.ChronoUnit.NANOS;
 
@@ -32,14 +28,14 @@ public class Config {
     /**
      * Instantiates from an existing protobuf representation.
      */
-    public Config(OmniLedgerProto.Config config) {
-        this.blockInterval = Duration.of(config.getBlockInterval(), NANOS);
+    public Config(OmniLedgerProto.ChainConfig config) {
+        this.blockInterval = Duration.of(config.getBlockinterval(), NANOS);
     }
 
     public Config(byte[] buf) throws CothorityCommunicationException  {
         try {
-            OmniLedgerProto.Config config = OmniLedgerProto.Config.parseFrom(buf);
-            this.blockInterval = Duration.of(config.getBlockInterval(), NANOS);
+            OmniLedgerProto.ChainConfig config = OmniLedgerProto.ChainConfig.parseFrom(buf);
+            this.blockInterval = Duration.of(config.getBlockinterval(), NANOS);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
@@ -55,9 +51,9 @@ public class Config {
     /**
      * @return the protobuf representation of the configuration.
      */
-    public OmniLedgerProto.Config toProto(){
-        OmniLedgerProto.Config.Builder b = OmniLedgerProto.Config.newBuilder();
-        b.setBlockInterval(blockInterval.get(NANOS));
+    public OmniLedgerProto.ChainConfig toProto(){
+        OmniLedgerProto.ChainConfig.Builder b = OmniLedgerProto.ChainConfig.newBuilder();
+        b.setBlockinterval(blockInterval.get(NANOS));
         return b.build();
     }
 

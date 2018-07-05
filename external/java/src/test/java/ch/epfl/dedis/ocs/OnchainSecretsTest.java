@@ -10,7 +10,7 @@ import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.proto.OCSProto;
-import ch.epfl.dedis.proto.SkipBlockProto;
+import ch.epfl.dedis.proto.SkipchainProto;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -191,7 +191,7 @@ class OnchainSecretsTest {
         ocs.addIdentityToDarc(adminDarc, publisher, admin, SignaturePath.USER);
         List<Darc> darcs = new ArrayList<>();
         for (SkipblockId latest = ocs.getID();latest != null;){
-            SkipBlockProto.SkipBlock sb = ocs.getSkipblock(latest);
+            SkipchainProto.SkipBlock sb = ocs.getSkipblock(latest);
             OCSProto.Transaction transaction = OCSProto.Transaction.parseFrom(sb.getData());
             if (transaction.hasDarc()){
                 darcs.add(new Darc(transaction.getDarc()));

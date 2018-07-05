@@ -7,20 +7,6 @@ import (
 	"github.com/dedis/protobuf"
 )
 
-// dump
-
-type dump struct {
-	Key    []byte   `protobuf:"opt"`
-	Values [][]byte `protobuf:"opt"`
-
-	Children struct {
-		Left  [sha256.Size]byte
-		Right [sha256.Size]byte
-	}
-
-	Label [sha256.Size]byte
-}
-
 // Constructors
 
 func dumpNode(node *node) (dump dump) {
@@ -75,24 +61,6 @@ func (d *dump) to(node *node) {
 			node.children.right.label = d.Children.Right
 		}
 	}
-}
-
-// step
-
-type step struct {
-	Left  dump
-	Right dump
-}
-
-// Proof
-
-// Proof is an object representing the proof of presence or absence of a given key in a collection.
-type Proof struct {
-	Key   []byte // Key is the key that this proof is representing
-	Root  dump   // Root is the root node
-	Steps []step // Steps are the steps to go from root to key
-
-	collection *Collection
 }
 
 // Getters

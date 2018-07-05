@@ -1,5 +1,5 @@
 syntax = "proto2";
-
+package darc;
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "DarcProto";
 
@@ -7,24 +7,24 @@ option java_outer_classname = "DarcProto";
 // These are the messages used in the API-calls
 // ***
 
-// Darc is the basic structure representing an access control. A Darc can evolve in the way that
-// a new Darc points to the previous one and is signed by the owner(s) of the previous Darc.
+// Darc is the basic structure representing an access control. A Darc can
+// evolve in the way that a new Darc points to the previous one and is signed
+// by the owner(s) of the previous Darc.
 message Darc {
-  // Version should be monotonically increasing over the evolution of a Darc.
+  // Version should be monotonically increasing over the evolution of a
+  // Darc.
   required uint64 version = 1;
-  // Description is a free-form field that can hold any data as required by the user.
-  // Darc itself will never depend on any of the data in here.
+  // Description is a free-form field that can hold any data as required
+  // by the user. Darc itself will never depend on any of the data in
+  // here.
   required bytes description = 2;
-  // BaseID is the ID of the first darc of this Series
+  // BaseID is the ID of the first darc in the chain of evolution. It is
+  // not set if the darc is on version 0.
   optional bytes baseid = 3;
   // PrevID is the previous darc ID in the chain of evolution.
   required bytes previd = 4;
   // Rules map an action to an expression.
-  // An action is a string that should be associated with an expression. The
-  // application typically will define the action but there are two actions that
-  // are in all the darcs, "_evolve" and "_sign". The application can modify
-  // these actions but should not change the semantics of these actions.
-  map<string, bytes> rules = 5;
+   map<string, bytes> rules = 5;
   // Signature is calculated on the Request-representation of the darc.
   // It needs to be created by identities that have the "_evolve" action
   // from the previous valid Darc.
@@ -38,11 +38,11 @@ message Darc {
 // Identity is a generic structure can be either an Ed25519 public key, a Darc
 // or a X509 Identity.
 message Identity {
-  // 	 Darc identity
+  // Darc identity
   optional IdentityDarc darc = 1;
-  // 	 Public-key identity
+  // Public-key identity
   optional IdentityEd25519 ed25519 = 2;
-  // 	 Public-key identity
+  // Public-key identity
   optional IdentityX509EC x509ec = 3;
 }
 
@@ -59,16 +59,16 @@ message IdentityX509EC {
 // IdentityDarc is a structure that points to a Darc with a given ID on a
 // skipchain. The signer should belong to the Darc.
 message IdentityDarc {
-  // 	 Signer SignerEd25519
+  // Signer SignerEd25519
   required bytes id = 1;
 }
 
 // Signature is a signature on a Darc to accept a given decision.
 // can be verified using the appropriate identity.
 message Signature {
-  // 	 The signature itself
+  // The signature itself
   required bytes signature = 1;
-  // 	 Signer is the Idenity (public key or another Darc) of the signer
+  // Signer is the Idenity (public key or another Darc) of the signer
   required Identity signer = 2;
 }
 
@@ -88,7 +88,6 @@ message SignerEd25519 {
 // but the private key will not be given out.
 message SignerX509EC {
   required bytes point = 1;
-  required bytes secret = 2;
 }
 
 // Request is the structure that the client must provide to be verified

@@ -1,6 +1,5 @@
 package ch.epfl.dedis.lib.darc;
 
-import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcOCSProto;
 import org.junit.jupiter.api.BeforeAll;

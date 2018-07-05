@@ -9,7 +9,7 @@ import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityException;
-import ch.epfl.dedis.proto.SkipBlockProto;
+import ch.epfl.dedis.proto.SkipchainProto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -45,7 +45,7 @@ public class RestartError {
     }
 
     void listBlocks(OnchainSecretsRPC ocs) throws CothorityException {
-        SkipBlockProto.SkipBlock sb = ocs.getSkipblock(ocs.ocsID);
+        SkipchainProto.SkipBlock sb = ocs.getSkipblock(ocs.ocsID);
         for (;;){
             logger.info(Hex.printHexBinary(sb.getHash().toByteArray()));
             if (sb.getForwardCount() == 0){

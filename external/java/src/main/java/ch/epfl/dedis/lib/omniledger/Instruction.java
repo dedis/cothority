@@ -2,7 +2,7 @@ package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.omniledger.darc.*;
-import ch.epfl.dedis.proto.TransactionProto;
+import ch.epfl.dedis.proto.OmniLedgerProto;
 import com.google.protobuf.ByteString;
 
 import java.nio.ByteBuffer;
@@ -126,9 +126,9 @@ public class Instruction {
      * Converts this object to the protobuf representation.
      * @return The protobuf representation.
      */
-    public TransactionProto.Instruction toProto() {
-        TransactionProto.Instruction.Builder b = TransactionProto.Instruction.newBuilder();
-        b.setObjectid(this.instId.toProto());
+    public OmniLedgerProto.Instruction toProto() {
+        OmniLedgerProto.Instruction.Builder b = OmniLedgerProto.Instruction.newBuilder();
+        b.setInstanceid(this.instId.toProto());
         b.setNonce(ByteString.copyFrom(this.nonce));
         b.setIndex(this.index);
         b.setLength(this.length);

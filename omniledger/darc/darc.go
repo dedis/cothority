@@ -310,14 +310,14 @@ func (d *Darc) MakeEvolveRequest(prevSigners ...Signer) (*Request, []byte, error
 	for i, s := range prevSigners {
 		signerIDs[i] = s.Identity()
 	}
-	inner := innerRequest{
+	req := Request{
 		BaseID:     d.GetBaseID(),
 		Action:     evolve,
 		Msg:        d.GetID(),
 		Identities: signerIDs,
 	}
-	// Have every signer sign the digest of the innerRequest.
-	digest := inner.Hash()
+	// Have every signer sign the digest of the Request.
+	digest := req.Hash()
 	tmpSigs := make([][]byte, len(prevSigners))
 	for i, s := range prevSigners {
 		var err error
@@ -330,10 +330,8 @@ func (d *Darc) MakeEvolveRequest(prevSigners ...Signer) (*Request, []byte, error
 	if err != nil {
 		return nil, nil, err
 	}
-	return &Request{
-		inner,
-		tmpSigs,
-	}, darcBuf, nil
+	req.Signatures = tmpSigs
+	return &req, darcBuf, nil
 }
 
 // Verify will check that the darc is correct, an error is returned if
@@ -517,7 +515,7 @@ func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string, bool) *Dar
 	for i, sig := range newDarc.Signatures {
 		signerIDs[i] = sig.Signer
 	}
-	inner := innerRequest{
+	req := Request{
 		BaseID:     newDarc.GetBaseID(),
 		Action:     evolve,
 		Msg:        newDarc.GetID(),
@@ -525,7 +523,7 @@ func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string, bool) *Dar
 	}
 
 	// perform the verification
-	digest := inner.Hash()
+	digest := req.Hash()
 	for _, sig := range newDarc.Signatures {
 		if err := sig.Signer.Verify(digest, sig.Signature); err != nil {
 			return err
@@ -821,10 +819,6 @@ func (eds SignerEd25519) Sign(msg []byte) ([]byte, error) {
 // Hash computes the digest of the request, the identities and signatures are
 // not included.
 func (r Request) Hash() []byte {
-	return r.innerRequest.Hash()
-}
-
-func (r innerRequest) Hash() []byte {
 	h := sha256.New()
 	h.Write(r.BaseID)
 	h.Write([]byte(r.Action))
@@ -878,16 +872,14 @@ func (r Request) MsgToDarc(darcBuf []byte) (*Darc, error) {
 // InitAndSignRequest is a valid request needs to be created.
 // TODO: rename to NewRequest
 func InitRequest(baseID ID, action Action, msg []byte, ids []Identity, sigs [][]byte) Request {
-	inner := innerRequest{
+	req := Request{
 		BaseID:     baseID,
 		Action:     action,
 		Msg:        msg,
 		Identities: ids,
 	}
-	return Request{
-		inner,
-		sigs,
-	}
+	req.Signatures = sigs
+	return req
 }
 
 // InitAndSignRequest creates a new request which can be verified by a Darc.
@@ -899,13 +891,13 @@ func InitAndSignRequest(baseID ID, action Action, msg []byte, signers ...Signer)
 	for i, s := range signers {
 		signerIDs[i] = s.Identity()
 	}
-	inner := innerRequest{
+	req := Request{
 		BaseID:     baseID,
 		Action:     action,
 		Msg:        msg,
 		Identities: signerIDs,
 	}
-	digest := inner.Hash()
+	digest := req.Hash()
 	sigs := make([][]byte, len(signers))
 	for i, s := range signers {
 		var err error
@@ -914,10 +906,8 @@ func InitAndSignRequest(baseID ID, action Action, msg []byte, signers ...Signer)
 			return nil, err
 		}
 	}
-	return &Request{
-		inner,
-		sigs,
-	}, nil
+	req.Signatures = sigs
+	return &req, nil
 }
 
 // NewSignerX509EC creates a new SignerX509EC - mostly for tests.

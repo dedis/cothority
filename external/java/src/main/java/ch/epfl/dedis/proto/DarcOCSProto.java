@@ -15,100 +15,100 @@ public final class DarcOCSProto {
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
   public interface DarcOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Darc)
+      // @@protoc_insertion_point(interface_extends:darcOCS.Darc)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <pre>
-     * 	 Identities who are allowed to evolve this Darc.
+     * Identities who are allowed to evolve this Darc.
      * </pre>
      *
-     * <code>repeated .Identity owners = 1;</code>
+     * <code>repeated .darcOCS.Identity owners = 1;</code>
      */
     java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Identity> 
         getOwnersList();
     /**
      * <pre>
-     * 	 Identities who are allowed to evolve this Darc.
+     * Identities who are allowed to evolve this Darc.
      * </pre>
      *
-     * <code>repeated .Identity owners = 1;</code>
+     * <code>repeated .darcOCS.Identity owners = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Identity getOwners(int index);
     /**
      * <pre>
-     * 	 Identities who are allowed to evolve this Darc.
+     * Identities who are allowed to evolve this Darc.
      * </pre>
      *
-     * <code>repeated .Identity owners = 1;</code>
+     * <code>repeated .darcOCS.Identity owners = 1;</code>
      */
     int getOwnersCount();
     /**
      * <pre>
-     * 	 Identities who are allowed to evolve this Darc.
+     * Identities who are allowed to evolve this Darc.
      * </pre>
      *
-     * <code>repeated .Identity owners = 1;</code>
+     * <code>repeated .darcOCS.Identity owners = 1;</code>
      */
     java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder> 
         getOwnersOrBuilderList();
     /**
      * <pre>
-     * 	 Identities who are allowed to evolve this Darc.
+     * Identities who are allowed to evolve this Darc.
      * </pre>
      *
-     * <code>repeated .Identity owners = 1;</code>
+     * <code>repeated .darcOCS.Identity owners = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getOwnersOrBuilder(
         int index);
 
     /**
      * <pre>
-     * 	 Identities who can perform actions (write/read) with data on a skipchain.
+     * Identities who can perform actions (write/read) with data on a skipchain.
      * </pre>
      *
-     * <code>repeated .Identity users = 2;</code>
+     * <code>repeated .darcOCS.Identity users = 2;</code>
      */
     java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Identity> 
         getUsersList();
     /**
      * <pre>
-     * 	 Identities who can perform actions (write/read) with data on a skipchain.
+     * Identities who can perform actions (write/read) with data on a skipchain.
      * </pre>
      *
-     * <code>repeated .Identity users = 2;</code>
+     * <code>repeated .darcOCS.Identity users = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Identity getUsers(int index);
     /**
      * <pre>
-     * 	 Identities who can perform actions (write/read) with data on a skipchain.
+     * Identities who can perform actions (write/read) with data on a skipchain.
      * </pre>
      *
-     * <code>repeated .Identity users = 2;</code>
+     * <code>repeated .darcOCS.Identity users = 2;</code>
      */
     int getUsersCount();
     /**
      * <pre>
-     * 	 Identities who can perform actions (write/read) with data on a skipchain.
+     * Identities who can perform actions (write/read) with data on a skipchain.
      * </pre>
      *
-     * <code>repeated .Identity users = 2;</code>
+     * <code>repeated .darcOCS.Identity users = 2;</code>
      */
     java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder> 
         getUsersOrBuilderList();
     /**
      * <pre>
-     * 	 Identities who can perform actions (write/read) with data on a skipchain.
+     * Identities who can perform actions (write/read) with data on a skipchain.
      * </pre>
      *
-     * <code>repeated .Identity users = 2;</code>
+     * <code>repeated .darcOCS.Identity users = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getUsersOrBuilder(
         int index);
 
     /**
      * <pre>
-     * 	 Version should be monotonically increasing over the evolution of a Darc.
+     * Version should be monotonically increasing over the evolution of a Darc.
      * </pre>
      *
      * <code>required sint32 version = 3;</code>
@@ -116,7 +116,7 @@ public final class DarcOCSProto {
     boolean hasVersion();
     /**
      * <pre>
-     * 	 Version should be monotonically increasing over the evolution of a Darc.
+     * Version should be monotonically increasing over the evolution of a Darc.
      * </pre>
      *
      * <code>required sint32 version = 3;</code>
@@ -125,8 +125,8 @@ public final class DarcOCSProto {
 
     /**
      * <pre>
-     * 	 Description is a free-form field that can hold any data as required by the user.
-     * 	 Darc itself will never depend on any of the data in here.
+     * Description is a free-form field that can hold any data as required by the user.
+     * Darc itself will never depend on any of the data in here.
      * </pre>
      *
      * <code>optional bytes description = 4;</code>
@@ -134,8 +134,8 @@ public final class DarcOCSProto {
     boolean hasDescription();
     /**
      * <pre>
-     * 	 Description is a free-form field that can hold any data as required by the user.
-     * 	 Darc itself will never depend on any of the data in here.
+     * Description is a free-form field that can hold any data as required by the user.
+     * Darc itself will never depend on any of the data in here.
      * </pre>
      *
      * <code>optional bytes description = 4;</code>
@@ -144,7 +144,7 @@ public final class DarcOCSProto {
 
     /**
      * <pre>
-     * 	 BaseID is the ID of the first darc of this Series
+     * BaseID is the ID of the first darc of this Series
      * </pre>
      *
      * <code>optional bytes baseid = 5;</code>
@@ -152,7 +152,7 @@ public final class DarcOCSProto {
     boolean hasBaseid();
     /**
      * <pre>
-     * 	 BaseID is the ID of the first darc of this Series
+     * BaseID is the ID of the first darc of this Series
      * </pre>
      *
      * <code>optional bytes baseid = 5;</code>
@@ -161,29 +161,29 @@ public final class DarcOCSProto {
 
     /**
      * <pre>
-     * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-     * 	 and needs to be created by an Owner from the previous valid Darc.
+     * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+     * and needs to be created by an Owner from the previous valid Darc.
      * </pre>
      *
-     * <code>optional .Signature signature = 6;</code>
+     * <code>optional .darcOCS.Signature signature = 6;</code>
      */
     boolean hasSignature();
     /**
      * <pre>
-     * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-     * 	 and needs to be created by an Owner from the previous valid Darc.
+     * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+     * and needs to be created by an Owner from the previous valid Darc.
      * </pre>
      *
-     * <code>optional .Signature signature = 6;</code>
+     * <code>optional .darcOCS.Signature signature = 6;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature();
     /**
      * <pre>
-     * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-     * 	 and needs to be created by an Owner from the previous valid Darc.
+     * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+     * and needs to be created by an Owner from the previous valid Darc.
      * </pre>
      *
-     * <code>optional .Signature signature = 6;</code>
+     * <code>optional .darcOCS.Signature signature = 6;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder();
   }
@@ -193,11 +193,11 @@ public final class DarcOCSProto {
    * a new Darc points to the previous one and is signed by the owner(s) of the previous Darc.
    * </pre>
    *
-   * Protobuf type {@code Darc}
+   * Protobuf type {@code darcOCS.Darc}
    */
   public  static final class Darc extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Darc)
+      // @@protoc_insertion_point(message_implements:darcOCS.Darc)
       DarcOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use Darc.newBuilder() to construct.
@@ -222,9 +222,6 @@ public final class DarcOCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -309,12 +306,12 @@ public final class DarcOCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Darc_descriptor;
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Darc_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Darc_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Darc_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.DarcOCSProto.Darc.class, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder.class);
     }
@@ -324,20 +321,20 @@ public final class DarcOCSProto {
     private java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Identity> owners_;
     /**
      * <pre>
-     * 	 Identities who are allowed to evolve this Darc.
+     * Identities who are allowed to evolve this Darc.
      * </pre>
      *
-     * <code>repeated .Identity owners = 1;</code>
+     * <code>repeated .darcOCS.Identity owners = 1;</code>
      */
     public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Identity> getOwnersList() {
       return owners_;
     }
     /**
      * <pre>
-     * 	 Identities who are allowed to evolve this Darc.
+     * Identities who are allowed to evolve this Darc.
      * </pre>
      *
-     * <code>repeated .Identity owners = 1;</code>
+     * <code>repeated .darcOCS.Identity owners = 1;</code>
      */
     public java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder> 
         getOwnersOrBuilderList() {
@@ -345,30 +342,30 @@ public final class DarcOCSProto {
     }
     /**
      * <pre>
-     * 	 Identities who are allowed to evolve this Darc.
+     * Identities who are allowed to evolve this Darc.
      * </pre>
      *
-     * <code>repeated .Identity owners = 1;</code>
+     * <code>repeated .darcOCS.Identity owners = 1;</code>
      */
     public int getOwnersCount() {
       return owners_.size();
     }
     /**
      * <pre>
-     * 	 Identities who are allowed to evolve this Darc.
+     * Identities who are allowed to evolve this Darc.
      * </pre>
      *
-     * <code>repeated .Identity owners = 1;</code>
+     * <code>repeated .darcOCS.Identity owners = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Identity getOwners(int index) {
       return owners_.get(index);
     }
     /**
      * <pre>
-     * 	 Identities who are allowed to evolve this Darc.
+     * Identities who are allowed to evolve this Darc.
      * </pre>
      *
-     * <code>repeated .Identity owners = 1;</code>
+     * <code>repeated .darcOCS.Identity owners = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getOwnersOrBuilder(
         int index) {
@@ -379,20 +376,20 @@ public final class DarcOCSProto {
     private java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Identity> users_;
     /**
      * <pre>
-     * 	 Identities who can perform actions (write/read) with data on a skipchain.
+     * Identities who can perform actions (write/read) with data on a skipchain.
      * </pre>
      *
-     * <code>repeated .Identity users = 2;</code>
+     * <code>repeated .darcOCS.Identity users = 2;</code>
      */
     public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Identity> getUsersList() {
       return users_;
     }
     /**
      * <pre>
-     * 	 Identities who can perform actions (write/read) with data on a skipchain.
+     * Identities who can perform actions (write/read) with data on a skipchain.
      * </pre>
      *
-     * <code>repeated .Identity users = 2;</code>
+     * <code>repeated .darcOCS.Identity users = 2;</code>
      */
     public java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder> 
         getUsersOrBuilderList() {
@@ -400,30 +397,30 @@ public final class DarcOCSProto {
     }
     /**
      * <pre>
-     * 	 Identities who can perform actions (write/read) with data on a skipchain.
+     * Identities who can perform actions (write/read) with data on a skipchain.
      * </pre>
      *
-     * <code>repeated .Identity users = 2;</code>
+     * <code>repeated .darcOCS.Identity users = 2;</code>
      */
     public int getUsersCount() {
       return users_.size();
     }
     /**
      * <pre>
-     * 	 Identities who can perform actions (write/read) with data on a skipchain.
+     * Identities who can perform actions (write/read) with data on a skipchain.
      * </pre>
      *
-     * <code>repeated .Identity users = 2;</code>
+     * <code>repeated .darcOCS.Identity users = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Identity getUsers(int index) {
       return users_.get(index);
     }
     /**
      * <pre>
-     * 	 Identities who can perform actions (write/read) with data on a skipchain.
+     * Identities who can perform actions (write/read) with data on a skipchain.
      * </pre>
      *
-     * <code>repeated .Identity users = 2;</code>
+     * <code>repeated .darcOCS.Identity users = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getUsersOrBuilder(
         int index) {
@@ -434,7 +431,7 @@ public final class DarcOCSProto {
     private int version_;
     /**
      * <pre>
-     * 	 Version should be monotonically increasing over the evolution of a Darc.
+     * Version should be monotonically increasing over the evolution of a Darc.
      * </pre>
      *
      * <code>required sint32 version = 3;</code>
@@ -444,7 +441,7 @@ public final class DarcOCSProto {
     }
     /**
      * <pre>
-     * 	 Version should be monotonically increasing over the evolution of a Darc.
+     * Version should be monotonically increasing over the evolution of a Darc.
      * </pre>
      *
      * <code>required sint32 version = 3;</code>
@@ -457,8 +454,8 @@ public final class DarcOCSProto {
     private com.google.protobuf.ByteString description_;
     /**
      * <pre>
-     * 	 Description is a free-form field that can hold any data as required by the user.
-     * 	 Darc itself will never depend on any of the data in here.
+     * Description is a free-form field that can hold any data as required by the user.
+     * Darc itself will never depend on any of the data in here.
      * </pre>
      *
      * <code>optional bytes description = 4;</code>
@@ -468,8 +465,8 @@ public final class DarcOCSProto {
     }
     /**
      * <pre>
-     * 	 Description is a free-form field that can hold any data as required by the user.
-     * 	 Darc itself will never depend on any of the data in here.
+     * Description is a free-form field that can hold any data as required by the user.
+     * Darc itself will never depend on any of the data in here.
      * </pre>
      *
      * <code>optional bytes description = 4;</code>
@@ -482,7 +479,7 @@ public final class DarcOCSProto {
     private com.google.protobuf.ByteString baseid_;
     /**
      * <pre>
-     * 	 BaseID is the ID of the first darc of this Series
+     * BaseID is the ID of the first darc of this Series
      * </pre>
      *
      * <code>optional bytes baseid = 5;</code>
@@ -492,7 +489,7 @@ public final class DarcOCSProto {
     }
     /**
      * <pre>
-     * 	 BaseID is the ID of the first darc of this Series
+     * BaseID is the ID of the first darc of this Series
      * </pre>
      *
      * <code>optional bytes baseid = 5;</code>
@@ -505,33 +502,33 @@ public final class DarcOCSProto {
     private ch.epfl.dedis.proto.DarcOCSProto.Signature signature_;
     /**
      * <pre>
-     * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-     * 	 and needs to be created by an Owner from the previous valid Darc.
+     * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+     * and needs to be created by an Owner from the previous valid Darc.
      * </pre>
      *
-     * <code>optional .Signature signature = 6;</code>
+     * <code>optional .darcOCS.Signature signature = 6;</code>
      */
     public boolean hasSignature() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
      * <pre>
-     * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-     * 	 and needs to be created by an Owner from the previous valid Darc.
+     * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+     * and needs to be created by an Owner from the previous valid Darc.
      * </pre>
      *
-     * <code>optional .Signature signature = 6;</code>
+     * <code>optional .darcOCS.Signature signature = 6;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature() {
       return signature_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Signature.getDefaultInstance() : signature_;
     }
     /**
      * <pre>
-     * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-     * 	 and needs to be created by an Owner from the previous valid Darc.
+     * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+     * and needs to be created by an Owner from the previous valid Darc.
      * </pre>
      *
-     * <code>optional .Signature signature = 6;</code>
+     * <code>optional .darcOCS.Signature signature = 6;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder() {
       return signature_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Signature.getDefaultInstance() : signature_;
@@ -795,20 +792,20 @@ public final class DarcOCSProto {
      * a new Darc points to the previous one and is signed by the owner(s) of the previous Darc.
      * </pre>
      *
-     * Protobuf type {@code Darc}
+     * Protobuf type {@code darcOCS.Darc}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Darc)
+        // @@protoc_insertion_point(builder_implements:darcOCS.Darc)
         ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Darc_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Darc_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Darc_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Darc_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.DarcOCSProto.Darc.class, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder.class);
       }
@@ -862,7 +859,7 @@ public final class DarcOCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Darc_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Darc_descriptor;
       }
 
       public ch.epfl.dedis.proto.DarcOCSProto.Darc getDefaultInstanceForType() {
@@ -1085,10 +1082,10 @@ public final class DarcOCSProto {
 
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Identity> getOwnersList() {
         if (ownersBuilder_ == null) {
@@ -1099,10 +1096,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public int getOwnersCount() {
         if (ownersBuilder_ == null) {
@@ -1113,10 +1110,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity getOwners(int index) {
         if (ownersBuilder_ == null) {
@@ -1127,10 +1124,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public Builder setOwners(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Identity value) {
@@ -1148,10 +1145,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public Builder setOwners(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder builderForValue) {
@@ -1166,10 +1163,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public Builder addOwners(ch.epfl.dedis.proto.DarcOCSProto.Identity value) {
         if (ownersBuilder_ == null) {
@@ -1186,10 +1183,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public Builder addOwners(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Identity value) {
@@ -1207,10 +1204,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public Builder addOwners(
           ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder builderForValue) {
@@ -1225,10 +1222,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public Builder addOwners(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder builderForValue) {
@@ -1243,10 +1240,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public Builder addAllOwners(
           java.lang.Iterable<? extends ch.epfl.dedis.proto.DarcOCSProto.Identity> values) {
@@ -1262,10 +1259,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public Builder clearOwners() {
         if (ownersBuilder_ == null) {
@@ -1279,10 +1276,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public Builder removeOwners(int index) {
         if (ownersBuilder_ == null) {
@@ -1296,10 +1293,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder getOwnersBuilder(
           int index) {
@@ -1307,10 +1304,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getOwnersOrBuilder(
           int index) {
@@ -1321,10 +1318,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder> 
            getOwnersOrBuilderList() {
@@ -1336,10 +1333,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder addOwnersBuilder() {
         return getOwnersFieldBuilder().addBuilder(
@@ -1347,10 +1344,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder addOwnersBuilder(
           int index) {
@@ -1359,10 +1356,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who are allowed to evolve this Darc.
+       * Identities who are allowed to evolve this Darc.
        * </pre>
        *
-       * <code>repeated .Identity owners = 1;</code>
+       * <code>repeated .darcOCS.Identity owners = 1;</code>
        */
       public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder> 
            getOwnersBuilderList() {
@@ -1397,10 +1394,10 @@ public final class DarcOCSProto {
 
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Identity> getUsersList() {
         if (usersBuilder_ == null) {
@@ -1411,10 +1408,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public int getUsersCount() {
         if (usersBuilder_ == null) {
@@ -1425,10 +1422,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity getUsers(int index) {
         if (usersBuilder_ == null) {
@@ -1439,10 +1436,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public Builder setUsers(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Identity value) {
@@ -1460,10 +1457,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public Builder setUsers(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder builderForValue) {
@@ -1478,10 +1475,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public Builder addUsers(ch.epfl.dedis.proto.DarcOCSProto.Identity value) {
         if (usersBuilder_ == null) {
@@ -1498,10 +1495,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public Builder addUsers(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Identity value) {
@@ -1519,10 +1516,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public Builder addUsers(
           ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder builderForValue) {
@@ -1537,10 +1534,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public Builder addUsers(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder builderForValue) {
@@ -1555,10 +1552,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public Builder addAllUsers(
           java.lang.Iterable<? extends ch.epfl.dedis.proto.DarcOCSProto.Identity> values) {
@@ -1574,10 +1571,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public Builder clearUsers() {
         if (usersBuilder_ == null) {
@@ -1591,10 +1588,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public Builder removeUsers(int index) {
         if (usersBuilder_ == null) {
@@ -1608,10 +1605,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder getUsersBuilder(
           int index) {
@@ -1619,10 +1616,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getUsersOrBuilder(
           int index) {
@@ -1633,10 +1630,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder> 
            getUsersOrBuilderList() {
@@ -1648,10 +1645,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder addUsersBuilder() {
         return getUsersFieldBuilder().addBuilder(
@@ -1659,10 +1656,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder addUsersBuilder(
           int index) {
@@ -1671,10 +1668,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Identities who can perform actions (write/read) with data on a skipchain.
+       * Identities who can perform actions (write/read) with data on a skipchain.
        * </pre>
        *
-       * <code>repeated .Identity users = 2;</code>
+       * <code>repeated .darcOCS.Identity users = 2;</code>
        */
       public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder> 
            getUsersBuilderList() {
@@ -1698,7 +1695,7 @@ public final class DarcOCSProto {
       private int version_ ;
       /**
        * <pre>
-       * 	 Version should be monotonically increasing over the evolution of a Darc.
+       * Version should be monotonically increasing over the evolution of a Darc.
        * </pre>
        *
        * <code>required sint32 version = 3;</code>
@@ -1708,7 +1705,7 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Version should be monotonically increasing over the evolution of a Darc.
+       * Version should be monotonically increasing over the evolution of a Darc.
        * </pre>
        *
        * <code>required sint32 version = 3;</code>
@@ -1718,7 +1715,7 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Version should be monotonically increasing over the evolution of a Darc.
+       * Version should be monotonically increasing over the evolution of a Darc.
        * </pre>
        *
        * <code>required sint32 version = 3;</code>
@@ -1731,7 +1728,7 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Version should be monotonically increasing over the evolution of a Darc.
+       * Version should be monotonically increasing over the evolution of a Darc.
        * </pre>
        *
        * <code>required sint32 version = 3;</code>
@@ -1746,8 +1743,8 @@ public final class DarcOCSProto {
       private com.google.protobuf.ByteString description_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 Description is a free-form field that can hold any data as required by the user.
-       * 	 Darc itself will never depend on any of the data in here.
+       * Description is a free-form field that can hold any data as required by the user.
+       * Darc itself will never depend on any of the data in here.
        * </pre>
        *
        * <code>optional bytes description = 4;</code>
@@ -1757,8 +1754,8 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Description is a free-form field that can hold any data as required by the user.
-       * 	 Darc itself will never depend on any of the data in here.
+       * Description is a free-form field that can hold any data as required by the user.
+       * Darc itself will never depend on any of the data in here.
        * </pre>
        *
        * <code>optional bytes description = 4;</code>
@@ -1768,8 +1765,8 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Description is a free-form field that can hold any data as required by the user.
-       * 	 Darc itself will never depend on any of the data in here.
+       * Description is a free-form field that can hold any data as required by the user.
+       * Darc itself will never depend on any of the data in here.
        * </pre>
        *
        * <code>optional bytes description = 4;</code>
@@ -1785,8 +1782,8 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Description is a free-form field that can hold any data as required by the user.
-       * 	 Darc itself will never depend on any of the data in here.
+       * Description is a free-form field that can hold any data as required by the user.
+       * Darc itself will never depend on any of the data in here.
        * </pre>
        *
        * <code>optional bytes description = 4;</code>
@@ -1801,7 +1798,7 @@ public final class DarcOCSProto {
       private com.google.protobuf.ByteString baseid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 BaseID is the ID of the first darc of this Series
+       * BaseID is the ID of the first darc of this Series
        * </pre>
        *
        * <code>optional bytes baseid = 5;</code>
@@ -1811,7 +1808,7 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 BaseID is the ID of the first darc of this Series
+       * BaseID is the ID of the first darc of this Series
        * </pre>
        *
        * <code>optional bytes baseid = 5;</code>
@@ -1821,7 +1818,7 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 BaseID is the ID of the first darc of this Series
+       * BaseID is the ID of the first darc of this Series
        * </pre>
        *
        * <code>optional bytes baseid = 5;</code>
@@ -1837,7 +1834,7 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 BaseID is the ID of the first darc of this Series
+       * BaseID is the ID of the first darc of this Series
        * </pre>
        *
        * <code>optional bytes baseid = 5;</code>
@@ -1854,22 +1851,22 @@ public final class DarcOCSProto {
           ch.epfl.dedis.proto.DarcOCSProto.Signature, ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder> signatureBuilder_;
       /**
        * <pre>
-       * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-       * 	 and needs to be created by an Owner from the previous valid Darc.
+       * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+       * and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 6;</code>
+       * <code>optional .darcOCS.Signature signature = 6;</code>
        */
       public boolean hasSignature() {
         return ((bitField0_ & 0x00000020) == 0x00000020);
       }
       /**
        * <pre>
-       * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-       * 	 and needs to be created by an Owner from the previous valid Darc.
+       * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+       * and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 6;</code>
+       * <code>optional .darcOCS.Signature signature = 6;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature() {
         if (signatureBuilder_ == null) {
@@ -1880,11 +1877,11 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-       * 	 and needs to be created by an Owner from the previous valid Darc.
+       * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+       * and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 6;</code>
+       * <code>optional .darcOCS.Signature signature = 6;</code>
        */
       public Builder setSignature(ch.epfl.dedis.proto.DarcOCSProto.Signature value) {
         if (signatureBuilder_ == null) {
@@ -1901,11 +1898,11 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-       * 	 and needs to be created by an Owner from the previous valid Darc.
+       * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+       * and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 6;</code>
+       * <code>optional .darcOCS.Signature signature = 6;</code>
        */
       public Builder setSignature(
           ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder builderForValue) {
@@ -1920,11 +1917,11 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-       * 	 and needs to be created by an Owner from the previous valid Darc.
+       * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+       * and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 6;</code>
+       * <code>optional .darcOCS.Signature signature = 6;</code>
        */
       public Builder mergeSignature(ch.epfl.dedis.proto.DarcOCSProto.Signature value) {
         if (signatureBuilder_ == null) {
@@ -1945,11 +1942,11 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-       * 	 and needs to be created by an Owner from the previous valid Darc.
+       * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+       * and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 6;</code>
+       * <code>optional .darcOCS.Signature signature = 6;</code>
        */
       public Builder clearSignature() {
         if (signatureBuilder_ == null) {
@@ -1963,11 +1960,11 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-       * 	 and needs to be created by an Owner from the previous valid Darc.
+       * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+       * and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 6;</code>
+       * <code>optional .darcOCS.Signature signature = 6;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder getSignatureBuilder() {
         bitField0_ |= 0x00000020;
@@ -1976,11 +1973,11 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-       * 	 and needs to be created by an Owner from the previous valid Darc.
+       * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+       * and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 6;</code>
+       * <code>optional .darcOCS.Signature signature = 6;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder() {
         if (signatureBuilder_ != null) {
@@ -1992,11 +1989,11 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
-       * 	 and needs to be created by an Owner from the previous valid Darc.
+       * Signature is calculated over the protobuf representation of [Owner, Users, Version, Description]
+       * and needs to be created by an Owner from the previous valid Darc.
        * </pre>
        *
-       * <code>optional .Signature signature = 6;</code>
+       * <code>optional .darcOCS.Signature signature = 6;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Signature, ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder> 
@@ -2022,10 +2019,10 @@ public final class DarcOCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Darc)
+      // @@protoc_insertion_point(builder_scope:darcOCS.Darc)
     }
 
-    // @@protoc_insertion_point(class_scope:Darc)
+    // @@protoc_insertion_point(class_scope:darcOCS.Darc)
     private static final ch.epfl.dedis.proto.DarcOCSProto.Darc DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcOCSProto.Darc();
@@ -2041,7 +2038,7 @@ public final class DarcOCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Darc(input, extensionRegistry);
+          return new Darc(input, extensionRegistry);
       }
     };
 
@@ -2061,81 +2058,81 @@ public final class DarcOCSProto {
   }
 
   public interface IdentityOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Identity)
+      // @@protoc_insertion_point(interface_extends:darcOCS.Identity)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <pre>
-     * 	 Darc identity
+     * Darc identity
      * </pre>
      *
-     * <code>optional .IdentityDarc darc = 1;</code>
+     * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
      */
     boolean hasDarc();
     /**
      * <pre>
-     * 	 Darc identity
+     * Darc identity
      * </pre>
      *
-     * <code>optional .IdentityDarc darc = 1;</code>
+     * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc getDarc();
     /**
      * <pre>
-     * 	 Darc identity
+     * Darc identity
      * </pre>
      *
-     * <code>optional .IdentityDarc darc = 1;</code>
+     * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.IdentityDarcOrBuilder getDarcOrBuilder();
 
     /**
      * <pre>
-     * 	 Public-key identity
+     * Public-key identity
      * </pre>
      *
-     * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+     * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
      */
     boolean hasEd25519();
     /**
      * <pre>
-     * 	 Public-key identity
+     * Public-key identity
      * </pre>
      *
-     * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+     * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519 getEd25519();
     /**
      * <pre>
-     * 	 Public-key identity
+     * Public-key identity
      * </pre>
      *
-     * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+     * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519OrBuilder getEd25519OrBuilder();
 
     /**
      * <pre>
-     * 	 Public-key identity
+     * Public-key identity
      * </pre>
      *
-     * <code>optional .IdentityX509EC x509ec = 3;</code>
+     * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
      */
     boolean hasX509Ec();
     /**
      * <pre>
-     * 	 Public-key identity
+     * Public-key identity
      * </pre>
      *
-     * <code>optional .IdentityX509EC x509ec = 3;</code>
+     * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC getX509Ec();
     /**
      * <pre>
-     * 	 Public-key identity
+     * Public-key identity
      * </pre>
      *
-     * <code>optional .IdentityX509EC x509ec = 3;</code>
+     * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.IdentityX509ECOrBuilder getX509EcOrBuilder();
   }
@@ -2144,11 +2141,11 @@ public final class DarcOCSProto {
    * Identity is a generic structure can be either an Ed25519 public key or a Darc
    * </pre>
    *
-   * Protobuf type {@code Identity}
+   * Protobuf type {@code darcOCS.Identity}
    */
   public  static final class Identity extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Identity)
+      // @@protoc_insertion_point(message_implements:darcOCS.Identity)
       IdentityOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use Identity.newBuilder() to construct.
@@ -2168,9 +2165,6 @@ public final class DarcOCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2242,12 +2236,12 @@ public final class DarcOCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Identity_descriptor;
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Identity_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Identity_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Identity_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.DarcOCSProto.Identity.class, ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder.class);
     }
@@ -2257,30 +2251,30 @@ public final class DarcOCSProto {
     private ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc darc_;
     /**
      * <pre>
-     * 	 Darc identity
+     * Darc identity
      * </pre>
      *
-     * <code>optional .IdentityDarc darc = 1;</code>
+     * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
      */
     public boolean hasDarc() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
      * <pre>
-     * 	 Darc identity
+     * Darc identity
      * </pre>
      *
-     * <code>optional .IdentityDarc darc = 1;</code>
+     * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc getDarc() {
       return darc_ == null ? ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc.getDefaultInstance() : darc_;
     }
     /**
      * <pre>
-     * 	 Darc identity
+     * Darc identity
      * </pre>
      *
-     * <code>optional .IdentityDarc darc = 1;</code>
+     * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.IdentityDarcOrBuilder getDarcOrBuilder() {
       return darc_ == null ? ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc.getDefaultInstance() : darc_;
@@ -2290,30 +2284,30 @@ public final class DarcOCSProto {
     private ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519 ed25519_;
     /**
      * <pre>
-     * 	 Public-key identity
+     * Public-key identity
      * </pre>
      *
-     * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+     * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
      */
     public boolean hasEd25519() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
      * <pre>
-     * 	 Public-key identity
+     * Public-key identity
      * </pre>
      *
-     * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+     * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519 getEd25519() {
       return ed25519_ == null ? ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519.getDefaultInstance() : ed25519_;
     }
     /**
      * <pre>
-     * 	 Public-key identity
+     * Public-key identity
      * </pre>
      *
-     * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+     * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519OrBuilder getEd25519OrBuilder() {
       return ed25519_ == null ? ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519.getDefaultInstance() : ed25519_;
@@ -2323,30 +2317,30 @@ public final class DarcOCSProto {
     private ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC x509Ec_;
     /**
      * <pre>
-     * 	 Public-key identity
+     * Public-key identity
      * </pre>
      *
-     * <code>optional .IdentityX509EC x509ec = 3;</code>
+     * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
      */
     public boolean hasX509Ec() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
      * <pre>
-     * 	 Public-key identity
+     * Public-key identity
      * </pre>
      *
-     * <code>optional .IdentityX509EC x509ec = 3;</code>
+     * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC getX509Ec() {
       return x509Ec_ == null ? ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC.getDefaultInstance() : x509Ec_;
     }
     /**
      * <pre>
-     * 	 Public-key identity
+     * Public-key identity
      * </pre>
      *
-     * <code>optional .IdentityX509EC x509ec = 3;</code>
+     * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.IdentityX509ECOrBuilder getX509EcOrBuilder() {
       return x509Ec_ == null ? ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC.getDefaultInstance() : x509Ec_;
@@ -2563,20 +2557,20 @@ public final class DarcOCSProto {
      * Identity is a generic structure can be either an Ed25519 public key or a Darc
      * </pre>
      *
-     * Protobuf type {@code Identity}
+     * Protobuf type {@code darcOCS.Identity}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Identity)
+        // @@protoc_insertion_point(builder_implements:darcOCS.Identity)
         ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Identity_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Identity_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Identity_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Identity_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.DarcOCSProto.Identity.class, ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder.class);
       }
@@ -2624,7 +2618,7 @@ public final class DarcOCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Identity_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Identity_descriptor;
       }
 
       public ch.epfl.dedis.proto.DarcOCSProto.Identity getDefaultInstanceForType() {
@@ -2766,20 +2760,20 @@ public final class DarcOCSProto {
           ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc, ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc.Builder, ch.epfl.dedis.proto.DarcOCSProto.IdentityDarcOrBuilder> darcBuilder_;
       /**
        * <pre>
-       * 	 Darc identity
+       * Darc identity
        * </pre>
        *
-       * <code>optional .IdentityDarc darc = 1;</code>
+       * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
        */
       public boolean hasDarc() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
        * <pre>
-       * 	 Darc identity
+       * Darc identity
        * </pre>
        *
-       * <code>optional .IdentityDarc darc = 1;</code>
+       * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc getDarc() {
         if (darcBuilder_ == null) {
@@ -2790,10 +2784,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc identity
+       * Darc identity
        * </pre>
        *
-       * <code>optional .IdentityDarc darc = 1;</code>
+       * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
        */
       public Builder setDarc(ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc value) {
         if (darcBuilder_ == null) {
@@ -2810,10 +2804,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc identity
+       * Darc identity
        * </pre>
        *
-       * <code>optional .IdentityDarc darc = 1;</code>
+       * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
        */
       public Builder setDarc(
           ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc.Builder builderForValue) {
@@ -2828,10 +2822,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc identity
+       * Darc identity
        * </pre>
        *
-       * <code>optional .IdentityDarc darc = 1;</code>
+       * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
        */
       public Builder mergeDarc(ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc value) {
         if (darcBuilder_ == null) {
@@ -2852,10 +2846,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc identity
+       * Darc identity
        * </pre>
        *
-       * <code>optional .IdentityDarc darc = 1;</code>
+       * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
        */
       public Builder clearDarc() {
         if (darcBuilder_ == null) {
@@ -2869,10 +2863,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc identity
+       * Darc identity
        * </pre>
        *
-       * <code>optional .IdentityDarc darc = 1;</code>
+       * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc.Builder getDarcBuilder() {
         bitField0_ |= 0x00000001;
@@ -2881,10 +2875,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc identity
+       * Darc identity
        * </pre>
        *
-       * <code>optional .IdentityDarc darc = 1;</code>
+       * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityDarcOrBuilder getDarcOrBuilder() {
         if (darcBuilder_ != null) {
@@ -2896,10 +2890,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc identity
+       * Darc identity
        * </pre>
        *
-       * <code>optional .IdentityDarc darc = 1;</code>
+       * <code>optional .darcOCS.IdentityDarc darc = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc, ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc.Builder, ch.epfl.dedis.proto.DarcOCSProto.IdentityDarcOrBuilder> 
@@ -2920,20 +2914,20 @@ public final class DarcOCSProto {
           ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519, ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519.Builder, ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519OrBuilder> ed25519Builder_;
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+       * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
        */
       public boolean hasEd25519() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+       * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519 getEd25519() {
         if (ed25519Builder_ == null) {
@@ -2944,10 +2938,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+       * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
        */
       public Builder setEd25519(ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519 value) {
         if (ed25519Builder_ == null) {
@@ -2964,10 +2958,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+       * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
        */
       public Builder setEd25519(
           ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519.Builder builderForValue) {
@@ -2982,10 +2976,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+       * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
        */
       public Builder mergeEd25519(ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519 value) {
         if (ed25519Builder_ == null) {
@@ -3006,10 +3000,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+       * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
        */
       public Builder clearEd25519() {
         if (ed25519Builder_ == null) {
@@ -3023,10 +3017,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+       * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519.Builder getEd25519Builder() {
         bitField0_ |= 0x00000002;
@@ -3035,10 +3029,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+       * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519OrBuilder getEd25519OrBuilder() {
         if (ed25519Builder_ != null) {
@@ -3050,10 +3044,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityEd25519 ed25519 = 2;</code>
+       * <code>optional .darcOCS.IdentityEd25519 ed25519 = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519, ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519.Builder, ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519OrBuilder> 
@@ -3074,20 +3068,20 @@ public final class DarcOCSProto {
           ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC, ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC.Builder, ch.epfl.dedis.proto.DarcOCSProto.IdentityX509ECOrBuilder> x509EcBuilder_;
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
        */
       public boolean hasX509Ec() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC getX509Ec() {
         if (x509EcBuilder_ == null) {
@@ -3098,10 +3092,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
        */
       public Builder setX509Ec(ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC value) {
         if (x509EcBuilder_ == null) {
@@ -3118,10 +3112,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
        */
       public Builder setX509Ec(
           ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC.Builder builderForValue) {
@@ -3136,10 +3130,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
        */
       public Builder mergeX509Ec(ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC value) {
         if (x509EcBuilder_ == null) {
@@ -3160,10 +3154,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
        */
       public Builder clearX509Ec() {
         if (x509EcBuilder_ == null) {
@@ -3177,10 +3171,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC.Builder getX509EcBuilder() {
         bitField0_ |= 0x00000004;
@@ -3189,10 +3183,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityX509ECOrBuilder getX509EcOrBuilder() {
         if (x509EcBuilder_ != null) {
@@ -3204,10 +3198,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Public-key identity
+       * Public-key identity
        * </pre>
        *
-       * <code>optional .IdentityX509EC x509ec = 3;</code>
+       * <code>optional .darcOCS.IdentityX509EC x509ec = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC, ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC.Builder, ch.epfl.dedis.proto.DarcOCSProto.IdentityX509ECOrBuilder> 
@@ -3233,10 +3227,10 @@ public final class DarcOCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Identity)
+      // @@protoc_insertion_point(builder_scope:darcOCS.Identity)
     }
 
-    // @@protoc_insertion_point(class_scope:Identity)
+    // @@protoc_insertion_point(class_scope:darcOCS.Identity)
     private static final ch.epfl.dedis.proto.DarcOCSProto.Identity DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcOCSProto.Identity();
@@ -3252,7 +3246,7 @@ public final class DarcOCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Identity(input, extensionRegistry);
+          return new Identity(input, extensionRegistry);
       }
     };
 
@@ -3272,7 +3266,7 @@ public final class DarcOCSProto {
   }
 
   public interface IdentityEd25519OrBuilder extends
-      // @@protoc_insertion_point(interface_extends:IdentityEd25519)
+      // @@protoc_insertion_point(interface_extends:darcOCS.IdentityEd25519)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -3289,11 +3283,11 @@ public final class DarcOCSProto {
    * IdentityEd25519 holds a Ed25519 public key (Point)
    * </pre>
    *
-   * Protobuf type {@code IdentityEd25519}
+   * Protobuf type {@code darcOCS.IdentityEd25519}
    */
   public  static final class IdentityEd25519 extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:IdentityEd25519)
+      // @@protoc_insertion_point(message_implements:darcOCS.IdentityEd25519)
       IdentityEd25519OrBuilder {
   private static final long serialVersionUID = 0L;
     // Use IdentityEd25519.newBuilder() to construct.
@@ -3314,9 +3308,6 @@ public final class DarcOCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3354,12 +3345,12 @@ public final class DarcOCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityEd25519_descriptor;
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityEd25519_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityEd25519_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityEd25519_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519.class, ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519.Builder.class);
     }
@@ -3545,20 +3536,20 @@ public final class DarcOCSProto {
      * IdentityEd25519 holds a Ed25519 public key (Point)
      * </pre>
      *
-     * Protobuf type {@code IdentityEd25519}
+     * Protobuf type {@code darcOCS.IdentityEd25519}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:IdentityEd25519)
+        // @@protoc_insertion_point(builder_implements:darcOCS.IdentityEd25519)
         ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519OrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityEd25519_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityEd25519_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityEd25519_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityEd25519_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519.class, ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519.Builder.class);
       }
@@ -3587,7 +3578,7 @@ public final class DarcOCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityEd25519_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityEd25519_descriptor;
       }
 
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519 getDefaultInstanceForType() {
@@ -3731,10 +3722,10 @@ public final class DarcOCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:IdentityEd25519)
+      // @@protoc_insertion_point(builder_scope:darcOCS.IdentityEd25519)
     }
 
-    // @@protoc_insertion_point(class_scope:IdentityEd25519)
+    // @@protoc_insertion_point(class_scope:darcOCS.IdentityEd25519)
     private static final ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519 DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcOCSProto.IdentityEd25519();
@@ -3750,7 +3741,7 @@ public final class DarcOCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new IdentityEd25519(input, extensionRegistry);
+          return new IdentityEd25519(input, extensionRegistry);
       }
     };
 
@@ -3770,7 +3761,7 @@ public final class DarcOCSProto {
   }
 
   public interface IdentityX509ECOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:IdentityX509EC)
+      // @@protoc_insertion_point(interface_extends:darcOCS.IdentityX509EC)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -3787,11 +3778,11 @@ public final class DarcOCSProto {
    * IdentityX509EC holds a public key from a X509EC
    * </pre>
    *
-   * Protobuf type {@code IdentityX509EC}
+   * Protobuf type {@code darcOCS.IdentityX509EC}
    */
   public  static final class IdentityX509EC extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:IdentityX509EC)
+      // @@protoc_insertion_point(message_implements:darcOCS.IdentityX509EC)
       IdentityX509ECOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use IdentityX509EC.newBuilder() to construct.
@@ -3812,9 +3803,6 @@ public final class DarcOCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3852,12 +3840,12 @@ public final class DarcOCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityX509EC_descriptor;
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityX509EC_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityX509EC_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityX509EC_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC.class, ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC.Builder.class);
     }
@@ -4043,20 +4031,20 @@ public final class DarcOCSProto {
      * IdentityX509EC holds a public key from a X509EC
      * </pre>
      *
-     * Protobuf type {@code IdentityX509EC}
+     * Protobuf type {@code darcOCS.IdentityX509EC}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:IdentityX509EC)
+        // @@protoc_insertion_point(builder_implements:darcOCS.IdentityX509EC)
         ch.epfl.dedis.proto.DarcOCSProto.IdentityX509ECOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityX509EC_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityX509EC_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityX509EC_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityX509EC_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC.class, ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC.Builder.class);
       }
@@ -4085,7 +4073,7 @@ public final class DarcOCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityX509EC_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityX509EC_descriptor;
       }
 
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC getDefaultInstanceForType() {
@@ -4229,10 +4217,10 @@ public final class DarcOCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:IdentityX509EC)
+      // @@protoc_insertion_point(builder_scope:darcOCS.IdentityX509EC)
     }
 
-    // @@protoc_insertion_point(class_scope:IdentityX509EC)
+    // @@protoc_insertion_point(class_scope:darcOCS.IdentityX509EC)
     private static final ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcOCSProto.IdentityX509EC();
@@ -4248,7 +4236,7 @@ public final class DarcOCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new IdentityX509EC(input, extensionRegistry);
+          return new IdentityX509EC(input, extensionRegistry);
       }
     };
 
@@ -4268,7 +4256,7 @@ public final class DarcOCSProto {
   }
 
   public interface IdentityDarcOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:IdentityDarc)
+      // @@protoc_insertion_point(interface_extends:darcOCS.IdentityDarc)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -4285,11 +4273,11 @@ public final class DarcOCSProto {
    * IdentityDarc is a structure that points to a Darc with a given DarcID on a skipchain
    * </pre>
    *
-   * Protobuf type {@code IdentityDarc}
+   * Protobuf type {@code darcOCS.IdentityDarc}
    */
   public  static final class IdentityDarc extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:IdentityDarc)
+      // @@protoc_insertion_point(message_implements:darcOCS.IdentityDarc)
       IdentityDarcOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use IdentityDarc.newBuilder() to construct.
@@ -4310,9 +4298,6 @@ public final class DarcOCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4350,12 +4335,12 @@ public final class DarcOCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityDarc_descriptor;
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityDarc_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityDarc_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityDarc_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc.class, ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc.Builder.class);
     }
@@ -4541,20 +4526,20 @@ public final class DarcOCSProto {
      * IdentityDarc is a structure that points to a Darc with a given DarcID on a skipchain
      * </pre>
      *
-     * Protobuf type {@code IdentityDarc}
+     * Protobuf type {@code darcOCS.IdentityDarc}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:IdentityDarc)
+        // @@protoc_insertion_point(builder_implements:darcOCS.IdentityDarc)
         ch.epfl.dedis.proto.DarcOCSProto.IdentityDarcOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityDarc_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityDarc_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityDarc_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityDarc_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc.class, ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc.Builder.class);
       }
@@ -4583,7 +4568,7 @@ public final class DarcOCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_IdentityDarc_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_IdentityDarc_descriptor;
       }
 
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc getDefaultInstanceForType() {
@@ -4727,10 +4712,10 @@ public final class DarcOCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:IdentityDarc)
+      // @@protoc_insertion_point(builder_scope:darcOCS.IdentityDarc)
     }
 
-    // @@protoc_insertion_point(class_scope:IdentityDarc)
+    // @@protoc_insertion_point(class_scope:darcOCS.IdentityDarc)
     private static final ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcOCSProto.IdentityDarc();
@@ -4746,7 +4731,7 @@ public final class DarcOCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new IdentityDarc(input, extensionRegistry);
+          return new IdentityDarc(input, extensionRegistry);
       }
     };
 
@@ -4766,12 +4751,12 @@ public final class DarcOCSProto {
   }
 
   public interface SignatureOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Signature)
+      // @@protoc_insertion_point(interface_extends:darcOCS.Signature)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <pre>
-     * 	 The signature itself
+     * The signature itself
      * </pre>
      *
      * <code>required bytes signature = 1;</code>
@@ -4779,7 +4764,7 @@ public final class DarcOCSProto {
     boolean hasSignature();
     /**
      * <pre>
-     * 	 The signature itself
+     * The signature itself
      * </pre>
      *
      * <code>required bytes signature = 1;</code>
@@ -4788,26 +4773,26 @@ public final class DarcOCSProto {
 
     /**
      * <pre>
-     * 	 Represents the path to get up to information to be able to verify this signature
+     * Represents the path to get up to information to be able to verify this signature
      * </pre>
      *
-     * <code>required .SignaturePath signaturepath = 2;</code>
+     * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
      */
     boolean hasSignaturepath();
     /**
      * <pre>
-     * 	 Represents the path to get up to information to be able to verify this signature
+     * Represents the path to get up to information to be able to verify this signature
      * </pre>
      *
-     * <code>required .SignaturePath signaturepath = 2;</code>
+     * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.SignaturePath getSignaturepath();
     /**
      * <pre>
-     * 	 Represents the path to get up to information to be able to verify this signature
+     * Represents the path to get up to information to be able to verify this signature
      * </pre>
      *
-     * <code>required .SignaturePath signaturepath = 2;</code>
+     * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.SignaturePathOrBuilder getSignaturepathOrBuilder();
   }
@@ -4817,11 +4802,11 @@ public final class DarcOCSProto {
    * can be verified using the appropriate identity.
    * </pre>
    *
-   * Protobuf type {@code Signature}
+   * Protobuf type {@code darcOCS.Signature}
    */
   public  static final class Signature extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Signature)
+      // @@protoc_insertion_point(message_implements:darcOCS.Signature)
       SignatureOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use Signature.newBuilder() to construct.
@@ -4842,9 +4827,6 @@ public final class DarcOCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4895,12 +4877,12 @@ public final class DarcOCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Signature_descriptor;
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Signature_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Signature_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Signature_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.DarcOCSProto.Signature.class, ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder.class);
     }
@@ -4910,7 +4892,7 @@ public final class DarcOCSProto {
     private com.google.protobuf.ByteString signature_;
     /**
      * <pre>
-     * 	 The signature itself
+     * The signature itself
      * </pre>
      *
      * <code>required bytes signature = 1;</code>
@@ -4920,7 +4902,7 @@ public final class DarcOCSProto {
     }
     /**
      * <pre>
-     * 	 The signature itself
+     * The signature itself
      * </pre>
      *
      * <code>required bytes signature = 1;</code>
@@ -4933,30 +4915,30 @@ public final class DarcOCSProto {
     private ch.epfl.dedis.proto.DarcOCSProto.SignaturePath signaturepath_;
     /**
      * <pre>
-     * 	 Represents the path to get up to information to be able to verify this signature
+     * Represents the path to get up to information to be able to verify this signature
      * </pre>
      *
-     * <code>required .SignaturePath signaturepath = 2;</code>
+     * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
      */
     public boolean hasSignaturepath() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
      * <pre>
-     * 	 Represents the path to get up to information to be able to verify this signature
+     * Represents the path to get up to information to be able to verify this signature
      * </pre>
      *
-     * <code>required .SignaturePath signaturepath = 2;</code>
+     * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.SignaturePath getSignaturepath() {
       return signaturepath_ == null ? ch.epfl.dedis.proto.DarcOCSProto.SignaturePath.getDefaultInstance() : signaturepath_;
     }
     /**
      * <pre>
-     * 	 Represents the path to get up to information to be able to verify this signature
+     * Represents the path to get up to information to be able to verify this signature
      * </pre>
      *
-     * <code>required .SignaturePath signaturepath = 2;</code>
+     * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.SignaturePathOrBuilder getSignaturepathOrBuilder() {
       return signaturepath_ == null ? ch.epfl.dedis.proto.DarcOCSProto.SignaturePath.getDefaultInstance() : signaturepath_;
@@ -5152,20 +5134,20 @@ public final class DarcOCSProto {
      * can be verified using the appropriate identity.
      * </pre>
      *
-     * Protobuf type {@code Signature}
+     * Protobuf type {@code darcOCS.Signature}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Signature)
+        // @@protoc_insertion_point(builder_implements:darcOCS.Signature)
         ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Signature_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Signature_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Signature_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Signature_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.DarcOCSProto.Signature.class, ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder.class);
       }
@@ -5201,7 +5183,7 @@ public final class DarcOCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Signature_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Signature_descriptor;
       }
 
       public ch.epfl.dedis.proto.DarcOCSProto.Signature getDefaultInstanceForType() {
@@ -5320,7 +5302,7 @@ public final class DarcOCSProto {
       private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 The signature itself
+       * The signature itself
        * </pre>
        *
        * <code>required bytes signature = 1;</code>
@@ -5330,7 +5312,7 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 The signature itself
+       * The signature itself
        * </pre>
        *
        * <code>required bytes signature = 1;</code>
@@ -5340,7 +5322,7 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 The signature itself
+       * The signature itself
        * </pre>
        *
        * <code>required bytes signature = 1;</code>
@@ -5356,7 +5338,7 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 The signature itself
+       * The signature itself
        * </pre>
        *
        * <code>required bytes signature = 1;</code>
@@ -5373,20 +5355,20 @@ public final class DarcOCSProto {
           ch.epfl.dedis.proto.DarcOCSProto.SignaturePath, ch.epfl.dedis.proto.DarcOCSProto.SignaturePath.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignaturePathOrBuilder> signaturepathBuilder_;
       /**
        * <pre>
-       * 	 Represents the path to get up to information to be able to verify this signature
+       * Represents the path to get up to information to be able to verify this signature
        * </pre>
        *
-       * <code>required .SignaturePath signaturepath = 2;</code>
+       * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
        */
       public boolean hasSignaturepath() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
        * <pre>
-       * 	 Represents the path to get up to information to be able to verify this signature
+       * Represents the path to get up to information to be able to verify this signature
        * </pre>
        *
-       * <code>required .SignaturePath signaturepath = 2;</code>
+       * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignaturePath getSignaturepath() {
         if (signaturepathBuilder_ == null) {
@@ -5397,10 +5379,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Represents the path to get up to information to be able to verify this signature
+       * Represents the path to get up to information to be able to verify this signature
        * </pre>
        *
-       * <code>required .SignaturePath signaturepath = 2;</code>
+       * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
        */
       public Builder setSignaturepath(ch.epfl.dedis.proto.DarcOCSProto.SignaturePath value) {
         if (signaturepathBuilder_ == null) {
@@ -5417,10 +5399,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Represents the path to get up to information to be able to verify this signature
+       * Represents the path to get up to information to be able to verify this signature
        * </pre>
        *
-       * <code>required .SignaturePath signaturepath = 2;</code>
+       * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
        */
       public Builder setSignaturepath(
           ch.epfl.dedis.proto.DarcOCSProto.SignaturePath.Builder builderForValue) {
@@ -5435,10 +5417,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Represents the path to get up to information to be able to verify this signature
+       * Represents the path to get up to information to be able to verify this signature
        * </pre>
        *
-       * <code>required .SignaturePath signaturepath = 2;</code>
+       * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
        */
       public Builder mergeSignaturepath(ch.epfl.dedis.proto.DarcOCSProto.SignaturePath value) {
         if (signaturepathBuilder_ == null) {
@@ -5459,10 +5441,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Represents the path to get up to information to be able to verify this signature
+       * Represents the path to get up to information to be able to verify this signature
        * </pre>
        *
-       * <code>required .SignaturePath signaturepath = 2;</code>
+       * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
        */
       public Builder clearSignaturepath() {
         if (signaturepathBuilder_ == null) {
@@ -5476,10 +5458,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Represents the path to get up to information to be able to verify this signature
+       * Represents the path to get up to information to be able to verify this signature
        * </pre>
        *
-       * <code>required .SignaturePath signaturepath = 2;</code>
+       * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignaturePath.Builder getSignaturepathBuilder() {
         bitField0_ |= 0x00000002;
@@ -5488,10 +5470,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Represents the path to get up to information to be able to verify this signature
+       * Represents the path to get up to information to be able to verify this signature
        * </pre>
        *
-       * <code>required .SignaturePath signaturepath = 2;</code>
+       * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignaturePathOrBuilder getSignaturepathOrBuilder() {
         if (signaturepathBuilder_ != null) {
@@ -5503,10 +5485,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Represents the path to get up to information to be able to verify this signature
+       * Represents the path to get up to information to be able to verify this signature
        * </pre>
        *
-       * <code>required .SignaturePath signaturepath = 2;</code>
+       * <code>required .darcOCS.SignaturePath signaturepath = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.SignaturePath, ch.epfl.dedis.proto.DarcOCSProto.SignaturePath.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignaturePathOrBuilder> 
@@ -5532,10 +5514,10 @@ public final class DarcOCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Signature)
+      // @@protoc_insertion_point(builder_scope:darcOCS.Signature)
     }
 
-    // @@protoc_insertion_point(class_scope:Signature)
+    // @@protoc_insertion_point(class_scope:darcOCS.Signature)
     private static final ch.epfl.dedis.proto.DarcOCSProto.Signature DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcOCSProto.Signature();
@@ -5551,7 +5533,7 @@ public final class DarcOCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Signature(input, extensionRegistry);
+          return new Signature(input, extensionRegistry);
       }
     };
 
@@ -5571,81 +5553,81 @@ public final class DarcOCSProto {
   }
 
   public interface SignaturePathOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:SignaturePath)
+      // @@protoc_insertion_point(interface_extends:darcOCS.SignaturePath)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
+     * Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc> 
         getDarcsList();
     /**
      * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
+     * Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Darc getDarcs(int index);
     /**
      * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
+     * Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     int getDarcsCount();
     /**
      * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
+     * Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
         getDarcsOrBuilderList();
     /**
      * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
+     * Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getDarcsOrBuilder(
         int index);
 
     /**
      * <pre>
-     * 	 the Idenity (public key or another Darc) of the signer
+     * the Idenity (public key or another Darc) of the signer
      * </pre>
      *
-     * <code>required .Identity signer = 2;</code>
+     * <code>required .darcOCS.Identity signer = 2;</code>
      */
     boolean hasSigner();
     /**
      * <pre>
-     * 	 the Idenity (public key or another Darc) of the signer
+     * the Idenity (public key or another Darc) of the signer
      * </pre>
      *
-     * <code>required .Identity signer = 2;</code>
+     * <code>required .darcOCS.Identity signer = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Identity getSigner();
     /**
      * <pre>
-     * 	 the Idenity (public key or another Darc) of the signer
+     * the Idenity (public key or another Darc) of the signer
      * </pre>
      *
-     * <code>required .Identity signer = 2;</code>
+     * <code>required .darcOCS.Identity signer = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getSignerOrBuilder();
 
     /**
      * <pre>
-     * 	 Is the signer Owner of a Darc or an user
+     * Is the signer Owner of a Darc or an user
      * </pre>
      *
      * <code>required sint32 role = 3;</code>
@@ -5653,7 +5635,7 @@ public final class DarcOCSProto {
     boolean hasRole();
     /**
      * <pre>
-     * 	 Is the signer Owner of a Darc or an user
+     * Is the signer Owner of a Darc or an user
      * </pre>
      *
      * <code>required sint32 role = 3;</code>
@@ -5665,11 +5647,11 @@ public final class DarcOCSProto {
    * SignaturePath is a struct that holds information necessary for signature verification
    * </pre>
    *
-   * Protobuf type {@code SignaturePath}
+   * Protobuf type {@code darcOCS.SignaturePath}
    */
   public  static final class SignaturePath extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:SignaturePath)
+      // @@protoc_insertion_point(message_implements:darcOCS.SignaturePath)
       SignaturePathOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use SignaturePath.newBuilder() to construct.
@@ -5691,9 +5673,6 @@ public final class DarcOCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5756,12 +5735,12 @@ public final class DarcOCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignaturePath_descriptor;
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignaturePath_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignaturePath_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignaturePath_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.DarcOCSProto.SignaturePath.class, ch.epfl.dedis.proto.DarcOCSProto.SignaturePath.Builder.class);
     }
@@ -5771,20 +5750,20 @@ public final class DarcOCSProto {
     private java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc> darcs_;
     /**
      * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
+     * Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc> getDarcsList() {
       return darcs_;
     }
     /**
      * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
+     * Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     public java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
         getDarcsOrBuilderList() {
@@ -5792,30 +5771,30 @@ public final class DarcOCSProto {
     }
     /**
      * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
+     * Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     public int getDarcsCount() {
       return darcs_.size();
     }
     /**
      * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
+     * Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Darc getDarcs(int index) {
       return darcs_.get(index);
     }
     /**
      * <pre>
-     * 	 Darc(s) that justify the right of the signer to push a new Darc
+     * Darc(s) that justify the right of the signer to push a new Darc
      * </pre>
      *
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getDarcsOrBuilder(
         int index) {
@@ -5826,30 +5805,30 @@ public final class DarcOCSProto {
     private ch.epfl.dedis.proto.DarcOCSProto.Identity signer_;
     /**
      * <pre>
-     * 	 the Idenity (public key or another Darc) of the signer
+     * the Idenity (public key or another Darc) of the signer
      * </pre>
      *
-     * <code>required .Identity signer = 2;</code>
+     * <code>required .darcOCS.Identity signer = 2;</code>
      */
     public boolean hasSigner() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
      * <pre>
-     * 	 the Idenity (public key or another Darc) of the signer
+     * the Idenity (public key or another Darc) of the signer
      * </pre>
      *
-     * <code>required .Identity signer = 2;</code>
+     * <code>required .darcOCS.Identity signer = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Identity getSigner() {
       return signer_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Identity.getDefaultInstance() : signer_;
     }
     /**
      * <pre>
-     * 	 the Idenity (public key or another Darc) of the signer
+     * the Idenity (public key or another Darc) of the signer
      * </pre>
      *
-     * <code>required .Identity signer = 2;</code>
+     * <code>required .darcOCS.Identity signer = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getSignerOrBuilder() {
       return signer_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Identity.getDefaultInstance() : signer_;
@@ -5859,7 +5838,7 @@ public final class DarcOCSProto {
     private int role_;
     /**
      * <pre>
-     * 	 Is the signer Owner of a Darc or an user
+     * Is the signer Owner of a Darc or an user
      * </pre>
      *
      * <code>required sint32 role = 3;</code>
@@ -5869,7 +5848,7 @@ public final class DarcOCSProto {
     }
     /**
      * <pre>
-     * 	 Is the signer Owner of a Darc or an user
+     * Is the signer Owner of a Darc or an user
      * </pre>
      *
      * <code>required sint32 role = 3;</code>
@@ -6086,20 +6065,20 @@ public final class DarcOCSProto {
      * SignaturePath is a struct that holds information necessary for signature verification
      * </pre>
      *
-     * Protobuf type {@code SignaturePath}
+     * Protobuf type {@code darcOCS.SignaturePath}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:SignaturePath)
+        // @@protoc_insertion_point(builder_implements:darcOCS.SignaturePath)
         ch.epfl.dedis.proto.DarcOCSProto.SignaturePathOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignaturePath_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignaturePath_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignaturePath_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignaturePath_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.DarcOCSProto.SignaturePath.class, ch.epfl.dedis.proto.DarcOCSProto.SignaturePath.Builder.class);
       }
@@ -6142,7 +6121,7 @@ public final class DarcOCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignaturePath_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignaturePath_descriptor;
       }
 
       public ch.epfl.dedis.proto.DarcOCSProto.SignaturePath getDefaultInstanceForType() {
@@ -6312,10 +6291,10 @@ public final class DarcOCSProto {
 
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc> getDarcsList() {
         if (darcsBuilder_ == null) {
@@ -6326,10 +6305,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public int getDarcsCount() {
         if (darcsBuilder_ == null) {
@@ -6340,10 +6319,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc getDarcs(int index) {
         if (darcsBuilder_ == null) {
@@ -6354,10 +6333,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder setDarcs(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
@@ -6375,10 +6354,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder setDarcs(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -6393,10 +6372,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder addDarcs(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (darcsBuilder_ == null) {
@@ -6413,10 +6392,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder addDarcs(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
@@ -6434,10 +6413,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder addDarcs(
           ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -6452,10 +6431,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder addDarcs(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -6470,10 +6449,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder addAllDarcs(
           java.lang.Iterable<? extends ch.epfl.dedis.proto.DarcOCSProto.Darc> values) {
@@ -6489,10 +6468,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder clearDarcs() {
         if (darcsBuilder_ == null) {
@@ -6506,10 +6485,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder removeDarcs(int index) {
         if (darcsBuilder_ == null) {
@@ -6523,10 +6502,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder getDarcsBuilder(
           int index) {
@@ -6534,10 +6513,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getDarcsOrBuilder(
           int index) {
@@ -6548,10 +6527,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
            getDarcsOrBuilderList() {
@@ -6563,10 +6542,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder addDarcsBuilder() {
         return getDarcsFieldBuilder().addBuilder(
@@ -6574,10 +6553,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder addDarcsBuilder(
           int index) {
@@ -6586,10 +6565,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Darc(s) that justify the right of the signer to push a new Darc
+       * Darc(s) that justify the right of the signer to push a new Darc
        * </pre>
        *
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder> 
            getDarcsBuilderList() {
@@ -6615,20 +6594,20 @@ public final class DarcOCSProto {
           ch.epfl.dedis.proto.DarcOCSProto.Identity, ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder, ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder> signerBuilder_;
       /**
        * <pre>
-       * 	 the Idenity (public key or another Darc) of the signer
+       * the Idenity (public key or another Darc) of the signer
        * </pre>
        *
-       * <code>required .Identity signer = 2;</code>
+       * <code>required .darcOCS.Identity signer = 2;</code>
        */
       public boolean hasSigner() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
        * <pre>
-       * 	 the Idenity (public key or another Darc) of the signer
+       * the Idenity (public key or another Darc) of the signer
        * </pre>
        *
-       * <code>required .Identity signer = 2;</code>
+       * <code>required .darcOCS.Identity signer = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity getSigner() {
         if (signerBuilder_ == null) {
@@ -6639,10 +6618,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 the Idenity (public key or another Darc) of the signer
+       * the Idenity (public key or another Darc) of the signer
        * </pre>
        *
-       * <code>required .Identity signer = 2;</code>
+       * <code>required .darcOCS.Identity signer = 2;</code>
        */
       public Builder setSigner(ch.epfl.dedis.proto.DarcOCSProto.Identity value) {
         if (signerBuilder_ == null) {
@@ -6659,10 +6638,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 the Idenity (public key or another Darc) of the signer
+       * the Idenity (public key or another Darc) of the signer
        * </pre>
        *
-       * <code>required .Identity signer = 2;</code>
+       * <code>required .darcOCS.Identity signer = 2;</code>
        */
       public Builder setSigner(
           ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder builderForValue) {
@@ -6677,10 +6656,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 the Idenity (public key or another Darc) of the signer
+       * the Idenity (public key or another Darc) of the signer
        * </pre>
        *
-       * <code>required .Identity signer = 2;</code>
+       * <code>required .darcOCS.Identity signer = 2;</code>
        */
       public Builder mergeSigner(ch.epfl.dedis.proto.DarcOCSProto.Identity value) {
         if (signerBuilder_ == null) {
@@ -6701,10 +6680,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 the Idenity (public key or another Darc) of the signer
+       * the Idenity (public key or another Darc) of the signer
        * </pre>
        *
-       * <code>required .Identity signer = 2;</code>
+       * <code>required .darcOCS.Identity signer = 2;</code>
        */
       public Builder clearSigner() {
         if (signerBuilder_ == null) {
@@ -6718,10 +6697,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 the Idenity (public key or another Darc) of the signer
+       * the Idenity (public key or another Darc) of the signer
        * </pre>
        *
-       * <code>required .Identity signer = 2;</code>
+       * <code>required .darcOCS.Identity signer = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder getSignerBuilder() {
         bitField0_ |= 0x00000002;
@@ -6730,10 +6709,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 the Idenity (public key or another Darc) of the signer
+       * the Idenity (public key or another Darc) of the signer
        * </pre>
        *
-       * <code>required .Identity signer = 2;</code>
+       * <code>required .darcOCS.Identity signer = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getSignerOrBuilder() {
         if (signerBuilder_ != null) {
@@ -6745,10 +6724,10 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 the Idenity (public key or another Darc) of the signer
+       * the Idenity (public key or another Darc) of the signer
        * </pre>
        *
-       * <code>required .Identity signer = 2;</code>
+       * <code>required .darcOCS.Identity signer = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Identity, ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder, ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder> 
@@ -6767,7 +6746,7 @@ public final class DarcOCSProto {
       private int role_ ;
       /**
        * <pre>
-       * 	 Is the signer Owner of a Darc or an user
+       * Is the signer Owner of a Darc or an user
        * </pre>
        *
        * <code>required sint32 role = 3;</code>
@@ -6777,7 +6756,7 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Is the signer Owner of a Darc or an user
+       * Is the signer Owner of a Darc or an user
        * </pre>
        *
        * <code>required sint32 role = 3;</code>
@@ -6787,7 +6766,7 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Is the signer Owner of a Darc or an user
+       * Is the signer Owner of a Darc or an user
        * </pre>
        *
        * <code>required sint32 role = 3;</code>
@@ -6800,7 +6779,7 @@ public final class DarcOCSProto {
       }
       /**
        * <pre>
-       * 	 Is the signer Owner of a Darc or an user
+       * Is the signer Owner of a Darc or an user
        * </pre>
        *
        * <code>required sint32 role = 3;</code>
@@ -6822,10 +6801,10 @@ public final class DarcOCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:SignaturePath)
+      // @@protoc_insertion_point(builder_scope:darcOCS.SignaturePath)
     }
 
-    // @@protoc_insertion_point(class_scope:SignaturePath)
+    // @@protoc_insertion_point(class_scope:darcOCS.SignaturePath)
     private static final ch.epfl.dedis.proto.DarcOCSProto.SignaturePath DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcOCSProto.SignaturePath();
@@ -6841,7 +6820,7 @@ public final class DarcOCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SignaturePath(input, extensionRegistry);
+          return new SignaturePath(input, extensionRegistry);
       }
     };
 
@@ -6861,32 +6840,32 @@ public final class DarcOCSProto {
   }
 
   public interface SignerOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Signer)
+      // @@protoc_insertion_point(interface_extends:darcOCS.Signer)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional .SignerEd25519 ed25519 = 1;</code>
+     * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
      */
     boolean hasEd25519();
     /**
-     * <code>optional .SignerEd25519 ed25519 = 1;</code>
+     * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519 getEd25519();
     /**
-     * <code>optional .SignerEd25519 ed25519 = 1;</code>
+     * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519OrBuilder getEd25519OrBuilder();
 
     /**
-     * <code>optional .SignerX509EC x509ec = 2;</code>
+     * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
      */
     boolean hasX509Ec();
     /**
-     * <code>optional .SignerX509EC x509ec = 2;</code>
+     * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC getX509Ec();
     /**
-     * <code>optional .SignerX509EC x509ec = 2;</code>
+     * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.SignerX509ECOrBuilder getX509EcOrBuilder();
   }
@@ -6895,11 +6874,11 @@ public final class DarcOCSProto {
    * Signer is a generic structure that can hold different types of signers
    * </pre>
    *
-   * Protobuf type {@code Signer}
+   * Protobuf type {@code darcOCS.Signer}
    */
   public  static final class Signer extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Signer)
+      // @@protoc_insertion_point(message_implements:darcOCS.Signer)
       SignerOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use Signer.newBuilder() to construct.
@@ -6919,9 +6898,6 @@ public final class DarcOCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6980,12 +6956,12 @@ public final class DarcOCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Signer_descriptor;
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Signer_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Signer_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Signer_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.DarcOCSProto.Signer.class, ch.epfl.dedis.proto.DarcOCSProto.Signer.Builder.class);
     }
@@ -6994,19 +6970,19 @@ public final class DarcOCSProto {
     public static final int ED25519_FIELD_NUMBER = 1;
     private ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519 ed25519_;
     /**
-     * <code>optional .SignerEd25519 ed25519 = 1;</code>
+     * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
      */
     public boolean hasEd25519() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional .SignerEd25519 ed25519 = 1;</code>
+     * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519 getEd25519() {
       return ed25519_ == null ? ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519.getDefaultInstance() : ed25519_;
     }
     /**
-     * <code>optional .SignerEd25519 ed25519 = 1;</code>
+     * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519OrBuilder getEd25519OrBuilder() {
       return ed25519_ == null ? ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519.getDefaultInstance() : ed25519_;
@@ -7015,19 +6991,19 @@ public final class DarcOCSProto {
     public static final int X509EC_FIELD_NUMBER = 2;
     private ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC x509Ec_;
     /**
-     * <code>optional .SignerX509EC x509ec = 2;</code>
+     * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
      */
     public boolean hasX509Ec() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>optional .SignerX509EC x509ec = 2;</code>
+     * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC getX509Ec() {
       return x509Ec_ == null ? ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC.getDefaultInstance() : x509Ec_;
     }
     /**
-     * <code>optional .SignerX509EC x509ec = 2;</code>
+     * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.SignerX509ECOrBuilder getX509EcOrBuilder() {
       return x509Ec_ == null ? ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC.getDefaultInstance() : x509Ec_;
@@ -7222,20 +7198,20 @@ public final class DarcOCSProto {
      * Signer is a generic structure that can hold different types of signers
      * </pre>
      *
-     * Protobuf type {@code Signer}
+     * Protobuf type {@code darcOCS.Signer}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Signer)
+        // @@protoc_insertion_point(builder_implements:darcOCS.Signer)
         ch.epfl.dedis.proto.DarcOCSProto.SignerOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Signer_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Signer_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Signer_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Signer_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.DarcOCSProto.Signer.class, ch.epfl.dedis.proto.DarcOCSProto.Signer.Builder.class);
       }
@@ -7276,7 +7252,7 @@ public final class DarcOCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_Signer_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_Signer_descriptor;
       }
 
       public ch.epfl.dedis.proto.DarcOCSProto.Signer getDefaultInstanceForType() {
@@ -7401,13 +7377,13 @@ public final class DarcOCSProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519, ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519OrBuilder> ed25519Builder_;
       /**
-       * <code>optional .SignerEd25519 ed25519 = 1;</code>
+       * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
        */
       public boolean hasEd25519() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional .SignerEd25519 ed25519 = 1;</code>
+       * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519 getEd25519() {
         if (ed25519Builder_ == null) {
@@ -7417,7 +7393,7 @@ public final class DarcOCSProto {
         }
       }
       /**
-       * <code>optional .SignerEd25519 ed25519 = 1;</code>
+       * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
        */
       public Builder setEd25519(ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519 value) {
         if (ed25519Builder_ == null) {
@@ -7433,7 +7409,7 @@ public final class DarcOCSProto {
         return this;
       }
       /**
-       * <code>optional .SignerEd25519 ed25519 = 1;</code>
+       * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
        */
       public Builder setEd25519(
           ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519.Builder builderForValue) {
@@ -7447,7 +7423,7 @@ public final class DarcOCSProto {
         return this;
       }
       /**
-       * <code>optional .SignerEd25519 ed25519 = 1;</code>
+       * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
        */
       public Builder mergeEd25519(ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519 value) {
         if (ed25519Builder_ == null) {
@@ -7467,7 +7443,7 @@ public final class DarcOCSProto {
         return this;
       }
       /**
-       * <code>optional .SignerEd25519 ed25519 = 1;</code>
+       * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
        */
       public Builder clearEd25519() {
         if (ed25519Builder_ == null) {
@@ -7480,7 +7456,7 @@ public final class DarcOCSProto {
         return this;
       }
       /**
-       * <code>optional .SignerEd25519 ed25519 = 1;</code>
+       * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519.Builder getEd25519Builder() {
         bitField0_ |= 0x00000001;
@@ -7488,7 +7464,7 @@ public final class DarcOCSProto {
         return getEd25519FieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .SignerEd25519 ed25519 = 1;</code>
+       * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519OrBuilder getEd25519OrBuilder() {
         if (ed25519Builder_ != null) {
@@ -7499,7 +7475,7 @@ public final class DarcOCSProto {
         }
       }
       /**
-       * <code>optional .SignerEd25519 ed25519 = 1;</code>
+       * <code>optional .darcOCS.SignerEd25519 ed25519 = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519, ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519OrBuilder> 
@@ -7519,13 +7495,13 @@ public final class DarcOCSProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC, ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignerX509ECOrBuilder> x509EcBuilder_;
       /**
-       * <code>optional .SignerX509EC x509ec = 2;</code>
+       * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
        */
       public boolean hasX509Ec() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>optional .SignerX509EC x509ec = 2;</code>
+       * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC getX509Ec() {
         if (x509EcBuilder_ == null) {
@@ -7535,7 +7511,7 @@ public final class DarcOCSProto {
         }
       }
       /**
-       * <code>optional .SignerX509EC x509ec = 2;</code>
+       * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
        */
       public Builder setX509Ec(ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC value) {
         if (x509EcBuilder_ == null) {
@@ -7551,7 +7527,7 @@ public final class DarcOCSProto {
         return this;
       }
       /**
-       * <code>optional .SignerX509EC x509ec = 2;</code>
+       * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
        */
       public Builder setX509Ec(
           ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC.Builder builderForValue) {
@@ -7565,7 +7541,7 @@ public final class DarcOCSProto {
         return this;
       }
       /**
-       * <code>optional .SignerX509EC x509ec = 2;</code>
+       * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
        */
       public Builder mergeX509Ec(ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC value) {
         if (x509EcBuilder_ == null) {
@@ -7585,7 +7561,7 @@ public final class DarcOCSProto {
         return this;
       }
       /**
-       * <code>optional .SignerX509EC x509ec = 2;</code>
+       * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
        */
       public Builder clearX509Ec() {
         if (x509EcBuilder_ == null) {
@@ -7598,7 +7574,7 @@ public final class DarcOCSProto {
         return this;
       }
       /**
-       * <code>optional .SignerX509EC x509ec = 2;</code>
+       * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC.Builder getX509EcBuilder() {
         bitField0_ |= 0x00000002;
@@ -7606,7 +7582,7 @@ public final class DarcOCSProto {
         return getX509EcFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .SignerX509EC x509ec = 2;</code>
+       * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignerX509ECOrBuilder getX509EcOrBuilder() {
         if (x509EcBuilder_ != null) {
@@ -7617,7 +7593,7 @@ public final class DarcOCSProto {
         }
       }
       /**
-       * <code>optional .SignerX509EC x509ec = 2;</code>
+       * <code>optional .darcOCS.SignerX509EC x509ec = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC, ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignerX509ECOrBuilder> 
@@ -7643,10 +7619,10 @@ public final class DarcOCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Signer)
+      // @@protoc_insertion_point(builder_scope:darcOCS.Signer)
     }
 
-    // @@protoc_insertion_point(class_scope:Signer)
+    // @@protoc_insertion_point(class_scope:darcOCS.Signer)
     private static final ch.epfl.dedis.proto.DarcOCSProto.Signer DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcOCSProto.Signer();
@@ -7662,7 +7638,7 @@ public final class DarcOCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Signer(input, extensionRegistry);
+          return new Signer(input, extensionRegistry);
       }
     };
 
@@ -7682,7 +7658,7 @@ public final class DarcOCSProto {
   }
 
   public interface SignerEd25519OrBuilder extends
-      // @@protoc_insertion_point(interface_extends:SignerEd25519)
+      // @@protoc_insertion_point(interface_extends:darcOCS.SignerEd25519)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -7708,11 +7684,11 @@ public final class DarcOCSProto {
    * SignerEd25519 holds a public and private keys necessary to sign Darcs
    * </pre>
    *
-   * Protobuf type {@code SignerEd25519}
+   * Protobuf type {@code darcOCS.SignerEd25519}
    */
   public  static final class SignerEd25519 extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:SignerEd25519)
+      // @@protoc_insertion_point(message_implements:darcOCS.SignerEd25519)
       SignerEd25519OrBuilder {
   private static final long serialVersionUID = 0L;
     // Use SignerEd25519.newBuilder() to construct.
@@ -7734,9 +7710,6 @@ public final class DarcOCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7779,12 +7752,12 @@ public final class DarcOCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignerEd25519_descriptor;
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignerEd25519_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignerEd25519_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignerEd25519_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519.class, ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519.Builder.class);
     }
@@ -8005,20 +7978,20 @@ public final class DarcOCSProto {
      * SignerEd25519 holds a public and private keys necessary to sign Darcs
      * </pre>
      *
-     * Protobuf type {@code SignerEd25519}
+     * Protobuf type {@code darcOCS.SignerEd25519}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:SignerEd25519)
+        // @@protoc_insertion_point(builder_implements:darcOCS.SignerEd25519)
         ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519OrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignerEd25519_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignerEd25519_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignerEd25519_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignerEd25519_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519.class, ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519.Builder.class);
       }
@@ -8049,7 +8022,7 @@ public final class DarcOCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignerEd25519_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignerEd25519_descriptor;
       }
 
       public ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519 getDefaultInstanceForType() {
@@ -8238,10 +8211,10 @@ public final class DarcOCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:SignerEd25519)
+      // @@protoc_insertion_point(builder_scope:darcOCS.SignerEd25519)
     }
 
-    // @@protoc_insertion_point(class_scope:SignerEd25519)
+    // @@protoc_insertion_point(class_scope:darcOCS.SignerEd25519)
     private static final ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519 DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcOCSProto.SignerEd25519();
@@ -8257,7 +8230,7 @@ public final class DarcOCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SignerEd25519(input, extensionRegistry);
+          return new SignerEd25519(input, extensionRegistry);
       }
     };
 
@@ -8277,7 +8250,7 @@ public final class DarcOCSProto {
   }
 
   public interface SignerX509ECOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:SignerX509EC)
+      // @@protoc_insertion_point(interface_extends:darcOCS.SignerX509EC)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -8288,15 +8261,6 @@ public final class DarcOCSProto {
      * <code>required bytes point = 1;</code>
      */
     com.google.protobuf.ByteString getPoint();
-
-    /**
-     * <code>required bytes secret = 2;</code>
-     */
-    boolean hasSecret();
-    /**
-     * <code>required bytes secret = 2;</code>
-     */
-    com.google.protobuf.ByteString getSecret();
   }
   /**
    * <pre>
@@ -8304,11 +8268,11 @@ public final class DarcOCSProto {
    * but the private key will not be given out.
    * </pre>
    *
-   * Protobuf type {@code SignerX509EC}
+   * Protobuf type {@code darcOCS.SignerX509EC}
    */
   public  static final class SignerX509EC extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:SignerX509EC)
+      // @@protoc_insertion_point(message_implements:darcOCS.SignerX509EC)
       SignerX509ECOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use SignerX509EC.newBuilder() to construct.
@@ -8317,7 +8281,6 @@ public final class DarcOCSProto {
     }
     private SignerX509EC() {
       point_ = com.google.protobuf.ByteString.EMPTY;
-      secret_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -8330,9 +8293,6 @@ public final class DarcOCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8356,11 +8316,6 @@ public final class DarcOCSProto {
               point_ = input.readBytes();
               break;
             }
-            case 18: {
-              bitField0_ |= 0x00000002;
-              secret_ = input.readBytes();
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -8375,12 +8330,12 @@ public final class DarcOCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignerX509EC_descriptor;
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignerX509EC_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignerX509EC_fieldAccessorTable
+      return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignerX509EC_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC.class, ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC.Builder.class);
     }
@@ -8401,21 +8356,6 @@ public final class DarcOCSProto {
       return point_;
     }
 
-    public static final int SECRET_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString secret_;
-    /**
-     * <code>required bytes secret = 2;</code>
-     */
-    public boolean hasSecret() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required bytes secret = 2;</code>
-     */
-    public com.google.protobuf.ByteString getSecret() {
-      return secret_;
-    }
-
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -8423,10 +8363,6 @@ public final class DarcOCSProto {
       if (isInitialized == 0) return false;
 
       if (!hasPoint()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasSecret()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -8439,9 +8375,6 @@ public final class DarcOCSProto {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeBytes(1, point_);
       }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, secret_);
-      }
       unknownFields.writeTo(output);
     }
 
@@ -8453,10 +8386,6 @@ public final class DarcOCSProto {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, point_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, secret_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -8479,11 +8408,6 @@ public final class DarcOCSProto {
         result = result && getPoint()
             .equals(other.getPoint());
       }
-      result = result && (hasSecret() == other.hasSecret());
-      if (hasSecret()) {
-        result = result && getSecret()
-            .equals(other.getSecret());
-      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -8498,10 +8422,6 @@ public final class DarcOCSProto {
       if (hasPoint()) {
         hash = (37 * hash) + POINT_FIELD_NUMBER;
         hash = (53 * hash) + getPoint().hashCode();
-      }
-      if (hasSecret()) {
-        hash = (37 * hash) + SECRET_FIELD_NUMBER;
-        hash = (53 * hash) + getSecret().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -8602,20 +8522,20 @@ public final class DarcOCSProto {
      * but the private key will not be given out.
      * </pre>
      *
-     * Protobuf type {@code SignerX509EC}
+     * Protobuf type {@code darcOCS.SignerX509EC}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:SignerX509EC)
+        // @@protoc_insertion_point(builder_implements:darcOCS.SignerX509EC)
         ch.epfl.dedis.proto.DarcOCSProto.SignerX509ECOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignerX509EC_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignerX509EC_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignerX509EC_fieldAccessorTable
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignerX509EC_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC.class, ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC.Builder.class);
       }
@@ -8639,14 +8559,12 @@ public final class DarcOCSProto {
         super.clear();
         point_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
-        secret_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_SignerX509EC_descriptor;
+        return ch.epfl.dedis.proto.DarcOCSProto.internal_static_darcOCS_SignerX509EC_descriptor;
       }
 
       public ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC getDefaultInstanceForType() {
@@ -8669,10 +8587,6 @@ public final class DarcOCSProto {
           to_bitField0_ |= 0x00000001;
         }
         result.point_ = point_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.secret_ = secret_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -8718,9 +8632,6 @@ public final class DarcOCSProto {
         if (other.hasPoint()) {
           setPoint(other.getPoint());
         }
-        if (other.hasSecret()) {
-          setSecret(other.getSecret());
-        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -8728,9 +8639,6 @@ public final class DarcOCSProto {
 
       public final boolean isInitialized() {
         if (!hasPoint()) {
-          return false;
-        }
-        if (!hasSecret()) {
           return false;
         }
         return true;
@@ -8789,41 +8697,6 @@ public final class DarcOCSProto {
         onChanged();
         return this;
       }
-
-      private com.google.protobuf.ByteString secret_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes secret = 2;</code>
-       */
-      public boolean hasSecret() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required bytes secret = 2;</code>
-       */
-      public com.google.protobuf.ByteString getSecret() {
-        return secret_;
-      }
-      /**
-       * <code>required bytes secret = 2;</code>
-       */
-      public Builder setSecret(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        secret_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes secret = 2;</code>
-       */
-      public Builder clearSecret() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        secret_ = getDefaultInstance().getSecret();
-        onChanged();
-        return this;
-      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
@@ -8835,10 +8708,10 @@ public final class DarcOCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:SignerX509EC)
+      // @@protoc_insertion_point(builder_scope:darcOCS.SignerX509EC)
     }
 
-    // @@protoc_insertion_point(class_scope:SignerX509EC)
+    // @@protoc_insertion_point(class_scope:darcOCS.SignerX509EC)
     private static final ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.DarcOCSProto.SignerX509EC();
@@ -8854,7 +8727,7 @@ public final class DarcOCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SignerX509EC(input, extensionRegistry);
+          return new SignerX509EC(input, extensionRegistry);
       }
     };
 
@@ -8874,55 +8747,55 @@ public final class DarcOCSProto {
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Darc_descriptor;
+    internal_static_darcOCS_Darc_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Darc_fieldAccessorTable;
+      internal_static_darcOCS_Darc_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Identity_descriptor;
+    internal_static_darcOCS_Identity_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Identity_fieldAccessorTable;
+      internal_static_darcOCS_Identity_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_IdentityEd25519_descriptor;
+    internal_static_darcOCS_IdentityEd25519_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_IdentityEd25519_fieldAccessorTable;
+      internal_static_darcOCS_IdentityEd25519_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_IdentityX509EC_descriptor;
+    internal_static_darcOCS_IdentityX509EC_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_IdentityX509EC_fieldAccessorTable;
+      internal_static_darcOCS_IdentityX509EC_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_IdentityDarc_descriptor;
+    internal_static_darcOCS_IdentityDarc_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_IdentityDarc_fieldAccessorTable;
+      internal_static_darcOCS_IdentityDarc_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Signature_descriptor;
+    internal_static_darcOCS_Signature_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Signature_fieldAccessorTable;
+      internal_static_darcOCS_Signature_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_SignaturePath_descriptor;
+    internal_static_darcOCS_SignaturePath_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_SignaturePath_fieldAccessorTable;
+      internal_static_darcOCS_SignaturePath_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Signer_descriptor;
+    internal_static_darcOCS_Signer_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Signer_fieldAccessorTable;
+      internal_static_darcOCS_Signer_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_SignerEd25519_descriptor;
+    internal_static_darcOCS_SignerEd25519_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_SignerEd25519_fieldAccessorTable;
+      internal_static_darcOCS_SignerEd25519_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_SignerX509EC_descriptor;
+    internal_static_darcOCS_SignerX509EC_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_SignerX509EC_fieldAccessorTable;
+      internal_static_darcOCS_SignerX509EC_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -8932,25 +8805,27 @@ public final class DarcOCSProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rdarcOCS.proto\"\220\001\n\004Darc\022\031\n\006owners\030\001 \003(\013" +
-      "2\t.Identity\022\030\n\005users\030\002 \003(\0132\t.Identity\022\017\n" +
-      "\007version\030\003 \002(\021\022\023\n\013description\030\004 \001(\014\022\016\n\006b" +
-      "aseid\030\005 \001(\014\022\035\n\tsignature\030\006 \001(\0132\n.Signatu" +
-      "re\"k\n\010Identity\022\033\n\004darc\030\001 \001(\0132\r.IdentityD" +
-      "arc\022!\n\007ed25519\030\002 \001(\0132\020.IdentityEd25519\022\037" +
-      "\n\006x509ec\030\003 \001(\0132\017.IdentityX509EC\" \n\017Ident" +
-      "ityEd25519\022\r\n\005point\030\001 \002(\014\" \n\016IdentityX50" +
-      "9EC\022\016\n\006public\030\001 \002(\014\"\032\n\014IdentityDarc\022\n\n\002i" +
-      "d\030\001 \002(\014\"E\n\tSignature\022\021\n\tsignature\030\001 \002(\014\022" +
-      "%\n\rsignaturepath\030\002 \002(\0132\016.SignaturePath\"N" +
-      "\n\rSignaturePath\022\024\n\005darcs\030\001 \003(\0132\005.Darc\022\031\n" +
-      "\006signer\030\002 \002(\0132\t.Identity\022\014\n\004role\030\003 \002(\021\"H" +
-      "\n\006Signer\022\037\n\007ed25519\030\001 \001(\0132\016.SignerEd2551" +
-      "9\022\035\n\006x509ec\030\002 \001(\0132\r.SignerX509EC\".\n\rSign" +
-      "erEd25519\022\r\n\005point\030\001 \002(\014\022\016\n\006secret\030\002 \002(\014" +
-      "\"-\n\014SignerX509EC\022\r\n\005point\030\001 \002(\014\022\016\n\006secre" +
-      "t\030\002 \002(\014B#\n\023ch.epfl.dedis.protoB\014DarcOCSP" +
-      "roto"
+      "\n\rdarcOCS.proto\022\007darcOCS\"\250\001\n\004Darc\022!\n\006own" +
+      "ers\030\001 \003(\0132\021.darcOCS.Identity\022 \n\005users\030\002 " +
+      "\003(\0132\021.darcOCS.Identity\022\017\n\007version\030\003 \002(\021\022" +
+      "\023\n\013description\030\004 \001(\014\022\016\n\006baseid\030\005 \001(\014\022%\n\t" +
+      "signature\030\006 \001(\0132\022.darcOCS.Signature\"\203\001\n\010" +
+      "Identity\022#\n\004darc\030\001 \001(\0132\025.darcOCS.Identit" +
+      "yDarc\022)\n\007ed25519\030\002 \001(\0132\030.darcOCS.Identit" +
+      "yEd25519\022\'\n\006x509ec\030\003 \001(\0132\027.darcOCS.Ident" +
+      "ityX509EC\" \n\017IdentityEd25519\022\r\n\005point\030\001 " +
+      "\002(\014\" \n\016IdentityX509EC\022\016\n\006public\030\001 \002(\014\"\032\n",
+      "\014IdentityDarc\022\n\n\002id\030\001 \002(\014\"M\n\tSignature\022\021" +
+      "\n\tsignature\030\001 \002(\014\022-\n\rsignaturepath\030\002 \002(\013" +
+      "2\026.darcOCS.SignaturePath\"^\n\rSignaturePat" +
+      "h\022\034\n\005darcs\030\001 \003(\0132\r.darcOCS.Darc\022!\n\006signe" +
+      "r\030\002 \002(\0132\021.darcOCS.Identity\022\014\n\004role\030\003 \002(\021" +
+      "\"X\n\006Signer\022\'\n\007ed25519\030\001 \001(\0132\026.darcOCS.Si" +
+      "gnerEd25519\022%\n\006x509ec\030\002 \001(\0132\025.darcOCS.Si" +
+      "gnerX509EC\".\n\rSignerEd25519\022\r\n\005point\030\001 \002" +
+      "(\014\022\016\n\006secret\030\002 \002(\014\"\035\n\014SignerX509EC\022\r\n\005po" +
+      "int\030\001 \002(\014B#\n\023ch.epfl.dedis.protoB\014DarcOC",
+      "SProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -8964,66 +8839,66 @@ public final class DarcOCSProto {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
-    internal_static_Darc_descriptor =
+    internal_static_darcOCS_Darc_descriptor =
       getDescriptor().getMessageTypes().get(0);
-    internal_static_Darc_fieldAccessorTable = new
+    internal_static_darcOCS_Darc_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Darc_descriptor,
+        internal_static_darcOCS_Darc_descriptor,
         new java.lang.String[] { "Owners", "Users", "Version", "Description", "Baseid", "Signature", });
-    internal_static_Identity_descriptor =
+    internal_static_darcOCS_Identity_descriptor =
       getDescriptor().getMessageTypes().get(1);
-    internal_static_Identity_fieldAccessorTable = new
+    internal_static_darcOCS_Identity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Identity_descriptor,
+        internal_static_darcOCS_Identity_descriptor,
         new java.lang.String[] { "Darc", "Ed25519", "X509Ec", });
-    internal_static_IdentityEd25519_descriptor =
+    internal_static_darcOCS_IdentityEd25519_descriptor =
       getDescriptor().getMessageTypes().get(2);
-    internal_static_IdentityEd25519_fieldAccessorTable = new
+    internal_static_darcOCS_IdentityEd25519_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_IdentityEd25519_descriptor,
+        internal_static_darcOCS_IdentityEd25519_descriptor,
         new java.lang.String[] { "Point", });
-    internal_static_IdentityX509EC_descriptor =
+    internal_static_darcOCS_IdentityX509EC_descriptor =
       getDescriptor().getMessageTypes().get(3);
-    internal_static_IdentityX509EC_fieldAccessorTable = new
+    internal_static_darcOCS_IdentityX509EC_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_IdentityX509EC_descriptor,
+        internal_static_darcOCS_IdentityX509EC_descriptor,
         new java.lang.String[] { "Public", });
-    internal_static_IdentityDarc_descriptor =
+    internal_static_darcOCS_IdentityDarc_descriptor =
       getDescriptor().getMessageTypes().get(4);
-    internal_static_IdentityDarc_fieldAccessorTable = new
+    internal_static_darcOCS_IdentityDarc_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_IdentityDarc_descriptor,
+        internal_static_darcOCS_IdentityDarc_descriptor,
         new java.lang.String[] { "Id", });
-    internal_static_Signature_descriptor =
+    internal_static_darcOCS_Signature_descriptor =
       getDescriptor().getMessageTypes().get(5);
-    internal_static_Signature_fieldAccessorTable = new
+    internal_static_darcOCS_Signature_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Signature_descriptor,
+        internal_static_darcOCS_Signature_descriptor,
         new java.lang.String[] { "Signature", "Signaturepath", });
-    internal_static_SignaturePath_descriptor =
+    internal_static_darcOCS_SignaturePath_descriptor =
       getDescriptor().getMessageTypes().get(6);
-    internal_static_SignaturePath_fieldAccessorTable = new
+    internal_static_darcOCS_SignaturePath_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_SignaturePath_descriptor,
+        internal_static_darcOCS_SignaturePath_descriptor,
         new java.lang.String[] { "Darcs", "Signer", "Role", });
-    internal_static_Signer_descriptor =
+    internal_static_darcOCS_Signer_descriptor =
       getDescriptor().getMessageTypes().get(7);
-    internal_static_Signer_fieldAccessorTable = new
+    internal_static_darcOCS_Signer_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Signer_descriptor,
+        internal_static_darcOCS_Signer_descriptor,
         new java.lang.String[] { "Ed25519", "X509Ec", });
-    internal_static_SignerEd25519_descriptor =
+    internal_static_darcOCS_SignerEd25519_descriptor =
       getDescriptor().getMessageTypes().get(8);
-    internal_static_SignerEd25519_fieldAccessorTable = new
+    internal_static_darcOCS_SignerEd25519_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_SignerEd25519_descriptor,
+        internal_static_darcOCS_SignerEd25519_descriptor,
         new java.lang.String[] { "Point", "Secret", });
-    internal_static_SignerX509EC_descriptor =
+    internal_static_darcOCS_SignerX509EC_descriptor =
       getDescriptor().getMessageTypes().get(9);
-    internal_static_SignerX509EC_fieldAccessorTable = new
+    internal_static_darcOCS_SignerX509EC_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_SignerX509EC_descriptor,
-        new java.lang.String[] { "Point", "Secret", });
+        internal_static_darcOCS_SignerX509EC_descriptor,
+        new java.lang.String[] { "Point", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -5,7 +5,6 @@ import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.proto.SkipBlockProto;
 import ch.epfl.dedis.proto.SkipchainProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -74,7 +73,7 @@ public class SkipchainRPC {
                 request);
 
         try {
-            SkipBlockProto.SkipBlock sb = SkipBlockProto.SkipBlock.parseFrom(msg);
+            SkipchainProto.SkipBlock sb = SkipchainProto.SkipBlock.parseFrom(msg);
             //TODO: add verification that the skipblock is valid by hashing and comparing to the id
 
             logger.debug("Got the following skipblock: {}", sb);

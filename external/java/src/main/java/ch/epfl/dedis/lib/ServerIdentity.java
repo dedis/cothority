@@ -4,7 +4,7 @@ import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.proto.ServerIdentityProto;
+import ch.epfl.dedis.proto.NetworkProto;
 import ch.epfl.dedis.proto.StatusProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -41,7 +41,7 @@ public class ServerIdentity {
         this(new URI(siToml.getString("Address")), siToml.getString("Public"));
     }
 
-    public ServerIdentity(ServerIdentityProto.ServerIdentity sid) throws URISyntaxException {
+    public ServerIdentity(NetworkProto.ServerIdentity sid) throws URISyntaxException {
         this(new URI(sid.getAddress()), Hex.printHexBinary(sid.getPublic().toByteArray()));
     }
 
@@ -60,9 +60,9 @@ public class ServerIdentity {
         }
     }
 
-    public ServerIdentityProto.ServerIdentity toProto() {
-        ServerIdentityProto.ServerIdentity.Builder si =
-                ServerIdentityProto.ServerIdentity.newBuilder();
+    public NetworkProto.ServerIdentity toProto() {
+        NetworkProto.ServerIdentity.Builder si =
+                NetworkProto.ServerIdentity.newBuilder();
         si.setPublic(Public.toProto());
         String pubStr = "https://dedis.epfl.ch/id/" + Public.toString().toLowerCase();
         byte[] id = UUIDType5.toBytes(UUIDType5.nameUUIDFromNamespaceAndString(UUIDType5.NAMESPACE_URL, pubStr));

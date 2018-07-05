@@ -1,6 +1,7 @@
 package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.proto.CollectionProto;
 import ch.epfl.dedis.proto.OmniLedgerProto;
 import com.google.protobuf.ByteString;
 
@@ -14,7 +15,7 @@ import java.util.List;
  */
 public class Proof {
     private OmniLedgerProto.Proof proof;
-    private OmniLedgerProto.CollectionProof.Node leaf;
+    private CollectionProto.Dump leaf;
 
     /**
      * Creates a new proof given a protobuf-representation.
@@ -23,9 +24,9 @@ public class Proof {
      */
     public Proof(OmniLedgerProto.Proof p) {
         proof = p;
-        List<OmniLedgerProto.CollectionProof.Step> steps = p.getInclusionProof().getStepsList();
-        OmniLedgerProto.CollectionProof.Node left = steps.get(steps.size() - 1).getLeft();
-        OmniLedgerProto.CollectionProof.Node right = steps.get(steps.size() - 1).getRight();
+        List<CollectionProto.Step> steps = p.getInclusionproof().getStepsList();
+        CollectionProto.Dump left = steps.get(steps.size() - 1).getLeft();
+        CollectionProto.Dump right = steps.get(steps.size() - 1).getRight();
         if (Arrays.equals(left.getKey().toByteArray(), getKey())) {
             leaf = left;
         } else if (Arrays.equals(right.getKey().toByteArray(), getKey())) {
@@ -59,7 +60,7 @@ public class Proof {
      * @return the key of the leaf node
      */
     public byte[] getKey() {
-        return proof.getInclusionProof().getKey().toByteArray();
+        return proof.getInclusionproof().getKey().toByteArray();
     }
 
     /**
