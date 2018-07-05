@@ -205,7 +205,6 @@ func (c *Collection) Set(key []byte, values ...interface{}) error {
 // SetField updates one of the the value associated with a key to a new value.
 // It updates the field with the index given by the parameter field to a new
 // value.
-// FIXME: locking here will cause a deadlock because Set already has a lock
 func (c *Collection) SetField(key []byte, field int, value interface{}) error {
 	c.Lock()
 	defer c.Unlock()

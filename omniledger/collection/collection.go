@@ -25,7 +25,8 @@ type Collection struct {
 // Constructors
 
 // New creates a new collection, with one root node and the given Fields
-func New(fields ...Field) (collection Collection) {
+func New(fields ...Field) (collection *Collection) {
+	collection = &Collection{}
 	collection.fields = fields
 
 	collection.scope.All()
@@ -70,9 +71,10 @@ func NewVerifier(fields ...Field) (verifier Collection) {
 
 // Clone returns a deep copy of the collection.
 // Note that the transaction id are restarted from 0 for the copy.
-func (c *Collection) Clone() (collection Collection) {
+func (c *Collection) Clone() (collection *Collection) {
 	c.Lock()
 	defer c.Unlock()
+	collection = &Collection{}
 	if c.transaction.ongoing {
 		panic("Cannot clone a collection while a transaction is ongoing.")
 	}

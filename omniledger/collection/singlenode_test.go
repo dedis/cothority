@@ -116,7 +116,7 @@ func TestSingleNodeUpdate(test *testing.T) {
 		test.Error("[singlenode.go]", "[stake]", "Wrong value on stake root.")
 	}
 
-	ctx.verify.tree("[tree]", &stakeCollection)
+	ctx.verify.tree("[tree]", stakeCollection)
 
 	stakeCollection.root.children.left.values[0] = make([]byte, 5)
 

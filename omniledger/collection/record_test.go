@@ -1,8 +1,9 @@
 package collection
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestRecord(test *testing.T) {
@@ -20,11 +21,11 @@ func TestRecord(test *testing.T) {
 		leaf = collection.root.children.left
 	}
 
-	keyMatch := recordKeyMatch(&collection, leaf)
-	queryMatch := recordQueryMatch(&collection, 0, stake64.Encode(uint64(99)), leaf)
-	keyMismatch := recordKeyMismatch(&collection, []byte("wrongkey"))
+	keyMatch := recordKeyMatch(collection, leaf)
+	queryMatch := recordQueryMatch(collection, 0, stake64.Encode(uint64(99)), leaf)
+	keyMismatch := recordKeyMismatch(collection, []byte("wrongkey"))
 
-	if (keyMatch.collection != &collection) || (queryMatch.collection != &collection) || (keyMismatch.collection != &collection) {
+	if (keyMatch.collection != collection) || (queryMatch.collection != collection) || (keyMismatch.collection != collection) {
 		test.Error("[record.go]", "[constructors]", "Constructors don't set collection appropriately.")
 	}
 

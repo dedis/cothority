@@ -71,7 +71,7 @@ func TestTransactionRollback(test *testing.T) {
 		test.Error("[transaction.go]", "[rollback]", "Rollback() does not increment the transaction id.")
 	}
 
-	ctx.verify.tree("[rollback]", &collection)
+	ctx.verify.tree("[rollback]", collection)
 
 	if collection.root.label != reference.root.label {
 		test.Error("[transaction.go]", "[rollback]", "Rollback() doesn't produce the same tree as before.")
@@ -150,18 +150,18 @@ func TestTransactionEnd(test *testing.T) {
 		test.Error("[transaction.go]", "[end]", "End() does not increment transaction id.")
 	}
 
-	ctx.verify.tree("[end]", &collection)
+	ctx.verify.tree("[end]", collection)
 
 	for index := 0; index < 1024; index++ {
 		key := make([]byte, 8)
 		binary.BigEndian.PutUint64(key, uint64(index))
 
 		if (index % 3) == 0 {
-			ctx.verify.values("[end]", &collection, key, uint64(3*index))
+			ctx.verify.values("[end]", collection, key, uint64(3*index))
 		} else if (index % 3) == 1 {
-			ctx.verify.noKey("[end]", &collection, key)
+			ctx.verify.noKey("[end]", collection, key)
 		} else {
-			ctx.verify.values("[end]", &collection, key, uint64(index))
+			ctx.verify.values("[end]", collection, key, uint64(index))
 		}
 	}
 
@@ -172,7 +172,7 @@ func TestTransactionEnd(test *testing.T) {
 		test.Error("[transaction.go]", "[end]", "Fixing after End() alters the tree root.")
 	}
 
-	ctx.verify.scope("[scope]", &collection)
+	ctx.verify.scope("[scope]", collection)
 
 	ctx.shouldPanic("[endagain]", func() {
 		collection.End()
@@ -218,7 +218,7 @@ func TestTransactionCollect(test *testing.T) {
 	collection.Collect()
 	collection.transaction.ongoing = false
 
-	ctx.verify.scope("[collect]", &collection)
+	ctx.verify.scope("[collect]", collection)
 
 	unknownRoot := New()
 	unknownRoot.root.known = false
@@ -307,7 +307,7 @@ func TestTransactionFix(test *testing.T) {
 	collection.root.transaction.inconsistent = true
 
 	collection.fix()
-	ctx.verify.tree("[fix]", &collection)
+	ctx.verify.tree("[fix]", collection)
 
 	oldRootLabel := collection.root.label
 
@@ -336,5 +336,5 @@ func TestTransactionFix(test *testing.T) {
 		test.Error("[transaction.go]", "[fix]", "Fix should alter the label of the root of a collection tree.")
 	}
 
-	ctx.verify.tree("[fix]", &collection)
+	ctx.verify.tree("[fix]", collection)
 }

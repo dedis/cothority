@@ -10,7 +10,7 @@ func TestUpdateProxy(test *testing.T) {
 
 	proxy := collection.proxy([][]byte{[]byte("firstkey"), []byte("secondkey"), []byte("thirdkey")})
 
-	if proxy.collection != &collection {
+	if proxy.collection != collection {
 		test.Error("[update.go]", "[proxy]", "proxy() method sets wrong collection pointer.")
 	}
 

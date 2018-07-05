@@ -270,7 +270,7 @@ func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instructio
 func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts ClientTransactions) (*skipchain.SkipBlock, error) {
 	var sb *skipchain.SkipBlock
 	var mr []byte
-	var coll collection.Collection
+	var coll *collection.Collection
 
 	if scID.IsNull() {
 		// For a genesis block, we create a throwaway collection.
@@ -587,7 +587,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 // createStateChanges goes through all ClientTransactions and creates
 // the appropriate StateChanges. If any of the transactions are invalid,
 // it returns an error.
-func (s *Service) createStateChanges(coll collection.Collection, cts ClientTransactions) (merkleRoot []byte, ctsOK ClientTransactions, states StateChanges, err error) {
+func (s *Service) createStateChanges(coll *collection.Collection, cts ClientTransactions) (merkleRoot []byte, ctsOK ClientTransactions, states StateChanges, err error) {
 
 	// TODO: Because we depend on making at least one clone per transaction
 	// we need to find out if this is as expensive as it looks, and if so if

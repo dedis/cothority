@@ -37,13 +37,13 @@ func TestVerifiersVerify(test *testing.T) {
 		}
 	}
 
-	ctx.verify.tree("[verify]", &unknown)
+	ctx.verify.tree("[verify]", unknown)
 
 	for index := 0; index < 512; index++ {
 		key := make([]byte, 8)
 		binary.BigEndian.PutUint64(key, uint64(index))
 
-		ctx.verify.values("[verify]", &unknown, key, uint64(index), key)
+		ctx.verify.values("[verify]", unknown, key, uint64(index), key)
 	}
 
 	proof, _ := collection.Get(make([]byte, 8)).Proof()
