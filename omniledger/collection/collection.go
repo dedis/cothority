@@ -5,9 +5,12 @@
 // distributed and decentralized ledgers with minimal bootstrapping time.
 package collection
 
+import "sync"
+
 // Collection represents the Merkle-tree based data structure.
 // The data is defined by a pointer to its root.
 type Collection struct {
+	sync.Mutex
 	root   *node
 	fields []Field
 	scope  scope
@@ -68,6 +71,8 @@ func NewVerifier(fields ...Field) (verifier Collection) {
 // Clone returns a deep copy of the collection.
 // Note that the transaction id are restarted from 0 for the copy.
 func (c *Collection) Clone() (collection Collection) {
+	c.Lock()
+	defer c.Unlock()
 	if c.transaction.ongoing {
 		panic("Cannot clone a collection while a transaction is ongoing.")
 	}
@@ -110,5 +115,7 @@ func (c *Collection) Clone() (collection Collection) {
 // GetRoot returns the root hash of the collection, which cryptographically
 // represents the whole set of key/value pairs in the collection.
 func (c *Collection) GetRoot() []byte {
+	c.Lock()
+	defer c.Unlock()
 	return c.root.key
 }

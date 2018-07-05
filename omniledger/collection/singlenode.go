@@ -19,15 +19,11 @@ type toHash struct {
 // Private methods (collection) (single node operations)
 
 func (c *Collection) update(node *node) error {
-	node.Lock()
-	defer node.Unlock()
-
 	if !(node.known) {
 		return errors.New("updating an unknown node")
 	}
 
-	// NOTE: this is the same as !node.leaf() without the locks.
-	if !(node.children.left == nil) {
+	if !node.leaf() {
 		if !(node.children.left.known) || !(node.children.right.known) {
 			return errors.New("updating internal node with unknown children")
 		}
@@ -73,8 +69,7 @@ func (c *Collection) setPlaceholder(node *node) error {
 func (n *node) generateHash() [sha256.Size]byte {
 
 	var toEncode toHash
-	// NOTE: this is the same as node.leaf() without the locks.
-	if n.children.left == nil {
+	if n.leaf() {
 		toEncode = toHash{true, n.key, n.values, [sha256.Size]byte{}, [sha256.Size]byte{}}
 	} else {
 		toEncode = toHash{false, []byte{}, n.values, n.children.left.label, n.children.right.label}

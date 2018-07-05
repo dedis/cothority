@@ -24,22 +24,14 @@ type dump struct {
 // Constructors
 
 func dumpNode(node *node) (dump dump) {
-	node.Lock()
-	defer node.Unlock()
-
 	dump.Label = node.label
 	dump.Values = node.values
 
-	// NOTE: this is the same as node.leaf() without the locks.
-	if node.children.left == nil {
+	if node.leaf() {
 		dump.Key = node.key
 	} else {
-		node.children.left.Lock()
-		node.children.right.Lock()
 		dump.Children.Left = node.children.left.label
 		dump.Children.Right = node.children.right.label
-		node.children.left.Unlock()
-		node.children.right.Unlock()
 	}
 
 	return

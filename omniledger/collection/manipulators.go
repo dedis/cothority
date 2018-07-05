@@ -17,6 +17,8 @@ type Same struct {
 // instead use set to modify an already existing key/value pair.
 // The key location must also be in the known tree, otherwise an error is thrown.
 func (c *Collection) Add(key []byte, values ...interface{}) error {
+	c.Lock()
+	defer c.Unlock()
 	if len(key) == 0 {
 		return errors.New("cannot add empty key to collection")
 	}
@@ -121,9 +123,7 @@ func (c *Collection) Add(key []byte, values ...interface{}) error {
 	return nil
 }
 
-// Set updates a given key with a new value.
-// The key must already be present in the known collection, otherwise, an error is thrown.
-func (c *Collection) Set(key []byte, values ...interface{}) error {
+func (c *Collection) set(key []byte, values ...interface{}) error {
 	if len(values) != len(c.fields) {
 		panic("wrong number of values provided")
 	}
@@ -194,9 +194,21 @@ func (c *Collection) Set(key []byte, values ...interface{}) error {
 	return nil
 }
 
+// Set updates a given key with a new value.
+// The key must already be present in the known collection, otherwise, an error is thrown.
+func (c *Collection) Set(key []byte, values ...interface{}) error {
+	c.Lock()
+	defer c.Unlock()
+	return c.set(key, values...)
+}
+
 // SetField updates one of the the value associated with a key to a new value.
-// It updates the field with the index given by the parameter field to a new value.
+// It updates the field with the index given by the parameter field to a new
+// value.
+// FIXME: locking here will cause a deadlock because Set already has a lock
 func (c *Collection) SetField(key []byte, field int, value interface{}) error {
+	c.Lock()
+	defer c.Unlock()
 	if field >= len(c.fields) {
 		panic("field does not exist")
 	}
@@ -210,7 +222,7 @@ func (c *Collection) SetField(key []byte, field int, value interface{}) error {
 		}
 	}
 
-	return c.Set(key, values...)
+	return c.set(key, values...)
 }
 
 // Remove removes a given key and its associated value from the collection.
@@ -218,6 +230,8 @@ func (c *Collection) SetField(key []byte, field int, value interface{}) error {
 // except if the collection contains no more data.
 // Note that the removed key/pair value must be present in the known tree, otherwise an error is thrown.
 func (c *Collection) Remove(key []byte) error {
+	c.Lock()
+	defer c.Unlock()
 	path := sha256.Sum256(key)
 
 	depth := 0

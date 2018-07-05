@@ -34,6 +34,8 @@ func recordKeyMismatch(collection *Collection, key []byte) Record {
 // Query returns the original query, decoded, that generated the record.
 // It returns an error if the record was generated from a getter (key search).
 func (r Record) Query() (interface{}, error) {
+	r.collection.Lock()
+	defer r.collection.Unlock()
 	if len(r.query) == 0 {
 		return nil, errors.New("no query specified")
 	}
@@ -53,17 +55,23 @@ func (r Record) Query() (interface{}, error) {
 
 // Match returns true if the record match the query that generated it, and false otherwise.
 func (r Record) Match() bool {
+	r.collection.Lock()
+	defer r.collection.Unlock()
 	return r.match
 }
 
 // Key returns the key of the record
 func (r Record) Key() []byte {
+	r.collection.Lock()
+	defer r.collection.Unlock()
 	return r.key
 }
 
 // Values returns a copy of the values of a record.
 // If the record didn't match the query, an error will be returned.
 func (r Record) Values() ([]interface{}, error) {
+	r.collection.Lock()
+	defer r.collection.Unlock()
 	if !(r.match) {
 		return []interface{}{}, errors.New("no match found")
 	}

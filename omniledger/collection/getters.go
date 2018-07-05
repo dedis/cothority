@@ -26,6 +26,8 @@ func (c *Collection) Get(key []byte) Getter {
 // Record returns a Record object that correspond to the result of the key search.
 // The Record will contain a boolean "match" that is true if the search was successful and false otherwise.
 func (g Getter) Record() (Record, error) {
+	g.collection.Lock()
+	defer g.collection.Unlock()
 	if len(g.key) == 0 {
 		return Record{}, errors.New("cannot create a record with no key")
 	}
@@ -59,6 +61,8 @@ func (g Getter) Record() (Record, error) {
 // The location the proof points to can contains the actual key.
 // It can also contain another key, effectively proving that the key is absent from the collection.
 func (g Getter) Proof() (Proof, error) {
+	g.collection.Lock()
+	defer g.collection.Unlock()
 	if len(g.key) == 0 {
 		return Proof{}, errors.New("cannot create a proof with no key")
 	}
