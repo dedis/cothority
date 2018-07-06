@@ -110,6 +110,9 @@ func TestClient_Log200(t *testing.T) {
 	require.Nil(t, err)
 
 	for i := 0; i < 10; i++ {
+		// Apparently leader.waitForBlock isn't enough for jenkins, so
+		// wait a bit longer.
+		time.Sleep(time.Second)
 		leader.waitForBlock(c.OmniLedger.ID)
 		if err = leader.checkBuckets(c.EventlogID, c.OmniLedger.ID, 2*logCount); err == nil {
 			break
