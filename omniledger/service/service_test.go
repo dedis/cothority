@@ -13,6 +13,7 @@ import (
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -474,6 +475,51 @@ func TestService_SetLeader(t *testing.T) {
 	}
 }
 
+func TestService_SetConfig(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	newConfig := ChainConfig{420 * time.Millisecond}
+	newConfigBuf, err := protobuf.Encode(&newConfig)
+	require.NoError(t, err)
+
+	ctx := ClientTransaction{
+		Instructions: []Instruction{{
+			InstanceID: InstanceID{
+				DarcID: s.darc.GetBaseID(),
+				SubID:  oneSubID,
+			},
+			Nonce:  GenNonce(),
+			Index:  0,
+			Length: 1,
+			Invoke: &Invoke{
+				Command: "update_config",
+				Args: []Argument{{
+					Name:  "config",
+					Value: newConfigBuf,
+				}},
+			},
+		}},
+	}
+	require.NoError(t, ctx.Instructions[0].SignBy(s.signer))
+	s.sendTx(t, ctx)
+
+	// wait for a change
+	for i := 0; i < 5; i++ {
+		println(s.interval)
+		time.Sleep(s.interval)
+		config, err := s.service().LoadConfig(s.sb.SkipChainID())
+		require.NoError(t, err)
+
+		if config.BlockInterval == newConfig.BlockInterval {
+			return
+		}
+	}
+
+	require.Fail(t, "did not find new config in time")
+}
+
 func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction {
 	d2Buf, err := d2.ToProto()
 	require.Nil(t, err)
@@ -596,7 +642,7 @@ func newSer(t *testing.T, step int, interval time.Duration) *ser {
 	registerDummy(s.hosts)
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
-		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc"}, s.signer.Identity())
+		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 

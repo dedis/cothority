@@ -581,6 +581,8 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		log.Lvl2(s.ServerIdentity(), "State Changes hash doesn't verify")
 		return false
 	}
+	// TODO compute new state and check if there's a state change on the
+	// config, if there is, then we check whether newSB matches the config
 	return true
 }
 
