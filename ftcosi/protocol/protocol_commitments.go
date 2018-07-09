@@ -2,11 +2,12 @@ package protocol
 
 import (
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"sync"
-	"time"
 )
 
 // get all commitments, restart subprotocols where subleaders do not respond
@@ -24,8 +25,8 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 
 	// receive in parallel
 	var closingWg sync.WaitGroup
+	closingWg.Add(len(subProtocols))
 	for i, subProtocol := range subProtocols {
-		closingWg.Add(1)
 		go func(i int, subProtocol *SubFtCosi) {
 			defer closingWg.Done()
 			timeout := time.After(p.Timeout / 2)
@@ -37,27 +38,32 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 					subleaderID := trees[i].Root.Children[0].RosterIndex
 					log.Lvlf2("(subprotocol %v) subleader with id %d failed, restarting subprotocol", i, subleaderID)
 
-					// send stop signal
-					subProtocol.HandleStop(StructStop{subProtocol.TreeNode(), Stop{}})
-
-					// generate new tree
-					newSubleaderID := subleaderID + 1
-					if newSubleaderID >= len(trees[i].Roster.List) {
-						log.Lvl2("(subprotocol %v) failed with every subleader, ignoring this subtree")
+					// generate new tree by adding the current subleader to the end of the
+					// leafs and taking the first leaf for the new subleader.
+					nodes := []int{trees[i].Root.RosterIndex}
+					for _, child := range trees[i].Root.Children[0].Children {
+						nodes = append(nodes, child.RosterIndex)
+					}
+					if subleaderID > nodes[len(nodes)-1] {
+						errChan <- fmt.Errorf("(subprotocol %v) failed with every subleader, ignoring this subtree",
+							i)
 						return
 					}
+					nodes = append(nodes, subleaderID)
+
 					var err error
-					trees[i], err = genSubtree(trees[i].Roster, newSubleaderID)
+					trees[i], err = genSubtree(trees[i].Roster, nodes)
 					if err != nil {
 						errChan <- fmt.Errorf("(subprotocol %v) error in tree generation: %v", i, err)
 						return
 					}
 
 					// restart subprotocol
+					// send stop signal to old protocol
+					subProtocol.HandleStop(StructStop{subProtocol.TreeNode(), Stop{}})
 					subProtocol, err = p.startSubProtocol(trees[i])
 					if err != nil {
-						err = fmt.Errorf("(subprotocol %v) error in restarting of subprotocol: %s", i, err)
-						errChan <- err
+						errChan <- fmt.Errorf("(subprotocol %v) error in restarting of subprotocol: %s", i, err)
 						return
 					}
 					subProtocols[i] = subProtocol
@@ -119,8 +125,8 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 				return nil, nil, err
 			case <-time.After(p.Timeout):
 				close(closingChan)
-				return nil, nil, fmt.Errorf("not enough replies from nodes at timeout "+
-					"for Threshold %d, got %d commitments and %d refusals",
+				return nil, nil, fmt.Errorf("not enough replies from nodes at timeout %v "+
+					"for Threshold %d, got %d commitments and %d refusals", p.Timeout,
 					p.Threshold, sharedMask.CountEnabled(), sumRefusals(commitmentsMap))
 			}
 		}

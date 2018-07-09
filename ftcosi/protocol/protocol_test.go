@@ -156,7 +156,7 @@ func TestUnresponsiveLeafs(t *testing.T) {
 			publics := tree.Roster.Publics()
 
 			// find first subtree leaves servers based on GenTree function
-			leafsServerIdentities, err := GetLeafsIDs(tree, nNodes, nSubtrees)
+			leafsServerIdentities, err := GetLeafsIDs(tree, 0, nNodes, nSubtrees)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -225,7 +225,7 @@ func TestUnresponsiveSubleader(t *testing.T) {
 			publics := tree.Roster.Publics()
 
 			// find first subleader server based on genTree function
-			subleaderIds, err := GetSubleaderIDs(tree, nNodes, nSubtrees)
+			subleaderIds, err := GetSubleaderIDs(tree, 0, nNodes, nSubtrees)
 			if err != nil {
 				local.CloseAll()
 				t.Fatal(err)

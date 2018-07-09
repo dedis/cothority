@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib.omniledger.contracts;
 
 import ch.epfl.dedis.lib.eventlog.Event;
 import ch.epfl.dedis.lib.eventlog.SearchResponse;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.omniledger.InstanceId;
 import org.junit.jupiter.api.Test;
 
@@ -70,11 +71,24 @@ class EventLogInstanceTest {
             // add all the events. So we have to limit the number of events that we add.
             keys.add(el.log(event, Arrays.asList(admin)));
         }
-        Thread.sleep(2 * ol.getConfig().getBlockInterval().toMillis());
-        for (InstanceId key : keys) {
-            Event event2 = el.get(key);
-            assertEquals(event, event2);
+        boolean allOK = true;
+        for (int i = 0; i < 4; i++) {
+            allOK = true;
+            Thread.sleep(2 * ol.getConfig().getBlockInterval().toMillis());
+            for (InstanceId key : keys) {
+                try {
+                    Event event2 = el.get(key);
+                    assertEquals(event, event2);
+                } catch (CothorityCryptoException e){
+                    allOK = false;
+                    break;
+                }
+            }
+            if (allOK){
+                break;
+            }
         }
+        assertTrue(allOK, "one of the events failed");
     }
 
     @Test

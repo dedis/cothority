@@ -75,7 +75,7 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 		p.NSubtrees = 1
 	}
 	// Complete Threshold
-	p.Threshold = len(p.List())
+	p.Threshold = p.Tree().Size()
 
 	// start the protocol
 	log.Lvl3("Cosi Service starting up root protocol")

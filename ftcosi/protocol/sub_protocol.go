@@ -238,7 +238,7 @@ loop:
 				if commitment.CoSiCommitment.Equal(p.suite.Point().Null()) { //refusal
 					NRefusal++
 					if p.IsLeaf() {
-						log.Warn(p.ServerIdentity(), " leaf refused Commitment, stopping node")
+						log.Warn(p.ServerIdentity(), " leaf refused Commitment, marking as not signed")
 
 						err = p.sendAggregatedCommitments([]StructCommitment{}, 1)
 						if err != nil {

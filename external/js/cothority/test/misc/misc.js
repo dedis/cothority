@@ -44,14 +44,14 @@ describe("misc bitmask", () => {
     const bitmask = Uint8Array.from(buffer);
     var nb = misc.getBitmaskLength(bitmask);
     expect(nb).to.be.equal(16);
-    var indices = misc.getSetBits(bitmask);
-    const expected = [1, 2, 4, 5, 7, 14];
+    var indices = misc.getClearBits(bitmask, 10);
+    const expected = [1, 4, 7, 8];
     expect(indices).to.be.deep.equal(expected);
 
     const empty = new Uint8Array();
     nb = misc.getBitmaskLength(empty);
     expect(nb).to.be.equal(0);
-    indices = misc.getSetBits(empty);
+    indices = misc.getClearBits(empty);
     expect(indices).to.be.deep.equal([]);
   });
 });

@@ -9,13 +9,14 @@ import (
 	"sync"
 	"time"
 
+	"math"
+
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
-	"math"
 )
 
 // VerificationFn is called on every node. Where msg is the message that is
@@ -128,7 +129,7 @@ func (p *FtCosi) Dispatch() error {
 
 	// generate trees
 	nNodes := p.Tree().Size()
-	trees, err := genTrees(p.Tree().Roster, nNodes, p.NSubtrees)
+	trees, err := genTrees(p.Tree().Roster, p.Tree().Root.RosterIndex, nNodes, p.NSubtrees)
 	if err != nil {
 		p.FinalSignature <- nil
 		return fmt.Errorf("error in tree generation: %s", err)
@@ -253,6 +254,7 @@ func (p *FtCosi) Dispatch() error {
 
 	//starts final signature
 	log.Lvl3(p.ServerIdentity().Address, "starts final signature")
+
 	var signature []byte
 	signature, err = cosi.Sign(p.suite, commitment, aggResponse, finalMask)
 	if err != nil {
@@ -288,9 +290,9 @@ func (p *FtCosi) Start() error {
 		p.Shutdown()
 		return fmt.Errorf("unrealistic timeout")
 	}
-	if p.Threshold > len(p.publics) {
+	if p.Threshold > p.Tree().Size() {
 		p.Shutdown()
-		return fmt.Errorf("threshold (%d) bigger than number of nodes (%d)", p.Threshold, len(p.publics))
+		return fmt.Errorf("threshold (%d) bigger than number of nodes (%d)", p.Threshold, p.Tree().Size())
 	}
 	if p.Threshold < 1 {
 		p.Shutdown()

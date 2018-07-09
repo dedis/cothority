@@ -853,31 +853,31 @@ func TestService_MissingForwardlink(t *testing.T) {
 	ro2 := onet.NewRoster(ro.List[2:6])
 	ro3 := onet.NewRoster(ro.List[4:8])
 
-	log.Lvl1("Making genesis-block")
+	log.Lvl1("Making genesis-block with list", ro1.List)
 	sbRoot, err := makeGenesisRosterArgs(service1, ro1, nil, VerificationNone,
 		2, 4)
 	require.Nil(t, err)
 	scid := sbRoot.SkipChainID()
 
-	log.Lvl1("Adding block #1")
+	log.Lvl1("Adding block #1 with list", ro2.List)
 	sb := NewSkipBlock()
 	sb.Roster = ro2
 	_, err = addBlockToChain(service2, scid, sb)
 	require.Nil(t, err)
 	require.Nil(t, local.WaitDone(time.Second))
 
-	log.Lvl1("Adding block #2 while node0 is down")
+	log.Lvl1("Adding block #2 while node0 is down with list", ro3.List)
 	servers[0].Pause()
 	sb = NewSkipBlock()
 	sb.Roster = ro3
 	_, err = addBlockToChain(service3, scid, sb)
 	require.Nil(t, err)
 
-	log.Lvl1("Adding block #3 while node0 is up again")
+	log.Lvl1("Adding block #3 while node0 is up again with list", ro3.List)
 	servers[0].Unpause()
 	_, err = addBlockToChain(service3, scid, sb)
 
-	log.Lvl1("Adding block #4 while node0 is up again")
+	log.Lvl1("Adding block #4 while node0 is up again with list", ro3.List)
 	_, err = addBlockToChain(service3, scid, sb)
 	require.Nil(t, waitForwardLinks(service1, sbRoot, 3))
 }

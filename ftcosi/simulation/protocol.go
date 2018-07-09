@@ -78,7 +78,7 @@ func (s *SimulationProtocol) Node(config *onet.SimulationConfig) error {
 	}
 
 	// get subleader ids
-	subleadersIds, err := protocol.GetSubleaderIDs(config.Tree, s.Hosts, s.NSubtrees)
+	subleadersIds, err := protocol.GetSubleaderIDs(config.Tree, 0, s.Hosts, s.NSubtrees)
 	if err != nil {
 		return err
 	}
@@ -87,7 +87,7 @@ func (s *SimulationProtocol) Node(config *onet.SimulationConfig) error {
 	}
 
 	// get leafs ids
-	leafsIds, err := protocol.GetLeafsIDs(config.Tree, s.Hosts, s.NSubtrees)
+	leafsIds, err := protocol.GetLeafsIDs(config.Tree, 0, s.Hosts, s.NSubtrees)
 	if err != nil {
 		return err
 	}

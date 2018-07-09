@@ -79,8 +79,8 @@ func aggregateResponses(s cosi.Suite, structResponses []StructResponse) (kyber.S
 }
 
 // GetSubleaderIDs returns a slice of subleaders for tree
-func GetSubleaderIDs(tree *onet.Tree, nNodes, nSubtrees int) ([]network.ServerIdentityID, error) {
-	exampleTrees, err := genTrees(tree.Roster, nNodes, nSubtrees)
+func GetSubleaderIDs(tree *onet.Tree, root, nNodes, nSubtrees int) ([]network.ServerIdentityID, error) {
+	exampleTrees, err := genTrees(tree.Roster, root, nNodes, nSubtrees)
 	if err != nil {
 		return nil, fmt.Errorf("error in creation of example tree:%s", err)
 	}
@@ -95,8 +95,8 @@ func GetSubleaderIDs(tree *onet.Tree, nNodes, nSubtrees int) ([]network.ServerId
 }
 
 // GetLeafsIDs returns a slice of leaves for tree
-func GetLeafsIDs(tree *onet.Tree, nNodes, nSubtrees int) ([]network.ServerIdentityID, error) {
-	exampleTrees, err := genTrees(tree.Roster, nNodes, nSubtrees)
+func GetLeafsIDs(tree *onet.Tree, root, nNodes, nSubtrees int) ([]network.ServerIdentityID, error) {
+	exampleTrees, err := genTrees(tree.Roster, root, nNodes, nSubtrees)
 	if err != nil {
 		return nil, fmt.Errorf("error in creation of example tree:%s", err)
 	}
