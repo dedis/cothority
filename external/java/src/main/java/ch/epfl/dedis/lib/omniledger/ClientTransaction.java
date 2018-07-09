@@ -1,6 +1,6 @@
 package ch.epfl.dedis.lib.omniledger;
 
-import ch.epfl.dedis.proto.TransactionProto;
+import ch.epfl.dedis.proto.OmniLedgerProto;
 
 import java.util.List;
 
@@ -30,8 +30,8 @@ public class ClientTransaction {
      * Converts this object to the protobuf representation.
      * @return The protobuf representation.
      */
-    public TransactionProto.ClientTransaction toProto() {
-        TransactionProto.ClientTransaction.Builder b = TransactionProto.ClientTransaction.newBuilder();
+    public OmniLedgerProto.ClientTransaction toProto() {
+        OmniLedgerProto.ClientTransaction.Builder b = OmniLedgerProto.ClientTransaction.newBuilder();
         for (Instruction instr : this.instructions) {
             b.addInstructions(instr.toProto());
         }

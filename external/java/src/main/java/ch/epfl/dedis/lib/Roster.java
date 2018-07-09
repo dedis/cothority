@@ -3,8 +3,8 @@ package ch.epfl.dedis.lib;
 import ch.epfl.dedis.lib.crypto.Ed25519;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.proto.RosterProto;
-import ch.epfl.dedis.proto.ServerIdentityProto;
+import ch.epfl.dedis.proto.NetworkProto;
+import ch.epfl.dedis.proto.OnetProto;
 import com.google.protobuf.ByteString;
 import com.moandjiezana.toml.Toml;
 
@@ -28,9 +28,9 @@ public class Roster {
         this.updateAggregate();
     }
 
-    public Roster(RosterProto.Roster roster) throws URISyntaxException {
+    public Roster(OnetProto.Roster roster) throws URISyntaxException {
         List<ServerIdentity> sids = new ArrayList<>();
-        for (ServerIdentityProto.ServerIdentity sid : roster.getListList()) {
+        for (NetworkProto.ServerIdentity sid : roster.getListList()) {
             sids.add(new ServerIdentity(sid));
         }
         nodes.addAll(sids);
@@ -52,8 +52,8 @@ public class Roster {
         return nodes;
     }
 
-    public RosterProto.Roster toProto() {
-        RosterProto.Roster.Builder r = RosterProto.Roster.newBuilder();
+    public OnetProto.Roster toProto() {
+        OnetProto.Roster.Builder r = OnetProto.Roster.newBuilder();
         r.setId(ByteString.copyFrom(Ed25519.uuid4()));
         nodes.forEach(n -> r.addList(n.toProto()));
         r.setAggregate(aggregate.toProto());

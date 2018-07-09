@@ -5,31 +5,10 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/omniledger/collection"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet/network"
 )
-
-// Proof represents everything necessary to verify a given
-// key/value pair is stored in a skipchain. The proof is in three parts:
-//   1. InclusionProof proofs the presence or absence of the key. In case of
-//   the key being present, the value is included in the proof
-//   2. Latest is used to verify the merkle tree root used in the collection-proof
-//   is stored in the latest skipblock
-//   3. Links proves that the latest skipblock is part of the skipchain
-//
-// This Structure could later be moved to cothority/skipchain.
-type Proof struct {
-	// InclusionProof is the deserialized InclusionProof
-	InclusionProof collection.Proof
-	// Providing the latest skipblock to retrieve the Merkle tree root.
-	Latest skipchain.SkipBlock
-	// Proving the path to the latest skipblock. The first ForwardLink has an
-	// empty-sliced `From` and the genesis-block in `To`, together with the
-	// roster of the genesis-block in the `NewRoster`.
-	Links []skipchain.ForwardLink
-}
 
 // NewProof creates a proof for key in the skipchain with the given id. It uses
 // the collectionDB to look up the key and the skipblockdb to create the correct

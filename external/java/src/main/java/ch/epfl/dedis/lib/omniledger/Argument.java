@@ -1,6 +1,6 @@
 package ch.epfl.dedis.lib.omniledger;
 
-import ch.epfl.dedis.proto.TransactionProto;
+import ch.epfl.dedis.proto.OmniLedgerProto;
 import com.google.protobuf.ByteString;
 
 import java.util.ArrayList;
@@ -43,8 +43,8 @@ public class Argument {
      * Converts this object to the protobuf representation.
      * @return The protobuf representation.
      */
-    public TransactionProto.Argument toProto() {
-        TransactionProto.Argument.Builder b = TransactionProto.Argument.newBuilder();
+    public OmniLedgerProto.Argument toProto() {
+        OmniLedgerProto.Argument.Builder b = OmniLedgerProto.Argument.newBuilder();
         b.setName(this.name);
         b.setValue(ByteString.copyFrom(this.value));
         return b.build();

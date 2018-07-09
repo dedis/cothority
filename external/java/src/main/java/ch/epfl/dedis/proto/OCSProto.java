@@ -15,90 +15,90 @@ public final class OCSProto {
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
   public interface TransactionOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Transaction)
+      // @@protoc_insertion_point(interface_extends:ocs.Transaction)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <pre>
-     * 	 Write holds an eventual write-request with a document
+     * Write holds an eventual write-request with a document
      * </pre>
      *
-     * <code>optional .Write write = 1;</code>
+     * <code>optional .ocs.Write write = 1;</code>
      */
     boolean hasWrite();
     /**
      * <pre>
-     * 	 Write holds an eventual write-request with a document
+     * Write holds an eventual write-request with a document
      * </pre>
      *
-     * <code>optional .Write write = 1;</code>
+     * <code>optional .ocs.Write write = 1;</code>
      */
     ch.epfl.dedis.proto.OCSProto.Write getWrite();
     /**
      * <pre>
-     * 	 Write holds an eventual write-request with a document
+     * Write holds an eventual write-request with a document
      * </pre>
      *
-     * <code>optional .Write write = 1;</code>
+     * <code>optional .ocs.Write write = 1;</code>
      */
     ch.epfl.dedis.proto.OCSProto.WriteOrBuilder getWriteOrBuilder();
 
     /**
      * <pre>
-     * 	 Read holds an eventual read-request, which is approved, for a document
+     * Read holds an eventual read-request, which is approved, for a document
      * </pre>
      *
-     * <code>optional .Read read = 2;</code>
+     * <code>optional .ocs.Read read = 2;</code>
      */
     boolean hasRead();
     /**
      * <pre>
-     * 	 Read holds an eventual read-request, which is approved, for a document
+     * Read holds an eventual read-request, which is approved, for a document
      * </pre>
      *
-     * <code>optional .Read read = 2;</code>
+     * <code>optional .ocs.Read read = 2;</code>
      */
     ch.epfl.dedis.proto.OCSProto.Read getRead();
     /**
      * <pre>
-     * 	 Read holds an eventual read-request, which is approved, for a document
+     * Read holds an eventual read-request, which is approved, for a document
      * </pre>
      *
-     * <code>optional .Read read = 2;</code>
+     * <code>optional .ocs.Read read = 2;</code>
      */
     ch.epfl.dedis.proto.OCSProto.ReadOrBuilder getReadOrBuilder();
 
     /**
      * <pre>
-     * 	 Darc defines either the readers allowed for this write-request
-     * 	 or is an update to an existing Darc
+     * Darc defines either the readers allowed for this write-request
+     * or is an update to an existing Darc
      * </pre>
      *
-     * <code>optional .Darc darc = 3;</code>
+     * <code>optional .darcOCS.Darc darc = 3;</code>
      */
     boolean hasDarc();
     /**
      * <pre>
-     * 	 Darc defines either the readers allowed for this write-request
-     * 	 or is an update to an existing Darc
+     * Darc defines either the readers allowed for this write-request
+     * or is an update to an existing Darc
      * </pre>
      *
-     * <code>optional .Darc darc = 3;</code>
+     * <code>optional .darcOCS.Darc darc = 3;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Darc getDarc();
     /**
      * <pre>
-     * 	 Darc defines either the readers allowed for this write-request
-     * 	 or is an update to an existing Darc
+     * Darc defines either the readers allowed for this write-request
+     * or is an update to an existing Darc
      * </pre>
      *
-     * <code>optional .Darc darc = 3;</code>
+     * <code>optional .darcOCS.Darc darc = 3;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getDarcOrBuilder();
 
     /**
      * <pre>
-     * 	 Meta is any free-form data in that skipblock
+     * Meta is any free-form data in that skipblock
      * </pre>
      *
      * <code>optional bytes meta = 4;</code>
@@ -106,7 +106,7 @@ public final class OCSProto {
     boolean hasMeta();
     /**
      * <pre>
-     * 	 Meta is any free-form data in that skipblock
+     * Meta is any free-form data in that skipblock
      * </pre>
      *
      * <code>optional bytes meta = 4;</code>
@@ -115,7 +115,7 @@ public final class OCSProto {
 
     /**
      * <pre>
-     * 	 Unix timestamp to record the transaction creation time
+     * Unix timestamp to record the transaction creation time
      * </pre>
      *
      * <code>required sint64 timestamp = 5;</code>
@@ -123,7 +123,7 @@ public final class OCSProto {
     boolean hasTimestamp();
     /**
      * <pre>
-     * 	 Unix timestamp to record the transaction creation time
+     * Unix timestamp to record the transaction creation time
      * </pre>
      *
      * <code>required sint64 timestamp = 5;</code>
@@ -142,11 +142,11 @@ public final class OCSProto {
    * Every Transaction must have a Unix timestamp.
    * </pre>
    *
-   * Protobuf type {@code Transaction}
+   * Protobuf type {@code ocs.Transaction}
    */
   public  static final class Transaction extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Transaction)
+      // @@protoc_insertion_point(message_implements:ocs.Transaction)
       TransactionOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use Transaction.newBuilder() to construct.
@@ -168,9 +168,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -252,12 +249,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_Transaction_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Transaction_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_Transaction_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Transaction_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.Transaction.class, ch.epfl.dedis.proto.OCSProto.Transaction.Builder.class);
     }
@@ -267,30 +264,30 @@ public final class OCSProto {
     private ch.epfl.dedis.proto.OCSProto.Write write_;
     /**
      * <pre>
-     * 	 Write holds an eventual write-request with a document
+     * Write holds an eventual write-request with a document
      * </pre>
      *
-     * <code>optional .Write write = 1;</code>
+     * <code>optional .ocs.Write write = 1;</code>
      */
     public boolean hasWrite() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
      * <pre>
-     * 	 Write holds an eventual write-request with a document
+     * Write holds an eventual write-request with a document
      * </pre>
      *
-     * <code>optional .Write write = 1;</code>
+     * <code>optional .ocs.Write write = 1;</code>
      */
     public ch.epfl.dedis.proto.OCSProto.Write getWrite() {
       return write_ == null ? ch.epfl.dedis.proto.OCSProto.Write.getDefaultInstance() : write_;
     }
     /**
      * <pre>
-     * 	 Write holds an eventual write-request with a document
+     * Write holds an eventual write-request with a document
      * </pre>
      *
-     * <code>optional .Write write = 1;</code>
+     * <code>optional .ocs.Write write = 1;</code>
      */
     public ch.epfl.dedis.proto.OCSProto.WriteOrBuilder getWriteOrBuilder() {
       return write_ == null ? ch.epfl.dedis.proto.OCSProto.Write.getDefaultInstance() : write_;
@@ -300,30 +297,30 @@ public final class OCSProto {
     private ch.epfl.dedis.proto.OCSProto.Read read_;
     /**
      * <pre>
-     * 	 Read holds an eventual read-request, which is approved, for a document
+     * Read holds an eventual read-request, which is approved, for a document
      * </pre>
      *
-     * <code>optional .Read read = 2;</code>
+     * <code>optional .ocs.Read read = 2;</code>
      */
     public boolean hasRead() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
      * <pre>
-     * 	 Read holds an eventual read-request, which is approved, for a document
+     * Read holds an eventual read-request, which is approved, for a document
      * </pre>
      *
-     * <code>optional .Read read = 2;</code>
+     * <code>optional .ocs.Read read = 2;</code>
      */
     public ch.epfl.dedis.proto.OCSProto.Read getRead() {
       return read_ == null ? ch.epfl.dedis.proto.OCSProto.Read.getDefaultInstance() : read_;
     }
     /**
      * <pre>
-     * 	 Read holds an eventual read-request, which is approved, for a document
+     * Read holds an eventual read-request, which is approved, for a document
      * </pre>
      *
-     * <code>optional .Read read = 2;</code>
+     * <code>optional .ocs.Read read = 2;</code>
      */
     public ch.epfl.dedis.proto.OCSProto.ReadOrBuilder getReadOrBuilder() {
       return read_ == null ? ch.epfl.dedis.proto.OCSProto.Read.getDefaultInstance() : read_;
@@ -333,33 +330,33 @@ public final class OCSProto {
     private ch.epfl.dedis.proto.DarcOCSProto.Darc darc_;
     /**
      * <pre>
-     * 	 Darc defines either the readers allowed for this write-request
-     * 	 or is an update to an existing Darc
+     * Darc defines either the readers allowed for this write-request
+     * or is an update to an existing Darc
      * </pre>
      *
-     * <code>optional .Darc darc = 3;</code>
+     * <code>optional .darcOCS.Darc darc = 3;</code>
      */
     public boolean hasDarc() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
      * <pre>
-     * 	 Darc defines either the readers allowed for this write-request
-     * 	 or is an update to an existing Darc
+     * Darc defines either the readers allowed for this write-request
+     * or is an update to an existing Darc
      * </pre>
      *
-     * <code>optional .Darc darc = 3;</code>
+     * <code>optional .darcOCS.Darc darc = 3;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Darc getDarc() {
       return darc_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance() : darc_;
     }
     /**
      * <pre>
-     * 	 Darc defines either the readers allowed for this write-request
-     * 	 or is an update to an existing Darc
+     * Darc defines either the readers allowed for this write-request
+     * or is an update to an existing Darc
      * </pre>
      *
-     * <code>optional .Darc darc = 3;</code>
+     * <code>optional .darcOCS.Darc darc = 3;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getDarcOrBuilder() {
       return darc_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance() : darc_;
@@ -369,7 +366,7 @@ public final class OCSProto {
     private com.google.protobuf.ByteString meta_;
     /**
      * <pre>
-     * 	 Meta is any free-form data in that skipblock
+     * Meta is any free-form data in that skipblock
      * </pre>
      *
      * <code>optional bytes meta = 4;</code>
@@ -379,7 +376,7 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 Meta is any free-form data in that skipblock
+     * Meta is any free-form data in that skipblock
      * </pre>
      *
      * <code>optional bytes meta = 4;</code>
@@ -392,7 +389,7 @@ public final class OCSProto {
     private long timestamp_;
     /**
      * <pre>
-     * 	 Unix timestamp to record the transaction creation time
+     * Unix timestamp to record the transaction creation time
      * </pre>
      *
      * <code>required sint64 timestamp = 5;</code>
@@ -402,7 +399,7 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 Unix timestamp to record the transaction creation time
+     * Unix timestamp to record the transaction creation time
      * </pre>
      *
      * <code>required sint64 timestamp = 5;</code>
@@ -666,20 +663,20 @@ public final class OCSProto {
      * Every Transaction must have a Unix timestamp.
      * </pre>
      *
-     * Protobuf type {@code Transaction}
+     * Protobuf type {@code ocs.Transaction}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Transaction)
+        // @@protoc_insertion_point(builder_implements:ocs.Transaction)
         ch.epfl.dedis.proto.OCSProto.TransactionOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_Transaction_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Transaction_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_Transaction_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Transaction_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.Transaction.class, ch.epfl.dedis.proto.OCSProto.Transaction.Builder.class);
       }
@@ -731,7 +728,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_Transaction_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Transaction_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.Transaction getDefaultInstanceForType() {
@@ -890,20 +887,20 @@ public final class OCSProto {
           ch.epfl.dedis.proto.OCSProto.Write, ch.epfl.dedis.proto.OCSProto.Write.Builder, ch.epfl.dedis.proto.OCSProto.WriteOrBuilder> writeBuilder_;
       /**
        * <pre>
-       * 	 Write holds an eventual write-request with a document
+       * Write holds an eventual write-request with a document
        * </pre>
        *
-       * <code>optional .Write write = 1;</code>
+       * <code>optional .ocs.Write write = 1;</code>
        */
       public boolean hasWrite() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
        * <pre>
-       * 	 Write holds an eventual write-request with a document
+       * Write holds an eventual write-request with a document
        * </pre>
        *
-       * <code>optional .Write write = 1;</code>
+       * <code>optional .ocs.Write write = 1;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.Write getWrite() {
         if (writeBuilder_ == null) {
@@ -914,10 +911,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Write holds an eventual write-request with a document
+       * Write holds an eventual write-request with a document
        * </pre>
        *
-       * <code>optional .Write write = 1;</code>
+       * <code>optional .ocs.Write write = 1;</code>
        */
       public Builder setWrite(ch.epfl.dedis.proto.OCSProto.Write value) {
         if (writeBuilder_ == null) {
@@ -934,10 +931,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Write holds an eventual write-request with a document
+       * Write holds an eventual write-request with a document
        * </pre>
        *
-       * <code>optional .Write write = 1;</code>
+       * <code>optional .ocs.Write write = 1;</code>
        */
       public Builder setWrite(
           ch.epfl.dedis.proto.OCSProto.Write.Builder builderForValue) {
@@ -952,10 +949,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Write holds an eventual write-request with a document
+       * Write holds an eventual write-request with a document
        * </pre>
        *
-       * <code>optional .Write write = 1;</code>
+       * <code>optional .ocs.Write write = 1;</code>
        */
       public Builder mergeWrite(ch.epfl.dedis.proto.OCSProto.Write value) {
         if (writeBuilder_ == null) {
@@ -976,10 +973,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Write holds an eventual write-request with a document
+       * Write holds an eventual write-request with a document
        * </pre>
        *
-       * <code>optional .Write write = 1;</code>
+       * <code>optional .ocs.Write write = 1;</code>
        */
       public Builder clearWrite() {
         if (writeBuilder_ == null) {
@@ -993,10 +990,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Write holds an eventual write-request with a document
+       * Write holds an eventual write-request with a document
        * </pre>
        *
-       * <code>optional .Write write = 1;</code>
+       * <code>optional .ocs.Write write = 1;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.Write.Builder getWriteBuilder() {
         bitField0_ |= 0x00000001;
@@ -1005,10 +1002,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Write holds an eventual write-request with a document
+       * Write holds an eventual write-request with a document
        * </pre>
        *
-       * <code>optional .Write write = 1;</code>
+       * <code>optional .ocs.Write write = 1;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.WriteOrBuilder getWriteOrBuilder() {
         if (writeBuilder_ != null) {
@@ -1020,10 +1017,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Write holds an eventual write-request with a document
+       * Write holds an eventual write-request with a document
        * </pre>
        *
-       * <code>optional .Write write = 1;</code>
+       * <code>optional .ocs.Write write = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.OCSProto.Write, ch.epfl.dedis.proto.OCSProto.Write.Builder, ch.epfl.dedis.proto.OCSProto.WriteOrBuilder> 
@@ -1044,20 +1041,20 @@ public final class OCSProto {
           ch.epfl.dedis.proto.OCSProto.Read, ch.epfl.dedis.proto.OCSProto.Read.Builder, ch.epfl.dedis.proto.OCSProto.ReadOrBuilder> readBuilder_;
       /**
        * <pre>
-       * 	 Read holds an eventual read-request, which is approved, for a document
+       * Read holds an eventual read-request, which is approved, for a document
        * </pre>
        *
-       * <code>optional .Read read = 2;</code>
+       * <code>optional .ocs.Read read = 2;</code>
        */
       public boolean hasRead() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
        * <pre>
-       * 	 Read holds an eventual read-request, which is approved, for a document
+       * Read holds an eventual read-request, which is approved, for a document
        * </pre>
        *
-       * <code>optional .Read read = 2;</code>
+       * <code>optional .ocs.Read read = 2;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.Read getRead() {
         if (readBuilder_ == null) {
@@ -1068,10 +1065,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Read holds an eventual read-request, which is approved, for a document
+       * Read holds an eventual read-request, which is approved, for a document
        * </pre>
        *
-       * <code>optional .Read read = 2;</code>
+       * <code>optional .ocs.Read read = 2;</code>
        */
       public Builder setRead(ch.epfl.dedis.proto.OCSProto.Read value) {
         if (readBuilder_ == null) {
@@ -1088,10 +1085,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Read holds an eventual read-request, which is approved, for a document
+       * Read holds an eventual read-request, which is approved, for a document
        * </pre>
        *
-       * <code>optional .Read read = 2;</code>
+       * <code>optional .ocs.Read read = 2;</code>
        */
       public Builder setRead(
           ch.epfl.dedis.proto.OCSProto.Read.Builder builderForValue) {
@@ -1106,10 +1103,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Read holds an eventual read-request, which is approved, for a document
+       * Read holds an eventual read-request, which is approved, for a document
        * </pre>
        *
-       * <code>optional .Read read = 2;</code>
+       * <code>optional .ocs.Read read = 2;</code>
        */
       public Builder mergeRead(ch.epfl.dedis.proto.OCSProto.Read value) {
         if (readBuilder_ == null) {
@@ -1130,10 +1127,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Read holds an eventual read-request, which is approved, for a document
+       * Read holds an eventual read-request, which is approved, for a document
        * </pre>
        *
-       * <code>optional .Read read = 2;</code>
+       * <code>optional .ocs.Read read = 2;</code>
        */
       public Builder clearRead() {
         if (readBuilder_ == null) {
@@ -1147,10 +1144,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Read holds an eventual read-request, which is approved, for a document
+       * Read holds an eventual read-request, which is approved, for a document
        * </pre>
        *
-       * <code>optional .Read read = 2;</code>
+       * <code>optional .ocs.Read read = 2;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.Read.Builder getReadBuilder() {
         bitField0_ |= 0x00000002;
@@ -1159,10 +1156,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Read holds an eventual read-request, which is approved, for a document
+       * Read holds an eventual read-request, which is approved, for a document
        * </pre>
        *
-       * <code>optional .Read read = 2;</code>
+       * <code>optional .ocs.Read read = 2;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.ReadOrBuilder getReadOrBuilder() {
         if (readBuilder_ != null) {
@@ -1174,10 +1171,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Read holds an eventual read-request, which is approved, for a document
+       * Read holds an eventual read-request, which is approved, for a document
        * </pre>
        *
-       * <code>optional .Read read = 2;</code>
+       * <code>optional .ocs.Read read = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.OCSProto.Read, ch.epfl.dedis.proto.OCSProto.Read.Builder, ch.epfl.dedis.proto.OCSProto.ReadOrBuilder> 
@@ -1198,22 +1195,22 @@ public final class OCSProto {
           ch.epfl.dedis.proto.DarcOCSProto.Darc, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder, ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> darcBuilder_;
       /**
        * <pre>
-       * 	 Darc defines either the readers allowed for this write-request
-       * 	 or is an update to an existing Darc
+       * Darc defines either the readers allowed for this write-request
+       * or is an update to an existing Darc
        * </pre>
        *
-       * <code>optional .Darc darc = 3;</code>
+       * <code>optional .darcOCS.Darc darc = 3;</code>
        */
       public boolean hasDarc() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
        * <pre>
-       * 	 Darc defines either the readers allowed for this write-request
-       * 	 or is an update to an existing Darc
+       * Darc defines either the readers allowed for this write-request
+       * or is an update to an existing Darc
        * </pre>
        *
-       * <code>optional .Darc darc = 3;</code>
+       * <code>optional .darcOCS.Darc darc = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc getDarc() {
         if (darcBuilder_ == null) {
@@ -1224,11 +1221,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Darc defines either the readers allowed for this write-request
-       * 	 or is an update to an existing Darc
+       * Darc defines either the readers allowed for this write-request
+       * or is an update to an existing Darc
        * </pre>
        *
-       * <code>optional .Darc darc = 3;</code>
+       * <code>optional .darcOCS.Darc darc = 3;</code>
        */
       public Builder setDarc(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (darcBuilder_ == null) {
@@ -1245,11 +1242,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Darc defines either the readers allowed for this write-request
-       * 	 or is an update to an existing Darc
+       * Darc defines either the readers allowed for this write-request
+       * or is an update to an existing Darc
        * </pre>
        *
-       * <code>optional .Darc darc = 3;</code>
+       * <code>optional .darcOCS.Darc darc = 3;</code>
        */
       public Builder setDarc(
           ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -1264,11 +1261,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Darc defines either the readers allowed for this write-request
-       * 	 or is an update to an existing Darc
+       * Darc defines either the readers allowed for this write-request
+       * or is an update to an existing Darc
        * </pre>
        *
-       * <code>optional .Darc darc = 3;</code>
+       * <code>optional .darcOCS.Darc darc = 3;</code>
        */
       public Builder mergeDarc(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (darcBuilder_ == null) {
@@ -1289,11 +1286,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Darc defines either the readers allowed for this write-request
-       * 	 or is an update to an existing Darc
+       * Darc defines either the readers allowed for this write-request
+       * or is an update to an existing Darc
        * </pre>
        *
-       * <code>optional .Darc darc = 3;</code>
+       * <code>optional .darcOCS.Darc darc = 3;</code>
        */
       public Builder clearDarc() {
         if (darcBuilder_ == null) {
@@ -1307,11 +1304,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Darc defines either the readers allowed for this write-request
-       * 	 or is an update to an existing Darc
+       * Darc defines either the readers allowed for this write-request
+       * or is an update to an existing Darc
        * </pre>
        *
-       * <code>optional .Darc darc = 3;</code>
+       * <code>optional .darcOCS.Darc darc = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder getDarcBuilder() {
         bitField0_ |= 0x00000004;
@@ -1320,11 +1317,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Darc defines either the readers allowed for this write-request
-       * 	 or is an update to an existing Darc
+       * Darc defines either the readers allowed for this write-request
+       * or is an update to an existing Darc
        * </pre>
        *
-       * <code>optional .Darc darc = 3;</code>
+       * <code>optional .darcOCS.Darc darc = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getDarcOrBuilder() {
         if (darcBuilder_ != null) {
@@ -1336,11 +1333,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Darc defines either the readers allowed for this write-request
-       * 	 or is an update to an existing Darc
+       * Darc defines either the readers allowed for this write-request
+       * or is an update to an existing Darc
        * </pre>
        *
-       * <code>optional .Darc darc = 3;</code>
+       * <code>optional .darcOCS.Darc darc = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Darc, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder, ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
@@ -1359,7 +1356,7 @@ public final class OCSProto {
       private com.google.protobuf.ByteString meta_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 Meta is any free-form data in that skipblock
+       * Meta is any free-form data in that skipblock
        * </pre>
        *
        * <code>optional bytes meta = 4;</code>
@@ -1369,7 +1366,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Meta is any free-form data in that skipblock
+       * Meta is any free-form data in that skipblock
        * </pre>
        *
        * <code>optional bytes meta = 4;</code>
@@ -1379,7 +1376,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Meta is any free-form data in that skipblock
+       * Meta is any free-form data in that skipblock
        * </pre>
        *
        * <code>optional bytes meta = 4;</code>
@@ -1395,7 +1392,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Meta is any free-form data in that skipblock
+       * Meta is any free-form data in that skipblock
        * </pre>
        *
        * <code>optional bytes meta = 4;</code>
@@ -1410,7 +1407,7 @@ public final class OCSProto {
       private long timestamp_ ;
       /**
        * <pre>
-       * 	 Unix timestamp to record the transaction creation time
+       * Unix timestamp to record the transaction creation time
        * </pre>
        *
        * <code>required sint64 timestamp = 5;</code>
@@ -1420,7 +1417,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Unix timestamp to record the transaction creation time
+       * Unix timestamp to record the transaction creation time
        * </pre>
        *
        * <code>required sint64 timestamp = 5;</code>
@@ -1430,7 +1427,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Unix timestamp to record the transaction creation time
+       * Unix timestamp to record the transaction creation time
        * </pre>
        *
        * <code>required sint64 timestamp = 5;</code>
@@ -1443,7 +1440,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Unix timestamp to record the transaction creation time
+       * Unix timestamp to record the transaction creation time
        * </pre>
        *
        * <code>required sint64 timestamp = 5;</code>
@@ -1465,10 +1462,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Transaction)
+      // @@protoc_insertion_point(builder_scope:ocs.Transaction)
     }
 
-    // @@protoc_insertion_point(class_scope:Transaction)
+    // @@protoc_insertion_point(class_scope:ocs.Transaction)
     private static final ch.epfl.dedis.proto.OCSProto.Transaction DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.Transaction();
@@ -1484,7 +1481,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Transaction(input, extensionRegistry);
+          return new Transaction(input, extensionRegistry);
       }
     };
 
@@ -1504,12 +1501,12 @@ public final class OCSProto {
   }
 
   public interface WriteOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Write)
+      // @@protoc_insertion_point(interface_extends:ocs.Write)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <pre>
-     * 	 Data should be encrypted by the application under the symmetric key in U and Cs
+     * Data should be encrypted by the application under the symmetric key in U and Cs
      * </pre>
      *
      * <code>required bytes data = 1;</code>
@@ -1517,7 +1514,7 @@ public final class OCSProto {
     boolean hasData();
     /**
      * <pre>
-     * 	 Data should be encrypted by the application under the symmetric key in U and Cs
+     * Data should be encrypted by the application under the symmetric key in U and Cs
      * </pre>
      *
      * <code>required bytes data = 1;</code>
@@ -1526,7 +1523,7 @@ public final class OCSProto {
 
     /**
      * <pre>
-     * 	 U is the encrypted random value for the ElGamal encryption
+     * U is the encrypted random value for the ElGamal encryption
      * </pre>
      *
      * <code>required bytes u = 2;</code>
@@ -1534,7 +1531,7 @@ public final class OCSProto {
     boolean hasU();
     /**
      * <pre>
-     * 	 U is the encrypted random value for the ElGamal encryption
+     * U is the encrypted random value for the ElGamal encryption
      * </pre>
      *
      * <code>required bytes u = 2;</code>
@@ -1543,10 +1540,10 @@ public final class OCSProto {
 
     /**
      * <pre>
-     * 	 Ubar, E and f will be used by the server to verify the writer did
-     * 	 correctly encrypt the key. It binds the policy (the darc) with the
-     * 	 cyphertext.
-     * 	 Ubar is used for the log-equality proof
+     * Ubar, E and f will be used by the server to verify the writer did
+     * correctly encrypt the key. It binds the policy (the darc) with the
+     * cyphertext.
+     * Ubar is used for the log-equality proof
      * </pre>
      *
      * <code>required bytes ubar = 3;</code>
@@ -1554,10 +1551,10 @@ public final class OCSProto {
     boolean hasUbar();
     /**
      * <pre>
-     * 	 Ubar, E and f will be used by the server to verify the writer did
-     * 	 correctly encrypt the key. It binds the policy (the darc) with the
-     * 	 cyphertext.
-     * 	 Ubar is used for the log-equality proof
+     * Ubar, E and f will be used by the server to verify the writer did
+     * correctly encrypt the key. It binds the policy (the darc) with the
+     * cyphertext.
+     * Ubar is used for the log-equality proof
      * </pre>
      *
      * <code>required bytes ubar = 3;</code>
@@ -1566,7 +1563,7 @@ public final class OCSProto {
 
     /**
      * <pre>
-     * 	 E is the non-interactive challenge as scalar
+     * E is the non-interactive challenge as scalar
      * </pre>
      *
      * <code>required bytes e = 4;</code>
@@ -1574,7 +1571,7 @@ public final class OCSProto {
     boolean hasE();
     /**
      * <pre>
-     * 	 E is the non-interactive challenge as scalar
+     * E is the non-interactive challenge as scalar
      * </pre>
      *
      * <code>required bytes e = 4;</code>
@@ -1583,8 +1580,8 @@ public final class OCSProto {
 
     /**
      * <pre>
-     * 	 f is the proof - written in uppercase here so it is an exported field,
-     * 	 but in the OCS-paper it's lowercase.
+     * f is the proof - written in uppercase here so it is an exported field,
+     * but in the OCS-paper it's lowercase.
      * </pre>
      *
      * <code>required bytes f = 5;</code>
@@ -1592,8 +1589,8 @@ public final class OCSProto {
     boolean hasF();
     /**
      * <pre>
-     * 	 f is the proof - written in uppercase here so it is an exported field,
-     * 	 but in the OCS-paper it's lowercase.
+     * f is the proof - written in uppercase here so it is an exported field,
+     * but in the OCS-paper it's lowercase.
      * </pre>
      *
      * <code>required bytes f = 5;</code>
@@ -1602,8 +1599,8 @@ public final class OCSProto {
 
     /**
      * <pre>
-     * 	 Cs are the ElGamal parts for the symmetric key material (might
-     * 	 also contain an IV)
+     * Cs are the ElGamal parts for the symmetric key material (might
+     * also contain an IV)
      * </pre>
      *
      * <code>repeated bytes cs = 6;</code>
@@ -1611,8 +1608,8 @@ public final class OCSProto {
     java.util.List<com.google.protobuf.ByteString> getCsList();
     /**
      * <pre>
-     * 	 Cs are the ElGamal parts for the symmetric key material (might
-     * 	 also contain an IV)
+     * Cs are the ElGamal parts for the symmetric key material (might
+     * also contain an IV)
      * </pre>
      *
      * <code>repeated bytes cs = 6;</code>
@@ -1620,8 +1617,8 @@ public final class OCSProto {
     int getCsCount();
     /**
      * <pre>
-     * 	 Cs are the ElGamal parts for the symmetric key material (might
-     * 	 also contain an IV)
+     * Cs are the ElGamal parts for the symmetric key material (might
+     * also contain an IV)
      * </pre>
      *
      * <code>repeated bytes cs = 6;</code>
@@ -1630,7 +1627,7 @@ public final class OCSProto {
 
     /**
      * <pre>
-     * 	 ExtraData is clear text and application-specific
+     * ExtraData is clear text and application-specific
      * </pre>
      *
      * <code>optional bytes extradata = 7;</code>
@@ -1638,7 +1635,7 @@ public final class OCSProto {
     boolean hasExtradata();
     /**
      * <pre>
-     * 	 ExtraData is clear text and application-specific
+     * ExtraData is clear text and application-specific
      * </pre>
      *
      * <code>optional bytes extradata = 7;</code>
@@ -1647,57 +1644,57 @@ public final class OCSProto {
 
     /**
      * <pre>
-     * 	 Reader points to a darc where the reading-rights are stored
+     * Reader points to a darc where the reading-rights are stored
      * </pre>
      *
-     * <code>required .Darc reader = 8;</code>
+     * <code>required .darcOCS.Darc reader = 8;</code>
      */
     boolean hasReader();
     /**
      * <pre>
-     * 	 Reader points to a darc where the reading-rights are stored
+     * Reader points to a darc where the reading-rights are stored
      * </pre>
      *
-     * <code>required .Darc reader = 8;</code>
+     * <code>required .darcOCS.Darc reader = 8;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Darc getReader();
     /**
      * <pre>
-     * 	 Reader points to a darc where the reading-rights are stored
+     * Reader points to a darc where the reading-rights are stored
      * </pre>
      *
-     * <code>required .Darc reader = 8;</code>
+     * <code>required .darcOCS.Darc reader = 8;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getReaderOrBuilder();
 
     /**
      * <pre>
-     * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-     * 	 skipchain. For backwards-compatibility, this is an optional field.
-     * 	 But for every new write-request, it must be set.
+     * Signature must come from a valid writer stored in the admin darc of the OCS
+     * skipchain. For backwards-compatibility, this is an optional field.
+     * But for every new write-request, it must be set.
      * </pre>
      *
-     * <code>optional .Signature signature = 9;</code>
+     * <code>optional .darcOCS.Signature signature = 9;</code>
      */
     boolean hasSignature();
     /**
      * <pre>
-     * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-     * 	 skipchain. For backwards-compatibility, this is an optional field.
-     * 	 But for every new write-request, it must be set.
+     * Signature must come from a valid writer stored in the admin darc of the OCS
+     * skipchain. For backwards-compatibility, this is an optional field.
+     * But for every new write-request, it must be set.
      * </pre>
      *
-     * <code>optional .Signature signature = 9;</code>
+     * <code>optional .darcOCS.Signature signature = 9;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature();
     /**
      * <pre>
-     * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-     * 	 skipchain. For backwards-compatibility, this is an optional field.
-     * 	 But for every new write-request, it must be set.
+     * Signature must come from a valid writer stored in the admin darc of the OCS
+     * skipchain. For backwards-compatibility, this is an optional field.
+     * But for every new write-request, it must be set.
      * </pre>
      *
-     * <code>optional .Signature signature = 9;</code>
+     * <code>optional .darcOCS.Signature signature = 9;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder();
   }
@@ -1706,11 +1703,11 @@ public final class OCSProto {
    * Write stores the data and the encrypted secret
    * </pre>
    *
-   * Protobuf type {@code Write}
+   * Protobuf type {@code ocs.Write}
    */
   public  static final class Write extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Write)
+      // @@protoc_insertion_point(message_implements:ocs.Write)
       WriteOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use Write.newBuilder() to construct.
@@ -1737,9 +1734,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1839,12 +1833,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_Write_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Write_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_Write_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Write_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.Write.class, ch.epfl.dedis.proto.OCSProto.Write.Builder.class);
     }
@@ -1854,7 +1848,7 @@ public final class OCSProto {
     private com.google.protobuf.ByteString data_;
     /**
      * <pre>
-     * 	 Data should be encrypted by the application under the symmetric key in U and Cs
+     * Data should be encrypted by the application under the symmetric key in U and Cs
      * </pre>
      *
      * <code>required bytes data = 1;</code>
@@ -1864,7 +1858,7 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 Data should be encrypted by the application under the symmetric key in U and Cs
+     * Data should be encrypted by the application under the symmetric key in U and Cs
      * </pre>
      *
      * <code>required bytes data = 1;</code>
@@ -1877,7 +1871,7 @@ public final class OCSProto {
     private com.google.protobuf.ByteString u_;
     /**
      * <pre>
-     * 	 U is the encrypted random value for the ElGamal encryption
+     * U is the encrypted random value for the ElGamal encryption
      * </pre>
      *
      * <code>required bytes u = 2;</code>
@@ -1887,7 +1881,7 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 U is the encrypted random value for the ElGamal encryption
+     * U is the encrypted random value for the ElGamal encryption
      * </pre>
      *
      * <code>required bytes u = 2;</code>
@@ -1900,10 +1894,10 @@ public final class OCSProto {
     private com.google.protobuf.ByteString ubar_;
     /**
      * <pre>
-     * 	 Ubar, E and f will be used by the server to verify the writer did
-     * 	 correctly encrypt the key. It binds the policy (the darc) with the
-     * 	 cyphertext.
-     * 	 Ubar is used for the log-equality proof
+     * Ubar, E and f will be used by the server to verify the writer did
+     * correctly encrypt the key. It binds the policy (the darc) with the
+     * cyphertext.
+     * Ubar is used for the log-equality proof
      * </pre>
      *
      * <code>required bytes ubar = 3;</code>
@@ -1913,10 +1907,10 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 Ubar, E and f will be used by the server to verify the writer did
-     * 	 correctly encrypt the key. It binds the policy (the darc) with the
-     * 	 cyphertext.
-     * 	 Ubar is used for the log-equality proof
+     * Ubar, E and f will be used by the server to verify the writer did
+     * correctly encrypt the key. It binds the policy (the darc) with the
+     * cyphertext.
+     * Ubar is used for the log-equality proof
      * </pre>
      *
      * <code>required bytes ubar = 3;</code>
@@ -1929,7 +1923,7 @@ public final class OCSProto {
     private com.google.protobuf.ByteString e_;
     /**
      * <pre>
-     * 	 E is the non-interactive challenge as scalar
+     * E is the non-interactive challenge as scalar
      * </pre>
      *
      * <code>required bytes e = 4;</code>
@@ -1939,7 +1933,7 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 E is the non-interactive challenge as scalar
+     * E is the non-interactive challenge as scalar
      * </pre>
      *
      * <code>required bytes e = 4;</code>
@@ -1952,8 +1946,8 @@ public final class OCSProto {
     private com.google.protobuf.ByteString f_;
     /**
      * <pre>
-     * 	 f is the proof - written in uppercase here so it is an exported field,
-     * 	 but in the OCS-paper it's lowercase.
+     * f is the proof - written in uppercase here so it is an exported field,
+     * but in the OCS-paper it's lowercase.
      * </pre>
      *
      * <code>required bytes f = 5;</code>
@@ -1963,8 +1957,8 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 f is the proof - written in uppercase here so it is an exported field,
-     * 	 but in the OCS-paper it's lowercase.
+     * f is the proof - written in uppercase here so it is an exported field,
+     * but in the OCS-paper it's lowercase.
      * </pre>
      *
      * <code>required bytes f = 5;</code>
@@ -1977,8 +1971,8 @@ public final class OCSProto {
     private java.util.List<com.google.protobuf.ByteString> cs_;
     /**
      * <pre>
-     * 	 Cs are the ElGamal parts for the symmetric key material (might
-     * 	 also contain an IV)
+     * Cs are the ElGamal parts for the symmetric key material (might
+     * also contain an IV)
      * </pre>
      *
      * <code>repeated bytes cs = 6;</code>
@@ -1989,8 +1983,8 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 Cs are the ElGamal parts for the symmetric key material (might
-     * 	 also contain an IV)
+     * Cs are the ElGamal parts for the symmetric key material (might
+     * also contain an IV)
      * </pre>
      *
      * <code>repeated bytes cs = 6;</code>
@@ -2000,8 +1994,8 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 Cs are the ElGamal parts for the symmetric key material (might
-     * 	 also contain an IV)
+     * Cs are the ElGamal parts for the symmetric key material (might
+     * also contain an IV)
      * </pre>
      *
      * <code>repeated bytes cs = 6;</code>
@@ -2014,7 +2008,7 @@ public final class OCSProto {
     private com.google.protobuf.ByteString extradata_;
     /**
      * <pre>
-     * 	 ExtraData is clear text and application-specific
+     * ExtraData is clear text and application-specific
      * </pre>
      *
      * <code>optional bytes extradata = 7;</code>
@@ -2024,7 +2018,7 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 ExtraData is clear text and application-specific
+     * ExtraData is clear text and application-specific
      * </pre>
      *
      * <code>optional bytes extradata = 7;</code>
@@ -2037,30 +2031,30 @@ public final class OCSProto {
     private ch.epfl.dedis.proto.DarcOCSProto.Darc reader_;
     /**
      * <pre>
-     * 	 Reader points to a darc where the reading-rights are stored
+     * Reader points to a darc where the reading-rights are stored
      * </pre>
      *
-     * <code>required .Darc reader = 8;</code>
+     * <code>required .darcOCS.Darc reader = 8;</code>
      */
     public boolean hasReader() {
       return ((bitField0_ & 0x00000040) == 0x00000040);
     }
     /**
      * <pre>
-     * 	 Reader points to a darc where the reading-rights are stored
+     * Reader points to a darc where the reading-rights are stored
      * </pre>
      *
-     * <code>required .Darc reader = 8;</code>
+     * <code>required .darcOCS.Darc reader = 8;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Darc getReader() {
       return reader_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance() : reader_;
     }
     /**
      * <pre>
-     * 	 Reader points to a darc where the reading-rights are stored
+     * Reader points to a darc where the reading-rights are stored
      * </pre>
      *
-     * <code>required .Darc reader = 8;</code>
+     * <code>required .darcOCS.Darc reader = 8;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getReaderOrBuilder() {
       return reader_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance() : reader_;
@@ -2070,36 +2064,36 @@ public final class OCSProto {
     private ch.epfl.dedis.proto.DarcOCSProto.Signature signature_;
     /**
      * <pre>
-     * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-     * 	 skipchain. For backwards-compatibility, this is an optional field.
-     * 	 But for every new write-request, it must be set.
+     * Signature must come from a valid writer stored in the admin darc of the OCS
+     * skipchain. For backwards-compatibility, this is an optional field.
+     * But for every new write-request, it must be set.
      * </pre>
      *
-     * <code>optional .Signature signature = 9;</code>
+     * <code>optional .darcOCS.Signature signature = 9;</code>
      */
     public boolean hasSignature() {
       return ((bitField0_ & 0x00000080) == 0x00000080);
     }
     /**
      * <pre>
-     * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-     * 	 skipchain. For backwards-compatibility, this is an optional field.
-     * 	 But for every new write-request, it must be set.
+     * Signature must come from a valid writer stored in the admin darc of the OCS
+     * skipchain. For backwards-compatibility, this is an optional field.
+     * But for every new write-request, it must be set.
      * </pre>
      *
-     * <code>optional .Signature signature = 9;</code>
+     * <code>optional .darcOCS.Signature signature = 9;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature() {
       return signature_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Signature.getDefaultInstance() : signature_;
     }
     /**
      * <pre>
-     * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-     * 	 skipchain. For backwards-compatibility, this is an optional field.
-     * 	 But for every new write-request, it must be set.
+     * Signature must come from a valid writer stored in the admin darc of the OCS
+     * skipchain. For backwards-compatibility, this is an optional field.
+     * But for every new write-request, it must be set.
      * </pre>
      *
-     * <code>optional .Signature signature = 9;</code>
+     * <code>optional .darcOCS.Signature signature = 9;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder() {
       return signature_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Signature.getDefaultInstance() : signature_;
@@ -2430,20 +2424,20 @@ public final class OCSProto {
      * Write stores the data and the encrypted secret
      * </pre>
      *
-     * Protobuf type {@code Write}
+     * Protobuf type {@code ocs.Write}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Write)
+        // @@protoc_insertion_point(builder_implements:ocs.Write)
         ch.epfl.dedis.proto.OCSProto.WriteOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_Write_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Write_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_Write_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Write_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.Write.class, ch.epfl.dedis.proto.OCSProto.Write.Builder.class);
       }
@@ -2498,7 +2492,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_Write_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Write_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.Write getDefaultInstanceForType() {
@@ -2695,7 +2689,7 @@ public final class OCSProto {
       private com.google.protobuf.ByteString data_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 Data should be encrypted by the application under the symmetric key in U and Cs
+       * Data should be encrypted by the application under the symmetric key in U and Cs
        * </pre>
        *
        * <code>required bytes data = 1;</code>
@@ -2705,7 +2699,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Data should be encrypted by the application under the symmetric key in U and Cs
+       * Data should be encrypted by the application under the symmetric key in U and Cs
        * </pre>
        *
        * <code>required bytes data = 1;</code>
@@ -2715,7 +2709,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Data should be encrypted by the application under the symmetric key in U and Cs
+       * Data should be encrypted by the application under the symmetric key in U and Cs
        * </pre>
        *
        * <code>required bytes data = 1;</code>
@@ -2731,7 +2725,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Data should be encrypted by the application under the symmetric key in U and Cs
+       * Data should be encrypted by the application under the symmetric key in U and Cs
        * </pre>
        *
        * <code>required bytes data = 1;</code>
@@ -2746,7 +2740,7 @@ public final class OCSProto {
       private com.google.protobuf.ByteString u_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 U is the encrypted random value for the ElGamal encryption
+       * U is the encrypted random value for the ElGamal encryption
        * </pre>
        *
        * <code>required bytes u = 2;</code>
@@ -2756,7 +2750,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 U is the encrypted random value for the ElGamal encryption
+       * U is the encrypted random value for the ElGamal encryption
        * </pre>
        *
        * <code>required bytes u = 2;</code>
@@ -2766,7 +2760,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 U is the encrypted random value for the ElGamal encryption
+       * U is the encrypted random value for the ElGamal encryption
        * </pre>
        *
        * <code>required bytes u = 2;</code>
@@ -2782,7 +2776,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 U is the encrypted random value for the ElGamal encryption
+       * U is the encrypted random value for the ElGamal encryption
        * </pre>
        *
        * <code>required bytes u = 2;</code>
@@ -2797,10 +2791,10 @@ public final class OCSProto {
       private com.google.protobuf.ByteString ubar_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 Ubar, E and f will be used by the server to verify the writer did
-       * 	 correctly encrypt the key. It binds the policy (the darc) with the
-       * 	 cyphertext.
-       * 	 Ubar is used for the log-equality proof
+       * Ubar, E and f will be used by the server to verify the writer did
+       * correctly encrypt the key. It binds the policy (the darc) with the
+       * cyphertext.
+       * Ubar is used for the log-equality proof
        * </pre>
        *
        * <code>required bytes ubar = 3;</code>
@@ -2810,10 +2804,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Ubar, E and f will be used by the server to verify the writer did
-       * 	 correctly encrypt the key. It binds the policy (the darc) with the
-       * 	 cyphertext.
-       * 	 Ubar is used for the log-equality proof
+       * Ubar, E and f will be used by the server to verify the writer did
+       * correctly encrypt the key. It binds the policy (the darc) with the
+       * cyphertext.
+       * Ubar is used for the log-equality proof
        * </pre>
        *
        * <code>required bytes ubar = 3;</code>
@@ -2823,10 +2817,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Ubar, E and f will be used by the server to verify the writer did
-       * 	 correctly encrypt the key. It binds the policy (the darc) with the
-       * 	 cyphertext.
-       * 	 Ubar is used for the log-equality proof
+       * Ubar, E and f will be used by the server to verify the writer did
+       * correctly encrypt the key. It binds the policy (the darc) with the
+       * cyphertext.
+       * Ubar is used for the log-equality proof
        * </pre>
        *
        * <code>required bytes ubar = 3;</code>
@@ -2842,10 +2836,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Ubar, E and f will be used by the server to verify the writer did
-       * 	 correctly encrypt the key. It binds the policy (the darc) with the
-       * 	 cyphertext.
-       * 	 Ubar is used for the log-equality proof
+       * Ubar, E and f will be used by the server to verify the writer did
+       * correctly encrypt the key. It binds the policy (the darc) with the
+       * cyphertext.
+       * Ubar is used for the log-equality proof
        * </pre>
        *
        * <code>required bytes ubar = 3;</code>
@@ -2860,7 +2854,7 @@ public final class OCSProto {
       private com.google.protobuf.ByteString e_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 E is the non-interactive challenge as scalar
+       * E is the non-interactive challenge as scalar
        * </pre>
        *
        * <code>required bytes e = 4;</code>
@@ -2870,7 +2864,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 E is the non-interactive challenge as scalar
+       * E is the non-interactive challenge as scalar
        * </pre>
        *
        * <code>required bytes e = 4;</code>
@@ -2880,7 +2874,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 E is the non-interactive challenge as scalar
+       * E is the non-interactive challenge as scalar
        * </pre>
        *
        * <code>required bytes e = 4;</code>
@@ -2896,7 +2890,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 E is the non-interactive challenge as scalar
+       * E is the non-interactive challenge as scalar
        * </pre>
        *
        * <code>required bytes e = 4;</code>
@@ -2911,8 +2905,8 @@ public final class OCSProto {
       private com.google.protobuf.ByteString f_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 f is the proof - written in uppercase here so it is an exported field,
-       * 	 but in the OCS-paper it's lowercase.
+       * f is the proof - written in uppercase here so it is an exported field,
+       * but in the OCS-paper it's lowercase.
        * </pre>
        *
        * <code>required bytes f = 5;</code>
@@ -2922,8 +2916,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 f is the proof - written in uppercase here so it is an exported field,
-       * 	 but in the OCS-paper it's lowercase.
+       * f is the proof - written in uppercase here so it is an exported field,
+       * but in the OCS-paper it's lowercase.
        * </pre>
        *
        * <code>required bytes f = 5;</code>
@@ -2933,8 +2927,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 f is the proof - written in uppercase here so it is an exported field,
-       * 	 but in the OCS-paper it's lowercase.
+       * f is the proof - written in uppercase here so it is an exported field,
+       * but in the OCS-paper it's lowercase.
        * </pre>
        *
        * <code>required bytes f = 5;</code>
@@ -2950,8 +2944,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 f is the proof - written in uppercase here so it is an exported field,
-       * 	 but in the OCS-paper it's lowercase.
+       * f is the proof - written in uppercase here so it is an exported field,
+       * but in the OCS-paper it's lowercase.
        * </pre>
        *
        * <code>required bytes f = 5;</code>
@@ -2972,8 +2966,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Cs are the ElGamal parts for the symmetric key material (might
-       * 	 also contain an IV)
+       * Cs are the ElGamal parts for the symmetric key material (might
+       * also contain an IV)
        * </pre>
        *
        * <code>repeated bytes cs = 6;</code>
@@ -2984,8 +2978,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Cs are the ElGamal parts for the symmetric key material (might
-       * 	 also contain an IV)
+       * Cs are the ElGamal parts for the symmetric key material (might
+       * also contain an IV)
        * </pre>
        *
        * <code>repeated bytes cs = 6;</code>
@@ -2995,8 +2989,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Cs are the ElGamal parts for the symmetric key material (might
-       * 	 also contain an IV)
+       * Cs are the ElGamal parts for the symmetric key material (might
+       * also contain an IV)
        * </pre>
        *
        * <code>repeated bytes cs = 6;</code>
@@ -3006,8 +3000,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Cs are the ElGamal parts for the symmetric key material (might
-       * 	 also contain an IV)
+       * Cs are the ElGamal parts for the symmetric key material (might
+       * also contain an IV)
        * </pre>
        *
        * <code>repeated bytes cs = 6;</code>
@@ -3024,8 +3018,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Cs are the ElGamal parts for the symmetric key material (might
-       * 	 also contain an IV)
+       * Cs are the ElGamal parts for the symmetric key material (might
+       * also contain an IV)
        * </pre>
        *
        * <code>repeated bytes cs = 6;</code>
@@ -3041,8 +3035,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Cs are the ElGamal parts for the symmetric key material (might
-       * 	 also contain an IV)
+       * Cs are the ElGamal parts for the symmetric key material (might
+       * also contain an IV)
        * </pre>
        *
        * <code>repeated bytes cs = 6;</code>
@@ -3057,8 +3051,8 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Cs are the ElGamal parts for the symmetric key material (might
-       * 	 also contain an IV)
+       * Cs are the ElGamal parts for the symmetric key material (might
+       * also contain an IV)
        * </pre>
        *
        * <code>repeated bytes cs = 6;</code>
@@ -3073,7 +3067,7 @@ public final class OCSProto {
       private com.google.protobuf.ByteString extradata_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 ExtraData is clear text and application-specific
+       * ExtraData is clear text and application-specific
        * </pre>
        *
        * <code>optional bytes extradata = 7;</code>
@@ -3083,7 +3077,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 ExtraData is clear text and application-specific
+       * ExtraData is clear text and application-specific
        * </pre>
        *
        * <code>optional bytes extradata = 7;</code>
@@ -3093,7 +3087,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 ExtraData is clear text and application-specific
+       * ExtraData is clear text and application-specific
        * </pre>
        *
        * <code>optional bytes extradata = 7;</code>
@@ -3109,7 +3103,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 ExtraData is clear text and application-specific
+       * ExtraData is clear text and application-specific
        * </pre>
        *
        * <code>optional bytes extradata = 7;</code>
@@ -3126,20 +3120,20 @@ public final class OCSProto {
           ch.epfl.dedis.proto.DarcOCSProto.Darc, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder, ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> readerBuilder_;
       /**
        * <pre>
-       * 	 Reader points to a darc where the reading-rights are stored
+       * Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 8;</code>
+       * <code>required .darcOCS.Darc reader = 8;</code>
        */
       public boolean hasReader() {
         return ((bitField0_ & 0x00000080) == 0x00000080);
       }
       /**
        * <pre>
-       * 	 Reader points to a darc where the reading-rights are stored
+       * Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 8;</code>
+       * <code>required .darcOCS.Darc reader = 8;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc getReader() {
         if (readerBuilder_ == null) {
@@ -3150,10 +3144,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Reader points to a darc where the reading-rights are stored
+       * Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 8;</code>
+       * <code>required .darcOCS.Darc reader = 8;</code>
        */
       public Builder setReader(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (readerBuilder_ == null) {
@@ -3170,10 +3164,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Reader points to a darc where the reading-rights are stored
+       * Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 8;</code>
+       * <code>required .darcOCS.Darc reader = 8;</code>
        */
       public Builder setReader(
           ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -3188,10 +3182,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Reader points to a darc where the reading-rights are stored
+       * Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 8;</code>
+       * <code>required .darcOCS.Darc reader = 8;</code>
        */
       public Builder mergeReader(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (readerBuilder_ == null) {
@@ -3212,10 +3206,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Reader points to a darc where the reading-rights are stored
+       * Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 8;</code>
+       * <code>required .darcOCS.Darc reader = 8;</code>
        */
       public Builder clearReader() {
         if (readerBuilder_ == null) {
@@ -3229,10 +3223,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Reader points to a darc where the reading-rights are stored
+       * Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 8;</code>
+       * <code>required .darcOCS.Darc reader = 8;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder getReaderBuilder() {
         bitField0_ |= 0x00000080;
@@ -3241,10 +3235,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Reader points to a darc where the reading-rights are stored
+       * Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 8;</code>
+       * <code>required .darcOCS.Darc reader = 8;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getReaderOrBuilder() {
         if (readerBuilder_ != null) {
@@ -3256,10 +3250,10 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Reader points to a darc where the reading-rights are stored
+       * Reader points to a darc where the reading-rights are stored
        * </pre>
        *
-       * <code>required .Darc reader = 8;</code>
+       * <code>required .darcOCS.Darc reader = 8;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Darc, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder, ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
@@ -3280,24 +3274,24 @@ public final class OCSProto {
           ch.epfl.dedis.proto.DarcOCSProto.Signature, ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder> signatureBuilder_;
       /**
        * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
+       * Signature must come from a valid writer stored in the admin darc of the OCS
+       * skipchain. For backwards-compatibility, this is an optional field.
+       * But for every new write-request, it must be set.
        * </pre>
        *
-       * <code>optional .Signature signature = 9;</code>
+       * <code>optional .darcOCS.Signature signature = 9;</code>
        */
       public boolean hasSignature() {
         return ((bitField0_ & 0x00000100) == 0x00000100);
       }
       /**
        * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
+       * Signature must come from a valid writer stored in the admin darc of the OCS
+       * skipchain. For backwards-compatibility, this is an optional field.
+       * But for every new write-request, it must be set.
        * </pre>
        *
-       * <code>optional .Signature signature = 9;</code>
+       * <code>optional .darcOCS.Signature signature = 9;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature() {
         if (signatureBuilder_ == null) {
@@ -3308,12 +3302,12 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
+       * Signature must come from a valid writer stored in the admin darc of the OCS
+       * skipchain. For backwards-compatibility, this is an optional field.
+       * But for every new write-request, it must be set.
        * </pre>
        *
-       * <code>optional .Signature signature = 9;</code>
+       * <code>optional .darcOCS.Signature signature = 9;</code>
        */
       public Builder setSignature(ch.epfl.dedis.proto.DarcOCSProto.Signature value) {
         if (signatureBuilder_ == null) {
@@ -3330,12 +3324,12 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
+       * Signature must come from a valid writer stored in the admin darc of the OCS
+       * skipchain. For backwards-compatibility, this is an optional field.
+       * But for every new write-request, it must be set.
        * </pre>
        *
-       * <code>optional .Signature signature = 9;</code>
+       * <code>optional .darcOCS.Signature signature = 9;</code>
        */
       public Builder setSignature(
           ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder builderForValue) {
@@ -3350,12 +3344,12 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
+       * Signature must come from a valid writer stored in the admin darc of the OCS
+       * skipchain. For backwards-compatibility, this is an optional field.
+       * But for every new write-request, it must be set.
        * </pre>
        *
-       * <code>optional .Signature signature = 9;</code>
+       * <code>optional .darcOCS.Signature signature = 9;</code>
        */
       public Builder mergeSignature(ch.epfl.dedis.proto.DarcOCSProto.Signature value) {
         if (signatureBuilder_ == null) {
@@ -3376,12 +3370,12 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
+       * Signature must come from a valid writer stored in the admin darc of the OCS
+       * skipchain. For backwards-compatibility, this is an optional field.
+       * But for every new write-request, it must be set.
        * </pre>
        *
-       * <code>optional .Signature signature = 9;</code>
+       * <code>optional .darcOCS.Signature signature = 9;</code>
        */
       public Builder clearSignature() {
         if (signatureBuilder_ == null) {
@@ -3395,12 +3389,12 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
+       * Signature must come from a valid writer stored in the admin darc of the OCS
+       * skipchain. For backwards-compatibility, this is an optional field.
+       * But for every new write-request, it must be set.
        * </pre>
        *
-       * <code>optional .Signature signature = 9;</code>
+       * <code>optional .darcOCS.Signature signature = 9;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder getSignatureBuilder() {
         bitField0_ |= 0x00000100;
@@ -3409,12 +3403,12 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
+       * Signature must come from a valid writer stored in the admin darc of the OCS
+       * skipchain. For backwards-compatibility, this is an optional field.
+       * But for every new write-request, it must be set.
        * </pre>
        *
-       * <code>optional .Signature signature = 9;</code>
+       * <code>optional .darcOCS.Signature signature = 9;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder() {
         if (signatureBuilder_ != null) {
@@ -3426,12 +3420,12 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature must come from a valid writer stored in the admin darc of the OCS
-       * 	 skipchain. For backwards-compatibility, this is an optional field.
-       * 	 But for every new write-request, it must be set.
+       * Signature must come from a valid writer stored in the admin darc of the OCS
+       * skipchain. For backwards-compatibility, this is an optional field.
+       * But for every new write-request, it must be set.
        * </pre>
        *
-       * <code>optional .Signature signature = 9;</code>
+       * <code>optional .darcOCS.Signature signature = 9;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Signature, ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder> 
@@ -3457,10 +3451,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Write)
+      // @@protoc_insertion_point(builder_scope:ocs.Write)
     }
 
-    // @@protoc_insertion_point(class_scope:Write)
+    // @@protoc_insertion_point(class_scope:ocs.Write)
     private static final ch.epfl.dedis.proto.OCSProto.Write DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.Write();
@@ -3476,7 +3470,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Write(input, extensionRegistry);
+          return new Write(input, extensionRegistry);
       }
     };
 
@@ -3496,12 +3490,12 @@ public final class OCSProto {
   }
 
   public interface ReadOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Read)
+      // @@protoc_insertion_point(interface_extends:ocs.Read)
       com.google.protobuf.MessageOrBuilder {
 
     /**
      * <pre>
-     * 	 DataID is the document-id for the read request
+     * DataID is the document-id for the read request
      * </pre>
      *
      * <code>required bytes dataid = 1;</code>
@@ -3509,7 +3503,7 @@ public final class OCSProto {
     boolean hasDataid();
     /**
      * <pre>
-     * 	 DataID is the document-id for the read request
+     * DataID is the document-id for the read request
      * </pre>
      *
      * <code>required bytes dataid = 1;</code>
@@ -3518,29 +3512,29 @@ public final class OCSProto {
 
     /**
      * <pre>
-     * 	 Signature is a Schnorr-signature using the private key of the
-     * 	 reader on the message 'DataID'
+     * Signature is a Schnorr-signature using the private key of the
+     * reader on the message 'DataID'
      * </pre>
      *
-     * <code>required .Signature signature = 2;</code>
+     * <code>required .darcOCS.Signature signature = 2;</code>
      */
     boolean hasSignature();
     /**
      * <pre>
-     * 	 Signature is a Schnorr-signature using the private key of the
-     * 	 reader on the message 'DataID'
+     * Signature is a Schnorr-signature using the private key of the
+     * reader on the message 'DataID'
      * </pre>
      *
-     * <code>required .Signature signature = 2;</code>
+     * <code>required .darcOCS.Signature signature = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature();
     /**
      * <pre>
-     * 	 Signature is a Schnorr-signature using the private key of the
-     * 	 reader on the message 'DataID'
+     * Signature is a Schnorr-signature using the private key of the
+     * reader on the message 'DataID'
      * </pre>
      *
-     * <code>required .Signature signature = 2;</code>
+     * <code>required .darcOCS.Signature signature = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder();
   }
@@ -3551,11 +3545,11 @@ public final class OCSProto {
    * holding the data.
    * </pre>
    *
-   * Protobuf type {@code Read}
+   * Protobuf type {@code ocs.Read}
    */
   public  static final class Read extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Read)
+      // @@protoc_insertion_point(message_implements:ocs.Read)
       ReadOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use Read.newBuilder() to construct.
@@ -3576,9 +3570,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3629,12 +3620,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_Read_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Read_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_Read_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Read_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.Read.class, ch.epfl.dedis.proto.OCSProto.Read.Builder.class);
     }
@@ -3644,7 +3635,7 @@ public final class OCSProto {
     private com.google.protobuf.ByteString dataid_;
     /**
      * <pre>
-     * 	 DataID is the document-id for the read request
+     * DataID is the document-id for the read request
      * </pre>
      *
      * <code>required bytes dataid = 1;</code>
@@ -3654,7 +3645,7 @@ public final class OCSProto {
     }
     /**
      * <pre>
-     * 	 DataID is the document-id for the read request
+     * DataID is the document-id for the read request
      * </pre>
      *
      * <code>required bytes dataid = 1;</code>
@@ -3667,33 +3658,33 @@ public final class OCSProto {
     private ch.epfl.dedis.proto.DarcOCSProto.Signature signature_;
     /**
      * <pre>
-     * 	 Signature is a Schnorr-signature using the private key of the
-     * 	 reader on the message 'DataID'
+     * Signature is a Schnorr-signature using the private key of the
+     * reader on the message 'DataID'
      * </pre>
      *
-     * <code>required .Signature signature = 2;</code>
+     * <code>required .darcOCS.Signature signature = 2;</code>
      */
     public boolean hasSignature() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
      * <pre>
-     * 	 Signature is a Schnorr-signature using the private key of the
-     * 	 reader on the message 'DataID'
+     * Signature is a Schnorr-signature using the private key of the
+     * reader on the message 'DataID'
      * </pre>
      *
-     * <code>required .Signature signature = 2;</code>
+     * <code>required .darcOCS.Signature signature = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature() {
       return signature_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Signature.getDefaultInstance() : signature_;
     }
     /**
      * <pre>
-     * 	 Signature is a Schnorr-signature using the private key of the
-     * 	 reader on the message 'DataID'
+     * Signature is a Schnorr-signature using the private key of the
+     * reader on the message 'DataID'
      * </pre>
      *
-     * <code>required .Signature signature = 2;</code>
+     * <code>required .darcOCS.Signature signature = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder() {
       return signature_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Signature.getDefaultInstance() : signature_;
@@ -3890,20 +3881,20 @@ public final class OCSProto {
      * holding the data.
      * </pre>
      *
-     * Protobuf type {@code Read}
+     * Protobuf type {@code ocs.Read}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Read)
+        // @@protoc_insertion_point(builder_implements:ocs.Read)
         ch.epfl.dedis.proto.OCSProto.ReadOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_Read_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Read_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_Read_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Read_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.Read.class, ch.epfl.dedis.proto.OCSProto.Read.Builder.class);
       }
@@ -3939,7 +3930,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_Read_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Read_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.Read getDefaultInstanceForType() {
@@ -4058,7 +4049,7 @@ public final class OCSProto {
       private com.google.protobuf.ByteString dataid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * 	 DataID is the document-id for the read request
+       * DataID is the document-id for the read request
        * </pre>
        *
        * <code>required bytes dataid = 1;</code>
@@ -4068,7 +4059,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 DataID is the document-id for the read request
+       * DataID is the document-id for the read request
        * </pre>
        *
        * <code>required bytes dataid = 1;</code>
@@ -4078,7 +4069,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 DataID is the document-id for the read request
+       * DataID is the document-id for the read request
        * </pre>
        *
        * <code>required bytes dataid = 1;</code>
@@ -4094,7 +4085,7 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 DataID is the document-id for the read request
+       * DataID is the document-id for the read request
        * </pre>
        *
        * <code>required bytes dataid = 1;</code>
@@ -4111,22 +4102,22 @@ public final class OCSProto {
           ch.epfl.dedis.proto.DarcOCSProto.Signature, ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder> signatureBuilder_;
       /**
        * <pre>
-       * 	 Signature is a Schnorr-signature using the private key of the
-       * 	 reader on the message 'DataID'
+       * Signature is a Schnorr-signature using the private key of the
+       * reader on the message 'DataID'
        * </pre>
        *
-       * <code>required .Signature signature = 2;</code>
+       * <code>required .darcOCS.Signature signature = 2;</code>
        */
       public boolean hasSignature() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
        * <pre>
-       * 	 Signature is a Schnorr-signature using the private key of the
-       * 	 reader on the message 'DataID'
+       * Signature is a Schnorr-signature using the private key of the
+       * reader on the message 'DataID'
        * </pre>
        *
-       * <code>required .Signature signature = 2;</code>
+       * <code>required .darcOCS.Signature signature = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature() {
         if (signatureBuilder_ == null) {
@@ -4137,11 +4128,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is a Schnorr-signature using the private key of the
-       * 	 reader on the message 'DataID'
+       * Signature is a Schnorr-signature using the private key of the
+       * reader on the message 'DataID'
        * </pre>
        *
-       * <code>required .Signature signature = 2;</code>
+       * <code>required .darcOCS.Signature signature = 2;</code>
        */
       public Builder setSignature(ch.epfl.dedis.proto.DarcOCSProto.Signature value) {
         if (signatureBuilder_ == null) {
@@ -4158,11 +4149,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is a Schnorr-signature using the private key of the
-       * 	 reader on the message 'DataID'
+       * Signature is a Schnorr-signature using the private key of the
+       * reader on the message 'DataID'
        * </pre>
        *
-       * <code>required .Signature signature = 2;</code>
+       * <code>required .darcOCS.Signature signature = 2;</code>
        */
       public Builder setSignature(
           ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder builderForValue) {
@@ -4177,11 +4168,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is a Schnorr-signature using the private key of the
-       * 	 reader on the message 'DataID'
+       * Signature is a Schnorr-signature using the private key of the
+       * reader on the message 'DataID'
        * </pre>
        *
-       * <code>required .Signature signature = 2;</code>
+       * <code>required .darcOCS.Signature signature = 2;</code>
        */
       public Builder mergeSignature(ch.epfl.dedis.proto.DarcOCSProto.Signature value) {
         if (signatureBuilder_ == null) {
@@ -4202,11 +4193,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is a Schnorr-signature using the private key of the
-       * 	 reader on the message 'DataID'
+       * Signature is a Schnorr-signature using the private key of the
+       * reader on the message 'DataID'
        * </pre>
        *
-       * <code>required .Signature signature = 2;</code>
+       * <code>required .darcOCS.Signature signature = 2;</code>
        */
       public Builder clearSignature() {
         if (signatureBuilder_ == null) {
@@ -4220,11 +4211,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is a Schnorr-signature using the private key of the
-       * 	 reader on the message 'DataID'
+       * Signature is a Schnorr-signature using the private key of the
+       * reader on the message 'DataID'
        * </pre>
        *
-       * <code>required .Signature signature = 2;</code>
+       * <code>required .darcOCS.Signature signature = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder getSignatureBuilder() {
         bitField0_ |= 0x00000002;
@@ -4233,11 +4224,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is a Schnorr-signature using the private key of the
-       * 	 reader on the message 'DataID'
+       * Signature is a Schnorr-signature using the private key of the
+       * reader on the message 'DataID'
        * </pre>
        *
-       * <code>required .Signature signature = 2;</code>
+       * <code>required .darcOCS.Signature signature = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder() {
         if (signatureBuilder_ != null) {
@@ -4249,11 +4240,11 @@ public final class OCSProto {
       }
       /**
        * <pre>
-       * 	 Signature is a Schnorr-signature using the private key of the
-       * 	 reader on the message 'DataID'
+       * Signature is a Schnorr-signature using the private key of the
+       * reader on the message 'DataID'
        * </pre>
        *
-       * <code>required .Signature signature = 2;</code>
+       * <code>required .darcOCS.Signature signature = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Signature, ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder> 
@@ -4279,10 +4270,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Read)
+      // @@protoc_insertion_point(builder_scope:ocs.Read)
     }
 
-    // @@protoc_insertion_point(class_scope:Read)
+    // @@protoc_insertion_point(class_scope:ocs.Read)
     private static final ch.epfl.dedis.proto.OCSProto.Read DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.Read();
@@ -4298,7 +4289,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Read(input, extensionRegistry);
+          return new Read(input, extensionRegistry);
       }
     };
 
@@ -4318,19 +4309,19 @@ public final class OCSProto {
   }
 
   public interface ReadDocOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:ReadDoc)
+      // @@protoc_insertion_point(interface_extends:ocs.ReadDoc)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required .Identity reader = 1;</code>
+     * <code>required .darcOCS.Identity reader = 1;</code>
      */
     boolean hasReader();
     /**
-     * <code>required .Identity reader = 1;</code>
+     * <code>required .darcOCS.Identity reader = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Identity getReader();
     /**
-     * <code>required .Identity reader = 1;</code>
+     * <code>required .darcOCS.Identity reader = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getReaderOrBuilder();
 
@@ -4357,11 +4348,11 @@ public final class OCSProto {
    * ReadDoc represents one read-request by a reader.
    * </pre>
    *
-   * Protobuf type {@code ReadDoc}
+   * Protobuf type {@code ocs.ReadDoc}
    */
   public  static final class ReadDoc extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:ReadDoc)
+      // @@protoc_insertion_point(message_implements:ocs.ReadDoc)
       ReadDocOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use ReadDoc.newBuilder() to construct.
@@ -4383,9 +4374,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4441,12 +4429,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_ReadDoc_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadDoc_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_ReadDoc_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadDoc_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.ReadDoc.class, ch.epfl.dedis.proto.OCSProto.ReadDoc.Builder.class);
     }
@@ -4455,19 +4443,19 @@ public final class OCSProto {
     public static final int READER_FIELD_NUMBER = 1;
     private ch.epfl.dedis.proto.DarcOCSProto.Identity reader_;
     /**
-     * <code>required .Identity reader = 1;</code>
+     * <code>required .darcOCS.Identity reader = 1;</code>
      */
     public boolean hasReader() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required .Identity reader = 1;</code>
+     * <code>required .darcOCS.Identity reader = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Identity getReader() {
       return reader_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Identity.getDefaultInstance() : reader_;
     }
     /**
-     * <code>required .Identity reader = 1;</code>
+     * <code>required .darcOCS.Identity reader = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getReaderOrBuilder() {
       return reader_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Identity.getDefaultInstance() : reader_;
@@ -4712,20 +4700,20 @@ public final class OCSProto {
      * ReadDoc represents one read-request by a reader.
      * </pre>
      *
-     * Protobuf type {@code ReadDoc}
+     * Protobuf type {@code ocs.ReadDoc}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:ReadDoc)
+        // @@protoc_insertion_point(builder_implements:ocs.ReadDoc)
         ch.epfl.dedis.proto.OCSProto.ReadDocOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_ReadDoc_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadDoc_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_ReadDoc_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadDoc_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.ReadDoc.class, ch.epfl.dedis.proto.OCSProto.ReadDoc.Builder.class);
       }
@@ -4763,7 +4751,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_ReadDoc_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadDoc_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.ReadDoc getDefaultInstanceForType() {
@@ -4893,13 +4881,13 @@ public final class OCSProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Identity, ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder, ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder> readerBuilder_;
       /**
-       * <code>required .Identity reader = 1;</code>
+       * <code>required .darcOCS.Identity reader = 1;</code>
        */
       public boolean hasReader() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required .Identity reader = 1;</code>
+       * <code>required .darcOCS.Identity reader = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity getReader() {
         if (readerBuilder_ == null) {
@@ -4909,7 +4897,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Identity reader = 1;</code>
+       * <code>required .darcOCS.Identity reader = 1;</code>
        */
       public Builder setReader(ch.epfl.dedis.proto.DarcOCSProto.Identity value) {
         if (readerBuilder_ == null) {
@@ -4925,7 +4913,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Identity reader = 1;</code>
+       * <code>required .darcOCS.Identity reader = 1;</code>
        */
       public Builder setReader(
           ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder builderForValue) {
@@ -4939,7 +4927,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Identity reader = 1;</code>
+       * <code>required .darcOCS.Identity reader = 1;</code>
        */
       public Builder mergeReader(ch.epfl.dedis.proto.DarcOCSProto.Identity value) {
         if (readerBuilder_ == null) {
@@ -4959,7 +4947,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Identity reader = 1;</code>
+       * <code>required .darcOCS.Identity reader = 1;</code>
        */
       public Builder clearReader() {
         if (readerBuilder_ == null) {
@@ -4972,7 +4960,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Identity reader = 1;</code>
+       * <code>required .darcOCS.Identity reader = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder getReaderBuilder() {
         bitField0_ |= 0x00000001;
@@ -4980,7 +4968,7 @@ public final class OCSProto {
         return getReaderFieldBuilder().getBuilder();
       }
       /**
-       * <code>required .Identity reader = 1;</code>
+       * <code>required .darcOCS.Identity reader = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getReaderOrBuilder() {
         if (readerBuilder_ != null) {
@@ -4991,7 +4979,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Identity reader = 1;</code>
+       * <code>required .darcOCS.Identity reader = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Identity, ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder, ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder> 
@@ -5087,10 +5075,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:ReadDoc)
+      // @@protoc_insertion_point(builder_scope:ocs.ReadDoc)
     }
 
-    // @@protoc_insertion_point(class_scope:ReadDoc)
+    // @@protoc_insertion_point(class_scope:ocs.ReadDoc)
     private static final ch.epfl.dedis.proto.OCSProto.ReadDoc DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.ReadDoc();
@@ -5106,7 +5094,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ReadDoc(input, extensionRegistry);
+          return new ReadDoc(input, extensionRegistry);
       }
     };
 
@@ -5126,32 +5114,32 @@ public final class OCSProto {
   }
 
   public interface CreateSkipchainsRequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:CreateSkipchainsRequest)
+      // @@protoc_insertion_point(interface_extends:ocs.CreateSkipchainsRequest)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required .Roster roster = 1;</code>
+     * <code>required .onet.Roster roster = 1;</code>
      */
     boolean hasRoster();
     /**
-     * <code>required .Roster roster = 1;</code>
+     * <code>required .onet.Roster roster = 1;</code>
      */
-    ch.epfl.dedis.proto.RosterProto.Roster getRoster();
+    ch.epfl.dedis.proto.OnetProto.Roster getRoster();
     /**
-     * <code>required .Roster roster = 1;</code>
+     * <code>required .onet.Roster roster = 1;</code>
      */
-    ch.epfl.dedis.proto.RosterProto.RosterOrBuilder getRosterOrBuilder();
+    ch.epfl.dedis.proto.OnetProto.RosterOrBuilder getRosterOrBuilder();
 
     /**
-     * <code>required .Darc writers = 2;</code>
+     * <code>required .darcOCS.Darc writers = 2;</code>
      */
     boolean hasWriters();
     /**
-     * <code>required .Darc writers = 2;</code>
+     * <code>required .darcOCS.Darc writers = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Darc getWriters();
     /**
-     * <code>required .Darc writers = 2;</code>
+     * <code>required .darcOCS.Darc writers = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getWritersOrBuilder();
   }
@@ -5160,11 +5148,11 @@ public final class OCSProto {
    * CreateSkipchainsRequest asks for setting up a new OCS-skipchain.
    * </pre>
    *
-   * Protobuf type {@code CreateSkipchainsRequest}
+   * Protobuf type {@code ocs.CreateSkipchainsRequest}
    */
   public  static final class CreateSkipchainsRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:CreateSkipchainsRequest)
+      // @@protoc_insertion_point(message_implements:ocs.CreateSkipchainsRequest)
       CreateSkipchainsRequestOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use CreateSkipchainsRequest.newBuilder() to construct.
@@ -5184,9 +5172,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5206,11 +5191,11 @@ public final class OCSProto {
               break;
             }
             case 10: {
-              ch.epfl.dedis.proto.RosterProto.Roster.Builder subBuilder = null;
+              ch.epfl.dedis.proto.OnetProto.Roster.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = roster_.toBuilder();
               }
-              roster_ = input.readMessage(ch.epfl.dedis.proto.RosterProto.Roster.PARSER, extensionRegistry);
+              roster_ = input.readMessage(ch.epfl.dedis.proto.OnetProto.Roster.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(roster_);
                 roster_ = subBuilder.buildPartial();
@@ -5245,54 +5230,54 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_CreateSkipchainsRequest_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsRequest_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_CreateSkipchainsRequest_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest.class, ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest.Builder.class);
     }
 
     private int bitField0_;
     public static final int ROSTER_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.proto.RosterProto.Roster roster_;
+    private ch.epfl.dedis.proto.OnetProto.Roster roster_;
     /**
-     * <code>required .Roster roster = 1;</code>
+     * <code>required .onet.Roster roster = 1;</code>
      */
     public boolean hasRoster() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required .Roster roster = 1;</code>
+     * <code>required .onet.Roster roster = 1;</code>
      */
-    public ch.epfl.dedis.proto.RosterProto.Roster getRoster() {
-      return roster_ == null ? ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
+    public ch.epfl.dedis.proto.OnetProto.Roster getRoster() {
+      return roster_ == null ? ch.epfl.dedis.proto.OnetProto.Roster.getDefaultInstance() : roster_;
     }
     /**
-     * <code>required .Roster roster = 1;</code>
+     * <code>required .onet.Roster roster = 1;</code>
      */
-    public ch.epfl.dedis.proto.RosterProto.RosterOrBuilder getRosterOrBuilder() {
-      return roster_ == null ? ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
+    public ch.epfl.dedis.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
+      return roster_ == null ? ch.epfl.dedis.proto.OnetProto.Roster.getDefaultInstance() : roster_;
     }
 
     public static final int WRITERS_FIELD_NUMBER = 2;
     private ch.epfl.dedis.proto.DarcOCSProto.Darc writers_;
     /**
-     * <code>required .Darc writers = 2;</code>
+     * <code>required .darcOCS.Darc writers = 2;</code>
      */
     public boolean hasWriters() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required .Darc writers = 2;</code>
+     * <code>required .darcOCS.Darc writers = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Darc getWriters() {
       return writers_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance() : writers_;
     }
     /**
-     * <code>required .Darc writers = 2;</code>
+     * <code>required .darcOCS.Darc writers = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getWritersOrBuilder() {
       return writers_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance() : writers_;
@@ -5491,20 +5476,20 @@ public final class OCSProto {
      * CreateSkipchainsRequest asks for setting up a new OCS-skipchain.
      * </pre>
      *
-     * Protobuf type {@code CreateSkipchainsRequest}
+     * Protobuf type {@code ocs.CreateSkipchainsRequest}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:CreateSkipchainsRequest)
+        // @@protoc_insertion_point(builder_implements:ocs.CreateSkipchainsRequest)
         ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_CreateSkipchainsRequest_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsRequest_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_CreateSkipchainsRequest_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest.class, ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest.Builder.class);
       }
@@ -5545,7 +5530,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_CreateSkipchainsRequest_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsRequest_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest getDefaultInstanceForType() {
@@ -5668,29 +5653,29 @@ public final class OCSProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.proto.RosterProto.Roster roster_ = null;
+      private ch.epfl.dedis.proto.OnetProto.Roster roster_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.RosterProto.Roster, ch.epfl.dedis.proto.RosterProto.Roster.Builder, ch.epfl.dedis.proto.RosterProto.RosterOrBuilder> rosterBuilder_;
+          ch.epfl.dedis.proto.OnetProto.Roster, ch.epfl.dedis.proto.OnetProto.Roster.Builder, ch.epfl.dedis.proto.OnetProto.RosterOrBuilder> rosterBuilder_;
       /**
-       * <code>required .Roster roster = 1;</code>
+       * <code>required .onet.Roster roster = 1;</code>
        */
       public boolean hasRoster() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required .Roster roster = 1;</code>
+       * <code>required .onet.Roster roster = 1;</code>
        */
-      public ch.epfl.dedis.proto.RosterProto.Roster getRoster() {
+      public ch.epfl.dedis.proto.OnetProto.Roster getRoster() {
         if (rosterBuilder_ == null) {
-          return roster_ == null ? ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
+          return roster_ == null ? ch.epfl.dedis.proto.OnetProto.Roster.getDefaultInstance() : roster_;
         } else {
           return rosterBuilder_.getMessage();
         }
       }
       /**
-       * <code>required .Roster roster = 1;</code>
+       * <code>required .onet.Roster roster = 1;</code>
        */
-      public Builder setRoster(ch.epfl.dedis.proto.RosterProto.Roster value) {
+      public Builder setRoster(ch.epfl.dedis.proto.OnetProto.Roster value) {
         if (rosterBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -5704,10 +5689,10 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Roster roster = 1;</code>
+       * <code>required .onet.Roster roster = 1;</code>
        */
       public Builder setRoster(
-          ch.epfl.dedis.proto.RosterProto.Roster.Builder builderForValue) {
+          ch.epfl.dedis.proto.OnetProto.Roster.Builder builderForValue) {
         if (rosterBuilder_ == null) {
           roster_ = builderForValue.build();
           onChanged();
@@ -5718,15 +5703,15 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Roster roster = 1;</code>
+       * <code>required .onet.Roster roster = 1;</code>
        */
-      public Builder mergeRoster(ch.epfl.dedis.proto.RosterProto.Roster value) {
+      public Builder mergeRoster(ch.epfl.dedis.proto.OnetProto.Roster value) {
         if (rosterBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
               roster_ != null &&
-              roster_ != ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance()) {
+              roster_ != ch.epfl.dedis.proto.OnetProto.Roster.getDefaultInstance()) {
             roster_ =
-              ch.epfl.dedis.proto.RosterProto.Roster.newBuilder(roster_).mergeFrom(value).buildPartial();
+              ch.epfl.dedis.proto.OnetProto.Roster.newBuilder(roster_).mergeFrom(value).buildPartial();
           } else {
             roster_ = value;
           }
@@ -5738,7 +5723,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Roster roster = 1;</code>
+       * <code>required .onet.Roster roster = 1;</code>
        */
       public Builder clearRoster() {
         if (rosterBuilder_ == null) {
@@ -5751,33 +5736,33 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Roster roster = 1;</code>
+       * <code>required .onet.Roster roster = 1;</code>
        */
-      public ch.epfl.dedis.proto.RosterProto.Roster.Builder getRosterBuilder() {
+      public ch.epfl.dedis.proto.OnetProto.Roster.Builder getRosterBuilder() {
         bitField0_ |= 0x00000001;
         onChanged();
         return getRosterFieldBuilder().getBuilder();
       }
       /**
-       * <code>required .Roster roster = 1;</code>
+       * <code>required .onet.Roster roster = 1;</code>
        */
-      public ch.epfl.dedis.proto.RosterProto.RosterOrBuilder getRosterOrBuilder() {
+      public ch.epfl.dedis.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
         if (rosterBuilder_ != null) {
           return rosterBuilder_.getMessageOrBuilder();
         } else {
           return roster_ == null ?
-              ch.epfl.dedis.proto.RosterProto.Roster.getDefaultInstance() : roster_;
+              ch.epfl.dedis.proto.OnetProto.Roster.getDefaultInstance() : roster_;
         }
       }
       /**
-       * <code>required .Roster roster = 1;</code>
+       * <code>required .onet.Roster roster = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.RosterProto.Roster, ch.epfl.dedis.proto.RosterProto.Roster.Builder, ch.epfl.dedis.proto.RosterProto.RosterOrBuilder> 
+          ch.epfl.dedis.proto.OnetProto.Roster, ch.epfl.dedis.proto.OnetProto.Roster.Builder, ch.epfl.dedis.proto.OnetProto.RosterOrBuilder> 
           getRosterFieldBuilder() {
         if (rosterBuilder_ == null) {
           rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.RosterProto.Roster, ch.epfl.dedis.proto.RosterProto.Roster.Builder, ch.epfl.dedis.proto.RosterProto.RosterOrBuilder>(
+              ch.epfl.dedis.proto.OnetProto.Roster, ch.epfl.dedis.proto.OnetProto.Roster.Builder, ch.epfl.dedis.proto.OnetProto.RosterOrBuilder>(
                   getRoster(),
                   getParentForChildren(),
                   isClean());
@@ -5790,13 +5775,13 @@ public final class OCSProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Darc, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder, ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> writersBuilder_;
       /**
-       * <code>required .Darc writers = 2;</code>
+       * <code>required .darcOCS.Darc writers = 2;</code>
        */
       public boolean hasWriters() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required .Darc writers = 2;</code>
+       * <code>required .darcOCS.Darc writers = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc getWriters() {
         if (writersBuilder_ == null) {
@@ -5806,7 +5791,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Darc writers = 2;</code>
+       * <code>required .darcOCS.Darc writers = 2;</code>
        */
       public Builder setWriters(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (writersBuilder_ == null) {
@@ -5822,7 +5807,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Darc writers = 2;</code>
+       * <code>required .darcOCS.Darc writers = 2;</code>
        */
       public Builder setWriters(
           ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -5836,7 +5821,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Darc writers = 2;</code>
+       * <code>required .darcOCS.Darc writers = 2;</code>
        */
       public Builder mergeWriters(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (writersBuilder_ == null) {
@@ -5856,7 +5841,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Darc writers = 2;</code>
+       * <code>required .darcOCS.Darc writers = 2;</code>
        */
       public Builder clearWriters() {
         if (writersBuilder_ == null) {
@@ -5869,7 +5854,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Darc writers = 2;</code>
+       * <code>required .darcOCS.Darc writers = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder getWritersBuilder() {
         bitField0_ |= 0x00000002;
@@ -5877,7 +5862,7 @@ public final class OCSProto {
         return getWritersFieldBuilder().getBuilder();
       }
       /**
-       * <code>required .Darc writers = 2;</code>
+       * <code>required .darcOCS.Darc writers = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getWritersOrBuilder() {
         if (writersBuilder_ != null) {
@@ -5888,7 +5873,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Darc writers = 2;</code>
+       * <code>required .darcOCS.Darc writers = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Darc, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder, ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
@@ -5914,10 +5899,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:CreateSkipchainsRequest)
+      // @@protoc_insertion_point(builder_scope:ocs.CreateSkipchainsRequest)
     }
 
-    // @@protoc_insertion_point(class_scope:CreateSkipchainsRequest)
+    // @@protoc_insertion_point(class_scope:ocs.CreateSkipchainsRequest)
     private static final ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest();
@@ -5933,7 +5918,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateSkipchainsRequest(input, extensionRegistry);
+          return new CreateSkipchainsRequest(input, extensionRegistry);
       }
     };
 
@@ -5953,21 +5938,21 @@ public final class OCSProto {
   }
 
   public interface CreateSkipchainsReplyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:CreateSkipchainsReply)
+      // @@protoc_insertion_point(interface_extends:ocs.CreateSkipchainsReply)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional .SkipBlock ocs = 1;</code>
+     * <code>optional .skipchain.SkipBlock ocs = 1;</code>
      */
     boolean hasOcs();
     /**
-     * <code>optional .SkipBlock ocs = 1;</code>
+     * <code>optional .skipchain.SkipBlock ocs = 1;</code>
      */
-    ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getOcs();
+    ch.epfl.dedis.proto.SkipchainProto.SkipBlock getOcs();
     /**
-     * <code>optional .SkipBlock ocs = 1;</code>
+     * <code>optional .skipchain.SkipBlock ocs = 1;</code>
      */
-    ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getOcsOrBuilder();
+    ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getOcsOrBuilder();
 
     /**
      * <code>required bytes x = 2;</code>
@@ -5983,11 +5968,11 @@ public final class OCSProto {
    * CreateSkipchainsReply returns the skipchain-id of the OCS-skipchain
    * </pre>
    *
-   * Protobuf type {@code CreateSkipchainsReply}
+   * Protobuf type {@code ocs.CreateSkipchainsReply}
    */
   public  static final class CreateSkipchainsReply extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:CreateSkipchainsReply)
+      // @@protoc_insertion_point(message_implements:ocs.CreateSkipchainsReply)
       CreateSkipchainsReplyOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use CreateSkipchainsReply.newBuilder() to construct.
@@ -6008,9 +5993,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6030,11 +6012,11 @@ public final class OCSProto {
               break;
             }
             case 10: {
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder subBuilder = null;
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = ocs_.toBuilder();
               }
-              ocs_ = input.readMessage(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.PARSER, extensionRegistry);
+              ocs_ = input.readMessage(ch.epfl.dedis.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(ocs_);
                 ocs_ = subBuilder.buildPartial();
@@ -6061,36 +6043,36 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_CreateSkipchainsReply_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsReply_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_CreateSkipchainsReply_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply.class, ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply.Builder.class);
     }
 
     private int bitField0_;
     public static final int OCS_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.proto.SkipBlockProto.SkipBlock ocs_;
+    private ch.epfl.dedis.proto.SkipchainProto.SkipBlock ocs_;
     /**
-     * <code>optional .SkipBlock ocs = 1;</code>
+     * <code>optional .skipchain.SkipBlock ocs = 1;</code>
      */
     public boolean hasOcs() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional .SkipBlock ocs = 1;</code>
+     * <code>optional .skipchain.SkipBlock ocs = 1;</code>
      */
-    public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getOcs() {
-      return ocs_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : ocs_;
+    public ch.epfl.dedis.proto.SkipchainProto.SkipBlock getOcs() {
+      return ocs_ == null ? ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : ocs_;
     }
     /**
-     * <code>optional .SkipBlock ocs = 1;</code>
+     * <code>optional .skipchain.SkipBlock ocs = 1;</code>
      */
-    public ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getOcsOrBuilder() {
-      return ocs_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : ocs_;
+    public ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getOcsOrBuilder() {
+      return ocs_ == null ? ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : ocs_;
     }
 
     public static final int X_FIELD_NUMBER = 2;
@@ -6295,20 +6277,20 @@ public final class OCSProto {
      * CreateSkipchainsReply returns the skipchain-id of the OCS-skipchain
      * </pre>
      *
-     * Protobuf type {@code CreateSkipchainsReply}
+     * Protobuf type {@code ocs.CreateSkipchainsReply}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:CreateSkipchainsReply)
+        // @@protoc_insertion_point(builder_implements:ocs.CreateSkipchainsReply)
         ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReplyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_CreateSkipchainsReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsReply_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_CreateSkipchainsReply_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsReply_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply.class, ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply.Builder.class);
       }
@@ -6344,7 +6326,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_CreateSkipchainsReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsReply_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply getDefaultInstanceForType() {
@@ -6459,29 +6441,29 @@ public final class OCSProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.proto.SkipBlockProto.SkipBlock ocs_ = null;
+      private ch.epfl.dedis.proto.SkipchainProto.SkipBlock ocs_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> ocsBuilder_;
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> ocsBuilder_;
       /**
-       * <code>optional .SkipBlock ocs = 1;</code>
+       * <code>optional .skipchain.SkipBlock ocs = 1;</code>
        */
       public boolean hasOcs() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional .SkipBlock ocs = 1;</code>
+       * <code>optional .skipchain.SkipBlock ocs = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getOcs() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlock getOcs() {
         if (ocsBuilder_ == null) {
-          return ocs_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : ocs_;
+          return ocs_ == null ? ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : ocs_;
         } else {
           return ocsBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .SkipBlock ocs = 1;</code>
+       * <code>optional .skipchain.SkipBlock ocs = 1;</code>
        */
-      public Builder setOcs(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+      public Builder setOcs(ch.epfl.dedis.proto.SkipchainProto.SkipBlock value) {
         if (ocsBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -6495,10 +6477,10 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock ocs = 1;</code>
+       * <code>optional .skipchain.SkipBlock ocs = 1;</code>
        */
       public Builder setOcs(
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder builderForValue) {
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder builderForValue) {
         if (ocsBuilder_ == null) {
           ocs_ = builderForValue.build();
           onChanged();
@@ -6509,15 +6491,15 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock ocs = 1;</code>
+       * <code>optional .skipchain.SkipBlock ocs = 1;</code>
        */
-      public Builder mergeOcs(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+      public Builder mergeOcs(ch.epfl.dedis.proto.SkipchainProto.SkipBlock value) {
         if (ocsBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
               ocs_ != null &&
-              ocs_ != ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance()) {
+              ocs_ != ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance()) {
             ocs_ =
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.newBuilder(ocs_).mergeFrom(value).buildPartial();
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock.newBuilder(ocs_).mergeFrom(value).buildPartial();
           } else {
             ocs_ = value;
           }
@@ -6529,7 +6511,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock ocs = 1;</code>
+       * <code>optional .skipchain.SkipBlock ocs = 1;</code>
        */
       public Builder clearOcs() {
         if (ocsBuilder_ == null) {
@@ -6542,33 +6524,33 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock ocs = 1;</code>
+       * <code>optional .skipchain.SkipBlock ocs = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder getOcsBuilder() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder getOcsBuilder() {
         bitField0_ |= 0x00000001;
         onChanged();
         return getOcsFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .SkipBlock ocs = 1;</code>
+       * <code>optional .skipchain.SkipBlock ocs = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getOcsOrBuilder() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getOcsOrBuilder() {
         if (ocsBuilder_ != null) {
           return ocsBuilder_.getMessageOrBuilder();
         } else {
           return ocs_ == null ?
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : ocs_;
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : ocs_;
         }
       }
       /**
-       * <code>optional .SkipBlock ocs = 1;</code>
+       * <code>optional .skipchain.SkipBlock ocs = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> 
           getOcsFieldBuilder() {
         if (ocsBuilder_ == null) {
           ocsBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder>(
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder>(
                   getOcs(),
                   getParentForChildren(),
                   isClean());
@@ -6622,10 +6604,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:CreateSkipchainsReply)
+      // @@protoc_insertion_point(builder_scope:ocs.CreateSkipchainsReply)
     }
 
-    // @@protoc_insertion_point(class_scope:CreateSkipchainsReply)
+    // @@protoc_insertion_point(class_scope:ocs.CreateSkipchainsReply)
     private static final ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply();
@@ -6641,7 +6623,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateSkipchainsReply(input, extensionRegistry);
+          return new CreateSkipchainsReply(input, extensionRegistry);
       }
     };
 
@@ -6661,7 +6643,7 @@ public final class OCSProto {
   }
 
   public interface GetDarcPathOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:GetDarcPath)
+      // @@protoc_insertion_point(interface_extends:ocs.GetDarcPath)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -6683,15 +6665,15 @@ public final class OCSProto {
     com.google.protobuf.ByteString getBasedarcid();
 
     /**
-     * <code>required .Identity identity = 3;</code>
+     * <code>required .darcOCS.Identity identity = 3;</code>
      */
     boolean hasIdentity();
     /**
-     * <code>required .Identity identity = 3;</code>
+     * <code>required .darcOCS.Identity identity = 3;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Identity getIdentity();
     /**
-     * <code>required .Identity identity = 3;</code>
+     * <code>required .darcOCS.Identity identity = 3;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getIdentityOrBuilder();
 
@@ -6710,11 +6692,11 @@ public final class OCSProto {
    * containing the identity.
    * </pre>
    *
-   * Protobuf type {@code GetDarcPath}
+   * Protobuf type {@code ocs.GetDarcPath}
    */
   public  static final class GetDarcPath extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:GetDarcPath)
+      // @@protoc_insertion_point(message_implements:ocs.GetDarcPath)
       GetDarcPathOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use GetDarcPath.newBuilder() to construct.
@@ -6737,9 +6719,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6800,12 +6779,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetDarcPath_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPath_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetDarcPath_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPath_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.GetDarcPath.class, ch.epfl.dedis.proto.OCSProto.GetDarcPath.Builder.class);
     }
@@ -6844,19 +6823,19 @@ public final class OCSProto {
     public static final int IDENTITY_FIELD_NUMBER = 3;
     private ch.epfl.dedis.proto.DarcOCSProto.Identity identity_;
     /**
-     * <code>required .Identity identity = 3;</code>
+     * <code>required .darcOCS.Identity identity = 3;</code>
      */
     public boolean hasIdentity() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>required .Identity identity = 3;</code>
+     * <code>required .darcOCS.Identity identity = 3;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Identity getIdentity() {
       return identity_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Identity.getDefaultInstance() : identity_;
     }
     /**
-     * <code>required .Identity identity = 3;</code>
+     * <code>required .darcOCS.Identity identity = 3;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getIdentityOrBuilder() {
       return identity_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Identity.getDefaultInstance() : identity_;
@@ -7107,20 +7086,20 @@ public final class OCSProto {
      * containing the identity.
      * </pre>
      *
-     * Protobuf type {@code GetDarcPath}
+     * Protobuf type {@code ocs.GetDarcPath}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:GetDarcPath)
+        // @@protoc_insertion_point(builder_implements:ocs.GetDarcPath)
         ch.epfl.dedis.proto.OCSProto.GetDarcPathOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetDarcPath_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPath_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetDarcPath_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPath_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.GetDarcPath.class, ch.epfl.dedis.proto.OCSProto.GetDarcPath.Builder.class);
       }
@@ -7160,7 +7139,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetDarcPath_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPath_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.GetDarcPath getDefaultInstanceForType() {
@@ -7370,13 +7349,13 @@ public final class OCSProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Identity, ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder, ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder> identityBuilder_;
       /**
-       * <code>required .Identity identity = 3;</code>
+       * <code>required .darcOCS.Identity identity = 3;</code>
        */
       public boolean hasIdentity() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>required .Identity identity = 3;</code>
+       * <code>required .darcOCS.Identity identity = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity getIdentity() {
         if (identityBuilder_ == null) {
@@ -7386,7 +7365,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Identity identity = 3;</code>
+       * <code>required .darcOCS.Identity identity = 3;</code>
        */
       public Builder setIdentity(ch.epfl.dedis.proto.DarcOCSProto.Identity value) {
         if (identityBuilder_ == null) {
@@ -7402,7 +7381,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Identity identity = 3;</code>
+       * <code>required .darcOCS.Identity identity = 3;</code>
        */
       public Builder setIdentity(
           ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder builderForValue) {
@@ -7416,7 +7395,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Identity identity = 3;</code>
+       * <code>required .darcOCS.Identity identity = 3;</code>
        */
       public Builder mergeIdentity(ch.epfl.dedis.proto.DarcOCSProto.Identity value) {
         if (identityBuilder_ == null) {
@@ -7436,7 +7415,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Identity identity = 3;</code>
+       * <code>required .darcOCS.Identity identity = 3;</code>
        */
       public Builder clearIdentity() {
         if (identityBuilder_ == null) {
@@ -7449,7 +7428,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Identity identity = 3;</code>
+       * <code>required .darcOCS.Identity identity = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder getIdentityBuilder() {
         bitField0_ |= 0x00000004;
@@ -7457,7 +7436,7 @@ public final class OCSProto {
         return getIdentityFieldBuilder().getBuilder();
       }
       /**
-       * <code>required .Identity identity = 3;</code>
+       * <code>required .darcOCS.Identity identity = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder getIdentityOrBuilder() {
         if (identityBuilder_ != null) {
@@ -7468,7 +7447,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Identity identity = 3;</code>
+       * <code>required .darcOCS.Identity identity = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Identity, ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder, ch.epfl.dedis.proto.DarcOCSProto.IdentityOrBuilder> 
@@ -7526,10 +7505,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:GetDarcPath)
+      // @@protoc_insertion_point(builder_scope:ocs.GetDarcPath)
     }
 
-    // @@protoc_insertion_point(class_scope:GetDarcPath)
+    // @@protoc_insertion_point(class_scope:ocs.GetDarcPath)
     private static final ch.epfl.dedis.proto.OCSProto.GetDarcPath DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.GetDarcPath();
@@ -7545,7 +7524,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetDarcPath(input, extensionRegistry);
+          return new GetDarcPath(input, extensionRegistry);
       }
     };
 
@@ -7565,29 +7544,29 @@ public final class OCSProto {
   }
 
   public interface GetDarcPathReplyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:GetDarcPathReply)
+      // @@protoc_insertion_point(interface_extends:ocs.GetDarcPathReply)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>repeated .Darc path = 1;</code>
+     * <code>repeated .darcOCS.Darc path = 1;</code>
      */
     java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc> 
         getPathList();
     /**
-     * <code>repeated .Darc path = 1;</code>
+     * <code>repeated .darcOCS.Darc path = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Darc getPath(int index);
     /**
-     * <code>repeated .Darc path = 1;</code>
+     * <code>repeated .darcOCS.Darc path = 1;</code>
      */
     int getPathCount();
     /**
-     * <code>repeated .Darc path = 1;</code>
+     * <code>repeated .darcOCS.Darc path = 1;</code>
      */
     java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
         getPathOrBuilderList();
     /**
-     * <code>repeated .Darc path = 1;</code>
+     * <code>repeated .darcOCS.Darc path = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getPathOrBuilder(
         int index);
@@ -7598,11 +7577,11 @@ public final class OCSProto {
    * can sign. If there is no such path, Path is nil.
    * </pre>
    *
-   * Protobuf type {@code GetDarcPathReply}
+   * Protobuf type {@code ocs.GetDarcPathReply}
    */
   public  static final class GetDarcPathReply extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:GetDarcPathReply)
+      // @@protoc_insertion_point(message_implements:ocs.GetDarcPathReply)
       GetDarcPathReplyOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use GetDarcPathReply.newBuilder() to construct.
@@ -7623,9 +7602,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7670,12 +7646,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetDarcPathReply_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPathReply_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetDarcPathReply_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPathReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.GetDarcPathReply.class, ch.epfl.dedis.proto.OCSProto.GetDarcPathReply.Builder.class);
     }
@@ -7683,32 +7659,32 @@ public final class OCSProto {
     public static final int PATH_FIELD_NUMBER = 1;
     private java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc> path_;
     /**
-     * <code>repeated .Darc path = 1;</code>
+     * <code>repeated .darcOCS.Darc path = 1;</code>
      */
     public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc> getPathList() {
       return path_;
     }
     /**
-     * <code>repeated .Darc path = 1;</code>
+     * <code>repeated .darcOCS.Darc path = 1;</code>
      */
     public java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
         getPathOrBuilderList() {
       return path_;
     }
     /**
-     * <code>repeated .Darc path = 1;</code>
+     * <code>repeated .darcOCS.Darc path = 1;</code>
      */
     public int getPathCount() {
       return path_.size();
     }
     /**
-     * <code>repeated .Darc path = 1;</code>
+     * <code>repeated .darcOCS.Darc path = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Darc getPath(int index) {
       return path_.get(index);
     }
     /**
-     * <code>repeated .Darc path = 1;</code>
+     * <code>repeated .darcOCS.Darc path = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getPathOrBuilder(
         int index) {
@@ -7880,20 +7856,20 @@ public final class OCSProto {
      * can sign. If there is no such path, Path is nil.
      * </pre>
      *
-     * Protobuf type {@code GetDarcPathReply}
+     * Protobuf type {@code ocs.GetDarcPathReply}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:GetDarcPathReply)
+        // @@protoc_insertion_point(builder_implements:ocs.GetDarcPathReply)
         ch.epfl.dedis.proto.OCSProto.GetDarcPathReplyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetDarcPathReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPathReply_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetDarcPathReply_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPathReply_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.GetDarcPathReply.class, ch.epfl.dedis.proto.OCSProto.GetDarcPathReply.Builder.class);
       }
@@ -7927,7 +7903,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetDarcPathReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPathReply_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.GetDarcPathReply getDefaultInstanceForType() {
@@ -8067,7 +8043,7 @@ public final class OCSProto {
           ch.epfl.dedis.proto.DarcOCSProto.Darc, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder, ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> pathBuilder_;
 
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc> getPathList() {
         if (pathBuilder_ == null) {
@@ -8077,7 +8053,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public int getPathCount() {
         if (pathBuilder_ == null) {
@@ -8087,7 +8063,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc getPath(int index) {
         if (pathBuilder_ == null) {
@@ -8097,7 +8073,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public Builder setPath(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
@@ -8114,7 +8090,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public Builder setPath(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -8128,7 +8104,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public Builder addPath(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (pathBuilder_ == null) {
@@ -8144,7 +8120,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public Builder addPath(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
@@ -8161,7 +8137,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public Builder addPath(
           ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -8175,7 +8151,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public Builder addPath(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -8189,7 +8165,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public Builder addAllPath(
           java.lang.Iterable<? extends ch.epfl.dedis.proto.DarcOCSProto.Darc> values) {
@@ -8204,7 +8180,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public Builder clearPath() {
         if (pathBuilder_ == null) {
@@ -8217,7 +8193,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public Builder removePath(int index) {
         if (pathBuilder_ == null) {
@@ -8230,14 +8206,14 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder getPathBuilder(
           int index) {
         return getPathFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getPathOrBuilder(
           int index) {
@@ -8247,7 +8223,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
            getPathOrBuilderList() {
@@ -8258,14 +8234,14 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder addPathBuilder() {
         return getPathFieldBuilder().addBuilder(
             ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance());
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder addPathBuilder(
           int index) {
@@ -8273,7 +8249,7 @@ public final class OCSProto {
             index, ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance());
       }
       /**
-       * <code>repeated .Darc path = 1;</code>
+       * <code>repeated .darcOCS.Darc path = 1;</code>
        */
       public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder> 
            getPathBuilderList() {
@@ -8304,10 +8280,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:GetDarcPathReply)
+      // @@protoc_insertion_point(builder_scope:ocs.GetDarcPathReply)
     }
 
-    // @@protoc_insertion_point(class_scope:GetDarcPathReply)
+    // @@protoc_insertion_point(class_scope:ocs.GetDarcPathReply)
     private static final ch.epfl.dedis.proto.OCSProto.GetDarcPathReply DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.GetDarcPathReply();
@@ -8323,7 +8299,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetDarcPathReply(input, extensionRegistry);
+          return new GetDarcPathReply(input, extensionRegistry);
       }
     };
 
@@ -8343,7 +8319,7 @@ public final class OCSProto {
   }
 
   public interface UpdateDarcOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:UpdateDarc)
+      // @@protoc_insertion_point(interface_extends:ocs.UpdateDarc)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -8356,15 +8332,15 @@ public final class OCSProto {
     com.google.protobuf.ByteString getOcs();
 
     /**
-     * <code>required .Darc darc = 2;</code>
+     * <code>required .darcOCS.Darc darc = 2;</code>
      */
     boolean hasDarc();
     /**
-     * <code>required .Darc darc = 2;</code>
+     * <code>required .darcOCS.Darc darc = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Darc getDarc();
     /**
-     * <code>required .Darc darc = 2;</code>
+     * <code>required .darcOCS.Darc darc = 2;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getDarcOrBuilder();
   }
@@ -8374,11 +8350,11 @@ public final class OCSProto {
    * read-rights in documents.
    * </pre>
    *
-   * Protobuf type {@code UpdateDarc}
+   * Protobuf type {@code ocs.UpdateDarc}
    */
   public  static final class UpdateDarc extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:UpdateDarc)
+      // @@protoc_insertion_point(message_implements:ocs.UpdateDarc)
       UpdateDarcOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use UpdateDarc.newBuilder() to construct.
@@ -8399,9 +8375,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8452,12 +8425,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_UpdateDarc_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarc_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_UpdateDarc_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarc_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.UpdateDarc.class, ch.epfl.dedis.proto.OCSProto.UpdateDarc.Builder.class);
     }
@@ -8481,19 +8454,19 @@ public final class OCSProto {
     public static final int DARC_FIELD_NUMBER = 2;
     private ch.epfl.dedis.proto.DarcOCSProto.Darc darc_;
     /**
-     * <code>required .Darc darc = 2;</code>
+     * <code>required .darcOCS.Darc darc = 2;</code>
      */
     public boolean hasDarc() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required .Darc darc = 2;</code>
+     * <code>required .darcOCS.Darc darc = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Darc getDarc() {
       return darc_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance() : darc_;
     }
     /**
-     * <code>required .Darc darc = 2;</code>
+     * <code>required .darcOCS.Darc darc = 2;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getDarcOrBuilder() {
       return darc_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance() : darc_;
@@ -8689,20 +8662,20 @@ public final class OCSProto {
      * read-rights in documents.
      * </pre>
      *
-     * Protobuf type {@code UpdateDarc}
+     * Protobuf type {@code ocs.UpdateDarc}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:UpdateDarc)
+        // @@protoc_insertion_point(builder_implements:ocs.UpdateDarc)
         ch.epfl.dedis.proto.OCSProto.UpdateDarcOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_UpdateDarc_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarc_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_UpdateDarc_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarc_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.UpdateDarc.class, ch.epfl.dedis.proto.OCSProto.UpdateDarc.Builder.class);
       }
@@ -8738,7 +8711,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_UpdateDarc_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarc_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.UpdateDarc getDefaultInstanceForType() {
@@ -8893,13 +8866,13 @@ public final class OCSProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Darc, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder, ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> darcBuilder_;
       /**
-       * <code>required .Darc darc = 2;</code>
+       * <code>required .darcOCS.Darc darc = 2;</code>
        */
       public boolean hasDarc() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required .Darc darc = 2;</code>
+       * <code>required .darcOCS.Darc darc = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc getDarc() {
         if (darcBuilder_ == null) {
@@ -8909,7 +8882,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Darc darc = 2;</code>
+       * <code>required .darcOCS.Darc darc = 2;</code>
        */
       public Builder setDarc(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (darcBuilder_ == null) {
@@ -8925,7 +8898,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Darc darc = 2;</code>
+       * <code>required .darcOCS.Darc darc = 2;</code>
        */
       public Builder setDarc(
           ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -8939,7 +8912,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Darc darc = 2;</code>
+       * <code>required .darcOCS.Darc darc = 2;</code>
        */
       public Builder mergeDarc(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (darcBuilder_ == null) {
@@ -8959,7 +8932,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Darc darc = 2;</code>
+       * <code>required .darcOCS.Darc darc = 2;</code>
        */
       public Builder clearDarc() {
         if (darcBuilder_ == null) {
@@ -8972,7 +8945,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Darc darc = 2;</code>
+       * <code>required .darcOCS.Darc darc = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder getDarcBuilder() {
         bitField0_ |= 0x00000002;
@@ -8980,7 +8953,7 @@ public final class OCSProto {
         return getDarcFieldBuilder().getBuilder();
       }
       /**
-       * <code>required .Darc darc = 2;</code>
+       * <code>required .darcOCS.Darc darc = 2;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getDarcOrBuilder() {
         if (darcBuilder_ != null) {
@@ -8991,7 +8964,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Darc darc = 2;</code>
+       * <code>required .darcOCS.Darc darc = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Darc, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder, ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
@@ -9017,10 +8990,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:UpdateDarc)
+      // @@protoc_insertion_point(builder_scope:ocs.UpdateDarc)
     }
 
-    // @@protoc_insertion_point(class_scope:UpdateDarc)
+    // @@protoc_insertion_point(class_scope:ocs.UpdateDarc)
     private static final ch.epfl.dedis.proto.OCSProto.UpdateDarc DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.UpdateDarc();
@@ -9036,7 +9009,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new UpdateDarc(input, extensionRegistry);
+          return new UpdateDarc(input, extensionRegistry);
       }
     };
 
@@ -9056,21 +9029,21 @@ public final class OCSProto {
   }
 
   public interface UpdateDarcReplyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:UpdateDarcReply)
+      // @@protoc_insertion_point(interface_extends:ocs.UpdateDarcReply)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
     boolean hasSb();
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
-    ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getSb();
+    ch.epfl.dedis.proto.SkipchainProto.SkipBlock getSb();
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
-    ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getSbOrBuilder();
+    ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getSbOrBuilder();
   }
   /**
    * <pre>
@@ -9079,11 +9052,11 @@ public final class OCSProto {
    * be returned.
    * </pre>
    *
-   * Protobuf type {@code UpdateDarcReply}
+   * Protobuf type {@code ocs.UpdateDarcReply}
    */
   public  static final class UpdateDarcReply extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:UpdateDarcReply)
+      // @@protoc_insertion_point(message_implements:ocs.UpdateDarcReply)
       UpdateDarcReplyOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use UpdateDarcReply.newBuilder() to construct.
@@ -9103,9 +9076,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9125,11 +9095,11 @@ public final class OCSProto {
               break;
             }
             case 10: {
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder subBuilder = null;
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = sb_.toBuilder();
               }
-              sb_ = input.readMessage(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.PARSER, extensionRegistry);
+              sb_ = input.readMessage(ch.epfl.dedis.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(sb_);
                 sb_ = subBuilder.buildPartial();
@@ -9151,36 +9121,36 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_UpdateDarcReply_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarcReply_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_UpdateDarcReply_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarcReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.UpdateDarcReply.class, ch.epfl.dedis.proto.OCSProto.UpdateDarcReply.Builder.class);
     }
 
     private int bitField0_;
     public static final int SB_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.proto.SkipBlockProto.SkipBlock sb_;
+    private ch.epfl.dedis.proto.SkipchainProto.SkipBlock sb_;
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
     public boolean hasSb() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
-    public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getSb() {
-      return sb_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : sb_;
+    public ch.epfl.dedis.proto.SkipchainProto.SkipBlock getSb() {
+      return sb_ == null ? ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : sb_;
     }
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
-    public ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getSbOrBuilder() {
-      return sb_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : sb_;
+    public ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getSbOrBuilder() {
+      return sb_ == null ? ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : sb_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -9352,20 +9322,20 @@ public final class OCSProto {
      * be returned.
      * </pre>
      *
-     * Protobuf type {@code UpdateDarcReply}
+     * Protobuf type {@code ocs.UpdateDarcReply}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:UpdateDarcReply)
+        // @@protoc_insertion_point(builder_implements:ocs.UpdateDarcReply)
         ch.epfl.dedis.proto.OCSProto.UpdateDarcReplyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_UpdateDarcReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarcReply_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_UpdateDarcReply_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarcReply_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.UpdateDarcReply.class, ch.epfl.dedis.proto.OCSProto.UpdateDarcReply.Builder.class);
       }
@@ -9399,7 +9369,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_UpdateDarcReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarcReply_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.UpdateDarcReply getDefaultInstanceForType() {
@@ -9504,29 +9474,29 @@ public final class OCSProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.proto.SkipBlockProto.SkipBlock sb_ = null;
+      private ch.epfl.dedis.proto.SkipchainProto.SkipBlock sb_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> sbBuilder_;
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> sbBuilder_;
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
       public boolean hasSb() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getSb() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlock getSb() {
         if (sbBuilder_ == null) {
-          return sb_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : sb_;
+          return sb_ == null ? ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : sb_;
         } else {
           return sbBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public Builder setSb(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+      public Builder setSb(ch.epfl.dedis.proto.SkipchainProto.SkipBlock value) {
         if (sbBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -9540,10 +9510,10 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
       public Builder setSb(
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder builderForValue) {
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder builderForValue) {
         if (sbBuilder_ == null) {
           sb_ = builderForValue.build();
           onChanged();
@@ -9554,15 +9524,15 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public Builder mergeSb(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+      public Builder mergeSb(ch.epfl.dedis.proto.SkipchainProto.SkipBlock value) {
         if (sbBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
               sb_ != null &&
-              sb_ != ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance()) {
+              sb_ != ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance()) {
             sb_ =
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.newBuilder(sb_).mergeFrom(value).buildPartial();
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock.newBuilder(sb_).mergeFrom(value).buildPartial();
           } else {
             sb_ = value;
           }
@@ -9574,7 +9544,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
       public Builder clearSb() {
         if (sbBuilder_ == null) {
@@ -9587,33 +9557,33 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder getSbBuilder() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder getSbBuilder() {
         bitField0_ |= 0x00000001;
         onChanged();
         return getSbFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getSbOrBuilder() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getSbOrBuilder() {
         if (sbBuilder_ != null) {
           return sbBuilder_.getMessageOrBuilder();
         } else {
           return sb_ == null ?
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : sb_;
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : sb_;
         }
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> 
           getSbFieldBuilder() {
         if (sbBuilder_ == null) {
           sbBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder>(
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder>(
                   getSb(),
                   getParentForChildren(),
                   isClean());
@@ -9632,10 +9602,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:UpdateDarcReply)
+      // @@protoc_insertion_point(builder_scope:ocs.UpdateDarcReply)
     }
 
-    // @@protoc_insertion_point(class_scope:UpdateDarcReply)
+    // @@protoc_insertion_point(class_scope:ocs.UpdateDarcReply)
     private static final ch.epfl.dedis.proto.OCSProto.UpdateDarcReply DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.UpdateDarcReply();
@@ -9651,7 +9621,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new UpdateDarcReply(input, extensionRegistry);
+          return new UpdateDarcReply(input, extensionRegistry);
       }
     };
 
@@ -9671,7 +9641,7 @@ public final class OCSProto {
   }
 
   public interface WriteRequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:WriteRequest)
+      // @@protoc_insertion_point(interface_extends:ocs.WriteRequest)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -9684,41 +9654,41 @@ public final class OCSProto {
     com.google.protobuf.ByteString getOcs();
 
     /**
-     * <code>required .Write write = 2;</code>
+     * <code>required .ocs.Write write = 2;</code>
      */
     boolean hasWrite();
     /**
-     * <code>required .Write write = 2;</code>
+     * <code>required .ocs.Write write = 2;</code>
      */
     ch.epfl.dedis.proto.OCSProto.Write getWrite();
     /**
-     * <code>required .Write write = 2;</code>
+     * <code>required .ocs.Write write = 2;</code>
      */
     ch.epfl.dedis.proto.OCSProto.WriteOrBuilder getWriteOrBuilder();
 
     /**
-     * <code>required .Signature signature = 3;</code>
+     * <code>required .darcOCS.Signature signature = 3;</code>
      */
     boolean hasSignature();
     /**
-     * <code>required .Signature signature = 3;</code>
+     * <code>required .darcOCS.Signature signature = 3;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature();
     /**
-     * <code>required .Signature signature = 3;</code>
+     * <code>required .darcOCS.Signature signature = 3;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder();
 
     /**
-     * <code>optional .Darc readers = 4;</code>
+     * <code>optional .darcOCS.Darc readers = 4;</code>
      */
     boolean hasReaders();
     /**
-     * <code>optional .Darc readers = 4;</code>
+     * <code>optional .darcOCS.Darc readers = 4;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Darc getReaders();
     /**
-     * <code>optional .Darc readers = 4;</code>
+     * <code>optional .darcOCS.Darc readers = 4;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getReadersOrBuilder();
   }
@@ -9731,11 +9701,11 @@ public final class OCSProto {
    * must be the same as the publisher in the Write-request.
    * </pre>
    *
-   * Protobuf type {@code WriteRequest}
+   * Protobuf type {@code ocs.WriteRequest}
    */
   public  static final class WriteRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:WriteRequest)
+      // @@protoc_insertion_point(message_implements:ocs.WriteRequest)
       WriteRequestOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use WriteRequest.newBuilder() to construct.
@@ -9756,9 +9726,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9835,12 +9802,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_WriteRequest_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteRequest_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_WriteRequest_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.WriteRequest.class, ch.epfl.dedis.proto.OCSProto.WriteRequest.Builder.class);
     }
@@ -9864,19 +9831,19 @@ public final class OCSProto {
     public static final int WRITE_FIELD_NUMBER = 2;
     private ch.epfl.dedis.proto.OCSProto.Write write_;
     /**
-     * <code>required .Write write = 2;</code>
+     * <code>required .ocs.Write write = 2;</code>
      */
     public boolean hasWrite() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required .Write write = 2;</code>
+     * <code>required .ocs.Write write = 2;</code>
      */
     public ch.epfl.dedis.proto.OCSProto.Write getWrite() {
       return write_ == null ? ch.epfl.dedis.proto.OCSProto.Write.getDefaultInstance() : write_;
     }
     /**
-     * <code>required .Write write = 2;</code>
+     * <code>required .ocs.Write write = 2;</code>
      */
     public ch.epfl.dedis.proto.OCSProto.WriteOrBuilder getWriteOrBuilder() {
       return write_ == null ? ch.epfl.dedis.proto.OCSProto.Write.getDefaultInstance() : write_;
@@ -9885,19 +9852,19 @@ public final class OCSProto {
     public static final int SIGNATURE_FIELD_NUMBER = 3;
     private ch.epfl.dedis.proto.DarcOCSProto.Signature signature_;
     /**
-     * <code>required .Signature signature = 3;</code>
+     * <code>required .darcOCS.Signature signature = 3;</code>
      */
     public boolean hasSignature() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>required .Signature signature = 3;</code>
+     * <code>required .darcOCS.Signature signature = 3;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature() {
       return signature_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Signature.getDefaultInstance() : signature_;
     }
     /**
-     * <code>required .Signature signature = 3;</code>
+     * <code>required .darcOCS.Signature signature = 3;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder() {
       return signature_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Signature.getDefaultInstance() : signature_;
@@ -9906,19 +9873,19 @@ public final class OCSProto {
     public static final int READERS_FIELD_NUMBER = 4;
     private ch.epfl.dedis.proto.DarcOCSProto.Darc readers_;
     /**
-     * <code>optional .Darc readers = 4;</code>
+     * <code>optional .darcOCS.Darc readers = 4;</code>
      */
     public boolean hasReaders() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>optional .Darc readers = 4;</code>
+     * <code>optional .darcOCS.Darc readers = 4;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Darc getReaders() {
       return readers_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance() : readers_;
     }
     /**
-     * <code>optional .Darc readers = 4;</code>
+     * <code>optional .darcOCS.Darc readers = 4;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getReadersOrBuilder() {
       return readers_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance() : readers_;
@@ -10163,20 +10130,20 @@ public final class OCSProto {
      * must be the same as the publisher in the Write-request.
      * </pre>
      *
-     * Protobuf type {@code WriteRequest}
+     * Protobuf type {@code ocs.WriteRequest}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:WriteRequest)
+        // @@protoc_insertion_point(builder_implements:ocs.WriteRequest)
         ch.epfl.dedis.proto.OCSProto.WriteRequestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_WriteRequest_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteRequest_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_WriteRequest_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.WriteRequest.class, ch.epfl.dedis.proto.OCSProto.WriteRequest.Builder.class);
       }
@@ -10226,7 +10193,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_WriteRequest_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteRequest_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.WriteRequest getDefaultInstanceForType() {
@@ -10414,13 +10381,13 @@ public final class OCSProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.OCSProto.Write, ch.epfl.dedis.proto.OCSProto.Write.Builder, ch.epfl.dedis.proto.OCSProto.WriteOrBuilder> writeBuilder_;
       /**
-       * <code>required .Write write = 2;</code>
+       * <code>required .ocs.Write write = 2;</code>
        */
       public boolean hasWrite() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required .Write write = 2;</code>
+       * <code>required .ocs.Write write = 2;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.Write getWrite() {
         if (writeBuilder_ == null) {
@@ -10430,7 +10397,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Write write = 2;</code>
+       * <code>required .ocs.Write write = 2;</code>
        */
       public Builder setWrite(ch.epfl.dedis.proto.OCSProto.Write value) {
         if (writeBuilder_ == null) {
@@ -10446,7 +10413,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Write write = 2;</code>
+       * <code>required .ocs.Write write = 2;</code>
        */
       public Builder setWrite(
           ch.epfl.dedis.proto.OCSProto.Write.Builder builderForValue) {
@@ -10460,7 +10427,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Write write = 2;</code>
+       * <code>required .ocs.Write write = 2;</code>
        */
       public Builder mergeWrite(ch.epfl.dedis.proto.OCSProto.Write value) {
         if (writeBuilder_ == null) {
@@ -10480,7 +10447,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Write write = 2;</code>
+       * <code>required .ocs.Write write = 2;</code>
        */
       public Builder clearWrite() {
         if (writeBuilder_ == null) {
@@ -10493,7 +10460,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Write write = 2;</code>
+       * <code>required .ocs.Write write = 2;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.Write.Builder getWriteBuilder() {
         bitField0_ |= 0x00000002;
@@ -10501,7 +10468,7 @@ public final class OCSProto {
         return getWriteFieldBuilder().getBuilder();
       }
       /**
-       * <code>required .Write write = 2;</code>
+       * <code>required .ocs.Write write = 2;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.WriteOrBuilder getWriteOrBuilder() {
         if (writeBuilder_ != null) {
@@ -10512,7 +10479,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Write write = 2;</code>
+       * <code>required .ocs.Write write = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.OCSProto.Write, ch.epfl.dedis.proto.OCSProto.Write.Builder, ch.epfl.dedis.proto.OCSProto.WriteOrBuilder> 
@@ -10532,13 +10499,13 @@ public final class OCSProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Signature, ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder> signatureBuilder_;
       /**
-       * <code>required .Signature signature = 3;</code>
+       * <code>required .darcOCS.Signature signature = 3;</code>
        */
       public boolean hasSignature() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>required .Signature signature = 3;</code>
+       * <code>required .darcOCS.Signature signature = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature() {
         if (signatureBuilder_ == null) {
@@ -10548,7 +10515,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Signature signature = 3;</code>
+       * <code>required .darcOCS.Signature signature = 3;</code>
        */
       public Builder setSignature(ch.epfl.dedis.proto.DarcOCSProto.Signature value) {
         if (signatureBuilder_ == null) {
@@ -10564,7 +10531,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Signature signature = 3;</code>
+       * <code>required .darcOCS.Signature signature = 3;</code>
        */
       public Builder setSignature(
           ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder builderForValue) {
@@ -10578,7 +10545,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Signature signature = 3;</code>
+       * <code>required .darcOCS.Signature signature = 3;</code>
        */
       public Builder mergeSignature(ch.epfl.dedis.proto.DarcOCSProto.Signature value) {
         if (signatureBuilder_ == null) {
@@ -10598,7 +10565,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Signature signature = 3;</code>
+       * <code>required .darcOCS.Signature signature = 3;</code>
        */
       public Builder clearSignature() {
         if (signatureBuilder_ == null) {
@@ -10611,7 +10578,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Signature signature = 3;</code>
+       * <code>required .darcOCS.Signature signature = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder getSignatureBuilder() {
         bitField0_ |= 0x00000004;
@@ -10619,7 +10586,7 @@ public final class OCSProto {
         return getSignatureFieldBuilder().getBuilder();
       }
       /**
-       * <code>required .Signature signature = 3;</code>
+       * <code>required .darcOCS.Signature signature = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder() {
         if (signatureBuilder_ != null) {
@@ -10630,7 +10597,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Signature signature = 3;</code>
+       * <code>required .darcOCS.Signature signature = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Signature, ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder> 
@@ -10650,13 +10617,13 @@ public final class OCSProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Darc, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder, ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> readersBuilder_;
       /**
-       * <code>optional .Darc readers = 4;</code>
+       * <code>optional .darcOCS.Darc readers = 4;</code>
        */
       public boolean hasReaders() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>optional .Darc readers = 4;</code>
+       * <code>optional .darcOCS.Darc readers = 4;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc getReaders() {
         if (readersBuilder_ == null) {
@@ -10666,7 +10633,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>optional .Darc readers = 4;</code>
+       * <code>optional .darcOCS.Darc readers = 4;</code>
        */
       public Builder setReaders(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (readersBuilder_ == null) {
@@ -10682,7 +10649,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .Darc readers = 4;</code>
+       * <code>optional .darcOCS.Darc readers = 4;</code>
        */
       public Builder setReaders(
           ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -10696,7 +10663,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .Darc readers = 4;</code>
+       * <code>optional .darcOCS.Darc readers = 4;</code>
        */
       public Builder mergeReaders(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (readersBuilder_ == null) {
@@ -10716,7 +10683,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .Darc readers = 4;</code>
+       * <code>optional .darcOCS.Darc readers = 4;</code>
        */
       public Builder clearReaders() {
         if (readersBuilder_ == null) {
@@ -10729,7 +10696,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .Darc readers = 4;</code>
+       * <code>optional .darcOCS.Darc readers = 4;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder getReadersBuilder() {
         bitField0_ |= 0x00000008;
@@ -10737,7 +10704,7 @@ public final class OCSProto {
         return getReadersFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .Darc readers = 4;</code>
+       * <code>optional .darcOCS.Darc readers = 4;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getReadersOrBuilder() {
         if (readersBuilder_ != null) {
@@ -10748,7 +10715,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>optional .Darc readers = 4;</code>
+       * <code>optional .darcOCS.Darc readers = 4;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Darc, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder, ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
@@ -10774,10 +10741,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:WriteRequest)
+      // @@protoc_insertion_point(builder_scope:ocs.WriteRequest)
     }
 
-    // @@protoc_insertion_point(class_scope:WriteRequest)
+    // @@protoc_insertion_point(class_scope:ocs.WriteRequest)
     private static final ch.epfl.dedis.proto.OCSProto.WriteRequest DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.WriteRequest();
@@ -10793,7 +10760,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new WriteRequest(input, extensionRegistry);
+          return new WriteRequest(input, extensionRegistry);
       }
     };
 
@@ -10813,32 +10780,32 @@ public final class OCSProto {
   }
 
   public interface WriteReplyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:WriteReply)
+      // @@protoc_insertion_point(interface_extends:ocs.WriteReply)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
     boolean hasSb();
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
-    ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getSb();
+    ch.epfl.dedis.proto.SkipchainProto.SkipBlock getSb();
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
-    ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getSbOrBuilder();
+    ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getSbOrBuilder();
   }
   /**
    * <pre>
    * WriteReply returns the created skipblock which is the write-id
    * </pre>
    *
-   * Protobuf type {@code WriteReply}
+   * Protobuf type {@code ocs.WriteReply}
    */
   public  static final class WriteReply extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:WriteReply)
+      // @@protoc_insertion_point(message_implements:ocs.WriteReply)
       WriteReplyOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use WriteReply.newBuilder() to construct.
@@ -10858,9 +10825,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -10880,11 +10844,11 @@ public final class OCSProto {
               break;
             }
             case 10: {
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder subBuilder = null;
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = sb_.toBuilder();
               }
-              sb_ = input.readMessage(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.PARSER, extensionRegistry);
+              sb_ = input.readMessage(ch.epfl.dedis.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(sb_);
                 sb_ = subBuilder.buildPartial();
@@ -10906,36 +10870,36 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_WriteReply_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteReply_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_WriteReply_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.WriteReply.class, ch.epfl.dedis.proto.OCSProto.WriteReply.Builder.class);
     }
 
     private int bitField0_;
     public static final int SB_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.proto.SkipBlockProto.SkipBlock sb_;
+    private ch.epfl.dedis.proto.SkipchainProto.SkipBlock sb_;
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
     public boolean hasSb() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
-    public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getSb() {
-      return sb_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : sb_;
+    public ch.epfl.dedis.proto.SkipchainProto.SkipBlock getSb() {
+      return sb_ == null ? ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : sb_;
     }
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
-    public ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getSbOrBuilder() {
-      return sb_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : sb_;
+    public ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getSbOrBuilder() {
+      return sb_ == null ? ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : sb_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -11105,20 +11069,20 @@ public final class OCSProto {
      * WriteReply returns the created skipblock which is the write-id
      * </pre>
      *
-     * Protobuf type {@code WriteReply}
+     * Protobuf type {@code ocs.WriteReply}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:WriteReply)
+        // @@protoc_insertion_point(builder_implements:ocs.WriteReply)
         ch.epfl.dedis.proto.OCSProto.WriteReplyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_WriteReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteReply_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_WriteReply_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteReply_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.WriteReply.class, ch.epfl.dedis.proto.OCSProto.WriteReply.Builder.class);
       }
@@ -11152,7 +11116,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_WriteReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteReply_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.WriteReply getDefaultInstanceForType() {
@@ -11257,29 +11221,29 @@ public final class OCSProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.proto.SkipBlockProto.SkipBlock sb_ = null;
+      private ch.epfl.dedis.proto.SkipchainProto.SkipBlock sb_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> sbBuilder_;
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> sbBuilder_;
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
       public boolean hasSb() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getSb() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlock getSb() {
         if (sbBuilder_ == null) {
-          return sb_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : sb_;
+          return sb_ == null ? ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : sb_;
         } else {
           return sbBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public Builder setSb(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+      public Builder setSb(ch.epfl.dedis.proto.SkipchainProto.SkipBlock value) {
         if (sbBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -11293,10 +11257,10 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
       public Builder setSb(
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder builderForValue) {
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder builderForValue) {
         if (sbBuilder_ == null) {
           sb_ = builderForValue.build();
           onChanged();
@@ -11307,15 +11271,15 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public Builder mergeSb(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+      public Builder mergeSb(ch.epfl.dedis.proto.SkipchainProto.SkipBlock value) {
         if (sbBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
               sb_ != null &&
-              sb_ != ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance()) {
+              sb_ != ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance()) {
             sb_ =
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.newBuilder(sb_).mergeFrom(value).buildPartial();
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock.newBuilder(sb_).mergeFrom(value).buildPartial();
           } else {
             sb_ = value;
           }
@@ -11327,7 +11291,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
       public Builder clearSb() {
         if (sbBuilder_ == null) {
@@ -11340,33 +11304,33 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder getSbBuilder() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder getSbBuilder() {
         bitField0_ |= 0x00000001;
         onChanged();
         return getSbFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getSbOrBuilder() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getSbOrBuilder() {
         if (sbBuilder_ != null) {
           return sbBuilder_.getMessageOrBuilder();
         } else {
           return sb_ == null ?
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : sb_;
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : sb_;
         }
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> 
           getSbFieldBuilder() {
         if (sbBuilder_ == null) {
           sbBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder>(
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder>(
                   getSb(),
                   getParentForChildren(),
                   isClean());
@@ -11385,10 +11349,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:WriteReply)
+      // @@protoc_insertion_point(builder_scope:ocs.WriteReply)
     }
 
-    // @@protoc_insertion_point(class_scope:WriteReply)
+    // @@protoc_insertion_point(class_scope:ocs.WriteReply)
     private static final ch.epfl.dedis.proto.OCSProto.WriteReply DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.WriteReply();
@@ -11404,7 +11368,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new WriteReply(input, extensionRegistry);
+          return new WriteReply(input, extensionRegistry);
       }
     };
 
@@ -11424,7 +11388,7 @@ public final class OCSProto {
   }
 
   public interface ReadRequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:ReadRequest)
+      // @@protoc_insertion_point(interface_extends:ocs.ReadRequest)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -11437,15 +11401,15 @@ public final class OCSProto {
     com.google.protobuf.ByteString getOcs();
 
     /**
-     * <code>required .Read read = 2;</code>
+     * <code>required .ocs.Read read = 2;</code>
      */
     boolean hasRead();
     /**
-     * <code>required .Read read = 2;</code>
+     * <code>required .ocs.Read read = 2;</code>
      */
     ch.epfl.dedis.proto.OCSProto.Read getRead();
     /**
-     * <code>required .Read read = 2;</code>
+     * <code>required .ocs.Read read = 2;</code>
      */
     ch.epfl.dedis.proto.OCSProto.ReadOrBuilder getReadOrBuilder();
   }
@@ -11454,11 +11418,11 @@ public final class OCSProto {
    * ReadRequest asks the OCS-skipchain to allow a reader to access a document.
    * </pre>
    *
-   * Protobuf type {@code ReadRequest}
+   * Protobuf type {@code ocs.ReadRequest}
    */
   public  static final class ReadRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:ReadRequest)
+      // @@protoc_insertion_point(message_implements:ocs.ReadRequest)
       ReadRequestOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use ReadRequest.newBuilder() to construct.
@@ -11479,9 +11443,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -11532,12 +11493,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_ReadRequest_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadRequest_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_ReadRequest_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.ReadRequest.class, ch.epfl.dedis.proto.OCSProto.ReadRequest.Builder.class);
     }
@@ -11561,19 +11522,19 @@ public final class OCSProto {
     public static final int READ_FIELD_NUMBER = 2;
     private ch.epfl.dedis.proto.OCSProto.Read read_;
     /**
-     * <code>required .Read read = 2;</code>
+     * <code>required .ocs.Read read = 2;</code>
      */
     public boolean hasRead() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required .Read read = 2;</code>
+     * <code>required .ocs.Read read = 2;</code>
      */
     public ch.epfl.dedis.proto.OCSProto.Read getRead() {
       return read_ == null ? ch.epfl.dedis.proto.OCSProto.Read.getDefaultInstance() : read_;
     }
     /**
-     * <code>required .Read read = 2;</code>
+     * <code>required .ocs.Read read = 2;</code>
      */
     public ch.epfl.dedis.proto.OCSProto.ReadOrBuilder getReadOrBuilder() {
       return read_ == null ? ch.epfl.dedis.proto.OCSProto.Read.getDefaultInstance() : read_;
@@ -11768,20 +11729,20 @@ public final class OCSProto {
      * ReadRequest asks the OCS-skipchain to allow a reader to access a document.
      * </pre>
      *
-     * Protobuf type {@code ReadRequest}
+     * Protobuf type {@code ocs.ReadRequest}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:ReadRequest)
+        // @@protoc_insertion_point(builder_implements:ocs.ReadRequest)
         ch.epfl.dedis.proto.OCSProto.ReadRequestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_ReadRequest_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadRequest_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_ReadRequest_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.ReadRequest.class, ch.epfl.dedis.proto.OCSProto.ReadRequest.Builder.class);
       }
@@ -11817,7 +11778,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_ReadRequest_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadRequest_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.ReadRequest getDefaultInstanceForType() {
@@ -11972,13 +11933,13 @@ public final class OCSProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.OCSProto.Read, ch.epfl.dedis.proto.OCSProto.Read.Builder, ch.epfl.dedis.proto.OCSProto.ReadOrBuilder> readBuilder_;
       /**
-       * <code>required .Read read = 2;</code>
+       * <code>required .ocs.Read read = 2;</code>
        */
       public boolean hasRead() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required .Read read = 2;</code>
+       * <code>required .ocs.Read read = 2;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.Read getRead() {
         if (readBuilder_ == null) {
@@ -11988,7 +11949,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Read read = 2;</code>
+       * <code>required .ocs.Read read = 2;</code>
        */
       public Builder setRead(ch.epfl.dedis.proto.OCSProto.Read value) {
         if (readBuilder_ == null) {
@@ -12004,7 +11965,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Read read = 2;</code>
+       * <code>required .ocs.Read read = 2;</code>
        */
       public Builder setRead(
           ch.epfl.dedis.proto.OCSProto.Read.Builder builderForValue) {
@@ -12018,7 +11979,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Read read = 2;</code>
+       * <code>required .ocs.Read read = 2;</code>
        */
       public Builder mergeRead(ch.epfl.dedis.proto.OCSProto.Read value) {
         if (readBuilder_ == null) {
@@ -12038,7 +11999,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Read read = 2;</code>
+       * <code>required .ocs.Read read = 2;</code>
        */
       public Builder clearRead() {
         if (readBuilder_ == null) {
@@ -12051,7 +12012,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>required .Read read = 2;</code>
+       * <code>required .ocs.Read read = 2;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.Read.Builder getReadBuilder() {
         bitField0_ |= 0x00000002;
@@ -12059,7 +12020,7 @@ public final class OCSProto {
         return getReadFieldBuilder().getBuilder();
       }
       /**
-       * <code>required .Read read = 2;</code>
+       * <code>required .ocs.Read read = 2;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.ReadOrBuilder getReadOrBuilder() {
         if (readBuilder_ != null) {
@@ -12070,7 +12031,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>required .Read read = 2;</code>
+       * <code>required .ocs.Read read = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.OCSProto.Read, ch.epfl.dedis.proto.OCSProto.Read.Builder, ch.epfl.dedis.proto.OCSProto.ReadOrBuilder> 
@@ -12096,10 +12057,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:ReadRequest)
+      // @@protoc_insertion_point(builder_scope:ocs.ReadRequest)
     }
 
-    // @@protoc_insertion_point(class_scope:ReadRequest)
+    // @@protoc_insertion_point(class_scope:ocs.ReadRequest)
     private static final ch.epfl.dedis.proto.OCSProto.ReadRequest DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.ReadRequest();
@@ -12115,7 +12076,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ReadRequest(input, extensionRegistry);
+          return new ReadRequest(input, extensionRegistry);
       }
     };
 
@@ -12135,32 +12096,32 @@ public final class OCSProto {
   }
 
   public interface ReadReplyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:ReadReply)
+      // @@protoc_insertion_point(interface_extends:ocs.ReadReply)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
     boolean hasSb();
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
-    ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getSb();
+    ch.epfl.dedis.proto.SkipchainProto.SkipBlock getSb();
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
-    ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getSbOrBuilder();
+    ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getSbOrBuilder();
   }
   /**
    * <pre>
    * ReadReply is the added skipblock, if successful.
    * </pre>
    *
-   * Protobuf type {@code ReadReply}
+   * Protobuf type {@code ocs.ReadReply}
    */
   public  static final class ReadReply extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:ReadReply)
+      // @@protoc_insertion_point(message_implements:ocs.ReadReply)
       ReadReplyOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use ReadReply.newBuilder() to construct.
@@ -12180,9 +12141,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12202,11 +12160,11 @@ public final class OCSProto {
               break;
             }
             case 10: {
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder subBuilder = null;
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = sb_.toBuilder();
               }
-              sb_ = input.readMessage(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.PARSER, extensionRegistry);
+              sb_ = input.readMessage(ch.epfl.dedis.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(sb_);
                 sb_ = subBuilder.buildPartial();
@@ -12228,36 +12186,36 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_ReadReply_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadReply_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_ReadReply_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.ReadReply.class, ch.epfl.dedis.proto.OCSProto.ReadReply.Builder.class);
     }
 
     private int bitField0_;
     public static final int SB_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.proto.SkipBlockProto.SkipBlock sb_;
+    private ch.epfl.dedis.proto.SkipchainProto.SkipBlock sb_;
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
     public boolean hasSb() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
-    public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getSb() {
-      return sb_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : sb_;
+    public ch.epfl.dedis.proto.SkipchainProto.SkipBlock getSb() {
+      return sb_ == null ? ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : sb_;
     }
     /**
-     * <code>optional .SkipBlock sb = 1;</code>
+     * <code>optional .skipchain.SkipBlock sb = 1;</code>
      */
-    public ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getSbOrBuilder() {
-      return sb_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : sb_;
+    public ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getSbOrBuilder() {
+      return sb_ == null ? ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : sb_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -12427,20 +12385,20 @@ public final class OCSProto {
      * ReadReply is the added skipblock, if successful.
      * </pre>
      *
-     * Protobuf type {@code ReadReply}
+     * Protobuf type {@code ocs.ReadReply}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:ReadReply)
+        // @@protoc_insertion_point(builder_implements:ocs.ReadReply)
         ch.epfl.dedis.proto.OCSProto.ReadReplyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_ReadReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadReply_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_ReadReply_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadReply_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.ReadReply.class, ch.epfl.dedis.proto.OCSProto.ReadReply.Builder.class);
       }
@@ -12474,7 +12432,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_ReadReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadReply_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.ReadReply getDefaultInstanceForType() {
@@ -12579,29 +12537,29 @@ public final class OCSProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.proto.SkipBlockProto.SkipBlock sb_ = null;
+      private ch.epfl.dedis.proto.SkipchainProto.SkipBlock sb_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> sbBuilder_;
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> sbBuilder_;
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
       public boolean hasSb() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getSb() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlock getSb() {
         if (sbBuilder_ == null) {
-          return sb_ == null ? ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : sb_;
+          return sb_ == null ? ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : sb_;
         } else {
           return sbBuilder_.getMessage();
         }
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public Builder setSb(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+      public Builder setSb(ch.epfl.dedis.proto.SkipchainProto.SkipBlock value) {
         if (sbBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -12615,10 +12573,10 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
       public Builder setSb(
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder builderForValue) {
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder builderForValue) {
         if (sbBuilder_ == null) {
           sb_ = builderForValue.build();
           onChanged();
@@ -12629,15 +12587,15 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public Builder mergeSb(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+      public Builder mergeSb(ch.epfl.dedis.proto.SkipchainProto.SkipBlock value) {
         if (sbBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
               sb_ != null &&
-              sb_ != ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance()) {
+              sb_ != ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance()) {
             sb_ =
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.newBuilder(sb_).mergeFrom(value).buildPartial();
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock.newBuilder(sb_).mergeFrom(value).buildPartial();
           } else {
             sb_ = value;
           }
@@ -12649,7 +12607,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
       public Builder clearSb() {
         if (sbBuilder_ == null) {
@@ -12662,33 +12620,33 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder getSbBuilder() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder getSbBuilder() {
         bitField0_ |= 0x00000001;
         onChanged();
         return getSbFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getSbOrBuilder() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getSbOrBuilder() {
         if (sbBuilder_ != null) {
           return sbBuilder_.getMessageOrBuilder();
         } else {
           return sb_ == null ?
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance() : sb_;
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance() : sb_;
         }
       }
       /**
-       * <code>optional .SkipBlock sb = 1;</code>
+       * <code>optional .skipchain.SkipBlock sb = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> 
           getSbFieldBuilder() {
         if (sbBuilder_ == null) {
           sbBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder>(
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder>(
                   getSb(),
                   getParentForChildren(),
                   isClean());
@@ -12707,10 +12665,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:ReadReply)
+      // @@protoc_insertion_point(builder_scope:ocs.ReadReply)
     }
 
-    // @@protoc_insertion_point(class_scope:ReadReply)
+    // @@protoc_insertion_point(class_scope:ocs.ReadReply)
     private static final ch.epfl.dedis.proto.OCSProto.ReadReply DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.ReadReply();
@@ -12726,7 +12684,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ReadReply(input, extensionRegistry);
+          return new ReadReply(input, extensionRegistry);
       }
     };
 
@@ -12746,7 +12704,7 @@ public final class OCSProto {
   }
 
   public interface SharedPublicRequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:SharedPublicRequest)
+      // @@protoc_insertion_point(interface_extends:ocs.SharedPublicRequest)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -12764,11 +12722,11 @@ public final class OCSProto {
    * skipchain-ID.
    * </pre>
    *
-   * Protobuf type {@code SharedPublicRequest}
+   * Protobuf type {@code ocs.SharedPublicRequest}
    */
   public  static final class SharedPublicRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:SharedPublicRequest)
+      // @@protoc_insertion_point(message_implements:ocs.SharedPublicRequest)
       SharedPublicRequestOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use SharedPublicRequest.newBuilder() to construct.
@@ -12789,9 +12747,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12829,12 +12784,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_SharedPublicRequest_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicRequest_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_SharedPublicRequest_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.SharedPublicRequest.class, ch.epfl.dedis.proto.OCSProto.SharedPublicRequest.Builder.class);
     }
@@ -13021,20 +12976,20 @@ public final class OCSProto {
      * skipchain-ID.
      * </pre>
      *
-     * Protobuf type {@code SharedPublicRequest}
+     * Protobuf type {@code ocs.SharedPublicRequest}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:SharedPublicRequest)
+        // @@protoc_insertion_point(builder_implements:ocs.SharedPublicRequest)
         ch.epfl.dedis.proto.OCSProto.SharedPublicRequestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_SharedPublicRequest_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicRequest_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_SharedPublicRequest_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.SharedPublicRequest.class, ch.epfl.dedis.proto.OCSProto.SharedPublicRequest.Builder.class);
       }
@@ -13063,7 +13018,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_SharedPublicRequest_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicRequest_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.SharedPublicRequest getDefaultInstanceForType() {
@@ -13207,10 +13162,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:SharedPublicRequest)
+      // @@protoc_insertion_point(builder_scope:ocs.SharedPublicRequest)
     }
 
-    // @@protoc_insertion_point(class_scope:SharedPublicRequest)
+    // @@protoc_insertion_point(class_scope:ocs.SharedPublicRequest)
     private static final ch.epfl.dedis.proto.OCSProto.SharedPublicRequest DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.SharedPublicRequest();
@@ -13226,7 +13181,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SharedPublicRequest(input, extensionRegistry);
+          return new SharedPublicRequest(input, extensionRegistry);
       }
     };
 
@@ -13246,7 +13201,7 @@ public final class OCSProto {
   }
 
   public interface SharedPublicReplyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:SharedPublicReply)
+      // @@protoc_insertion_point(interface_extends:ocs.SharedPublicReply)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -13263,11 +13218,11 @@ public final class OCSProto {
    * SharedPublicReply sends back the shared public key.
    * </pre>
    *
-   * Protobuf type {@code SharedPublicReply}
+   * Protobuf type {@code ocs.SharedPublicReply}
    */
   public  static final class SharedPublicReply extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:SharedPublicReply)
+      // @@protoc_insertion_point(message_implements:ocs.SharedPublicReply)
       SharedPublicReplyOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use SharedPublicReply.newBuilder() to construct.
@@ -13288,9 +13243,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -13328,12 +13280,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_SharedPublicReply_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicReply_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_SharedPublicReply_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.SharedPublicReply.class, ch.epfl.dedis.proto.OCSProto.SharedPublicReply.Builder.class);
     }
@@ -13519,20 +13471,20 @@ public final class OCSProto {
      * SharedPublicReply sends back the shared public key.
      * </pre>
      *
-     * Protobuf type {@code SharedPublicReply}
+     * Protobuf type {@code ocs.SharedPublicReply}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:SharedPublicReply)
+        // @@protoc_insertion_point(builder_implements:ocs.SharedPublicReply)
         ch.epfl.dedis.proto.OCSProto.SharedPublicReplyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_SharedPublicReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicReply_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_SharedPublicReply_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicReply_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.SharedPublicReply.class, ch.epfl.dedis.proto.OCSProto.SharedPublicReply.Builder.class);
       }
@@ -13561,7 +13513,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_SharedPublicReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicReply_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.SharedPublicReply getDefaultInstanceForType() {
@@ -13705,10 +13657,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:SharedPublicReply)
+      // @@protoc_insertion_point(builder_scope:ocs.SharedPublicReply)
     }
 
-    // @@protoc_insertion_point(class_scope:SharedPublicReply)
+    // @@protoc_insertion_point(class_scope:ocs.SharedPublicReply)
     private static final ch.epfl.dedis.proto.OCSProto.SharedPublicReply DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.SharedPublicReply();
@@ -13724,7 +13676,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SharedPublicReply(input, extensionRegistry);
+          return new SharedPublicReply(input, extensionRegistry);
       }
     };
 
@@ -13744,7 +13696,7 @@ public final class OCSProto {
   }
 
   public interface DecryptKeyRequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:DecryptKeyRequest)
+      // @@protoc_insertion_point(interface_extends:ocs.DecryptKeyRequest)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -13766,15 +13718,15 @@ public final class OCSProto {
     com.google.protobuf.ByteString getEphemeral();
 
     /**
-     * <code>optional .Signature signature = 3;</code>
+     * <code>optional .darcOCS.Signature signature = 3;</code>
      */
     boolean hasSignature();
     /**
-     * <code>optional .Signature signature = 3;</code>
+     * <code>optional .darcOCS.Signature signature = 3;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature();
     /**
-     * <code>optional .Signature signature = 3;</code>
+     * <code>optional .darcOCS.Signature signature = 3;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder();
   }
@@ -13785,11 +13737,11 @@ public final class OCSProto {
    * encrypted, but then a Signature on the key from the reader is needed.
    * </pre>
    *
-   * Protobuf type {@code DecryptKeyRequest}
+   * Protobuf type {@code ocs.DecryptKeyRequest}
    */
   public  static final class DecryptKeyRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:DecryptKeyRequest)
+      // @@protoc_insertion_point(message_implements:ocs.DecryptKeyRequest)
       DecryptKeyRequestOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use DecryptKeyRequest.newBuilder() to construct.
@@ -13811,9 +13763,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -13869,12 +13818,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_DecryptKeyRequest_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyRequest_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_DecryptKeyRequest_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest.class, ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest.Builder.class);
     }
@@ -13913,19 +13862,19 @@ public final class OCSProto {
     public static final int SIGNATURE_FIELD_NUMBER = 3;
     private ch.epfl.dedis.proto.DarcOCSProto.Signature signature_;
     /**
-     * <code>optional .Signature signature = 3;</code>
+     * <code>optional .darcOCS.Signature signature = 3;</code>
      */
     public boolean hasSignature() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>optional .Signature signature = 3;</code>
+     * <code>optional .darcOCS.Signature signature = 3;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature() {
       return signature_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Signature.getDefaultInstance() : signature_;
     }
     /**
-     * <code>optional .Signature signature = 3;</code>
+     * <code>optional .darcOCS.Signature signature = 3;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder() {
       return signature_ == null ? ch.epfl.dedis.proto.DarcOCSProto.Signature.getDefaultInstance() : signature_;
@@ -14136,20 +14085,20 @@ public final class OCSProto {
      * encrypted, but then a Signature on the key from the reader is needed.
      * </pre>
      *
-     * Protobuf type {@code DecryptKeyRequest}
+     * Protobuf type {@code ocs.DecryptKeyRequest}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:DecryptKeyRequest)
+        // @@protoc_insertion_point(builder_implements:ocs.DecryptKeyRequest)
         ch.epfl.dedis.proto.OCSProto.DecryptKeyRequestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_DecryptKeyRequest_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyRequest_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_DecryptKeyRequest_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest.class, ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest.Builder.class);
       }
@@ -14187,7 +14136,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_DecryptKeyRequest_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyRequest_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest getDefaultInstanceForType() {
@@ -14383,13 +14332,13 @@ public final class OCSProto {
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Signature, ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder> signatureBuilder_;
       /**
-       * <code>optional .Signature signature = 3;</code>
+       * <code>optional .darcOCS.Signature signature = 3;</code>
        */
       public boolean hasSignature() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>optional .Signature signature = 3;</code>
+       * <code>optional .darcOCS.Signature signature = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Signature getSignature() {
         if (signatureBuilder_ == null) {
@@ -14399,7 +14348,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>optional .Signature signature = 3;</code>
+       * <code>optional .darcOCS.Signature signature = 3;</code>
        */
       public Builder setSignature(ch.epfl.dedis.proto.DarcOCSProto.Signature value) {
         if (signatureBuilder_ == null) {
@@ -14415,7 +14364,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .Signature signature = 3;</code>
+       * <code>optional .darcOCS.Signature signature = 3;</code>
        */
       public Builder setSignature(
           ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder builderForValue) {
@@ -14429,7 +14378,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .Signature signature = 3;</code>
+       * <code>optional .darcOCS.Signature signature = 3;</code>
        */
       public Builder mergeSignature(ch.epfl.dedis.proto.DarcOCSProto.Signature value) {
         if (signatureBuilder_ == null) {
@@ -14449,7 +14398,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .Signature signature = 3;</code>
+       * <code>optional .darcOCS.Signature signature = 3;</code>
        */
       public Builder clearSignature() {
         if (signatureBuilder_ == null) {
@@ -14462,7 +14411,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>optional .Signature signature = 3;</code>
+       * <code>optional .darcOCS.Signature signature = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder getSignatureBuilder() {
         bitField0_ |= 0x00000004;
@@ -14470,7 +14419,7 @@ public final class OCSProto {
         return getSignatureFieldBuilder().getBuilder();
       }
       /**
-       * <code>optional .Signature signature = 3;</code>
+       * <code>optional .darcOCS.Signature signature = 3;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder getSignatureOrBuilder() {
         if (signatureBuilder_ != null) {
@@ -14481,7 +14430,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>optional .Signature signature = 3;</code>
+       * <code>optional .darcOCS.Signature signature = 3;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
           ch.epfl.dedis.proto.DarcOCSProto.Signature, ch.epfl.dedis.proto.DarcOCSProto.Signature.Builder, ch.epfl.dedis.proto.DarcOCSProto.SignatureOrBuilder> 
@@ -14507,10 +14456,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:DecryptKeyRequest)
+      // @@protoc_insertion_point(builder_scope:ocs.DecryptKeyRequest)
     }
 
-    // @@protoc_insertion_point(class_scope:DecryptKeyRequest)
+    // @@protoc_insertion_point(class_scope:ocs.DecryptKeyRequest)
     private static final ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest();
@@ -14526,7 +14475,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DecryptKeyRequest(input, extensionRegistry);
+          return new DecryptKeyRequest(input, extensionRegistry);
       }
     };
 
@@ -14546,7 +14495,7 @@ public final class OCSProto {
   }
 
   public interface DecryptKeyReplyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:DecryptKeyReply)
+      // @@protoc_insertion_point(interface_extends:ocs.DecryptKeyReply)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -14586,11 +14535,11 @@ public final class OCSProto {
    * reader's public key.
    * </pre>
    *
-   * Protobuf type {@code DecryptKeyReply}
+   * Protobuf type {@code ocs.DecryptKeyReply}
    */
   public  static final class DecryptKeyReply extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:DecryptKeyReply)
+      // @@protoc_insertion_point(message_implements:ocs.DecryptKeyReply)
       DecryptKeyReplyOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use DecryptKeyReply.newBuilder() to construct.
@@ -14613,9 +14562,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -14669,12 +14615,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_DecryptKeyReply_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyReply_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_DecryptKeyReply_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.DecryptKeyReply.class, ch.epfl.dedis.proto.OCSProto.DecryptKeyReply.Builder.class);
     }
@@ -14936,20 +14882,20 @@ public final class OCSProto {
      * reader's public key.
      * </pre>
      *
-     * Protobuf type {@code DecryptKeyReply}
+     * Protobuf type {@code ocs.DecryptKeyReply}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:DecryptKeyReply)
+        // @@protoc_insertion_point(builder_implements:ocs.DecryptKeyReply)
         ch.epfl.dedis.proto.OCSProto.DecryptKeyReplyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_DecryptKeyReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyReply_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_DecryptKeyReply_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyReply_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.DecryptKeyReply.class, ch.epfl.dedis.proto.OCSProto.DecryptKeyReply.Builder.class);
       }
@@ -14982,7 +14928,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_DecryptKeyReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyReply_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.DecryptKeyReply getDefaultInstanceForType() {
@@ -15258,10 +15204,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:DecryptKeyReply)
+      // @@protoc_insertion_point(builder_scope:ocs.DecryptKeyReply)
     }
 
-    // @@protoc_insertion_point(class_scope:DecryptKeyReply)
+    // @@protoc_insertion_point(class_scope:ocs.DecryptKeyReply)
     private static final ch.epfl.dedis.proto.OCSProto.DecryptKeyReply DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.DecryptKeyReply();
@@ -15277,7 +15223,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DecryptKeyReply(input, extensionRegistry);
+          return new DecryptKeyReply(input, extensionRegistry);
       }
     };
 
@@ -15297,7 +15243,7 @@ public final class OCSProto {
   }
 
   public interface GetReadRequestsOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:GetReadRequests)
+      // @@protoc_insertion_point(interface_extends:ocs.GetReadRequests)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -15323,11 +15269,11 @@ public final class OCSProto {
    * GetReadRequests asks for a list of requests
    * </pre>
    *
-   * Protobuf type {@code GetReadRequests}
+   * Protobuf type {@code ocs.GetReadRequests}
    */
   public  static final class GetReadRequests extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:GetReadRequests)
+      // @@protoc_insertion_point(message_implements:ocs.GetReadRequests)
       GetReadRequestsOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use GetReadRequests.newBuilder() to construct.
@@ -15349,9 +15295,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -15394,12 +15337,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetReadRequests_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequests_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetReadRequests_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequests_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.GetReadRequests.class, ch.epfl.dedis.proto.OCSProto.GetReadRequests.Builder.class);
     }
@@ -15620,20 +15563,20 @@ public final class OCSProto {
      * GetReadRequests asks for a list of requests
      * </pre>
      *
-     * Protobuf type {@code GetReadRequests}
+     * Protobuf type {@code ocs.GetReadRequests}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:GetReadRequests)
+        // @@protoc_insertion_point(builder_implements:ocs.GetReadRequests)
         ch.epfl.dedis.proto.OCSProto.GetReadRequestsOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetReadRequests_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequests_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetReadRequests_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequests_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.GetReadRequests.class, ch.epfl.dedis.proto.OCSProto.GetReadRequests.Builder.class);
       }
@@ -15664,7 +15607,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetReadRequests_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequests_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.GetReadRequests getDefaultInstanceForType() {
@@ -15850,10 +15793,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:GetReadRequests)
+      // @@protoc_insertion_point(builder_scope:ocs.GetReadRequests)
     }
 
-    // @@protoc_insertion_point(class_scope:GetReadRequests)
+    // @@protoc_insertion_point(class_scope:ocs.GetReadRequests)
     private static final ch.epfl.dedis.proto.OCSProto.GetReadRequests DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.GetReadRequests();
@@ -15869,7 +15812,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetReadRequests(input, extensionRegistry);
+          return new GetReadRequests(input, extensionRegistry);
       }
     };
 
@@ -15889,29 +15832,29 @@ public final class OCSProto {
   }
 
   public interface GetReadRequestsReplyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:GetReadRequestsReply)
+      // @@protoc_insertion_point(interface_extends:ocs.GetReadRequestsReply)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>repeated .ReadDoc documents = 1;</code>
+     * <code>repeated .ocs.ReadDoc documents = 1;</code>
      */
     java.util.List<ch.epfl.dedis.proto.OCSProto.ReadDoc> 
         getDocumentsList();
     /**
-     * <code>repeated .ReadDoc documents = 1;</code>
+     * <code>repeated .ocs.ReadDoc documents = 1;</code>
      */
     ch.epfl.dedis.proto.OCSProto.ReadDoc getDocuments(int index);
     /**
-     * <code>repeated .ReadDoc documents = 1;</code>
+     * <code>repeated .ocs.ReadDoc documents = 1;</code>
      */
     int getDocumentsCount();
     /**
-     * <code>repeated .ReadDoc documents = 1;</code>
+     * <code>repeated .ocs.ReadDoc documents = 1;</code>
      */
     java.util.List<? extends ch.epfl.dedis.proto.OCSProto.ReadDocOrBuilder> 
         getDocumentsOrBuilderList();
     /**
-     * <code>repeated .ReadDoc documents = 1;</code>
+     * <code>repeated .ocs.ReadDoc documents = 1;</code>
      */
     ch.epfl.dedis.proto.OCSProto.ReadDocOrBuilder getDocumentsOrBuilder(
         int index);
@@ -15921,11 +15864,11 @@ public final class OCSProto {
    * GetReadRequestsReply returns the requests
    * </pre>
    *
-   * Protobuf type {@code GetReadRequestsReply}
+   * Protobuf type {@code ocs.GetReadRequestsReply}
    */
   public  static final class GetReadRequestsReply extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:GetReadRequestsReply)
+      // @@protoc_insertion_point(message_implements:ocs.GetReadRequestsReply)
       GetReadRequestsReplyOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use GetReadRequestsReply.newBuilder() to construct.
@@ -15946,9 +15889,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -15993,12 +15933,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetReadRequestsReply_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequestsReply_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetReadRequestsReply_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequestsReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply.class, ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply.Builder.class);
     }
@@ -16006,32 +15946,32 @@ public final class OCSProto {
     public static final int DOCUMENTS_FIELD_NUMBER = 1;
     private java.util.List<ch.epfl.dedis.proto.OCSProto.ReadDoc> documents_;
     /**
-     * <code>repeated .ReadDoc documents = 1;</code>
+     * <code>repeated .ocs.ReadDoc documents = 1;</code>
      */
     public java.util.List<ch.epfl.dedis.proto.OCSProto.ReadDoc> getDocumentsList() {
       return documents_;
     }
     /**
-     * <code>repeated .ReadDoc documents = 1;</code>
+     * <code>repeated .ocs.ReadDoc documents = 1;</code>
      */
     public java.util.List<? extends ch.epfl.dedis.proto.OCSProto.ReadDocOrBuilder> 
         getDocumentsOrBuilderList() {
       return documents_;
     }
     /**
-     * <code>repeated .ReadDoc documents = 1;</code>
+     * <code>repeated .ocs.ReadDoc documents = 1;</code>
      */
     public int getDocumentsCount() {
       return documents_.size();
     }
     /**
-     * <code>repeated .ReadDoc documents = 1;</code>
+     * <code>repeated .ocs.ReadDoc documents = 1;</code>
      */
     public ch.epfl.dedis.proto.OCSProto.ReadDoc getDocuments(int index) {
       return documents_.get(index);
     }
     /**
-     * <code>repeated .ReadDoc documents = 1;</code>
+     * <code>repeated .ocs.ReadDoc documents = 1;</code>
      */
     public ch.epfl.dedis.proto.OCSProto.ReadDocOrBuilder getDocumentsOrBuilder(
         int index) {
@@ -16202,20 +16142,20 @@ public final class OCSProto {
      * GetReadRequestsReply returns the requests
      * </pre>
      *
-     * Protobuf type {@code GetReadRequestsReply}
+     * Protobuf type {@code ocs.GetReadRequestsReply}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:GetReadRequestsReply)
+        // @@protoc_insertion_point(builder_implements:ocs.GetReadRequestsReply)
         ch.epfl.dedis.proto.OCSProto.GetReadRequestsReplyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetReadRequestsReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequestsReply_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetReadRequestsReply_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequestsReply_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply.class, ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply.Builder.class);
       }
@@ -16249,7 +16189,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetReadRequestsReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequestsReply_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply getDefaultInstanceForType() {
@@ -16389,7 +16329,7 @@ public final class OCSProto {
           ch.epfl.dedis.proto.OCSProto.ReadDoc, ch.epfl.dedis.proto.OCSProto.ReadDoc.Builder, ch.epfl.dedis.proto.OCSProto.ReadDocOrBuilder> documentsBuilder_;
 
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public java.util.List<ch.epfl.dedis.proto.OCSProto.ReadDoc> getDocumentsList() {
         if (documentsBuilder_ == null) {
@@ -16399,7 +16339,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public int getDocumentsCount() {
         if (documentsBuilder_ == null) {
@@ -16409,7 +16349,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.ReadDoc getDocuments(int index) {
         if (documentsBuilder_ == null) {
@@ -16419,7 +16359,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public Builder setDocuments(
           int index, ch.epfl.dedis.proto.OCSProto.ReadDoc value) {
@@ -16436,7 +16376,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public Builder setDocuments(
           int index, ch.epfl.dedis.proto.OCSProto.ReadDoc.Builder builderForValue) {
@@ -16450,7 +16390,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public Builder addDocuments(ch.epfl.dedis.proto.OCSProto.ReadDoc value) {
         if (documentsBuilder_ == null) {
@@ -16466,7 +16406,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public Builder addDocuments(
           int index, ch.epfl.dedis.proto.OCSProto.ReadDoc value) {
@@ -16483,7 +16423,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public Builder addDocuments(
           ch.epfl.dedis.proto.OCSProto.ReadDoc.Builder builderForValue) {
@@ -16497,7 +16437,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public Builder addDocuments(
           int index, ch.epfl.dedis.proto.OCSProto.ReadDoc.Builder builderForValue) {
@@ -16511,7 +16451,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public Builder addAllDocuments(
           java.lang.Iterable<? extends ch.epfl.dedis.proto.OCSProto.ReadDoc> values) {
@@ -16526,7 +16466,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public Builder clearDocuments() {
         if (documentsBuilder_ == null) {
@@ -16539,7 +16479,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public Builder removeDocuments(int index) {
         if (documentsBuilder_ == null) {
@@ -16552,14 +16492,14 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.ReadDoc.Builder getDocumentsBuilder(
           int index) {
         return getDocumentsFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.ReadDocOrBuilder getDocumentsOrBuilder(
           int index) {
@@ -16569,7 +16509,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public java.util.List<? extends ch.epfl.dedis.proto.OCSProto.ReadDocOrBuilder> 
            getDocumentsOrBuilderList() {
@@ -16580,14 +16520,14 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.ReadDoc.Builder addDocumentsBuilder() {
         return getDocumentsFieldBuilder().addBuilder(
             ch.epfl.dedis.proto.OCSProto.ReadDoc.getDefaultInstance());
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public ch.epfl.dedis.proto.OCSProto.ReadDoc.Builder addDocumentsBuilder(
           int index) {
@@ -16595,7 +16535,7 @@ public final class OCSProto {
             index, ch.epfl.dedis.proto.OCSProto.ReadDoc.getDefaultInstance());
       }
       /**
-       * <code>repeated .ReadDoc documents = 1;</code>
+       * <code>repeated .ocs.ReadDoc documents = 1;</code>
        */
       public java.util.List<ch.epfl.dedis.proto.OCSProto.ReadDoc.Builder> 
            getDocumentsBuilderList() {
@@ -16626,10 +16566,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:GetReadRequestsReply)
+      // @@protoc_insertion_point(builder_scope:ocs.GetReadRequestsReply)
     }
 
-    // @@protoc_insertion_point(class_scope:GetReadRequestsReply)
+    // @@protoc_insertion_point(class_scope:ocs.GetReadRequestsReply)
     private static final ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply();
@@ -16645,7 +16585,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetReadRequestsReply(input, extensionRegistry);
+          return new GetReadRequestsReply(input, extensionRegistry);
       }
     };
 
@@ -16665,7 +16605,7 @@ public final class OCSProto {
   }
 
   public interface GetBunchRequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:GetBunchRequest)
+      // @@protoc_insertion_point(interface_extends:ocs.GetBunchRequest)
       com.google.protobuf.MessageOrBuilder {
   }
   /**
@@ -16673,11 +16613,11 @@ public final class OCSProto {
    * GetBunchRequest asks for a list of bunches
    * </pre>
    *
-   * Protobuf type {@code GetBunchRequest}
+   * Protobuf type {@code ocs.GetBunchRequest}
    */
   public  static final class GetBunchRequest extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:GetBunchRequest)
+      // @@protoc_insertion_point(message_implements:ocs.GetBunchRequest)
       GetBunchRequestOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use GetBunchRequest.newBuilder() to construct.
@@ -16697,9 +16637,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -16731,12 +16668,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetBunchRequest_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchRequest_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetBunchRequest_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchRequest_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.GetBunchRequest.class, ch.epfl.dedis.proto.OCSProto.GetBunchRequest.Builder.class);
     }
@@ -16886,20 +16823,20 @@ public final class OCSProto {
      * GetBunchRequest asks for a list of bunches
      * </pre>
      *
-     * Protobuf type {@code GetBunchRequest}
+     * Protobuf type {@code ocs.GetBunchRequest}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:GetBunchRequest)
+        // @@protoc_insertion_point(builder_implements:ocs.GetBunchRequest)
         ch.epfl.dedis.proto.OCSProto.GetBunchRequestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetBunchRequest_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchRequest_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetBunchRequest_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchRequest_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.GetBunchRequest.class, ch.epfl.dedis.proto.OCSProto.GetBunchRequest.Builder.class);
       }
@@ -16926,7 +16863,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetBunchRequest_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchRequest_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.GetBunchRequest getDefaultInstanceForType() {
@@ -17021,10 +16958,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:GetBunchRequest)
+      // @@protoc_insertion_point(builder_scope:ocs.GetBunchRequest)
     }
 
-    // @@protoc_insertion_point(class_scope:GetBunchRequest)
+    // @@protoc_insertion_point(class_scope:ocs.GetBunchRequest)
     private static final ch.epfl.dedis.proto.OCSProto.GetBunchRequest DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.GetBunchRequest();
@@ -17040,7 +16977,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetBunchRequest(input, extensionRegistry);
+          return new GetBunchRequest(input, extensionRegistry);
       }
     };
 
@@ -17060,31 +16997,31 @@ public final class OCSProto {
   }
 
   public interface GetBunchReplyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:GetBunchReply)
+      // @@protoc_insertion_point(interface_extends:ocs.GetBunchReply)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>repeated .SkipBlock bunches = 1;</code>
+     * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
      */
-    java.util.List<ch.epfl.dedis.proto.SkipBlockProto.SkipBlock> 
+    java.util.List<ch.epfl.dedis.proto.SkipchainProto.SkipBlock> 
         getBunchesList();
     /**
-     * <code>repeated .SkipBlock bunches = 1;</code>
+     * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
      */
-    ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getBunches(int index);
+    ch.epfl.dedis.proto.SkipchainProto.SkipBlock getBunches(int index);
     /**
-     * <code>repeated .SkipBlock bunches = 1;</code>
+     * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
      */
     int getBunchesCount();
     /**
-     * <code>repeated .SkipBlock bunches = 1;</code>
+     * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
      */
-    java.util.List<? extends ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> 
+    java.util.List<? extends ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> 
         getBunchesOrBuilderList();
     /**
-     * <code>repeated .SkipBlock bunches = 1;</code>
+     * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
      */
-    ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getBunchesOrBuilder(
+    ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getBunchesOrBuilder(
         int index);
   }
   /**
@@ -17092,11 +17029,11 @@ public final class OCSProto {
    * GetBunchReply returns the genesis blocks of all registered OCS.
    * </pre>
    *
-   * Protobuf type {@code GetBunchReply}
+   * Protobuf type {@code ocs.GetBunchReply}
    */
   public  static final class GetBunchReply extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:GetBunchReply)
+      // @@protoc_insertion_point(message_implements:ocs.GetBunchReply)
       GetBunchReplyOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use GetBunchReply.newBuilder() to construct.
@@ -17117,9 +17054,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -17140,11 +17074,11 @@ public final class OCSProto {
             }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                bunches_ = new java.util.ArrayList<ch.epfl.dedis.proto.SkipBlockProto.SkipBlock>();
+                bunches_ = new java.util.ArrayList<ch.epfl.dedis.proto.SkipchainProto.SkipBlock>();
                 mutable_bitField0_ |= 0x00000001;
               }
               bunches_.add(
-                  input.readMessage(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry));
               break;
             }
           }
@@ -17164,47 +17098,47 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetBunchReply_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchReply_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetBunchReply_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.GetBunchReply.class, ch.epfl.dedis.proto.OCSProto.GetBunchReply.Builder.class);
     }
 
     public static final int BUNCHES_FIELD_NUMBER = 1;
-    private java.util.List<ch.epfl.dedis.proto.SkipBlockProto.SkipBlock> bunches_;
+    private java.util.List<ch.epfl.dedis.proto.SkipchainProto.SkipBlock> bunches_;
     /**
-     * <code>repeated .SkipBlock bunches = 1;</code>
+     * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
      */
-    public java.util.List<ch.epfl.dedis.proto.SkipBlockProto.SkipBlock> getBunchesList() {
+    public java.util.List<ch.epfl.dedis.proto.SkipchainProto.SkipBlock> getBunchesList() {
       return bunches_;
     }
     /**
-     * <code>repeated .SkipBlock bunches = 1;</code>
+     * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
      */
-    public java.util.List<? extends ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> 
+    public java.util.List<? extends ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> 
         getBunchesOrBuilderList() {
       return bunches_;
     }
     /**
-     * <code>repeated .SkipBlock bunches = 1;</code>
+     * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
      */
     public int getBunchesCount() {
       return bunches_.size();
     }
     /**
-     * <code>repeated .SkipBlock bunches = 1;</code>
+     * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
      */
-    public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getBunches(int index) {
+    public ch.epfl.dedis.proto.SkipchainProto.SkipBlock getBunches(int index) {
       return bunches_.get(index);
     }
     /**
-     * <code>repeated .SkipBlock bunches = 1;</code>
+     * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
      */
-    public ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getBunchesOrBuilder(
+    public ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getBunchesOrBuilder(
         int index) {
       return bunches_.get(index);
     }
@@ -17373,20 +17307,20 @@ public final class OCSProto {
      * GetBunchReply returns the genesis blocks of all registered OCS.
      * </pre>
      *
-     * Protobuf type {@code GetBunchReply}
+     * Protobuf type {@code ocs.GetBunchReply}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:GetBunchReply)
+        // @@protoc_insertion_point(builder_implements:ocs.GetBunchReply)
         ch.epfl.dedis.proto.OCSProto.GetBunchReplyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetBunchReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchReply_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetBunchReply_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchReply_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.GetBunchReply.class, ch.epfl.dedis.proto.OCSProto.GetBunchReply.Builder.class);
       }
@@ -17420,7 +17354,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetBunchReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchReply_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.GetBunchReply getDefaultInstanceForType() {
@@ -17547,22 +17481,22 @@ public final class OCSProto {
       }
       private int bitField0_;
 
-      private java.util.List<ch.epfl.dedis.proto.SkipBlockProto.SkipBlock> bunches_ =
+      private java.util.List<ch.epfl.dedis.proto.SkipchainProto.SkipBlock> bunches_ =
         java.util.Collections.emptyList();
       private void ensureBunchesIsMutable() {
         if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          bunches_ = new java.util.ArrayList<ch.epfl.dedis.proto.SkipBlockProto.SkipBlock>(bunches_);
+          bunches_ = new java.util.ArrayList<ch.epfl.dedis.proto.SkipchainProto.SkipBlock>(bunches_);
           bitField0_ |= 0x00000001;
          }
       }
 
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> bunchesBuilder_;
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> bunchesBuilder_;
 
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.proto.SkipBlockProto.SkipBlock> getBunchesList() {
+      public java.util.List<ch.epfl.dedis.proto.SkipchainProto.SkipBlock> getBunchesList() {
         if (bunchesBuilder_ == null) {
           return java.util.Collections.unmodifiableList(bunches_);
         } else {
@@ -17570,7 +17504,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
       public int getBunchesCount() {
         if (bunchesBuilder_ == null) {
@@ -17580,9 +17514,9 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock getBunches(int index) {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlock getBunches(int index) {
         if (bunchesBuilder_ == null) {
           return bunches_.get(index);
         } else {
@@ -17590,10 +17524,10 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
       public Builder setBunches(
-          int index, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+          int index, ch.epfl.dedis.proto.SkipchainProto.SkipBlock value) {
         if (bunchesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -17607,10 +17541,10 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
       public Builder setBunches(
-          int index, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder builderForValue) {
+          int index, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder builderForValue) {
         if (bunchesBuilder_ == null) {
           ensureBunchesIsMutable();
           bunches_.set(index, builderForValue.build());
@@ -17621,9 +17555,9 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
-      public Builder addBunches(ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+      public Builder addBunches(ch.epfl.dedis.proto.SkipchainProto.SkipBlock value) {
         if (bunchesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -17637,10 +17571,10 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
       public Builder addBunches(
-          int index, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock value) {
+          int index, ch.epfl.dedis.proto.SkipchainProto.SkipBlock value) {
         if (bunchesBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -17654,10 +17588,10 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
       public Builder addBunches(
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder builderForValue) {
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder builderForValue) {
         if (bunchesBuilder_ == null) {
           ensureBunchesIsMutable();
           bunches_.add(builderForValue.build());
@@ -17668,10 +17602,10 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
       public Builder addBunches(
-          int index, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder builderForValue) {
+          int index, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder builderForValue) {
         if (bunchesBuilder_ == null) {
           ensureBunchesIsMutable();
           bunches_.add(index, builderForValue.build());
@@ -17682,10 +17616,10 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
       public Builder addAllBunches(
-          java.lang.Iterable<? extends ch.epfl.dedis.proto.SkipBlockProto.SkipBlock> values) {
+          java.lang.Iterable<? extends ch.epfl.dedis.proto.SkipchainProto.SkipBlock> values) {
         if (bunchesBuilder_ == null) {
           ensureBunchesIsMutable();
           com.google.protobuf.AbstractMessageLite.Builder.addAll(
@@ -17697,7 +17631,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
       public Builder clearBunches() {
         if (bunchesBuilder_ == null) {
@@ -17710,7 +17644,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
       public Builder removeBunches(int index) {
         if (bunchesBuilder_ == null) {
@@ -17723,16 +17657,16 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder getBunchesBuilder(
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder getBunchesBuilder(
           int index) {
         return getBunchesFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder getBunchesOrBuilder(
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder getBunchesOrBuilder(
           int index) {
         if (bunchesBuilder_ == null) {
           return bunches_.get(index);  } else {
@@ -17740,9 +17674,9 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
-      public java.util.List<? extends ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> 
+      public java.util.List<? extends ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> 
            getBunchesOrBuilderList() {
         if (bunchesBuilder_ != null) {
           return bunchesBuilder_.getMessageOrBuilderList();
@@ -17751,33 +17685,33 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder addBunchesBuilder() {
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder addBunchesBuilder() {
         return getBunchesFieldBuilder().addBuilder(
-            ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance());
+            ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance());
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
-      public ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder addBunchesBuilder(
+      public ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder addBunchesBuilder(
           int index) {
         return getBunchesFieldBuilder().addBuilder(
-            index, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.getDefaultInstance());
+            index, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.getDefaultInstance());
       }
       /**
-       * <code>repeated .SkipBlock bunches = 1;</code>
+       * <code>repeated .skipchain.SkipBlock bunches = 1;</code>
        */
-      public java.util.List<ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder> 
+      public java.util.List<ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder> 
            getBunchesBuilderList() {
         return getBunchesFieldBuilder().getBuilderList();
       }
       private com.google.protobuf.RepeatedFieldBuilderV3<
-          ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder> 
+          ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder> 
           getBunchesFieldBuilder() {
         if (bunchesBuilder_ == null) {
           bunchesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
-              ch.epfl.dedis.proto.SkipBlockProto.SkipBlock, ch.epfl.dedis.proto.SkipBlockProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipBlockProto.SkipBlockOrBuilder>(
+              ch.epfl.dedis.proto.SkipchainProto.SkipBlock, ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder, ch.epfl.dedis.proto.SkipchainProto.SkipBlockOrBuilder>(
                   bunches_,
                   ((bitField0_ & 0x00000001) == 0x00000001),
                   getParentForChildren(),
@@ -17797,10 +17731,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:GetBunchReply)
+      // @@protoc_insertion_point(builder_scope:ocs.GetBunchReply)
     }
 
-    // @@protoc_insertion_point(class_scope:GetBunchReply)
+    // @@protoc_insertion_point(class_scope:ocs.GetBunchReply)
     private static final ch.epfl.dedis.proto.OCSProto.GetBunchReply DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.GetBunchReply();
@@ -17816,7 +17750,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetBunchReply(input, extensionRegistry);
+          return new GetBunchReply(input, extensionRegistry);
       }
     };
 
@@ -17836,7 +17770,7 @@ public final class OCSProto {
   }
 
   public interface GetLatestDarcOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:GetLatestDarc)
+      // @@protoc_insertion_point(interface_extends:ocs.GetLatestDarc)
       com.google.protobuf.MessageOrBuilder {
 
     /**
@@ -17863,11 +17797,11 @@ public final class OCSProto {
    * can be nil if DarcID has version==0.
    * </pre>
    *
-   * Protobuf type {@code GetLatestDarc}
+   * Protobuf type {@code ocs.GetLatestDarc}
    */
   public  static final class GetLatestDarc extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:GetLatestDarc)
+      // @@protoc_insertion_point(message_implements:ocs.GetLatestDarc)
       GetLatestDarcOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use GetLatestDarc.newBuilder() to construct.
@@ -17889,9 +17823,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -17934,12 +17865,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetLatestDarc_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarc_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetLatestDarc_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarc_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.GetLatestDarc.class, ch.epfl.dedis.proto.OCSProto.GetLatestDarc.Builder.class);
     }
@@ -18161,20 +18092,20 @@ public final class OCSProto {
      * can be nil if DarcID has version==0.
      * </pre>
      *
-     * Protobuf type {@code GetLatestDarc}
+     * Protobuf type {@code ocs.GetLatestDarc}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:GetLatestDarc)
+        // @@protoc_insertion_point(builder_implements:ocs.GetLatestDarc)
         ch.epfl.dedis.proto.OCSProto.GetLatestDarcOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetLatestDarc_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarc_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetLatestDarc_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarc_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.GetLatestDarc.class, ch.epfl.dedis.proto.OCSProto.GetLatestDarc.Builder.class);
       }
@@ -18205,7 +18136,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetLatestDarc_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarc_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.GetLatestDarc getDefaultInstanceForType() {
@@ -18394,10 +18325,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:GetLatestDarc)
+      // @@protoc_insertion_point(builder_scope:ocs.GetLatestDarc)
     }
 
-    // @@protoc_insertion_point(class_scope:GetLatestDarc)
+    // @@protoc_insertion_point(class_scope:ocs.GetLatestDarc)
     private static final ch.epfl.dedis.proto.OCSProto.GetLatestDarc DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.GetLatestDarc();
@@ -18413,7 +18344,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetLatestDarc(input, extensionRegistry);
+          return new GetLatestDarc(input, extensionRegistry);
       }
     };
 
@@ -18433,29 +18364,29 @@ public final class OCSProto {
   }
 
   public interface GetLatestDarcReplyOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:GetLatestDarcReply)
+      // @@protoc_insertion_point(interface_extends:ocs.GetLatestDarcReply)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc> 
         getDarcsList();
     /**
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.Darc getDarcs(int index);
     /**
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     int getDarcsCount();
     /**
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
         getDarcsOrBuilderList();
     /**
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getDarcsOrBuilder(
         int index);
@@ -18467,11 +18398,11 @@ public final class OCSProto {
    * returns a nil list.
    * </pre>
    *
-   * Protobuf type {@code GetLatestDarcReply}
+   * Protobuf type {@code ocs.GetLatestDarcReply}
    */
   public  static final class GetLatestDarcReply extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:GetLatestDarcReply)
+      // @@protoc_insertion_point(message_implements:ocs.GetLatestDarcReply)
       GetLatestDarcReplyOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use GetLatestDarcReply.newBuilder() to construct.
@@ -18492,9 +18423,6 @@ public final class OCSProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -18539,12 +18467,12 @@ public final class OCSProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetLatestDarcReply_descriptor;
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarcReply_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OCSProto.internal_static_GetLatestDarcReply_fieldAccessorTable
+      return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarcReply_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply.class, ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply.Builder.class);
     }
@@ -18552,32 +18480,32 @@ public final class OCSProto {
     public static final int DARCS_FIELD_NUMBER = 1;
     private java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc> darcs_;
     /**
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc> getDarcsList() {
       return darcs_;
     }
     /**
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     public java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
         getDarcsOrBuilderList() {
       return darcs_;
     }
     /**
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     public int getDarcsCount() {
       return darcs_.size();
     }
     /**
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.Darc getDarcs(int index) {
       return darcs_.get(index);
     }
     /**
-     * <code>repeated .Darc darcs = 1;</code>
+     * <code>repeated .darcOCS.Darc darcs = 1;</code>
      */
     public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getDarcsOrBuilder(
         int index) {
@@ -18750,20 +18678,20 @@ public final class OCSProto {
      * returns a nil list.
      * </pre>
      *
-     * Protobuf type {@code GetLatestDarcReply}
+     * Protobuf type {@code ocs.GetLatestDarcReply}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:GetLatestDarcReply)
+        // @@protoc_insertion_point(builder_implements:ocs.GetLatestDarcReply)
         ch.epfl.dedis.proto.OCSProto.GetLatestDarcReplyOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetLatestDarcReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarcReply_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetLatestDarcReply_fieldAccessorTable
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarcReply_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply.class, ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply.Builder.class);
       }
@@ -18797,7 +18725,7 @@ public final class OCSProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.OCSProto.internal_static_GetLatestDarcReply_descriptor;
+        return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarcReply_descriptor;
       }
 
       public ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply getDefaultInstanceForType() {
@@ -18937,7 +18865,7 @@ public final class OCSProto {
           ch.epfl.dedis.proto.DarcOCSProto.Darc, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder, ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> darcsBuilder_;
 
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc> getDarcsList() {
         if (darcsBuilder_ == null) {
@@ -18947,7 +18875,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public int getDarcsCount() {
         if (darcsBuilder_ == null) {
@@ -18957,7 +18885,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc getDarcs(int index) {
         if (darcsBuilder_ == null) {
@@ -18967,7 +18895,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder setDarcs(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
@@ -18984,7 +18912,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder setDarcs(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -18998,7 +18926,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder addDarcs(ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
         if (darcsBuilder_ == null) {
@@ -19014,7 +18942,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder addDarcs(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Darc value) {
@@ -19031,7 +18959,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder addDarcs(
           ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -19045,7 +18973,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder addDarcs(
           int index, ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder builderForValue) {
@@ -19059,7 +18987,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder addAllDarcs(
           java.lang.Iterable<? extends ch.epfl.dedis.proto.DarcOCSProto.Darc> values) {
@@ -19074,7 +19002,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder clearDarcs() {
         if (darcsBuilder_ == null) {
@@ -19087,7 +19015,7 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public Builder removeDarcs(int index) {
         if (darcsBuilder_ == null) {
@@ -19100,14 +19028,14 @@ public final class OCSProto {
         return this;
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder getDarcsBuilder(
           int index) {
         return getDarcsFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder getDarcsOrBuilder(
           int index) {
@@ -19117,7 +19045,7 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public java.util.List<? extends ch.epfl.dedis.proto.DarcOCSProto.DarcOrBuilder> 
            getDarcsOrBuilderList() {
@@ -19128,14 +19056,14 @@ public final class OCSProto {
         }
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder addDarcsBuilder() {
         return getDarcsFieldBuilder().addBuilder(
             ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance());
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder addDarcsBuilder(
           int index) {
@@ -19143,7 +19071,7 @@ public final class OCSProto {
             index, ch.epfl.dedis.proto.DarcOCSProto.Darc.getDefaultInstance());
       }
       /**
-       * <code>repeated .Darc darcs = 1;</code>
+       * <code>repeated .darcOCS.Darc darcs = 1;</code>
        */
       public java.util.List<ch.epfl.dedis.proto.DarcOCSProto.Darc.Builder> 
            getDarcsBuilderList() {
@@ -19174,10 +19102,10 @@ public final class OCSProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:GetLatestDarcReply)
+      // @@protoc_insertion_point(builder_scope:ocs.GetLatestDarcReply)
     }
 
-    // @@protoc_insertion_point(class_scope:GetLatestDarcReply)
+    // @@protoc_insertion_point(class_scope:ocs.GetLatestDarcReply)
     private static final ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply();
@@ -19193,7 +19121,7 @@ public final class OCSProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetLatestDarcReply(input, extensionRegistry);
+          return new GetLatestDarcReply(input, extensionRegistry);
       }
     };
 
@@ -19213,125 +19141,125 @@ public final class OCSProto {
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Transaction_descriptor;
+    internal_static_ocs_Transaction_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Transaction_fieldAccessorTable;
+      internal_static_ocs_Transaction_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Write_descriptor;
+    internal_static_ocs_Write_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Write_fieldAccessorTable;
+      internal_static_ocs_Write_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Read_descriptor;
+    internal_static_ocs_Read_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Read_fieldAccessorTable;
+      internal_static_ocs_Read_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_ReadDoc_descriptor;
+    internal_static_ocs_ReadDoc_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_ReadDoc_fieldAccessorTable;
+      internal_static_ocs_ReadDoc_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_CreateSkipchainsRequest_descriptor;
+    internal_static_ocs_CreateSkipchainsRequest_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_CreateSkipchainsRequest_fieldAccessorTable;
+      internal_static_ocs_CreateSkipchainsRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_CreateSkipchainsReply_descriptor;
+    internal_static_ocs_CreateSkipchainsReply_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_CreateSkipchainsReply_fieldAccessorTable;
+      internal_static_ocs_CreateSkipchainsReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_GetDarcPath_descriptor;
+    internal_static_ocs_GetDarcPath_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_GetDarcPath_fieldAccessorTable;
+      internal_static_ocs_GetDarcPath_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_GetDarcPathReply_descriptor;
+    internal_static_ocs_GetDarcPathReply_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_GetDarcPathReply_fieldAccessorTable;
+      internal_static_ocs_GetDarcPathReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_UpdateDarc_descriptor;
+    internal_static_ocs_UpdateDarc_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_UpdateDarc_fieldAccessorTable;
+      internal_static_ocs_UpdateDarc_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_UpdateDarcReply_descriptor;
+    internal_static_ocs_UpdateDarcReply_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_UpdateDarcReply_fieldAccessorTable;
+      internal_static_ocs_UpdateDarcReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_WriteRequest_descriptor;
+    internal_static_ocs_WriteRequest_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_WriteRequest_fieldAccessorTable;
+      internal_static_ocs_WriteRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_WriteReply_descriptor;
+    internal_static_ocs_WriteReply_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_WriteReply_fieldAccessorTable;
+      internal_static_ocs_WriteReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_ReadRequest_descriptor;
+    internal_static_ocs_ReadRequest_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_ReadRequest_fieldAccessorTable;
+      internal_static_ocs_ReadRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_ReadReply_descriptor;
+    internal_static_ocs_ReadReply_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_ReadReply_fieldAccessorTable;
+      internal_static_ocs_ReadReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_SharedPublicRequest_descriptor;
+    internal_static_ocs_SharedPublicRequest_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_SharedPublicRequest_fieldAccessorTable;
+      internal_static_ocs_SharedPublicRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_SharedPublicReply_descriptor;
+    internal_static_ocs_SharedPublicReply_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_SharedPublicReply_fieldAccessorTable;
+      internal_static_ocs_SharedPublicReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_DecryptKeyRequest_descriptor;
+    internal_static_ocs_DecryptKeyRequest_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_DecryptKeyRequest_fieldAccessorTable;
+      internal_static_ocs_DecryptKeyRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_DecryptKeyReply_descriptor;
+    internal_static_ocs_DecryptKeyReply_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_DecryptKeyReply_fieldAccessorTable;
+      internal_static_ocs_DecryptKeyReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_GetReadRequests_descriptor;
+    internal_static_ocs_GetReadRequests_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_GetReadRequests_fieldAccessorTable;
+      internal_static_ocs_GetReadRequests_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_GetReadRequestsReply_descriptor;
+    internal_static_ocs_GetReadRequestsReply_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_GetReadRequestsReply_fieldAccessorTable;
+      internal_static_ocs_GetReadRequestsReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_GetBunchRequest_descriptor;
+    internal_static_ocs_GetBunchRequest_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_GetBunchRequest_fieldAccessorTable;
+      internal_static_ocs_GetBunchRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_GetBunchReply_descriptor;
+    internal_static_ocs_GetBunchReply_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_GetBunchReply_fieldAccessorTable;
+      internal_static_ocs_GetBunchReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_GetLatestDarc_descriptor;
+    internal_static_ocs_GetLatestDarc_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_GetLatestDarc_fieldAccessorTable;
+      internal_static_ocs_GetLatestDarc_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_GetLatestDarcReply_descriptor;
+    internal_static_ocs_GetLatestDarcReply_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_GetLatestDarcReply_fieldAccessorTable;
+      internal_static_ocs_GetLatestDarcReply_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -19341,45 +19269,50 @@ public final class OCSProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\tocs.proto\032\017skipblock.proto\032\rdarcOCS.pr" +
-      "oto\032\014roster.proto\"o\n\013Transaction\022\025\n\005writ" +
-      "e\030\001 \001(\0132\006.Write\022\023\n\004read\030\002 \001(\0132\005.Read\022\023\n\004" +
-      "darc\030\003 \001(\0132\005.Darc\022\014\n\004meta\030\004 \001(\014\022\021\n\ttimes" +
-      "tamp\030\005 \002(\022\"\231\001\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u\030" +
-      "\002 \002(\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002(" +
-      "\014\022\n\n\002cs\030\006 \003(\014\022\021\n\textradata\030\007 \001(\014\022\025\n\006read" +
-      "er\030\010 \002(\0132\005.Darc\022\035\n\tsignature\030\t \001(\0132\n.Sig" +
-      "nature\"5\n\004Read\022\016\n\006dataid\030\001 \002(\014\022\035\n\tsignat" +
-      "ure\030\002 \002(\0132\n.Signature\"D\n\007ReadDoc\022\031\n\006read" +
-      "er\030\001 \002(\0132\t.Identity\022\016\n\006readid\030\002 \002(\014\022\016\n\006d" +
-      "ataid\030\003 \002(\014\"J\n\027CreateSkipchainsRequest\022\027" +
-      "\n\006roster\030\001 \002(\0132\007.Roster\022\026\n\007writers\030\002 \002(\013" +
-      "2\005.Darc\";\n\025CreateSkipchainsReply\022\027\n\003ocs\030" +
-      "\001 \001(\0132\n.SkipBlock\022\t\n\001x\030\002 \002(\014\"Y\n\013GetDarcP" +
-      "ath\022\013\n\003ocs\030\001 \002(\014\022\022\n\nbasedarcid\030\002 \002(\014\022\033\n\010" +
-      "identity\030\003 \002(\0132\t.Identity\022\014\n\004role\030\004 \002(\021\"" +
-      "\'\n\020GetDarcPathReply\022\023\n\004path\030\001 \003(\0132\005.Darc" +
-      "\".\n\nUpdateDarc\022\013\n\003ocs\030\001 \002(\014\022\023\n\004darc\030\002 \002(" +
-      "\0132\005.Darc\")\n\017UpdateDarcReply\022\026\n\002sb\030\001 \001(\0132" +
-      "\n.SkipBlock\"i\n\014WriteRequest\022\013\n\003ocs\030\001 \002(\014" +
-      "\022\025\n\005write\030\002 \002(\0132\006.Write\022\035\n\tsignature\030\003 \002" +
-      "(\0132\n.Signature\022\026\n\007readers\030\004 \001(\0132\005.Darc\"$" +
-      "\n\nWriteReply\022\026\n\002sb\030\001 \001(\0132\n.SkipBlock\"/\n\013" +
-      "ReadRequest\022\013\n\003ocs\030\001 \002(\014\022\023\n\004read\030\002 \002(\0132\005" +
-      ".Read\"#\n\tReadReply\022\026\n\002sb\030\001 \001(\0132\n.SkipBlo" +
-      "ck\"&\n\023SharedPublicRequest\022\017\n\007genesis\030\001 \002" +
-      "(\014\"\036\n\021SharedPublicReply\022\t\n\001x\030\001 \002(\014\"S\n\021De" +
-      "cryptKeyRequest\022\014\n\004read\030\001 \002(\014\022\021\n\tephemer" +
-      "al\030\002 \001(\014\022\035\n\tsignature\030\003 \001(\0132\n.Signature\"" +
+      "\n\tocs.proto\022\003ocs\032\017skipchain.proto\032\rdarcO" +
+      "CS.proto\032\nonet.proto\"\177\n\013Transaction\022\031\n\005w" +
+      "rite\030\001 \001(\0132\n.ocs.Write\022\027\n\004read\030\002 \001(\0132\t.o" +
+      "cs.Read\022\033\n\004darc\030\003 \001(\0132\r.darcOCS.Darc\022\014\n\004" +
+      "meta\030\004 \001(\014\022\021\n\ttimestamp\030\005 \002(\022\"\251\001\n\005Write\022" +
+      "\014\n\004data\030\001 \002(\014\022\t\n\001u\030\002 \002(\014\022\014\n\004ubar\030\003 \002(\014\022\t" +
+      "\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002(\014\022\n\n\002cs\030\006 \003(\014\022\021\n\textr" +
+      "adata\030\007 \001(\014\022\035\n\006reader\030\010 \002(\0132\r.darcOCS.Da" +
+      "rc\022%\n\tsignature\030\t \001(\0132\022.darcOCS.Signatur" +
+      "e\"=\n\004Read\022\016\n\006dataid\030\001 \002(\014\022%\n\tsignature\030\002",
+      " \002(\0132\022.darcOCS.Signature\"L\n\007ReadDoc\022!\n\006r" +
+      "eader\030\001 \002(\0132\021.darcOCS.Identity\022\016\n\006readid" +
+      "\030\002 \002(\014\022\016\n\006dataid\030\003 \002(\014\"W\n\027CreateSkipchai" +
+      "nsRequest\022\034\n\006roster\030\001 \002(\0132\014.onet.Roster\022" +
+      "\036\n\007writers\030\002 \002(\0132\r.darcOCS.Darc\"E\n\025Creat" +
+      "eSkipchainsReply\022!\n\003ocs\030\001 \001(\0132\024.skipchai" +
+      "n.SkipBlock\022\t\n\001x\030\002 \002(\014\"a\n\013GetDarcPath\022\013\n" +
+      "\003ocs\030\001 \002(\014\022\022\n\nbasedarcid\030\002 \002(\014\022#\n\010identi" +
+      "ty\030\003 \002(\0132\021.darcOCS.Identity\022\014\n\004role\030\004 \002(" +
+      "\021\"/\n\020GetDarcPathReply\022\033\n\004path\030\001 \003(\0132\r.da",
+      "rcOCS.Darc\"6\n\nUpdateDarc\022\013\n\003ocs\030\001 \002(\014\022\033\n" +
+      "\004darc\030\002 \002(\0132\r.darcOCS.Darc\"3\n\017UpdateDarc" +
+      "Reply\022 \n\002sb\030\001 \001(\0132\024.skipchain.SkipBlock\"" +
+      "}\n\014WriteRequest\022\013\n\003ocs\030\001 \002(\014\022\031\n\005write\030\002 " +
+      "\002(\0132\n.ocs.Write\022%\n\tsignature\030\003 \002(\0132\022.dar" +
+      "cOCS.Signature\022\036\n\007readers\030\004 \001(\0132\r.darcOC" +
+      "S.Darc\".\n\nWriteReply\022 \n\002sb\030\001 \001(\0132\024.skipc" +
+      "hain.SkipBlock\"3\n\013ReadRequest\022\013\n\003ocs\030\001 \002" +
+      "(\014\022\027\n\004read\030\002 \002(\0132\t.ocs.Read\"-\n\tReadReply" +
+      "\022 \n\002sb\030\001 \001(\0132\024.skipchain.SkipBlock\"&\n\023Sh",
+      "aredPublicRequest\022\017\n\007genesis\030\001 \002(\014\"\036\n\021Sh" +
+      "aredPublicReply\022\t\n\001x\030\001 \002(\014\"[\n\021DecryptKey" +
+      "Request\022\014\n\004read\030\001 \002(\014\022\021\n\tephemeral\030\002 \001(\014" +
+      "\022%\n\tsignature\030\003 \001(\0132\022.darcOCS.Signature\"" +
       "9\n\017DecryptKeyReply\022\n\n\002cs\030\001 \003(\014\022\017\n\007xhaten" +
       "c\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"/\n\017GetReadRequests\022\r\n" +
-      "\005start\030\001 \002(\014\022\r\n\005count\030\002 \002(\021\"3\n\024GetReadRe" +
-      "questsReply\022\033\n\tdocuments\030\001 \003(\0132\010.ReadDoc" +
-      "\"\021\n\017GetBunchRequest\",\n\rGetBunchReply\022\033\n\007" +
-      "bunches\030\001 \003(\0132\n.SkipBlock\",\n\rGetLatestDa" +
-      "rc\022\013\n\003ocs\030\001 \002(\014\022\016\n\006darcid\030\002 \002(\014\"*\n\022GetLa" +
-      "testDarcReply\022\024\n\005darcs\030\001 \003(\0132\005.DarcB\037\n\023c" +
-      "h.epfl.dedis.protoB\010OCSProto"
+      "\005start\030\001 \002(\014\022\r\n\005count\030\002 \002(\021\"7\n\024GetReadRe" +
+      "questsReply\022\037\n\tdocuments\030\001 \003(\0132\014.ocs.Rea" +
+      "dDoc\"\021\n\017GetBunchRequest\"6\n\rGetBunchReply" +
+      "\022%\n\007bunches\030\001 \003(\0132\024.skipchain.SkipBlock\"",
+      ",\n\rGetLatestDarc\022\013\n\003ocs\030\001 \002(\014\022\016\n\006darcid\030" +
+      "\002 \002(\014\"2\n\022GetLatestDarcReply\022\034\n\005darcs\030\001 \003" +
+      "(\0132\r.darcOCS.DarcB\037\n\023ch.epfl.dedis.proto" +
+      "B\010OCSProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -19392,157 +19325,157 @@ public final class OCSProto {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          ch.epfl.dedis.proto.SkipBlockProto.getDescriptor(),
+          ch.epfl.dedis.proto.SkipchainProto.getDescriptor(),
           ch.epfl.dedis.proto.DarcOCSProto.getDescriptor(),
-          ch.epfl.dedis.proto.RosterProto.getDescriptor(),
+          ch.epfl.dedis.proto.OnetProto.getDescriptor(),
         }, assigner);
-    internal_static_Transaction_descriptor =
+    internal_static_ocs_Transaction_descriptor =
       getDescriptor().getMessageTypes().get(0);
-    internal_static_Transaction_fieldAccessorTable = new
+    internal_static_ocs_Transaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Transaction_descriptor,
+        internal_static_ocs_Transaction_descriptor,
         new java.lang.String[] { "Write", "Read", "Darc", "Meta", "Timestamp", });
-    internal_static_Write_descriptor =
+    internal_static_ocs_Write_descriptor =
       getDescriptor().getMessageTypes().get(1);
-    internal_static_Write_fieldAccessorTable = new
+    internal_static_ocs_Write_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Write_descriptor,
+        internal_static_ocs_Write_descriptor,
         new java.lang.String[] { "Data", "U", "Ubar", "E", "F", "Cs", "Extradata", "Reader", "Signature", });
-    internal_static_Read_descriptor =
+    internal_static_ocs_Read_descriptor =
       getDescriptor().getMessageTypes().get(2);
-    internal_static_Read_fieldAccessorTable = new
+    internal_static_ocs_Read_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Read_descriptor,
+        internal_static_ocs_Read_descriptor,
         new java.lang.String[] { "Dataid", "Signature", });
-    internal_static_ReadDoc_descriptor =
+    internal_static_ocs_ReadDoc_descriptor =
       getDescriptor().getMessageTypes().get(3);
-    internal_static_ReadDoc_fieldAccessorTable = new
+    internal_static_ocs_ReadDoc_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_ReadDoc_descriptor,
+        internal_static_ocs_ReadDoc_descriptor,
         new java.lang.String[] { "Reader", "Readid", "Dataid", });
-    internal_static_CreateSkipchainsRequest_descriptor =
+    internal_static_ocs_CreateSkipchainsRequest_descriptor =
       getDescriptor().getMessageTypes().get(4);
-    internal_static_CreateSkipchainsRequest_fieldAccessorTable = new
+    internal_static_ocs_CreateSkipchainsRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_CreateSkipchainsRequest_descriptor,
+        internal_static_ocs_CreateSkipchainsRequest_descriptor,
         new java.lang.String[] { "Roster", "Writers", });
-    internal_static_CreateSkipchainsReply_descriptor =
+    internal_static_ocs_CreateSkipchainsReply_descriptor =
       getDescriptor().getMessageTypes().get(5);
-    internal_static_CreateSkipchainsReply_fieldAccessorTable = new
+    internal_static_ocs_CreateSkipchainsReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_CreateSkipchainsReply_descriptor,
+        internal_static_ocs_CreateSkipchainsReply_descriptor,
         new java.lang.String[] { "Ocs", "X", });
-    internal_static_GetDarcPath_descriptor =
+    internal_static_ocs_GetDarcPath_descriptor =
       getDescriptor().getMessageTypes().get(6);
-    internal_static_GetDarcPath_fieldAccessorTable = new
+    internal_static_ocs_GetDarcPath_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_GetDarcPath_descriptor,
+        internal_static_ocs_GetDarcPath_descriptor,
         new java.lang.String[] { "Ocs", "Basedarcid", "Identity", "Role", });
-    internal_static_GetDarcPathReply_descriptor =
+    internal_static_ocs_GetDarcPathReply_descriptor =
       getDescriptor().getMessageTypes().get(7);
-    internal_static_GetDarcPathReply_fieldAccessorTable = new
+    internal_static_ocs_GetDarcPathReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_GetDarcPathReply_descriptor,
+        internal_static_ocs_GetDarcPathReply_descriptor,
         new java.lang.String[] { "Path", });
-    internal_static_UpdateDarc_descriptor =
+    internal_static_ocs_UpdateDarc_descriptor =
       getDescriptor().getMessageTypes().get(8);
-    internal_static_UpdateDarc_fieldAccessorTable = new
+    internal_static_ocs_UpdateDarc_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_UpdateDarc_descriptor,
+        internal_static_ocs_UpdateDarc_descriptor,
         new java.lang.String[] { "Ocs", "Darc", });
-    internal_static_UpdateDarcReply_descriptor =
+    internal_static_ocs_UpdateDarcReply_descriptor =
       getDescriptor().getMessageTypes().get(9);
-    internal_static_UpdateDarcReply_fieldAccessorTable = new
+    internal_static_ocs_UpdateDarcReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_UpdateDarcReply_descriptor,
+        internal_static_ocs_UpdateDarcReply_descriptor,
         new java.lang.String[] { "Sb", });
-    internal_static_WriteRequest_descriptor =
+    internal_static_ocs_WriteRequest_descriptor =
       getDescriptor().getMessageTypes().get(10);
-    internal_static_WriteRequest_fieldAccessorTable = new
+    internal_static_ocs_WriteRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_WriteRequest_descriptor,
+        internal_static_ocs_WriteRequest_descriptor,
         new java.lang.String[] { "Ocs", "Write", "Signature", "Readers", });
-    internal_static_WriteReply_descriptor =
+    internal_static_ocs_WriteReply_descriptor =
       getDescriptor().getMessageTypes().get(11);
-    internal_static_WriteReply_fieldAccessorTable = new
+    internal_static_ocs_WriteReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_WriteReply_descriptor,
+        internal_static_ocs_WriteReply_descriptor,
         new java.lang.String[] { "Sb", });
-    internal_static_ReadRequest_descriptor =
+    internal_static_ocs_ReadRequest_descriptor =
       getDescriptor().getMessageTypes().get(12);
-    internal_static_ReadRequest_fieldAccessorTable = new
+    internal_static_ocs_ReadRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_ReadRequest_descriptor,
+        internal_static_ocs_ReadRequest_descriptor,
         new java.lang.String[] { "Ocs", "Read", });
-    internal_static_ReadReply_descriptor =
+    internal_static_ocs_ReadReply_descriptor =
       getDescriptor().getMessageTypes().get(13);
-    internal_static_ReadReply_fieldAccessorTable = new
+    internal_static_ocs_ReadReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_ReadReply_descriptor,
+        internal_static_ocs_ReadReply_descriptor,
         new java.lang.String[] { "Sb", });
-    internal_static_SharedPublicRequest_descriptor =
+    internal_static_ocs_SharedPublicRequest_descriptor =
       getDescriptor().getMessageTypes().get(14);
-    internal_static_SharedPublicRequest_fieldAccessorTable = new
+    internal_static_ocs_SharedPublicRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_SharedPublicRequest_descriptor,
+        internal_static_ocs_SharedPublicRequest_descriptor,
         new java.lang.String[] { "Genesis", });
-    internal_static_SharedPublicReply_descriptor =
+    internal_static_ocs_SharedPublicReply_descriptor =
       getDescriptor().getMessageTypes().get(15);
-    internal_static_SharedPublicReply_fieldAccessorTable = new
+    internal_static_ocs_SharedPublicReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_SharedPublicReply_descriptor,
+        internal_static_ocs_SharedPublicReply_descriptor,
         new java.lang.String[] { "X", });
-    internal_static_DecryptKeyRequest_descriptor =
+    internal_static_ocs_DecryptKeyRequest_descriptor =
       getDescriptor().getMessageTypes().get(16);
-    internal_static_DecryptKeyRequest_fieldAccessorTable = new
+    internal_static_ocs_DecryptKeyRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_DecryptKeyRequest_descriptor,
+        internal_static_ocs_DecryptKeyRequest_descriptor,
         new java.lang.String[] { "Read", "Ephemeral", "Signature", });
-    internal_static_DecryptKeyReply_descriptor =
+    internal_static_ocs_DecryptKeyReply_descriptor =
       getDescriptor().getMessageTypes().get(17);
-    internal_static_DecryptKeyReply_fieldAccessorTable = new
+    internal_static_ocs_DecryptKeyReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_DecryptKeyReply_descriptor,
+        internal_static_ocs_DecryptKeyReply_descriptor,
         new java.lang.String[] { "Cs", "Xhatenc", "X", });
-    internal_static_GetReadRequests_descriptor =
+    internal_static_ocs_GetReadRequests_descriptor =
       getDescriptor().getMessageTypes().get(18);
-    internal_static_GetReadRequests_fieldAccessorTable = new
+    internal_static_ocs_GetReadRequests_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_GetReadRequests_descriptor,
+        internal_static_ocs_GetReadRequests_descriptor,
         new java.lang.String[] { "Start", "Count", });
-    internal_static_GetReadRequestsReply_descriptor =
+    internal_static_ocs_GetReadRequestsReply_descriptor =
       getDescriptor().getMessageTypes().get(19);
-    internal_static_GetReadRequestsReply_fieldAccessorTable = new
+    internal_static_ocs_GetReadRequestsReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_GetReadRequestsReply_descriptor,
+        internal_static_ocs_GetReadRequestsReply_descriptor,
         new java.lang.String[] { "Documents", });
-    internal_static_GetBunchRequest_descriptor =
+    internal_static_ocs_GetBunchRequest_descriptor =
       getDescriptor().getMessageTypes().get(20);
-    internal_static_GetBunchRequest_fieldAccessorTable = new
+    internal_static_ocs_GetBunchRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_GetBunchRequest_descriptor,
+        internal_static_ocs_GetBunchRequest_descriptor,
         new java.lang.String[] { });
-    internal_static_GetBunchReply_descriptor =
+    internal_static_ocs_GetBunchReply_descriptor =
       getDescriptor().getMessageTypes().get(21);
-    internal_static_GetBunchReply_fieldAccessorTable = new
+    internal_static_ocs_GetBunchReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_GetBunchReply_descriptor,
+        internal_static_ocs_GetBunchReply_descriptor,
         new java.lang.String[] { "Bunches", });
-    internal_static_GetLatestDarc_descriptor =
+    internal_static_ocs_GetLatestDarc_descriptor =
       getDescriptor().getMessageTypes().get(22);
-    internal_static_GetLatestDarc_fieldAccessorTable = new
+    internal_static_ocs_GetLatestDarc_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_GetLatestDarc_descriptor,
+        internal_static_ocs_GetLatestDarc_descriptor,
         new java.lang.String[] { "Ocs", "Darcid", });
-    internal_static_GetLatestDarcReply_descriptor =
+    internal_static_ocs_GetLatestDarcReply_descriptor =
       getDescriptor().getMessageTypes().get(23);
-    internal_static_GetLatestDarcReply_fieldAccessorTable = new
+    internal_static_ocs_GetLatestDarcReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_GetLatestDarcReply_descriptor,
+        internal_static_ocs_GetLatestDarcReply_descriptor,
         new java.lang.String[] { "Darcs", });
-    ch.epfl.dedis.proto.SkipBlockProto.getDescriptor();
+    ch.epfl.dedis.proto.SkipchainProto.getDescriptor();
     ch.epfl.dedis.proto.DarcOCSProto.getDescriptor();
-    ch.epfl.dedis.proto.RosterProto.getDescriptor();
+    ch.epfl.dedis.proto.OnetProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

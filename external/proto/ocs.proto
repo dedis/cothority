@@ -1,7 +1,8 @@
 syntax = "proto2";
-import "skipblock.proto";
+package ocs;
+import "skipchain.proto";
 import "darcOCS.proto";
-import "roster.proto";
+import "onet.proto";
 
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "OCSProto";
@@ -19,62 +20,62 @@ option java_outer_classname = "OCSProto";
 // add to bind to that transaction.
 // Every Transaction must have a Unix timestamp.
 message Transaction {
-  // 	 Write holds an eventual write-request with a document
+  // Write holds an eventual write-request with a document
   optional Write write = 1;
-  // 	 Read holds an eventual read-request, which is approved, for a document
+  // Read holds an eventual read-request, which is approved, for a document
   optional Read read = 2;
-  // 	 Darc defines either the readers allowed for this write-request
-  // 	 or is an update to an existing Darc
-  optional Darc darc = 3;
-  // 	 Meta is any free-form data in that skipblock
+  // Darc defines either the readers allowed for this write-request
+  // or is an update to an existing Darc
+  optional darcOCS.Darc darc = 3;
+  // Meta is any free-form data in that skipblock
   optional bytes meta = 4;
-  // 	 Unix timestamp to record the transaction creation time
+  // Unix timestamp to record the transaction creation time
   required sint64 timestamp = 5;
 }
 
 // Write stores the data and the encrypted secret
 message Write {
-  // 	 Data should be encrypted by the application under the symmetric key in U and Cs
+  // Data should be encrypted by the application under the symmetric key in U and Cs
   required bytes data = 1;
-  // 	 U is the encrypted random value for the ElGamal encryption
+  // U is the encrypted random value for the ElGamal encryption
   required bytes u = 2;
-  // 	 Ubar, E and f will be used by the server to verify the writer did
-  // 	 correctly encrypt the key. It binds the policy (the darc) with the
-  // 	 cyphertext.
-  // 	 Ubar is used for the log-equality proof
+  // Ubar, E and f will be used by the server to verify the writer did
+  // correctly encrypt the key. It binds the policy (the darc) with the
+  // cyphertext.
+  // Ubar is used for the log-equality proof
   required bytes ubar = 3;
-  // 	 E is the non-interactive challenge as scalar
+  // E is the non-interactive challenge as scalar
   required bytes e = 4;
-  // 	 f is the proof - written in uppercase here so it is an exported field,
-  // 	 but in the OCS-paper it's lowercase.
+  // f is the proof - written in uppercase here so it is an exported field,
+  // but in the OCS-paper it's lowercase.
   required bytes f = 5;
-  // 	 Cs are the ElGamal parts for the symmetric key material (might
-  // 	 also contain an IV)
+  // Cs are the ElGamal parts for the symmetric key material (might
+  // also contain an IV)
   repeated bytes cs = 6;
-  // 	 ExtraData is clear text and application-specific
+  // ExtraData is clear text and application-specific
   optional bytes extradata = 7;
-  // 	 Reader points to a darc where the reading-rights are stored
-  required Darc reader = 8;
-  // 	 Signature must come from a valid writer stored in the admin darc of the OCS
-  // 	 skipchain. For backwards-compatibility, this is an optional field.
-  // 	 But for every new write-request, it must be set.
-  optional Signature signature = 9;
+  // Reader points to a darc where the reading-rights are stored
+  required darcOCS.Darc reader = 8;
+  // Signature must come from a valid writer stored in the admin darc of the OCS
+  // skipchain. For backwards-compatibility, this is an optional field.
+  // But for every new write-request, it must be set.
+  optional darcOCS.Signature signature = 9;
 }
 
 // Read stores a read-request which is the secret encrypted under the
 // pseudonym's public key. The Data is the skipblock-id of the skipblock
 // holding the data.
 message Read {
-  // 	 DataID is the document-id for the read request
+  // DataID is the document-id for the read request
   required bytes dataid = 1;
-  // 	 Signature is a Schnorr-signature using the private key of the
-  // 	 reader on the message 'DataID'
-  required Signature signature = 2;
+  // Signature is a Schnorr-signature using the private key of the
+  // reader on the message 'DataID'
+  required darcOCS.Signature signature = 2;
 }
 
 // ReadDoc represents one read-request by a reader.
 message ReadDoc {
-  required Identity reader = 1;
+  required darcOCS.Identity reader = 1;
   required bytes readid = 2;
   required bytes dataid = 3;
 }
@@ -85,13 +86,13 @@ message ReadDoc {
 
 // CreateSkipchainsRequest asks for setting up a new OCS-skipchain.
 message CreateSkipchainsRequest {
-  required Roster roster = 1;
-  required Darc writers = 2;
+  required onet.Roster roster = 1;
+  required darcOCS.Darc writers = 2;
 }
 
 // CreateSkipchainsReply returns the skipchain-id of the OCS-skipchain
 message CreateSkipchainsReply {
-  optional SkipBlock ocs = 1;
+  optional skipchain.SkipBlock ocs = 1;
   required bytes x = 2;
 }
 
@@ -100,28 +101,28 @@ message CreateSkipchainsReply {
 message GetDarcPath {
   required bytes ocs = 1;
   required bytes basedarcid = 2;
-  required Identity identity = 3;
+  required darcOCS.Identity identity = 3;
   required sint32 role = 4;
 }
 
 // GetDarcPathReply returns the shortest path to prove that the identity
 // can sign. If there is no such path, Path is nil.
 message GetDarcPathReply {
-  repeated Darc path = 1;
+  repeated darcOCS.Darc path = 1;
 }
 
 // UpdateDarc allows to set up new accounts or edit existing
 // read-rights in documents.
 message UpdateDarc {
   required bytes ocs = 1;
-  required Darc darc = 2;
+  required darcOCS.Darc darc = 2;
 }
 
 // UpdateDarcReply contains the skipblock with the account stored
 // in it. If the requested update is invalid, a nil skipblcok will
 // be returned.
 message UpdateDarcReply {
-  optional SkipBlock sb = 1;
+  optional skipchain.SkipBlock sb = 1;
 }
 
 // WriteRequest asks the OCS-skipchain to store data on the skipchain.
@@ -132,13 +133,13 @@ message UpdateDarcReply {
 message WriteRequest {
   required bytes ocs = 1;
   required Write write = 2;
-  required Signature signature = 3;
-  optional Darc readers = 4;
+  required darcOCS.Signature signature = 3;
+  optional darcOCS.Darc readers = 4;
 }
 
 // WriteReply returns the created skipblock which is the write-id
 message WriteReply {
-  optional SkipBlock sb = 1;
+  optional skipchain.SkipBlock sb = 1;
 }
 
 // ReadRequest asks the OCS-skipchain to allow a reader to access a document.
@@ -149,7 +150,7 @@ message ReadRequest {
 
 // ReadReply is the added skipblock, if successful.
 message ReadReply {
-  optional SkipBlock sb = 1;
+  optional skipchain.SkipBlock sb = 1;
 }
 
 // SharedPublicRequest asks for the shared public key of the corresponding
@@ -169,7 +170,7 @@ message SharedPublicReply {
 message DecryptKeyRequest {
   required bytes read = 1;
   optional bytes ephemeral = 2;
-  optional Signature signature = 3;
+  optional darcOCS.Signature signature = 3;
 }
 
 // DecryptKeyReply is sent back to the api with the key encrypted under the
@@ -197,7 +198,7 @@ message GetBunchRequest {
 
 // GetBunchReply returns the genesis blocks of all registered OCS.
 message GetBunchReply {
-  repeated SkipBlock bunches = 1;
+  repeated skipchain.SkipBlock bunches = 1;
 }
 
 // GetLatestDarc returns the path to the latest darc. DarcBaseID
@@ -211,5 +212,5 @@ message GetLatestDarc {
 // the one requested. If the darc has not been found, it
 // returns a nil list.
 message GetLatestDarcReply {
-  repeated Darc darcs = 1;
+  repeated darcOCS.Darc darcs = 1;
 }

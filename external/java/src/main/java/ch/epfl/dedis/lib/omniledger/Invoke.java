@@ -1,6 +1,6 @@
 package ch.epfl.dedis.lib.omniledger;
 
-import ch.epfl.dedis.proto.TransactionProto;
+import ch.epfl.dedis.proto.OmniLedgerProto;
 
 import java.util.Arrays;
 import java.util.List;
@@ -46,8 +46,8 @@ public class Invoke {
      * Converts this object to the protobuf representation.
      * @return The protobuf representation.
      */
-    public TransactionProto.Invoke toProto() {
-        TransactionProto.Invoke.Builder b = TransactionProto.Invoke.newBuilder();
+    public OmniLedgerProto.Invoke toProto() {
+        OmniLedgerProto.Invoke.Builder b = OmniLedgerProto.Invoke.newBuilder();
         b.setCommand(this.command);
         for (Argument a : this.arguments) {
             b.addArgs(a.toProto());

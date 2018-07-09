@@ -4,7 +4,7 @@ import ch.epfl.dedis.lib.HashId;
 import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.omniledger.darc.DarcId;
-import ch.epfl.dedis.proto.TransactionProto;
+import ch.epfl.dedis.proto.OmniLedgerProto;
 import com.google.protobuf.ByteString;
 
 import java.util.Arrays;
@@ -72,11 +72,11 @@ public class InstanceId implements HashId {
         return ByteString.copyFrom(id);
     }
 
-    public TransactionProto.ObjectID toProto(){
+    public OmniLedgerProto.InstanceID toProto(){
         try {
-            TransactionProto.ObjectID.Builder ret = TransactionProto.ObjectID.newBuilder();
+            OmniLedgerProto.InstanceID.Builder ret = OmniLedgerProto.InstanceID.newBuilder();
             ret.setDarcid(ByteString.copyFrom(getDarcId().getId()));
-            ret.setInstanceid(ByteString.copyFrom(getSubId().getId()));
+            ret.setSubid(ByteString.copyFrom(getSubId().getId()));
             return ret.build();
         } catch (CothorityCryptoException e){
             throw new RuntimeException(e);

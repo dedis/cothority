@@ -2,32 +2,31 @@ package ch.epfl.dedis.lib;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
-import ch.epfl.dedis.proto.SkipBlockProto;
+import ch.epfl.dedis.proto.SkipchainProto;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 
 /**
  * SkipBlock is a wrapper around the protobuf SkipBlock class. It is mainly used to serialize the genesis block for
  * storage.
  */
 public class SkipBlock {
-    private SkipBlockProto.SkipBlock skipBlock;
+    private SkipchainProto.SkipBlock skipBlock;
 
-    public SkipBlock(SkipBlockProto.SkipBlock skipBlock) {
+    public SkipBlock(SkipchainProto.SkipBlock skipBlock) {
         this.skipBlock = skipBlock;
     }
 
     public SkipBlock(byte[] sb) throws CothorityException {
         try {
-            this.skipBlock = SkipBlockProto.SkipBlock.parseFrom(sb);
+            this.skipBlock = SkipchainProto.SkipBlock.parseFrom(sb);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityException(e);
         }
     }
 
-    public SkipBlockProto.SkipBlock getProto(){
+    public SkipchainProto.SkipBlock getProto(){
         return skipBlock;
     }
 

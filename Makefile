@@ -24,7 +24,9 @@ test_playground:
 # make create_stable
 
 proto:
-	awk -f proto.awk status/service/struct.go > external/proto/status.proto
+	./proto.sh
+	make -C external
+
 
 test_java:
 	cd conode/; make docker_dev

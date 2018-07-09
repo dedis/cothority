@@ -15,15 +15,19 @@ public final class StatusProto {
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
   public interface RequestOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Request)
+      // @@protoc_insertion_point(interface_extends:status.Request)
       com.google.protobuf.MessageOrBuilder {
   }
   /**
-   * Protobuf type {@code Request}
+   * <pre>
+   * Request is what the Status service is expected to receive from clients.
+   * </pre>
+   *
+   * Protobuf type {@code status.Request}
    */
   public  static final class Request extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Request)
+      // @@protoc_insertion_point(message_implements:status.Request)
       RequestOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use Request.newBuilder() to construct.
@@ -43,9 +47,6 @@ public final class StatusProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -77,12 +78,12 @@ public final class StatusProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.StatusProto.internal_static_Request_descriptor;
+      return ch.epfl.dedis.proto.StatusProto.internal_static_status_Request_descriptor;
     }
 
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.StatusProto.internal_static_Request_fieldAccessorTable
+      return ch.epfl.dedis.proto.StatusProto.internal_static_status_Request_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.StatusProto.Request.class, ch.epfl.dedis.proto.StatusProto.Request.Builder.class);
     }
@@ -228,20 +229,24 @@ public final class StatusProto {
       return builder;
     }
     /**
-     * Protobuf type {@code Request}
+     * <pre>
+     * Request is what the Status service is expected to receive from clients.
+     * </pre>
+     *
+     * Protobuf type {@code status.Request}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Request)
+        // @@protoc_insertion_point(builder_implements:status.Request)
         ch.epfl.dedis.proto.StatusProto.RequestOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.StatusProto.internal_static_Request_descriptor;
+        return ch.epfl.dedis.proto.StatusProto.internal_static_status_Request_descriptor;
       }
 
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.StatusProto.internal_static_Request_fieldAccessorTable
+        return ch.epfl.dedis.proto.StatusProto.internal_static_status_Request_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.StatusProto.Request.class, ch.epfl.dedis.proto.StatusProto.Request.Builder.class);
       }
@@ -268,7 +273,7 @@ public final class StatusProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.StatusProto.internal_static_Request_descriptor;
+        return ch.epfl.dedis.proto.StatusProto.internal_static_status_Request_descriptor;
       }
 
       public ch.epfl.dedis.proto.StatusProto.Request getDefaultInstanceForType() {
@@ -363,10 +368,10 @@ public final class StatusProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Request)
+      // @@protoc_insertion_point(builder_scope:status.Request)
     }
 
-    // @@protoc_insertion_point(class_scope:Request)
+    // @@protoc_insertion_point(class_scope:status.Request)
     private static final ch.epfl.dedis.proto.StatusProto.Request DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.StatusProto.Request();
@@ -382,7 +387,7 @@ public final class StatusProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Request(input, extensionRegistry);
+          return new Request(input, extensionRegistry);
       }
     };
 
@@ -402,62 +407,66 @@ public final class StatusProto {
   }
 
   public interface ResponseOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:Response)
+      // @@protoc_insertion_point(interface_extends:status.Response)
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+     * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
-    int getSystemCount();
+    int getStatusCount();
     /**
-     * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+     * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
-    boolean containsSystem(
+    boolean containsStatus(
         java.lang.String key);
     /**
-     * Use {@link #getSystemMap()} instead.
+     * Use {@link #getStatusMap()} instead.
      */
     @java.lang.Deprecated
-    java.util.Map<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status>
-    getSystem();
+    java.util.Map<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status>
+    getStatus();
     /**
-     * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+     * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
-    java.util.Map<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status>
-    getSystemMap();
+    java.util.Map<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status>
+    getStatusMap();
     /**
-     * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+     * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
 
-    ch.epfl.dedis.proto.StatusProto.Response.Status getSystemOrDefault(
+    ch.epfl.dedis.proto.OnetProto.Status getStatusOrDefault(
         java.lang.String key,
-        ch.epfl.dedis.proto.StatusProto.Response.Status defaultValue);
+        ch.epfl.dedis.proto.OnetProto.Status defaultValue);
     /**
-     * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+     * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
 
-    ch.epfl.dedis.proto.StatusProto.Response.Status getSystemOrThrow(
+    ch.epfl.dedis.proto.OnetProto.Status getStatusOrThrow(
         java.lang.String key);
 
     /**
-     * <code>required .ServerIdentity server = 2;</code>
+     * <code>optional .network.ServerIdentity serveridentity = 2;</code>
      */
-    boolean hasServer();
+    boolean hasServeridentity();
     /**
-     * <code>required .ServerIdentity server = 2;</code>
+     * <code>optional .network.ServerIdentity serveridentity = 2;</code>
      */
-    ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity getServer();
+    ch.epfl.dedis.proto.NetworkProto.ServerIdentity getServeridentity();
     /**
-     * <code>required .ServerIdentity server = 2;</code>
+     * <code>optional .network.ServerIdentity serveridentity = 2;</code>
      */
-    ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentityOrBuilder getServerOrBuilder();
+    ch.epfl.dedis.proto.NetworkProto.ServerIdentityOrBuilder getServeridentityOrBuilder();
   }
   /**
-   * Protobuf type {@code Response}
+   * <pre>
+   * Response is what the Status service will reply to clients.
+   * </pre>
+   *
+   * Protobuf type {@code status.Response}
    */
   public  static final class Response extends
       com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:Response)
+      // @@protoc_insertion_point(message_implements:status.Response)
       ResponseOrBuilder {
   private static final long serialVersionUID = 0L;
     // Use Response.newBuilder() to construct.
@@ -477,9 +486,6 @@ public final class StatusProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -500,26 +506,26 @@ public final class StatusProto {
             }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                system_ = com.google.protobuf.MapField.newMapField(
-                    SystemDefaultEntryHolder.defaultEntry);
+                status_ = com.google.protobuf.MapField.newMapField(
+                    StatusDefaultEntryHolder.defaultEntry);
                 mutable_bitField0_ |= 0x00000001;
               }
-              com.google.protobuf.MapEntry<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status>
-              system__ = input.readMessage(
-                  SystemDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
-              system_.getMutableMap().put(
-                  system__.getKey(), system__.getValue());
+              com.google.protobuf.MapEntry<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status>
+              status__ = input.readMessage(
+                  StatusDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+              status_.getMutableMap().put(
+                  status__.getKey(), status__.getValue());
               break;
             }
             case 18: {
-              ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.Builder subBuilder = null;
+              ch.epfl.dedis.proto.NetworkProto.ServerIdentity.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                subBuilder = server_.toBuilder();
+                subBuilder = serveridentity_.toBuilder();
               }
-              server_ = input.readMessage(ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.PARSER, extensionRegistry);
+              serveridentity_ = input.readMessage(ch.epfl.dedis.proto.NetworkProto.ServerIdentity.PARSER, extensionRegistry);
               if (subBuilder != null) {
-                subBuilder.mergeFrom(server_);
-                server_ = subBuilder.buildPartial();
+                subBuilder.mergeFrom(serveridentity_);
+                serveridentity_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
               break;
@@ -538,7 +544,7 @@ public final class StatusProto {
     }
     public static final com.google.protobuf.Descriptors.Descriptor
         getDescriptor() {
-      return ch.epfl.dedis.proto.StatusProto.internal_static_Response_descriptor;
+      return ch.epfl.dedis.proto.StatusProto.internal_static_status_Response_descriptor;
     }
 
     @SuppressWarnings({"rawtypes"})
@@ -546,7 +552,7 @@ public final class StatusProto {
         int number) {
       switch (number) {
         case 1:
-          return internalGetSystem();
+          return internalGetStatus();
         default:
           throw new RuntimeException(
               "Invalid map field number: " + number);
@@ -554,803 +560,107 @@ public final class StatusProto {
     }
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.StatusProto.internal_static_Response_fieldAccessorTable
+      return ch.epfl.dedis.proto.StatusProto.internal_static_status_Response_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               ch.epfl.dedis.proto.StatusProto.Response.class, ch.epfl.dedis.proto.StatusProto.Response.Builder.class);
     }
 
-    public interface StatusOrBuilder extends
-        // @@protoc_insertion_point(interface_extends:Response.Status)
-        com.google.protobuf.MessageOrBuilder {
-
-      /**
-       * <code>map&lt;string, string&gt; field = 1;</code>
-       */
-      int getFieldCount();
-      /**
-       * <code>map&lt;string, string&gt; field = 1;</code>
-       */
-      boolean containsField(
-          java.lang.String key);
-      /**
-       * Use {@link #getFieldMap()} instead.
-       */
-      @java.lang.Deprecated
-      java.util.Map<java.lang.String, java.lang.String>
-      getField();
-      /**
-       * <code>map&lt;string, string&gt; field = 1;</code>
-       */
-      java.util.Map<java.lang.String, java.lang.String>
-      getFieldMap();
-      /**
-       * <code>map&lt;string, string&gt; field = 1;</code>
-       */
-
-      java.lang.String getFieldOrDefault(
-          java.lang.String key,
-          java.lang.String defaultValue);
-      /**
-       * <code>map&lt;string, string&gt; field = 1;</code>
-       */
-
-      java.lang.String getFieldOrThrow(
-          java.lang.String key);
-    }
-    /**
-     * Protobuf type {@code Response.Status}
-     */
-    public  static final class Status extends
-        com.google.protobuf.GeneratedMessageV3 implements
-        // @@protoc_insertion_point(message_implements:Response.Status)
-        StatusOrBuilder {
-    private static final long serialVersionUID = 0L;
-      // Use Status.newBuilder() to construct.
-      private Status(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-        super(builder);
-      }
-      private Status() {
-      }
-
-      @java.lang.Override
-      public final com.google.protobuf.UnknownFieldSet
-      getUnknownFields() {
-        return this.unknownFields;
-      }
-      private Status(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        this();
-        if (extensionRegistry == null) {
-          throw new java.lang.NullPointerException();
-        }
-        int mutable_bitField0_ = 0;
-        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-            com.google.protobuf.UnknownFieldSet.newBuilder();
-        try {
-          boolean done = false;
-          while (!done) {
-            int tag = input.readTag();
-            switch (tag) {
-              case 0:
-                done = true;
-                break;
-              default: {
-                if (!parseUnknownField(
-                    input, unknownFields, extensionRegistry, tag)) {
-                  done = true;
-                }
-                break;
-              }
-              case 10: {
-                if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                  field_ = com.google.protobuf.MapField.newMapField(
-                      FieldDefaultEntryHolder.defaultEntry);
-                  mutable_bitField0_ |= 0x00000001;
-                }
-                com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
-                field__ = input.readMessage(
-                    FieldDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
-                field_.getMutableMap().put(
-                    field__.getKey(), field__.getValue());
-                break;
-              }
-            }
-          }
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          throw e.setUnfinishedMessage(this);
-        } catch (java.io.IOException e) {
-          throw new com.google.protobuf.InvalidProtocolBufferException(
-              e).setUnfinishedMessage(this);
-        } finally {
-          this.unknownFields = unknownFields.build();
-          makeExtensionsImmutable();
-        }
-      }
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.proto.StatusProto.internal_static_Response_Status_descriptor;
-      }
-
-      @SuppressWarnings({"rawtypes"})
-      protected com.google.protobuf.MapField internalGetMapField(
-          int number) {
-        switch (number) {
-          case 1:
-            return internalGetField();
-          default:
-            throw new RuntimeException(
-                "Invalid map field number: " + number);
-        }
-      }
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.StatusProto.internal_static_Response_Status_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.proto.StatusProto.Response.Status.class, ch.epfl.dedis.proto.StatusProto.Response.Status.Builder.class);
-      }
-
-      public static final int FIELD_FIELD_NUMBER = 1;
-      private static final class FieldDefaultEntryHolder {
-        static final com.google.protobuf.MapEntry<
-            java.lang.String, java.lang.String> defaultEntry =
-                com.google.protobuf.MapEntry
-                .<java.lang.String, java.lang.String>newDefaultInstance(
-                    ch.epfl.dedis.proto.StatusProto.internal_static_Response_Status_FieldEntry_descriptor, 
-                    com.google.protobuf.WireFormat.FieldType.STRING,
-                    "",
-                    com.google.protobuf.WireFormat.FieldType.STRING,
-                    "");
-      }
-      private com.google.protobuf.MapField<
-          java.lang.String, java.lang.String> field_;
-      private com.google.protobuf.MapField<java.lang.String, java.lang.String>
-      internalGetField() {
-        if (field_ == null) {
-          return com.google.protobuf.MapField.emptyMapField(
-              FieldDefaultEntryHolder.defaultEntry);
-        }
-        return field_;
-      }
-
-      public int getFieldCount() {
-        return internalGetField().getMap().size();
-      }
-      /**
-       * <code>map&lt;string, string&gt; field = 1;</code>
-       */
-
-      public boolean containsField(
-          java.lang.String key) {
-        if (key == null) { throw new java.lang.NullPointerException(); }
-        return internalGetField().getMap().containsKey(key);
-      }
-      /**
-       * Use {@link #getFieldMap()} instead.
-       */
-      @java.lang.Deprecated
-      public java.util.Map<java.lang.String, java.lang.String> getField() {
-        return getFieldMap();
-      }
-      /**
-       * <code>map&lt;string, string&gt; field = 1;</code>
-       */
-
-      public java.util.Map<java.lang.String, java.lang.String> getFieldMap() {
-        return internalGetField().getMap();
-      }
-      /**
-       * <code>map&lt;string, string&gt; field = 1;</code>
-       */
-
-      public java.lang.String getFieldOrDefault(
-          java.lang.String key,
-          java.lang.String defaultValue) {
-        if (key == null) { throw new java.lang.NullPointerException(); }
-        java.util.Map<java.lang.String, java.lang.String> map =
-            internalGetField().getMap();
-        return map.containsKey(key) ? map.get(key) : defaultValue;
-      }
-      /**
-       * <code>map&lt;string, string&gt; field = 1;</code>
-       */
-
-      public java.lang.String getFieldOrThrow(
-          java.lang.String key) {
-        if (key == null) { throw new java.lang.NullPointerException(); }
-        java.util.Map<java.lang.String, java.lang.String> map =
-            internalGetField().getMap();
-        if (!map.containsKey(key)) {
-          throw new java.lang.IllegalArgumentException();
-        }
-        return map.get(key);
-      }
-
-      private byte memoizedIsInitialized = -1;
-      public final boolean isInitialized() {
-        byte isInitialized = memoizedIsInitialized;
-        if (isInitialized == 1) return true;
-        if (isInitialized == 0) return false;
-
-        memoizedIsInitialized = 1;
-        return true;
-      }
-
-      public void writeTo(com.google.protobuf.CodedOutputStream output)
-                          throws java.io.IOException {
-        com.google.protobuf.GeneratedMessageV3
-          .serializeStringMapTo(
-            output,
-            internalGetField(),
-            FieldDefaultEntryHolder.defaultEntry,
-            1);
-        unknownFields.writeTo(output);
-      }
-
-      public int getSerializedSize() {
-        int size = memoizedSize;
-        if (size != -1) return size;
-
-        size = 0;
-        for (java.util.Map.Entry<java.lang.String, java.lang.String> entry
-             : internalGetField().getMap().entrySet()) {
-          com.google.protobuf.MapEntry<java.lang.String, java.lang.String>
-          field__ = FieldDefaultEntryHolder.defaultEntry.newBuilderForType()
-              .setKey(entry.getKey())
-              .setValue(entry.getValue())
-              .build();
-          size += com.google.protobuf.CodedOutputStream
-              .computeMessageSize(1, field__);
-        }
-        size += unknownFields.getSerializedSize();
-        memoizedSize = size;
-        return size;
-      }
-
-      @java.lang.Override
-      public boolean equals(final java.lang.Object obj) {
-        if (obj == this) {
-         return true;
-        }
-        if (!(obj instanceof ch.epfl.dedis.proto.StatusProto.Response.Status)) {
-          return super.equals(obj);
-        }
-        ch.epfl.dedis.proto.StatusProto.Response.Status other = (ch.epfl.dedis.proto.StatusProto.Response.Status) obj;
-
-        boolean result = true;
-        result = result && internalGetField().equals(
-            other.internalGetField());
-        result = result && unknownFields.equals(other.unknownFields);
-        return result;
-      }
-
-      @java.lang.Override
-      public int hashCode() {
-        if (memoizedHashCode != 0) {
-          return memoizedHashCode;
-        }
-        int hash = 41;
-        hash = (19 * hash) + getDescriptor().hashCode();
-        if (!internalGetField().getMap().isEmpty()) {
-          hash = (37 * hash) + FIELD_FIELD_NUMBER;
-          hash = (53 * hash) + internalGetField().hashCode();
-        }
-        hash = (29 * hash) + unknownFields.hashCode();
-        memoizedHashCode = hash;
-        return hash;
-      }
-
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status parseFrom(
-          java.nio.ByteBuffer data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status parseFrom(
-          java.nio.ByteBuffer data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status parseFrom(
-          com.google.protobuf.ByteString data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status parseFrom(
-          com.google.protobuf.ByteString data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status parseFrom(byte[] data)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data);
-      }
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status parseFrom(
-          byte[] data,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return PARSER.parseFrom(data, extensionRegistry);
-      }
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status parseFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
-      }
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status parseFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
-      }
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status parseDelimitedFrom(java.io.InputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input);
-      }
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status parseDelimitedFrom(
-          java.io.InputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-      }
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status parseFrom(
-          com.google.protobuf.CodedInputStream input)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input);
-      }
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status parseFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        return com.google.protobuf.GeneratedMessageV3
-            .parseWithIOException(PARSER, input, extensionRegistry);
-      }
-
-      public Builder newBuilderForType() { return newBuilder(); }
-      public static Builder newBuilder() {
-        return DEFAULT_INSTANCE.toBuilder();
-      }
-      public static Builder newBuilder(ch.epfl.dedis.proto.StatusProto.Response.Status prototype) {
-        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-      }
-      public Builder toBuilder() {
-        return this == DEFAULT_INSTANCE
-            ? new Builder() : new Builder().mergeFrom(this);
-      }
-
-      @java.lang.Override
-      protected Builder newBuilderForType(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        Builder builder = new Builder(parent);
-        return builder;
-      }
-      /**
-       * Protobuf type {@code Response.Status}
-       */
-      public static final class Builder extends
-          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-          // @@protoc_insertion_point(builder_implements:Response.Status)
-          ch.epfl.dedis.proto.StatusProto.Response.StatusOrBuilder {
-        public static final com.google.protobuf.Descriptors.Descriptor
-            getDescriptor() {
-          return ch.epfl.dedis.proto.StatusProto.internal_static_Response_Status_descriptor;
-        }
-
-        @SuppressWarnings({"rawtypes"})
-        protected com.google.protobuf.MapField internalGetMapField(
-            int number) {
-          switch (number) {
-            case 1:
-              return internalGetField();
-            default:
-              throw new RuntimeException(
-                  "Invalid map field number: " + number);
-          }
-        }
-        @SuppressWarnings({"rawtypes"})
-        protected com.google.protobuf.MapField internalGetMutableMapField(
-            int number) {
-          switch (number) {
-            case 1:
-              return internalGetMutableField();
-            default:
-              throw new RuntimeException(
-                  "Invalid map field number: " + number);
-          }
-        }
-        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-            internalGetFieldAccessorTable() {
-          return ch.epfl.dedis.proto.StatusProto.internal_static_Response_Status_fieldAccessorTable
-              .ensureFieldAccessorsInitialized(
-                  ch.epfl.dedis.proto.StatusProto.Response.Status.class, ch.epfl.dedis.proto.StatusProto.Response.Status.Builder.class);
-        }
-
-        // Construct using ch.epfl.dedis.proto.StatusProto.Response.Status.newBuilder()
-        private Builder() {
-          maybeForceBuilderInitialization();
-        }
-
-        private Builder(
-            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-          super(parent);
-          maybeForceBuilderInitialization();
-        }
-        private void maybeForceBuilderInitialization() {
-          if (com.google.protobuf.GeneratedMessageV3
-                  .alwaysUseFieldBuilders) {
-          }
-        }
-        public Builder clear() {
-          super.clear();
-          internalGetMutableField().clear();
-          return this;
-        }
-
-        public com.google.protobuf.Descriptors.Descriptor
-            getDescriptorForType() {
-          return ch.epfl.dedis.proto.StatusProto.internal_static_Response_Status_descriptor;
-        }
-
-        public ch.epfl.dedis.proto.StatusProto.Response.Status getDefaultInstanceForType() {
-          return ch.epfl.dedis.proto.StatusProto.Response.Status.getDefaultInstance();
-        }
-
-        public ch.epfl.dedis.proto.StatusProto.Response.Status build() {
-          ch.epfl.dedis.proto.StatusProto.Response.Status result = buildPartial();
-          if (!result.isInitialized()) {
-            throw newUninitializedMessageException(result);
-          }
-          return result;
-        }
-
-        public ch.epfl.dedis.proto.StatusProto.Response.Status buildPartial() {
-          ch.epfl.dedis.proto.StatusProto.Response.Status result = new ch.epfl.dedis.proto.StatusProto.Response.Status(this);
-          int from_bitField0_ = bitField0_;
-          result.field_ = internalGetField();
-          result.field_.makeImmutable();
-          onBuilt();
-          return result;
-        }
-
-        public Builder clone() {
-          return (Builder) super.clone();
-        }
-        public Builder setField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
-          return (Builder) super.setField(field, value);
-        }
-        public Builder clearField(
-            com.google.protobuf.Descriptors.FieldDescriptor field) {
-          return (Builder) super.clearField(field);
-        }
-        public Builder clearOneof(
-            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-          return (Builder) super.clearOneof(oneof);
-        }
-        public Builder setRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            int index, java.lang.Object value) {
-          return (Builder) super.setRepeatedField(field, index, value);
-        }
-        public Builder addRepeatedField(
-            com.google.protobuf.Descriptors.FieldDescriptor field,
-            java.lang.Object value) {
-          return (Builder) super.addRepeatedField(field, value);
-        }
-        public Builder mergeFrom(com.google.protobuf.Message other) {
-          if (other instanceof ch.epfl.dedis.proto.StatusProto.Response.Status) {
-            return mergeFrom((ch.epfl.dedis.proto.StatusProto.Response.Status)other);
-          } else {
-            super.mergeFrom(other);
-            return this;
-          }
-        }
-
-        public Builder mergeFrom(ch.epfl.dedis.proto.StatusProto.Response.Status other) {
-          if (other == ch.epfl.dedis.proto.StatusProto.Response.Status.getDefaultInstance()) return this;
-          internalGetMutableField().mergeFrom(
-              other.internalGetField());
-          this.mergeUnknownFields(other.unknownFields);
-          onChanged();
-          return this;
-        }
-
-        public final boolean isInitialized() {
-          return true;
-        }
-
-        public Builder mergeFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws java.io.IOException {
-          ch.epfl.dedis.proto.StatusProto.Response.Status parsedMessage = null;
-          try {
-            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            parsedMessage = (ch.epfl.dedis.proto.StatusProto.Response.Status) e.getUnfinishedMessage();
-            throw e.unwrapIOException();
-          } finally {
-            if (parsedMessage != null) {
-              mergeFrom(parsedMessage);
-            }
-          }
-          return this;
-        }
-        private int bitField0_;
-
-        private com.google.protobuf.MapField<
-            java.lang.String, java.lang.String> field_;
-        private com.google.protobuf.MapField<java.lang.String, java.lang.String>
-        internalGetField() {
-          if (field_ == null) {
-            return com.google.protobuf.MapField.emptyMapField(
-                FieldDefaultEntryHolder.defaultEntry);
-          }
-          return field_;
-        }
-        private com.google.protobuf.MapField<java.lang.String, java.lang.String>
-        internalGetMutableField() {
-          onChanged();;
-          if (field_ == null) {
-            field_ = com.google.protobuf.MapField.newMapField(
-                FieldDefaultEntryHolder.defaultEntry);
-          }
-          if (!field_.isMutable()) {
-            field_ = field_.copy();
-          }
-          return field_;
-        }
-
-        public int getFieldCount() {
-          return internalGetField().getMap().size();
-        }
-        /**
-         * <code>map&lt;string, string&gt; field = 1;</code>
-         */
-
-        public boolean containsField(
-            java.lang.String key) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          return internalGetField().getMap().containsKey(key);
-        }
-        /**
-         * Use {@link #getFieldMap()} instead.
-         */
-        @java.lang.Deprecated
-        public java.util.Map<java.lang.String, java.lang.String> getField() {
-          return getFieldMap();
-        }
-        /**
-         * <code>map&lt;string, string&gt; field = 1;</code>
-         */
-
-        public java.util.Map<java.lang.String, java.lang.String> getFieldMap() {
-          return internalGetField().getMap();
-        }
-        /**
-         * <code>map&lt;string, string&gt; field = 1;</code>
-         */
-
-        public java.lang.String getFieldOrDefault(
-            java.lang.String key,
-            java.lang.String defaultValue) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          java.util.Map<java.lang.String, java.lang.String> map =
-              internalGetField().getMap();
-          return map.containsKey(key) ? map.get(key) : defaultValue;
-        }
-        /**
-         * <code>map&lt;string, string&gt; field = 1;</code>
-         */
-
-        public java.lang.String getFieldOrThrow(
-            java.lang.String key) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          java.util.Map<java.lang.String, java.lang.String> map =
-              internalGetField().getMap();
-          if (!map.containsKey(key)) {
-            throw new java.lang.IllegalArgumentException();
-          }
-          return map.get(key);
-        }
-
-        public Builder clearField() {
-          internalGetMutableField().getMutableMap()
-              .clear();
-          return this;
-        }
-        /**
-         * <code>map&lt;string, string&gt; field = 1;</code>
-         */
-
-        public Builder removeField(
-            java.lang.String key) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          internalGetMutableField().getMutableMap()
-              .remove(key);
-          return this;
-        }
-        /**
-         * Use alternate mutation accessors instead.
-         */
-        @java.lang.Deprecated
-        public java.util.Map<java.lang.String, java.lang.String>
-        getMutableField() {
-          return internalGetMutableField().getMutableMap();
-        }
-        /**
-         * <code>map&lt;string, string&gt; field = 1;</code>
-         */
-        public Builder putField(
-            java.lang.String key,
-            java.lang.String value) {
-          if (key == null) { throw new java.lang.NullPointerException(); }
-          if (value == null) { throw new java.lang.NullPointerException(); }
-          internalGetMutableField().getMutableMap()
-              .put(key, value);
-          return this;
-        }
-        /**
-         * <code>map&lt;string, string&gt; field = 1;</code>
-         */
-
-        public Builder putAllField(
-            java.util.Map<java.lang.String, java.lang.String> values) {
-          internalGetMutableField().getMutableMap()
-              .putAll(values);
-          return this;
-        }
-        public final Builder setUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.setUnknownFields(unknownFields);
-        }
-
-        public final Builder mergeUnknownFields(
-            final com.google.protobuf.UnknownFieldSet unknownFields) {
-          return super.mergeUnknownFields(unknownFields);
-        }
-
-
-        // @@protoc_insertion_point(builder_scope:Response.Status)
-      }
-
-      // @@protoc_insertion_point(class_scope:Response.Status)
-      private static final ch.epfl.dedis.proto.StatusProto.Response.Status DEFAULT_INSTANCE;
-      static {
-        DEFAULT_INSTANCE = new ch.epfl.dedis.proto.StatusProto.Response.Status();
-      }
-
-      public static ch.epfl.dedis.proto.StatusProto.Response.Status getDefaultInstance() {
-        return DEFAULT_INSTANCE;
-      }
-
-      @java.lang.Deprecated public static final com.google.protobuf.Parser<Status>
-          PARSER = new com.google.protobuf.AbstractParser<Status>() {
-        public Status parsePartialFrom(
-            com.google.protobuf.CodedInputStream input,
-            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-            throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Status(input, extensionRegistry);
-        }
-      };
-
-      public static com.google.protobuf.Parser<Status> parser() {
-        return PARSER;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Parser<Status> getParserForType() {
-        return PARSER;
-      }
-
-      public ch.epfl.dedis.proto.StatusProto.Response.Status getDefaultInstanceForType() {
-        return DEFAULT_INSTANCE;
-      }
-
-    }
-
     private int bitField0_;
-    public static final int SYSTEM_FIELD_NUMBER = 1;
-    private static final class SystemDefaultEntryHolder {
+    public static final int STATUS_FIELD_NUMBER = 1;
+    private static final class StatusDefaultEntryHolder {
       static final com.google.protobuf.MapEntry<
-          java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> defaultEntry =
+          java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> defaultEntry =
               com.google.protobuf.MapEntry
-              .<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status>newDefaultInstance(
-                  ch.epfl.dedis.proto.StatusProto.internal_static_Response_SystemEntry_descriptor, 
+              .<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status>newDefaultInstance(
+                  ch.epfl.dedis.proto.StatusProto.internal_static_status_Response_StatusEntry_descriptor, 
                   com.google.protobuf.WireFormat.FieldType.STRING,
                   "",
                   com.google.protobuf.WireFormat.FieldType.MESSAGE,
-                  ch.epfl.dedis.proto.StatusProto.Response.Status.getDefaultInstance());
+                  ch.epfl.dedis.proto.OnetProto.Status.getDefaultInstance());
     }
     private com.google.protobuf.MapField<
-        java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> system_;
-    private com.google.protobuf.MapField<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status>
-    internalGetSystem() {
-      if (system_ == null) {
+        java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> status_;
+    private com.google.protobuf.MapField<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status>
+    internalGetStatus() {
+      if (status_ == null) {
         return com.google.protobuf.MapField.emptyMapField(
-            SystemDefaultEntryHolder.defaultEntry);
+            StatusDefaultEntryHolder.defaultEntry);
       }
-      return system_;
+      return status_;
     }
 
-    public int getSystemCount() {
-      return internalGetSystem().getMap().size();
+    public int getStatusCount() {
+      return internalGetStatus().getMap().size();
     }
     /**
-     * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+     * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
 
-    public boolean containsSystem(
+    public boolean containsStatus(
         java.lang.String key) {
       if (key == null) { throw new java.lang.NullPointerException(); }
-      return internalGetSystem().getMap().containsKey(key);
+      return internalGetStatus().getMap().containsKey(key);
     }
     /**
-     * Use {@link #getSystemMap()} instead.
+     * Use {@link #getStatusMap()} instead.
      */
     @java.lang.Deprecated
-    public java.util.Map<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> getSystem() {
-      return getSystemMap();
+    public java.util.Map<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> getStatus() {
+      return getStatusMap();
     }
     /**
-     * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+     * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
 
-    public java.util.Map<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> getSystemMap() {
-      return internalGetSystem().getMap();
+    public java.util.Map<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> getStatusMap() {
+      return internalGetStatus().getMap();
     }
     /**
-     * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+     * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
 
-    public ch.epfl.dedis.proto.StatusProto.Response.Status getSystemOrDefault(
+    public ch.epfl.dedis.proto.OnetProto.Status getStatusOrDefault(
         java.lang.String key,
-        ch.epfl.dedis.proto.StatusProto.Response.Status defaultValue) {
+        ch.epfl.dedis.proto.OnetProto.Status defaultValue) {
       if (key == null) { throw new java.lang.NullPointerException(); }
-      java.util.Map<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> map =
-          internalGetSystem().getMap();
+      java.util.Map<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> map =
+          internalGetStatus().getMap();
       return map.containsKey(key) ? map.get(key) : defaultValue;
     }
     /**
-     * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+     * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
      */
 
-    public ch.epfl.dedis.proto.StatusProto.Response.Status getSystemOrThrow(
+    public ch.epfl.dedis.proto.OnetProto.Status getStatusOrThrow(
         java.lang.String key) {
       if (key == null) { throw new java.lang.NullPointerException(); }
-      java.util.Map<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> map =
-          internalGetSystem().getMap();
+      java.util.Map<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> map =
+          internalGetStatus().getMap();
       if (!map.containsKey(key)) {
         throw new java.lang.IllegalArgumentException();
       }
       return map.get(key);
     }
 
-    public static final int SERVER_FIELD_NUMBER = 2;
-    private ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity server_;
+    public static final int SERVERIDENTITY_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.proto.NetworkProto.ServerIdentity serveridentity_;
     /**
-     * <code>required .ServerIdentity server = 2;</code>
+     * <code>optional .network.ServerIdentity serveridentity = 2;</code>
      */
-    public boolean hasServer() {
+    public boolean hasServeridentity() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required .ServerIdentity server = 2;</code>
+     * <code>optional .network.ServerIdentity serveridentity = 2;</code>
      */
-    public ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity getServer() {
-      return server_ == null ? ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.getDefaultInstance() : server_;
+    public ch.epfl.dedis.proto.NetworkProto.ServerIdentity getServeridentity() {
+      return serveridentity_ == null ? ch.epfl.dedis.proto.NetworkProto.ServerIdentity.getDefaultInstance() : serveridentity_;
     }
     /**
-     * <code>required .ServerIdentity server = 2;</code>
+     * <code>optional .network.ServerIdentity serveridentity = 2;</code>
      */
-    public ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentityOrBuilder getServerOrBuilder() {
-      return server_ == null ? ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.getDefaultInstance() : server_;
+    public ch.epfl.dedis.proto.NetworkProto.ServerIdentityOrBuilder getServeridentityOrBuilder() {
+      return serveridentity_ == null ? ch.epfl.dedis.proto.NetworkProto.ServerIdentity.getDefaultInstance() : serveridentity_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -1359,13 +669,11 @@ public final class StatusProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasServer()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!getServer().isInitialized()) {
-        memoizedIsInitialized = 0;
-        return false;
+      if (hasServeridentity()) {
+        if (!getServeridentity().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
       }
       memoizedIsInitialized = 1;
       return true;
@@ -1376,11 +684,11 @@ public final class StatusProto {
       com.google.protobuf.GeneratedMessageV3
         .serializeStringMapTo(
           output,
-          internalGetSystem(),
-          SystemDefaultEntryHolder.defaultEntry,
+          internalGetStatus(),
+          StatusDefaultEntryHolder.defaultEntry,
           1);
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeMessage(2, getServer());
+        output.writeMessage(2, getServeridentity());
       }
       unknownFields.writeTo(output);
     }
@@ -1390,19 +698,19 @@ public final class StatusProto {
       if (size != -1) return size;
 
       size = 0;
-      for (java.util.Map.Entry<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> entry
-           : internalGetSystem().getMap().entrySet()) {
-        com.google.protobuf.MapEntry<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status>
-        system__ = SystemDefaultEntryHolder.defaultEntry.newBuilderForType()
+      for (java.util.Map.Entry<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> entry
+           : internalGetStatus().getMap().entrySet()) {
+        com.google.protobuf.MapEntry<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status>
+        status__ = StatusDefaultEntryHolder.defaultEntry.newBuilderForType()
             .setKey(entry.getKey())
             .setValue(entry.getValue())
             .build();
         size += com.google.protobuf.CodedOutputStream
-            .computeMessageSize(1, system__);
+            .computeMessageSize(1, status__);
       }
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(2, getServer());
+          .computeMessageSize(2, getServeridentity());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1420,12 +728,12 @@ public final class StatusProto {
       ch.epfl.dedis.proto.StatusProto.Response other = (ch.epfl.dedis.proto.StatusProto.Response) obj;
 
       boolean result = true;
-      result = result && internalGetSystem().equals(
-          other.internalGetSystem());
-      result = result && (hasServer() == other.hasServer());
-      if (hasServer()) {
-        result = result && getServer()
-            .equals(other.getServer());
+      result = result && internalGetStatus().equals(
+          other.internalGetStatus());
+      result = result && (hasServeridentity() == other.hasServeridentity());
+      if (hasServeridentity()) {
+        result = result && getServeridentity()
+            .equals(other.getServeridentity());
       }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
@@ -1438,13 +746,13 @@ public final class StatusProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (!internalGetSystem().getMap().isEmpty()) {
-        hash = (37 * hash) + SYSTEM_FIELD_NUMBER;
-        hash = (53 * hash) + internalGetSystem().hashCode();
+      if (!internalGetStatus().getMap().isEmpty()) {
+        hash = (37 * hash) + STATUS_FIELD_NUMBER;
+        hash = (53 * hash) + internalGetStatus().hashCode();
       }
-      if (hasServer()) {
-        hash = (37 * hash) + SERVER_FIELD_NUMBER;
-        hash = (53 * hash) + getServer().hashCode();
+      if (hasServeridentity()) {
+        hash = (37 * hash) + SERVERIDENTITY_FIELD_NUMBER;
+        hash = (53 * hash) + getServeridentity().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -1540,15 +848,19 @@ public final class StatusProto {
       return builder;
     }
     /**
-     * Protobuf type {@code Response}
+     * <pre>
+     * Response is what the Status service will reply to clients.
+     * </pre>
+     *
+     * Protobuf type {@code status.Response}
      */
     public static final class Builder extends
         com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:Response)
+        // @@protoc_insertion_point(builder_implements:status.Response)
         ch.epfl.dedis.proto.StatusProto.ResponseOrBuilder {
       public static final com.google.protobuf.Descriptors.Descriptor
           getDescriptor() {
-        return ch.epfl.dedis.proto.StatusProto.internal_static_Response_descriptor;
+        return ch.epfl.dedis.proto.StatusProto.internal_static_status_Response_descriptor;
       }
 
       @SuppressWarnings({"rawtypes"})
@@ -1556,7 +868,7 @@ public final class StatusProto {
           int number) {
         switch (number) {
           case 1:
-            return internalGetSystem();
+            return internalGetStatus();
           default:
             throw new RuntimeException(
                 "Invalid map field number: " + number);
@@ -1567,7 +879,7 @@ public final class StatusProto {
           int number) {
         switch (number) {
           case 1:
-            return internalGetMutableSystem();
+            return internalGetMutableStatus();
           default:
             throw new RuntimeException(
                 "Invalid map field number: " + number);
@@ -1575,7 +887,7 @@ public final class StatusProto {
       }
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.StatusProto.internal_static_Response_fieldAccessorTable
+        return ch.epfl.dedis.proto.StatusProto.internal_static_status_Response_fieldAccessorTable
             .ensureFieldAccessorsInitialized(
                 ch.epfl.dedis.proto.StatusProto.Response.class, ch.epfl.dedis.proto.StatusProto.Response.Builder.class);
       }
@@ -1593,16 +905,16 @@ public final class StatusProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
-          getServerFieldBuilder();
+          getServeridentityFieldBuilder();
         }
       }
       public Builder clear() {
         super.clear();
-        internalGetMutableSystem().clear();
-        if (serverBuilder_ == null) {
-          server_ = null;
+        internalGetMutableStatus().clear();
+        if (serveridentityBuilder_ == null) {
+          serveridentity_ = null;
         } else {
-          serverBuilder_.clear();
+          serveridentityBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
@@ -1610,7 +922,7 @@ public final class StatusProto {
 
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
-        return ch.epfl.dedis.proto.StatusProto.internal_static_Response_descriptor;
+        return ch.epfl.dedis.proto.StatusProto.internal_static_status_Response_descriptor;
       }
 
       public ch.epfl.dedis.proto.StatusProto.Response getDefaultInstanceForType() {
@@ -1629,15 +941,15 @@ public final class StatusProto {
         ch.epfl.dedis.proto.StatusProto.Response result = new ch.epfl.dedis.proto.StatusProto.Response(this);
         int from_bitField0_ = bitField0_;
         int to_bitField0_ = 0;
-        result.system_ = internalGetSystem();
-        result.system_.makeImmutable();
+        result.status_ = internalGetStatus();
+        result.status_.makeImmutable();
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000001;
         }
-        if (serverBuilder_ == null) {
-          result.server_ = server_;
+        if (serveridentityBuilder_ == null) {
+          result.serveridentity_ = serveridentity_;
         } else {
-          result.server_ = serverBuilder_.build();
+          result.serveridentity_ = serveridentityBuilder_.build();
         }
         result.bitField0_ = to_bitField0_;
         onBuilt();
@@ -1681,10 +993,10 @@ public final class StatusProto {
 
       public Builder mergeFrom(ch.epfl.dedis.proto.StatusProto.Response other) {
         if (other == ch.epfl.dedis.proto.StatusProto.Response.getDefaultInstance()) return this;
-        internalGetMutableSystem().mergeFrom(
-            other.internalGetSystem());
-        if (other.hasServer()) {
-          mergeServer(other.getServer());
+        internalGetMutableStatus().mergeFrom(
+            other.internalGetStatus());
+        if (other.hasServeridentity()) {
+          mergeServeridentity(other.getServeridentity());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -1692,11 +1004,10 @@ public final class StatusProto {
       }
 
       public final boolean isInitialized() {
-        if (!hasServer()) {
-          return false;
-        }
-        if (!getServer().isInitialized()) {
-          return false;
+        if (hasServeridentity()) {
+          if (!getServeridentity().isInitialized()) {
+            return false;
+          }
         }
         return true;
       }
@@ -1721,94 +1032,94 @@ public final class StatusProto {
       private int bitField0_;
 
       private com.google.protobuf.MapField<
-          java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> system_;
-      private com.google.protobuf.MapField<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status>
-      internalGetSystem() {
-        if (system_ == null) {
+          java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> status_;
+      private com.google.protobuf.MapField<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status>
+      internalGetStatus() {
+        if (status_ == null) {
           return com.google.protobuf.MapField.emptyMapField(
-              SystemDefaultEntryHolder.defaultEntry);
+              StatusDefaultEntryHolder.defaultEntry);
         }
-        return system_;
+        return status_;
       }
-      private com.google.protobuf.MapField<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status>
-      internalGetMutableSystem() {
+      private com.google.protobuf.MapField<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status>
+      internalGetMutableStatus() {
         onChanged();;
-        if (system_ == null) {
-          system_ = com.google.protobuf.MapField.newMapField(
-              SystemDefaultEntryHolder.defaultEntry);
+        if (status_ == null) {
+          status_ = com.google.protobuf.MapField.newMapField(
+              StatusDefaultEntryHolder.defaultEntry);
         }
-        if (!system_.isMutable()) {
-          system_ = system_.copy();
+        if (!status_.isMutable()) {
+          status_ = status_.copy();
         }
-        return system_;
+        return status_;
       }
 
-      public int getSystemCount() {
-        return internalGetSystem().getMap().size();
+      public int getStatusCount() {
+        return internalGetStatus().getMap().size();
       }
       /**
-       * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+       * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
        */
 
-      public boolean containsSystem(
+      public boolean containsStatus(
           java.lang.String key) {
         if (key == null) { throw new java.lang.NullPointerException(); }
-        return internalGetSystem().getMap().containsKey(key);
+        return internalGetStatus().getMap().containsKey(key);
       }
       /**
-       * Use {@link #getSystemMap()} instead.
+       * Use {@link #getStatusMap()} instead.
        */
       @java.lang.Deprecated
-      public java.util.Map<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> getSystem() {
-        return getSystemMap();
+      public java.util.Map<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> getStatus() {
+        return getStatusMap();
       }
       /**
-       * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+       * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
        */
 
-      public java.util.Map<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> getSystemMap() {
-        return internalGetSystem().getMap();
+      public java.util.Map<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> getStatusMap() {
+        return internalGetStatus().getMap();
       }
       /**
-       * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+       * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
        */
 
-      public ch.epfl.dedis.proto.StatusProto.Response.Status getSystemOrDefault(
+      public ch.epfl.dedis.proto.OnetProto.Status getStatusOrDefault(
           java.lang.String key,
-          ch.epfl.dedis.proto.StatusProto.Response.Status defaultValue) {
+          ch.epfl.dedis.proto.OnetProto.Status defaultValue) {
         if (key == null) { throw new java.lang.NullPointerException(); }
-        java.util.Map<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> map =
-            internalGetSystem().getMap();
+        java.util.Map<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> map =
+            internalGetStatus().getMap();
         return map.containsKey(key) ? map.get(key) : defaultValue;
       }
       /**
-       * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+       * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
        */
 
-      public ch.epfl.dedis.proto.StatusProto.Response.Status getSystemOrThrow(
+      public ch.epfl.dedis.proto.OnetProto.Status getStatusOrThrow(
           java.lang.String key) {
         if (key == null) { throw new java.lang.NullPointerException(); }
-        java.util.Map<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> map =
-            internalGetSystem().getMap();
+        java.util.Map<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> map =
+            internalGetStatus().getMap();
         if (!map.containsKey(key)) {
           throw new java.lang.IllegalArgumentException();
         }
         return map.get(key);
       }
 
-      public Builder clearSystem() {
-        internalGetMutableSystem().getMutableMap()
+      public Builder clearStatus() {
+        internalGetMutableStatus().getMutableMap()
             .clear();
         return this;
       }
       /**
-       * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+       * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
        */
 
-      public Builder removeSystem(
+      public Builder removeStatus(
           java.lang.String key) {
         if (key == null) { throw new java.lang.NullPointerException(); }
-        internalGetMutableSystem().getMutableMap()
+        internalGetMutableStatus().getMutableMap()
             .remove(key);
         return this;
       }
@@ -1816,149 +1127,149 @@ public final class StatusProto {
        * Use alternate mutation accessors instead.
        */
       @java.lang.Deprecated
-      public java.util.Map<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status>
-      getMutableSystem() {
-        return internalGetMutableSystem().getMutableMap();
+      public java.util.Map<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status>
+      getMutableStatus() {
+        return internalGetMutableStatus().getMutableMap();
       }
       /**
-       * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+       * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
        */
-      public Builder putSystem(
+      public Builder putStatus(
           java.lang.String key,
-          ch.epfl.dedis.proto.StatusProto.Response.Status value) {
+          ch.epfl.dedis.proto.OnetProto.Status value) {
         if (key == null) { throw new java.lang.NullPointerException(); }
         if (value == null) { throw new java.lang.NullPointerException(); }
-        internalGetMutableSystem().getMutableMap()
+        internalGetMutableStatus().getMutableMap()
             .put(key, value);
         return this;
       }
       /**
-       * <code>map&lt;string, .Response.Status&gt; system = 1;</code>
+       * <code>map&lt;string, .onet.Status&gt; status = 1;</code>
        */
 
-      public Builder putAllSystem(
-          java.util.Map<java.lang.String, ch.epfl.dedis.proto.StatusProto.Response.Status> values) {
-        internalGetMutableSystem().getMutableMap()
+      public Builder putAllStatus(
+          java.util.Map<java.lang.String, ch.epfl.dedis.proto.OnetProto.Status> values) {
+        internalGetMutableStatus().getMutableMap()
             .putAll(values);
         return this;
       }
 
-      private ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity server_ = null;
+      private ch.epfl.dedis.proto.NetworkProto.ServerIdentity serveridentity_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity, ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.Builder, ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentityOrBuilder> serverBuilder_;
+          ch.epfl.dedis.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.proto.NetworkProto.ServerIdentityOrBuilder> serveridentityBuilder_;
       /**
-       * <code>required .ServerIdentity server = 2;</code>
+       * <code>optional .network.ServerIdentity serveridentity = 2;</code>
        */
-      public boolean hasServer() {
+      public boolean hasServeridentity() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required .ServerIdentity server = 2;</code>
+       * <code>optional .network.ServerIdentity serveridentity = 2;</code>
        */
-      public ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity getServer() {
-        if (serverBuilder_ == null) {
-          return server_ == null ? ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.getDefaultInstance() : server_;
+      public ch.epfl.dedis.proto.NetworkProto.ServerIdentity getServeridentity() {
+        if (serveridentityBuilder_ == null) {
+          return serveridentity_ == null ? ch.epfl.dedis.proto.NetworkProto.ServerIdentity.getDefaultInstance() : serveridentity_;
         } else {
-          return serverBuilder_.getMessage();
+          return serveridentityBuilder_.getMessage();
         }
       }
       /**
-       * <code>required .ServerIdentity server = 2;</code>
+       * <code>optional .network.ServerIdentity serveridentity = 2;</code>
        */
-      public Builder setServer(ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity value) {
-        if (serverBuilder_ == null) {
+      public Builder setServeridentity(ch.epfl.dedis.proto.NetworkProto.ServerIdentity value) {
+        if (serveridentityBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
           }
-          server_ = value;
+          serveridentity_ = value;
           onChanged();
         } else {
-          serverBuilder_.setMessage(value);
+          serveridentityBuilder_.setMessage(value);
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>required .ServerIdentity server = 2;</code>
+       * <code>optional .network.ServerIdentity serveridentity = 2;</code>
        */
-      public Builder setServer(
-          ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.Builder builderForValue) {
-        if (serverBuilder_ == null) {
-          server_ = builderForValue.build();
+      public Builder setServeridentity(
+          ch.epfl.dedis.proto.NetworkProto.ServerIdentity.Builder builderForValue) {
+        if (serveridentityBuilder_ == null) {
+          serveridentity_ = builderForValue.build();
           onChanged();
         } else {
-          serverBuilder_.setMessage(builderForValue.build());
+          serveridentityBuilder_.setMessage(builderForValue.build());
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>required .ServerIdentity server = 2;</code>
+       * <code>optional .network.ServerIdentity serveridentity = 2;</code>
        */
-      public Builder mergeServer(ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity value) {
-        if (serverBuilder_ == null) {
+      public Builder mergeServeridentity(ch.epfl.dedis.proto.NetworkProto.ServerIdentity value) {
+        if (serveridentityBuilder_ == null) {
           if (((bitField0_ & 0x00000002) == 0x00000002) &&
-              server_ != null &&
-              server_ != ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.getDefaultInstance()) {
-            server_ =
-              ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.newBuilder(server_).mergeFrom(value).buildPartial();
+              serveridentity_ != null &&
+              serveridentity_ != ch.epfl.dedis.proto.NetworkProto.ServerIdentity.getDefaultInstance()) {
+            serveridentity_ =
+              ch.epfl.dedis.proto.NetworkProto.ServerIdentity.newBuilder(serveridentity_).mergeFrom(value).buildPartial();
           } else {
-            server_ = value;
+            serveridentity_ = value;
           }
           onChanged();
         } else {
-          serverBuilder_.mergeFrom(value);
+          serveridentityBuilder_.mergeFrom(value);
         }
         bitField0_ |= 0x00000002;
         return this;
       }
       /**
-       * <code>required .ServerIdentity server = 2;</code>
+       * <code>optional .network.ServerIdentity serveridentity = 2;</code>
        */
-      public Builder clearServer() {
-        if (serverBuilder_ == null) {
-          server_ = null;
+      public Builder clearServeridentity() {
+        if (serveridentityBuilder_ == null) {
+          serveridentity_ = null;
           onChanged();
         } else {
-          serverBuilder_.clear();
+          serveridentityBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
       /**
-       * <code>required .ServerIdentity server = 2;</code>
+       * <code>optional .network.ServerIdentity serveridentity = 2;</code>
        */
-      public ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.Builder getServerBuilder() {
+      public ch.epfl.dedis.proto.NetworkProto.ServerIdentity.Builder getServeridentityBuilder() {
         bitField0_ |= 0x00000002;
         onChanged();
-        return getServerFieldBuilder().getBuilder();
+        return getServeridentityFieldBuilder().getBuilder();
       }
       /**
-       * <code>required .ServerIdentity server = 2;</code>
+       * <code>optional .network.ServerIdentity serveridentity = 2;</code>
        */
-      public ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentityOrBuilder getServerOrBuilder() {
-        if (serverBuilder_ != null) {
-          return serverBuilder_.getMessageOrBuilder();
+      public ch.epfl.dedis.proto.NetworkProto.ServerIdentityOrBuilder getServeridentityOrBuilder() {
+        if (serveridentityBuilder_ != null) {
+          return serveridentityBuilder_.getMessageOrBuilder();
         } else {
-          return server_ == null ?
-              ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.getDefaultInstance() : server_;
+          return serveridentity_ == null ?
+              ch.epfl.dedis.proto.NetworkProto.ServerIdentity.getDefaultInstance() : serveridentity_;
         }
       }
       /**
-       * <code>required .ServerIdentity server = 2;</code>
+       * <code>optional .network.ServerIdentity serveridentity = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity, ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.Builder, ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentityOrBuilder> 
-          getServerFieldBuilder() {
-        if (serverBuilder_ == null) {
-          serverBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity, ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentity.Builder, ch.epfl.dedis.proto.ServerIdentityProto.ServerIdentityOrBuilder>(
-                  getServer(),
+          ch.epfl.dedis.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.proto.NetworkProto.ServerIdentityOrBuilder> 
+          getServeridentityFieldBuilder() {
+        if (serveridentityBuilder_ == null) {
+          serveridentityBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.NetworkProto.ServerIdentity, ch.epfl.dedis.proto.NetworkProto.ServerIdentity.Builder, ch.epfl.dedis.proto.NetworkProto.ServerIdentityOrBuilder>(
+                  getServeridentity(),
                   getParentForChildren(),
                   isClean());
-          server_ = null;
+          serveridentity_ = null;
         }
-        return serverBuilder_;
+        return serveridentityBuilder_;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -1971,10 +1282,10 @@ public final class StatusProto {
       }
 
 
-      // @@protoc_insertion_point(builder_scope:Response)
+      // @@protoc_insertion_point(builder_scope:status.Response)
     }
 
-    // @@protoc_insertion_point(class_scope:Response)
+    // @@protoc_insertion_point(class_scope:status.Response)
     private static final ch.epfl.dedis.proto.StatusProto.Response DEFAULT_INSTANCE;
     static {
       DEFAULT_INSTANCE = new ch.epfl.dedis.proto.StatusProto.Response();
@@ -1990,7 +1301,7 @@ public final class StatusProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Response(input, extensionRegistry);
+          return new Response(input, extensionRegistry);
       }
     };
 
@@ -2010,30 +1321,20 @@ public final class StatusProto {
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Request_descriptor;
+    internal_static_status_Request_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Request_fieldAccessorTable;
+      internal_static_status_Request_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Response_descriptor;
+    internal_static_status_Response_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Response_fieldAccessorTable;
+      internal_static_status_Response_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Response_SystemEntry_descriptor;
+    internal_static_status_Response_StatusEntry_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Response_SystemEntry_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Response_Status_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Response_Status_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_Response_Status_FieldEntry_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_Response_Status_FieldEntry_fieldAccessorTable;
+      internal_static_status_Response_StatusEntry_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -2043,15 +1344,13 @@ public final class StatusProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\014status.proto\032\025server-identity.proto\"\t\n" +
-      "\007Request\"\367\001\n\010Response\022%\n\006system\030\001 \003(\0132\025." +
-      "Response.SystemEntry\022\037\n\006server\030\002 \002(\0132\017.S" +
-      "erverIdentity\032?\n\013SystemEntry\022\013\n\003key\030\001 \001(" +
-      "\t\022\037\n\005value\030\002 \001(\0132\020.Response.Status:\0028\001\032b" +
-      "\n\006Status\022*\n\005field\030\001 \003(\0132\033.Response.Statu" +
-      "s.FieldEntry\032,\n\nFieldEntry\022\013\n\003key\030\001 \001(\t\022" +
-      "\r\n\005value\030\002 \001(\t:\0028\001B\"\n\023ch.epfl.dedis.prot" +
-      "oB\013StatusProto"
+      "\n\014status.proto\022\006status\032\nonet.proto\032\rnetw" +
+      "ork.proto\"\t\n\007Request\"\246\001\n\010Response\022,\n\006sta" +
+      "tus\030\001 \003(\0132\034.status.Response.StatusEntry\022" +
+      "/\n\016serveridentity\030\002 \001(\0132\027.network.Server" +
+      "Identity\032;\n\013StatusEntry\022\013\n\003key\030\001 \001(\t\022\033\n\005" +
+      "value\030\002 \001(\0132\014.onet.Status:\0028\001B\"\n\023ch.epfl" +
+      ".dedis.protoB\013StatusProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -2064,39 +1363,29 @@ public final class StatusProto {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          ch.epfl.dedis.proto.ServerIdentityProto.getDescriptor(),
+          ch.epfl.dedis.proto.OnetProto.getDescriptor(),
+          ch.epfl.dedis.proto.NetworkProto.getDescriptor(),
         }, assigner);
-    internal_static_Request_descriptor =
+    internal_static_status_Request_descriptor =
       getDescriptor().getMessageTypes().get(0);
-    internal_static_Request_fieldAccessorTable = new
+    internal_static_status_Request_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Request_descriptor,
+        internal_static_status_Request_descriptor,
         new java.lang.String[] { });
-    internal_static_Response_descriptor =
+    internal_static_status_Response_descriptor =
       getDescriptor().getMessageTypes().get(1);
-    internal_static_Response_fieldAccessorTable = new
+    internal_static_status_Response_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Response_descriptor,
-        new java.lang.String[] { "System", "Server", });
-    internal_static_Response_SystemEntry_descriptor =
-      internal_static_Response_descriptor.getNestedTypes().get(0);
-    internal_static_Response_SystemEntry_fieldAccessorTable = new
+        internal_static_status_Response_descriptor,
+        new java.lang.String[] { "Status", "Serveridentity", });
+    internal_static_status_Response_StatusEntry_descriptor =
+      internal_static_status_Response_descriptor.getNestedTypes().get(0);
+    internal_static_status_Response_StatusEntry_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Response_SystemEntry_descriptor,
+        internal_static_status_Response_StatusEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
-    internal_static_Response_Status_descriptor =
-      internal_static_Response_descriptor.getNestedTypes().get(1);
-    internal_static_Response_Status_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Response_Status_descriptor,
-        new java.lang.String[] { "Field", });
-    internal_static_Response_Status_FieldEntry_descriptor =
-      internal_static_Response_Status_descriptor.getNestedTypes().get(0);
-    internal_static_Response_Status_FieldEntry_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_Response_Status_FieldEntry_descriptor,
-        new java.lang.String[] { "Key", "Value", });
-    ch.epfl.dedis.proto.ServerIdentityProto.getDescriptor();
+    ch.epfl.dedis.proto.OnetProto.getDescriptor();
+    ch.epfl.dedis.proto.NetworkProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

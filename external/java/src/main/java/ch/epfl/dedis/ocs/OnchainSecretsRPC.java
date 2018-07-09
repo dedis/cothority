@@ -11,7 +11,6 @@ import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcOCSProto;
 import ch.epfl.dedis.proto.OCSProto;
-import ch.epfl.dedis.proto.SkipBlockProto;
 import ch.epfl.dedis.proto.SkipchainProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -287,7 +286,7 @@ public class OnchainSecretsRPC {
      * @return the proto-representation of the skipblock.
      * @throws CothorityCommunicationException in case of communication difficulties
      */
-    public SkipBlockProto.SkipBlock getSkipblock(SkipblockId id) throws CothorityCommunicationException {
+    public SkipchainProto.SkipBlock getSkipblock(SkipblockId id) throws CothorityCommunicationException {
         SkipchainProto.GetSingleBlock request =
                 SkipchainProto.GetSingleBlock.newBuilder().setId(ByteString.copyFrom(id.getId())).build();
 
@@ -295,7 +294,7 @@ public class OnchainSecretsRPC {
                 request);
 
         try {
-            SkipBlockProto.SkipBlock sb = SkipBlockProto.SkipBlock.parseFrom(msg);
+            SkipchainProto.SkipBlock sb = SkipchainProto.SkipBlock.parseFrom(msg);
             //TODO: add verification that the skipblock is valid by hashing and comparing to the id
 
             logger.debug("Got the following skipblock: {}", sb);
@@ -316,7 +315,7 @@ public class OnchainSecretsRPC {
      */
     public OCSProto.Transaction getTransaction(SkipblockId id) throws CothorityCommunicationException {
         try {
-            SkipBlockProto.SkipBlock sb = getSkipblock(id);
+            SkipchainProto.SkipBlock sb = getSkipblock(id);
 
             logger.debug("Got the following skipblock: {}", sb);
             logger.info("Successfully read skipblock");

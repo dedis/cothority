@@ -1,18 +1,18 @@
 syntax = "proto2";
-
-import "server-identity.proto";
+package status;
 
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "StatusProto";
 
+import "onet.proto";
+import "network.proto";
+
+// Request is what the Status service is expected to receive from clients.
 message Request {
 }
 
+// Response is what the Status service will reply to clients.
 message Response {
-    map<string, Status> system = 1;
-    required ServerIdentity server = 2;
-
-    message Status {
-        map<string, string> field = 1;
-    }
+   map<string, onet.Status> status = 1;
+  optional network.ServerIdentity serveridentity = 2;
 }

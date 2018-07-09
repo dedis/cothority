@@ -15,10 +15,22 @@ func init() {
 	)
 }
 
+// NewEvent returns a new event mapping with the current time as its
+// timestamp and a random key.
+func NewEvent(topic, content string) Event {
+	return Event{
+		When:    time.Now().UnixNano(),
+		Topic:   topic,
+		Content: content,
+	}
+}
+
 // PROTOSTART
-// import "roster.proto";
-// import "darc.proto";
-// import "transaction.proto";
+// type :skipchain.SkipBlockID:bytes
+//
+// package eventlog;
+//
+// import "omniledger.proto";
 //
 // option java_package = "ch.epfl.dedis.proto";
 // option java_outer_classname = "EventLogProto";
@@ -34,9 +46,12 @@ func init() {
 type SearchRequest struct {
 	EventLogID omniledger.InstanceID
 	ID         skipchain.SkipBlockID
-	Topic      string // Return events where Event.Topic == Topic, if Topic != "".
-	From       int64  // Return events where When is > From.
-	To         int64  // Return events where When is <= To.
+	// Return events where Event.Topic == Topic, if Topic != "".
+	Topic string
+	// Return events where When is > From.
+	From int64
+	// Return events where When is <= To.
+	To int64
 }
 
 // SearchResponse is the reply to LogRequest.
@@ -54,14 +69,4 @@ type Event struct {
 	When    int64
 	Topic   string
 	Content string
-}
-
-// NewEvent returns a new event mapping with the current time as its
-// timestamp and a random key.
-func NewEvent(topic, content string) Event {
-	return Event{
-		When:    time.Now().UnixNano(),
-		Topic:   topic,
-		Content: content,
-	}
 }

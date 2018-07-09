@@ -1,8 +1,9 @@
 syntax = "proto2";
-import "skipblock.proto";
-import "roster.proto";
+package omniledger;
+import "skipchain.proto";
+import "onet.proto";
 import "darc.proto";
-import "transaction.proto";
+import "collection.proto";
 
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "OmniLedgerProto";
@@ -13,102 +14,173 @@ option java_outer_classname = "OmniLedgerProto";
 
 // CreateGenesisBlock asks the cisc-service to set up a new skipchain.
 message CreateGenesisBlock {
-  // 	 Version of the protocol
-  required sint64 version = 1;
-  // 	 Roster defines which nodes participate in the skipchain.
-  required Roster roster = 2;
-  // 	 GenesisDarc defines who is allowed to write to this skipchain.
-  required Darc genesisdarc = 3;
-  // 	 BlockInterval in int64.
+  // Version of the protocol
+  required sint32 version = 1;
+  // Roster defines which nodes participate in the skipchain.
+  required onet.Roster roster = 2;
+  // GenesisDarc defines who is allowed to write to this skipchain.
+  required darc.Darc genesisdarc = 3;
+  // BlockInterval in int64.
   required sint64 blockinterval = 4;
 }
 
 // CreateGenesisBlockResponse holds the genesis-block of the new skipchain.
 message CreateGenesisBlockResponse {
-  // 	 Version of the protocol
-  required sint64 version = 1;
-  // 	 Skipblock of the created skipchain or empty if there was an error.
-  optional SkipBlock skipblock = 2;
+  // Version of the protocol
+  required sint32 version = 1;
+  // Skipblock of the created skipchain or empty if there was an error.
+  optional skipchain.SkipBlock skipblock = 2;
 }
 
 // AddTxRequest requests to apply a new transaction to the ledger.
 message AddTxRequest {
-  // 	 Version of the protocol
-  required sint64 version = 1;
-  // 	 SkipchainID is the hash of the first skipblock
+  // Version of the protocol
+  required sint32 version = 1;
+  // SkipchainID is the hash of the first skipblock
   required bytes skipchainid = 2;
-  // 	 Transaction to be applied to the kv-store
+  // Transaction to be applied to the kv-store
   required ClientTransaction transaction = 3;
 }
 
 // AddTxResponse is the reply after an AddTxRequest is finished.
 message AddTxResponse {
-  // 	 Version of the protocol
-  required sint64 version = 1;
-}
-
-// Config stores all the configuration information for one skipchain. It will
-// be stored under the key "GenesisDarcID || OneNonce", in the collections. The
-// GenesisDarcID is the value of GenesisReferenceID.
-message Config {
-  // BlockInterval is the time in nanoseconds between two blocks
-  required sint64 blockInterval = 1;
+  // Version of the protocol
+  required sint32 version = 1;
 }
 
 // GetProof returns the proof that the given key is in the collection.
 message GetProof {
-  // 	 Version of the protocol
-  required sint64 version = 1;
-  // 	 Key is the key we want to look up
+  // Version of the protocol
+  required sint32 version = 1;
+  // Key is the key we want to look up
   required bytes key = 2;
-  // 	 ID is any block that is known to us in the skipchain, can be the genesis
-  // 	 block or any later block. The proof returned will be starting at this block.
+  // ID is any block that is known to us in the skipchain, can be the genesis
+  // block or any later block. The proof returned will be starting at this block.
   required bytes id = 3;
 }
 
 // GetProofResponse can be used together with the Genesis block to proof that
 // the returned key/value pair is in the collection.
 message GetProofResponse {
-  // 	 Version of the protocol
-  required sint64 version = 1;
-  // 	 Proof contains everything necessary to prove the inclusion
-  // 	 of the included key/value pair given a genesis skipblock.
+  // Version of the protocol
+  required sint32 version = 1;
+  // Proof contains everything necessary to prove the inclusion
+  // of the included key/value pair given a genesis skipblock.
   required Proof proof = 2;
 }
 
-// This Structure could later be moved to cothority/skipchain.
-message Proof {
-	// InclusionProof is the deserialized InclusionProof
-	required CollectionProof inclusionProof = 1;
-	// Providing the latest skipblock to retrieve the Merkle tree root.
-	required SkipBlock latest = 2;
-	// Proving the path to the latest skipblock. The first ForwardLink has an
-	// empty-sliced `From` and the genesis-block in `To`, together with the
-	// roster of the genesis-block in the `NewRoster`.
-	repeated ForwardLink links = 3;
+// ChainConfig stores all the configuration information for one skipchain. It will
+// be stored under the key "GenesisDarcID || OneNonce", in the collections. The
+// GenesisDarcID is the value of GenesisReferenceID.
+message ChainConfig {
+  required sint64 blockinterval = 1;
 }
 
-// CollectionProof can be checked against the hash of the root
-// node and also contains the key and the data.
-message CollectionProof {
-  required bytes key = 1;
-  required Node root = 2;
-  repeated Step steps = 3;
+// Proof represents everything necessary to verify a given
+// key/value pair is stored in a skipchain. The proof is in three parts:
+//   1. InclusionProof proofs the presence or absence of the key. In case of
+//   the key being present, the value is included in the proof
+//   2. Latest is used to verify the merkle tree root used in the collection-proof
+//   is stored in the latest skipblock
+//   3. Links proves that the latest skipblock is part of the skipchain
+//
+// This Structure could later be moved to cothority/skipchain.
+message Proof {
+  // InclusionProof is the deserialized InclusionProof
+  required collection.Proof inclusionproof = 1;
+  // Providing the latest skipblock to retrieve the Merkle tree root.
+  required skipchain.SkipBlock latest = 2;
+  // Proving the path to the latest skipblock. The first ForwardLink has an
+  // empty-sliced `From` and the genesis-block in `To`, together with the
+  // roster of the genesis-block in the `NewRoster`.
+  repeated skipchain.ForwardLink links = 3;
+}
 
-  message Step{
-    required Node left = 1;
-    required Node right = 2;
-  }
-  
-  message Node {
-    optional bytes key = 1;
-    repeated bytes values = 2;
-    optional Children children = 3;
-    optional bytes label = 4;
+// Instruction holds only one of Spawn, Invoke, or Delete
+message Instruction {
+  // InstanceID holds the id of the existing object that can spawn new objects.
+  // It is composed of the Darc-ID + a random value generated by OmniLedger.
+  required InstanceID instanceid = 1;
+  // Nonce is monotonically increasing with regard to the darc in the instanceID
+  // and used to prevent replay attacks.
+  // The client has to track which is the current nonce of a darc-ID.
+  required bytes nonce = 2;
+  // Index and length prevent a leader from censoring specific instructions from
+  // a client and still keep the other instructions valid.
+  // Index is relative to the beginning of the clientTransaction.
+  required sint32 index = 3;
+  // Length is the total number of instructions in this clientTransaction
+  required sint32 length = 4;
+  // Spawn creates a new object
+  optional Spawn spawn = 5;
+  // Invoke calls a method of an existing object
+  optional Invoke invoke = 6;
+  // Delete removes the given object
+  optional Delete delete = 7;
+  // Signatures that can be verified using the darc defined by the instanceID.
+  repeated darc.Signature signatures = 8;
+}
 
-    message Children {
-      required bytes left = 1;
-      required bytes right = 2;
-    }
-  }
+// An InstanceID is a unique identifier for one instance of a contract.
+message InstanceID {
+  // DarcID is the base ID of the Darc controlling access to this instance.
+  required bytes darcid = 1;
+  // SubID is a unique ID among all the objects spawned by this Darc.
+  required bytes subid = 2;
+}
+
+// Spawn is called upon an existing object that will spawn a new object.
+message Spawn {
+  // ContractID represents the kind of contract that needs to be spawn.
+  required string contractid = 1;
+  // args holds all data necessary to spawn the new object.
+  repeated Argument args = 2;
+}
+
+// Invoke calls a method of an existing object which will update its internal
+// state.
+message Invoke {
+  // Command is object specific and interpreted by the object.
+  required string command = 1;
+  // args holds all data necessary for the successful execution of the command.
+  repeated Argument args = 2;
+}
+
+// Delete removes the object.
+message Delete {
+}
+
+// Argument is a name/value pair that will be passed to the object.
+message Argument {
+  // Name can be any name recognized by the object.
+  required string name = 1;
+  // Value must be binary marshalled
+  required bytes value = 2;
+}
+
+// ClientTransaction is a slice of Instructions that will be applied in order.
+// If any of the instructions fails, none of them will be applied.
+message ClientTransaction {
+  repeated Instruction instructions = 1;
+}
+
+// StateChange is one new state that will be applied to the collection.
+message StateChange {
+  // StateAction can be any of Create, Update, Remove
+  required sint32 stateaction = 1;
+  // InstanceID of the state to change
+  required bytes instanceid = 2;
+  // ContractID points to the contract that can interpret the value
+  required bytes contractid = 3;
+  // Value is the data needed by the contract
+  required bytes value = 4;
+}
+
+// Coin is a generic structure holding any type of coin. Coins are defined
+// by a genesis coin object that is unique for each type of coin.
+message Coin {
+  // Name points to the genesis object of that coin.
+  required InstanceID name = 1;
+  // Value is the total number of coins of that type.
+  required uint64 value = 2;
 }

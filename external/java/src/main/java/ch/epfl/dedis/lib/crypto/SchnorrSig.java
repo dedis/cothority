@@ -1,6 +1,6 @@
 package ch.epfl.dedis.lib.crypto;
 
-import ch.epfl.dedis.proto.SkipBlockProto;
+import ch.epfl.dedis.proto.SkipchainProto;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -53,9 +53,9 @@ public class SchnorrSig {
         }
     }
 
-    public SkipBlockProto.SchnorrSig toProto() {
-        SkipBlockProto.SchnorrSig.Builder ss =
-                SkipBlockProto.SchnorrSig.newBuilder();
+    public SkipchainProto.SchnorrSig toProto() {
+        SkipchainProto.SchnorrSig.Builder ss =
+                SkipchainProto.SchnorrSig.newBuilder();
         ss.setChallenge(challenge.toProto());
         ss.setResponse(response.toProto());
         return ss.build();
