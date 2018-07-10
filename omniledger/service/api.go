@@ -166,7 +166,7 @@ func (c *Client) GetChainConfig() (*ChainConfig, error) {
 		return nil, errors.New("expected contract to be config but got: " + string(contractBuf))
 	}
 	config := &ChainConfig{}
-	err = protobuf.Decode(vs[0], config)
+	err = protobuf.DecodeWithConstructors(vs[0], config, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		return nil, err
 	}

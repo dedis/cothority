@@ -89,6 +89,7 @@ type GetProofResponse struct {
 // GenesisDarcID is the value of GenesisReferenceID.
 type ChainConfig struct {
 	BlockInterval time.Duration
+	Roster        onet.Roster
 }
 
 // Proof represents everything necessary to verify a given

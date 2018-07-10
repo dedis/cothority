@@ -480,8 +480,51 @@ func TestService_SetConfig(t *testing.T) {
 	defer s.local.CloseAll()
 	defer closeQueues(s.local)
 
-	newConfig := ChainConfig{420 * time.Millisecond}
-	newConfigBuf, err := protobuf.Encode(&newConfig)
+	ctx, newConfig := createConfigTx(t, s, true)
+	s.sendTx(t, ctx)
+
+	// wait for a change
+	for i := 0; i < 5; i++ {
+		time.Sleep(s.interval)
+		config, err := s.service().LoadConfig(s.sb.SkipChainID())
+		require.NoError(t, err)
+
+		if config.BlockInterval == newConfig.BlockInterval {
+			return
+		}
+	}
+
+	require.Fail(t, "did not find new config in time")
+}
+
+func TestService_SetBadConfig(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	ctx, badConfig := createConfigTx(t, s, false)
+	s.sendTx(t, ctx)
+
+	// wait for a change, which should not happend
+	for i := 0; i < 5; i++ {
+		time.Sleep(s.interval)
+		config, err := s.service().LoadConfig(s.sb.SkipChainID())
+		require.NoError(t, err)
+
+		if badConfig.Roster.List[0].Equal(config.Roster.List[0]) {
+			require.Fail(t, "found a bad config")
+		}
+	}
+}
+
+func createConfigTx(t *testing.T, s *ser, isgood bool) (ClientTransaction, ChainConfig) {
+	var config ChainConfig
+	if isgood {
+		config = ChainConfig{420 * time.Millisecond, *s.roster}
+	} else {
+		config = ChainConfig{400 * time.Millisecond, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2)}
+	}
+	configBuf, err := protobuf.Encode(&config)
 	require.NoError(t, err)
 
 	ctx := ClientTransaction{
@@ -497,27 +540,13 @@ func TestService_SetConfig(t *testing.T) {
 				Command: "update_config",
 				Args: []Argument{{
 					Name:  "config",
-					Value: newConfigBuf,
+					Value: configBuf,
 				}},
 			},
 		}},
 	}
 	require.NoError(t, ctx.Instructions[0].SignBy(s.signer))
-	s.sendTx(t, ctx)
-
-	// wait for a change
-	for i := 0; i < 5; i++ {
-		println(s.interval)
-		time.Sleep(s.interval)
-		config, err := s.service().LoadConfig(s.sb.SkipChainID())
-		require.NoError(t, err)
-
-		if config.BlockInterval == newConfig.BlockInterval {
-			return
-		}
-	}
-
-	require.Fail(t, "did not find new config in time")
+	return ctx, config
 }
 
 func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction {
