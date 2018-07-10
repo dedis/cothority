@@ -109,10 +109,41 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 // ContractConfig can only be instantiated once per skipchain, and only for
 // the genesis block.
 func (s *Service) ContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
-	c = coins
-	if inst.GetType() != SpawnType {
-		return nil, nil, errors.New("Config can only be spawned")
+	if inst.GetType() == SpawnType {
+		return spawnContractConfig(cdb, inst, coins)
+	} else if inst.GetType() == InvokeType {
+		return invokeContractConfig(cdb, inst, coins)
+	} else {
+		return nil, coins, errors.New("unsupported instruction type")
 	}
+}
+
+func invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+	c = coins
+	if inst.Invoke.Command != "update_config" {
+		return
+	}
+	configBuf := inst.Invoke.Args.Search("config")
+	newConfig := ChainConfig{}
+	err = protobuf.Decode(configBuf, &newConfig)
+	if err != nil {
+		return
+	}
+
+	if newConfig.BlockInterval <= 0 {
+		err = errors.New("block interval is less or equal to zero")
+	}
+
+	return []StateChange{
+		NewStateChange(Update, InstanceID{
+			DarcID: inst.InstanceID.DarcID,
+			SubID:  oneSubID,
+		}, ContractConfigID, configBuf),
+	}, c, nil
+}
+
+func spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+	c = coins
 	darcBuf := inst.Spawn.Args.Search("darc")
 	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {
@@ -130,8 +161,8 @@ func (s *Service) ContractConfig(cdb CollectionView, inst Instruction, coins []C
 	// sanity check the block interval
 	intervalBuf := inst.Spawn.Args.Search("block_interval")
 	interval, _ := binary.Varint(intervalBuf)
-	if interval == 0 {
-		err = errors.New("block interval is zero")
+	if interval <= 0 {
+		err = errors.New("block interval is less or equal to zero")
 		return
 	}
 
@@ -153,6 +184,7 @@ func (s *Service) ContractConfig(cdb CollectionView, inst Instruction, coins []C
 				SubID:  oneSubID,
 			}, ContractConfigID, configBuf),
 	}, c, nil
+
 }
 
 // ContractDarc accepts the following instructions:
