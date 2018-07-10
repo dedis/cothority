@@ -10,6 +10,5 @@ cisc/cisc
 cosi/simulation/build/
 cosi/simulation/test_data/
 *~
-cothority
 .tags*
-build/
+*/build/

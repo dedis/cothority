@@ -13,7 +13,7 @@ const kyber = require("@dedis/kyber-js");
 const ed25519 = new kyber.curve.edwards25519.Curve();
 const serverAddr = "ws://127.0.0.1:9000";
 const deviceProtoName = "Device";
-const idProtoName = "ID";
+const idProtoName = "Device";
 const message = new Uint8Array([1, 2, 3, 4]);
 const deviceMessage = {
   point: message
@@ -155,7 +155,7 @@ describe("leader socket", () => {
     // create the socket and see if we have any messages back
     const socket = new network.LeaderSocket(roster, "test");
     socket
-      .send("Request", "ServerIdentity", {})
+      .send("status.Request", "ServerIdentity", {})
       .then(data => {
         expect(data.address).to.equal("tcp://127.0.0.1:6000");
         server.close(done);
@@ -183,7 +183,7 @@ describe("leader socket", () => {
     const roster = new identity.Roster(ed25519, identities);
     // create the socket and see if we have any messages back
     const socket = new network.LeaderSocket(roster, "test");
-    socket.send("Request", "ServerIdentity", {}).catch(e => {
+    socket.send("status.Request", "ServerIdentity", {}).catch(e => {
       expect(e.message).to.include("couldn't send request after 3 attempts");
       done();
     });
@@ -203,9 +203,9 @@ describe("real server status", () => {
       [roster, id] = helpers.readSkipchainInfo(build_dir);
       const socket = new network.RosterSocket(roster, "Status");
       socket
-        .send("Request", "Response", {})
+        .send("status.Request", "Response", {})
         .then(data => {
-          expect(data.system.Db.field.Open).to.equal("true");
+          expect(data.status.Db.field.Open).to.equal("true");
           done();
         })
         .catch(err => {

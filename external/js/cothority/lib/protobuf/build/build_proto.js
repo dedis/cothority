@@ -6,7 +6,7 @@ const root = new protobuf.Root();
 root.define("cothority");
 
 const regex = /^.*\.proto$/;
-const protoPath = "../../protobuf/";
+const protoPath = "../../proto/";
 //files.walk("../../protobuf", (err, path, dirs, items) => {
 files.walkSync(protoPath, (path, dirs, items) => {
   items.forEach(file => {

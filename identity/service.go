@@ -83,14 +83,6 @@ type Storage struct {
 	Auth *authData
 }
 
-// IDBlock stores one identity together with the skipblocks.
-type IDBlock struct {
-	sync.Mutex
-	Latest          *Data
-	Proposed        *Data
-	LatestSkipblock *skipchain.SkipBlock
-}
-
 type authData struct {
 	// set of Pins and keys
 	Pins map[string]bool
@@ -700,7 +692,7 @@ func (s *Service) propagateIdentityHandler(msg network.Message) {
 		}
 		s.pointsLimits[pi.PubStr]--
 	}
-	id := ID(pi.LatestSkipblock.Hash)
+	id := ID(pi.IDBlock.LatestSkipblock.Hash)
 	if s.getIdentityStorage(id) != nil {
 		log.Error("Couldn't store new identity")
 		return
