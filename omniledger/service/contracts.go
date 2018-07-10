@@ -5,8 +5,11 @@ import (
 	"errors"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
 
@@ -58,11 +61,13 @@ func LoadConfigFromColl(coll CollectionView) (*ChainConfig, error) {
 	if string(contract) != ContractConfigID {
 		return nil, errors.New("did not get " + ContractConfigID)
 	}
+
 	config := ChainConfig{}
-	err = protobuf.Decode(val, &config)
+	err = protobuf.DecodeWithConstructors(val, &config, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		return nil, err
 	}
+
 	return &config, nil
 }
 
@@ -125,7 +130,7 @@ func invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (s
 	}
 	configBuf := inst.Invoke.Args.Search("config")
 	newConfig := ChainConfig{}
-	err = protobuf.Decode(configBuf, &newConfig)
+	err = protobuf.DecodeWithConstructors(configBuf, &newConfig, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		return
 	}
@@ -166,9 +171,17 @@ func spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc
 		return
 	}
 
+	rosterBuf := inst.Spawn.Args.Search("roster")
+	roster := onet.Roster{}
+	err = protobuf.DecodeWithConstructors(rosterBuf, &roster, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return
+	}
+
 	// create the config to be stored by state changes
 	config := ChainConfig{
 		BlockInterval: time.Duration(interval),
+		Roster:        roster,
 	}
 	configBuf, err := protobuf.Encode(&config)
 	if err != nil {

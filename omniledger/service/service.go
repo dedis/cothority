@@ -18,6 +18,7 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
 	"gopkg.in/satori/go.uuid.v1"
 )
 
@@ -130,11 +131,17 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	intervalBuf := make([]byte, 8)
 	binary.PutVarint(intervalBuf, int64(req.BlockInterval))
 
+	rosterBuf, err := protobuf.Encode(&req.Roster)
+	if err != nil {
+		return nil, err
+	}
+
 	spawn := &Spawn{
 		ContractID: ContractConfigID,
 		Args: Arguments{
 			{Name: "darc", Value: darcBuf},
 			{Name: "block_interval", Value: intervalBuf},
+			{Name: "roster", Value: rosterBuf},
 		},
 	}
 
@@ -581,8 +588,35 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		log.Lvl2(s.ServerIdentity(), "State Changes hash doesn't verify")
 		return false
 	}
-	// TODO compute new state and check if there's a state change on the
-	// config, if there is, then we check whether newSB matches the config
+
+	// Compute the new state and check whether the roster in newSB matches
+	// the config.
+	collClone := s.getCollection(newSB.SkipChainID()).coll.Clone()
+	for _, sc := range scs {
+		if err := storeInColl(collClone, &sc); err != nil {
+			log.Error(err)
+			return false
+		}
+	}
+	config, err := LoadConfigFromColl(&roCollection{collClone})
+	if err != nil {
+		log.Error(err)
+		return false
+	}
+	if !config.Roster.ID.Equal(newSB.Roster.ID) {
+		log.Error("rosters have unequal IDs")
+		return false
+	}
+	if len(config.Roster.List) != len(newSB.Roster.List) {
+		log.Error("roster lengths are unequal")
+		return false
+	}
+	for i := range config.Roster.List {
+		if !newSB.Roster.List[i].Equal(config.Roster.List[i]) {
+			log.Error("roster in config is not equal to the one in skipblock")
+			return false
+		}
+	}
 	return true
 }
 
