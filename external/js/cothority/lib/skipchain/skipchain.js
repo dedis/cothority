@@ -47,7 +47,7 @@ class Client {
     var fn = co.wrap(function*(client) {
       const requestStr = "GetUpdateChain";
       const responseStr = "GetUpdateChainReply";
-      const request = { latestId: client.lastID };
+      const request = { latestID: client.lastID };
       // XXX  somewhat hackyish but sets a realistic upper bound
       const initLength = client.lastRoster.length;
       var nbErr = 0;
@@ -138,7 +138,7 @@ class Client {
    */
   verifyForwardLink(roster, flink) {
     // check that the message is correct
-    const message = flink.signature.message;
+    const message = flink.signature.msg;
     const h = crypto.createHash("sha256");
     h.update(flink.from);
     h.update(flink.to);
@@ -148,18 +148,19 @@ class Client {
     if (!h.digest().equals(message)) {
       return new Error("recreated message does not match");
     }
+
     // verify the signature length and get the bitmask
     var bftSig = flink.signature;
-    const sigLen = bftSig.signature.length;
+    const sigLen = bftSig.sig.length;
     const pointLen = this.group.pointLen();
     const scalarLen = this.group.scalarLen();
     if (sigLen < pointLen + scalarLen)
       return new Error("signature length invalid");
 
     // compute the bitmask and the reduced public key
-    const bitmask = bftSig.signature.slice(
+    const bitmask = bftSig.sig.slice(
       pointLen + scalarLen,
-      bftSig.signature.length
+      bftSig.sig.length
     );
     const bitmaskLength = misc.getBitmaskLength(bitmask);
     const expectedBitmaskLength = roster.length + 8 - roster.length % 8;
@@ -192,9 +193,9 @@ class Client {
     // R' || s with R' being the reduced commitment
     // R' = R - SUM(exception-commitment)
     const R = this.group.point();
-    R.unmarshalBinary(bftSig.signature.slice(0, pointLen));
+    R.unmarshalBinary(bftSig.sig.slice(0, pointLen));
     const s = this.group.scalar();
-    s.unmarshalBinary(bftSig.signature.slice(pointLen, pointLen + scalarLen));
+    s.unmarshalBinary(bftSig.sig.slice(pointLen, pointLen + scalarLen));
     // recompute challenge = H(R || P || M)
     // with P being the roster aggregate public key minus the public keys
     // indicated by the bitmask

@@ -34,18 +34,21 @@ function Socket(addr, service) {
    */
   this.send = (request, response, data) => {
     return new Promise((resolve, reject) => {
-      const path = this.url + "/" + request;
+      const path = this.url + "/" + request.replace(/.*\./, '');
       console.log("net.Socket: new WebSocket(" + path + ")");
-      const ws = new WS(this.url + "/" + request);
+      const ws = new WS(path);
       ws.binaryType = "arraybuffer";
 
       const requestModel = this.protobuf.lookup(request);
-      if (requestModel === undefined)
+      if (requestModel === undefined){
         reject(new Error("Model " + request + " not found"));
+      }
 
       const responseModel = this.protobuf.lookup(response);
-      if (responseModel === undefined)
+      if (responseModel === undefined){
+        console.log("failed to find " + response);
         reject(new Error("Model " + response + " not found"));
+      }
 
       // This makes the API consistent with nativescript-websockets
       if (typeof ws.open === "function") {

@@ -11,6 +11,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/skipchain"
+	_ "github.com/dedis/cothority/status/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
