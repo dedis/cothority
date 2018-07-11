@@ -10,6 +10,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
 	"github.com/dedis/kyber"
@@ -59,7 +60,7 @@ func main() {
 	block := reply.Update[0]
 	link := block.ForwardLink[len(block.ForwardLink)-1]
 	fmt.Println("Link signature: ", len(link.Signature.Sig))
-	policy := cosi.NewThresholdPolicy(len(ro.List))
+	policy := cosi.NewThresholdPolicy(byzcoinx.Threshold(len(ro.List)))
 	publics := make([]kyber.Point, len(ro.List))
 	for i := range ro.List {
 		publics[i] = ro.List[i].Public

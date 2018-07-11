@@ -24,6 +24,7 @@ type SubFtCosi struct {
 	Msg            []byte
 	Data           []byte
 	Timeout        time.Duration
+	Threshold      int
 	stoppedOnce    sync.Once
 	verificationFn VerificationFn
 	suite          cosi.Suite
@@ -52,6 +53,17 @@ func NewDefaultSubProtocol(n *onet.TreeNodeInstance) (onet.ProtocolInstance, err
 // the channels where the messages will be received.
 func NewSubFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite) (onet.ProtocolInstance, error) {
 
+	// tests if it's a three level tree
+	moreThreeLevel := false
+	n.Tree().Root.Visit(0, func(depth int, n *onet.TreeNode) {
+		if depth > 2 {
+			moreThreeLevel = true
+		}
+	})
+	if moreThreeLevel {
+		return nil, fmt.Errorf("subFtCosi launched with a more than three level tree")
+	}
+
 	c := &SubFtCosi{
 		TreeNodeInstance: n,
 		verificationFn:   vf,
@@ -59,9 +71,9 @@ func NewSubFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite)
 	}
 
 	if n.IsRoot() {
-		c.subleaderNotResponding = make(chan bool)
-		c.subCommitment = make(chan StructCommitment)
-		c.subResponse = make(chan StructResponse)
+		c.subleaderNotResponding = make(chan bool, 1)
+		c.subCommitment = make(chan StructCommitment, 2) // can send 2 commitments
+		c.subResponse = make(chan StructResponse, 1)
 	}
 
 	err := c.RegisterChannels(&c.ChannelAnnouncement,
@@ -78,27 +90,38 @@ func NewSubFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite)
 	return c, nil
 }
 
-// Shutdown stops the protocol
-func (p *SubFtCosi) Shutdown() error {
-	p.stoppedOnce.Do(func() {
-		close(p.ChannelAnnouncement)
-		close(p.ChannelCommitment)
-		close(p.ChannelChallenge)
-		close(p.ChannelResponse)
-	})
-	return nil
-}
-
 // Dispatch is the main method of the subprotocol, running on each node and handling the messages in order
 func (p *SubFtCosi) Dispatch() error {
-	defer p.Done()
+	defer func() {
+		if p.IsRoot() {
+			err := p.Broadcast(&Stop{})
+			if err != nil {
+				log.Error("error while broadcasting stopping message:", err)
+			}
+		}
+		p.Done()
+	}()
+	var err error
+	var channelOpen bool
 
 	// ----- Announcement -----
-	announcement, channelOpen := <-p.ChannelAnnouncement
-	if !channelOpen {
-		return nil
+	var announcement StructAnnouncement
+	for {
+		announcement, channelOpen = <-p.ChannelAnnouncement
+		if !channelOpen {
+			return nil
+		}
+		if !isValidSender(announcement.TreeNode, p.Parent(), p.TreeNode()) {
+			log.Warn(p.ServerIdentity(), "received announcement from node", announcement.ServerIdentity,
+				"that is not its parent nor itself, ignored")
+		} else {
+			log.Lvl3(p.ServerIdentity(), "received announcement")
+			break
+		}
+
 	}
-	log.Lvl3(p.ServerIdentity(), "received announcement")
+
+	// get announcement parameters
 	p.Publics = announcement.Publics
 	p.Timeout = announcement.Timeout
 	if !p.IsRoot() {
@@ -108,197 +131,342 @@ func (p *SubFtCosi) Dispatch() error {
 	}
 	p.Msg = announcement.Msg
 	p.Data = announcement.Data
-	var err error
+	p.Threshold = announcement.Threshold
+
+	// verify that threshold is valid
+	maxThreshold := p.Tree().Size() - 1
+	if p.Threshold > maxThreshold {
+		return fmt.Errorf("threshold %d bigger than the maximum of commitments this subtree can gather (%d)", p.Threshold, maxThreshold)
+	}
 
 	// start the verification in background if I'm not the root because
 	// root does the verification in the main protocol
-	verifyChan := make(chan bool, 1)
+	var secret kyber.Scalar
 	if !p.IsRoot() {
 		go func() {
-			log.Lvl3(p.ServerIdentity(), "starting verification")
-			verifyChan <- p.verificationFn(p.Msg, p.Data)
+			log.Lvl3(p.ServerIdentity(), "starting verification in the background")
+			verificationOk := p.verificationFn(p.Msg, p.Data)
+
+			var personalStructCommitment StructCommitment
+			var err error
+			secret, personalStructCommitment, err = p.getCommitment(verificationOk)
+			if err != nil {
+				log.Error("error while generating own commitment:", err)
+				return
+			}
+			p.ChannelCommitment <- personalStructCommitment
+			log.Lvl3(p.ServerIdentity(), "verification done:", verificationOk)
 		}()
 	}
 
 	if !p.IsLeaf() {
-		// Only send commits if it's the root node or the subleader.
+		// Only send commits if the node has children
 		go func() {
 			if errs := p.SendToChildrenInParallel(&announcement.Announcement); len(errs) > 0 {
-				log.Lvl3(p.ServerIdentity(), "failed to send announcement to all children")
+				log.Error(p.ServerIdentity(), "failed to send announcement to all children, trying to continue")
 			}
 		}()
 	}
 
-	// ----- Commitment -----
-	commitments := make([]StructCommitment, 0)
-	if !p.IsLeaf() {
-		// Only wait for commits if it's the root or the subleader.
-		t := time.After(p.Timeout / 2)
-	loop:
-		for range p.Children() {
-			select {
-			case commitment, channelOpen := <-p.ChannelCommitment:
-				if !channelOpen {
-					return nil
-				}
-				commitments = append(commitments, commitment)
-			case <-t:
-				if p.IsRoot() {
-					log.Error(p.ServerIdentity(), "timed out while waiting for subleader")
-					p.subleaderNotResponding <- true
-					return nil
-				}
-				log.Error(p.ServerIdentity(), "timed out while waiting for commits")
-				break loop
-			}
-		}
-	}
+	// ----- Commitment & Challenge -----
 
-	committedChildren := make([]*onet.TreeNode, 0)
-	for _, commitment := range commitments {
-		if !commitment.TreeNode.Parent.Equal(p.TreeNode()) {
-			return errors.New("received a Commitment from a non-Children node")
-		}
-		committedChildren = append(committedChildren, commitment.TreeNode)
-	}
-	log.Lvl3(p.ServerIdentity().Address, "finished receiving commitments, ", len(commitments), "commitment(s) received")
+	var commitments = make([]StructCommitment, 0)                  // list of received commitments
+	var challenge StructChallenge                                  // the challenge that will be received
+	var nodesCanCommit = make([]*onet.TreeNode, len(p.Children())) // the list of nodes that can commit. Nodes will be removed from the list once they commit.
+	var challengeMask *cosi.Mask                                   // the mask received in the challenge, set only if not root.
+	var childrenCanResponse = make([]*onet.TreeNode, 0)            // the list of children that can send a response. That is the list of children present in the challenge mask.
 
-	var secret kyber.Scalar
-	var ok bool
+	var NRefusal = 0                  // number of refusal received. Will be used only for the subleader
+	var firstCommitmentSent = false   // to avoid sending the quick commitment multiple times
+	var verificationDone = false      // to send the aggregate commitment only once this node has done its verification
+	var timedOut = false              // to refuse new commitments once it times out
+	var t = time.After(p.Timeout / 2) // the timeout
 
+	copy(nodesCanCommit, p.Children())
 	if p.IsRoot() {
-		// send commitment to super-protocol
-		if len(commitments) != 1 {
-			return fmt.Errorf("root node in subprotocol should have received 1 commitment,"+
-				"but received %d", len(commitments))
-		}
-		p.subCommitment <- commitments[0]
+		nodesCanCommit = append(nodesCanCommit, p.Children()...) // every node can send quick and final answer
 	} else {
-		ok = <-verifyChan
-		if !ok {
-			log.Lvl2(p.ServerIdentity().Address, "verification failed, unsetting the mask")
-		}
+		nodesCanCommit = append(nodesCanCommit, p.TreeNode()) // can have its own commitment
+	}
 
-		// otherwise, compute personal commitment and send to parent
-		var commitment kyber.Point
-		var mask *cosi.Mask
-		secret, commitment, mask, err = generateCommitmentAndAggregate(p.suite, p.TreeNodeInstance, p.Publics, commitments, ok)
-		if err != nil {
-			return err
-		}
+loop:
+	for {
+		select {
+		case commitment, channelOpen := <-p.ChannelCommitment:
+			if !channelOpen {
+				return nil
+			}
+			if timedOut {
+				// ignore new commits once time-out has been reached
+				break
+			}
 
-		// unset the mask if the verification failed and remove commitment
-		var found bool
-		if !ok {
-			for i := range p.Publics {
-				if p.Public().Equal(p.Publics[i]) {
-					mask.SetBit(i, false)
-					found = true
+			if !isValidSender(commitment.TreeNode, nodesCanCommit...) {
+				log.Warn(p.ServerIdentity(), "received a Commitment from node", commitment.ServerIdentity,
+					"that is not in the list of nodes that can still commit, ignored")
+				break // discards it
+			}
+			nodesCanCommit = remove(nodesCanCommit, commitment.TreeNode)
+
+			// if is own commitment
+			if commitment.TreeNode.ID.Equal(p.TreeNode().ID) {
+				verificationDone = true
+			}
+
+			if p.IsRoot() {
+				// send commitment to super-protocol
+				p.subCommitment <- commitment
+
+				// deactivate timeout
+				t = make(chan time.Time)
+			} else {
+
+				// verify mask of received commitment
+				verificationMask, err := cosi.NewMask(p.suite, p.Publics, nil)
+				if err != nil {
+					return err
+				}
+				err = verificationMask.SetMask(commitment.Mask)
+				if err != nil {
+					return err
+				}
+				if verificationMask.CountEnabled() > 1 {
+					log.Warn(p.ServerIdentity(), "received commitment with ill-formed mask in non-root node: has",
+						verificationMask.CountEnabled(), "nodes enabled instead of 0 or 1, ignored")
 					break
 				}
+
+				// checks if commitment is a refusal or acceptance
+				if commitment.CoSiCommitment.Equal(p.suite.Point().Null()) { // refusal
+					NRefusal++
+					if p.IsLeaf() {
+						log.Warn(p.ServerIdentity(), "leaf refused Commitment, marking as not signed")
+						return p.sendAggregatedCommitments([]StructCommitment{}, 1)
+					}
+					log.Warn(p.ServerIdentity(), "non-leaf got refusal")
+				} else {
+					// accepted
+					commitments = append(commitments, commitment)
+				}
+
+				thresholdRefusal := (1 + len(p.Children()) - p.Threshold) + 1
+
+				// checks if threshold is reached or unreachable
+				quickAnswer := !firstCommitmentSent &&
+					(len(commitments) >= p.Threshold || // quick valid answer
+						NRefusal >= thresholdRefusal) // quick refusal answer
+
+				// checks if every child and himself committed
+				finalAnswer := len(commitments)+NRefusal == len(p.Children())+1
+
+				if (quickAnswer || finalAnswer) && verificationDone {
+
+					err = p.sendAggregatedCommitments(commitments, NRefusal)
+					if err != nil {
+						return err
+					}
+
+					// deactivate timeout if final commitment
+					if finalAnswer {
+						t = make(chan time.Time)
+					}
+
+					firstCommitmentSent = true
+				}
+
+				// security check
+				if len(commitments)+NRefusal > maxThreshold {
+					log.Error(p.ServerIdentity(), "more commitments (", len(commitments),
+						") and refusals (", NRefusal, ") than possible in subleader (", maxThreshold, ")")
+				}
 			}
-		}
-		if !ok && !found {
-			return fmt.Errorf("%s was unable to find its own public key", p.ServerIdentity().Address)
-		}
+		case challenge, channelOpen = <-p.ChannelChallenge:
+			if !channelOpen {
+				return nil
+			}
+			if !isValidSender(challenge.TreeNode, p.Parent(), p.TreeNode()) {
+				log.Warn(p.ServerIdentity(), "received a Challenge from node", challenge.ServerIdentity,
+					"that is not its parent nor itself, ignored")
+				break // discards it
+			}
+			log.Lvl3(p.ServerIdentity(), "received challenge")
 
-		err = p.SendToParent(&Commitment{commitment, mask.Mask()})
-		if err != nil {
-			return err
-		}
-		if !ok {
-			return errors.New("stopping because we won't sign")
+			if challenge.AggregateCommit == nil {
+				log.Warn(p.ServerIdentity(), "got an old, insecure challenge from", p.ServerIdentity())
+			}
+
+			if p.IsRoot() {
+				childrenCanResponse = p.Children()
+			} else {
+
+				// get children present in challenge mask
+				challengeMask, err = cosi.NewMask(p.suite, p.Publics, nil)
+				if err != nil {
+					return fmt.Errorf("error in creating new mask: %s", err)
+				}
+				err = challengeMask.SetMask(challenge.Mask)
+				if err != nil {
+					return fmt.Errorf("error in setting challenge mask: %s", err)
+				}
+				for _, child := range p.Children() {
+					isEnabled, err := challengeMask.KeyEnabled(child.ServerIdentity.Public)
+					if err != nil {
+						return fmt.Errorf("error in checking a child presence in challenge mask: %s", err)
+					}
+					if isEnabled {
+						childrenCanResponse = append(childrenCanResponse, child)
+					}
+				}
+			}
+			// send challenge to children
+			childrenToSendChallenge := make([]*onet.TreeNode, len(childrenCanResponse))
+			copy(childrenToSendChallenge, childrenCanResponse) // copy to avoid data race
+			go func() {
+				if errs := p.multicastParallel(&challenge.Challenge, childrenToSendChallenge...); len(errs) > 0 {
+					log.Error(p.ServerIdentity(), errs)
+				}
+			}()
+
+			break loop
+		case <-t:
+			if p.IsRoot() {
+				log.Warn(p.ServerIdentity(), "timed out while waiting for subleader commitment")
+				p.subleaderNotResponding <- true
+				return nil
+			}
+			log.Warn(p.ServerIdentity(), "timed out while waiting for commits, got", len(commitments), "commitments and", NRefusal, "refusals")
+
+			// sending commits received
+			err = p.sendAggregatedCommitments(commitments, NRefusal)
+			if err != nil {
+				return err
+			}
+			timedOut = true
 		}
 	}
-
-	// ----- Challenge -----
-	challenge, channelOpen := <-p.ChannelChallenge // from the leader
-	if !channelOpen || challenge.TreeNode == nil {
-		return nil
-	}
-	if challenge.AggregateCommit == nil {
-		log.Warn("Got an old, insecure challenge from", p.ServerIdentity())
-	}
-
-	log.Lvl3(p.ServerIdentity(), "received challenge")
-	go func() {
-		if errs := p.multicastParallel(&challenge.Challenge, committedChildren...); len(errs) > 0 {
-			log.Lvl3(p.ServerIdentity(), errs)
-		}
-	}()
 
 	// ----- Response -----
-	if p.IsLeaf() {
-		p.ChannelResponse <- StructResponse{}
-	}
 	responses := make([]StructResponse, 0)
 
 	// Second half of our time budget for the responses.
 	timeout := time.After(p.Timeout / 2)
-	for range committedChildren {
+	for len(childrenCanResponse) > 0 {
 		select {
 		case response, channelOpen := <-p.ChannelResponse:
 			if !channelOpen {
 				return nil
 			}
+
+			if !isValidSender(response.TreeNode, childrenCanResponse...) {
+				log.Warn(p.ServerIdentity(), "received a Response from node", response.ServerIdentity,
+					"that is not in the list of nodes that cna still send a response, ignored")
+				break
+			}
+			childrenCanResponse = remove(childrenCanResponse, response.TreeNode)
+
 			responses = append(responses, response)
 		case <-timeout:
-			log.Error(p.ServerIdentity(), "timeout while waiting for responses")
-			break
+			return fmt.Errorf("timeout while waiting for responses")
 		}
 	}
 	log.Lvl3(p.ServerIdentity(), "received all", len(responses), "response(s)")
 
+	// if root, send response to super-protocol and finish
 	if p.IsRoot() {
-		// send response to super-protocol
 		if len(responses) != 1 {
 			return fmt.Errorf(
-				"root node in subprotocol should have received %d response, but received %d",
-				len(commitments), len(responses))
+				"root node in subprotocol should have received 1 response, but received %d",
+				len(responses))
 		}
 		p.subResponse <- responses[0]
+		return nil
+	}
+
+	// check challenge
+	if challenge.AggregateCommit == nil || challenge.Mask == nil {
+		log.Warn("Only have pre-calculated challenge - this is dangerous!")
 	} else {
-		// generate own response and send to parent
-		if challenge.AggregateCommit == nil || challenge.Mask == nil {
-			log.Warn("Only have pre-calculated challange - this is dangerous!")
-		} else {
-			cosiChallenge, err := cosi.Challenge(p.suite, challenge.AggregateCommit,
-				challenge.Mask.AggregatePublic, p.Msg)
-			if err != nil {
-				return err
-			}
-			if !cosiChallenge.Equal(challenge.CoSiChallenge) {
-				log.Warn("Pre-calculated challange is not the same as ours!")
-				challenge.CoSiChallenge = cosiChallenge
-			}
+		mask, err := cosi.NewMask(p.suite, p.Publics, nil)
+		if err != nil {
+			return fmt.Errorf("error, while creating empty mask: %s", err)
 		}
-		response, err := generateResponse(
-			p.suite, p.TreeNodeInstance, responses, secret, challenge.Challenge.CoSiChallenge, ok)
+		err = mask.SetMask(challenge.Mask)
+		if err != nil {
+			return fmt.Errorf("error while setting challenge mask: %s", err)
+		}
+		cosiChallenge, err := cosi.Challenge(p.suite, challenge.AggregateCommit,
+			mask.AggregatePublic, p.Msg)
 		if err != nil {
 			return err
 		}
-		err = p.SendToParent(&Response{response})
-		if err != nil {
-			return err
+		if !cosiChallenge.Equal(challenge.CoSiChallenge) {
+			log.Warn("Pre-calculated challenge is not the same as ours!")
+			challenge.CoSiChallenge = cosiChallenge
 		}
+	}
+
+	// add own response if in mask
+	isInMask, err := challengeMask.KeyEnabled(p.Public())
+	if err != nil {
+		return fmt.Errorf("error in checking a key presence in the challenge mask: %s", err)
+	}
+	if isInMask {
+		personalResponse, err := cosi.Response(p.suite, p.Private(), secret, challenge.CoSiChallenge)
+		if err != nil {
+			return fmt.Errorf("error while generating own response: %s", err)
+		}
+		responses = append(responses, StructResponse{p.TreeNode(), Response{personalResponse}})
+	}
+
+	// aggregate all responses
+	aggResponse, err := aggregateResponses(p.suite, responses)
+	if err != nil {
+		return err
+	}
+
+	// send to parents
+	err = p.SendToParent(&Response{aggResponse})
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-// HandleStop is called when a Stop message is send to this node.
-// It broadcasts the message to all the nodes in tree and each node will stop
-// the protocol by calling p.Done.
-func (p *SubFtCosi) HandleStop(stop StructStop) error {
-	defer p.Done()
-	if p.IsRoot() {
-		p.Broadcast(&stop.Stop)
+func (p *SubFtCosi) sendAggregatedCommitments(commitments []StructCommitment, NRefusal int) error {
+
+	// aggregate commitments
+	commitment, mask, err := aggregateCommitments(p.suite, p.Publics, commitments)
+	if err != nil {
+		return err
 	}
+
+	// send to parent
+	err = p.SendToParent(&Commitment{commitment, mask.Mask(), NRefusal})
+	if err != nil {
+		return err
+	}
+
+	log.Lvl3(p.ServerIdentity(), "commitment sent with", mask.CountEnabled(), "accepted and", NRefusal, "refusals")
+
+	return nil
+}
+
+// HandleStop is called when a Stop message is send to this node. It stops the node.
+func (p *SubFtCosi) HandleStop(stop StructStop) error {
+	if !isValidSender(stop.TreeNode, p.Root()) {
+		log.Warn(p.ServerIdentity(), "received a Stop from node", stop.ServerIdentity,
+			"that is not the root, ignored")
+	}
+	close(p.ChannelAnnouncement)
+	// close(p.ChannelCommitment) // Channel left open to allow verification function to safely return
+	close(p.ChannelChallenge)
+	close(p.ChannelResponse)
 	return nil
 }
 
 // Start is done only by root and starts the subprotocol
 func (p *SubFtCosi) Start() error {
-	log.Lvl3(p.ServerIdentity().Address, "Starting subCoSi")
+	log.Lvl3(p.ServerIdentity(), "Starting subCoSi")
 	if p.Msg == nil {
 		return errors.New("subprotocol does not have a proposal msg")
 	}
@@ -314,13 +482,48 @@ func (p *SubFtCosi) Start() error {
 	if p.Timeout < 10*time.Nanosecond {
 		return errors.New("unrealistic timeout")
 	}
+	if p.Threshold > p.Tree().Size() {
+		return errors.New("threshold bigger than number of nodes in subtree")
+	}
+	if p.Threshold < 1 {
+		return fmt.Errorf("threshold of %d smaller than one node", p.Threshold)
+	}
 
 	announcement := StructAnnouncement{
 		p.TreeNode(),
-		Announcement{p.Msg, p.Data, p.Publics, p.Timeout},
+		Announcement{p.Msg, p.Data, p.Publics, p.Timeout, p.Threshold},
 	}
 	p.ChannelAnnouncement <- announcement
 	return nil
+}
+
+// generates a commitment.
+// the boolean indicates whether the commitment is a proposal acceptance or a proposal refusal.
+// Returns the generated secret, the commitment and an error if there was a problem in the process.
+func (p *SubFtCosi) getCommitment(accepts bool) (kyber.Scalar, StructCommitment, error) {
+
+	emptyMask, err := cosi.NewMask(p.suite, p.Publics, nil)
+	if err != nil {
+		return nil, StructCommitment{}, err
+	}
+
+	structCommitment := StructCommitment{p.TreeNode(),
+		Commitment{p.suite.Point().Null(), emptyMask.Mask(), 0}}
+
+	var secret kyber.Scalar // nil
+	if accepts {
+		secret, structCommitment.CoSiCommitment = cosi.Commit(p.suite)
+		var personalMask *cosi.Mask
+		personalMask, err = cosi.NewMask(p.suite, p.Publics, p.Public())
+		if err != nil {
+			return secret, StructCommitment{}, err
+		}
+		structCommitment.Mask = personalMask.Mask()
+	} else { // refuses
+		structCommitment.NRefusal++
+	}
+
+	return secret, structCommitment, nil
 }
 
 // multicastParallel can be moved to onet.TreeNodeInstance once it shows
@@ -343,4 +546,28 @@ func (p *SubFtCosi) multicastParallel(msg interface{}, nodes ...*onet.TreeNode) 
 	}
 	wg.Wait()
 	return errs
+}
+
+// checks if a node is in a list of nodes
+func isValidSender(node *onet.TreeNode, valids ...*onet.TreeNode) bool {
+	// check if comes from a committed children
+	isValid := false
+	for _, valid := range valids {
+		if valid != nil {
+			if valid.Equal(node) {
+				isValid = true
+			}
+		}
+	}
+	return isValid
+}
+
+// removes the first instance of a node from a slice
+func remove(nodesList []*onet.TreeNode, node *onet.TreeNode) []*onet.TreeNode {
+	for i, iNode := range nodesList {
+		if iNode.Equal(node) {
+			return append(nodesList[:i], nodesList[i+1:]...)
+		}
+	}
+	return nodesList
 }

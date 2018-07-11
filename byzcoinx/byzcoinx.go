@@ -35,6 +35,8 @@ type ByzCoinX struct {
 	// Timeout is passed down to the ftcosi protocol and used for waiting
 	// for some of its messages.
 	Timeout time.Duration
+	// Threshold is the number of nodes to reach for a signature to be valid
+	Threshold int
 	// prepCosiProtoName is the ftcosi protocol name for the prepare phase
 	prepCosiProtoName string
 	// commitCosiProtoName is the ftcosi protocol name for the commit phase
@@ -119,6 +121,7 @@ func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.FtCosi, error) {
 	cosiProto.NSubtrees = bft.nSubtrees
 	cosiProto.Msg = bft.Msg
 	cosiProto.Data = bft.Data
+	cosiProto.Threshold = bft.Threshold
 	// For each of the prepare and commit phase we get half of the time.
 	cosiProto.Timeout = bft.Timeout / 2
 
@@ -142,8 +145,7 @@ func (bft *ByzCoinX) Dispatch() error {
 
 	// prepare phase (part 2)
 	prepSig := <-bft.prepSigChan
-	nbrFault := FaultThreshold(len(bft.List()))
-	err := cosi.Verify(bft.suite, bft.publics, bft.Msg, prepSig, cosi.NewThresholdPolicy(len(bft.List())-nbrFault))
+	err := cosi.Verify(bft.suite, bft.publics, bft.Msg, prepSig, cosi.NewThresholdPolicy(bft.Threshold))
 	if err != nil {
 		log.Lvl2("Signature verification failed on root during the prepare phase with error:", err)
 		bft.FinalSignatureChan <- FinalSignature{nil, nil}
@@ -180,10 +182,6 @@ func (bft *ByzCoinX) Dispatch() error {
 // NewByzCoinX creates and initialises a ByzCoinX protocol.
 func NewByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoName string,
 	suite cosi.Suite) (*ByzCoinX, error) {
-	publics := make([]kyber.Point, n.Tree().Size())
-	for i, node := range n.Tree().List() {
-		publics[i] = node.ServerIdentity.Public
-	}
 	return &ByzCoinX{
 		TreeNodeInstance: n,
 		// we do not have Msg to make the protocol fail if it's not set
@@ -192,7 +190,7 @@ func NewByzCoinX(n *onet.TreeNodeInstance, prepCosiProtoName, commitCosiProtoNam
 		prepCosiProtoName:   prepCosiProtoName,
 		commitCosiProtoName: commitCosiProtoName,
 		prepSigChan:         make(chan []byte, 0),
-		publics:             publics,
+		publics:             n.Roster().Publics(),
 		suite:               suite,
 		// We set nSubtrees to the cube root of n to evenly distribute the load,
 		// i.e. depth (=3) = log_f n, where f is the fan-out (branching factor).
@@ -264,4 +262,9 @@ func InitBFTCoSiProtocol(suite cosi.Suite, c *onet.Context, vf, ack protocol.Ver
 // FaultThreshold computes the number of faults that byzcoinx tolerates.
 func FaultThreshold(n int) int {
 	return (n - 1) / 3
+}
+
+// Threshold computes the number of nodes needed for successful operation.
+func Threshold(n int) int {
+	return n - FaultThreshold(n)
 }

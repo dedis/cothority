@@ -38,13 +38,13 @@ docker_push_latest: docker_push
 docker_setup:
 	mkdir -p $(DATA_DIR)
 	docker run -it --rm -p 6879-6880:6879-6880 --name $(CONTAINER) -v $(DATA_DIR):/conode_data \
-	    $(IMAGE_NAME) ./conode setup
+	    $(IMAGE_NAME):$(VERSION) ./conode setup
 
 docker_run:
 	if [ ! -f conode_data/private.toml ]; then make docker_setup; fi
 	mkdir -p $(DATA_DIR)
 	docker run -it --rm -p 6879-6880:6879-6880 --name $(CONTAINER) -v $(DATA_DIR):/conode_data \
-	    $(IMAGE_NAME)
+	    $(IMAGE_NAME):$(VERSION)
 
 docker_stop:
 	docker rm -f $(CONTAINER)

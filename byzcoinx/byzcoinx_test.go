@@ -158,21 +158,18 @@ func TestBftCoSiFault(t *testing.T) {
 }
 
 func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, protoName string) {
+	log.Lvlf1("Starting with %d hosts with %d faulty ones and refusing at %d. Protocol name is %s",
+		nbrHosts, nbrFault, refuseIndex, protoName)
 	local := onet.NewLocalTest(testSuite)
 	defer local.CloseAll()
 
 	servers, roster, tree := local.GenTree(nbrHosts, false)
 	require.NotNil(t, roster)
 
-	// get public keys
-	publics := make([]kyber.Point, tree.Size())
-	for i, node := range tree.List() {
-		publics[i] = node.ServerIdentity.Public
-	}
-
 	pi, err := local.CreateProtocol(protoName, tree)
 	require.Nil(t, err)
 
+	publics := roster.Publics()
 	bftCosiProto := pi.(*ByzCoinX)
 	bftCosiProto.CreateProtocol = local.CreateProtocol
 	bftCosiProto.FinalSignatureChan = make(chan FinalSignature, 1)
@@ -183,6 +180,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	bftCosiProto.Msg = proposal
 	bftCosiProto.Data = []byte("hello world")
 	bftCosiProto.Timeout = defaultTimeout
+	bftCosiProto.Threshold = nbrHosts - nbrFault
 	log.Lvl3("Added counter", counters.size()-1, refuseIndex)
 
 	require.Equal(t, bftCosiProto.nSubtrees, int(math.Pow(float64(nbrHosts), 1.0/3.0)))
@@ -202,7 +200,7 @@ func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, prot
 	if nbrFault == 0 {
 		policy = nil
 	} else {
-		policy = cosi.NewThresholdPolicy(nbrHosts - nbrFault)
+		policy = cosi.NewThresholdPolicy(bftCosiProto.Threshold)
 	}
 	err = getAndVerifySignature(bftCosiProto.FinalSignatureChan, publics, proposal, policy)
 	require.Nil(t, err)

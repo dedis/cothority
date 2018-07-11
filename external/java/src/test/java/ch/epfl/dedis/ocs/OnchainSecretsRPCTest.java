@@ -263,13 +263,15 @@ class OnchainSecretsRPCTest {
         testInstanceController.killConode(4);
         assertEquals(3, testInstanceController.countRunningConodes());
 
-        wr.id = null;
-        wr = ocs.createWriteRequest(wr, sig);
-        assertNotNull(wr.id);
-
-        // bring the conode backup for future tests and make sure we have 4 conodes running
-        testInstanceController.startConode(4);
-        assertEquals(4, testInstanceController.countRunningConodes());
+        try {
+            wr.id = null;
+            wr = ocs.createWriteRequest(wr, sig);
+            assertNotNull(wr.id);
+        } finally {
+            // bring the conode backup for future tests and make sure we have 4 conodes running
+            testInstanceController.startConode(4);
+            assertEquals(4, testInstanceController.countRunningConodes());
+        }
 
         // try to write again
         wr.id = null;

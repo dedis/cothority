@@ -1152,7 +1152,8 @@ func (s *Service) bftForwardLinkAck(msg, data []byte) bool {
 	return ok
 }
 
-// startBFT starts a BFT-protocol with the given parameters.
+// startBFT starts a BFT-protocol with the given parameters. We can only
+// start the bft protocol if we're the root.
 func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) (*byzcoinx.FinalSignature, error) {
 
 	if len(roster.List) == 0 {
@@ -1164,11 +1165,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	if len(roster.List)-1 > 2 {
 		bf = len(roster.List) - 1
 	}
-	rooted := roster.NewRosterWithRoot(s.ServerIdentity())
-	if rooted == nil {
-		return nil, errors.New("we're not in the roster")
-	}
-	tree := rooted.GenerateNaryTree(bf)
+	tree := roster.GenerateNaryTreeWithRoot(bf, s.ServerIdentity())
 	if tree == nil {
 		return nil, errors.New("couldn't form tree")
 	}
@@ -1184,6 +1181,7 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 	root.CreateProtocol = s.CreateProtocol
 	root.FinalSignatureChan = make(chan byzcoinx.FinalSignature, 1)
 	root.Timeout = s.propTimeout
+	root.Threshold = byzcoinx.Threshold(len(tree.List()))
 	if s.bftTimeout != 0 {
 		root.Timeout = s.bftTimeout
 	}

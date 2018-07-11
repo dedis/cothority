@@ -139,7 +139,7 @@ class Roster {
   }
 
   get(idx) {
-    if (idx >= this.identitis.length) throw new Error("identity idx too high");
+    if (idx >= this.identities.length) throw new Error("identity idx too high");
 
     return this.identities[idx];
   }

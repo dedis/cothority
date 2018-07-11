@@ -47,7 +47,9 @@ class Client {
     var fn = co.wrap(function*(client) {
       const requestStr = "GetUpdateChain";
       const responseStr = "GetUpdateChainReply";
-      const request = { latestID: client.lastID };
+      const request = {
+        latestID: client.lastID
+      };
       // XXX  somewhat hackyish but sets a realistic upper bound
       const initLength = client.lastRoster.length;
       var nbErr = 0;
@@ -169,24 +171,17 @@ class Client {
 
     const threshold = (roster.length - 1) / 3;
     // all indices of the absent nodes from the roster
-    /*const absenteesIdx = misc.getSetBits(bitmask);*/
-    //console.log(
-    //"absenteesIdx: ",
-    //absenteesIdx,
-    //" (length ",
-    //absenteesIdx.length,
-    //" vs threshold ",
-    //threshold
-    //);
-    //if (absenteesIdx.length > threshold)
-    //return new Error("nb of signers absent above threshold");
+    const absenteesIdx = misc.getClearBits(bitmask, roster.length);
+    if (absenteesIdx.length > threshold) {
+      return new Error("nb of signers absent above threshold");
+    }
 
     // get the roster aggregate key and subtract any exception listed.
     const aggregate = roster.aggregateKey();
     //compute reduced public key
-    /*absenteesIdx.forEach(idx => {*/
-    //aggregate.sub(aggregate, roster.get(idx));
-    /*});*/
+    absenteesIdx.forEach(idx => {
+      aggregate.sub(aggregate, roster.get(idx).pub);
+    });
 
     // XXX suppose c = H(R || Pub || m) , with R being the FULL commitment
     // that is being generated at challenge time and the signature is

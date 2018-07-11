@@ -2,10 +2,8 @@ Simulation = "ftCosiProtocol"
 Servers = 8
 Bf = 4
 Rounds = 1
-CloseWait = 6000
+RunWait = "600s"
 Suite = "Ed25519"
-# Removed this line because it will fail
-# 50,  7, 5, 10
 
 Hosts, NSubtrees, FailingSubleaders,FailingLeafs
   4,  1, 0,  0
@@ -14,4 +12,5 @@ Hosts, NSubtrees, FailingSubleaders,FailingLeafs
  10,  3, 0,  0
  10,  3, 2,  0
  10,  3, 0,  3
- 50,  7, 0,  0
+ 20,  5, 0,  0
+ 20,  5, 1,  5

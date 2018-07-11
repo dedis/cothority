@@ -28,7 +28,9 @@ proto:
 	make -C external
 
 
-test_java:
+docker: conode/Dockerfile external/docker/Dockerfile
 	cd conode/; make docker_dev
 	cd external/docker/; make docker_test
+
+test_java: docker
 	cd external/java; mvn test

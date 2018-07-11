@@ -16,6 +16,12 @@ import (
 )
 
 func TestService_ParallelStoreBlock(t *testing.T) {
+	nbrRoutines := 20
+	numBlocks := 100
+	if testing.Short() {
+		nbrRoutines = 10
+		numBlocks = 20
+	}
 	local := onet.NewLocalTest(cothority.Suite)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
@@ -35,8 +41,6 @@ func TestService_ParallelStoreBlock(t *testing.T) {
 		t.Error(err)
 	}
 
-	const nbrRoutines = 20
-	const numBlocks = 100
 	errs := make(chan error, nbrRoutines*numBlocks)
 
 	wg := &sync.WaitGroup{}
