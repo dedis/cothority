@@ -5,6 +5,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -69,7 +70,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 					subProtocols[i] = subProtocol
 				case com := <-subProtocol.subCommitment:
 					commitmentsChan <- commitmentProtocol{com, subProtocol}
-					timeout = make(chan time.Time) //deactivate timeout
+					timeout = make(chan time.Time) // deactivate timeout
 				case <-timeout:
 					errChan <- fmt.Errorf("(subprotocol %v) didn't get commitment after timeout %v", i, p.Timeout)
 					return
@@ -78,7 +79,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 		}(i, subProtocol)
 	}
 
-	//handle answers from all parallel threads
+	// handle answers from all parallel threads
 	sharedMask, err := cosi.NewMask(p.suite, p.publics, nil)
 	if err != nil {
 		close(closingChan)
@@ -92,15 +93,13 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 		for !thresholdReached && thresholdReachable {
 			select {
 			case com := <-commitmentsChan:
+				// If there is a commitment, add to map.
+				// This assumes that the last commit of a subtree is the biggest one.
+				commitmentsMap[com.subProtocol] = com.structCommitment
 
-				//if there is a commitment, add to map
-				if !com.structCommitment.CoSiCommitment.Equal(p.suite.Point().Null()) {
-					//assumes that the last commit of a subtree is the biggest one
-					commitmentsMap[com.subProtocol] = com.structCommitment
-				}
-
-				//check if threshold is reachable
-				if sumRefusals(commitmentsMap) > len(p.publics)-p.Threshold { // we assume the root accepts the proposal
+				// check if threshold is reachable
+				if sumRefusals(commitmentsMap) > len(p.publics)-p.Threshold {
+					// we assume the root accepts the proposal
 					thresholdReachable = false
 				}
 
@@ -153,8 +152,11 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 	runningSubProtocols := make([]*SubFtCosi, 0, len(commitmentsChan))
 	commitments := make([]StructCommitment, 0, len(commitmentsChan))
 	for subProtocol, commitment := range commitmentsMap {
-		runningSubProtocols = append(runningSubProtocols, subProtocol)
-		commitments = append(commitments, commitment)
+		if !commitment.CoSiCommitment.Equal(cothority.Suite.Point().Null()) {
+			// Only pass subProtocols that have at least one valid commit in them.
+			runningSubProtocols = append(runningSubProtocols, subProtocol)
+			commitments = append(commitments, commitment)
+		}
 	}
 
 	return commitments, runningSubProtocols, nil

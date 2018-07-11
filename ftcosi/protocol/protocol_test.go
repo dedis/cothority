@@ -36,7 +36,9 @@ func init() {
 		return NewFtCosi(n, vf, RefuseOneSubProtocolName, cothority.Suite)
 	})
 	onet.GlobalProtocolRegister(RefuseOneSubProtocolName, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-		return NewSubFtCosi(n, refuse, cothority.Suite)
+		return NewSubFtCosi(n, func(msg, data []byte) bool {
+			return refuse(n, msg, data)
+		}, cothority.Suite)
 	})
 }
 
@@ -59,6 +61,9 @@ func TestProtocol(t *testing.T) {
 
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
+			if nSubtrees >= nNodes && nSubtrees > 1 {
+				continue
+			}
 			log.Lvl2("test asking for", nNodes, "nodes and", nSubtrees, "subtrees")
 
 			local := onet.NewLocalTest(testSuite)
@@ -84,7 +89,7 @@ func TestProtocol(t *testing.T) {
 			}
 
 			// get and verify signature
-			err = getAndVerifySignature(cosiProtocol, publics, proposal, cosi.CompletePolicy{})
+			_, err = getAndVerifySignature(cosiProtocol, publics, proposal, cosi.CompletePolicy{})
 			if err != nil {
 				local.CloseAll()
 				t.Fatal(err)
@@ -103,6 +108,9 @@ func TestProtocolQuickAnswer(t *testing.T) {
 
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
+			if nSubtrees >= nNodes && nSubtrees > 1 {
+				continue
+			}
 			threshold := nNodes / 2
 			log.Lvl2("test asking for", nNodes, "node(s),", nSubtrees, "subtree(s) and a", threshold, "node(s) threshold")
 
@@ -129,11 +137,18 @@ func TestProtocolQuickAnswer(t *testing.T) {
 			}
 
 			// get and verify signature
-			err = getAndVerifySignature(cosiProtocol, publics, proposal, cosi.NewThresholdPolicy(threshold))
+			sig, err := getAndVerifySignature(cosiProtocol, publics, proposal, cosi.NewThresholdPolicy(threshold))
 			if err != nil {
 				local.CloseAll()
 				t.Fatal(err)
 			}
+
+			mask, err := cosi.NewMask(testSuite, publics, nil)
+			require.Nil(t, err)
+			lenRes := testSuite.PointLen() + testSuite.ScalarLen()
+			mask.SetMask(sig[lenRes:])
+			// Test that we have less than nNodes signatures
+			require.NotEqual(t, nNodes, mask.CountEnabled())
 
 			local.CloseAll()
 		}
@@ -199,7 +214,7 @@ func TestUnresponsiveLeafs(t *testing.T) {
 			}
 
 			// get and verify signature
-			err = getAndVerifySignature(cosiProtocol, publics, proposal, cosi.NewThresholdPolicy(threshold))
+			_, err = getAndVerifySignature(cosiProtocol, publics, proposal, cosi.NewThresholdPolicy(threshold))
 			if err != nil {
 				local.CloseAll()
 				t.Fatal(err)
@@ -265,7 +280,7 @@ func TestUnresponsiveSubleader(t *testing.T) {
 			}
 
 			// get and verify signature
-			err = getAndVerifySignature(cosiProtocol, publics, proposal, cosi.NewThresholdPolicy(nNodes-1))
+			_, err = getAndVerifySignature(cosiProtocol, publics, proposal, cosi.NewThresholdPolicy(nNodes-1))
 			if err != nil {
 				local.CloseAll()
 				t.Fatal(err)
@@ -284,6 +299,9 @@ func TestProtocolErrors(t *testing.T) {
 
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
+			if nSubtrees >= nNodes && nSubtrees > 1 {
+				continue
+			}
 			log.Lvl2("test asking for", nNodes, "nodes and", nSubtrees, "subtrees")
 
 			local := onet.NewLocalTest(testSuite)
@@ -340,6 +358,9 @@ func TestProtocolRefusalAll(t *testing.T) {
 
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
+			if nSubtrees >= nNodes && nSubtrees > 1 {
+				continue
+			}
 			log.Lvl2("test asking for", nNodes, "nodes and", nSubtrees, "subtrees")
 
 			local := onet.NewLocalTest(testSuite)
@@ -389,8 +410,12 @@ func TestProtocolRefuseOne(t *testing.T) {
 
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
-			for refuseIdx := 0; refuseIdx < nNodes-1; refuseIdx++ {
-				log.Lvl2("test asking for", nNodes, "nodes and", nSubtrees, "subtrees")
+			if nSubtrees >= nNodes && nSubtrees > 1 {
+				continue
+			}
+			for refuseIdx := 1; refuseIdx < nNodes; refuseIdx++ {
+				log.Lvl2("test asking for", nNodes, "nodes and", nSubtrees, "subtrees. "+
+					"Node", refuseIdx, "will refuse.")
 				counter = &Counter{refuseIdx: refuseIdx}
 
 				local := onet.NewLocalTest(testSuite)
@@ -451,17 +476,17 @@ func TestProtocolRefuseOne(t *testing.T) {
 }
 
 func getAndVerifySignature(cosiProtocol *FtCosi, publics []kyber.Point,
-	proposal []byte, policy cosi.Policy) error {
+	proposal []byte, policy cosi.Policy) ([]byte, error) {
 	var signature []byte
 	select {
 	case signature = <-cosiProtocol.FinalSignature:
 		log.Lvl3("Instance is done")
 	case <-time.After(defaultTimeout * 2):
 		// wait a bit longer than the protocol timeout
-		return fmt.Errorf("didn't get signature in time")
+		return nil, fmt.Errorf("didn't get signature in time")
 	}
 
-	return verifySignature(signature, publics, proposal, policy)
+	return signature, verifySignature(signature, publics, proposal, policy)
 }
 
 func verifySignature(signature []byte, publics []kyber.Point,
@@ -483,11 +508,11 @@ type Counter struct {
 
 var counter = &Counter{}
 
-func refuse(msg, data []byte) bool {
+func refuse(n *onet.TreeNodeInstance, msg, data []byte) bool {
 	counter.Lock()
 	defer counter.Unlock()
 	defer func() { counter.veriCount++ }()
-	if counter.veriCount == counter.refuseIdx {
+	if n.TreeNode().RosterIndex == counter.refuseIdx {
 		return false
 	}
 	return true

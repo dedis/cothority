@@ -79,7 +79,7 @@ class OnchainSecretsTest {
     @Test
     void addAccounts() throws CothorityException{
         Darc latest = adminDarc;
-        for ( int i = 0; i < 100; i++){
+        for ( int i = 0; i < 50; i++){
             logger.info("Adding darc {}", i);
             Signer newPub = new SignerEd25519();
             latest = ocs.addIdentityToDarc(latest, newPub, admin, SignaturePath.USER);

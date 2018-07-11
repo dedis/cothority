@@ -59,6 +59,7 @@ type Service struct {
 	// polling go-routing.
 	pollChan    map[string]chan bool
 	pollChanMut sync.Mutex
+	pollChanWG  sync.WaitGroup
 
 	// NOTE: If we have a lot of skipchains, then using mutex most likely
 	// will slow down our service, an improvement is to go-routines to
@@ -163,6 +164,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	}
 
 	s.pollChanMut.Lock()
+	s.pollChanWG.Add(1)
 	s.pollChan[string(sb.SkipChainID())] = s.startPolling(sb.SkipChainID(), req.BlockInterval)
 	s.pollChanMut.Unlock()
 
@@ -486,6 +488,7 @@ func (s *Service) loadLatestDarc(sid skipchain.SkipBlockID, dID darc.ID) (*darc.
 func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duration) chan bool {
 	closeSignal := make(chan bool)
 	go func() {
+		defer s.pollChanWG.Done()
 		for {
 			select {
 			case <-time.After(interval):
@@ -711,6 +714,7 @@ func (s *Service) ClosePolling() {
 	for _, c := range s.pollChan {
 		close(c)
 	}
+	s.pollChanWG.Wait()
 }
 
 // registerContract stores the contract in a map and will
@@ -764,6 +768,7 @@ func (s *Service) tryLoad() error {
 		if err != nil {
 			return err
 		}
+		s.pollChanWG.Add(1)
 		s.pollChan[string(gen)] = s.startPolling(gen, interval)
 	}
 

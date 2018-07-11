@@ -72,7 +72,7 @@ func NewSubFtCosi(n *onet.TreeNodeInstance, vf VerificationFn, suite cosi.Suite)
 
 	if n.IsRoot() {
 		c.subleaderNotResponding = make(chan bool, 1)
-		c.subCommitment = make(chan StructCommitment, 2) //can send 2 commitments
+		c.subCommitment = make(chan StructCommitment, 2) // can send 2 commitments
 		c.subResponse = make(chan StructResponse, 1)
 	}
 
@@ -121,7 +121,7 @@ func (p *SubFtCosi) Dispatch() error {
 
 	}
 
-	//get announcement parameters
+	// get announcement parameters
 	p.Publics = announcement.Publics
 	p.Timeout = announcement.Timeout
 	if !p.IsRoot() {
@@ -133,7 +133,7 @@ func (p *SubFtCosi) Dispatch() error {
 	p.Data = announcement.Data
 	p.Threshold = announcement.Threshold
 
-	//verify that threshold is valid
+	// verify that threshold is valid
 	maxThreshold := p.Tree().Size() - 1
 	if p.Threshold > maxThreshold {
 		return fmt.Errorf("threshold %d bigger than the maximum of commitments this subtree can gather (%d)", p.Threshold, maxThreshold)
@@ -148,6 +148,7 @@ func (p *SubFtCosi) Dispatch() error {
 			verificationOk := p.verificationFn(p.Msg, p.Data)
 
 			var personalStructCommitment StructCommitment
+			var err error
 			secret, personalStructCommitment, err = p.getCommitment(verificationOk)
 			if err != nil {
 				log.Error("error while generating own commitment:", err)
@@ -195,18 +196,19 @@ loop:
 			if !channelOpen {
 				return nil
 			}
-			if timedOut { //ignore new commits once time-out has been reached
+			if timedOut {
+				// ignore new commits once time-out has been reached
 				break
 			}
 
 			if !isValidSender(commitment.TreeNode, nodesCanCommit...) {
 				log.Warn(p.ServerIdentity(), "received a Commitment from node", commitment.ServerIdentity,
 					"that is not in the list of nodes that can still commit, ignored")
-				break //discards it
+				break // discards it
 			}
 			nodesCanCommit = remove(nodesCanCommit, commitment.TreeNode)
 
-			//if is own commitment
+			// if is own commitment
 			if commitment.TreeNode.ID.Equal(p.TreeNode().ID) {
 				verificationDone = true
 			}
@@ -215,11 +217,11 @@ loop:
 				// send commitment to super-protocol
 				p.subCommitment <- commitment
 
-				//deactivate timeout
+				// deactivate timeout
 				t = make(chan time.Time)
 			} else {
 
-				//verify mask of received commitment
+				// verify mask of received commitment
 				verificationMask, err := cosi.NewMask(p.suite, p.Publics, nil)
 				if err != nil {
 					return err
@@ -234,25 +236,22 @@ loop:
 					break
 				}
 
-				//checks if commitment is a refusal or acceptance
-				if commitment.CoSiCommitment.Equal(p.suite.Point().Null()) { //refusal
+				// checks if commitment is a refusal or acceptance
+				if commitment.CoSiCommitment.Equal(p.suite.Point().Null()) { // refusal
 					NRefusal++
 					if p.IsLeaf() {
-						log.Warn(p.ServerIdentity(), " leaf refused Commitment, marking as not signed")
-
-						err = p.sendAggregatedCommitments([]StructCommitment{}, 1)
-						if err != nil {
-							return err
-						}
-						return nil
+						log.Warn(p.ServerIdentity(), "leaf refused Commitment, marking as not signed")
+						return p.sendAggregatedCommitments([]StructCommitment{}, 1)
 					}
-				} else { //accepted
+					log.Warn(p.ServerIdentity(), "non-leaf got refusal")
+				} else {
+					// accepted
 					commitments = append(commitments, commitment)
 				}
 
 				thresholdRefusal := (1 + len(p.Children()) - p.Threshold) + 1
 
-				//checks if threshold is reached or unreachable
+				// checks if threshold is reached or unreachable
 				quickAnswer := !firstCommitmentSent &&
 					(len(commitments) >= p.Threshold || // quick valid answer
 						NRefusal >= thresholdRefusal) // quick refusal answer
@@ -267,7 +266,7 @@ loop:
 						return err
 					}
 
-					//deactivate timeout if final commitment
+					// deactivate timeout if final commitment
 					if finalAnswer {
 						t = make(chan time.Time)
 					}
@@ -275,7 +274,7 @@ loop:
 					firstCommitmentSent = true
 				}
 
-				//security check
+				// security check
 				if len(commitments)+NRefusal > maxThreshold {
 					log.Error(p.ServerIdentity(), "more commitments (", len(commitments),
 						") and refusals (", NRefusal, ") than possible in subleader (", maxThreshold, ")")
@@ -288,7 +287,7 @@ loop:
 			if !isValidSender(challenge.TreeNode, p.Parent(), p.TreeNode()) {
 				log.Warn(p.ServerIdentity(), "received a Challenge from node", challenge.ServerIdentity,
 					"that is not its parent nor itself, ignored")
-				break //discards it
+				break // discards it
 			}
 			log.Lvl3(p.ServerIdentity(), "received challenge")
 
@@ -300,7 +299,7 @@ loop:
 				childrenCanResponse = p.Children()
 			} else {
 
-				//get children present in challenge mask
+				// get children present in challenge mask
 				challengeMask, err = cosi.NewMask(p.suite, p.Publics, nil)
 				if err != nil {
 					return fmt.Errorf("error in creating new mask: %s", err)
@@ -319,8 +318,7 @@ loop:
 					}
 				}
 			}
-
-			//send challenge to children
+			// send challenge to children
 			childrenToSendChallenge := make([]*onet.TreeNode, len(childrenCanResponse))
 			copy(childrenToSendChallenge, childrenCanResponse) // copy to avoid data race
 			go func() {
@@ -338,7 +336,7 @@ loop:
 			}
 			log.Warn(p.ServerIdentity(), "timed out while waiting for commits, got", len(commitments), "commitments and", NRefusal, "refusals")
 
-			//sending commits received
+			// sending commits received
 			err = p.sendAggregatedCommitments(commitments, NRefusal)
 			if err != nil {
 				return err
@@ -384,7 +382,7 @@ loop:
 		return nil
 	}
 
-	//check challenge
+	// check challenge
 	if challenge.AggregateCommit == nil || challenge.Mask == nil {
 		log.Warn("Only have pre-calculated challenge - this is dangerous!")
 	} else {
@@ -420,13 +418,13 @@ loop:
 		responses = append(responses, StructResponse{p.TreeNode(), Response{personalResponse}})
 	}
 
-	//aggregate all responses
+	// aggregate all responses
 	aggResponse, err := aggregateResponses(p.suite, responses)
 	if err != nil {
 		return err
 	}
 
-	//send to parents
+	// send to parents
 	err = p.SendToParent(&Response{aggResponse})
 	if err != nil {
 		return err
@@ -460,7 +458,7 @@ func (p *SubFtCosi) HandleStop(stop StructStop) error {
 			"that is not the root, ignored")
 	}
 	close(p.ChannelAnnouncement)
-	//close(p.ChannelCommitment) // Channel left open to allow verification function to safely return
+	// close(p.ChannelCommitment) // Channel left open to allow verification function to safely return
 	close(p.ChannelChallenge)
 	close(p.ChannelResponse)
 	return nil
@@ -512,7 +510,7 @@ func (p *SubFtCosi) getCommitment(accepts bool) (kyber.Scalar, StructCommitment,
 	structCommitment := StructCommitment{p.TreeNode(),
 		Commitment{p.suite.Point().Null(), emptyMask.Mask(), 0}}
 
-	var secret kyber.Scalar //nil
+	var secret kyber.Scalar // nil
 	if accepts {
 		secret, structCommitment.CoSiCommitment = cosi.Commit(p.suite)
 		var personalMask *cosi.Mask
@@ -521,7 +519,7 @@ func (p *SubFtCosi) getCommitment(accepts bool) (kyber.Scalar, StructCommitment,
 			return secret, StructCommitment{}, err
 		}
 		structCommitment.Mask = personalMask.Mask()
-	} else { //refuses
+	} else { // refuses
 		structCommitment.NRefusal++
 	}
 
@@ -552,7 +550,7 @@ func (p *SubFtCosi) multicastParallel(msg interface{}, nodes ...*onet.TreeNode) 
 
 // checks if a node is in a list of nodes
 func isValidSender(node *onet.TreeNode, valids ...*onet.TreeNode) bool {
-	//check if comes from a committed children
+	// check if comes from a committed children
 	isValid := false
 	for _, valid := range valids {
 		if valid != nil {

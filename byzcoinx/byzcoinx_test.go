@@ -118,8 +118,7 @@ func TestBftCoSi(t *testing.T) {
 	require.Nil(t, err)
 
 	for _, n := range []int{1, 2, 4, 9, 20} {
-		nbrFault := FaultThreshold(n)
-		runProtocol(t, n, nbrFault, 0, protoName)
+		runProtocol(t, n, 0, 0, protoName)
 	}
 }
 
@@ -159,6 +158,8 @@ func TestBftCoSiFault(t *testing.T) {
 }
 
 func runProtocol(t *testing.T, nbrHosts int, nbrFault int, refuseIndex int, protoName string) {
+	log.Lvlf1("Starting with %d hosts with %d faulty ones and refusing at %d. Protocol name is %s",
+		nbrHosts, nbrFault, refuseIndex, protoName)
 	local := onet.NewLocalTest(testSuite)
 	defer local.CloseAll()
 

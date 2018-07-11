@@ -5,6 +5,7 @@
 package protocol
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"time"
@@ -112,8 +113,7 @@ func (p *FtCosi) Dispatch() error {
 	select {
 	case _, ok := <-p.startChan:
 		if !ok {
-			log.Lvl1("protocol finished prematurely")
-			return nil
+			return errors.New("protocol finished prematurely")
 		}
 	case <-time.After(time.Second):
 		return fmt.Errorf("timeout, did you forget to call Start?")
@@ -160,15 +160,20 @@ func (p *FtCosi) Dispatch() error {
 
 	var secret kyber.Scalar
 	// verifies the proposal
-	verificationOk := <-verifyChan
-	close(verifyChan)
+	var verificationOk bool
+	select {
+	case verificationOk = <-verifyChan:
+		close(verifyChan)
+	case <-time.After(p.Timeout):
+		log.Error(p.ServerIdentity(), "timeout while waiting for the verification!")
+	}
 	if !verificationOk {
 		// root should not fail the verification otherwise it would not have started the protocol
 		p.FinalSignature <- nil
 		return fmt.Errorf("verification failed on root node")
 	}
 
-	//add own commitment
+	// add own commitment
 	var personalCommitment kyber.Point
 	secret, personalCommitment = cosi.Commit(p.suite)
 	personalMask, err := cosi.NewMask(p.suite, p.publics, p.Public())
@@ -209,8 +214,8 @@ func (p *FtCosi) Dispatch() error {
 	errChan := make(chan error, len(runningSubProtocols))
 	var responsesMut sync.Mutex
 	var responsesWg sync.WaitGroup
+	responsesWg.Add(len(runningSubProtocols))
 	for i, cosiSubProtocol := range runningSubProtocols {
-		responsesWg.Add(1)
 		go func(i int, subProto *SubFtCosi) {
 			defer responsesWg.Done()
 			select {
@@ -252,7 +257,7 @@ func (p *FtCosi) Dispatch() error {
 		return err
 	}
 
-	//starts final signature
+	// starts final signature
 	log.Lvl3(p.ServerIdentity().Address, "starts final signature")
 
 	var signature []byte
@@ -303,6 +308,11 @@ func (p *FtCosi) Start() error {
 		log.Warn("no number of subtree specified, using one subtree")
 		p.NSubtrees = 1
 	}
+	if p.NSubtrees >= p.Tree().Size() && p.NSubtrees > 1 {
+		p.Shutdown()
+		return fmt.Errorf("cannot create more subtrees (%d) than there are non-root nodes (%d) in the tree",
+			p.NSubtrees, p.Tree().Size()-1)
+	}
 
 	log.Lvl3("Starting CoSi")
 	p.startChan <- true
@@ -326,7 +336,7 @@ func (p *FtCosi) startSubProtocol(tree *onet.Tree) (*SubFtCosi, error) {
 	// only allocate one third of the ftcosi budget to the subprotocol.
 	cosiSubProtocol.Timeout = p.Timeout / 3
 
-	//the Threshold (minus root node) is divided evenly among the subtrees
+	// the Threshold (minus root node) is divided evenly among the subtrees
 	subThreshold := int(math.Ceil(float64(p.Threshold-1) / float64(p.NSubtrees)))
 	if subThreshold > tree.Size()-1 {
 		subThreshold = tree.Size() - 1

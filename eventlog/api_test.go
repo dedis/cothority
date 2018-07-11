@@ -96,23 +96,38 @@ func TestClient_Log200(t *testing.T) {
 	waitForKey(t, leader.omni, c.OmniLedger.ID, c.EventlogID.Slice(), time.Second)
 
 	logCount := 100
-	for ct := 0; ct < logCount; ct++ {
-		_, err := c.Log(NewEvent("auth", fmt.Sprintf("user %v logged in", ct)))
-		require.Nil(t, err)
+	// Write the logs in chunks to make sure that the verification
+	// can be done in time.
+	for i := 0; i < 5; i++ {
+		current := s.getCurrentBlock(t)
+
+		start := i * logCount / 5
+		for ct := start; ct < start+logCount/5; ct++ {
+			_, err := c.Log(NewEvent("auth", fmt.Sprintf("user %v logged in", ct)))
+			require.Nil(t, err)
+		}
+
+		s.waitNextBlock(t, current)
 	}
 
 	// Also, one call to log with a bunch of logs in it.
-	evs := make([]Event, logCount)
-	for i := range evs {
-		evs[i] = NewEvent("auth", fmt.Sprintf("user %v logged in", i))
+	for i := 0; i < 5; i++ {
+		current := s.getCurrentBlock(t)
+
+		evs := make([]Event, logCount/5)
+		for j := range evs {
+			evs[j] = NewEvent("auth", fmt.Sprintf("user %v logged in", j+i*logCount/5))
+		}
+		_, err = c.Log(evs...)
+		require.Nil(t, err)
+
+		s.waitNextBlock(t, current)
 	}
-	_, err = c.Log(evs...)
-	require.Nil(t, err)
 
 	for i := 0; i < 10; i++ {
 		// Apparently leader.waitForBlock isn't enough for jenkins, so
 		// wait a bit longer.
-		time.Sleep(time.Second)
+		time.Sleep(s.req.BlockInterval)
 		leader.waitForBlock(c.OmniLedger.ID)
 		if err = leader.checkBuckets(c.EventlogID, c.OmniLedger.ID, 2*logCount); err == nil {
 			break
@@ -317,6 +332,7 @@ type ser struct {
 	services []*Service
 	id       skipchain.SkipBlockID
 	owner    darc.Signer
+	req      *omniledger.CreateGenesisBlock
 	gen      darc.Darc // the genesis darc
 }
 
@@ -340,17 +356,18 @@ func newSer(t *testing.T) (*ser, *Client) {
 	}
 
 	// And create an Omniledger to write to.
-	req, err := omniledger.DefaultGenesisMsg(omniledger.CurrentVersion, s.roster,
+	var err error
+	s.req, err = omniledger.DefaultGenesisMsg(omniledger.CurrentVersion, s.roster,
 		[]string{"spawn:darc", "spawn:eventlog", "invoke:eventlog"}, s.owner.Identity())
 	if err != nil {
 		t.Fatal(err)
 	}
-	s.gen = req.GenesisDarc
-	req.BlockInterval = testBlockInterval
+	s.gen = s.req.GenesisDarc
+	s.req.BlockInterval = testBlockInterval
 	cl := onet.NewClient(cothority.Suite, omniledger.ServiceName)
 
 	var resp omniledger.CreateGenesisBlockResponse
-	err = cl.SendProtobuf(s.roster.List[0], req, &resp)
+	err = cl.SendProtobuf(s.roster.List[0], s.req, &resp)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -364,6 +381,24 @@ func newSer(t *testing.T) (*ser, *Client) {
 	c.Signers = []darc.Signer{s.owner}
 
 	return s, c
+}
+
+func (s *ser) getCurrentBlock(t *testing.T) skipchain.SkipBlockID {
+	reply, err := skipchain.NewClient().GetUpdateChain(s.roster, s.id)
+	require.Nil(t, err)
+	return reply.Update[len(reply.Update)-1].Hash
+}
+
+func (s *ser) waitNextBlock(t *testing.T, current skipchain.SkipBlockID) {
+	for i := 0; i < 10; i++ {
+		reply, err := skipchain.NewClient().GetUpdateChain(s.roster, s.id)
+		require.Nil(t, err)
+		if !current.Equal(reply.Update[len(reply.Update)-1].Hash) {
+			return
+		}
+		time.Sleep(s.req.BlockInterval)
+	}
+	require.Fail(t, "waited too long for new block to appear")
 }
 
 // checkBuckets walks all the buckets for a given eventlog and returns an error
