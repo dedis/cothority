@@ -54,6 +54,10 @@ type Service struct {
 	// collections cannot be stored, so they will be re-created whenever the
 	// service reloads.
 	collectionDB map[string]*collectionDB
+	// holds a link for every omniledger to the latest block that is included in
+	// the collection.
+	// TODO: merge collectionDB and pollChan into olState structure.
+	state olState
 
 	// pollChan maintains a map of channels that can be used to stop the
 	// polling go-routing.
@@ -191,6 +195,24 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 
 	s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 
+	if req.InclusionWait > 0 {
+		// Wait for InclusionWait new blocks and look if our transaction is in it.
+		interval, err := LoadBlockIntervalFromColl(s.GetCollectionView(req.SkipchainID))
+		if err != nil {
+			return nil, errors.New("couldn't get collectionView: " + err.Error())
+		}
+		ctxHash := req.Transaction.Instructions.Hash()
+		ch := s.state.createWaitChannel(ctxHash)
+		defer s.state.deleteWaitChannel(ctxHash)
+		select {
+		case success := <-ch:
+			if !success {
+				return nil, errors.New("transaction is in block, but got refused")
+			}
+		case <-time.After(time.Duration(req.InclusionWait) * interval):
+			return nil, errors.New("didn't find transaction in blocks")
+		}
+	}
 	return &AddTxResponse{
 		Version: CurrentVersion,
 	}, nil
@@ -421,6 +443,12 @@ func (s *Service) updateCollection(msg network.Message) {
 	}
 	if !bytes.Equal(cdb.RootHash(), data.CollectionRoot) {
 		log.Error("hash of collection doesn't correspond to root hash")
+	}
+	s.state.setLast(sb)
+
+	// Send OK to all waiting channels
+	for _, ct := range body.Transactions {
+		s.state.informWaitChannel(ct.Instructions.Hash(), true)
 	}
 }
 
@@ -745,6 +773,10 @@ func (s *Service) tryLoad() error {
 		s.storage = &storage{}
 	}
 	s.collectionDB = map[string]*collectionDB{}
+	s.state = olState{
+		lastBlock:    make(map[string]skipchain.SkipBlockID),
+		waitChannels: make(map[string]chan bool),
+	}
 
 	// NOTE: Usually tryLoad is only called when services start up. but for
 	// testing, we might re-initialise the service. So we need to clean up
@@ -770,6 +802,11 @@ func (s *Service) tryLoad() error {
 		}
 		s.pollChanWG.Add(1)
 		s.pollChan[string(gen)] = s.startPolling(gen, interval)
+		sb, err := s.db().GetLatestByID(gen)
+		if err != nil {
+			return err
+		}
+		s.state.setLast(sb)
 	}
 
 	return nil

@@ -3,6 +3,7 @@ package service
 import (
 	"errors"
 	"fmt"
+	"sync"
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority/omniledger/collection"
@@ -246,22 +247,48 @@ func RegisterContract(s skipchain.GetService, kind string, f OmniLedgerContract)
 	return scs.(*Service).registerContract(kind, f)
 }
 
-// DataHeader is the data passed to the Skipchain
-type DataHeader struct {
-	// CollectionRoot is the root of the merkle tree of the colleciton after
-	// applying the valid transactions.
-	CollectionRoot []byte
-	// ClientTransactionHash is the sha256 hash of all the transactions in the body
-	ClientTransactionHash []byte
-	// StateChangesHash is the sha256 of all the stateChanges occuring through the
-	// clientTransactions.
-	StateChangesHash []byte
-	// Timestamp is a unix timestamp in nanoseconds.
-	Timestamp int64
+type olState struct {
+	sync.Mutex
+	// lastBlock is the last integrated block into the collection
+	lastBlock map[string]skipchain.SkipBlockID
+	// waitChannels will be informed by Service.updateCollection that a
+	// given ClientTransaction has been included. updateCollection will
+	// send true for a valid ClientTransaction and false for an invalid
+	// ClientTransaction.
+	waitChannels map[string]chan bool
 }
 
-// DataBody is stored in the body of the skipblock but is not hashed. This reduces
-// the proof needed for a key/value pair.
-type DataBody struct {
-	Transactions ClientTransactions
+func (ol *olState) setLast(sb *skipchain.SkipBlock) {
+	ol.Lock()
+	defer ol.Unlock()
+	ol.lastBlock[string(sb.SkipChainID())] = sb.Hash
+}
+
+func (ol *olState) getLast(id skipchain.SkipBlockID) skipchain.SkipBlockID {
+	ol.Lock()
+	defer ol.Unlock()
+	return ol.lastBlock[string(id)]
+}
+
+func (ol *olState) createWaitChannel(ctxHash []byte) chan bool {
+	ol.Lock()
+	defer ol.Unlock()
+	ch := make(chan bool, 1)
+	ol.waitChannels[string(ctxHash)] = ch
+	return ch
+}
+
+func (ol *olState) informWaitChannel(ctxHash []byte, valid bool) {
+	ol.Lock()
+	defer ol.Unlock()
+	ch := ol.waitChannels[string(ctxHash)]
+	if ch != nil {
+		ch <- valid
+	}
+}
+
+func (ol *olState) deleteWaitChannel(ctxHash []byte) {
+	ol.Lock()
+	defer ol.Unlock()
+	delete(ol.waitChannels, string(ctxHash))
 }

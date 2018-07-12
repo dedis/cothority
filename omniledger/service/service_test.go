@@ -20,6 +20,7 @@ import (
 
 var tSuite = suites.MustFind("Ed25519")
 var dummyKind = "dummy"
+var invalidKind = "invalid"
 var testInterval = 100 * time.Millisecond
 
 func TestMain(m *testing.M) {
@@ -198,6 +199,79 @@ func TestService_GetProof(t *testing.T) {
 	require.NotNil(t, err)
 }
 
+func TestService_WaitInclusion(t *testing.T) {
+	for i := 0; i < 3; i++ {
+		log.Lvl1("Testing inclusion when sending to service", i)
+		waitInclusion(t, i)
+	}
+}
+
+func waitInclusion(t *testing.T, client int) {
+	s := newSer(t, 2, testInterval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	// Create a transaction without waiting
+	log.Lvl1("Create transaction and don't wait")
+	pr := sendTransaction(t, s, client, dummyKind, 0)
+	require.False(t, pr.InclusionProof.Match())
+
+	// Create a transaction and wait
+	log.Lvl1("Create correct transaction and wait")
+	pr = sendTransaction(t, s, client, dummyKind, 10)
+	require.True(t, pr.InclusionProof.Match())
+
+	// Create a failing transaction and wait
+	done := make(chan bool)
+	go func() {
+		log.Lvl1("Create wrong transaction and wait")
+		pr := sendTransaction(t, s, client, invalidKind, 10)
+		require.False(t, pr.InclusionProof.Match())
+		done <- true
+	}()
+
+	// Wait two intervals before sending a new transaction
+	time.Sleep(2 * s.interval)
+
+	// Create a transaction and wait
+	log.Lvl1("Create second correct transaction and wait")
+	pr = sendTransaction(t, s, client, dummyKind, 5)
+	require.True(t, pr.InclusionProof.Match())
+	select {
+	case <-done:
+		require.Fail(t, "go-routine should not be done yet")
+	default:
+	}
+
+	<-done
+}
+
+func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) Proof {
+	tx, err := createOneClientTx(s.darc.GetBaseID(), kind, s.value, s.signer)
+	require.Nil(t, err)
+	ser := s.services[client]
+	_, err = ser.AddTransaction(&AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.sb.SkipChainID(),
+		Transaction:   tx,
+		InclusionWait: wait,
+	})
+	switch kind {
+	case dummyKind:
+		require.Nil(t, err)
+	case invalidKind:
+		require.NotNil(t, err)
+	}
+	// The instruction should not be included (except if we're very unlucky)
+	rep, err := ser.GetProof(&GetProof{
+		Version: CurrentVersion,
+		ID:      s.sb.SkipChainID(),
+		Key:     tx.Instructions[0].InstanceID.Slice(),
+	})
+	require.Nil(t, err)
+	return rep.Proof
+}
+
 func TestService_InvalidVerification(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
@@ -205,7 +279,6 @@ func TestService_InvalidVerification(t *testing.T) {
 
 	for i := range s.hosts {
 		RegisterContract(s.hosts[i], "panic", panicContractFunc)
-		RegisterContract(s.hosts[i], "invalid", invalidContractFunc)
 	}
 
 	// tx0 uses the panicing contract, so it should _not_ be stored.
@@ -222,7 +295,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
 	// tx1 uses the invalid contract, so it should _not_ be stored.
-	tx1, err := createOneClientTx(s.darc.GetBaseID(), "invalid", value1, s.signer)
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), invalidKind, value1, s.signer)
 	require.Nil(t, err)
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
@@ -658,11 +731,11 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 
 func newSer(t *testing.T, step int, interval time.Duration) *ser {
 	s := &ser{
-		local:  onet.NewTCPTest(tSuite),
+		local:  onet.NewLocalTestT(tSuite, t),
 		value:  []byte("anyvalue"),
 		signer: darc.NewSignerEd25519(nil, nil),
 	}
-	s.hosts, s.roster, _ = s.local.GenTree(2, true)
+	s.hosts, s.roster, _ = s.local.GenTree(3, true)
 
 	for _, sv := range s.local.GetServices(s.hosts, OmniledgerID) {
 		service := sv.(*Service)
@@ -733,6 +806,7 @@ func registerDummy(servers []*onet.Server) {
 	// services []skipchain.GetService in the method signature doesn't work :(
 	for _, s := range servers {
 		RegisterContract(s, dummyKind, dummyContractFunc)
+		RegisterContract(s, invalidKind, invalidContractFunc)
 	}
 }
 

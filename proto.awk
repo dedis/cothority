@@ -44,6 +44,11 @@ a == 3 && /\*/ { sub( "\\*", "", $2 )
 					i = i + 1
 					next
 				}
+a == 3 && /.*`protobuf:"opt"`/ {
+					print_field("optional", $2, $1, i)
+					i = i + 1
+					next
+				}
 a == 3 {
 			print_field("required", $2, $1, i)
 			i = i + 1
