@@ -373,7 +373,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 		NewBlock:          sb,
 		TargetSkipChainID: scID,
 	}
-	log.Lvlf2("Storing skipblock with transactions %+v", ctsOK)
+	log.Lvlf3("Storing skipblock with transactions %+v", ctsOK)
 	ssbReply, err := s.skService().StoreSkipBlock(&ssb)
 	if err != nil {
 		return nil, err
@@ -430,11 +430,7 @@ func (s *Service) updateCollection(msg network.Message) {
 		return
 	}
 
-	if i, _ := sb.Roster.Search(s.ServerIdentity().ID); i == 0 {
-		log.Lvlf2("%s: Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
-	} else {
-		log.Lvlf3("%s: Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
-	}
+	log.Lvlf3("%s: Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
 	for _, sc := range scs {
 		err = cdb.Store(&sc)
 		if err != nil {
@@ -517,6 +513,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 	closeSignal := make(chan bool)
 	go func() {
 		defer s.pollChanWG.Done()
+		var txs ClientTransactions
 		for {
 			select {
 			case <-time.After(interval):
@@ -547,7 +544,6 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 				}
 
 				protocolTimeout := time.After(s.skService().GetPropTimeout())
-				var txs ClientTransactions
 			collectTxLoop:
 				for {
 					select {
@@ -571,7 +567,34 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 					continue
 				}
 
-				_, err = s.createNewBlock(scID, sb.Roster, txs)
+				// Pre-run transactions to look how many we can fit in the alloted time
+				// slot. Perhaps we can run this in parallel during the wait-phase?
+				var txsCollect ClientTransactions
+				cdbI := s.GetCollectionView(scID)
+				now := time.Now()
+				for len(txs) > 0 {
+					if err := s.verifyClientTx(scID, txs[0]); err == nil {
+						var cin []Coin
+						for _, instr := range txs[0].Instructions {
+							_, cin, err = s.executeInstruction(cdbI, cin, instr)
+							if err != nil {
+								continue
+							}
+						}
+						if time.Now().Sub(now) < interval/2 {
+							txsCollect = append(txsCollect, txs[0])
+							txs = txs[1:]
+						} else {
+							log.Lvlf3("Got more transactions than what I can do in half the blockInterval. "+
+								"%d transactions left", len(txs))
+							break
+						}
+					} else {
+						log.Lvl3("Removing badly signed transaction")
+						txs = txs[1:]
+					}
+				}
+				_, err = s.createNewBlock(scID, sb.Roster, txsCollect)
 				if err != nil {
 					log.Error("couldn't create new block: " + err.Error())
 				}
@@ -661,6 +684,7 @@ func (s *Service) createStateChanges(coll *collection.Collection, cts ClientTran
 	// we could use some kind of copy-on-write technique.
 
 	cdbTemp := coll.Clone()
+	var cin []Coin
 clientTransactions:
 	for _, ct := range cts {
 		// Make a new collection for each instruction. If the instruction is sucessfully
@@ -668,33 +692,7 @@ clientTransactions:
 		// otherwise dump it.
 		cdbI := &roCollection{c: cdbTemp.Clone()}
 		for _, instr := range ct.Instructions {
-			contract, _, err := instr.GetContractState(cdbI)
-			if err != nil {
-				log.Error("Couldn't get contract type of instruction:", err)
-				continue clientTransactions
-			}
-
-			f, exists := s.contracts[contract]
-			// If the leader does not have a verifier for this contract, it drops the
-			// transaction.
-			if !exists {
-				log.Error("Leader is dropping instruction of unknown contract:", contract)
-				continue clientTransactions
-			}
-			// Now we call the contract function with the data of the key.
-			// Wrap up f() inside of g(), so that we can recover panics
-			// from f().
-			log.Lvlf3("%s: Calling contract %s", s.ServerIdentity(), contract)
-			g := func(cdb CollectionView, inst Instruction, c []Coin) (sc []StateChange, cout []Coin, err error) {
-				defer func() {
-					if re := recover(); re != nil {
-						err = errors.New(re.(string))
-					}
-				}()
-				sc, cout, err = f(cdb, inst, c)
-				return
-			}
-			scs, _, err := g(cdbI, instr, nil)
+			scs, cout, err := s.executeInstruction(cdbI, cin, instr)
 			if err != nil {
 				log.Error("Call to contract returned error:", err)
 				continue clientTransactions
@@ -706,11 +704,38 @@ clientTransactions:
 				}
 			}
 			states = append(states, scs...)
+			cin = cout
 		}
 		cdbTemp = cdbI.c
 		ctsOK = append(ctsOK, ct)
 	}
 	return cdbTemp.GetRoot(), ctsOK, states, nil
+}
+
+func (s *Service) executeInstruction(cdbI CollectionView, cin []Coin, instr Instruction) (scs StateChanges, cout []Coin, err error) {
+	defer func() {
+		if re := recover(); re != nil {
+			err = errors.New(re.(string))
+		}
+	}()
+	contractID, _, err := instr.GetContractState(cdbI)
+	if err != nil {
+		err = errors.New("Couldn't get contract type of instruction: " + err.Error())
+		return
+	}
+
+	contract, exists := s.contracts[contractID]
+	// If the leader does not have a verifier for this contract, it drops the
+	// transaction.
+	if !exists {
+		err = errors.New("Leader is dropping instruction of unknown contract: " + contractID)
+		return
+	}
+	// Now we call the contract function with the data of the key.
+	// Wrap up f() inside of g(), so that we can recover panics
+	// from f().
+	log.Lvlf3("%s: Calling contract %s", s.ServerIdentity(), contractID)
+	return contract(cdbI, instr, cin)
 }
 
 func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity, error) {
