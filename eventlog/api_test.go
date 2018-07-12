@@ -21,7 +21,7 @@ var tSuite = suites.MustFind("Ed25519")
 
 // Use this block interval for logic tests. Stress test often use a different
 // block interval.
-var testBlockInterval = 100 * time.Millisecond
+var testBlockInterval = 500 * time.Millisecond
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
