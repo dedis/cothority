@@ -14,6 +14,1709 @@ public final class OmniLedgerProto {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
+  public interface DataHeaderOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:omniledger.DataHeader)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * CollectionRoot is the root of the merkle tree of the colleciton after
+     * applying the valid transactions.
+     * </pre>
+     *
+     * <code>required bytes collectionroot = 1;</code>
+     */
+    boolean hasCollectionroot();
+    /**
+     * <pre>
+     * CollectionRoot is the root of the merkle tree of the colleciton after
+     * applying the valid transactions.
+     * </pre>
+     *
+     * <code>required bytes collectionroot = 1;</code>
+     */
+    com.google.protobuf.ByteString getCollectionroot();
+
+    /**
+     * <pre>
+     * ClientTransactionHash is the sha256 hash of all the transactions in the body
+     * </pre>
+     *
+     * <code>required bytes clienttransactionhash = 2;</code>
+     */
+    boolean hasClienttransactionhash();
+    /**
+     * <pre>
+     * ClientTransactionHash is the sha256 hash of all the transactions in the body
+     * </pre>
+     *
+     * <code>required bytes clienttransactionhash = 2;</code>
+     */
+    com.google.protobuf.ByteString getClienttransactionhash();
+
+    /**
+     * <pre>
+     * StateChangesHash is the sha256 of all the stateChanges occuring through the
+     * clientTransactions.
+     * </pre>
+     *
+     * <code>required bytes statechangeshash = 3;</code>
+     */
+    boolean hasStatechangeshash();
+    /**
+     * <pre>
+     * StateChangesHash is the sha256 of all the stateChanges occuring through the
+     * clientTransactions.
+     * </pre>
+     *
+     * <code>required bytes statechangeshash = 3;</code>
+     */
+    com.google.protobuf.ByteString getStatechangeshash();
+
+    /**
+     * <pre>
+     * Timestamp is a unix timestamp in nanoseconds.
+     * </pre>
+     *
+     * <code>required sint64 timestamp = 4;</code>
+     */
+    boolean hasTimestamp();
+    /**
+     * <pre>
+     * Timestamp is a unix timestamp in nanoseconds.
+     * </pre>
+     *
+     * <code>required sint64 timestamp = 4;</code>
+     */
+    long getTimestamp();
+  }
+  /**
+   * <pre>
+   * DataHeader is the data passed to the Skipchain
+   * </pre>
+   *
+   * Protobuf type {@code omniledger.DataHeader}
+   */
+  public  static final class DataHeader extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:omniledger.DataHeader)
+      DataHeaderOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use DataHeader.newBuilder() to construct.
+    private DataHeader(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private DataHeader() {
+      collectionroot_ = com.google.protobuf.ByteString.EMPTY;
+      clienttransactionhash_ = com.google.protobuf.ByteString.EMPTY;
+      statechangeshash_ = com.google.protobuf.ByteString.EMPTY;
+      timestamp_ = 0L;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private DataHeader(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              collectionroot_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              clienttransactionhash_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              statechangeshash_ = input.readBytes();
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              timestamp_ = input.readSInt64();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataHeader_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataHeader_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.OmniLedgerProto.DataHeader.class, ch.epfl.dedis.proto.OmniLedgerProto.DataHeader.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int COLLECTIONROOT_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString collectionroot_;
+    /**
+     * <pre>
+     * CollectionRoot is the root of the merkle tree of the colleciton after
+     * applying the valid transactions.
+     * </pre>
+     *
+     * <code>required bytes collectionroot = 1;</code>
+     */
+    public boolean hasCollectionroot() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * CollectionRoot is the root of the merkle tree of the colleciton after
+     * applying the valid transactions.
+     * </pre>
+     *
+     * <code>required bytes collectionroot = 1;</code>
+     */
+    public com.google.protobuf.ByteString getCollectionroot() {
+      return collectionroot_;
+    }
+
+    public static final int CLIENTTRANSACTIONHASH_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString clienttransactionhash_;
+    /**
+     * <pre>
+     * ClientTransactionHash is the sha256 hash of all the transactions in the body
+     * </pre>
+     *
+     * <code>required bytes clienttransactionhash = 2;</code>
+     */
+    public boolean hasClienttransactionhash() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * ClientTransactionHash is the sha256 hash of all the transactions in the body
+     * </pre>
+     *
+     * <code>required bytes clienttransactionhash = 2;</code>
+     */
+    public com.google.protobuf.ByteString getClienttransactionhash() {
+      return clienttransactionhash_;
+    }
+
+    public static final int STATECHANGESHASH_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString statechangeshash_;
+    /**
+     * <pre>
+     * StateChangesHash is the sha256 of all the stateChanges occuring through the
+     * clientTransactions.
+     * </pre>
+     *
+     * <code>required bytes statechangeshash = 3;</code>
+     */
+    public boolean hasStatechangeshash() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * StateChangesHash is the sha256 of all the stateChanges occuring through the
+     * clientTransactions.
+     * </pre>
+     *
+     * <code>required bytes statechangeshash = 3;</code>
+     */
+    public com.google.protobuf.ByteString getStatechangeshash() {
+      return statechangeshash_;
+    }
+
+    public static final int TIMESTAMP_FIELD_NUMBER = 4;
+    private long timestamp_;
+    /**
+     * <pre>
+     * Timestamp is a unix timestamp in nanoseconds.
+     * </pre>
+     *
+     * <code>required sint64 timestamp = 4;</code>
+     */
+    public boolean hasTimestamp() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <pre>
+     * Timestamp is a unix timestamp in nanoseconds.
+     * </pre>
+     *
+     * <code>required sint64 timestamp = 4;</code>
+     */
+    public long getTimestamp() {
+      return timestamp_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasCollectionroot()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasClienttransactionhash()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasStatechangeshash()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasTimestamp()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, collectionroot_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, clienttransactionhash_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, statechangeshash_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeSInt64(4, timestamp_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, collectionroot_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, clienttransactionhash_);
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, statechangeshash_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt64Size(4, timestamp_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.DataHeader)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.OmniLedgerProto.DataHeader other = (ch.epfl.dedis.proto.OmniLedgerProto.DataHeader) obj;
+
+      boolean result = true;
+      result = result && (hasCollectionroot() == other.hasCollectionroot());
+      if (hasCollectionroot()) {
+        result = result && getCollectionroot()
+            .equals(other.getCollectionroot());
+      }
+      result = result && (hasClienttransactionhash() == other.hasClienttransactionhash());
+      if (hasClienttransactionhash()) {
+        result = result && getClienttransactionhash()
+            .equals(other.getClienttransactionhash());
+      }
+      result = result && (hasStatechangeshash() == other.hasStatechangeshash());
+      if (hasStatechangeshash()) {
+        result = result && getStatechangeshash()
+            .equals(other.getStatechangeshash());
+      }
+      result = result && (hasTimestamp() == other.hasTimestamp());
+      if (hasTimestamp()) {
+        result = result && (getTimestamp()
+            == other.getTimestamp());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasCollectionroot()) {
+        hash = (37 * hash) + COLLECTIONROOT_FIELD_NUMBER;
+        hash = (53 * hash) + getCollectionroot().hashCode();
+      }
+      if (hasClienttransactionhash()) {
+        hash = (37 * hash) + CLIENTTRANSACTIONHASH_FIELD_NUMBER;
+        hash = (53 * hash) + getClienttransactionhash().hashCode();
+      }
+      if (hasStatechangeshash()) {
+        hash = (37 * hash) + STATECHANGESHASH_FIELD_NUMBER;
+        hash = (53 * hash) + getStatechangeshash().hashCode();
+      }
+      if (hasTimestamp()) {
+        hash = (37 * hash) + TIMESTAMP_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getTimestamp());
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.DataHeader prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * DataHeader is the data passed to the Skipchain
+     * </pre>
+     *
+     * Protobuf type {@code omniledger.DataHeader}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:omniledger.DataHeader)
+        ch.epfl.dedis.proto.OmniLedgerProto.DataHeaderOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataHeader_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataHeader_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.OmniLedgerProto.DataHeader.class, ch.epfl.dedis.proto.OmniLedgerProto.DataHeader.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.OmniLedgerProto.DataHeader.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        collectionroot_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        clienttransactionhash_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        statechangeshash_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        timestamp_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataHeader_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.DataHeader getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.DataHeader.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.DataHeader build() {
+        ch.epfl.dedis.proto.OmniLedgerProto.DataHeader result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.DataHeader buildPartial() {
+        ch.epfl.dedis.proto.OmniLedgerProto.DataHeader result = new ch.epfl.dedis.proto.OmniLedgerProto.DataHeader(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.collectionroot_ = collectionroot_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.clienttransactionhash_ = clienttransactionhash_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.statechangeshash_ = statechangeshash_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.timestamp_ = timestamp_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.DataHeader) {
+          return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.DataHeader)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.DataHeader other) {
+        if (other == ch.epfl.dedis.proto.OmniLedgerProto.DataHeader.getDefaultInstance()) return this;
+        if (other.hasCollectionroot()) {
+          setCollectionroot(other.getCollectionroot());
+        }
+        if (other.hasClienttransactionhash()) {
+          setClienttransactionhash(other.getClienttransactionhash());
+        }
+        if (other.hasStatechangeshash()) {
+          setStatechangeshash(other.getStatechangeshash());
+        }
+        if (other.hasTimestamp()) {
+          setTimestamp(other.getTimestamp());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasCollectionroot()) {
+          return false;
+        }
+        if (!hasClienttransactionhash()) {
+          return false;
+        }
+        if (!hasStatechangeshash()) {
+          return false;
+        }
+        if (!hasTimestamp()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.OmniLedgerProto.DataHeader parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.DataHeader) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString collectionroot_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * CollectionRoot is the root of the merkle tree of the colleciton after
+       * applying the valid transactions.
+       * </pre>
+       *
+       * <code>required bytes collectionroot = 1;</code>
+       */
+      public boolean hasCollectionroot() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * CollectionRoot is the root of the merkle tree of the colleciton after
+       * applying the valid transactions.
+       * </pre>
+       *
+       * <code>required bytes collectionroot = 1;</code>
+       */
+      public com.google.protobuf.ByteString getCollectionroot() {
+        return collectionroot_;
+      }
+      /**
+       * <pre>
+       * CollectionRoot is the root of the merkle tree of the colleciton after
+       * applying the valid transactions.
+       * </pre>
+       *
+       * <code>required bytes collectionroot = 1;</code>
+       */
+      public Builder setCollectionroot(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        collectionroot_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * CollectionRoot is the root of the merkle tree of the colleciton after
+       * applying the valid transactions.
+       * </pre>
+       *
+       * <code>required bytes collectionroot = 1;</code>
+       */
+      public Builder clearCollectionroot() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        collectionroot_ = getDefaultInstance().getCollectionroot();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString clienttransactionhash_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * ClientTransactionHash is the sha256 hash of all the transactions in the body
+       * </pre>
+       *
+       * <code>required bytes clienttransactionhash = 2;</code>
+       */
+      public boolean hasClienttransactionhash() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <pre>
+       * ClientTransactionHash is the sha256 hash of all the transactions in the body
+       * </pre>
+       *
+       * <code>required bytes clienttransactionhash = 2;</code>
+       */
+      public com.google.protobuf.ByteString getClienttransactionhash() {
+        return clienttransactionhash_;
+      }
+      /**
+       * <pre>
+       * ClientTransactionHash is the sha256 hash of all the transactions in the body
+       * </pre>
+       *
+       * <code>required bytes clienttransactionhash = 2;</code>
+       */
+      public Builder setClienttransactionhash(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        clienttransactionhash_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * ClientTransactionHash is the sha256 hash of all the transactions in the body
+       * </pre>
+       *
+       * <code>required bytes clienttransactionhash = 2;</code>
+       */
+      public Builder clearClienttransactionhash() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        clienttransactionhash_ = getDefaultInstance().getClienttransactionhash();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString statechangeshash_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * StateChangesHash is the sha256 of all the stateChanges occuring through the
+       * clientTransactions.
+       * </pre>
+       *
+       * <code>required bytes statechangeshash = 3;</code>
+       */
+      public boolean hasStatechangeshash() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * StateChangesHash is the sha256 of all the stateChanges occuring through the
+       * clientTransactions.
+       * </pre>
+       *
+       * <code>required bytes statechangeshash = 3;</code>
+       */
+      public com.google.protobuf.ByteString getStatechangeshash() {
+        return statechangeshash_;
+      }
+      /**
+       * <pre>
+       * StateChangesHash is the sha256 of all the stateChanges occuring through the
+       * clientTransactions.
+       * </pre>
+       *
+       * <code>required bytes statechangeshash = 3;</code>
+       */
+      public Builder setStatechangeshash(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        statechangeshash_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * StateChangesHash is the sha256 of all the stateChanges occuring through the
+       * clientTransactions.
+       * </pre>
+       *
+       * <code>required bytes statechangeshash = 3;</code>
+       */
+      public Builder clearStatechangeshash() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        statechangeshash_ = getDefaultInstance().getStatechangeshash();
+        onChanged();
+        return this;
+      }
+
+      private long timestamp_ ;
+      /**
+       * <pre>
+       * Timestamp is a unix timestamp in nanoseconds.
+       * </pre>
+       *
+       * <code>required sint64 timestamp = 4;</code>
+       */
+      public boolean hasTimestamp() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <pre>
+       * Timestamp is a unix timestamp in nanoseconds.
+       * </pre>
+       *
+       * <code>required sint64 timestamp = 4;</code>
+       */
+      public long getTimestamp() {
+        return timestamp_;
+      }
+      /**
+       * <pre>
+       * Timestamp is a unix timestamp in nanoseconds.
+       * </pre>
+       *
+       * <code>required sint64 timestamp = 4;</code>
+       */
+      public Builder setTimestamp(long value) {
+        bitField0_ |= 0x00000008;
+        timestamp_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Timestamp is a unix timestamp in nanoseconds.
+       * </pre>
+       *
+       * <code>required sint64 timestamp = 4;</code>
+       */
+      public Builder clearTimestamp() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        timestamp_ = 0L;
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:omniledger.DataHeader)
+    }
+
+    // @@protoc_insertion_point(class_scope:omniledger.DataHeader)
+    private static final ch.epfl.dedis.proto.OmniLedgerProto.DataHeader DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.DataHeader();
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataHeader getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<DataHeader>
+        PARSER = new com.google.protobuf.AbstractParser<DataHeader>() {
+      public DataHeader parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new DataHeader(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<DataHeader> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DataHeader> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.OmniLedgerProto.DataHeader getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface DataBodyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:omniledger.DataBody)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+     */
+    java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction> 
+        getTransactionsList();
+    /**
+     * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+     */
+    ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction getTransactions(int index);
+    /**
+     * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+     */
+    int getTransactionsCount();
+    /**
+     * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+     */
+    java.util.List<? extends ch.epfl.dedis.proto.OmniLedgerProto.ClientTransactionOrBuilder> 
+        getTransactionsOrBuilderList();
+    /**
+     * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+     */
+    ch.epfl.dedis.proto.OmniLedgerProto.ClientTransactionOrBuilder getTransactionsOrBuilder(
+        int index);
+  }
+  /**
+   * <pre>
+   * DataBody is stored in the body of the skipblock but is not hashed. This reduces
+   * the proof needed for a key/value pair.
+   * </pre>
+   *
+   * Protobuf type {@code omniledger.DataBody}
+   */
+  public  static final class DataBody extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:omniledger.DataBody)
+      DataBodyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use DataBody.newBuilder() to construct.
+    private DataBody(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private DataBody() {
+      transactions_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private DataBody(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                transactions_ = new java.util.ArrayList<ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              transactions_.add(
+                  input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.PARSER, extensionRegistry));
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          transactions_ = java.util.Collections.unmodifiableList(transactions_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataBody_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataBody_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.OmniLedgerProto.DataBody.class, ch.epfl.dedis.proto.OmniLedgerProto.DataBody.Builder.class);
+    }
+
+    public static final int TRANSACTIONS_FIELD_NUMBER = 1;
+    private java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction> transactions_;
+    /**
+     * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+     */
+    public java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction> getTransactionsList() {
+      return transactions_;
+    }
+    /**
+     * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+     */
+    public java.util.List<? extends ch.epfl.dedis.proto.OmniLedgerProto.ClientTransactionOrBuilder> 
+        getTransactionsOrBuilderList() {
+      return transactions_;
+    }
+    /**
+     * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+     */
+    public int getTransactionsCount() {
+      return transactions_.size();
+    }
+    /**
+     * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+     */
+    public ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction getTransactions(int index) {
+      return transactions_.get(index);
+    }
+    /**
+     * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+     */
+    public ch.epfl.dedis.proto.OmniLedgerProto.ClientTransactionOrBuilder getTransactionsOrBuilder(
+        int index) {
+      return transactions_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      for (int i = 0; i < getTransactionsCount(); i++) {
+        if (!getTransactions(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < transactions_.size(); i++) {
+        output.writeMessage(1, transactions_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (int i = 0; i < transactions_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, transactions_.get(i));
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.DataBody)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.OmniLedgerProto.DataBody other = (ch.epfl.dedis.proto.OmniLedgerProto.DataBody) obj;
+
+      boolean result = true;
+      result = result && getTransactionsList()
+          .equals(other.getTransactionsList());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getTransactionsCount() > 0) {
+        hash = (37 * hash) + TRANSACTIONS_FIELD_NUMBER;
+        hash = (53 * hash) + getTransactionsList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.DataBody prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * DataBody is stored in the body of the skipblock but is not hashed. This reduces
+     * the proof needed for a key/value pair.
+     * </pre>
+     *
+     * Protobuf type {@code omniledger.DataBody}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:omniledger.DataBody)
+        ch.epfl.dedis.proto.OmniLedgerProto.DataBodyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataBody_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataBody_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.OmniLedgerProto.DataBody.class, ch.epfl.dedis.proto.OmniLedgerProto.DataBody.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.OmniLedgerProto.DataBody.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getTransactionsFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        if (transactionsBuilder_ == null) {
+          transactions_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+        } else {
+          transactionsBuilder_.clear();
+        }
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataBody_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.DataBody getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.OmniLedgerProto.DataBody.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.DataBody build() {
+        ch.epfl.dedis.proto.OmniLedgerProto.DataBody result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.OmniLedgerProto.DataBody buildPartial() {
+        ch.epfl.dedis.proto.OmniLedgerProto.DataBody result = new ch.epfl.dedis.proto.OmniLedgerProto.DataBody(this);
+        int from_bitField0_ = bitField0_;
+        if (transactionsBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001)) {
+            transactions_ = java.util.Collections.unmodifiableList(transactions_);
+            bitField0_ = (bitField0_ & ~0x00000001);
+          }
+          result.transactions_ = transactions_;
+        } else {
+          result.transactions_ = transactionsBuilder_.build();
+        }
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.DataBody) {
+          return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.DataBody)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.DataBody other) {
+        if (other == ch.epfl.dedis.proto.OmniLedgerProto.DataBody.getDefaultInstance()) return this;
+        if (transactionsBuilder_ == null) {
+          if (!other.transactions_.isEmpty()) {
+            if (transactions_.isEmpty()) {
+              transactions_ = other.transactions_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+            } else {
+              ensureTransactionsIsMutable();
+              transactions_.addAll(other.transactions_);
+            }
+            onChanged();
+          }
+        } else {
+          if (!other.transactions_.isEmpty()) {
+            if (transactionsBuilder_.isEmpty()) {
+              transactionsBuilder_.dispose();
+              transactionsBuilder_ = null;
+              transactions_ = other.transactions_;
+              bitField0_ = (bitField0_ & ~0x00000001);
+              transactionsBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getTransactionsFieldBuilder() : null;
+            } else {
+              transactionsBuilder_.addAllMessages(other.transactions_);
+            }
+          }
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        for (int i = 0; i < getTransactionsCount(); i++) {
+          if (!getTransactions(i).isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.OmniLedgerProto.DataBody parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.DataBody) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction> transactions_ =
+        java.util.Collections.emptyList();
+      private void ensureTransactionsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          transactions_ = new java.util.ArrayList<ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction>(transactions_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction, ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.Builder, ch.epfl.dedis.proto.OmniLedgerProto.ClientTransactionOrBuilder> transactionsBuilder_;
+
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction> getTransactionsList() {
+        if (transactionsBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(transactions_);
+        } else {
+          return transactionsBuilder_.getMessageList();
+        }
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public int getTransactionsCount() {
+        if (transactionsBuilder_ == null) {
+          return transactions_.size();
+        } else {
+          return transactionsBuilder_.getCount();
+        }
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction getTransactions(int index) {
+        if (transactionsBuilder_ == null) {
+          return transactions_.get(index);
+        } else {
+          return transactionsBuilder_.getMessage(index);
+        }
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public Builder setTransactions(
+          int index, ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction value) {
+        if (transactionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTransactionsIsMutable();
+          transactions_.set(index, value);
+          onChanged();
+        } else {
+          transactionsBuilder_.setMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public Builder setTransactions(
+          int index, ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.Builder builderForValue) {
+        if (transactionsBuilder_ == null) {
+          ensureTransactionsIsMutable();
+          transactions_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          transactionsBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public Builder addTransactions(ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction value) {
+        if (transactionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTransactionsIsMutable();
+          transactions_.add(value);
+          onChanged();
+        } else {
+          transactionsBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public Builder addTransactions(
+          int index, ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction value) {
+        if (transactionsBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureTransactionsIsMutable();
+          transactions_.add(index, value);
+          onChanged();
+        } else {
+          transactionsBuilder_.addMessage(index, value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public Builder addTransactions(
+          ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.Builder builderForValue) {
+        if (transactionsBuilder_ == null) {
+          ensureTransactionsIsMutable();
+          transactions_.add(builderForValue.build());
+          onChanged();
+        } else {
+          transactionsBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public Builder addTransactions(
+          int index, ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.Builder builderForValue) {
+        if (transactionsBuilder_ == null) {
+          ensureTransactionsIsMutable();
+          transactions_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          transactionsBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public Builder addAllTransactions(
+          java.lang.Iterable<? extends ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction> values) {
+        if (transactionsBuilder_ == null) {
+          ensureTransactionsIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, transactions_);
+          onChanged();
+        } else {
+          transactionsBuilder_.addAllMessages(values);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public Builder clearTransactions() {
+        if (transactionsBuilder_ == null) {
+          transactions_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000001);
+          onChanged();
+        } else {
+          transactionsBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public Builder removeTransactions(int index) {
+        if (transactionsBuilder_ == null) {
+          ensureTransactionsIsMutable();
+          transactions_.remove(index);
+          onChanged();
+        } else {
+          transactionsBuilder_.remove(index);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.Builder getTransactionsBuilder(
+          int index) {
+        return getTransactionsFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.ClientTransactionOrBuilder getTransactionsOrBuilder(
+          int index) {
+        if (transactionsBuilder_ == null) {
+          return transactions_.get(index);  } else {
+          return transactionsBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public java.util.List<? extends ch.epfl.dedis.proto.OmniLedgerProto.ClientTransactionOrBuilder> 
+           getTransactionsOrBuilderList() {
+        if (transactionsBuilder_ != null) {
+          return transactionsBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(transactions_);
+        }
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.Builder addTransactionsBuilder() {
+        return getTransactionsFieldBuilder().addBuilder(
+            ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.Builder addTransactionsBuilder(
+          int index) {
+        return getTransactionsFieldBuilder().addBuilder(
+            index, ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .omniledger.ClientTransaction transactions = 1;</code>
+       */
+      public java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.Builder> 
+           getTransactionsBuilderList() {
+        return getTransactionsFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction, ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.Builder, ch.epfl.dedis.proto.OmniLedgerProto.ClientTransactionOrBuilder> 
+          getTransactionsFieldBuilder() {
+        if (transactionsBuilder_ == null) {
+          transactionsBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction, ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.Builder, ch.epfl.dedis.proto.OmniLedgerProto.ClientTransactionOrBuilder>(
+                  transactions_,
+                  ((bitField0_ & 0x00000001) == 0x00000001),
+                  getParentForChildren(),
+                  isClean());
+          transactions_ = null;
+        }
+        return transactionsBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:omniledger.DataBody)
+    }
+
+    // @@protoc_insertion_point(class_scope:omniledger.DataBody)
+    private static final ch.epfl.dedis.proto.OmniLedgerProto.DataBody DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.DataBody();
+    }
+
+    public static ch.epfl.dedis.proto.OmniLedgerProto.DataBody getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<DataBody>
+        PARSER = new com.google.protobuf.AbstractParser<DataBody>() {
+      public DataBody parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new DataBody(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<DataBody> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<DataBody> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.OmniLedgerProto.DataBody getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface CreateGenesisBlockOrBuilder extends
       // @@protoc_insertion_point(interface_extends:omniledger.CreateGenesisBlock)
       com.google.protobuf.MessageOrBuilder {
@@ -2067,6 +3770,25 @@ public final class OmniLedgerProto {
      * <code>required .omniledger.ClientTransaction transaction = 3;</code>
      */
     ch.epfl.dedis.proto.OmniLedgerProto.ClientTransactionOrBuilder getTransactionOrBuilder();
+
+    /**
+     * <pre>
+     * How many block-intervals to wait for inclusion -
+     * missing value or 0 means return immediately.
+     * </pre>
+     *
+     * <code>optional sint32 inclusionwait = 4;</code>
+     */
+    boolean hasInclusionwait();
+    /**
+     * <pre>
+     * How many block-intervals to wait for inclusion -
+     * missing value or 0 means return immediately.
+     * </pre>
+     *
+     * <code>optional sint32 inclusionwait = 4;</code>
+     */
+    int getInclusionwait();
   }
   /**
    * <pre>
@@ -2087,6 +3809,7 @@ public final class OmniLedgerProto {
     private AddTxRequest() {
       version_ = 0;
       skipchainid_ = com.google.protobuf.ByteString.EMPTY;
+      inclusionwait_ = 0;
     }
 
     @java.lang.Override
@@ -2138,6 +3861,11 @@ public final class OmniLedgerProto {
                 transaction_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000004;
+              break;
+            }
+            case 32: {
+              bitField0_ |= 0x00000008;
+              inclusionwait_ = input.readSInt32();
               break;
             }
           }
@@ -2244,6 +3972,31 @@ public final class OmniLedgerProto {
       return transaction_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.getDefaultInstance() : transaction_;
     }
 
+    public static final int INCLUSIONWAIT_FIELD_NUMBER = 4;
+    private int inclusionwait_;
+    /**
+     * <pre>
+     * How many block-intervals to wait for inclusion -
+     * missing value or 0 means return immediately.
+     * </pre>
+     *
+     * <code>optional sint32 inclusionwait = 4;</code>
+     */
+    public boolean hasInclusionwait() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <pre>
+     * How many block-intervals to wait for inclusion -
+     * missing value or 0 means return immediately.
+     * </pre>
+     *
+     * <code>optional sint32 inclusionwait = 4;</code>
+     */
+    public int getInclusionwait() {
+      return inclusionwait_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -2281,6 +4034,9 @@ public final class OmniLedgerProto {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         output.writeMessage(3, getTransaction());
       }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeSInt32(4, inclusionwait_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2300,6 +4056,10 @@ public final class OmniLedgerProto {
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(3, getTransaction());
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(4, inclusionwait_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2332,6 +4092,11 @@ public final class OmniLedgerProto {
         result = result && getTransaction()
             .equals(other.getTransaction());
       }
+      result = result && (hasInclusionwait() == other.hasInclusionwait());
+      if (hasInclusionwait()) {
+        result = result && (getInclusionwait()
+            == other.getInclusionwait());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -2354,6 +4119,10 @@ public final class OmniLedgerProto {
       if (hasTransaction()) {
         hash = (37 * hash) + TRANSACTION_FIELD_NUMBER;
         hash = (53 * hash) + getTransaction().hashCode();
+      }
+      if (hasInclusionwait()) {
+        hash = (37 * hash) + INCLUSIONWAIT_FIELD_NUMBER;
+        hash = (53 * hash) + getInclusionwait();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2499,6 +4268,8 @@ public final class OmniLedgerProto {
           transactionBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000004);
+        inclusionwait_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -2539,6 +4310,10 @@ public final class OmniLedgerProto {
         } else {
           result.transaction_ = transactionBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.inclusionwait_ = inclusionwait_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2589,6 +4364,9 @@ public final class OmniLedgerProto {
         }
         if (other.hasTransaction()) {
           mergeTransaction(other.getTransaction());
+        }
+        if (other.hasInclusionwait()) {
+          setInclusionwait(other.getInclusionwait());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2881,6 +4659,58 @@ public final class OmniLedgerProto {
           transaction_ = null;
         }
         return transactionBuilder_;
+      }
+
+      private int inclusionwait_ ;
+      /**
+       * <pre>
+       * How many block-intervals to wait for inclusion -
+       * missing value or 0 means return immediately.
+       * </pre>
+       *
+       * <code>optional sint32 inclusionwait = 4;</code>
+       */
+      public boolean hasInclusionwait() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <pre>
+       * How many block-intervals to wait for inclusion -
+       * missing value or 0 means return immediately.
+       * </pre>
+       *
+       * <code>optional sint32 inclusionwait = 4;</code>
+       */
+      public int getInclusionwait() {
+        return inclusionwait_;
+      }
+      /**
+       * <pre>
+       * How many block-intervals to wait for inclusion -
+       * missing value or 0 means return immediately.
+       * </pre>
+       *
+       * <code>optional sint32 inclusionwait = 4;</code>
+       */
+      public Builder setInclusionwait(int value) {
+        bitField0_ |= 0x00000008;
+        inclusionwait_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * How many block-intervals to wait for inclusion -
+       * missing value or 0 means return immediately.
+       * </pre>
+       *
+       * <code>optional sint32 inclusionwait = 4;</code>
+       */
+      public Builder clearInclusionwait() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        inclusionwait_ = 0;
+        onChanged();
+        return this;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -5071,6 +6901,19 @@ public final class OmniLedgerProto {
      * <code>required sint64 blockinterval = 1;</code>
      */
     long getBlockinterval();
+
+    /**
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    boolean hasRoster();
+    /**
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    ch.epfl.dedis.proto.OnetProto.Roster getRoster();
+    /**
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    ch.epfl.dedis.proto.OnetProto.RosterOrBuilder getRosterOrBuilder();
   }
   /**
    * <pre>
@@ -5127,6 +6970,19 @@ public final class OmniLedgerProto {
               blockinterval_ = input.readSInt64();
               break;
             }
+            case 18: {
+              ch.epfl.dedis.proto.OnetProto.Roster.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = roster_.toBuilder();
+              }
+              roster_ = input.readMessage(ch.epfl.dedis.proto.OnetProto.Roster.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(roster_);
+                roster_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -5167,6 +7023,27 @@ public final class OmniLedgerProto {
       return blockinterval_;
     }
 
+    public static final int ROSTER_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.proto.OnetProto.Roster roster_;
+    /**
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    public boolean hasRoster() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    public ch.epfl.dedis.proto.OnetProto.Roster getRoster() {
+      return roster_ == null ? ch.epfl.dedis.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+    }
+    /**
+     * <code>required .onet.Roster roster = 2;</code>
+     */
+    public ch.epfl.dedis.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
+      return roster_ == null ? ch.epfl.dedis.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -5174,6 +7051,14 @@ public final class OmniLedgerProto {
       if (isInitialized == 0) return false;
 
       if (!hasBlockinterval()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasRoster()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getRoster().isInitialized()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -5186,6 +7071,9 @@ public final class OmniLedgerProto {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeSInt64(1, blockinterval_);
       }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getRoster());
+      }
       unknownFields.writeTo(output);
     }
 
@@ -5197,6 +7085,10 @@ public final class OmniLedgerProto {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
           .computeSInt64Size(1, blockinterval_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getRoster());
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -5219,6 +7111,11 @@ public final class OmniLedgerProto {
         result = result && (getBlockinterval()
             == other.getBlockinterval());
       }
+      result = result && (hasRoster() == other.hasRoster());
+      if (hasRoster()) {
+        result = result && getRoster()
+            .equals(other.getRoster());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -5234,6 +7131,10 @@ public final class OmniLedgerProto {
         hash = (37 * hash) + BLOCKINTERVAL_FIELD_NUMBER;
         hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
             getBlockinterval());
+      }
+      if (hasRoster()) {
+        hash = (37 * hash) + ROSTER_FIELD_NUMBER;
+        hash = (53 * hash) + getRoster().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -5366,12 +7267,19 @@ public final class OmniLedgerProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getRosterFieldBuilder();
         }
       }
       public Builder clear() {
         super.clear();
         blockinterval_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000001);
+        if (rosterBuilder_ == null) {
+          roster_ = null;
+        } else {
+          rosterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -5400,6 +7308,14 @@ public final class OmniLedgerProto {
           to_bitField0_ |= 0x00000001;
         }
         result.blockinterval_ = blockinterval_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (rosterBuilder_ == null) {
+          result.roster_ = roster_;
+        } else {
+          result.roster_ = rosterBuilder_.build();
+        }
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -5445,6 +7361,9 @@ public final class OmniLedgerProto {
         if (other.hasBlockinterval()) {
           setBlockinterval(other.getBlockinterval());
         }
+        if (other.hasRoster()) {
+          mergeRoster(other.getRoster());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -5452,6 +7371,12 @@ public final class OmniLedgerProto {
 
       public final boolean isInitialized() {
         if (!hasBlockinterval()) {
+          return false;
+        }
+        if (!hasRoster()) {
+          return false;
+        }
+        if (!getRoster().isInitialized()) {
           return false;
         }
         return true;
@@ -5506,6 +7431,124 @@ public final class OmniLedgerProto {
         blockinterval_ = 0L;
         onChanged();
         return this;
+      }
+
+      private ch.epfl.dedis.proto.OnetProto.Roster roster_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OnetProto.Roster, ch.epfl.dedis.proto.OnetProto.Roster.Builder, ch.epfl.dedis.proto.OnetProto.RosterOrBuilder> rosterBuilder_;
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public boolean hasRoster() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OnetProto.Roster getRoster() {
+        if (rosterBuilder_ == null) {
+          return roster_ == null ? ch.epfl.dedis.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+        } else {
+          return rosterBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public Builder setRoster(ch.epfl.dedis.proto.OnetProto.Roster value) {
+        if (rosterBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          roster_ = value;
+          onChanged();
+        } else {
+          rosterBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public Builder setRoster(
+          ch.epfl.dedis.proto.OnetProto.Roster.Builder builderForValue) {
+        if (rosterBuilder_ == null) {
+          roster_ = builderForValue.build();
+          onChanged();
+        } else {
+          rosterBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public Builder mergeRoster(ch.epfl.dedis.proto.OnetProto.Roster value) {
+        if (rosterBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              roster_ != null &&
+              roster_ != ch.epfl.dedis.proto.OnetProto.Roster.getDefaultInstance()) {
+            roster_ =
+              ch.epfl.dedis.proto.OnetProto.Roster.newBuilder(roster_).mergeFrom(value).buildPartial();
+          } else {
+            roster_ = value;
+          }
+          onChanged();
+        } else {
+          rosterBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public Builder clearRoster() {
+        if (rosterBuilder_ == null) {
+          roster_ = null;
+          onChanged();
+        } else {
+          rosterBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OnetProto.Roster.Builder getRosterBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getRosterFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      public ch.epfl.dedis.proto.OnetProto.RosterOrBuilder getRosterOrBuilder() {
+        if (rosterBuilder_ != null) {
+          return rosterBuilder_.getMessageOrBuilder();
+        } else {
+          return roster_ == null ?
+              ch.epfl.dedis.proto.OnetProto.Roster.getDefaultInstance() : roster_;
+        }
+      }
+      /**
+       * <code>required .onet.Roster roster = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.OnetProto.Roster, ch.epfl.dedis.proto.OnetProto.Roster.Builder, ch.epfl.dedis.proto.OnetProto.RosterOrBuilder> 
+          getRosterFieldBuilder() {
+        if (rosterBuilder_ == null) {
+          rosterBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.OnetProto.Roster, ch.epfl.dedis.proto.OnetProto.Roster.Builder, ch.epfl.dedis.proto.OnetProto.RosterOrBuilder>(
+                  getRoster(),
+                  getParentForChildren(),
+                  isClean());
+          roster_ = null;
+        }
+        return rosterBuilder_;
       }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -15948,6 +17991,16 @@ public final class OmniLedgerProto {
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_omniledger_DataHeader_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_omniledger_DataHeader_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_omniledger_DataBody_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_omniledger_DataBody_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_omniledger_CreateGenesisBlock_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -16043,41 +18096,47 @@ public final class OmniLedgerProto {
     java.lang.String[] descriptorData = {
       "\n\020omniledger.proto\022\nomniledger\032\017skipchai" +
       "n.proto\032\nonet.proto\032\ndarc.proto\032\020collect" +
-      "ion.proto\"{\n\022CreateGenesisBlock\022\017\n\007versi" +
-      "on\030\001 \002(\021\022\034\n\006roster\030\002 \002(\0132\014.onet.Roster\022\037" +
-      "\n\013genesisdarc\030\003 \002(\0132\n.darc.Darc\022\025\n\rblock" +
-      "interval\030\004 \002(\022\"V\n\032CreateGenesisBlockResp" +
-      "onse\022\017\n\007version\030\001 \002(\021\022\'\n\tskipblock\030\002 \001(\013" +
-      "2\024.skipchain.SkipBlock\"h\n\014AddTxRequest\022\017" +
-      "\n\007version\030\001 \002(\021\022\023\n\013skipchainid\030\002 \002(\014\0222\n\013" +
-      "transaction\030\003 \002(\0132\035.omniledger.ClientTra",
-      "nsaction\" \n\rAddTxResponse\022\017\n\007version\030\001 \002" +
-      "(\021\"4\n\010GetProof\022\017\n\007version\030\001 \002(\021\022\013\n\003key\030\002" +
-      " \002(\014\022\n\n\002id\030\003 \002(\014\"E\n\020GetProofResponse\022\017\n\007" +
-      "version\030\001 \002(\021\022 \n\005proof\030\002 \002(\0132\021.omniledge" +
-      "r.Proof\"$\n\013ChainConfig\022\025\n\rblockinterval\030" +
-      "\001 \002(\022\"\177\n\005Proof\022)\n\016inclusionproof\030\001 \002(\0132\021" +
-      ".collection.Proof\022$\n\006latest\030\002 \002(\0132\024.skip" +
-      "chain.SkipBlock\022%\n\005links\030\003 \003(\0132\026.skipcha" +
-      "in.ForwardLink\"\366\001\n\013Instruction\022*\n\ninstan" +
-      "ceid\030\001 \002(\0132\026.omniledger.InstanceID\022\r\n\005no",
-      "nce\030\002 \002(\014\022\r\n\005index\030\003 \002(\021\022\016\n\006length\030\004 \002(\021" +
-      "\022 \n\005spawn\030\005 \001(\0132\021.omniledger.Spawn\022\"\n\006in" +
-      "voke\030\006 \001(\0132\022.omniledger.Invoke\022\"\n\006delete" +
-      "\030\007 \001(\0132\022.omniledger.Delete\022#\n\nsignatures" +
-      "\030\010 \003(\0132\017.darc.Signature\"+\n\nInstanceID\022\016\n" +
-      "\006darcid\030\001 \002(\014\022\r\n\005subid\030\002 \002(\014\"?\n\005Spawn\022\022\n" +
-      "\ncontractid\030\001 \002(\t\022\"\n\004args\030\002 \003(\0132\024.omnile" +
-      "dger.Argument\"=\n\006Invoke\022\017\n\007command\030\001 \002(\t" +
-      "\022\"\n\004args\030\002 \003(\0132\024.omniledger.Argument\"\010\n\006" +
-      "Delete\"\'\n\010Argument\022\014\n\004name\030\001 \002(\t\022\r\n\005valu",
-      "e\030\002 \002(\014\"B\n\021ClientTransaction\022-\n\014instruct" +
-      "ions\030\001 \003(\0132\027.omniledger.Instruction\"Y\n\013S" +
-      "tateChange\022\023\n\013stateaction\030\001 \002(\021\022\022\n\ninsta" +
-      "nceid\030\002 \002(\014\022\022\n\ncontractid\030\003 \002(\014\022\r\n\005value" +
-      "\030\004 \002(\014\";\n\004Coin\022$\n\004name\030\001 \002(\0132\026.omniledge" +
-      "r.InstanceID\022\r\n\005value\030\002 \002(\004B&\n\023ch.epfl.d" +
-      "edis.protoB\017OmniLedgerProto"
+      "ion.proto\"p\n\nDataHeader\022\026\n\016collectionroo" +
+      "t\030\001 \002(\014\022\035\n\025clienttransactionhash\030\002 \002(\014\022\030" +
+      "\n\020statechangeshash\030\003 \002(\014\022\021\n\ttimestamp\030\004 " +
+      "\002(\022\"?\n\010DataBody\0223\n\014transactions\030\001 \003(\0132\035." +
+      "omniledger.ClientTransaction\"{\n\022CreateGe" +
+      "nesisBlock\022\017\n\007version\030\001 \002(\021\022\034\n\006roster\030\002 " +
+      "\002(\0132\014.onet.Roster\022\037\n\013genesisdarc\030\003 \002(\0132\n" +
+      ".darc.Darc\022\025\n\rblockinterval\030\004 \002(\022\"V\n\032Cre",
+      "ateGenesisBlockResponse\022\017\n\007version\030\001 \002(\021" +
+      "\022\'\n\tskipblock\030\002 \001(\0132\024.skipchain.SkipBloc" +
+      "k\"\177\n\014AddTxRequest\022\017\n\007version\030\001 \002(\021\022\023\n\013sk" +
+      "ipchainid\030\002 \002(\014\0222\n\013transaction\030\003 \002(\0132\035.o" +
+      "mniledger.ClientTransaction\022\025\n\rinclusion" +
+      "wait\030\004 \001(\021\" \n\rAddTxResponse\022\017\n\007version\030\001" +
+      " \002(\021\"4\n\010GetProof\022\017\n\007version\030\001 \002(\021\022\013\n\003key" +
+      "\030\002 \002(\014\022\n\n\002id\030\003 \002(\014\"E\n\020GetProofResponse\022\017" +
+      "\n\007version\030\001 \002(\021\022 \n\005proof\030\002 \002(\0132\021.omniled" +
+      "ger.Proof\"B\n\013ChainConfig\022\025\n\rblockinterva",
+      "l\030\001 \002(\022\022\034\n\006roster\030\002 \002(\0132\014.onet.Roster\"\177\n" +
+      "\005Proof\022)\n\016inclusionproof\030\001 \002(\0132\021.collect" +
+      "ion.Proof\022$\n\006latest\030\002 \002(\0132\024.skipchain.Sk" +
+      "ipBlock\022%\n\005links\030\003 \003(\0132\026.skipchain.Forwa" +
+      "rdLink\"\366\001\n\013Instruction\022*\n\ninstanceid\030\001 \002" +
+      "(\0132\026.omniledger.InstanceID\022\r\n\005nonce\030\002 \002(" +
+      "\014\022\r\n\005index\030\003 \002(\021\022\016\n\006length\030\004 \002(\021\022 \n\005spaw" +
+      "n\030\005 \001(\0132\021.omniledger.Spawn\022\"\n\006invoke\030\006 \001" +
+      "(\0132\022.omniledger.Invoke\022\"\n\006delete\030\007 \001(\0132\022" +
+      ".omniledger.Delete\022#\n\nsignatures\030\010 \003(\0132\017",
+      ".darc.Signature\"+\n\nInstanceID\022\016\n\006darcid\030" +
+      "\001 \002(\014\022\r\n\005subid\030\002 \002(\014\"?\n\005Spawn\022\022\n\ncontrac" +
+      "tid\030\001 \002(\t\022\"\n\004args\030\002 \003(\0132\024.omniledger.Arg" +
+      "ument\"=\n\006Invoke\022\017\n\007command\030\001 \002(\t\022\"\n\004args" +
+      "\030\002 \003(\0132\024.omniledger.Argument\"\010\n\006Delete\"\'" +
+      "\n\010Argument\022\014\n\004name\030\001 \002(\t\022\r\n\005value\030\002 \002(\014\"" +
+      "B\n\021ClientTransaction\022-\n\014instructions\030\001 \003" +
+      "(\0132\027.omniledger.Instruction\"Y\n\013StateChan" +
+      "ge\022\023\n\013stateaction\030\001 \002(\021\022\022\n\ninstanceid\030\002 " +
+      "\002(\014\022\022\n\ncontractid\030\003 \002(\014\022\r\n\005value\030\004 \002(\014\";",
+      "\n\004Coin\022$\n\004name\030\001 \002(\0132\026.omniledger.Instan" +
+      "ceID\022\r\n\005value\030\002 \002(\004B&\n\023ch.epfl.dedis.pro" +
+      "toB\017OmniLedgerProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -16095,104 +18154,116 @@ public final class OmniLedgerProto {
           ch.epfl.dedis.proto.DarcProto.getDescriptor(),
           ch.epfl.dedis.proto.CollectionProto.getDescriptor(),
         }, assigner);
-    internal_static_omniledger_CreateGenesisBlock_descriptor =
+    internal_static_omniledger_DataHeader_descriptor =
       getDescriptor().getMessageTypes().get(0);
+    internal_static_omniledger_DataHeader_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_omniledger_DataHeader_descriptor,
+        new java.lang.String[] { "Collectionroot", "Clienttransactionhash", "Statechangeshash", "Timestamp", });
+    internal_static_omniledger_DataBody_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_omniledger_DataBody_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_omniledger_DataBody_descriptor,
+        new java.lang.String[] { "Transactions", });
+    internal_static_omniledger_CreateGenesisBlock_descriptor =
+      getDescriptor().getMessageTypes().get(2);
     internal_static_omniledger_CreateGenesisBlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_CreateGenesisBlock_descriptor,
         new java.lang.String[] { "Version", "Roster", "Genesisdarc", "Blockinterval", });
     internal_static_omniledger_CreateGenesisBlockResponse_descriptor =
-      getDescriptor().getMessageTypes().get(1);
+      getDescriptor().getMessageTypes().get(3);
     internal_static_omniledger_CreateGenesisBlockResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_CreateGenesisBlockResponse_descriptor,
         new java.lang.String[] { "Version", "Skipblock", });
     internal_static_omniledger_AddTxRequest_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(4);
     internal_static_omniledger_AddTxRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_AddTxRequest_descriptor,
-        new java.lang.String[] { "Version", "Skipchainid", "Transaction", });
+        new java.lang.String[] { "Version", "Skipchainid", "Transaction", "Inclusionwait", });
     internal_static_omniledger_AddTxResponse_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_omniledger_AddTxResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_AddTxResponse_descriptor,
         new java.lang.String[] { "Version", });
     internal_static_omniledger_GetProof_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_omniledger_GetProof_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_GetProof_descriptor,
         new java.lang.String[] { "Version", "Key", "Id", });
     internal_static_omniledger_GetProofResponse_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_omniledger_GetProofResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_GetProofResponse_descriptor,
         new java.lang.String[] { "Version", "Proof", });
     internal_static_omniledger_ChainConfig_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_omniledger_ChainConfig_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_ChainConfig_descriptor,
-        new java.lang.String[] { "Blockinterval", });
+        new java.lang.String[] { "Blockinterval", "Roster", });
     internal_static_omniledger_Proof_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_omniledger_Proof_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Proof_descriptor,
         new java.lang.String[] { "Inclusionproof", "Latest", "Links", });
     internal_static_omniledger_Instruction_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_omniledger_Instruction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Instruction_descriptor,
         new java.lang.String[] { "Instanceid", "Nonce", "Index", "Length", "Spawn", "Invoke", "Delete", "Signatures", });
     internal_static_omniledger_InstanceID_descriptor =
-      getDescriptor().getMessageTypes().get(9);
+      getDescriptor().getMessageTypes().get(11);
     internal_static_omniledger_InstanceID_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_InstanceID_descriptor,
         new java.lang.String[] { "Darcid", "Subid", });
     internal_static_omniledger_Spawn_descriptor =
-      getDescriptor().getMessageTypes().get(10);
+      getDescriptor().getMessageTypes().get(12);
     internal_static_omniledger_Spawn_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Spawn_descriptor,
         new java.lang.String[] { "Contractid", "Args", });
     internal_static_omniledger_Invoke_descriptor =
-      getDescriptor().getMessageTypes().get(11);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_omniledger_Invoke_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Invoke_descriptor,
         new java.lang.String[] { "Command", "Args", });
     internal_static_omniledger_Delete_descriptor =
-      getDescriptor().getMessageTypes().get(12);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_omniledger_Delete_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Delete_descriptor,
         new java.lang.String[] { });
     internal_static_omniledger_Argument_descriptor =
-      getDescriptor().getMessageTypes().get(13);
+      getDescriptor().getMessageTypes().get(15);
     internal_static_omniledger_Argument_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Argument_descriptor,
         new java.lang.String[] { "Name", "Value", });
     internal_static_omniledger_ClientTransaction_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(16);
     internal_static_omniledger_ClientTransaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_ClientTransaction_descriptor,
         new java.lang.String[] { "Instructions", });
     internal_static_omniledger_StateChange_descriptor =
-      getDescriptor().getMessageTypes().get(15);
+      getDescriptor().getMessageTypes().get(17);
     internal_static_omniledger_StateChange_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_StateChange_descriptor,
         new java.lang.String[] { "Stateaction", "Instanceid", "Contractid", "Value", });
     internal_static_omniledger_Coin_descriptor =
-      getDescriptor().getMessageTypes().get(16);
+      getDescriptor().getMessageTypes().get(18);
     internal_static_omniledger_Coin_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Coin_descriptor,

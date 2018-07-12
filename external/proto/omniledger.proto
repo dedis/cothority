@@ -8,6 +8,26 @@ import "collection.proto";
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "OmniLedgerProto";
 
+// DataHeader is the data passed to the Skipchain
+message DataHeader {
+  // CollectionRoot is the root of the merkle tree of the colleciton after
+  // applying the valid transactions.
+  required bytes collectionroot = 1;
+  // ClientTransactionHash is the sha256 hash of all the transactions in the body
+  required bytes clienttransactionhash = 2;
+  // StateChangesHash is the sha256 of all the stateChanges occuring through the
+  // clientTransactions.
+  required bytes statechangeshash = 3;
+  // Timestamp is a unix timestamp in nanoseconds.
+  required sint64 timestamp = 4;
+}
+
+// DataBody is stored in the body of the skipblock but is not hashed. This reduces
+// the proof needed for a key/value pair.
+message DataBody {
+  repeated ClientTransaction transactions = 1;
+}
+
 // ***
 // These are the messages used in the API-calls
 // ***
@@ -40,6 +60,9 @@ message AddTxRequest {
   required bytes skipchainid = 2;
   // Transaction to be applied to the kv-store
   required ClientTransaction transaction = 3;
+  // How many block-intervals to wait for inclusion -
+  // missing value or 0 means return immediately.
+  optional sint32 inclusionwait = 4;
 }
 
 // AddTxResponse is the reply after an AddTxRequest is finished.
@@ -74,6 +97,7 @@ message GetProofResponse {
 // GenesisDarcID is the value of GenesisReferenceID.
 message ChainConfig {
   required sint64 blockinterval = 1;
+  required onet.Roster roster = 2;
 }
 
 // Proof represents everything necessary to verify a given

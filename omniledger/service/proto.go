@@ -14,6 +14,7 @@ import (
 // type :darc.ID:bytes
 // type :Arguments:[]Argument
 // type :Instructions:[]Instruction
+// type :ClientTransactions:[]ClientTransaction
 // package omniledger;
 // import "skipchain.proto";
 // import "onet.proto";
@@ -22,6 +23,26 @@ import (
 //
 // option java_package = "ch.epfl.dedis.proto";
 // option java_outer_classname = "OmniLedgerProto";
+
+// DataHeader is the data passed to the Skipchain
+type DataHeader struct {
+	// CollectionRoot is the root of the merkle tree of the colleciton after
+	// applying the valid transactions.
+	CollectionRoot []byte
+	// ClientTransactionHash is the sha256 hash of all the transactions in the body
+	ClientTransactionHash []byte
+	// StateChangesHash is the sha256 of all the stateChanges occuring through the
+	// clientTransactions.
+	StateChangesHash []byte
+	// Timestamp is a unix timestamp in nanoseconds.
+	Timestamp int64
+}
+
+// DataBody is stored in the body of the skipblock but is not hashed. This reduces
+// the proof needed for a key/value pair.
+type DataBody struct {
+	Transactions ClientTransactions
+}
 
 // ***
 // These are the messages used in the API-calls
@@ -55,6 +76,9 @@ type AddTxRequest struct {
 	SkipchainID skipchain.SkipBlockID
 	// Transaction to be applied to the kv-store
 	Transaction ClientTransaction
+	// How many block-intervals to wait for inclusion -
+	// missing value or 0 means return immediately.
+	InclusionWait int `protobuf:"opt"`
 }
 
 // AddTxResponse is the reply after an AddTxRequest is finished.

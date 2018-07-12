@@ -28,7 +28,7 @@ proto:
 	make -C external
 
 
-docker: conode/Dockerfile external/docker/Dockerfile
+docker: 
 	cd conode/; make docker_dev
 	cd external/docker/; make docker_test
 
