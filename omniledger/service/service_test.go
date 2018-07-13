@@ -246,6 +246,34 @@ func waitInclusion(t *testing.T, client int) {
 	<-done
 }
 
+// Sends too many transactions to the ledger and waits for all blocks to be done.
+func TestService_FloodLedger(t *testing.T) {
+	s := newSer(t, 2, testInterval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	// Store the latest block
+	reply, err := skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
+	require.Nil(t, err)
+	before := reply.Update[len(reply.Update)-1]
+
+	// Create a transaction without waiting
+	log.Lvl1("Create transaction and don't wait")
+	for i := 0; i < 50; i++ {
+		sendTransaction(t, s, 0, dummyKind, 0)
+	}
+	// Send a last transaction and wait for it to be included
+	sendTransaction(t, s, 0, dummyKind, 100)
+
+	// Suppose we need at least 2 blocks
+	reply, err = skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
+	require.Nil(t, err)
+	latest := reply.Update[len(reply.Update)-1]
+	if latest.Index-before.Index <= 3 {
+		require.Fail(t, "didn't get at least 2 blocks!")
+	}
+}
+
 func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) Proof {
 	tx, err := createOneClientTx(s.darc.GetBaseID(), kind, s.value, s.signer)
 	require.Nil(t, err)
