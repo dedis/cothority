@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"encoding/hex"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/omniledger/collection"
@@ -20,7 +21,6 @@ import (
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 	"gopkg.in/satori/go.uuid.v1"
-	"encoding/hex"
 )
 
 const darcIDLen int = 32
@@ -287,14 +287,14 @@ func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instructio
 	if err != nil {
 		return errors.New("couldn't create darc request: " + err.Error())
 	}
-	err = req.VerifyWithCB(d, func(str string, latest bool)*darc.Darc{
+	err = req.VerifyWithCB(d, func(str string, latest bool) *darc.Darc {
 		log.Printf("-%s-", str)
 		darcID, err := hex.DecodeString(str[5:])
-		if err != nil{
+		if err != nil {
 			return nil
 		}
 		d, err := LoadDarcFromColl(s.GetCollectionView(scID), InstanceID{darcID, SubID{}}.Slice())
-		if err != nil{
+		if err != nil {
 			return nil
 		}
 		return d
