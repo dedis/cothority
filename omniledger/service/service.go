@@ -287,8 +287,10 @@ func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instructio
 	if err != nil {
 		return errors.New("couldn't create darc request: " + err.Error())
 	}
+	// Verify the request is signed by appropriate identities.
+	// A callback is required to get any delegated DARC(s) during
+	// expression evaluation.
 	err = req.VerifyWithCB(d, func(str string, latest bool) *darc.Darc {
-		log.Printf("-%s-", str)
 		darcID, err := hex.DecodeString(str[5:])
 		if err != nil {
 			return nil
