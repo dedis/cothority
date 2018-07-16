@@ -20,6 +20,7 @@ import (
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 	"gopkg.in/satori/go.uuid.v1"
+	"encoding/hex"
 )
 
 const darcIDLen int = 32
@@ -286,8 +287,18 @@ func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instructio
 	if err != nil {
 		return errors.New("couldn't create darc request: " + err.Error())
 	}
-	// TODO we need to use req.VerifyWithCB to search for missing darcs
-	err = req.Verify(d)
+	err = req.VerifyWithCB(d, func(str string, latest bool)*darc.Darc{
+		log.Printf("-%s-", str)
+		darcID, err := hex.DecodeString(str[5:])
+		if err != nil{
+			return nil
+		}
+		d, err := LoadDarcFromColl(s.GetCollectionView(scID), InstanceID{darcID, SubID{}}.Slice())
+		if err != nil{
+			return nil
+		}
+		return d
+	})
 	if err != nil {
 		return errors.New("request verification failed: " + err.Error())
 	}
