@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/darc/expression"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/random"
@@ -559,6 +560,82 @@ func TestService_DarcSpawn(t *testing.T) {
 
 	s.sendTx(t, ctx)
 	pr := s.waitProof(t, InstanceID{darc2.GetBaseID(), SubID{}})
+	require.True(t, pr.InclusionProof.Match())
+}
+
+func TestService_DarcDelegation(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+	defer closeQueues(s.local)
+
+	// Spawn second darc with a new owner/signer, but delegate its spawn
+	// rule to the first darc
+	signer2 := darc.NewSignerEd25519(nil, nil)
+	id2 := []darc.Identity{signer2.Identity()}
+	darc2 := darc.NewDarc(darc.InitRules(id2, id2),
+		[]byte("second darc"))
+	darc2.Rules.AddRule("spawn:darc", expression.InitOrExpr(s.darc.GetIdentityString()))
+	darc2Buf, err := darc2.ToProto()
+	require.Nil(t, err)
+	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
+	require.Nil(t, err)
+	require.True(t, darc2.Equal(darc2Copy))
+	ctx := ClientTransaction{
+		Instructions: []Instruction{{
+			InstanceID: InstanceID{
+				DarcID: s.darc.GetBaseID(),
+				SubID:  SubID{},
+			},
+			Nonce:  GenNonce(),
+			Index:  0,
+			Length: 1,
+			Spawn: &Spawn{
+				ContractID: ContractDarcID,
+				Args: []Argument{{
+					Name:  "darc",
+					Value: darc2Buf,
+				}},
+			},
+		}},
+	}
+	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
+	s.sendTx(t, ctx)
+	pr := s.waitProof(t, InstanceID{darc2.GetBaseID(), SubID{}})
+	require.True(t, pr.InclusionProof.Match())
+
+	// Spawn third darc from the second one, but sign the request with
+	// the signer of the first darc to test delegation
+	signer3 := darc.NewSignerEd25519(nil, nil)
+	id3 := []darc.Identity{signer3.Identity()}
+	darc3 := darc.NewDarc(darc.InitRules(id3, id3),
+		[]byte("third darc"))
+	darc3Buf, err := darc3.ToProto()
+	require.Nil(t, err)
+	darc3Copy, err := darc.NewFromProtobuf(darc3Buf)
+	require.Nil(t, err)
+	require.True(t, darc3.Equal(darc3Copy))
+	ctx = ClientTransaction{
+		Instructions: []Instruction{{
+			InstanceID: InstanceID{
+				DarcID: darc2.GetBaseID(),
+				SubID:  SubID{},
+			},
+			Nonce:  GenNonce(),
+			Index:  0,
+			Length: 1,
+			Spawn: &Spawn{
+				ContractID: ContractDarcID,
+				Args: []Argument{{
+					Name:  "darc",
+					Value: darc3Buf,
+				}},
+			},
+		}},
+	}
+
+	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
+	s.sendTx(t, ctx)
+	pr = s.waitProof(t, InstanceID{darc3.GetBaseID(), SubID{}})
 	require.True(t, pr.InclusionProof.Match())
 }
 
