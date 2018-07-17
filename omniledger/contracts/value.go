@@ -22,12 +22,8 @@ var ContractValueID = "value"
 func ContractValue(cdb service.CollectionView, inst service.Instruction, c []service.Coin) ([]service.StateChange, []service.Coin, error) {
 	switch {
 	case inst.Spawn != nil:
-		iid := service.InstanceID{
-			DarcID: inst.InstanceID.DarcID,
-			SubID:  service.NewSubID(inst.Hash()),
-		}
 		return []service.StateChange{
-			service.NewStateChange(service.Create, iid,
+			service.NewStateChange(service.Create, inst.DeriveID(ContractValueID),
 				ContractValueID, inst.Spawn.Args.Search("value")),
 		}, c, nil
 	case inst.Invoke != nil:

@@ -190,32 +190,22 @@ public class DarcInstance {
      * @param args       arguments to give to the contract
      * @throws CothorityException
      */
-    public Proof spawnContractAndWait(String contractID, Signer s, List<Argument> args) throws CothorityException {
-        TransactionId id = spawnContract(contractID, s, args);
-        InstanceId iid = new InstanceId(id.getId());
-        if (contractID.equals("darc")){
+    public Proof spawnContractAndWait(String contractID, Signer s, List<Argument> args, int wait) throws CothorityException {
+        Instruction inst = spawnContractInstruction(contractID, s, args, 0, 1);
+        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ol.sendTransactionAndWait(ct, wait);
+        InstanceId iid = inst.deriveId(contractID);
+        if (contractID.equals("darc")) {
             // Special case for a darc, then the resulting instanceId is based
             // on the darc itself.
             try {
                 Darc d = new Darc(args.get(0).getValue());
                 iid = new InstanceId(d.getBaseId(), SubId.zero());
-            } catch (InvalidProtocolBufferException e){
+            } catch (InvalidProtocolBufferException e) {
                 throw new CothorityCommunicationException("this is not a correct darc-spawn");
             }
         }
-        for (int i = 0; i < 10; i++) {
-            Proof p = ol.getProof(iid);
-            if (p.matches()) {
-                logger.info("Found contract {} at {}", contractID, id);
-                return p;
-            }
-            try {
-                Thread.sleep(ol.getConfig().getBlockInterval().toMillis());
-            } catch (InterruptedException e){
-                throw new RuntimeException(e);
-            }
-        }
-        throw new CothorityCommunicationException("Couldn't create new contract-instance");
+        return ol.getProof(iid);
     }
 
     /**

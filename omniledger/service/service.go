@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"encoding/hex"
+
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/omniledger/collection"
