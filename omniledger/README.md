@@ -130,6 +130,8 @@ threshold number of keys be delegated. So instead of having a fixed list of
 identities that are allowed to access a resource, the goal is to have an
 evolving description of who is allowed or not to access a certain resource.
 
+For more information, see [darc/README.md](darc/README.md).
+
 ## Further reading
 
 Some documents that might get evolved later:
