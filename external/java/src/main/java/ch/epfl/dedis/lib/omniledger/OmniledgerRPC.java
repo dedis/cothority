@@ -76,7 +76,7 @@ public class OmniledgerRPC {
      * Constructs an OmniLedgerRPC from known configuration. The constructor will communicate with the service to
      * populate other fields and perform verification.
      *
-     * @param roster the roster to talk to
+     * @param roster      the roster to talk to
      * @param skipchainId the ID of the genesis skipblock, aka skipchain ID
      * @throws CothorityException
      */
@@ -126,19 +126,33 @@ public class OmniledgerRPC {
      * @param t is the client transaction holding one or more instructions to be sent to omniledger.
      */
     public void sendTransaction(ClientTransaction t) throws CothorityException {
+        sendTransactionAndWait(t, 0);
+    }
+
+    /**
+     * Sends a transaction to omniledger and waits for up to 'wait' blocks for the transaction to be
+     * included in the global state. If more than 'wait' blocks are created and the transaction is not
+     * included, an exception will be raised.
+     *
+     * @param t is the client transaction holding one or more instructions to be sent to omniledger.
+     * @param wait indicates the number of blocks to wait for the transaction to be included.
+     * @throws CothorityException if the transaction has not been included within 'wait' blocks.
+     */
+    public void sendTransactionAndWait(ClientTransaction t, int wait) throws CothorityException {
         OmniLedgerProto.AddTxRequest.Builder request =
                 OmniLedgerProto.AddTxRequest.newBuilder();
         request.setVersion(currentVersion);
         request.setSkipchainid(ByteString.copyFrom(skipchain.getID().getId()));
         request.setTransaction(t.toProto());
+        request.setInclusionwait(wait);
 
         ByteString msg = roster.sendMessage("OmniLedger/AddTxRequest", request.build());
-        try{
+        try {
             OmniLedgerProto.AddTxResponse reply =
                     OmniLedgerProto.AddTxResponse.parseFrom(msg);
             // TODO do something with the reply?
             logger.info("Successfully stored request - waiting for inclusion");
-        } catch (InvalidProtocolBufferException e){
+        } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
     }
@@ -158,12 +172,12 @@ public class OmniledgerRPC {
         request.setKey(id.toByteString());
 
         ByteString msg = roster.sendMessage("OmniLedger/GetProof", request.build());
-        try{
+        try {
             OmniLedgerProto.GetProofResponse reply =
                     OmniLedgerProto.GetProofResponse.parseFrom(msg);
             logger.info("Successfully received proof");
             return new Proof(reply.getProof());
-        } catch (InvalidProtocolBufferException e){
+        } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
     }
@@ -174,8 +188,8 @@ public class OmniledgerRPC {
      * @throws CothorityException
      */
     public void update() throws CothorityException {
-        SkipBlock sb =  skipchain.getLatestSkipblock();
-        if (sb != null){
+        SkipBlock sb = skipchain.getLatestSkipblock();
+        if (sb != null) {
             latest = sb;
         }
     }

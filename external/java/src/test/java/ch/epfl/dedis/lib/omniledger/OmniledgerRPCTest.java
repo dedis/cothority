@@ -93,7 +93,7 @@ public class OmniledgerRPCTest {
         Darc newDarc = new Darc(id, id, "new darc".getBytes());
 
         Proof p = dc.spawnContractAndWait("darc", admin,
-                Argument.NewList("darc", newDarc.toProto().toByteArray()));
+                Argument.NewList("darc", newDarc.toProto().toByteArray()), 10);
         assertTrue(p.matches());
 
         logger.info("creating DarcInstance");
@@ -114,7 +114,7 @@ public class OmniledgerRPCTest {
         dc.evolveDarcAndWait(darc2, admin);
 
         byte[] myvalue = "314159".getBytes();
-        Proof p = dc.spawnContractAndWait("value", admin, Argument.NewList("value", myvalue));
+        Proof p = dc.spawnContractAndWait("value", admin, Argument.NewList("value", myvalue), 10);
         assertTrue(p.matches());
 
         ValueInstance vi = new ValueInstance(ol, p);

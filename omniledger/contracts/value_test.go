@@ -52,11 +52,7 @@ func TestValue_Spawn(t *testing.T) {
 
 	_, err = cl.AddTransaction(ctx)
 	require.Nil(t, err)
-	instID := service.InstanceID{
-		DarcID: ctx.Instructions[0].InstanceID.DarcID,
-		SubID:  service.NewSubID(ctx.Instructions[0].Hash()),
-	}
-	pr, err := cl.WaitProof(instID, genesisMsg.BlockInterval, myvalue)
+	pr, err := cl.WaitProof(ctx.Instructions[0].DeriveID(ContractValueID), genesisMsg.BlockInterval, myvalue)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match())
 	values, err := pr.InclusionProof.RawValues()
