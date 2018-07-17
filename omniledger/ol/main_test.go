@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
@@ -36,16 +35,6 @@ func TestCli(t *testing.T) {
 	_, roster, _ := l.GenTree(2, true)
 
 	defer l.CloseAll()
-	defer func() {
-		// Walk the service lists, looking for Omniledgers that we can shut down.
-		for _, x := range l.Services {
-			for _, y := range x {
-				if z, ok := y.(*omniledger.Service); ok {
-					z.ClosePolling()
-				}
-			}
-		}
-	}()
 
 	// All this mess is to take the roster we have from onet.NewTCPTest
 	// and get it into a file that create can read.

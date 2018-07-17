@@ -16,7 +16,7 @@ func TestValue_Spawn(t *testing.T) {
 	defer local.CloseAll()
 
 	signer := darc.NewSignerEd25519(nil, nil)
-	servers, roster, _ := local.GenTree(2, true)
+	_, roster, _ := local.GenTree(2, true)
 	cl := service.NewClient()
 
 	genesisMsg, err := service.DefaultGenesisMsg(service.CurrentVersion, roster,
@@ -59,9 +59,5 @@ func TestValue_Spawn(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, myvalue, values[0])
 
-	services := local.GetServices(servers, service.OmniledgerID)
-	for _, s := range services {
-		s.(*service.Service).ClosePolling()
-	}
 	local.WaitDone(genesisMsg.BlockInterval)
 }

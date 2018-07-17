@@ -776,8 +776,8 @@ func (s *Service) getTxs(leader *network.ServerIdentity, scID skipchain.SkipBloc
 	return s.txBuffer.take(string(scID))
 }
 
-// ClosePolling closes the go-routines that are polling for transactions.
-func (s *Service) ClosePolling() {
+// TestClose closes the go-routines that are polling for transactions.
+func (s *Service) TestClose() {
 	for _, c := range s.pollChan {
 		close(c)
 	}
@@ -822,7 +822,7 @@ func (s *Service) tryLoad() error {
 	// the go-routines.
 	s.pollChanMut.Lock()
 	defer s.pollChanMut.Unlock()
-	s.ClosePolling()
+	s.TestClose()
 	s.pollChan = make(map[string]chan bool)
 
 	gas := &skipchain.GetAllSkipChainIDs{}
