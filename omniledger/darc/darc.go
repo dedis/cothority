@@ -24,7 +24,7 @@
 //
 // Of course, we do not want to have static rules that allow only one signer.
 // Our Darc implementation supports an expression language where the user can
-// use logical operators to specify the rule.  For exmple, the expression
+// use logical operators to specify the rule.  For example, the expression
 // "darc:a & ed25519:b | ed25519:c" means that "darc:a" and at least one of
 // "ed25519:b" and "ed25519:c" must sign. For more information please see the
 // expression package.
