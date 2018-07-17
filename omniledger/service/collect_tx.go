@@ -97,6 +97,8 @@ func (p *CollectTxProtocol) Dispatch() error {
 	var req structCollectTxRequest
 	select {
 	case req = <-p.requestChan:
+	case <-p.Finish:
+		return nil
 	case <-time.After(time.Second):
 		// This timeout checks whether the root started the protocol,
 		// it is not like our usual timeout that detect failures.

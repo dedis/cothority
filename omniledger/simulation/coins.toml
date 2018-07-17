@@ -1,0 +1,13 @@
+Simulation = "TransferCoins"
+Servers = 2
+Bf = 4
+Rounds = 1
+RunWait = "6000s"
+Suite = "Ed25519"
+# Keep the different columns in case someboday wants to run another battery
+# of tests
+
+Keep,   Transactions, BatchSize,  Hosts,  Delay, BlockInterval
+true,   200,          5,          10,     10,    "2s"
+# true,   200,          10,         10,     10,    "2s"
+# true,   200,          20,         10,     10,    "2s"

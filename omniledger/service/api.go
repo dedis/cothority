@@ -34,6 +34,11 @@ func NewClient() *Client {
 	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
 }
 
+// NewClientKeep is like NewClient, but does not close the connection.
+func NewClientKeep() *Client {
+	return &Client{Client: onet.NewClientKeep(cothority.Suite, ServiceName)}
+}
+
 // NewClientFromConfig instantiates a new Omniledger client.
 func NewClientFromConfig(fn string) (*Client, error) {
 	cfg, err := loadConfig(fn)
@@ -65,11 +70,20 @@ func (c *Client) CreateGenesisBlock(msg *CreateGenesisBlock) (*CreateGenesisBloc
 // was committed. The Client's Roster and ID should be initialized before
 // calling this method (see NewClientFromConfig).
 func (c *Client) AddTransaction(tx ClientTransaction) (*AddTxResponse, error) {
+	return c.AddTransactionAndWait(tx, 0)
+}
+
+// AddTransactionAndWait adds a transaction and will wait for it to be included
+// in omniledger. It does not return any feedback
+// on the transaction. The Client's Roster and ID should be initialized before
+// calling this method (see NewClientFromConfig).
+func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxResponse, error) {
 	reply := &AddTxResponse{}
 	err := c.SendProtobuf(c.Roster.List[0], &AddTxRequest{
-		Version:     CurrentVersion,
-		SkipchainID: c.ID,
-		Transaction: tx,
+		Version:       CurrentVersion,
+		SkipchainID:   c.ID,
+		Transaction:   tx,
+		InclusionWait: wait,
 	}, reply)
 	if err != nil {
 		return nil, err

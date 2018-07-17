@@ -39,7 +39,7 @@ func init() {
 	var err error
 	OmniledgerID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
-	network.RegisterMessages(&storage{}, &DataHeader{}, &updateCollection{})
+	network.RegisterMessages(&omniStorage{}, &DataHeader{}, &updateCollection{})
 }
 
 // GenNonce returns a random nonce.
@@ -78,25 +78,26 @@ type Service struct {
 	// propagate the new transactions
 	propagateTransactions messaging.PropagationFunc
 
-	storage *storage
+	storage *omniStorage
 
 	createSkipChainMut sync.Mutex
 }
 
 // storageID reflects the data we're storing - we could store more
 // than one structure.
-const storageID = "main"
+const storageID = "OmniLedger"
 
 // defaultInterval is used if the BlockInterval field in the genesis
 // transaction is not set.
 var defaultInterval = 5 * time.Second
 
-// storage is used to save our data locally.
-type storage struct {
-	sync.Mutex
+// omniStorage is used to save our data locally.
+type omniStorage struct {
 	// PropTimeout is used when sending the request to integrate a new block
 	// to all nodes.
 	PropTimeout time.Duration
+
+	sync.Mutex
 }
 
 type updateCollection struct {
@@ -247,6 +248,7 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.storage.Lock()
 	s.storage.PropTimeout = p
+	s.Service(skipchain.ServiceName).(*skipchain.Service).SetBFTTimeout(p)
 	s.storage.Unlock()
 	s.save()
 }
@@ -338,6 +340,8 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 			return nil, errors.New(
 				"Could not get latest block from the skipchain: " + err.Error())
 		}
+		log.Lvlf3("Creating new block #%d with %d transactions", sbLatest.Index+1,
+			len(cts))
 		sb = sbLatest.Copy()
 		if r != nil {
 			sb.Roster = r
@@ -358,6 +362,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 	var scs StateChanges
 	var err error
 	var ctsOK ClientTransactions
+	log.Lvl3("Creating state changes")
 	mr, ctsOK, scs, err = s.createStateChanges(coll, cts)
 	if err != nil {
 		return nil, err
@@ -387,7 +392,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 		NewBlock:          sb,
 		TargetSkipChainID: scID,
 	}
-	log.Lvlf3("Storing skipblock with transactions %+v", ctsOK)
+	log.Lvlf3("Storing skipblock with %d transactions.", len(ctsOK))
 	ssbReply, err := s.skService().StoreSkipBlock(&ssb)
 	if err != nil {
 		return nil, err
@@ -397,6 +402,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 	pto := s.storage.PropTimeout
 	s.storage.Unlock()
 	// TODO: replace this with some kind of callback from the skipchain-service
+	log.Lvl3("Asking all nodes to update their collections")
 	replies, err := s.propagateTransactions(sb.Roster, &updateCollection{sb.Hash}, pto)
 	if err != nil {
 		log.Lvl1("Propagation-error:", err.Error())
@@ -404,7 +410,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 	if replies != len(sb.Roster.List) {
 		log.Lvl1(s.ServerIdentity(), "Only got", replies, "out of", len(sb.Roster.List))
 	}
-
+	log.Lvl3("All nodes have the latest transactions stored")
 	return ssbReply.Latest, nil
 }
 
@@ -536,6 +542,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 					panic("DB is in bad state and cannot find skipchain anymore: " + err.Error() +
 						" This function should never be called on a skipchain that does not exist.")
 				}
+				log.Lvl3("Starting new block", sb.Index+1)
 				// We assume the caller of this function is the
 				// current leader. So we generate a tree with
 				// this node as the root.
@@ -577,6 +584,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 						return
 					}
 				}
+				log.Lvl3("Collected all new transactions:", len(txs))
 
 				if txs.IsEmpty() {
 					log.Lvl3(s.ServerIdentity(), "no new transactions, not creating new block")
@@ -585,6 +593,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 
 				// Pre-run transactions to look how many we can fit in the alloted time
 				// slot. Perhaps we can run this in parallel during the wait-phase?
+				log.Lvl3("Counting how many transactions fit in", interval/2)
 				var txsCollect ClientTransactions
 				cdbI := s.GetCollectionView(scID)
 				now := time.Now()
@@ -796,22 +805,21 @@ func (s *Service) registerContract(contractID string, c OmniLedgerContract) erro
 // Tries to load the configuration and updates the data in the service
 // if it finds a valid config-file.
 func (s *Service) tryLoad() error {
-	s.storage = &storage{
-		PropTimeout: 10 * time.Second,
-	}
+	s.storage = &omniStorage{}
+	s.SetPropagationTimeout(120 * time.Second)
 	msg, err := s.Load([]byte(storageID))
 	if err != nil {
 		return err
 	}
 	if msg != nil {
 		var ok bool
-		s.storage, ok = msg.(*storage)
+		s.storage, ok = msg.(*omniStorage)
 		if !ok {
 			return errors.New("Data of wrong type")
 		}
 	}
 	if s.storage == nil {
-		s.storage = &storage{}
+		s.storage = &omniStorage{}
 	}
 	s.collectionDB = map[string]*collectionDB{}
 	s.state = olState{

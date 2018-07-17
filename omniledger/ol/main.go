@@ -251,9 +251,9 @@ func add(c *cli.Context) error {
 		return err
 	}
 
-	_, err = cl.AddTransaction(omniledger.ClientTransaction{
+	_, err = cl.AddTransactionAndWait(omniledger.ClientTransaction{
 		Instructions: []omniledger.Instruction{instr},
-	})
+	}, 10)
 	if err != nil {
 		return err
 	}
