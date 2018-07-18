@@ -22,7 +22,7 @@ import (
 var tSuite = suites.MustFind("Ed25519")
 var dummyKind = "dummy"
 var invalidKind = "invalid"
-var testInterval = 100 * time.Millisecond
+var testInterval = 200 * time.Millisecond
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -232,7 +232,7 @@ func waitInclusion(t *testing.T, client int) {
 
 	// Create a transaction and wait
 	log.Lvl1("Create second correct transaction and wait")
-	pr = sendTransaction(t, s, client, dummyKind, 5)
+	pr = sendTransaction(t, s, client, dummyKind, 10)
 	require.True(t, pr.InclusionProof.Match())
 	select {
 	case <-done:
@@ -265,7 +265,7 @@ func TestService_FloodLedger(t *testing.T) {
 	reply, err = skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
 	require.Nil(t, err)
 	latest := reply.Update[len(reply.Update)-1]
-	if latest.Index-before.Index <= 3 {
+	if latest.Index-before.Index <= 2 {
 		require.Fail(t, "didn't get at least 2 blocks!")
 	}
 }

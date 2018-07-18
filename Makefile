@@ -9,9 +9,9 @@ EXCLUDE_LINT = "should be.*UI|_test.go"
 # for more than once in Travis. Change `make test` in .travis.yml
 # to `make test_playground`.
 test_playground:
-	cd skipchain; \
+	cd omniledger/service; \
 	for a in $$( seq 100 ); do \
-		if DEBUG_TIME=true go test -v -race -run TestRosterAddCausesSync > log.txt 2>&1; then \
+		if DEBUG_TIME=true go test -v -race > log.txt 2>&1; then \
 			echo Successfully ran \#$$a at $$(date); \
 		else \
 			echo Failed at $$(date); \
@@ -28,7 +28,7 @@ proto:
 	make -C external
 
 
-docker: 
+docker:
 	cd conode/; make docker_dev
 	cd external/docker/; make docker_test
 

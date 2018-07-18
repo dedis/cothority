@@ -569,9 +569,11 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 						}
 					case <-protocolTimeout:
 						log.Lvl2(s.ServerIdentity(), "timeout while collecting transactions from other nodes")
+						close(root.Finish)
 						break collectTxLoop
 					case <-closeSignal:
 						log.Lvl2(s.ServerIdentity(), "stopping polling")
+						close(root.Finish)
 						return
 					}
 				}
