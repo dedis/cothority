@@ -15,7 +15,6 @@ func TestClient_GetProof(t *testing.T) {
 	servers, roster, _ := l.GenTree(3, true)
 	registerDummy(servers)
 	defer l.CloseAll()
-	defer closeQueues(l)
 
 	// Initialise the genesis message and send it to the service.
 	signer := darc.NewSignerEd25519(nil, nil)

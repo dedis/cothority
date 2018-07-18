@@ -31,7 +31,6 @@ func TestMain(m *testing.M) {
 func TestService_CreateSkipchain(t *testing.T) {
 	s := newSer(t, 0, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	// invalid version, missing transaction
 	resp, err := s.service().CreateGenesisBlock(&CreateGenesisBlock{
@@ -78,7 +77,6 @@ func TestService_AddTransactionToFollower(t *testing.T) {
 func testAddTransaction(t *testing.T, sendToIdx int) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	// wrong version
 	akvresp, err := s.service().AddTransaction(&AddTxRequest{
@@ -162,7 +160,6 @@ func testAddTransaction(t *testing.T, sendToIdx int) {
 func TestService_GetProof(t *testing.T) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	serKey := s.tx.Instructions[0].InstanceID.Slice()
 
@@ -210,7 +207,6 @@ func TestService_WaitInclusion(t *testing.T) {
 func waitInclusion(t *testing.T, client int) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	// Create a transaction without waiting
 	log.Lvl1("Create transaction and don't wait")
@@ -251,7 +247,6 @@ func waitInclusion(t *testing.T, client int) {
 func TestService_FloodLedger(t *testing.T) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	// Store the latest block
 	reply, err := skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
@@ -304,7 +299,6 @@ func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) Pr
 func TestService_InvalidVerification(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	for i := range s.hosts {
 		RegisterContract(s.hosts[i], "panic", panicContractFunc)
@@ -374,7 +368,6 @@ func TestService_LoadBlockInterval(t *testing.T) {
 	interval := 200 * time.Millisecond
 	s := newSer(t, 1, interval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	dur, err := s.service().LoadBlockInterval(s.sb.SkipChainID())
 	require.Nil(t, err)
@@ -384,7 +377,6 @@ func TestService_LoadBlockInterval(t *testing.T) {
 func TestService_StateChange(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	var latest int64
 	f := func(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
@@ -486,7 +478,6 @@ func TestService_StateChange(t *testing.T) {
 func TestService_DarcEvolutionFail(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	d2 := s.darc.Copy()
 	require.Nil(t, d2.EvolveFrom(s.darc))
@@ -508,7 +499,6 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 func TestService_DarcEvolution(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	d2 := s.darc.Copy()
 	require.Nil(t, d2.EvolveFrom(s.darc))
@@ -526,7 +516,6 @@ func TestService_DarcEvolution(t *testing.T) {
 func TestService_DarcSpawn(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	id := []darc.Identity{s.signer.Identity()}
 	darc2 := darc.NewDarc(darc.InitRulesWith(id, id, invokeEvolve),
@@ -566,7 +555,6 @@ func TestService_DarcSpawn(t *testing.T) {
 func TestService_DarcDelegation(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	// Spawn second darc with a new owner/signer, but delegate its spawn
 	// rule to the first darc
@@ -642,7 +630,6 @@ func TestService_DarcDelegation(t *testing.T) {
 func TestService_SetLeader(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	for _, service := range s.services {
 		// everyone should have the same leader after the genesis block is stored
@@ -656,7 +643,6 @@ func TestService_SetLeader(t *testing.T) {
 func TestService_SetConfig(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	ctx, newConfig := createConfigTx(t, s, true)
 	s.sendTx(t, ctx)
@@ -678,7 +664,6 @@ func TestService_SetConfig(t *testing.T) {
 func TestService_SetBadConfig(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
-	defer closeQueues(s.local)
 
 	ctx, badConfig := createConfigTx(t, s, false)
 	s.sendTx(t, ctx)
@@ -878,13 +863,6 @@ func newSer(t *testing.T, step int, interval time.Duration) *ser {
 		}
 	}
 	return s
-}
-
-func closeQueues(local *onet.LocalTest) {
-	for _, server := range local.Servers {
-		services := local.GetServices([]*onet.Server{server}, OmniledgerID)
-		services[0].(*Service).ClosePolling()
-	}
 }
 
 func invalidContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
