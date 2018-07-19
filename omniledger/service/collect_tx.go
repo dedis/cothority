@@ -22,6 +22,7 @@ type CollectTxProtocol struct {
 	requestChan  chan structCollectTxRequest
 	responseChan chan structCollectTxResponse
 	getTxs       func(*network.ServerIdentity, skipchain.SkipBlockID) ClientTransactions
+	Finish       chan bool
 }
 
 // CollectTxRequest is the request message that asks the receiver to send their
@@ -56,6 +57,7 @@ func NewCollectTxProtocol(getTxs func(*network.ServerIdentity, skipchain.SkipBlo
 			// stops reading from this channel.
 			TxsChan: make(chan ClientTransactions, len(node.List())),
 			getTxs:  getTxs,
+			Finish:  make(chan bool),
 		}
 		if err := node.RegisterChannels(&c.requestChan, &c.responseChan); err != nil {
 			return c, err
@@ -116,14 +118,16 @@ func (p *CollectTxProtocol) Dispatch() error {
 	}
 
 	// wait for the results to come back and write to the channel
+	defer close(p.TxsChan)
 	if p.IsRoot() {
 		for range p.List() {
 			select {
 			case resp := <-p.responseChan:
 				p.TxsChan <- resp.Txs
+			case <-p.Finish:
+				return nil
 			}
 		}
 	}
-	close(p.TxsChan)
 	return nil
 }
