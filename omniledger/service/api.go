@@ -74,9 +74,9 @@ func (c *Client) AddTransaction(tx ClientTransaction) (*AddTxResponse, error) {
 }
 
 // AddTransactionAndWait adds a transaction and will wait for it to be included
-// in omniledger. It does not return any feedback
-// on the transaction. The Client's Roster and ID should be initialized before
-// calling this method (see NewClientFromConfig).
+// in omniledger, up to a maximum of wait block intervals. It does not return
+// any feedback on the transaction. The Client's Roster and ID should be
+// initialized before calling this method (see NewClientFromConfig).
 func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxResponse, error) {
 	reply := &AddTxResponse{}
 	err := c.SendProtobuf(c.Roster.List[0], &AddTxRequest{

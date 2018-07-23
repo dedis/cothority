@@ -107,18 +107,19 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	coinOne := make([]byte, 8)
 	coinOne[0] = byte(1)
 	tx := service.ClientTransaction{
-		Instructions: []service.Instruction{{
-			InstanceID: service.InstanceID{
-				DarcID: gm.GenesisDarc.GetID(),
-				SubID:  service.SubID{},
+		Instructions: []service.Instruction{
+			{
+				InstanceID: service.InstanceID{
+					DarcID: gm.GenesisDarc.GetID(),
+					SubID:  service.SubID{},
+				},
+				Nonce:  service.Nonce{},
+				Index:  0,
+				Length: 3,
+				Spawn: &service.Spawn{
+					ContractID: contracts.ContractCoinID,
+				},
 			},
-			Nonce:  service.Nonce{},
-			Index:  0,
-			Length: 3,
-			Spawn: &service.Spawn{
-				ContractID: contracts.ContractCoinID,
-			},
-		},
 			{
 				InstanceID: service.InstanceID{
 					DarcID: gm.GenesisDarc.GetID(),
@@ -141,7 +142,8 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 						Name:  "coins",
 						Value: coins}},
 				},
-			}},
+			},
+		},
 	}
 
 	// The first instruction will create an account with the SubID equal to the
@@ -165,13 +167,10 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	}
 
 	// And send the instructions to omniledger
-	_, err = c.AddTransaction(tx)
+	_, err = c.AddTransactionAndWait(tx, 2)
 	if err != nil {
 		return errors.New("couldn't add transaction: " + err.Error())
 	}
-
-	// Wait for the instructions to be included
-	time.Sleep(2 * blockInterval)
 
 	for round := 0; round < s.Rounds; round++ {
 		log.Lvl1("Starting round", round)
@@ -239,6 +238,5 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		confirm.Record()
 		roundM.Record()
 	}
-	time.Sleep(blockInterval)
 	return nil
 }

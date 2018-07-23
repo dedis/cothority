@@ -101,8 +101,7 @@ func ContractCoin(cdb service.CollectionView, inst service.Instruction, c []serv
 		default:
 			return nil, nil, errors.New("Coin contract can only mine and transfer")
 		}
-		// Finally update our own coin value and send one or two stateChanges to
-		// the system.
+		// Finally update the coin value.
 		var w bytes.Buffer
 		binary.Write(&w, binary.LittleEndian, coinsCurrent)
 		return append(sc, service.NewStateChange(service.Update, inst.InstanceID,
