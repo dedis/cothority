@@ -743,6 +743,7 @@ func (s *Service) executeInstruction(cdbI CollectionView, cin []Coin, instr Inst
 			err = errors.New(re.(string))
 		}
 	}()
+
 	contractID, _, err := instr.GetContractState(cdbI)
 	if err != nil {
 		err = errors.New("Couldn't get contract type of instruction: " + err.Error())
@@ -757,8 +758,6 @@ func (s *Service) executeInstruction(cdbI CollectionView, cin []Coin, instr Inst
 		return
 	}
 	// Now we call the contract function with the data of the key.
-	// Wrap up f() inside of g(), so that we can recover panics
-	// from f().
 	log.Lvlf3("%s: Calling contract %s", s.ServerIdentity(), contractID)
 	return contract(cdbI, instr, cin)
 }
