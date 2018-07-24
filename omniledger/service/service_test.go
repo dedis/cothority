@@ -254,7 +254,6 @@ func TestService_FloodLedger(t *testing.T) {
 	require.Nil(t, err)
 	before := reply.Update[len(reply.Update)-1]
 
-	// Create a transaction without waiting
 	log.Lvl1("Create 10 transactions and don't wait")
 	for i := 0; i < 10; i++ {
 		sendTransaction(t, s, 0, slowKind, 0)

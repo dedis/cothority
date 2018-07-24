@@ -2,17 +2,45 @@ package contracts
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 
-	"github.com/dedis/cothority/omniledger/service"
+	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/onet/log"
 )
 
 // ContractCoinID denotes a contract that can store and transfer coins.
 var ContractCoinID = "coin"
 
-var olCoin = service.NewInstanceID([]byte("olCoin"))
+// CoinName is a well-known InstanceID that identifies coins as belonging
+// to this contract.
+var CoinName = iid("olCoin")
+
+// safeUint64 is a uin64 that guards against overflow/underflow.
+type safeUint64 uint64
+
+var errOverflow = errors.New("integer overflow")
+var errUnderflow = errors.New("integer underflow")
+
+func newSafeUint64(value []byte) safeUint64 {
+	return safeUint64(binary.LittleEndian.Uint64(value))
+}
+
+func (s safeUint64) add(a uint64) (safeUint64, error) {
+	s1 := uint64(s) + a
+	if s1 < uint64(s) {
+		return s, errOverflow
+	}
+	return safeUint64(s1), nil
+}
+
+func (s safeUint64) sub(a uint64) (safeUint64, error) {
+	if a <= uint64(s) {
+		return safeUint64(uint64(s) - a), nil
+	}
+	return s, errUnderflow
+}
 
 // ContractCoin is a coin implementation that holds one instance per coin.
 // If you spawn a new ContractCoin, it will create an account with a value
@@ -28,97 +56,142 @@ var olCoin = service.NewInstanceID([]byte("olCoin"))
 //    parameter for the next instruction to interpret.
 //  - store puts the coins given to the instance back into the account.
 // You can only delete a contractCoin instance if the account is empty.
-func ContractCoin(cdb service.CollectionView, inst service.Instruction, c []service.Coin) (sc []service.StateChange, cOut []service.Coin, err error) {
+func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c []omniledger.Coin) (sc []omniledger.StateChange, cOut []omniledger.Coin, err error) {
 	cOut = c
-	switch {
-	case inst.Spawn != nil:
+	switch inst.GetType() {
+	case omniledger.SpawnType:
 		// Spawn creates a new coin account as a separate instance. The subID is
 		// taken from the hash of the instruction.
-		ca := service.InstanceID{
+		ca := omniledger.InstanceID{
 			DarcID: inst.InstanceID.DarcID,
-			SubID:  service.NewSubID(inst.Hash()),
+			SubID:  omniledger.NewSubID(inst.Hash()),
 		}
 		log.Lvlf3("Spawing coin to %x", ca.Slice())
-		return []service.StateChange{
-			service.NewStateChange(service.Create, ca, ContractCoinID, make([]byte, 8)),
-		}, c, nil
-	case inst.Invoke != nil:
+		sc = []omniledger.StateChange{
+			omniledger.NewStateChange(omniledger.Create, ca, ContractCoinID, make([]byte, 8)),
+		}
+		return
+	case omniledger.InvokeType:
 		// Invoke is one of "mint", "transfer", "fetch", or "store".
-		value, _, err := cdb.GetValues(inst.InstanceID.Slice())
+		var value []byte
+		value, _, err = cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
-			return nil, nil, err
+			return
 		}
-		coinsCurrent := binary.LittleEndian.Uint64(value)
-		coinsBuf := inst.Invoke.Args.Search("coins")
-		if coinsBuf == nil {
-			return nil, nil, errors.New("please give coins")
+		coinsCurrent := newSafeUint64(value)
+		var coinsArg uint64
+
+		if inst.Invoke.Command != "store" {
+			coinsBuf := inst.Invoke.Args.Search("coins")
+			if coinsBuf == nil {
+				err = errors.New("argument \"coins\" is missing")
+				return
+			}
+			coinsArg = binary.LittleEndian.Uint64(coinsBuf)
 		}
-		coinsArg := binary.LittleEndian.Uint64(coinsBuf)
-		var sc []service.StateChange
 		switch inst.Invoke.Command {
 		case "mint":
 			// mint simply adds this amount of coins to the account.
 			log.Lvl2("minting", coinsArg)
-			coinsCurrent += coinsArg
+			coinsCurrent, err = coinsCurrent.add(coinsArg)
+			if err != nil {
+				return
+			}
 		case "transfer":
 			// transfer sends a given amount of coins to another account.
-			if coinsArg > coinsCurrent {
-				return nil, nil, errors.New("not enough coins in instance")
+			coinsCurrent, err = coinsCurrent.sub(coinsArg)
+			if err != nil {
+				return
 			}
-			coinsCurrent -= coinsArg
+
 			target := inst.Invoke.Args.Search("destination")
-			v, cid, err := cdb.GetValues(target)
+			var (
+				v   []byte
+				cid string
+			)
+			v, cid, err = cdb.GetValues(target)
 			if err == nil && cid != ContractCoinID {
 				err = errors.New("destination is not a coin contract")
 			}
 			if err != nil {
-				return nil, nil, err
+				return
 			}
-			targetCoin := binary.LittleEndian.Uint64(v)
+
+			targetCoin := newSafeUint64(v)
+			targetCoin, err = targetCoin.add(coinsArg)
+			if err != nil {
+				return
+			}
 			var w bytes.Buffer
-			binary.Write(&w, binary.LittleEndian, targetCoin+coinsArg)
+			binary.Write(&w, binary.LittleEndian, targetCoin)
+
 			log.Lvlf3("transferring %d to %x", coinsArg, target)
-			sc = append(sc, service.NewStateChange(service.Update, service.NewInstanceID(target),
+			sc = append(sc, omniledger.NewStateChange(omniledger.Update, omniledger.NewInstanceID(target),
 				ContractCoinID, w.Bytes()))
 		case "fetch":
 			// fetch removes coins from the account and passes it on to the next
 			// instruction.
-			if coinsArg > coinsCurrent {
-				return nil, nil, errors.New("not enough coins in instance")
+			if coinsArg > uint64(coinsCurrent) {
+				err = errors.New("not enough coins in instance")
+				return
 			}
-			coinsCurrent -= coinsArg
-			cOut = append(cOut, service.Coin{Name: olCoin, Value: coinsArg})
+			coinsCurrent, err = coinsCurrent.sub(coinsArg)
+			if err != nil {
+				return
+			}
+			cOut = append(cOut, omniledger.Coin{Name: CoinName, Value: coinsArg})
 		case "store":
-			// store moves all coins from the last instruction into the account.
-			cOut = []service.Coin{}
+			// store moves all coins from this instruction into the account.
+			cOut = []omniledger.Coin{}
 			for _, co := range c {
-				if co.Name.Equal(olCoin) {
-					coinsCurrent += co.Value
+				if co.Name.Equal(CoinName) {
+					coinsCurrent, err = coinsCurrent.add(co.Value)
+					if err != nil {
+						return
+					}
 				} else {
 					cOut = append(cOut, co)
 				}
 			}
 		default:
-			return nil, nil, errors.New("Coin contract can only mine and transfer")
+			err = errors.New("Coin contract can only mine and transfer")
+			return
 		}
 		// Finally update the coin value.
 		var w bytes.Buffer
 		binary.Write(&w, binary.LittleEndian, coinsCurrent)
-		return append(sc, service.NewStateChange(service.Update, inst.InstanceID,
-			ContractCoinID, w.Bytes())), c, nil
-	case inst.Delete != nil:
+		sc = append(sc, omniledger.NewStateChange(omniledger.Update, inst.InstanceID,
+			ContractCoinID, w.Bytes()))
+		return
+	case omniledger.DeleteType:
 		// Delete our coin address, but only if the current coin is empty.
-		value, _, err := cdb.GetValues(inst.InstanceID.Slice())
+		var value []byte
+		value, _, err = cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
-			return nil, nil, err
+			return
 		}
 		coinsCurrent := binary.LittleEndian.Uint64(value)
 		if coinsCurrent > 0 {
-			return nil, nil, errors.New("cannot destroy a coinInstance that still has coins in it")
+			err = errors.New("cannot destroy a coinInstance that still has coins in it")
+			return
 		}
-		return service.StateChanges{
-			service.NewStateChange(service.Remove, inst.InstanceID, ContractCoinID, nil),
-		}, c, nil
+		sc = omniledger.StateChanges{
+			omniledger.NewStateChange(omniledger.Remove, inst.InstanceID, ContractCoinID, nil),
+		}
+		return
 	}
-	return nil, nil, errors.New("didn't find any instruction")
+	err = errors.New("instruction type not allowed")
+	return
+}
+
+// iid uses sha256(in)x2 to get 64 bytes from in, and makes an InstanceID from it.
+// TODO: Find a more appropriate way to make well-known instance ID's.
+func iid(in string) omniledger.InstanceID {
+	h := sha256.New()
+	h.Write([]byte(in))
+	sum := h.Sum(nil)
+
+	i := omniledger.InstanceID{DarcID: sum}
+	copy(i.SubID[:], sum)
+	return i
 }
