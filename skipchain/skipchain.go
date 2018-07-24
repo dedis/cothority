@@ -826,11 +826,6 @@ func (s *Service) SetPropTimeout(t time.Duration) {
 	s.propTimeout = t
 }
 
-// GetPropTimeout retrieves the current propagation timeout.
-func (s *Service) GetPropTimeout() time.Duration {
-	return s.propTimeout
-}
-
 func (s *Service) verifySigs(msg, sig []byte) bool {
 	// If there are no clients, all signatures verify.
 	if len(s.Storage.Clients) == 0 {
