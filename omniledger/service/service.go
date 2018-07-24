@@ -243,12 +243,14 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 }
 
 // SetPropagationTimeout overrides the default propagation timeout that is used
-// when a new block is announced to the nodes.
+// when a new block is announced to the nodes as well as the skipchain
+// propagation timeout.
 func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.storage.Lock()
 	s.storage.PropTimeout = p
 	s.storage.Unlock()
 	s.save()
+	s.skService().SetPropTimeout(p)
 }
 
 func toInstanceID(dID darc.ID) InstanceID {
@@ -557,7 +559,9 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 						" If you see this message then there may be a programmer error.")
 				}
 
-				protocolTimeout := time.After(s.skService().GetPropTimeout())
+				// When we poll, the child nodes must reply within half of the block interval,
+				// because we'll use the other half to process the transactions.
+				protocolTimeout := time.After(interval / 2)
 			collectTxLoop:
 				for {
 					select {
@@ -797,7 +801,9 @@ func (s *Service) registerContract(contractID string, c OmniLedgerContract) erro
 // if it finds a valid config-file.
 func (s *Service) tryLoad() error {
 	s.storage = &storage{
-		PropTimeout: 10 * time.Second,
+		// Set the default to be the same as the default in
+		// skipchain/struct.go, which is 15 seconds.
+		PropTimeout: 15 * time.Second,
 	}
 	msg, err := s.Load([]byte(storageID))
 	if err != nil {
