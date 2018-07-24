@@ -71,8 +71,7 @@ public class EventLogInstance {
         } catch (InterruptedException e) {
             throw new CothorityException(e);
         }
-
-        this.instance = getInstaceProof(id);
+        this.setInstance(id);
     }
 
     /**
@@ -83,7 +82,7 @@ public class EventLogInstance {
      */
     public EventLogInstance(OmniledgerRPC ol, InstanceId id) throws CothorityException {
         this.ol = ol;
-        this.instance = getInstaceProof(id);
+        this.setInstance(id);
     }
 
     /**
@@ -95,8 +94,8 @@ public class EventLogInstance {
      * @return a list of keys which can be used to retrieve the logged events
      * @throws CothorityException
      */
-    public List<InstanceId> log(List<Event> events, List<Signer> signers) throws CothorityException {
-        Pair<ClientTransaction, List<InstanceId>> txAndKeys = makeTx(events, this.instance.getId(), signers);
+    public List<InstanceId> log(List<Event> events, DarcId darcId, List<Signer> signers) throws CothorityException {
+        Pair<ClientTransaction, List<InstanceId>> txAndKeys = makeTx(events, darcId, signers);
         ol.sendTransaction(txAndKeys._1);
         return txAndKeys._2;
     }
@@ -110,8 +109,8 @@ public class EventLogInstance {
      * @return the key which can be used to retrieve the event later
      * @throws CothorityException
      */
-    public InstanceId log(Event event, List<Signer> signers) throws CothorityException {
-        return this.log(Arrays.asList(event), signers).get(0);
+    public InstanceId log(Event event, DarcId darcId, List<Signer> signers) throws CothorityException {
+        return this.log(Arrays.asList(event), darcId, signers).get(0);
     }
 
     /**
@@ -128,7 +127,7 @@ public class EventLogInstance {
         if (!Arrays.equals(p.getKey(), key.getId())) {
             throw new CothorityCryptoException("wrong key");
         }
-        if (p.getValues().size() < 2) {
+        if (p.getValues().size() < 3) {
             throw new CothorityCryptoException("not enough values");
         }
         try {
@@ -153,7 +152,7 @@ public class EventLogInstance {
         // Note: this method is a bit different from the others, we directly use the raw sendMessage instead of via
         // OmniLedgerRPC.
         EventLogProto.SearchRequest.Builder b = EventLogProto.SearchRequest.newBuilder();
-        b.setEventlogid(this.instance.getId().toProto());
+        b.setInstance(ByteString.copyFrom(this.instance.getId().getId()));
         b.setId(this.ol.getGenesis().getId().toProto());
         b.setTopic(topic);
         b.setFrom(from);
@@ -182,27 +181,25 @@ public class EventLogInstance {
             throw new CothorityException("already have an instance");
         }
         Spawn spawn = new Spawn("eventlog", new ArrayList<>());
-        InstanceId darcInstId = new InstanceId(darcId, new SubId(new byte[32]));
-        Instruction instr = new Instruction(darcInstId, genNonce(), 0, 1, spawn);
-        instr.signBy(signers);
+        Instruction instr = new Instruction(darcId, Instruction.genNonce(), 0, 1, spawn);
+        instr.signBy(darcId, signers);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
         ol.sendTransaction(tx);
 
-        SubId subId = new SubId(instr.hash());
-        return new InstanceId(darcId, subId);
+        return instr.deriveId("eventlog");
     }
 
 
-    private Instance getInstaceProof(InstanceId id) throws CothorityException {
+    private void setInstance(InstanceId id) throws CothorityException {
         Proof p = ol.getProof(id);
         Instance inst = new Instance(p);
         if (!inst.getContractId().equals("eventlog")) {
             logger.error("wrong instance: {}", inst.getContractId());
             throw new CothorityNotFoundException("this is not an eventlog instance");
         }
+        this.instance = inst;
         logger.info("new eventlog instance: " + inst.getId().toString());
-        return inst;
     }
 
     private static final class Pair<A, B> {
@@ -215,8 +212,7 @@ public class EventLogInstance {
         }
     }
 
-    private static Pair<ClientTransaction, List<InstanceId>> makeTx(List<Event> events, InstanceId instId, List<Signer> signers) throws CothorityCryptoException {
-        byte[] instrNonce = genNonce();
+    private Pair<ClientTransaction, List<InstanceId>> makeTx(List<Event> events, DarcId darcId, List<Signer> signers) throws CothorityCryptoException {
         List<Instruction> instrs = new ArrayList<>();
         List<InstanceId> keys = new ArrayList<>();
         int idx = 0;
@@ -224,20 +220,13 @@ public class EventLogInstance {
             List<Argument> args = new ArrayList<>();
             args.add(new Argument("event", e.toProto().toByteArray()));
             Invoke invoke = new Invoke("eventlog", args);
-            Instruction instr = new Instruction(instId, instrNonce, idx, events.size(), invoke);
-            instr.signBy(signers);
+            Instruction instr = new Instruction(instance.getId(), Instruction.genNonce(), idx, events.size(), invoke);
+            instr.signBy(darcId, signers);
             instrs.add(instr);
             keys.add(instr.deriveId("event"));
             idx++;
         }
         ClientTransaction tx = new ClientTransaction(instrs);
         return new Pair(tx, keys);
-    }
-
-    private static byte[] genNonce()  {
-        SecureRandom sr = new SecureRandom();
-        byte[] nonce  = new byte[32];
-        sr.nextBytes(nonce);
-        return nonce;
     }
 }

@@ -6,6 +6,7 @@ import (
 	"encoding/binary"
 	"errors"
 
+	"github.com/dedis/cothority/omniledger/darc"
 	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/onet/log"
 )
@@ -58,23 +59,28 @@ func (s safeUint64) sub(a uint64) (safeUint64, error) {
 // You can only delete a contractCoin instance if the account is empty.
 func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c []omniledger.Coin) (sc []omniledger.StateChange, cOut []omniledger.Coin, err error) {
 	cOut = c
+
+	var darcID darc.ID
+	_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return
+	}
+
 	switch inst.GetType() {
 	case omniledger.SpawnType:
-		// Spawn creates a new coin account as a separate instance. The subID is
-		// taken from the hash of the instruction.
-		ca := omniledger.InstanceID{
-			DarcID: inst.InstanceID.DarcID,
-			SubID:  omniledger.NewSubID(inst.Hash()),
-		}
-		log.Lvlf3("Spawing coin to %x", ca.Slice())
+		// Spawn creates a new coin account as a separate instance.
+		ca := omniledger.InstanceIDFromSlice(inst.Hash())
+		log.Lvlf3("Spawning coin to %x", ca.Slice())
 		sc = []omniledger.StateChange{
-			omniledger.NewStateChange(omniledger.Create, ca, ContractCoinID, make([]byte, 8)),
+			omniledger.NewStateChange(omniledger.Create, ca,
+				ContractCoinID, make([]byte, 8),
+				inst.InstanceID.Slice()),
 		}
 		return
 	case omniledger.InvokeType:
 		// Invoke is one of "mint", "transfer", "fetch", or "store".
 		var value []byte
-		value, _, err = cdb.GetValues(inst.InstanceID.Slice())
+		value, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return
 		}
@@ -108,8 +114,9 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 			var (
 				v   []byte
 				cid string
+				did darc.ID
 			)
-			v, cid, err = cdb.GetValues(target)
+			v, cid, did, err = cdb.GetValues(target)
 			if err == nil && cid != ContractCoinID {
 				err = errors.New("destination is not a coin contract")
 			}
@@ -126,8 +133,8 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 			binary.Write(&w, binary.LittleEndian, targetCoin)
 
 			log.Lvlf3("transferring %d to %x", coinsArg, target)
-			sc = append(sc, omniledger.NewStateChange(omniledger.Update, omniledger.NewInstanceID(target),
-				ContractCoinID, w.Bytes()))
+			sc = append(sc, omniledger.NewStateChange(omniledger.Update, omniledger.InstanceIDFromSlice(target),
+				ContractCoinID, w.Bytes(), did))
 		case "fetch":
 			// fetch removes coins from the account and passes it on to the next
 			// instruction.
@@ -144,7 +151,7 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 			// store moves all coins from this instruction into the account.
 			cOut = []omniledger.Coin{}
 			for _, co := range c {
-				if co.Name.Equal(CoinName) {
+				if bytes.Equal(co.Name.Slice(), CoinName.Slice()) {
 					coinsCurrent, err = coinsCurrent.add(co.Value)
 					if err != nil {
 						return
@@ -161,12 +168,12 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 		var w bytes.Buffer
 		binary.Write(&w, binary.LittleEndian, coinsCurrent)
 		sc = append(sc, omniledger.NewStateChange(omniledger.Update, inst.InstanceID,
-			ContractCoinID, w.Bytes()))
+			ContractCoinID, w.Bytes(), darcID))
 		return
 	case omniledger.DeleteType:
 		// Delete our coin address, but only if the current coin is empty.
 		var value []byte
-		value, _, err = cdb.GetValues(inst.InstanceID.Slice())
+		value, _, _, err = cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return
 		}
@@ -176,7 +183,7 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 			return
 		}
 		sc = omniledger.StateChanges{
-			omniledger.NewStateChange(omniledger.Remove, inst.InstanceID, ContractCoinID, nil),
+			omniledger.NewStateChange(omniledger.Remove, inst.InstanceID, ContractCoinID, nil, darcID),
 		}
 		return
 	}
@@ -184,17 +191,12 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 	return
 }
 
-// iid uses darc=sha256(in) and subid=sha256(in) in order to manufacture an
-// InstanceID from in.
+// iid uses sha256(in) in order to manufacture an InstanceID from in
+// thereby handling the case where len(in) != 32.
 //
-// TODO: Find a more appropriate way to make well-known instance ID's, depends
-// on getting rid of subids.
+// TODO: Find a nicer way to make well-known instance IDs.
 func iid(in string) omniledger.InstanceID {
 	h := sha256.New()
 	h.Write([]byte(in))
-	sum := h.Sum(nil)
-
-	i := omniledger.InstanceID{DarcID: sum}
-	copy(i.SubID[:], sum)
-	return i
+	return omniledger.InstanceIDFromSlice(h.Sum(nil))
 }

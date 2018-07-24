@@ -21,7 +21,7 @@ const blockInterval = 1 * time.Second
 
 func TestCli(t *testing.T) {
 	// TODO: Fix this test.
-	t.Skip("Disabled for now.")
+	t.Skip("Disabled for now; we would need to test ol and el at the same time?")
 
 	l := onet.NewTCPTest(cothority.Suite)
 	_, _, _ = l.GenTree(2, true)

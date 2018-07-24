@@ -13,17 +13,19 @@ func TestStateChangeCache(t *testing.T) {
 	scID := []byte("scID")
 	digest := []byte("digest")
 
-	_, _, _, err := cache.get(scID, digest)
+	_, _, _, _, err := cache.get(scID, digest)
 	require.Error(t, err)
 
 	root := []byte("root")
 	txs := ClientTransactions([]ClientTransaction{})
+	btxs := ClientTransactions([]ClientTransaction{})
 	scs := StateChanges([]StateChange{})
-	cache.update(scID, digest, root, txs, scs)
+	cache.update(scID, digest, root, txs, btxs, scs)
 
-	root1, txs1, scs1, err := cache.get(scID, digest)
+	root1, txs1, btxs1, scs1, err := cache.get(scID, digest)
 	require.NoError(t, err)
 	require.Equal(t, root, root1)
 	require.Equal(t, txs, txs1)
+	require.Equal(t, btxs, btxs1)
 	require.Equal(t, scs, scs1)
 }

@@ -41,12 +41,13 @@ func TestClient_GetProof(t *testing.T) {
 	require.Nil(t, err)
 
 	// We should have a proof of our transaction in the skipchain.
+	newId := tx.Instructions[0].Hash()
 	var p *GetProofResponse
 	var i int
 	for i = 0; i < 10; i++ {
 		time.Sleep(4 * msg.BlockInterval)
 		var err error
-		p, err = c.GetProof(tx.Instructions[0].InstanceID.Slice())
+		p, err = c.GetProof(newId)
 		if err != nil {
 			continue
 		}
@@ -58,6 +59,6 @@ func TestClient_GetProof(t *testing.T) {
 	require.Nil(t, p.Proof.Verify(csr.Skipblock.SkipChainID()))
 	k, vs, err := p.Proof.KeyValue()
 	require.Nil(t, err)
-	require.Equal(t, k, tx.Instructions[0].InstanceID.Slice())
+	require.Equal(t, k, newId)
 	require.Equal(t, value, vs[0])
 }

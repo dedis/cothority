@@ -21,8 +21,8 @@ func (b bucket) isFirst() bool {
 }
 
 type eventLog struct {
-	ID []byte
-	v  omniledger.CollectionView
+	Instance omniledger.InstanceID
+	v        omniledger.CollectionView
 }
 
 func (e eventLog) getLatestBucket() ([]byte, *bucket, error) {
@@ -30,12 +30,12 @@ func (e eventLog) getLatestBucket() ([]byte, *bucket, error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	if len(bucketID) != 64 {
+	if len(bucketID) != 32 {
 		return nil, nil, errors.New("wrong length")
 	}
 	// The eventLog index has been initialised, but not used yet, so we
 	// return an empty bucketID and an empty bucket.
-	if bytes.Equal(bucketID, make([]byte, 64)) {
+	if bytes.Equal(bucketID, make([]byte, 32)) {
 		return nil, nil, nil
 	}
 	b, err := e.getBucketByID(bucketID)
@@ -66,7 +66,7 @@ func (e eventLog) getBucketByID(objID []byte) (*bucket, error) {
 }
 
 func (e eventLog) getIndexValue() ([]byte, error) {
-	r, err := e.v.Get(e.ID).Record()
+	r, err := e.v.Get(e.Instance.Slice()).Record()
 	if err != nil {
 		return nil, err
 	}

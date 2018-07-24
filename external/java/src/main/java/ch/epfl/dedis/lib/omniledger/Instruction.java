@@ -9,6 +9,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,14 +28,13 @@ public class Instruction {
 
     /**
      * Use this constructor if it is a spawn instruction, i.e. you want to create a new object.
-     * @param instId The ID of the object, which must be unique.
      * @param nonce The nonce of the object.
      * @param index The index of the instruction in the atomic set.
      * @param length The length of the atomic set.
      * @param spawn The spawn object, which contains the value and the argument.
      */
-    public Instruction(InstanceId instId, byte[] nonce, int index, int length, Spawn spawn) {
-        this.instId = instId;
+    public Instruction(DarcId darcId, byte[] nonce, int index, int length, Spawn spawn) {
+        this.instId = InstanceId.zero();
         this.nonce = nonce;
         this.index = index;
         this.length = length;
@@ -74,7 +74,7 @@ public class Instruction {
     }
 
     /**
-     * Getter for the object ID.
+     * Getter for the instance ID.
      */
     public InstanceId getInstId() {
         return instId;
@@ -94,8 +94,7 @@ public class Instruction {
     public byte[] hash() {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(this.instId.getDarcId().getId());
-            digest.update(this.instId.getSubId().getId());
+            digest.update(this.instId.getId());
             digest.update(this.nonce);
             digest.update(intToArr4(this.index));
             digest.update(intToArr4(this.length));
@@ -117,8 +116,6 @@ public class Instruction {
             return digest.digest();
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
-        } catch (CothorityCryptoException e){
-            throw new RuntimeException(e);
         }
     }
 
@@ -128,7 +125,7 @@ public class Instruction {
      */
     public OmniLedgerProto.Instruction toProto() {
         OmniLedgerProto.Instruction.Builder b = OmniLedgerProto.Instruction.newBuilder();
-        b.setInstanceid(this.instId.toProto());
+        b.setInstanceid(ByteString.copyFrom(this.instId.getId()));
         b.setNonce(ByteString.copyFrom(this.nonce));
         b.setIndex(this.index);
         b.setLength(this.length);
@@ -166,18 +163,14 @@ public class Instruction {
      * Converts the instruction to a Darc request representation.
      * @return The Darc request.
      */
-    public Request toDarcRequest() {
+    public Request toDarcRequest(DarcId darcId) {
         List<Identity> ids = new ArrayList<>();
         List<byte[]> sigs = new ArrayList<>();
         for (Signature sig : this.signatures) {
             ids.add(sig.signer);
             sigs.add(sig.signature);
         }
-        try {
-            return new Request(this.instId.getDarcId(), this.action(), this.hash(), ids, sigs);
-        } catch (CothorityCryptoException e){
-            throw new RuntimeException(e);
-        }
+        return new Request(darcId, this.action(), this.hash(), ids, sigs);
     }
 
     /**
@@ -186,13 +179,13 @@ public class Instruction {
      * @param signers - the list of signers.
      * @throws CothorityCryptoException
      */
-    public void signBy(List<Signer> signers) throws CothorityCryptoException {
+    public void signBy(DarcId darcId, List<Signer> signers) throws CothorityCryptoException {
         this.signatures = new ArrayList<>();
         for (Signer signer : signers) {
             this.signatures.add(new Signature(null, signer.getIdentity()));
         }
 
-        byte[] msg = this.toDarcRequest().hash();
+        byte[] msg = this.toDarcRequest(darcId).hash();
         for (int i = 0; i < this.signatures.size(); i++) {
             try {
                 this.signatures.set(i, new Signature(signers.get(i).sign(msg), signers.get(i).getIdentity()));
@@ -210,14 +203,18 @@ public class Instruction {
      * @throws CothorityCryptoException
      */
     public InstanceId deriveId(String what) throws CothorityCryptoException {
+        final byte zero = 0;
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(what.getBytes());
             digest.update(this.hash());
+            digest.update(zero);
             for (Signature sig : this.signatures) {
                 digest.update(sig.signature);
+                digest.update(zero);
             }
-            return new InstanceId(this.instId.getDarcId(), new SubId(digest.digest()));
+            digest.update(what.getBytes());
+            digest.update(zero);
+            return new InstanceId(digest.digest());
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
@@ -228,5 +225,12 @@ public class Instruction {
         b.order(ByteOrder.LITTLE_ENDIAN);
         b.putInt(x);
         return b.array();
+    }
+
+    public static byte[] genNonce()  {
+        SecureRandom sr = new SecureRandom();
+        byte[] nonce  = new byte[32];
+        sr.nextBytes(nonce);
+        return nonce;
     }
 }

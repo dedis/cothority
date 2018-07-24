@@ -123,6 +123,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -923,7 +926,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new DataHeader(input, extensionRegistry);
+        return new DataHeader(input, extensionRegistry);
       }
     };
 
@@ -1001,6 +1004,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1698,7 +1704,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new DataBody(input, extensionRegistry);
+        return new DataBody(input, extensionRegistry);
       }
     };
 
@@ -1836,6 +1842,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2895,7 +2904,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new CreateGenesisBlock(input, extensionRegistry);
+        return new CreateGenesisBlock(input, extensionRegistry);
       }
     };
 
@@ -2990,6 +2999,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3689,7 +3701,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new CreateGenesisBlockResponse(input, extensionRegistry);
+        return new CreateGenesisBlockResponse(input, extensionRegistry);
       }
     };
 
@@ -3822,6 +3834,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4742,7 +4757,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new AddTxRequest(input, extensionRegistry);
+        return new AddTxRequest(input, extensionRegistry);
       }
     };
 
@@ -4812,6 +4827,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5266,7 +5284,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new AddTxResponse(input, extensionRegistry);
+        return new AddTxResponse(input, extensionRegistry);
       }
     };
 
@@ -5374,6 +5392,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6056,7 +6077,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new GetProof(input, extensionRegistry);
+        return new GetProof(input, extensionRegistry);
       }
     };
 
@@ -6155,6 +6176,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6870,7 +6894,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new GetProofResponse(input, extensionRegistry);
+        return new GetProofResponse(input, extensionRegistry);
       }
     };
 
@@ -6947,6 +6971,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7580,7 +7607,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ChainConfig(input, extensionRegistry);
+        return new ChainConfig(input, extensionRegistry);
       }
     };
 
@@ -7744,6 +7771,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9084,7 +9114,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Proof(input, extensionRegistry);
+        return new Proof(input, extensionRegistry);
       }
     };
 
@@ -9109,37 +9139,28 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * InstanceID holds the id of the existing object that can spawn new objects.
-     * It is composed of the Darc-ID + a random value generated by OmniLedger.
+     * InstanceID is either the object that can spawn a new object, or a the object
+     * that will be invoked or deleted.
      * </pre>
      *
-     * <code>required .omniledger.InstanceID instanceid = 1;</code>
+     * <code>required bytes instanceid = 1;</code>
      */
     boolean hasInstanceid();
     /**
      * <pre>
-     * InstanceID holds the id of the existing object that can spawn new objects.
-     * It is composed of the Darc-ID + a random value generated by OmniLedger.
+     * InstanceID is either the object that can spawn a new object, or a the object
+     * that will be invoked or deleted.
      * </pre>
      *
-     * <code>required .omniledger.InstanceID instanceid = 1;</code>
+     * <code>required bytes instanceid = 1;</code>
      */
-    ch.epfl.dedis.proto.OmniLedgerProto.InstanceID getInstanceid();
-    /**
-     * <pre>
-     * InstanceID holds the id of the existing object that can spawn new objects.
-     * It is composed of the Darc-ID + a random value generated by OmniLedger.
-     * </pre>
-     *
-     * <code>required .omniledger.InstanceID instanceid = 1;</code>
-     */
-    ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder getInstanceidOrBuilder();
+    com.google.protobuf.ByteString getInstanceid();
 
     /**
      * <pre>
-     * Nonce is monotonically increasing with regard to the darc in the instanceID
-     * and used to prevent replay attacks.
-     * The client has to track which is the current nonce of a darc-ID.
+     * Nonce is monotonically increasing with regard to the Darc controlling
+     * access to the instance. It is used to prevent replay attacks.
+     * The client has to track what the next nonce should be for a given instance.
      * </pre>
      *
      * <code>required bytes nonce = 2;</code>
@@ -9147,9 +9168,9 @@ public final class OmniLedgerProto {
     boolean hasNonce();
     /**
      * <pre>
-     * Nonce is monotonically increasing with regard to the darc in the instanceID
-     * and used to prevent replay attacks.
-     * The client has to track which is the current nonce of a darc-ID.
+     * Nonce is monotonically increasing with regard to the Darc controlling
+     * access to the instance. It is used to prevent replay attacks.
+     * The client has to track what the next nonce should be for a given instance.
      * </pre>
      *
      * <code>required bytes nonce = 2;</code>
@@ -9196,7 +9217,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * Spawn creates a new object
+     * Spawn creates a new object.
      * </pre>
      *
      * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -9204,7 +9225,7 @@ public final class OmniLedgerProto {
     boolean hasSpawn();
     /**
      * <pre>
-     * Spawn creates a new object
+     * Spawn creates a new object.
      * </pre>
      *
      * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -9212,7 +9233,7 @@ public final class OmniLedgerProto {
     ch.epfl.dedis.proto.OmniLedgerProto.Spawn getSpawn();
     /**
      * <pre>
-     * Spawn creates a new object
+     * Spawn creates a new object.
      * </pre>
      *
      * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -9221,7 +9242,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * Invoke calls a method of an existing object
+     * Invoke calls a method of an existing object.
      * </pre>
      *
      * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -9229,7 +9250,7 @@ public final class OmniLedgerProto {
     boolean hasInvoke();
     /**
      * <pre>
-     * Invoke calls a method of an existing object
+     * Invoke calls a method of an existing object.
      * </pre>
      *
      * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -9237,7 +9258,7 @@ public final class OmniLedgerProto {
     ch.epfl.dedis.proto.OmniLedgerProto.Invoke getInvoke();
     /**
      * <pre>
-     * Invoke calls a method of an existing object
+     * Invoke calls a method of an existing object.
      * </pre>
      *
      * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -9246,7 +9267,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * Delete removes the given object
+     * Delete removes the given object.
      * </pre>
      *
      * <code>optional .omniledger.Delete delete = 7;</code>
@@ -9254,7 +9275,7 @@ public final class OmniLedgerProto {
     boolean hasDelete();
     /**
      * <pre>
-     * Delete removes the given object
+     * Delete removes the given object.
      * </pre>
      *
      * <code>optional .omniledger.Delete delete = 7;</code>
@@ -9262,7 +9283,7 @@ public final class OmniLedgerProto {
     ch.epfl.dedis.proto.OmniLedgerProto.Delete getDelete();
     /**
      * <pre>
-     * Delete removes the given object
+     * Delete removes the given object.
      * </pre>
      *
      * <code>optional .omniledger.Delete delete = 7;</code>
@@ -9271,7 +9292,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * Signatures that can be verified using the darc defined by the instanceID.
+     * Signatures that will be used while attempting to verify the Darc read request.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9280,7 +9301,7 @@ public final class OmniLedgerProto {
         getSignaturesList();
     /**
      * <pre>
-     * Signatures that can be verified using the darc defined by the instanceID.
+     * Signatures that will be used while attempting to verify the Darc read request.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9288,7 +9309,7 @@ public final class OmniLedgerProto {
     ch.epfl.dedis.proto.DarcProto.Signature getSignatures(int index);
     /**
      * <pre>
-     * Signatures that can be verified using the darc defined by the instanceID.
+     * Signatures that will be used while attempting to verify the Darc read request.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9296,7 +9317,7 @@ public final class OmniLedgerProto {
     int getSignaturesCount();
     /**
      * <pre>
-     * Signatures that can be verified using the darc defined by the instanceID.
+     * Signatures that will be used while attempting to verify the Darc read request.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9305,7 +9326,7 @@ public final class OmniLedgerProto {
         getSignaturesOrBuilderList();
     /**
      * <pre>
-     * Signatures that can be verified using the darc defined by the instanceID.
+     * Signatures that will be used while attempting to verify the Darc read request.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9330,6 +9351,7 @@ public final class OmniLedgerProto {
       super(builder);
     }
     private Instruction() {
+      instanceid_ = com.google.protobuf.ByteString.EMPTY;
       nonce_ = com.google.protobuf.ByteString.EMPTY;
       index_ = 0;
       length_ = 0;
@@ -9346,6 +9368,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9365,16 +9390,8 @@ public final class OmniLedgerProto {
               break;
             }
             case 10: {
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                subBuilder = instanceid_.toBuilder();
-              }
-              instanceid_ = input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(instanceid_);
-                instanceid_ = subBuilder.buildPartial();
-              }
               bitField0_ |= 0x00000001;
+              instanceid_ = input.readBytes();
               break;
             }
             case 18: {
@@ -9469,48 +9486,37 @@ public final class OmniLedgerProto {
 
     private int bitField0_;
     public static final int INSTANCEID_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.proto.OmniLedgerProto.InstanceID instanceid_;
+    private com.google.protobuf.ByteString instanceid_;
     /**
      * <pre>
-     * InstanceID holds the id of the existing object that can spawn new objects.
-     * It is composed of the Darc-ID + a random value generated by OmniLedger.
+     * InstanceID is either the object that can spawn a new object, or a the object
+     * that will be invoked or deleted.
      * </pre>
      *
-     * <code>required .omniledger.InstanceID instanceid = 1;</code>
+     * <code>required bytes instanceid = 1;</code>
      */
     public boolean hasInstanceid() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
      * <pre>
-     * InstanceID holds the id of the existing object that can spawn new objects.
-     * It is composed of the Darc-ID + a random value generated by OmniLedger.
+     * InstanceID is either the object that can spawn a new object, or a the object
+     * that will be invoked or deleted.
      * </pre>
      *
-     * <code>required .omniledger.InstanceID instanceid = 1;</code>
+     * <code>required bytes instanceid = 1;</code>
      */
-    public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID getInstanceid() {
-      return instanceid_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance() : instanceid_;
-    }
-    /**
-     * <pre>
-     * InstanceID holds the id of the existing object that can spawn new objects.
-     * It is composed of the Darc-ID + a random value generated by OmniLedger.
-     * </pre>
-     *
-     * <code>required .omniledger.InstanceID instanceid = 1;</code>
-     */
-    public ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder getInstanceidOrBuilder() {
-      return instanceid_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance() : instanceid_;
+    public com.google.protobuf.ByteString getInstanceid() {
+      return instanceid_;
     }
 
     public static final int NONCE_FIELD_NUMBER = 2;
     private com.google.protobuf.ByteString nonce_;
     /**
      * <pre>
-     * Nonce is monotonically increasing with regard to the darc in the instanceID
-     * and used to prevent replay attacks.
-     * The client has to track which is the current nonce of a darc-ID.
+     * Nonce is monotonically increasing with regard to the Darc controlling
+     * access to the instance. It is used to prevent replay attacks.
+     * The client has to track what the next nonce should be for a given instance.
      * </pre>
      *
      * <code>required bytes nonce = 2;</code>
@@ -9520,9 +9526,9 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Nonce is monotonically increasing with regard to the darc in the instanceID
-     * and used to prevent replay attacks.
-     * The client has to track which is the current nonce of a darc-ID.
+     * Nonce is monotonically increasing with regard to the Darc controlling
+     * access to the instance. It is used to prevent replay attacks.
+     * The client has to track what the next nonce should be for a given instance.
      * </pre>
      *
      * <code>required bytes nonce = 2;</code>
@@ -9585,7 +9591,7 @@ public final class OmniLedgerProto {
     private ch.epfl.dedis.proto.OmniLedgerProto.Spawn spawn_;
     /**
      * <pre>
-     * Spawn creates a new object
+     * Spawn creates a new object.
      * </pre>
      *
      * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -9595,7 +9601,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Spawn creates a new object
+     * Spawn creates a new object.
      * </pre>
      *
      * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -9605,7 +9611,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Spawn creates a new object
+     * Spawn creates a new object.
      * </pre>
      *
      * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -9618,7 +9624,7 @@ public final class OmniLedgerProto {
     private ch.epfl.dedis.proto.OmniLedgerProto.Invoke invoke_;
     /**
      * <pre>
-     * Invoke calls a method of an existing object
+     * Invoke calls a method of an existing object.
      * </pre>
      *
      * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -9628,7 +9634,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Invoke calls a method of an existing object
+     * Invoke calls a method of an existing object.
      * </pre>
      *
      * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -9638,7 +9644,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Invoke calls a method of an existing object
+     * Invoke calls a method of an existing object.
      * </pre>
      *
      * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -9651,7 +9657,7 @@ public final class OmniLedgerProto {
     private ch.epfl.dedis.proto.OmniLedgerProto.Delete delete_;
     /**
      * <pre>
-     * Delete removes the given object
+     * Delete removes the given object.
      * </pre>
      *
      * <code>optional .omniledger.Delete delete = 7;</code>
@@ -9661,7 +9667,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Delete removes the given object
+     * Delete removes the given object.
      * </pre>
      *
      * <code>optional .omniledger.Delete delete = 7;</code>
@@ -9671,7 +9677,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Delete removes the given object
+     * Delete removes the given object.
      * </pre>
      *
      * <code>optional .omniledger.Delete delete = 7;</code>
@@ -9684,7 +9690,7 @@ public final class OmniLedgerProto {
     private java.util.List<ch.epfl.dedis.proto.DarcProto.Signature> signatures_;
     /**
      * <pre>
-     * Signatures that can be verified using the darc defined by the instanceID.
+     * Signatures that will be used while attempting to verify the Darc read request.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9694,7 +9700,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Signatures that can be verified using the darc defined by the instanceID.
+     * Signatures that will be used while attempting to verify the Darc read request.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9705,7 +9711,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Signatures that can be verified using the darc defined by the instanceID.
+     * Signatures that will be used while attempting to verify the Darc read request.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9715,7 +9721,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Signatures that can be verified using the darc defined by the instanceID.
+     * Signatures that will be used while attempting to verify the Darc read request.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9725,7 +9731,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Signatures that can be verified using the darc defined by the instanceID.
+     * Signatures that will be used while attempting to verify the Darc read request.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9757,10 +9763,6 @@ public final class OmniLedgerProto {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!getInstanceid().isInitialized()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
       if (hasSpawn()) {
         if (!getSpawn().isInitialized()) {
           memoizedIsInitialized = 0;
@@ -9786,7 +9788,7 @@ public final class OmniLedgerProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeMessage(1, getInstanceid());
+        output.writeBytes(1, instanceid_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, nonce_);
@@ -9819,7 +9821,7 @@ public final class OmniLedgerProto {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, getInstanceid());
+          .computeBytesSize(1, instanceid_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -10074,7 +10076,6 @@ public final class OmniLedgerProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
-          getInstanceidFieldBuilder();
           getSpawnFieldBuilder();
           getInvokeFieldBuilder();
           getDeleteFieldBuilder();
@@ -10083,11 +10084,7 @@ public final class OmniLedgerProto {
       }
       public Builder clear() {
         super.clear();
-        if (instanceidBuilder_ == null) {
-          instanceid_ = null;
-        } else {
-          instanceidBuilder_.clear();
-        }
+        instanceid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
         nonce_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -10146,11 +10143,7 @@ public final class OmniLedgerProto {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        if (instanceidBuilder_ == null) {
-          result.instanceid_ = instanceid_;
-        } else {
-          result.instanceid_ = instanceidBuilder_.build();
-        }
+        result.instanceid_ = instanceid_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
@@ -10239,7 +10232,7 @@ public final class OmniLedgerProto {
       public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.Instruction other) {
         if (other == ch.epfl.dedis.proto.OmniLedgerProto.Instruction.getDefaultInstance()) return this;
         if (other.hasInstanceid()) {
-          mergeInstanceid(other.getInstanceid());
+          setInstanceid(other.getInstanceid());
         }
         if (other.hasNonce()) {
           setNonce(other.getNonce());
@@ -10303,9 +10296,6 @@ public final class OmniLedgerProto {
         if (!hasLength()) {
           return false;
         }
-        if (!getInstanceid().isInitialized()) {
-          return false;
-        }
         if (hasSpawn()) {
           if (!getSpawn().isInitialized()) {
             return false;
@@ -10343,175 +10333,67 @@ public final class OmniLedgerProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.proto.OmniLedgerProto.InstanceID instanceid_ = null;
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.OmniLedgerProto.InstanceID, ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder, ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder> instanceidBuilder_;
+      private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * InstanceID holds the id of the existing object that can spawn new objects.
-       * It is composed of the Darc-ID + a random value generated by OmniLedger.
+       * InstanceID is either the object that can spawn a new object, or a the object
+       * that will be invoked or deleted.
        * </pre>
        *
-       * <code>required .omniledger.InstanceID instanceid = 1;</code>
+       * <code>required bytes instanceid = 1;</code>
        */
       public boolean hasInstanceid() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
        * <pre>
-       * InstanceID holds the id of the existing object that can spawn new objects.
-       * It is composed of the Darc-ID + a random value generated by OmniLedger.
+       * InstanceID is either the object that can spawn a new object, or a the object
+       * that will be invoked or deleted.
        * </pre>
        *
-       * <code>required .omniledger.InstanceID instanceid = 1;</code>
+       * <code>required bytes instanceid = 1;</code>
        */
-      public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID getInstanceid() {
-        if (instanceidBuilder_ == null) {
-          return instanceid_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance() : instanceid_;
-        } else {
-          return instanceidBuilder_.getMessage();
-        }
+      public com.google.protobuf.ByteString getInstanceid() {
+        return instanceid_;
       }
       /**
        * <pre>
-       * InstanceID holds the id of the existing object that can spawn new objects.
-       * It is composed of the Darc-ID + a random value generated by OmniLedger.
+       * InstanceID is either the object that can spawn a new object, or a the object
+       * that will be invoked or deleted.
        * </pre>
        *
-       * <code>required .omniledger.InstanceID instanceid = 1;</code>
+       * <code>required bytes instanceid = 1;</code>
        */
-      public Builder setInstanceid(ch.epfl.dedis.proto.OmniLedgerProto.InstanceID value) {
-        if (instanceidBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          instanceid_ = value;
-          onChanged();
-        } else {
-          instanceidBuilder_.setMessage(value);
-        }
-        bitField0_ |= 0x00000001;
+      public Builder setInstanceid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        instanceid_ = value;
+        onChanged();
         return this;
       }
       /**
        * <pre>
-       * InstanceID holds the id of the existing object that can spawn new objects.
-       * It is composed of the Darc-ID + a random value generated by OmniLedger.
+       * InstanceID is either the object that can spawn a new object, or a the object
+       * that will be invoked or deleted.
        * </pre>
        *
-       * <code>required .omniledger.InstanceID instanceid = 1;</code>
-       */
-      public Builder setInstanceid(
-          ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder builderForValue) {
-        if (instanceidBuilder_ == null) {
-          instanceid_ = builderForValue.build();
-          onChanged();
-        } else {
-          instanceidBuilder_.setMessage(builderForValue.build());
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <pre>
-       * InstanceID holds the id of the existing object that can spawn new objects.
-       * It is composed of the Darc-ID + a random value generated by OmniLedger.
-       * </pre>
-       *
-       * <code>required .omniledger.InstanceID instanceid = 1;</code>
-       */
-      public Builder mergeInstanceid(ch.epfl.dedis.proto.OmniLedgerProto.InstanceID value) {
-        if (instanceidBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
-              instanceid_ != null &&
-              instanceid_ != ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance()) {
-            instanceid_ =
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.newBuilder(instanceid_).mergeFrom(value).buildPartial();
-          } else {
-            instanceid_ = value;
-          }
-          onChanged();
-        } else {
-          instanceidBuilder_.mergeFrom(value);
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <pre>
-       * InstanceID holds the id of the existing object that can spawn new objects.
-       * It is composed of the Darc-ID + a random value generated by OmniLedger.
-       * </pre>
-       *
-       * <code>required .omniledger.InstanceID instanceid = 1;</code>
+       * <code>required bytes instanceid = 1;</code>
        */
       public Builder clearInstanceid() {
-        if (instanceidBuilder_ == null) {
-          instanceid_ = null;
-          onChanged();
-        } else {
-          instanceidBuilder_.clear();
-        }
         bitField0_ = (bitField0_ & ~0x00000001);
-        return this;
-      }
-      /**
-       * <pre>
-       * InstanceID holds the id of the existing object that can spawn new objects.
-       * It is composed of the Darc-ID + a random value generated by OmniLedger.
-       * </pre>
-       *
-       * <code>required .omniledger.InstanceID instanceid = 1;</code>
-       */
-      public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder getInstanceidBuilder() {
-        bitField0_ |= 0x00000001;
+        instanceid_ = getDefaultInstance().getInstanceid();
         onChanged();
-        return getInstanceidFieldBuilder().getBuilder();
-      }
-      /**
-       * <pre>
-       * InstanceID holds the id of the existing object that can spawn new objects.
-       * It is composed of the Darc-ID + a random value generated by OmniLedger.
-       * </pre>
-       *
-       * <code>required .omniledger.InstanceID instanceid = 1;</code>
-       */
-      public ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder getInstanceidOrBuilder() {
-        if (instanceidBuilder_ != null) {
-          return instanceidBuilder_.getMessageOrBuilder();
-        } else {
-          return instanceid_ == null ?
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance() : instanceid_;
-        }
-      }
-      /**
-       * <pre>
-       * InstanceID holds the id of the existing object that can spawn new objects.
-       * It is composed of the Darc-ID + a random value generated by OmniLedger.
-       * </pre>
-       *
-       * <code>required .omniledger.InstanceID instanceid = 1;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.OmniLedgerProto.InstanceID, ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder, ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder> 
-          getInstanceidFieldBuilder() {
-        if (instanceidBuilder_ == null) {
-          instanceidBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID, ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder, ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder>(
-                  getInstanceid(),
-                  getParentForChildren(),
-                  isClean());
-          instanceid_ = null;
-        }
-        return instanceidBuilder_;
+        return this;
       }
 
       private com.google.protobuf.ByteString nonce_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * Nonce is monotonically increasing with regard to the darc in the instanceID
-       * and used to prevent replay attacks.
-       * The client has to track which is the current nonce of a darc-ID.
+       * Nonce is monotonically increasing with regard to the Darc controlling
+       * access to the instance. It is used to prevent replay attacks.
+       * The client has to track what the next nonce should be for a given instance.
        * </pre>
        *
        * <code>required bytes nonce = 2;</code>
@@ -10521,9 +10403,9 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Nonce is monotonically increasing with regard to the darc in the instanceID
-       * and used to prevent replay attacks.
-       * The client has to track which is the current nonce of a darc-ID.
+       * Nonce is monotonically increasing with regard to the Darc controlling
+       * access to the instance. It is used to prevent replay attacks.
+       * The client has to track what the next nonce should be for a given instance.
        * </pre>
        *
        * <code>required bytes nonce = 2;</code>
@@ -10533,9 +10415,9 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Nonce is monotonically increasing with regard to the darc in the instanceID
-       * and used to prevent replay attacks.
-       * The client has to track which is the current nonce of a darc-ID.
+       * Nonce is monotonically increasing with regard to the Darc controlling
+       * access to the instance. It is used to prevent replay attacks.
+       * The client has to track what the next nonce should be for a given instance.
        * </pre>
        *
        * <code>required bytes nonce = 2;</code>
@@ -10551,9 +10433,9 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Nonce is monotonically increasing with regard to the darc in the instanceID
-       * and used to prevent replay attacks.
-       * The client has to track which is the current nonce of a darc-ID.
+       * Nonce is monotonically increasing with regard to the Darc controlling
+       * access to the instance. It is used to prevent replay attacks.
+       * The client has to track what the next nonce should be for a given instance.
        * </pre>
        *
        * <code>required bytes nonce = 2;</code>
@@ -10674,7 +10556,7 @@ public final class OmniLedgerProto {
           ch.epfl.dedis.proto.OmniLedgerProto.Spawn, ch.epfl.dedis.proto.OmniLedgerProto.Spawn.Builder, ch.epfl.dedis.proto.OmniLedgerProto.SpawnOrBuilder> spawnBuilder_;
       /**
        * <pre>
-       * Spawn creates a new object
+       * Spawn creates a new object.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10684,7 +10566,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object
+       * Spawn creates a new object.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10698,7 +10580,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object
+       * Spawn creates a new object.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10718,7 +10600,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object
+       * Spawn creates a new object.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10736,7 +10618,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object
+       * Spawn creates a new object.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10760,7 +10642,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object
+       * Spawn creates a new object.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10777,7 +10659,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object
+       * Spawn creates a new object.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10789,7 +10671,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object
+       * Spawn creates a new object.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10804,7 +10686,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object
+       * Spawn creates a new object.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10828,7 +10710,7 @@ public final class OmniLedgerProto {
           ch.epfl.dedis.proto.OmniLedgerProto.Invoke, ch.epfl.dedis.proto.OmniLedgerProto.Invoke.Builder, ch.epfl.dedis.proto.OmniLedgerProto.InvokeOrBuilder> invokeBuilder_;
       /**
        * <pre>
-       * Invoke calls a method of an existing object
+       * Invoke calls a method of an existing object.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10838,7 +10720,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object
+       * Invoke calls a method of an existing object.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10852,7 +10734,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object
+       * Invoke calls a method of an existing object.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10872,7 +10754,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object
+       * Invoke calls a method of an existing object.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10890,7 +10772,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object
+       * Invoke calls a method of an existing object.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10914,7 +10796,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object
+       * Invoke calls a method of an existing object.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10931,7 +10813,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object
+       * Invoke calls a method of an existing object.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10943,7 +10825,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object
+       * Invoke calls a method of an existing object.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10958,7 +10840,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object
+       * Invoke calls a method of an existing object.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10982,7 +10864,7 @@ public final class OmniLedgerProto {
           ch.epfl.dedis.proto.OmniLedgerProto.Delete, ch.epfl.dedis.proto.OmniLedgerProto.Delete.Builder, ch.epfl.dedis.proto.OmniLedgerProto.DeleteOrBuilder> deleteBuilder_;
       /**
        * <pre>
-       * Delete removes the given object
+       * Delete removes the given object.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -10992,7 +10874,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object
+       * Delete removes the given object.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -11006,7 +10888,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object
+       * Delete removes the given object.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -11026,7 +10908,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object
+       * Delete removes the given object.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -11044,7 +10926,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object
+       * Delete removes the given object.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -11068,7 +10950,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object
+       * Delete removes the given object.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -11085,7 +10967,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object
+       * Delete removes the given object.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -11097,7 +10979,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object
+       * Delete removes the given object.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -11112,7 +10994,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object
+       * Delete removes the given object.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -11145,7 +11027,7 @@ public final class OmniLedgerProto {
 
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11159,7 +11041,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11173,7 +11055,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11187,7 +11069,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11208,7 +11090,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11226,7 +11108,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11246,7 +11128,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11267,7 +11149,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11285,7 +11167,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11303,7 +11185,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11322,7 +11204,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11339,7 +11221,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11356,7 +11238,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11367,7 +11249,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11381,7 +11263,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11396,7 +11278,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11407,7 +11289,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11419,7 +11301,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that can be verified using the darc defined by the instanceID.
+       * Signatures that will be used while attempting to verify the Darc read request.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11472,7 +11354,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Instruction(input, extensionRegistry);
+        return new Instruction(input, extensionRegistry);
       }
     };
 
@@ -11486,662 +11368,6 @@ public final class OmniLedgerProto {
     }
 
     public ch.epfl.dedis.proto.OmniLedgerProto.Instruction getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface InstanceIDOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:omniledger.InstanceID)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <pre>
-     * DarcID is the base ID of the Darc controlling access to this instance.
-     * </pre>
-     *
-     * <code>required bytes darcid = 1;</code>
-     */
-    boolean hasDarcid();
-    /**
-     * <pre>
-     * DarcID is the base ID of the Darc controlling access to this instance.
-     * </pre>
-     *
-     * <code>required bytes darcid = 1;</code>
-     */
-    com.google.protobuf.ByteString getDarcid();
-
-    /**
-     * <pre>
-     * SubID is a unique ID among all the objects spawned by this Darc.
-     * </pre>
-     *
-     * <code>required bytes subid = 2;</code>
-     */
-    boolean hasSubid();
-    /**
-     * <pre>
-     * SubID is a unique ID among all the objects spawned by this Darc.
-     * </pre>
-     *
-     * <code>required bytes subid = 2;</code>
-     */
-    com.google.protobuf.ByteString getSubid();
-  }
-  /**
-   * <pre>
-   * An InstanceID is a unique identifier for one instance of a contract.
-   * </pre>
-   *
-   * Protobuf type {@code omniledger.InstanceID}
-   */
-  public  static final class InstanceID extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:omniledger.InstanceID)
-      InstanceIDOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use InstanceID.newBuilder() to construct.
-    private InstanceID(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private InstanceID() {
-      darcid_ = com.google.protobuf.ByteString.EMPTY;
-      subid_ = com.google.protobuf.ByteString.EMPTY;
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private InstanceID(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              darcid_ = input.readBytes();
-              break;
-            }
-            case 18: {
-              bitField0_ |= 0x00000002;
-              subid_ = input.readBytes();
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_InstanceID_descriptor;
-    }
-
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_InstanceID_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.class, ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder.class);
-    }
-
-    private int bitField0_;
-    public static final int DARCID_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString darcid_;
-    /**
-     * <pre>
-     * DarcID is the base ID of the Darc controlling access to this instance.
-     * </pre>
-     *
-     * <code>required bytes darcid = 1;</code>
-     */
-    public boolean hasDarcid() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <pre>
-     * DarcID is the base ID of the Darc controlling access to this instance.
-     * </pre>
-     *
-     * <code>required bytes darcid = 1;</code>
-     */
-    public com.google.protobuf.ByteString getDarcid() {
-      return darcid_;
-    }
-
-    public static final int SUBID_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString subid_;
-    /**
-     * <pre>
-     * SubID is a unique ID among all the objects spawned by this Darc.
-     * </pre>
-     *
-     * <code>required bytes subid = 2;</code>
-     */
-    public boolean hasSubid() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <pre>
-     * SubID is a unique ID among all the objects spawned by this Darc.
-     * </pre>
-     *
-     * <code>required bytes subid = 2;</code>
-     */
-    public com.google.protobuf.ByteString getSubid() {
-      return subid_;
-    }
-
-    private byte memoizedIsInitialized = -1;
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasDarcid()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasSubid()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, darcid_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, subid_);
-      }
-      unknownFields.writeTo(output);
-    }
-
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, darcid_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, subid_);
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof ch.epfl.dedis.proto.OmniLedgerProto.InstanceID)) {
-        return super.equals(obj);
-      }
-      ch.epfl.dedis.proto.OmniLedgerProto.InstanceID other = (ch.epfl.dedis.proto.OmniLedgerProto.InstanceID) obj;
-
-      boolean result = true;
-      result = result && (hasDarcid() == other.hasDarcid());
-      if (hasDarcid()) {
-        result = result && getDarcid()
-            .equals(other.getDarcid());
-      }
-      result = result && (hasSubid() == other.hasSubid());
-      if (hasSubid()) {
-        result = result && getSubid()
-            .equals(other.getSubid());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasDarcid()) {
-        hash = (37 * hash) + DARCID_FIELD_NUMBER;
-        hash = (53 * hash) + getDarcid().hashCode();
-      }
-      if (hasSubid()) {
-        hash = (37 * hash) + SUBID_FIELD_NUMBER;
-        hash = (53 * hash) + getSubid().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.InstanceID prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * <pre>
-     * An InstanceID is a unique identifier for one instance of a contract.
-     * </pre>
-     *
-     * Protobuf type {@code omniledger.InstanceID}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:omniledger.InstanceID)
-        ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_InstanceID_descriptor;
-      }
-
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_InstanceID_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.class, ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder.class);
-      }
-
-      // Construct using ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      public Builder clear() {
-        super.clear();
-        darcid_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        subid_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
-
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_InstanceID_descriptor;
-      }
-
-      public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID getDefaultInstanceForType() {
-        return ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance();
-      }
-
-      public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID build() {
-        ch.epfl.dedis.proto.OmniLedgerProto.InstanceID result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID buildPartial() {
-        ch.epfl.dedis.proto.OmniLedgerProto.InstanceID result = new ch.epfl.dedis.proto.OmniLedgerProto.InstanceID(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.darcid_ = darcid_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.subid_ = subid_;
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.InstanceID) {
-          return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.InstanceID)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.InstanceID other) {
-        if (other == ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance()) return this;
-        if (other.hasDarcid()) {
-          setDarcid(other.getDarcid());
-        }
-        if (other.hasSubid()) {
-          setSubid(other.getSubid());
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      public final boolean isInitialized() {
-        if (!hasDarcid()) {
-          return false;
-        }
-        if (!hasSubid()) {
-          return false;
-        }
-        return true;
-      }
-
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        ch.epfl.dedis.proto.OmniLedgerProto.InstanceID parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.proto.OmniLedgerProto.InstanceID) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private com.google.protobuf.ByteString darcid_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <pre>
-       * DarcID is the base ID of the Darc controlling access to this instance.
-       * </pre>
-       *
-       * <code>required bytes darcid = 1;</code>
-       */
-      public boolean hasDarcid() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <pre>
-       * DarcID is the base ID of the Darc controlling access to this instance.
-       * </pre>
-       *
-       * <code>required bytes darcid = 1;</code>
-       */
-      public com.google.protobuf.ByteString getDarcid() {
-        return darcid_;
-      }
-      /**
-       * <pre>
-       * DarcID is the base ID of the Darc controlling access to this instance.
-       * </pre>
-       *
-       * <code>required bytes darcid = 1;</code>
-       */
-      public Builder setDarcid(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        darcid_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * DarcID is the base ID of the Darc controlling access to this instance.
-       * </pre>
-       *
-       * <code>required bytes darcid = 1;</code>
-       */
-      public Builder clearDarcid() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        darcid_ = getDefaultInstance().getDarcid();
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString subid_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <pre>
-       * SubID is a unique ID among all the objects spawned by this Darc.
-       * </pre>
-       *
-       * <code>required bytes subid = 2;</code>
-       */
-      public boolean hasSubid() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <pre>
-       * SubID is a unique ID among all the objects spawned by this Darc.
-       * </pre>
-       *
-       * <code>required bytes subid = 2;</code>
-       */
-      public com.google.protobuf.ByteString getSubid() {
-        return subid_;
-      }
-      /**
-       * <pre>
-       * SubID is a unique ID among all the objects spawned by this Darc.
-       * </pre>
-       *
-       * <code>required bytes subid = 2;</code>
-       */
-      public Builder setSubid(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        subid_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <pre>
-       * SubID is a unique ID among all the objects spawned by this Darc.
-       * </pre>
-       *
-       * <code>required bytes subid = 2;</code>
-       */
-      public Builder clearSubid() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        subid_ = getDefaultInstance().getSubid();
-        onChanged();
-        return this;
-      }
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:omniledger.InstanceID)
-    }
-
-    // @@protoc_insertion_point(class_scope:omniledger.InstanceID)
-    private static final ch.epfl.dedis.proto.OmniLedgerProto.InstanceID DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.OmniLedgerProto.InstanceID();
-    }
-
-    public static ch.epfl.dedis.proto.OmniLedgerProto.InstanceID getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<InstanceID>
-        PARSER = new com.google.protobuf.AbstractParser<InstanceID>() {
-      public InstanceID parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-          return new InstanceID(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<InstanceID> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<InstanceID> getParserForType() {
-      return PARSER;
-    }
-
-    public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -12179,7 +11405,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new object.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12188,7 +11414,7 @@ public final class OmniLedgerProto {
         getArgsList();
     /**
      * <pre>
-     * args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new object.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12196,7 +11422,7 @@ public final class OmniLedgerProto {
     ch.epfl.dedis.proto.OmniLedgerProto.Argument getArgs(int index);
     /**
      * <pre>
-     * args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new object.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12204,7 +11430,7 @@ public final class OmniLedgerProto {
     int getArgsCount();
     /**
      * <pre>
-     * args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new object.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12213,7 +11439,7 @@ public final class OmniLedgerProto {
         getArgsOrBuilderList();
     /**
      * <pre>
-     * args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new object.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12252,6 +11478,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12371,7 +11600,7 @@ public final class OmniLedgerProto {
     private java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.Argument> args_;
     /**
      * <pre>
-     * args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new object.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12381,7 +11610,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new object.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12392,7 +11621,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new object.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12402,7 +11631,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new object.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12412,7 +11641,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new object.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12909,7 +12138,7 @@ public final class OmniLedgerProto {
 
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12923,7 +12152,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12937,7 +12166,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12951,7 +12180,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12972,7 +12201,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12990,7 +12219,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13010,7 +12239,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13031,7 +12260,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13049,7 +12278,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13067,7 +12296,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13086,7 +12315,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13103,7 +12332,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13120,7 +12349,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13131,7 +12360,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13145,7 +12374,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13160,7 +12389,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13171,7 +12400,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13183,7 +12412,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new object.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13236,7 +12465,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Spawn(input, extensionRegistry);
+        return new Spawn(input, extensionRegistry);
       }
     };
 
@@ -13287,7 +12516,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * args holds all data necessary for the successful execution of the command.
+     * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13296,7 +12525,7 @@ public final class OmniLedgerProto {
         getArgsList();
     /**
      * <pre>
-     * args holds all data necessary for the successful execution of the command.
+     * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13304,7 +12533,7 @@ public final class OmniLedgerProto {
     ch.epfl.dedis.proto.OmniLedgerProto.Argument getArgs(int index);
     /**
      * <pre>
-     * args holds all data necessary for the successful execution of the command.
+     * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13312,7 +12541,7 @@ public final class OmniLedgerProto {
     int getArgsCount();
     /**
      * <pre>
-     * args holds all data necessary for the successful execution of the command.
+     * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13321,7 +12550,7 @@ public final class OmniLedgerProto {
         getArgsOrBuilderList();
     /**
      * <pre>
-     * args holds all data necessary for the successful execution of the command.
+     * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13361,6 +12590,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -13480,7 +12712,7 @@ public final class OmniLedgerProto {
     private java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.Argument> args_;
     /**
      * <pre>
-     * args holds all data necessary for the successful execution of the command.
+     * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13490,7 +12722,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * args holds all data necessary for the successful execution of the command.
+     * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13501,7 +12733,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * args holds all data necessary for the successful execution of the command.
+     * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13511,7 +12743,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * args holds all data necessary for the successful execution of the command.
+     * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -13521,7 +12753,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * args holds all data necessary for the successful execution of the command.
+     * Args holds all data necessary for the successful execution of the command.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14019,7 +13251,7 @@ public final class OmniLedgerProto {
 
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14033,7 +13265,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14047,7 +13279,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14061,7 +13293,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14082,7 +13314,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14100,7 +13332,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14120,7 +13352,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14141,7 +13373,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14159,7 +13391,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14177,7 +13409,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14196,7 +13428,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14213,7 +13445,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14230,7 +13462,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14241,7 +13473,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14255,7 +13487,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14270,7 +13502,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14281,7 +13513,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14293,7 +13525,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * args holds all data necessary for the successful execution of the command.
+       * Args holds all data necessary for the successful execution of the command.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -14346,7 +13578,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Invoke(input, extensionRegistry);
+        return new Invoke(input, extensionRegistry);
       }
     };
 
@@ -14398,6 +13630,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -14738,7 +13973,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Delete(input, extensionRegistry);
+        return new Delete(input, extensionRegistry);
       }
     };
 
@@ -14835,6 +14070,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -15485,7 +14723,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Argument(input, extensionRegistry);
+        return new Argument(input, extensionRegistry);
       }
     };
 
@@ -15563,6 +14801,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -16260,7 +15501,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ClientTransaction(input, extensionRegistry);
+        return new ClientTransaction(input, extensionRegistry);
       }
     };
 
@@ -16350,6 +15591,23 @@ public final class OmniLedgerProto {
      * <code>required bytes value = 4;</code>
      */
     com.google.protobuf.ByteString getValue();
+
+    /**
+     * <pre>
+     * DarcID is the Darc controlling access to this key.
+     * </pre>
+     *
+     * <code>required bytes darcid = 5;</code>
+     */
+    boolean hasDarcid();
+    /**
+     * <pre>
+     * DarcID is the Darc controlling access to this key.
+     * </pre>
+     *
+     * <code>required bytes darcid = 5;</code>
+     */
+    com.google.protobuf.ByteString getDarcid();
   }
   /**
    * <pre>
@@ -16372,6 +15630,7 @@ public final class OmniLedgerProto {
       instanceid_ = com.google.protobuf.ByteString.EMPTY;
       contractid_ = com.google.protobuf.ByteString.EMPTY;
       value_ = com.google.protobuf.ByteString.EMPTY;
+      darcid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -16384,6 +15643,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -16420,6 +15682,11 @@ public final class OmniLedgerProto {
             case 34: {
               bitField0_ |= 0x00000008;
               value_ = input.readBytes();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              darcid_ = input.readBytes();
               break;
             }
           }
@@ -16539,6 +15806,29 @@ public final class OmniLedgerProto {
       return value_;
     }
 
+    public static final int DARCID_FIELD_NUMBER = 5;
+    private com.google.protobuf.ByteString darcid_;
+    /**
+     * <pre>
+     * DarcID is the Darc controlling access to this key.
+     * </pre>
+     *
+     * <code>required bytes darcid = 5;</code>
+     */
+    public boolean hasDarcid() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <pre>
+     * DarcID is the Darc controlling access to this key.
+     * </pre>
+     *
+     * <code>required bytes darcid = 5;</code>
+     */
+    public com.google.protobuf.ByteString getDarcid() {
+      return darcid_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -16561,6 +15851,10 @@ public final class OmniLedgerProto {
         memoizedIsInitialized = 0;
         return false;
       }
+      if (!hasDarcid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -16578,6 +15872,9 @@ public final class OmniLedgerProto {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeBytes(4, value_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, darcid_);
       }
       unknownFields.writeTo(output);
     }
@@ -16602,6 +15899,10 @@ public final class OmniLedgerProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(4, value_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, darcid_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -16639,6 +15940,11 @@ public final class OmniLedgerProto {
         result = result && getValue()
             .equals(other.getValue());
       }
+      result = result && (hasDarcid() == other.hasDarcid());
+      if (hasDarcid()) {
+        result = result && getDarcid()
+            .equals(other.getDarcid());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -16665,6 +15971,10 @@ public final class OmniLedgerProto {
       if (hasValue()) {
         hash = (37 * hash) + VALUE_FIELD_NUMBER;
         hash = (53 * hash) + getValue().hashCode();
+      }
+      if (hasDarcid()) {
+        hash = (37 * hash) + DARCID_FIELD_NUMBER;
+        hash = (53 * hash) + getDarcid().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -16807,6 +16117,8 @@ public final class OmniLedgerProto {
         bitField0_ = (bitField0_ & ~0x00000004);
         value_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000008);
+        darcid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -16847,6 +16159,10 @@ public final class OmniLedgerProto {
           to_bitField0_ |= 0x00000008;
         }
         result.value_ = value_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.darcid_ = darcid_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -16901,6 +16217,9 @@ public final class OmniLedgerProto {
         if (other.hasValue()) {
           setValue(other.getValue());
         }
+        if (other.hasDarcid()) {
+          setDarcid(other.getDarcid());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -16917,6 +16236,9 @@ public final class OmniLedgerProto {
           return false;
         }
         if (!hasValue()) {
+          return false;
+        }
+        if (!hasDarcid()) {
           return false;
         }
         return true;
@@ -17141,6 +16463,57 @@ public final class OmniLedgerProto {
         onChanged();
         return this;
       }
+
+      private com.google.protobuf.ByteString darcid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * DarcID is the Darc controlling access to this key.
+       * </pre>
+       *
+       * <code>required bytes darcid = 5;</code>
+       */
+      public boolean hasDarcid() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <pre>
+       * DarcID is the Darc controlling access to this key.
+       * </pre>
+       *
+       * <code>required bytes darcid = 5;</code>
+       */
+      public com.google.protobuf.ByteString getDarcid() {
+        return darcid_;
+      }
+      /**
+       * <pre>
+       * DarcID is the Darc controlling access to this key.
+       * </pre>
+       *
+       * <code>required bytes darcid = 5;</code>
+       */
+      public Builder setDarcid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        darcid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * DarcID is the Darc controlling access to this key.
+       * </pre>
+       *
+       * <code>required bytes darcid = 5;</code>
+       */
+      public Builder clearDarcid() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        darcid_ = getDefaultInstance().getDarcid();
+        onChanged();
+        return this;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
@@ -17171,7 +16544,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new StateChange(input, extensionRegistry);
+        return new StateChange(input, extensionRegistry);
       }
     };
 
@@ -17199,7 +16572,7 @@ public final class OmniLedgerProto {
      * Name points to the genesis object of that coin.
      * </pre>
      *
-     * <code>required .omniledger.InstanceID name = 1;</code>
+     * <code>required bytes name = 1;</code>
      */
     boolean hasName();
     /**
@@ -17207,17 +16580,9 @@ public final class OmniLedgerProto {
      * Name points to the genesis object of that coin.
      * </pre>
      *
-     * <code>required .omniledger.InstanceID name = 1;</code>
+     * <code>required bytes name = 1;</code>
      */
-    ch.epfl.dedis.proto.OmniLedgerProto.InstanceID getName();
-    /**
-     * <pre>
-     * Name points to the genesis object of that coin.
-     * </pre>
-     *
-     * <code>required .omniledger.InstanceID name = 1;</code>
-     */
-    ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder getNameOrBuilder();
+    com.google.protobuf.ByteString getName();
 
     /**
      * <pre>
@@ -17254,6 +16619,7 @@ public final class OmniLedgerProto {
       super(builder);
     }
     private Coin() {
+      name_ = com.google.protobuf.ByteString.EMPTY;
       value_ = 0L;
     }
 
@@ -17267,6 +16633,9 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -17286,16 +16655,8 @@ public final class OmniLedgerProto {
               break;
             }
             case 10: {
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                subBuilder = name_.toBuilder();
-              }
-              name_ = input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(name_);
-                name_ = subBuilder.buildPartial();
-              }
               bitField0_ |= 0x00000001;
+              name_ = input.readBytes();
               break;
             }
             case 16: {
@@ -17329,13 +16690,13 @@ public final class OmniLedgerProto {
 
     private int bitField0_;
     public static final int NAME_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.proto.OmniLedgerProto.InstanceID name_;
+    private com.google.protobuf.ByteString name_;
     /**
      * <pre>
      * Name points to the genesis object of that coin.
      * </pre>
      *
-     * <code>required .omniledger.InstanceID name = 1;</code>
+     * <code>required bytes name = 1;</code>
      */
     public boolean hasName() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
@@ -17345,20 +16706,10 @@ public final class OmniLedgerProto {
      * Name points to the genesis object of that coin.
      * </pre>
      *
-     * <code>required .omniledger.InstanceID name = 1;</code>
+     * <code>required bytes name = 1;</code>
      */
-    public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID getName() {
-      return name_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance() : name_;
-    }
-    /**
-     * <pre>
-     * Name points to the genesis object of that coin.
-     * </pre>
-     *
-     * <code>required .omniledger.InstanceID name = 1;</code>
-     */
-    public ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder getNameOrBuilder() {
-      return name_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance() : name_;
+    public com.google.protobuf.ByteString getName() {
+      return name_;
     }
 
     public static final int VALUE_FIELD_NUMBER = 2;
@@ -17398,10 +16749,6 @@ public final class OmniLedgerProto {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!getName().isInitialized()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -17409,7 +16756,7 @@ public final class OmniLedgerProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeMessage(1, getName());
+        output.writeBytes(1, name_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeUInt64(2, value_);
@@ -17424,7 +16771,7 @@ public final class OmniLedgerProto {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, getName());
+          .computeBytesSize(1, name_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -17606,16 +16953,11 @@ public final class OmniLedgerProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
-          getNameFieldBuilder();
         }
       }
       public Builder clear() {
         super.clear();
-        if (nameBuilder_ == null) {
-          name_ = null;
-        } else {
-          nameBuilder_.clear();
-        }
+        name_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
         value_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -17646,11 +16988,7 @@ public final class OmniLedgerProto {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        if (nameBuilder_ == null) {
-          result.name_ = name_;
-        } else {
-          result.name_ = nameBuilder_.build();
-        }
+        result.name_ = name_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
@@ -17698,7 +17036,7 @@ public final class OmniLedgerProto {
       public Builder mergeFrom(ch.epfl.dedis.proto.OmniLedgerProto.Coin other) {
         if (other == ch.epfl.dedis.proto.OmniLedgerProto.Coin.getDefaultInstance()) return this;
         if (other.hasName()) {
-          mergeName(other.getName());
+          setName(other.getName());
         }
         if (other.hasValue()) {
           setValue(other.getValue());
@@ -17713,9 +17051,6 @@ public final class OmniLedgerProto {
           return false;
         }
         if (!hasValue()) {
-          return false;
-        }
-        if (!getName().isInitialized()) {
           return false;
         }
         return true;
@@ -17740,15 +17075,13 @@ public final class OmniLedgerProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.proto.OmniLedgerProto.InstanceID name_ = null;
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.OmniLedgerProto.InstanceID, ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder, ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder> nameBuilder_;
+      private com.google.protobuf.ByteString name_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
        * Name points to the genesis object of that coin.
        * </pre>
        *
-       * <code>required .omniledger.InstanceID name = 1;</code>
+       * <code>required bytes name = 1;</code>
        */
       public boolean hasName() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
@@ -17758,33 +17091,25 @@ public final class OmniLedgerProto {
        * Name points to the genesis object of that coin.
        * </pre>
        *
-       * <code>required .omniledger.InstanceID name = 1;</code>
+       * <code>required bytes name = 1;</code>
        */
-      public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID getName() {
-        if (nameBuilder_ == null) {
-          return name_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance() : name_;
-        } else {
-          return nameBuilder_.getMessage();
-        }
+      public com.google.protobuf.ByteString getName() {
+        return name_;
       }
       /**
        * <pre>
        * Name points to the genesis object of that coin.
        * </pre>
        *
-       * <code>required .omniledger.InstanceID name = 1;</code>
+       * <code>required bytes name = 1;</code>
        */
-      public Builder setName(ch.epfl.dedis.proto.OmniLedgerProto.InstanceID value) {
-        if (nameBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          name_ = value;
-          onChanged();
-        } else {
-          nameBuilder_.setMessage(value);
-        }
-        bitField0_ |= 0x00000001;
+      public Builder setName(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        name_ = value;
+        onChanged();
         return this;
       }
       /**
@@ -17792,106 +17117,13 @@ public final class OmniLedgerProto {
        * Name points to the genesis object of that coin.
        * </pre>
        *
-       * <code>required .omniledger.InstanceID name = 1;</code>
-       */
-      public Builder setName(
-          ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder builderForValue) {
-        if (nameBuilder_ == null) {
-          name_ = builderForValue.build();
-          onChanged();
-        } else {
-          nameBuilder_.setMessage(builderForValue.build());
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <pre>
-       * Name points to the genesis object of that coin.
-       * </pre>
-       *
-       * <code>required .omniledger.InstanceID name = 1;</code>
-       */
-      public Builder mergeName(ch.epfl.dedis.proto.OmniLedgerProto.InstanceID value) {
-        if (nameBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
-              name_ != null &&
-              name_ != ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance()) {
-            name_ =
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.newBuilder(name_).mergeFrom(value).buildPartial();
-          } else {
-            name_ = value;
-          }
-          onChanged();
-        } else {
-          nameBuilder_.mergeFrom(value);
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <pre>
-       * Name points to the genesis object of that coin.
-       * </pre>
-       *
-       * <code>required .omniledger.InstanceID name = 1;</code>
+       * <code>required bytes name = 1;</code>
        */
       public Builder clearName() {
-        if (nameBuilder_ == null) {
-          name_ = null;
-          onChanged();
-        } else {
-          nameBuilder_.clear();
-        }
         bitField0_ = (bitField0_ & ~0x00000001);
-        return this;
-      }
-      /**
-       * <pre>
-       * Name points to the genesis object of that coin.
-       * </pre>
-       *
-       * <code>required .omniledger.InstanceID name = 1;</code>
-       */
-      public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder getNameBuilder() {
-        bitField0_ |= 0x00000001;
+        name_ = getDefaultInstance().getName();
         onChanged();
-        return getNameFieldBuilder().getBuilder();
-      }
-      /**
-       * <pre>
-       * Name points to the genesis object of that coin.
-       * </pre>
-       *
-       * <code>required .omniledger.InstanceID name = 1;</code>
-       */
-      public ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder getNameOrBuilder() {
-        if (nameBuilder_ != null) {
-          return nameBuilder_.getMessageOrBuilder();
-        } else {
-          return name_ == null ?
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance() : name_;
-        }
-      }
-      /**
-       * <pre>
-       * Name points to the genesis object of that coin.
-       * </pre>
-       *
-       * <code>required .omniledger.InstanceID name = 1;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.OmniLedgerProto.InstanceID, ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder, ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder> 
-          getNameFieldBuilder() {
-        if (nameBuilder_ == null) {
-          nameBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID, ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder, ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder>(
-                  getName(),
-                  getParentForChildren(),
-                  isClean());
-          name_ = null;
-        }
-        return nameBuilder_;
+        return this;
       }
 
       private long value_ ;
@@ -17971,7 +17203,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Coin(input, extensionRegistry);
+        return new Coin(input, extensionRegistry);
       }
     };
 
@@ -18046,11 +17278,6 @@ public final class OmniLedgerProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_omniledger_Instruction_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_omniledger_InstanceID_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_omniledger_InstanceID_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_omniledger_Spawn_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -18103,7 +17330,7 @@ public final class OmniLedgerProto {
       "omniledger.ClientTransaction\"{\n\022CreateGe" +
       "nesisBlock\022\017\n\007version\030\001 \002(\021\022\034\n\006roster\030\002 " +
       "\002(\0132\014.onet.Roster\022\037\n\013genesisdarc\030\003 \002(\0132\n" +
-      ".darc.Darc\022\025\n\rblockinterval\030\004 \002(\022\"V\n\032Cre",
+      ".darc.Darc\022\025\n\rblockinterval\030\004 \002(\022\"V\n\032Cre" +
       "ateGenesisBlockResponse\022\017\n\007version\030\001 \002(\021" +
       "\022\'\n\tskipblock\030\002 \001(\0132\024.skipchain.SkipBloc" +
       "k\"\177\n\014AddTxRequest\022\017\n\007version\030\001 \002(\021\022\023\n\013sk" +
@@ -18113,30 +17340,28 @@ public final class OmniLedgerProto {
       " \002(\021\"4\n\010GetProof\022\017\n\007version\030\001 \002(\021\022\013\n\003key" +
       "\030\002 \002(\014\022\n\n\002id\030\003 \002(\014\"E\n\020GetProofResponse\022\017" +
       "\n\007version\030\001 \002(\021\022 \n\005proof\030\002 \002(\0132\021.omniled" +
-      "ger.Proof\"B\n\013ChainConfig\022\025\n\rblockinterva",
+      "ger.Proof\"B\n\013ChainConfig\022\025\n\rblockinterva" +
       "l\030\001 \002(\022\022\034\n\006roster\030\002 \002(\0132\014.onet.Roster\"\177\n" +
       "\005Proof\022)\n\016inclusionproof\030\001 \002(\0132\021.collect" +
       "ion.Proof\022$\n\006latest\030\002 \002(\0132\024.skipchain.Sk" +
       "ipBlock\022%\n\005links\030\003 \003(\0132\026.skipchain.Forwa" +
-      "rdLink\"\366\001\n\013Instruction\022*\n\ninstanceid\030\001 \002" +
-      "(\0132\026.omniledger.InstanceID\022\r\n\005nonce\030\002 \002(" +
-      "\014\022\r\n\005index\030\003 \002(\021\022\016\n\006length\030\004 \002(\021\022 \n\005spaw" +
-      "n\030\005 \001(\0132\021.omniledger.Spawn\022\"\n\006invoke\030\006 \001" +
-      "(\0132\022.omniledger.Invoke\022\"\n\006delete\030\007 \001(\0132\022" +
-      ".omniledger.Delete\022#\n\nsignatures\030\010 \003(\0132\017",
-      ".darc.Signature\"+\n\nInstanceID\022\016\n\006darcid\030" +
-      "\001 \002(\014\022\r\n\005subid\030\002 \002(\014\"?\n\005Spawn\022\022\n\ncontrac" +
-      "tid\030\001 \002(\t\022\"\n\004args\030\002 \003(\0132\024.omniledger.Arg" +
-      "ument\"=\n\006Invoke\022\017\n\007command\030\001 \002(\t\022\"\n\004args" +
-      "\030\002 \003(\0132\024.omniledger.Argument\"\010\n\006Delete\"\'" +
-      "\n\010Argument\022\014\n\004name\030\001 \002(\t\022\r\n\005value\030\002 \002(\014\"" +
-      "B\n\021ClientTransaction\022-\n\014instructions\030\001 \003" +
-      "(\0132\027.omniledger.Instruction\"Y\n\013StateChan" +
-      "ge\022\023\n\013stateaction\030\001 \002(\021\022\022\n\ninstanceid\030\002 " +
-      "\002(\014\022\022\n\ncontractid\030\003 \002(\014\022\r\n\005value\030\004 \002(\014\";",
-      "\n\004Coin\022$\n\004name\030\001 \002(\0132\026.omniledger.Instan" +
-      "ceID\022\r\n\005value\030\002 \002(\004B&\n\023ch.epfl.dedis.pro" +
-      "toB\017OmniLedgerProto"
+      "rdLink\"\336\001\n\013Instruction\022\022\n\ninstanceid\030\001 \002" +
+      "(\014\022\r\n\005nonce\030\002 \002(\014\022\r\n\005index\030\003 \002(\021\022\016\n\006leng" +
+      "th\030\004 \002(\021\022 \n\005spawn\030\005 \001(\0132\021.omniledger.Spa" +
+      "wn\022\"\n\006invoke\030\006 \001(\0132\022.omniledger.Invoke\022\"" +
+      "\n\006delete\030\007 \001(\0132\022.omniledger.Delete\022#\n\nsi" +
+      "gnatures\030\010 \003(\0132\017.darc.Signature\"?\n\005Spawn" +
+      "\022\022\n\ncontractid\030\001 \002(\t\022\"\n\004args\030\002 \003(\0132\024.omn" +
+      "iledger.Argument\"=\n\006Invoke\022\017\n\007command\030\001 " +
+      "\002(\t\022\"\n\004args\030\002 \003(\0132\024.omniledger.Argument\"" +
+      "\010\n\006Delete\"\'\n\010Argument\022\014\n\004name\030\001 \002(\t\022\r\n\005v" +
+      "alue\030\002 \002(\014\"B\n\021ClientTransaction\022-\n\014instr" +
+      "uctions\030\001 \003(\0132\027.omniledger.Instruction\"i" +
+      "\n\013StateChange\022\023\n\013stateaction\030\001 \002(\021\022\022\n\nin" +
+      "stanceid\030\002 \002(\014\022\022\n\ncontractid\030\003 \002(\014\022\r\n\005va" +
+      "lue\030\004 \002(\014\022\016\n\006darcid\030\005 \002(\014\"#\n\004Coin\022\014\n\004nam" +
+      "e\030\001 \002(\014\022\r\n\005value\030\002 \002(\004B&\n\023ch.epfl.dedis." +
+      "protoB\017OmniLedgerProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -18220,50 +17445,44 @@ public final class OmniLedgerProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Instruction_descriptor,
         new java.lang.String[] { "Instanceid", "Nonce", "Index", "Length", "Spawn", "Invoke", "Delete", "Signatures", });
-    internal_static_omniledger_InstanceID_descriptor =
-      getDescriptor().getMessageTypes().get(11);
-    internal_static_omniledger_InstanceID_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_omniledger_InstanceID_descriptor,
-        new java.lang.String[] { "Darcid", "Subid", });
     internal_static_omniledger_Spawn_descriptor =
-      getDescriptor().getMessageTypes().get(12);
+      getDescriptor().getMessageTypes().get(11);
     internal_static_omniledger_Spawn_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Spawn_descriptor,
         new java.lang.String[] { "Contractid", "Args", });
     internal_static_omniledger_Invoke_descriptor =
-      getDescriptor().getMessageTypes().get(13);
+      getDescriptor().getMessageTypes().get(12);
     internal_static_omniledger_Invoke_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Invoke_descriptor,
         new java.lang.String[] { "Command", "Args", });
     internal_static_omniledger_Delete_descriptor =
-      getDescriptor().getMessageTypes().get(14);
+      getDescriptor().getMessageTypes().get(13);
     internal_static_omniledger_Delete_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Delete_descriptor,
         new java.lang.String[] { });
     internal_static_omniledger_Argument_descriptor =
-      getDescriptor().getMessageTypes().get(15);
+      getDescriptor().getMessageTypes().get(14);
     internal_static_omniledger_Argument_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Argument_descriptor,
         new java.lang.String[] { "Name", "Value", });
     internal_static_omniledger_ClientTransaction_descriptor =
-      getDescriptor().getMessageTypes().get(16);
+      getDescriptor().getMessageTypes().get(15);
     internal_static_omniledger_ClientTransaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_ClientTransaction_descriptor,
         new java.lang.String[] { "Instructions", });
     internal_static_omniledger_StateChange_descriptor =
-      getDescriptor().getMessageTypes().get(17);
+      getDescriptor().getMessageTypes().get(16);
     internal_static_omniledger_StateChange_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_StateChange_descriptor,
-        new java.lang.String[] { "Stateaction", "Instanceid", "Contractid", "Value", });
+        new java.lang.String[] { "Stateaction", "Instanceid", "Contractid", "Value", "Darcid", });
     internal_static_omniledger_Coin_descriptor =
-      getDescriptor().getMessageTypes().get(18);
+      getDescriptor().getMessageTypes().get(17);
     internal_static_omniledger_Coin_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_omniledger_Coin_descriptor,

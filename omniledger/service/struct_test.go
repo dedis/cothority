@@ -32,7 +32,7 @@ func TestCollectionDBStrange(t *testing.T) {
 		ContractID:  []byte(contract),
 	})
 	require.Nil(t, err)
-	v, c, err := cdb.GetValues([]byte("first"))
+	v, c, _, err := cdb.GetValues([]byte("first"))
 	require.Nil(t, err)
 	require.Equal(t, value, v)
 	require.Equal(t, contract, c)
@@ -69,7 +69,7 @@ func TestCollectionDB(t *testing.T) {
 
 	// Verify it's all there
 	for c, v := range pairs {
-		stored, contract, err := cdb.GetValues([]byte(c))
+		stored, contract, _, err := cdb.GetValues([]byte(c))
 		require.Nil(t, err)
 		require.Equal(t, v, string(stored))
 		require.Equal(t, myContract, contract)
@@ -80,7 +80,7 @@ func TestCollectionDB(t *testing.T) {
 
 	// Verify it's all there
 	for c, v := range pairs {
-		stored, _, err := cdb2.GetValues([]byte(c))
+		stored, _, _, err := cdb2.GetValues([]byte(c))
 		require.Nil(t, err)
 		require.Equal(t, v, string(stored))
 	}
@@ -99,7 +99,7 @@ func TestCollectionDB(t *testing.T) {
 		require.Nil(t, cdb2.Store(sc), k)
 	}
 	for k, v := range pairs {
-		stored, contract, err := cdb2.GetValues([]byte(k))
+		stored, contract, _, err := cdb2.GetValues([]byte(k))
 		require.Nil(t, err)
 		require.Equal(t, v, string(stored))
 		require.Equal(t, myContract, contract)
@@ -115,7 +115,7 @@ func TestCollectionDB(t *testing.T) {
 		require.Nil(t, cdb2.Store(sc))
 	}
 	for c := range pairs {
-		_, _, err := cdb2.GetValues([]byte(c))
+		_, _, _, err := cdb2.GetValues([]byte(c))
 		require.NotNil(t, err, c)
 	}
 }
@@ -146,9 +146,9 @@ func TestCollectionDBtryHash(t *testing.T) {
 	}
 	mrTrial, err := cdb.tryHash(scs)
 	require.Nil(t, err)
-	_, _, err = cdb.GetValues([]byte("key1"))
+	_, _, _, err = cdb.GetValues([]byte("key1"))
 	require.EqualError(t, err, "no match found")
-	_, _, err = cdb.GetValues([]byte("key2"))
+	_, _, _, err = cdb.GetValues([]byte("key2"))
 	require.EqualError(t, err, "no match found")
 	cdb.Store(&scs[0])
 	cdb.Store(&scs[1])

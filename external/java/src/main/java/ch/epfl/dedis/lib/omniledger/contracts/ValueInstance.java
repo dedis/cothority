@@ -67,9 +67,9 @@ public class ValueInstance {
      */
     public Instruction evolveValueInstruction(byte[] newValue, Signer owner, int pos, int len) throws CothorityCryptoException {
         Invoke inv = new Invoke("update", "value", newValue);
-        Instruction inst = new Instruction(instance.getId(), SubId.random().getId(), pos, len, inv);
+        Instruction inst = new Instruction(instance.getId(), Instruction.genNonce(), pos, len, inv);
         try {
-            Request r = new Request(instance.getId().getDarcId(), "invoke:update", inst.hash(),
+            Request r = new Request(instance.getDarcId(), "invoke:update", inst.hash(),
                     Arrays.asList(owner.getIdentity()), null);
             logger.info("Signing: {}", Hex.printHexBinary(r.hash()));
             Signature sign = new Signature(owner.sign(r.hash()), owner.getIdentity());
@@ -80,11 +80,10 @@ public class ValueInstance {
         return inst;
     }
 
-    public TransactionId evolveValue(byte[] newValue, Signer owner) throws CothorityException {
+    public void evolveValue(byte[] newValue, Signer owner) throws CothorityException {
         Instruction inst = evolveValueInstruction(newValue, owner, 0, 1);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ol.sendTransaction(ct);
-        return new TransactionId(instance.getId().getDarcId(), SubId.zero());
     }
 
     /**

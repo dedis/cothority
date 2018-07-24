@@ -17,13 +17,16 @@ import (
 // Client is a structure to communicate with the eventlog service
 type Client struct {
 	OmniLedger *omniledger.Client
+	// The DarcID with "invoke:eventlog" permission on it.
+	DarcID darc.ID
 	// Signers are the Darc signers that will sign transactions sent with this client.
-	Signers    []darc.Signer
-	EventlogID omniledger.InstanceID
-	c          *onet.Client
+	Signers  []darc.Signer
+	Instance omniledger.InstanceID
+	c        *onet.Client
 }
 
 // NewClient creates a new client to talk to the eventlog service.
+// Fields DarcID, Instance, and Signers must be filled in before use.
 func NewClient(ol *omniledger.Client) *Client {
 	return &Client{
 		OmniLedger: ol,
@@ -43,33 +46,23 @@ func AddWriter(r darc.Rules, expr expression.Expr) darc.Rules {
 	return r
 }
 
-// Create creates a new event log. Upon return, c.EventlogID will be correctly
-// set. This method is synchronous: it will only return once the new eventlog has
-// been committed into the OmniLedger (or after a timeout).
-func (c *Client) Create(d darc.ID) error {
+// Create creates a new event log. This method is synchronous: it will only
+// return once the new eventlog has been committed into the OmniLedger (or after
+// a timeout). Upon non-error return, c.Instance will be correctly set.
+func (c *Client) Create() error {
 	instr := omniledger.Instruction{
-		InstanceID: omniledger.InstanceID{
-			DarcID: d,
-		},
 		Index:  0,
 		Length: 1,
 		Spawn:  &omniledger.Spawn{ContractID: contractName},
 	}
-	if err := instr.SignBy(c.Signers...); err != nil {
+	if err := instr.SignBy(c.DarcID, c.Signers...); err != nil {
 		return err
 	}
 	tx := omniledger.ClientTransaction{
 		Instructions: []omniledger.Instruction{instr},
 	}
-	if _, err := c.OmniLedger.AddTransaction(tx); err != nil {
+	if _, err := c.OmniLedger.AddTransactionAndWait(tx, 2); err != nil {
 		return err
-	}
-
-	var subID omniledger.SubID
-	copy(subID[:], instr.Hash())
-	c.EventlogID = omniledger.InstanceID{
-		DarcID: d,
-		SubID:  subID,
 	}
 
 	// Wait for GetProof to see it or timeout.
@@ -78,9 +71,10 @@ func (c *Client) Create(d darc.ID) error {
 		return err
 	}
 
+	in := instr.DeriveID("eventlog")
 	found := false
 	for ct := 0; ct < 10; ct++ {
-		resp, err := c.OmniLedger.GetProof(c.EventlogID.Slice())
+		resp, err := c.OmniLedger.GetProof(in.Slice())
 		if err == nil {
 			if resp.Proof.InclusionProof.Match() {
 				found = true
@@ -93,16 +87,17 @@ func (c *Client) Create(d darc.ID) error {
 		return errors.New("timeout waiting for creation")
 	}
 
+	c.Instance = in
 	return nil
 }
 
 // A LogID is an opaque unique identifier useful to find a given log message later
-// via omniledger.GetProof.
+// via GetEvent.
 type LogID []byte
 
 // Log asks the service to log events.
 func (c *Client) Log(ev ...Event) ([]LogID, error) {
-	tx, keys, err := makeTx(c.EventlogID, ev, c.Signers)
+	tx, keys, err := makeTx(c.DarcID, c.Instance, ev, c.Signers)
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +134,7 @@ func (c *Client) GetEvent(key []byte) (*Event, error) {
 	return &e, nil
 }
 
-func makeTx(eventlogID omniledger.InstanceID, msgs []Event, signers []darc.Signer) (*omniledger.ClientTransaction, []LogID, error) {
+func makeTx(darcID darc.ID, id omniledger.InstanceID, msgs []Event, signers []darc.Signer) (*omniledger.ClientTransaction, []LogID, error) {
 	// We need the identity part of the signatures before
 	// calling ToDarcRequest() below, because the identities
 	// go into the message digest.
@@ -164,7 +159,7 @@ func makeTx(eventlogID omniledger.InstanceID, msgs []Event, signers []darc.Signe
 			Value: eventBuf,
 		}
 		tx.Instructions[i] = omniledger.Instruction{
-			InstanceID: eventlogID,
+			InstanceID: id,
 			Nonce:      instrNonce,
 			Index:      i,
 			Length:     len(msgs),
@@ -178,7 +173,7 @@ func makeTx(eventlogID omniledger.InstanceID, msgs []Event, signers []darc.Signe
 	for i := range tx.Instructions {
 		darcSigs := make([]darc.Signature, len(signers))
 		for j, signer := range signers {
-			dr, err := tx.Instructions[i].ToDarcRequest()
+			dr, err := tx.Instructions[i].ToDarcRequest(darcID)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -200,11 +195,11 @@ func makeTx(eventlogID omniledger.InstanceID, msgs []Event, signers []darc.Signe
 
 // Search executes a search on the filter in req. See the definition of
 // type SearchRequest for additional details about how the filter is interpreted.
-// The ID field of the SearchRequest will be filled in from c, if it is null.
+// The ID and Instance fields of the SearchRequest will be filled in from c.
 func (c *Client) Search(req *SearchRequest) (*SearchResponse, error) {
-	if req.ID.IsNull() {
-		req.ID = c.OmniLedger.ID
-	}
+	req.ID = c.OmniLedger.ID
+	req.Instance = c.Instance
+
 	reply := &SearchResponse{}
 	if err := c.c.SendProtobuf(c.OmniLedger.Roster.List[0], req, reply); err != nil {
 		return nil, err

@@ -141,7 +141,7 @@ func main() {
 	log.ErrFatal(cliApp.Run(os.Args))
 }
 
-func getClient(c *cli.Context) (*eventlog.Client, error) {
+func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
 	fn := c.String("ol")
 	if fn == "" {
 		return nil, errors.New("--ol is required")
@@ -152,17 +152,25 @@ func getClient(c *cli.Context) (*eventlog.Client, error) {
 	}
 	cl := eventlog.NewClient(ol)
 
-	privStr := c.String("priv")
-	if privStr == "" {
-		return nil, errors.New("--priv is required")
-	}
-	priv, err := encoding.StringHexToScalar(cothority.Suite, privStr)
+	d, err := cl.OmniLedger.GetGenDarc()
 	if err != nil {
 		return nil, err
 	}
-	pub := cothority.Suite.Point().Mul(priv, nil)
+	cl.DarcID = d.GetBaseID()
 
-	cl.Signers = []darc.Signer{darc.NewSignerEd25519(pub, priv)}
+	if priv {
+		privStr := c.String("priv")
+		if privStr == "" {
+			return nil, errors.New("--priv is required")
+		}
+		priv, err := encoding.StringHexToScalar(cothority.Suite, privStr)
+		if err != nil {
+			return nil, err
+		}
+		pub := cothority.Suite.Point().Mul(priv, nil)
+
+		cl.Signers = []darc.Signer{darc.NewSignerEd25519(pub, priv)}
+	}
 	return cl, nil
 }
 
@@ -174,27 +182,31 @@ func create(c *cli.Context) error {
 		return nil
 	}
 
-	cl, err := getClient(c)
+	cl, err := getClient(c, true)
 	if err != nil {
 		return err
 	}
 
 	genDarc, err := cl.OmniLedger.GetGenDarc()
-	err = cl.Create(genDarc.GetBaseID())
+	if err != nil {
+		return err
+	}
+	cl.DarcID = genDarc.GetBaseID()
+
+	err = cl.Create()
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(c.App.Writer, "export EL=%x\n", cl.EventlogID.Slice())
+	fmt.Fprintf(c.App.Writer, "export EL=%x\n", cl.Instance.Slice())
 	return nil
 }
 
 func doLog(c *cli.Context) error {
-	cl, err := getClient(c)
+	cl, err := getClient(c, true)
 	if err != nil {
 		return err
 	}
-
 	e := c.String("el")
 	if e == "" {
 		return errors.New("--el is required")
@@ -203,7 +215,7 @@ func doLog(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	cl.EventlogID = omniledger.NewInstanceID(eb)
+	cl.Instance = omniledger.InstanceIDFromSlice(eb)
 
 	t := c.String("topic")
 	content := c.String("content")
@@ -245,27 +257,8 @@ func parseTime(in string) (time.Time, error) {
 }
 
 func search(c *cli.Context) error {
-	fn := c.String("ol")
-	if fn == "" {
-		return errors.New("--ol is required")
-	}
-	ol, err := omniledger.NewClientFromConfig(fn)
-	if err != nil {
-		return err
-	}
-
-	e := c.String("el")
-	if e == "" {
-		return errors.New("--el is required")
-	}
-	eb, err := hex.DecodeString(e)
-	if err != nil {
-		return err
-	}
-
 	req := &eventlog.SearchRequest{
-		EventLogID: omniledger.NewInstanceID(eb),
-		Topic:      c.String("topic"),
+		Topic: c.String("topic"),
 	}
 
 	f := c.String("from")
@@ -293,7 +286,20 @@ func search(c *cli.Context) error {
 		req.To = time.Unix(0, req.From).Add(forDur).UnixNano()
 	}
 
-	cl := eventlog.NewClient(ol)
+	cl, err := getClient(c, false)
+	if err != nil {
+		return err
+	}
+	e := c.String("el")
+	if e == "" {
+		return errors.New("--el is required")
+	}
+	eb, err := hex.DecodeString(e)
+	if err != nil {
+		return err
+	}
+	cl.Instance = omniledger.InstanceIDFromSlice(eb)
+
 	resp, err := cl.Search(req)
 	if err != nil {
 		return err

@@ -11,6 +11,7 @@ import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
 
@@ -52,7 +53,7 @@ public class DarcInstance {
     }
 
     public DarcInstance(OmniledgerRPC ol, Darc d) throws CothorityException {
-        this(ol, new InstanceId(d.getBaseId(), SubId.zero()));
+        this(ol, new InstanceId(d.getBaseId().getId()));
     }
 
     public void update() throws CothorityException {
@@ -86,8 +87,8 @@ public class DarcInstance {
             throw new CothorityCryptoException("not correct darc to evolve");
         }
         Invoke inv = new Invoke("evolve", "darc", newDarc.toProto().toByteArray());
-        Instruction inst = new Instruction(new InstanceId(darc.getBaseId(), SubId.zero()),
-                SubId.zero().getId(), pos, len, inv);
+        byte[] d = newDarc.getBaseId().getId();
+        Instruction inst = new Instruction(new InstanceId(d), Instruction.genNonce(), pos, len, inv);
         try {
             Request r = new Request(darc.getBaseId(), "invoke:evolve", inst.hash(),
                     Arrays.asList(owner.getIdentity()), null);
@@ -100,11 +101,10 @@ public class DarcInstance {
         return inst;
     }
 
-    public TransactionId evolveDarc(Darc newDarc, Signer owner) throws CothorityException {
+    public void evolveDarc(Darc newDarc, Signer owner) throws CothorityException {
         Instruction inst = evolveDarcInstruction(newDarc, owner, 0, 1);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ol.sendTransaction(ct);
-        return new TransactionId(darc.getBaseId(), SubId.zero());
     }
 
     /**
@@ -152,8 +152,7 @@ public class DarcInstance {
     public Instruction spawnContractInstruction(String contractID, Signer s, List<Argument> args, int pos, int len)
             throws CothorityCryptoException {
         Spawn sp = new Spawn(contractID, args);
-        Instruction inst = new Instruction(new InstanceId(darc.getBaseId(), SubId.zero()),
-                SubId.random().getId(), pos, len, sp);
+        Instruction inst = new Instruction(darc.getBaseId(), Instruction.genNonce(), pos, len, sp);
         try {
             Request r = new Request(darc.getBaseId(), "spawn:" + contractID, inst.hash(),
                     Arrays.asList(s.getIdentity()), null);
@@ -164,22 +163,6 @@ public class DarcInstance {
             throw new CothorityCryptoException(e.getMessage());
         }
         return inst;
-    }
-
-    /**
-     * Like spawnContractInstruction, but creates a ClientTransaction with only this instruction and sends it
-     * to the omniledger.
-     *
-     * @param contractID the id of the contract to create
-     * @param s          the signer that is authorized to spawn this contract
-     * @param args       arguments to give to the contract
-     * @throws CothorityException
-     */
-    public TransactionId spawnContract(String contractID, Signer s, List<Argument> args) throws CothorityException {
-        Instruction inst = spawnContractInstruction(contractID, s, args, 0, 1);
-        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
-        ol.sendTransaction(ct);
-        return new TransactionId(darc.getBaseId(), new SubId(inst.hash()));
     }
 
     /**
@@ -194,17 +177,18 @@ public class DarcInstance {
         Instruction inst = spawnContractInstruction(contractID, s, args, 0, 1);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ol.sendTransactionAndWait(ct, wait);
-        InstanceId iid = inst.deriveId(contractID);
+        InstanceId iid = inst.deriveId("value");
         if (contractID.equals("darc")) {
             // Special case for a darc, then the resulting instanceId is based
             // on the darc itself.
             try {
                 Darc d = new Darc(args.get(0).getValue());
-                iid = new InstanceId(d.getBaseId(), SubId.zero());
+                iid = new InstanceId(d.getBaseId().getId());
             } catch (InvalidProtocolBufferException e) {
                 throw new CothorityCommunicationException("this is not a correct darc-spawn");
             }
         }
+        logger.info("waiting on iid {}", iid);
         return ol.getProof(iid);
     }
 

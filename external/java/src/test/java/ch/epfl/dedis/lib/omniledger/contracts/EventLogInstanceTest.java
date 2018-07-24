@@ -55,7 +55,7 @@ class EventLogInstanceTest {
     @Test
     void log() throws Exception {
         Event e = new Event("hello", "goodbye");
-        InstanceId key = el.log(e, Arrays.asList(admin));
+        InstanceId key = el.log(e, ol.getGenesisDarc().getBaseId(), Arrays.asList(admin));
         Thread.sleep(2 * ol.getConfig().getBlockInterval().toMillis());
         Event loggedEvent = el.get(key);
         assertEquals(loggedEvent, e);
@@ -69,7 +69,7 @@ class EventLogInstanceTest {
         for (int i = 0; i < n; i++) {
             // The timestamps in these event are all the same, but doing el.log takes time and it may not be possible to
             // add all the events. So we have to limit the number of events that we add.
-            keys.add(el.log(event, Arrays.asList(admin)));
+            keys.add(el.log(event, ol.getGenesisDarc().getBaseId(), Arrays.asList(admin)));
         }
         boolean allOK = true;
         for (int i = 0; i < 4; i++) {
@@ -77,9 +77,11 @@ class EventLogInstanceTest {
             Thread.sleep(2 * ol.getConfig().getBlockInterval().toMillis());
             for (InstanceId key : keys) {
                 try {
+                    logger.info("ok");
                     Event event2 = el.get(key);
                     assertEquals(event, event2);
                 } catch (CothorityCryptoException e){
+                    logger.info("bad");
                     allOK = false;
                     break;
                 }
@@ -95,7 +97,7 @@ class EventLogInstanceTest {
     void testSearch() throws Exception {
         long now = System.currentTimeMillis() * 1000 * 1000;
         Event event = new Event(now, "login", "alice");
-        el.log(event, Arrays.asList(admin));
+        el.log(event, ol.getGenesisDarc().getBaseId(), Arrays.asList(admin));
 
         Thread.sleep(2 * ol.getConfig().getBlockInterval().toMillis());
 

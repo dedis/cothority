@@ -19,17 +19,13 @@ public final class EventLogProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required .omniledger.InstanceID eventlogid = 1;</code>
+     * <code>required bytes instance = 1;</code>
      */
-    boolean hasEventlogid();
+    boolean hasInstance();
     /**
-     * <code>required .omniledger.InstanceID eventlogid = 1;</code>
+     * <code>required bytes instance = 1;</code>
      */
-    ch.epfl.dedis.proto.OmniLedgerProto.InstanceID getEventlogid();
-    /**
-     * <code>required .omniledger.InstanceID eventlogid = 1;</code>
-     */
-    ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder getEventlogidOrBuilder();
+    com.google.protobuf.ByteString getInstance();
 
     /**
      * <code>required bytes id = 2;</code>
@@ -120,6 +116,7 @@ public final class EventLogProto {
       super(builder);
     }
     private SearchRequest() {
+      instance_ = com.google.protobuf.ByteString.EMPTY;
       id_ = com.google.protobuf.ByteString.EMPTY;
       topic_ = "";
       from_ = 0L;
@@ -136,6 +133,9 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -155,16 +155,8 @@ public final class EventLogProto {
               break;
             }
             case 10: {
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                subBuilder = eventlogid_.toBuilder();
-              }
-              eventlogid_ = input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.PARSER, extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(eventlogid_);
-                eventlogid_ = subBuilder.buildPartial();
-              }
               bitField0_ |= 0x00000001;
+              instance_ = input.readBytes();
               break;
             }
             case 18: {
@@ -213,25 +205,19 @@ public final class EventLogProto {
     }
 
     private int bitField0_;
-    public static final int EVENTLOGID_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.proto.OmniLedgerProto.InstanceID eventlogid_;
+    public static final int INSTANCE_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString instance_;
     /**
-     * <code>required .omniledger.InstanceID eventlogid = 1;</code>
+     * <code>required bytes instance = 1;</code>
      */
-    public boolean hasEventlogid() {
+    public boolean hasInstance() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required .omniledger.InstanceID eventlogid = 1;</code>
+     * <code>required bytes instance = 1;</code>
      */
-    public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID getEventlogid() {
-      return eventlogid_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance() : eventlogid_;
-    }
-    /**
-     * <code>required .omniledger.InstanceID eventlogid = 1;</code>
-     */
-    public ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder getEventlogidOrBuilder() {
-      return eventlogid_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance() : eventlogid_;
+    public com.google.protobuf.ByteString getInstance() {
+      return instance_;
     }
 
     public static final int ID_FIELD_NUMBER = 2;
@@ -355,7 +341,7 @@ public final class EventLogProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasEventlogid()) {
+      if (!hasInstance()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -375,10 +361,6 @@ public final class EventLogProto {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!getEventlogid().isInitialized()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -386,7 +368,7 @@ public final class EventLogProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeMessage(1, getEventlogid());
+        output.writeBytes(1, instance_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, id_);
@@ -410,7 +392,7 @@ public final class EventLogProto {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(1, getEventlogid());
+          .computeBytesSize(1, instance_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -443,10 +425,10 @@ public final class EventLogProto {
       ch.epfl.dedis.proto.EventLogProto.SearchRequest other = (ch.epfl.dedis.proto.EventLogProto.SearchRequest) obj;
 
       boolean result = true;
-      result = result && (hasEventlogid() == other.hasEventlogid());
-      if (hasEventlogid()) {
-        result = result && getEventlogid()
-            .equals(other.getEventlogid());
+      result = result && (hasInstance() == other.hasInstance());
+      if (hasInstance()) {
+        result = result && getInstance()
+            .equals(other.getInstance());
       }
       result = result && (hasId() == other.hasId());
       if (hasId()) {
@@ -479,9 +461,9 @@ public final class EventLogProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasEventlogid()) {
-        hash = (37 * hash) + EVENTLOGID_FIELD_NUMBER;
-        hash = (53 * hash) + getEventlogid().hashCode();
+      if (hasInstance()) {
+        hash = (37 * hash) + INSTANCE_FIELD_NUMBER;
+        hash = (53 * hash) + getInstance().hashCode();
       }
       if (hasId()) {
         hash = (37 * hash) + ID_FIELD_NUMBER;
@@ -633,16 +615,11 @@ public final class EventLogProto {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
-          getEventlogidFieldBuilder();
         }
       }
       public Builder clear() {
         super.clear();
-        if (eventlogidBuilder_ == null) {
-          eventlogid_ = null;
-        } else {
-          eventlogidBuilder_.clear();
-        }
+        instance_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
         id_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -679,11 +656,7 @@ public final class EventLogProto {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        if (eventlogidBuilder_ == null) {
-          result.eventlogid_ = eventlogid_;
-        } else {
-          result.eventlogid_ = eventlogidBuilder_.build();
-        }
+        result.instance_ = instance_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
@@ -742,8 +715,8 @@ public final class EventLogProto {
 
       public Builder mergeFrom(ch.epfl.dedis.proto.EventLogProto.SearchRequest other) {
         if (other == ch.epfl.dedis.proto.EventLogProto.SearchRequest.getDefaultInstance()) return this;
-        if (other.hasEventlogid()) {
-          mergeEventlogid(other.getEventlogid());
+        if (other.hasInstance()) {
+          setInstance(other.getInstance());
         }
         if (other.hasId()) {
           setId(other.getId());
@@ -765,7 +738,7 @@ public final class EventLogProto {
       }
 
       public final boolean isInitialized() {
-        if (!hasEventlogid()) {
+        if (!hasInstance()) {
           return false;
         }
         if (!hasId()) {
@@ -778,9 +751,6 @@ public final class EventLogProto {
           return false;
         }
         if (!hasTo()) {
-          return false;
-        }
-        if (!getEventlogid().isInitialized()) {
           return false;
         }
         return true;
@@ -805,122 +775,39 @@ public final class EventLogProto {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.proto.OmniLedgerProto.InstanceID eventlogid_ = null;
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.OmniLedgerProto.InstanceID, ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder, ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder> eventlogidBuilder_;
+      private com.google.protobuf.ByteString instance_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required .omniledger.InstanceID eventlogid = 1;</code>
+       * <code>required bytes instance = 1;</code>
        */
-      public boolean hasEventlogid() {
+      public boolean hasInstance() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required .omniledger.InstanceID eventlogid = 1;</code>
+       * <code>required bytes instance = 1;</code>
        */
-      public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID getEventlogid() {
-        if (eventlogidBuilder_ == null) {
-          return eventlogid_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance() : eventlogid_;
-        } else {
-          return eventlogidBuilder_.getMessage();
-        }
+      public com.google.protobuf.ByteString getInstance() {
+        return instance_;
       }
       /**
-       * <code>required .omniledger.InstanceID eventlogid = 1;</code>
+       * <code>required bytes instance = 1;</code>
        */
-      public Builder setEventlogid(ch.epfl.dedis.proto.OmniLedgerProto.InstanceID value) {
-        if (eventlogidBuilder_ == null) {
-          if (value == null) {
-            throw new NullPointerException();
-          }
-          eventlogid_ = value;
-          onChanged();
-        } else {
-          eventlogidBuilder_.setMessage(value);
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <code>required .omniledger.InstanceID eventlogid = 1;</code>
-       */
-      public Builder setEventlogid(
-          ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder builderForValue) {
-        if (eventlogidBuilder_ == null) {
-          eventlogid_ = builderForValue.build();
-          onChanged();
-        } else {
-          eventlogidBuilder_.setMessage(builderForValue.build());
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <code>required .omniledger.InstanceID eventlogid = 1;</code>
-       */
-      public Builder mergeEventlogid(ch.epfl.dedis.proto.OmniLedgerProto.InstanceID value) {
-        if (eventlogidBuilder_ == null) {
-          if (((bitField0_ & 0x00000001) == 0x00000001) &&
-              eventlogid_ != null &&
-              eventlogid_ != ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance()) {
-            eventlogid_ =
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.newBuilder(eventlogid_).mergeFrom(value).buildPartial();
-          } else {
-            eventlogid_ = value;
-          }
-          onChanged();
-        } else {
-          eventlogidBuilder_.mergeFrom(value);
-        }
-        bitField0_ |= 0x00000001;
-        return this;
-      }
-      /**
-       * <code>required .omniledger.InstanceID eventlogid = 1;</code>
-       */
-      public Builder clearEventlogid() {
-        if (eventlogidBuilder_ == null) {
-          eventlogid_ = null;
-          onChanged();
-        } else {
-          eventlogidBuilder_.clear();
-        }
-        bitField0_ = (bitField0_ & ~0x00000001);
-        return this;
-      }
-      /**
-       * <code>required .omniledger.InstanceID eventlogid = 1;</code>
-       */
-      public ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder getEventlogidBuilder() {
-        bitField0_ |= 0x00000001;
+      public Builder setInstance(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        instance_ = value;
         onChanged();
-        return getEventlogidFieldBuilder().getBuilder();
+        return this;
       }
       /**
-       * <code>required .omniledger.InstanceID eventlogid = 1;</code>
+       * <code>required bytes instance = 1;</code>
        */
-      public ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder getEventlogidOrBuilder() {
-        if (eventlogidBuilder_ != null) {
-          return eventlogidBuilder_.getMessageOrBuilder();
-        } else {
-          return eventlogid_ == null ?
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.getDefaultInstance() : eventlogid_;
-        }
-      }
-      /**
-       * <code>required .omniledger.InstanceID eventlogid = 1;</code>
-       */
-      private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.OmniLedgerProto.InstanceID, ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder, ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder> 
-          getEventlogidFieldBuilder() {
-        if (eventlogidBuilder_ == null) {
-          eventlogidBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.OmniLedgerProto.InstanceID, ch.epfl.dedis.proto.OmniLedgerProto.InstanceID.Builder, ch.epfl.dedis.proto.OmniLedgerProto.InstanceIDOrBuilder>(
-                  getEventlogid(),
-                  getParentForChildren(),
-                  isClean());
-          eventlogid_ = null;
-        }
-        return eventlogidBuilder_;
+      public Builder clearInstance() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        instance_ = getDefaultInstance().getInstance();
+        onChanged();
+        return this;
       }
 
       private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
@@ -1183,7 +1070,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SearchRequest(input, extensionRegistry);
+        return new SearchRequest(input, extensionRegistry);
       }
     };
 
@@ -1282,6 +1169,9 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2102,7 +1992,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SearchResponse(input, extensionRegistry);
+        return new SearchResponse(input, extensionRegistry);
       }
     };
 
@@ -2195,6 +2085,9 @@ public final class EventLogProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2941,7 +2834,7 @@ public final class EventLogProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Event(input, extensionRegistry);
+        return new Event(input, extensionRegistry);
       }
     };
 
@@ -2984,15 +2877,13 @@ public final class EventLogProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\016eventlog.proto\022\010eventlog\032\020omniledger.p" +
-      "roto\"p\n\rSearchRequest\022*\n\neventlogid\030\001 \002(" +
-      "\0132\026.omniledger.InstanceID\022\n\n\002id\030\002 \002(\014\022\r\n" +
-      "\005topic\030\003 \002(\t\022\014\n\004from\030\004 \002(\022\022\n\n\002to\030\005 \002(\022\"D" +
-      "\n\016SearchResponse\022\037\n\006events\030\001 \003(\0132\017.event" +
-      "log.Event\022\021\n\ttruncated\030\002 \002(\010\"5\n\005Event\022\014\n" +
-      "\004when\030\001 \002(\022\022\r\n\005topic\030\002 \002(\t\022\017\n\007content\030\003 " +
-      "\002(\tB$\n\023ch.epfl.dedis.protoB\rEventLogProt" +
-      "o"
+      "\n\016eventlog.proto\022\010eventlog\"V\n\rSearchRequ" +
+      "est\022\020\n\010instance\030\001 \002(\014\022\n\n\002id\030\002 \002(\014\022\r\n\005top" +
+      "ic\030\003 \002(\t\022\014\n\004from\030\004 \002(\022\022\n\n\002to\030\005 \002(\022\"D\n\016Se" +
+      "archResponse\022\037\n\006events\030\001 \003(\0132\017.eventlog." +
+      "Event\022\021\n\ttruncated\030\002 \002(\010\"5\n\005Event\022\014\n\004whe" +
+      "n\030\001 \002(\022\022\r\n\005topic\030\002 \002(\t\022\017\n\007content\030\003 \002(\tB" +
+      "$\n\023ch.epfl.dedis.protoB\rEventLogProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3005,14 +2896,13 @@ public final class EventLogProto {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          ch.epfl.dedis.proto.OmniLedgerProto.getDescriptor(),
         }, assigner);
     internal_static_eventlog_SearchRequest_descriptor =
       getDescriptor().getMessageTypes().get(0);
     internal_static_eventlog_SearchRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_eventlog_SearchRequest_descriptor,
-        new java.lang.String[] { "Eventlogid", "Id", "Topic", "From", "To", });
+        new java.lang.String[] { "Instance", "Id", "Topic", "From", "To", });
     internal_static_eventlog_SearchResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_eventlog_SearchResponse_fieldAccessorTable = new
@@ -3025,7 +2915,6 @@ public final class EventLogProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_eventlog_Event_descriptor,
         new java.lang.String[] { "When", "Topic", "Content", });
-    ch.epfl.dedis.proto.OmniLedgerProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

@@ -54,8 +54,7 @@ func NewClientFromConfig(fn string) (*Client, error) {
 	return c, nil
 }
 
-// CreateGenesisBlock sets up a new skipchain to hold the key/value pairs. If
-// a key is given, it is used to authenticate towards the cothority.
+// CreateGenesisBlock sets up a new OmniLedger instance.
 func (c *Client) CreateGenesisBlock(msg *CreateGenesisBlock) (*CreateGenesisBlockResponse, error) {
 	reply := &CreateGenesisBlockResponse{}
 	if err := c.SendProtobuf(msg.Roster.List[0], msg, reply); err != nil {
@@ -126,15 +125,15 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 		return nil, errors.New("not enough records")
 	}
 	contractBuf := vs[1]
-	if string(contractBuf) != "config" {
+	if string(contractBuf) != ContractConfigID {
 		return nil, errors.New("expected contract to be config but got: " + string(contractBuf))
 	}
-	darcBuf := vs[0]
-	if len(darcBuf) != 32 {
+	darcID := vs[0]
+	if len(darcID) != 32 {
 		return nil, errors.New("genesis darc ID is wrong length")
 	}
 
-	p, err = c.GetProof(InstanceID{DarcID: darcBuf}.Slice())
+	p, err = c.GetProof(darcID)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +147,7 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 		return nil, errors.New("not enough records")
 	}
 	contractBuf = vs[1]
-	if string(contractBuf) != "darc" {
+	if string(contractBuf) != ContractDarcID {
 		return nil, errors.New("expected contract to be darc but got: " + string(contractBuf))
 	}
 	d, err := darc.NewFromProtobuf(vs[0])
@@ -162,8 +161,8 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 // from OmniLedger.
 func (c *Client) GetChainConfig() (*ChainConfig, error) {
 	d, err := c.GetGenDarc()
+	cfid := DeriveConfigID(d.GetBaseID())
 
-	cfid := InstanceID{d.GetBaseID(), oneSubID}
 	p, err := c.GetProof(cfid.Slice())
 	if err != nil {
 		return nil, err
@@ -177,7 +176,7 @@ func (c *Client) GetChainConfig() (*ChainConfig, error) {
 		return nil, errors.New("not enough records")
 	}
 	contractBuf := vs[1]
-	if string(contractBuf) != "config" {
+	if string(contractBuf) != ContractConfigID {
 		return nil, errors.New("expected contract to be config but got: " + string(contractBuf))
 	}
 	config := &ChainConfig{}
@@ -292,7 +291,7 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 
 // SignInstruction takes an instruction and one or more signers and adds
 // a Signature to the instruction.
-func SignInstruction(inst *Instruction, signers ...darc.Signer) error {
+func SignInstruction(inst *Instruction, darcID darc.ID, signers ...darc.Signer) error {
 	inst.Signatures = make([]darc.Signature, 0)
 	var action string
 	switch {
@@ -303,7 +302,7 @@ func SignInstruction(inst *Instruction, signers ...darc.Signer) error {
 	case inst.Delete != nil:
 		action = "delete"
 	}
-	req, err := darc.InitAndSignRequest(inst.InstanceID.DarcID, darc.Action(action),
+	req, err := darc.InitAndSignRequest(darcID, darc.Action(action),
 		inst.Hash(), signers...)
 	if err != nil {
 		return err

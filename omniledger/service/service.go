@@ -168,7 +168,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	// reference to the actual genesis transaction.
 	transaction := []ClientTransaction{{
 		Instructions: []Instruction{{
-			InstanceID: InstanceID{DarcID: req.GenesisDarc.GetID()},
+			InstanceID: InstanceIDFromSlice(req.GenesisDarc.GetID()),
 			Nonce:      Nonce{},
 			Index:      0,
 			Length:     1,
@@ -219,7 +219,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 				return nil, errors.New("transaction is in block, but got refused")
 			}
 		case <-time.After(time.Duration(req.InclusionWait) * interval):
-			return nil, errors.New("didn't find transaction in blocks")
+			return nil, fmt.Errorf("didn't find transaction in %v blocks", req.InclusionWait)
 		}
 	}
 	return &AddTxResponse{
@@ -260,18 +260,11 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.skService().SetPropTimeout(p)
 }
 
-func toInstanceID(dID darc.ID) InstanceID {
-	return InstanceID{
-		DarcID: dID,
-		SubID:  SubID{},
-	}
-}
-
 func (s *Service) verifyAndFilterTxs(scID skipchain.SkipBlockID, ts []ClientTransaction) []ClientTransaction {
 	var validTxs []ClientTransaction
-	for _, t := range ts {
+	for i, t := range ts {
 		if err := s.verifyClientTx(scID, t); err != nil {
-			log.Error(s.ServerIdentity(), err)
+			log.Errorf("%v tx #%v, %v", s.ServerIdentity(), i, err)
 			continue
 		}
 		validTxs = append(validTxs, t)
@@ -280,8 +273,9 @@ func (s *Service) verifyAndFilterTxs(scID skipchain.SkipBlockID, ts []ClientTran
 }
 
 func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransaction) error {
-	for _, instr := range tx.Instructions {
+	for i, instr := range tx.Instructions {
 		if err := s.verifyInstruction(scID, instr); err != nil {
+			log.Errorf("%v instr #%v, %v", s.ServerIdentity(), i, err)
 			return err
 		}
 	}
@@ -289,11 +283,11 @@ func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransactio
 }
 
 func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
-	d, err := s.loadLatestDarc(scID, instr.InstanceID.DarcID)
+	d, err := s.loadLatestDarc(scID, instr.InstanceID)
 	if err != nil {
 		return errors.New("darc not found: " + err.Error())
 	}
-	req, err := instr.ToDarcRequest()
+	req, err := instr.ToDarcRequest(d.GetBaseID())
 	if err != nil {
 		return errors.New("couldn't create darc request: " + err.Error())
 	}
@@ -301,11 +295,14 @@ func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instructio
 	// A callback is required to get any delegated DARC(s) during
 	// expression evaluation.
 	err = req.VerifyWithCB(d, func(str string, latest bool) *darc.Darc {
+		if len(str) < 5 || string(str[0:5]) != "darc:" {
+			return nil
+		}
 		darcID, err := hex.DecodeString(str[5:])
 		if err != nil {
 			return nil
 		}
-		d, err := LoadDarcFromColl(s.GetCollectionView(scID), InstanceID{darcID, SubID{}}.Slice())
+		d, err := LoadDarcFromColl(s.GetCollectionView(scID), darcID)
 		if err != nil {
 			return nil
 		}
@@ -337,7 +334,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 		// We have to register the verification functions in the genesis block
 		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, verifyOmniLedger}
 
-		coll = collection.New(&collection.Data{}, &collection.Data{})
+		coll = collection.New(&collection.Data{}, &collection.Data{}, &collection.Data{})
 	} else {
 		// For all other blocks, we try to verify the signature using
 		// the darcs and remove those that do not have a valid
@@ -347,7 +344,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 			return nil, errors.New(
 				"Could not get latest block from the skipchain: " + err.Error())
 		}
-		log.Lvlf3("Creating new block #%d with %d transactions", sbLatest.Index+1,
+		log.Lvlf3("Creating block #%d with %d transactions", sbLatest.Index+1,
 			len(cts))
 		sb = sbLatest.Copy()
 		if r != nil {
@@ -372,7 +369,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 	var ctsOK ClientTransactions
 
 	log.Lvl3("Creating state changes")
-	mr, ctsOK, scs, err = s.createStateChanges(coll, scID, cts)
+	mr, ctsOK, _, scs, err = s.createStateChanges(coll, scID, cts, noTimeout)
 
 	if err != nil {
 		return nil, err
@@ -454,7 +451,7 @@ func (s *Service) updateCollection(msg network.Message) {
 
 	log.Lvlf2("%s: Updating transactions for %x", s.ServerIdentity(), sb.SkipChainID())
 	cdb := s.getCollection(sb.SkipChainID())
-	_, _, scs, err := s.createStateChanges(cdb.coll, sb.SkipChainID(), body.Transactions)
+	_, _, _, scs, err := s.createStateChanges(cdb.coll, sb.SkipChainID(), body.Transactions, noTimeout)
 	if err != nil {
 		log.Error("Couldn't recreate state changes:", err.Error())
 		return
@@ -472,6 +469,7 @@ func (s *Service) updateCollection(msg network.Message) {
 
 	// Send OK to all waiting channels
 	for _, ct := range body.Transactions {
+		// TODO: Where is the other call, for informWaitChannel(hash, false)?
 		s.state.informWaitChannel(ct.Instructions.Hash(), true)
 	}
 
@@ -558,7 +556,7 @@ func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
 func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error) {
 	coll := s.GetCollectionView(scID)
 	// Find the genesis-darc ID.
-	val, contract, err := getValueContract(coll, GenesisReferenceID.Slice())
+	val, contract, _, err := getValueContract(coll, GenesisReferenceID.Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -568,7 +566,7 @@ func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error
 	if len(val) != 32 {
 		return nil, errors.New("value has a invalid length")
 	}
-	return s.loadLatestDarc(scID, darc.ID(val))
+	return s.loadLatestDarc(scID, InstanceIDFromSlice(val))
 }
 
 // LoadBlockInterval loads the block interval from the skipchain ID.
@@ -580,17 +578,27 @@ func (s *Service) LoadBlockInterval(scID skipchain.SkipBlockID) (time.Duration, 
 	return LoadBlockIntervalFromColl(&roCollection{collDb.coll})
 }
 
-func (s *Service) loadLatestDarc(scID skipchain.SkipBlockID, dID darc.ID) (*darc.Darc, error) {
+func (s *Service) loadLatestDarc(scID skipchain.SkipBlockID, i InstanceID) (*darc.Darc, error) {
 	colldb := s.getCollection(scID)
 	if colldb == nil {
 		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", scID.Short())
 	}
-	value, contract, err := getValueContract(&roCollection{colldb.coll}, toInstanceID(dID).Slice())
+	coll := &roCollection{colldb.coll}
+
+	// From instance ID, find the darcID that controls access to it.
+	_, _, dID, err := coll.GetValues(i.Slice())
 	if err != nil {
 		return nil, err
 	}
-	if string(contract) != "darc" {
-		return nil, fmt.Errorf("for darc %x, expected Kind to be 'darc' but got '%v'", dID, string(contract))
+
+	// Fetch the darc itself.
+	value, contract, _, err := coll.GetValues(dID)
+	if err != nil {
+		return nil, err
+	}
+
+	if string(contract) != ContractDarcID {
+		return nil, fmt.Errorf("for instance %v, expected Kind to be 'darc' but got '%v'", i, string(contract))
 	}
 	return darc.NewFromProtobuf(value)
 }
@@ -669,32 +677,19 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 				// Pre-run transactions to look how many we can fit in the alloted time
 				// slot. Perhaps we can run this in parallel during the wait-phase?
 				log.Lvl3("Counting how many transactions fit in", interval/2)
-				var txsCollect ClientTransactions
-				cdbI := s.GetCollectionView(scID)
-				now := time.Now()
-				for len(txs) > 0 {
-					if s.verifyClientTx(scID, txs[0]) == nil {
-						var cin []Coin
-						for _, instr := range txs[0].Instructions {
-							_, cin, err = s.executeInstruction(cdbI, cin, instr)
-							if err != nil {
-								continue
-							}
-						}
-						if time.Now().Sub(now) < interval/2 {
-							txsCollect = append(txsCollect, txs[0])
-							txs = txs[1:]
-						} else {
-							log.Lvlf3("Got more transactions than what I can do in half the blockInterval. "+
-								"%d transactions left", len(txs))
-							break
-						}
-					} else {
-						log.Lvl3("Removing badly signed transaction")
-						txs = txs[1:]
-					}
+				cdb := s.getCollection(scID)
+				_, txOut, txBad, _, err := s.createStateChanges(cdb.coll, scID, txs, interval/2)
+				if err != nil {
+					log.Error("While choosing transactions, couldn't create state changes:", err)
+					continue
 				}
-				_, err = s.createNewBlock(scID, sb.Roster, txsCollect)
+
+				txs = txs[len(txOut)+len(txBad):]
+				if len(txs) > 0 {
+					log.Lvlf3("Got more transactions than can be done in half the blockInterval. "+
+						"%d transactions left", len(txs))
+				}
+				_, err = s.createNewBlock(scID, sb.Roster, txOut)
 				if err != nil {
 					log.Error("couldn't create new block: " + err.Error())
 				}
@@ -729,7 +724,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	}
 	ctx := body.Transactions
 	cdb := s.getCollection(newSB.SkipChainID())
-	mtr, _, scs, err := s.createStateChanges(cdb.coll, newSB.SkipChainID(), ctx)
+	mtr, _, _, scs, err := s.createStateChanges(cdb.coll, newSB.SkipChainID(), ctx, noTimeout)
 	if err != nil {
 		log.Error("Couldn't create state changes:", err)
 		return false
@@ -770,18 +765,24 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	return true
 }
 
+const noTimeout time.Duration = 0
+
 // createStateChanges goes through all ClientTransactions and creates
 // the appropriate StateChanges. If any of the transactions are invalid,
-// it returns an error.
-func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain.SkipBlockID, cts ClientTransactions) (merkleRoot []byte, ctsOK ClientTransactions, states StateChanges, err error) {
+// it returns an error. If timeout is not 0, createStateChanges will stop
+// running instructions after that long, in order for the caller to determine
+// how many instructions fit in a block interval.
+func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain.SkipBlockID, cts ClientTransactions, timeout time.Duration) (merkleRoot []byte, ctsOK ClientTransactions, ctsBad ClientTransactions, states StateChanges, err error) {
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
-	merkleRoot, ctsOK, states, err = s.stateChangeCache.get(scID, cts.Hash())
+	merkleRoot, ctsOK, ctsBad, states, err = s.stateChangeCache.get(scID, cts.Hash())
 	if err == nil {
 		log.Lvl3(s.ServerIdentity(), "loaded state changes from cache")
 		return
 	}
 	err = nil
+
+	deadline := time.Now().Add(timeout)
 
 	// TODO: Because we depend on making at least one clone per transaction
 	// we need to find out if this is as expensive as it looks, and if so if
@@ -799,6 +800,7 @@ clientTransactions:
 			scs, cout, err := s.executeInstruction(cdbI, cin, instr)
 			if err != nil {
 				log.Errorf("%s: Call to contract returned error: %s", s.ServerIdentity(), err)
+				ctsBad = append(ctsBad, ct)
 				continue clientTransactions
 			}
 			for _, sc := range scs {
@@ -809,6 +811,14 @@ clientTransactions:
 			}
 			states = append(states, scs...)
 			cin = cout
+
+		}
+		// timeout is ONLY used when the leader calls createStateChanges as
+		// part of planning which ClientTransactions fit into one block.
+		if timeout != noTimeout {
+			if time.Now().After(deadline) {
+				return
+			}
 		}
 		cdbTemp = cdbI.c
 		ctsOK = append(ctsOK, ct)
@@ -816,7 +826,7 @@ clientTransactions:
 
 	// Store the result in the cache before returning.
 	merkleRoot = cdbTemp.GetRoot()
-	s.stateChangeCache.update(scID, cts.Hash(), merkleRoot, ctsOK, states)
+	s.stateChangeCache.update(scID, cts.Hash(), merkleRoot, ctsOK, ctsBad, states)
 	return
 }
 
@@ -935,7 +945,7 @@ func (s *Service) startViewChange(scID skipchain.SkipBlockID) error {
 	}
 
 	newRoster := onet.NewRoster(append(sb.Roster.List[1:], sb.Roster.List[0]))
-	genesisDarcID, _, err := s.GetCollectionView(scID).GetValues(GenesisReferenceID.Slice())
+	genesisDarcID, _, _, err := s.GetCollectionView(scID).GetValues(GenesisReferenceID.Slice())
 	if err != nil {
 		return err
 	}
@@ -946,13 +956,10 @@ func (s *Service) startViewChange(scID skipchain.SkipBlockID) error {
 
 	ctx := ClientTransaction{
 		Instructions: []Instruction{{
-			InstanceID: InstanceID{
-				DarcID: genesisDarcID,
-				SubID:  oneSubID,
-			},
-			Nonce:  GenNonce(),
-			Index:  0,
-			Length: 1,
+			InstanceID: DeriveConfigID(genesisDarcID),
+			Nonce:      GenNonce(),
+			Index:      0,
+			Length:     1,
 			Invoke: &Invoke{
 				Command: "view_change",
 				Args: []Argument{{
@@ -963,7 +970,7 @@ func (s *Service) startViewChange(scID skipchain.SkipBlockID) error {
 		}},
 	}
 	signer := darc.NewSignerEd25519(s.ServerIdentity().Public, s.getPrivateKey())
-	if err = ctx.Instructions[0].SignBy(signer); err != nil {
+	if err = ctx.Instructions[0].SignBy(genesisDarcID, signer); err != nil {
 		return err
 	}
 
@@ -1100,8 +1107,15 @@ func (s *Service) tryLoad() error {
 		if err != nil {
 			return err
 		}
-		s.pollChanWG.Add(1)
-		s.pollChan[string(gen)] = s.startPolling(gen, interval)
+
+		leader, err := s.getLeader(gen)
+		if err != nil {
+			panic("getLeader should not return an error if roster is initialised.")
+		}
+		if leader.Equal(s.ServerIdentity()) {
+			s.pollChanWG.Add(1)
+			s.pollChan[string(gen)] = s.startPolling(gen, interval)
+		}
 		sb, err := s.db().GetLatestByID(gen)
 		if err != nil {
 			return err

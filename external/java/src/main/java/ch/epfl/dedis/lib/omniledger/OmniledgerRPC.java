@@ -87,8 +87,7 @@ public class OmniledgerRPC {
         DarcId darcId = new DarcId(proof.getValues().get(0));
 
         // find the actual darc
-        InstanceId darcInstanceId = new InstanceId(darcId, SubId.zero());
-        proof = OmniledgerRPC.getProof(roster, skipchainId, darcInstanceId);
+        proof = OmniledgerRPC.getProof(roster, skipchainId, new InstanceId(darcId.getId()));
         OmniledgerRPC.checkProof(proof, "darc");
         try {
             genesisDarc = new Darc(proof.getValues().get(0));
@@ -97,8 +96,7 @@ public class OmniledgerRPC {
         }
 
         // find the config info
-        InstanceId configInstanceId = new InstanceId(darcId, SubId.one());
-        proof = OmniledgerRPC.getProof(roster, skipchainId, configInstanceId);
+        proof = OmniledgerRPC.getProof(roster, skipchainId, InstanceId.deriveConfigId(darcId));
         OmniledgerRPC.checkProof(proof, "config");
         config = new Config(proof.getValues().get(0));
 
@@ -254,7 +252,7 @@ public class OmniledgerRPC {
         if (!proof.matches()) {
             throw new CothorityNotFoundException("couldn't find darc");
         }
-        if (proof.getValues().size() != 2) {
+        if (proof.getValues().size() != 3) {
             throw new CothorityNotFoundException("incorrect number of values in proof");
         }
         String contract = new String(proof.getValues().get(1));
