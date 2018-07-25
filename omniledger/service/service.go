@@ -249,7 +249,6 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.storage.Lock()
 	s.storage.PropTimeout = p
-	s.Service(skipchain.ServiceName).(*skipchain.Service).SetBFTTimeout(p)
 	s.storage.Unlock()
 	s.save()
 	s.skService().SetPropTimeout(p)
@@ -808,11 +807,7 @@ func (s *Service) registerContract(contractID string, c OmniLedgerContract) erro
 // Tries to load the configuration and updates the data in the service
 // if it finds a valid config-file.
 func (s *Service) tryLoad() error {
-	s.storage = &omniStorage{
-		// Set the default to be the same as the default in
-		// skipchain/struct.go, which is 15 seconds.
-		PropTimeout: 15 * time.Second,
-	}
+	s.SetPropagationTimeout(120 * time.Second)
 
 	msg, err := s.Load([]byte(storageID))
 	if err != nil {
@@ -824,9 +819,6 @@ func (s *Service) tryLoad() error {
 		if !ok {
 			return errors.New("Data of wrong type")
 		}
-	}
-	if s.storage == nil {
-		s.storage = &omniStorage{}
 	}
 	s.collectionDB = map[string]*collectionDB{}
 	s.state = olState{
@@ -903,6 +895,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		contracts:        make(map[string]OmniLedgerContract),
 		txBuffer:         newTxBuffer(),
+		storage:          &omniStorage{},
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
 		s.GetProof); err != nil {
