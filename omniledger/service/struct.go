@@ -27,22 +27,26 @@ type collectionDB struct {
 // A CollectionView is an interface that defines the read-only operations
 // on a collection.
 type CollectionView interface {
-	// Get returns the collection.Getter for the given key. collection.Getter
-	// is valid even for a non-existing key.
+	// Get returns the collection.Getter for the given key.
+	// collection.Getter is valid even for a non-existing key.
 	Get(key []byte) collection.Getter
-	// GetValues returns the value and the contractID of the given key, or an
-	// error if something went wrong. A non-existing key returns an error.
+	// GetValues returns the value and the contractID of the given key, or
+	// an error if something went wrong. A non-existing key returns an
+	// error.
 	GetValues(key []byte) (value []byte, contractID string, err error)
+	// GetSkipchainID gets the skipchain ID that this collection view
+	// represents.
+	GetSkipchainID() skipchain.SkipBlockID
 }
 
 // roCollection is a wrapper for a collection that satisfies interface
-// CollectionView and makes it impossible for callers who receive it
-// to call the methods on the collection which can modify it. This
-// is about type safety, not real security. If the holder of the
-// CollectionView chooses to use package unsafe, then it's all over;
-// they can get write access.
+// CollectionView and makes it impossible for callers who receive it to call
+// the methods on the collection which can modify it. This is about type
+// safety, not real security. If the holder of the CollectionView chooses to
+// use package unsafe, then it's all over; they can get write access.
 type roCollection struct {
-	c *collection.Collection
+	c    *collection.Collection
+	scID skipchain.SkipBlockID
 }
 
 // Get returns the collection.Getter for the key.
@@ -60,11 +64,18 @@ func (r *roCollection) GetValues(key []byte) (value []byte, contractID string, e
 	return getValuesFromRecord(record, key)
 }
 
+func (r *roCollection) GetSkipchainID() skipchain.SkipBlockID {
+	if r.scID == nil {
+		panic("if skipchain ID is nil, then this function should not be called")
+	}
+	return r.scID
+}
+
 // OmniLedgerContract is the type signature of the class functions
 // which can be registered with the OmniLedger service.
 // Since the outcome of the verification depends on the state of the collection
 // which is to be modified, we pass it as a pointer here.
-type OmniLedgerContract func(coll CollectionView, scID skipchain.SkipBlockID, inst Instruction, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
+type OmniLedgerContract func(coll CollectionView, inst Instruction, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
 
 // newCollectionDB initialises a structure and reads all key/value pairs to store
 // it in the collection.
@@ -178,7 +189,8 @@ func (c *collectionDB) Store(t *StateChange) error {
 }
 
 func (c *collectionDB) GetValueContract(key []byte) ([]byte, []byte, error) {
-	return getValueContract(c, key)
+	// getValueContract does not use skipchain ID, so we just set it to nil
+	return getValueContract(&roCollection{c.coll, nil}, key)
 }
 
 // TODO this function can be merged with getValuesFromRecord

@@ -496,9 +496,9 @@ func (s *Service) updateCollection(msg network.Message) {
 
 // GetCollectionView returns a read-only accessor to the collection
 // for the given skipchain.
-func (s *Service) GetCollectionView(id skipchain.SkipBlockID) CollectionView {
-	cdb := s.getCollection(id)
-	return &roCollection{c: cdb.coll}
+func (s *Service) GetCollectionView(scID skipchain.SkipBlockID) CollectionView {
+	cdb := s.getCollection(scID)
+	return &roCollection{cdb.coll, scID}
 }
 
 func (s *Service) getCollection(id skipchain.SkipBlockID) *collectionDB {
@@ -528,7 +528,7 @@ func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
 	if collDb == nil {
 		return nil, errors.New("nil collection DB")
 	}
-	return LoadConfigFromColl(&roCollection{collDb.coll})
+	return LoadConfigFromColl(&roCollection{collDb.coll, scID})
 }
 
 // LoadBlockInterval loads the block interval from the skipchain ID.
@@ -537,15 +537,15 @@ func (s *Service) LoadBlockInterval(scID skipchain.SkipBlockID) (time.Duration, 
 	if collDb == nil {
 		return defaultInterval, errors.New("nil collection DB")
 	}
-	return LoadBlockIntervalFromColl(&roCollection{collDb.coll})
+	return LoadBlockIntervalFromColl(&roCollection{collDb.coll, scID})
 }
 
-func (s *Service) loadLatestDarc(sid skipchain.SkipBlockID, dID darc.ID) (*darc.Darc, error) {
-	colldb := s.getCollection(sid)
+func (s *Service) loadLatestDarc(scID skipchain.SkipBlockID, dID darc.ID) (*darc.Darc, error) {
+	colldb := s.getCollection(scID)
 	if colldb == nil {
-		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", sid.Short())
+		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", scID.Short())
 	}
-	value, contract, err := colldb.GetValueContract(toInstanceID(dID).Slice())
+	value, contract, err := getValueContract(&roCollection{colldb.coll, scID}, toInstanceID(dID).Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -631,7 +631,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 					if err := s.verifyClientTx(scID, txs[0]); err == nil {
 						var cin []Coin
 						for _, instr := range txs[0].Instructions {
-							_, cin, err = s.executeInstruction(cdbI, scID, cin, instr)
+							_, cin, err = s.executeInstruction(cdbI, cin, instr)
 							if err != nil {
 								continue
 							}
@@ -707,7 +707,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			return false
 		}
 	}
-	config, err := LoadConfigFromColl(&roCollection{collClone})
+	config, err := LoadConfigFromColl(&roCollection{collClone, newSB.SkipChainID()})
 	if err != nil {
 		log.Error(err)
 		return false
@@ -741,9 +741,9 @@ clientTransactions:
 		// Make a new collection for each instruction. If the instruction is sucessfully
 		// implemented and changes applied, then keep it (via cdbTemp = cdbI.c),
 		// otherwise dump it.
-		cdbI := &roCollection{c: cdbTemp.Clone()}
+		cdbI := &roCollection{cdbTemp.Clone(), scID}
 		for _, instr := range ct.Instructions {
-			scs, cout, err := s.executeInstruction(cdbI, scID, cin, instr)
+			scs, cout, err := s.executeInstruction(cdbI, cin, instr)
 			if err != nil {
 				log.Errorf("%s: Call to contract returned error: %s", s.ServerIdentity(), err)
 				continue clientTransactions
@@ -763,7 +763,7 @@ clientTransactions:
 	return cdbTemp.GetRoot(), ctsOK, states, nil
 }
 
-func (s *Service) executeInstruction(cdbI CollectionView, scID skipchain.SkipBlockID, cin []Coin, instr Instruction) (scs StateChanges, cout []Coin, err error) {
+func (s *Service) executeInstruction(cdbI CollectionView, cin []Coin, instr Instruction) (scs StateChanges, cout []Coin, err error) {
 	defer func() {
 		if re := recover(); re != nil {
 			err = errors.New(re.(string))
@@ -786,7 +786,7 @@ func (s *Service) executeInstruction(cdbI CollectionView, scID skipchain.SkipBlo
 	// Wrap up f() inside of g(), so that we can recover panics
 	// from f().
 	log.Lvlf3("%s: Calling contract %s", s.ServerIdentity(), contractID)
-	return contract(cdbI, scID, instr, cin)
+	return contract(cdbI, instr, cin)
 }
 
 func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity, error) {

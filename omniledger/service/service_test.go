@@ -379,7 +379,7 @@ func TestService_StateChange(t *testing.T) {
 	defer s.local.CloseAll()
 
 	var latest int64
-	f := func(cdb CollectionView, scID skipchain.SkipBlockID, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	f := func(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		cid, _, err := inst.GetContractState(cdb)
 		if err != nil {
 			return nil, nil, err
@@ -937,15 +937,15 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 	return s
 }
 
-func invalidContractFunc(cdb CollectionView, scID skipchain.SkipBlockID, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func invalidContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	return nil, nil, errors.New("this invalid contract always returns an error")
 }
 
-func panicContractFunc(cdb CollectionView, scID skipchain.SkipBlockID, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func panicContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	panic("this contract panics")
 }
 
-func dummyContractFunc(cdb CollectionView, scID skipchain.SkipBlockID, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func dummyContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	args := inst.Spawn.Args[0].Value
 	cid, _, err := inst.GetContractState(cdb)
 	if err != nil {

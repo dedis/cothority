@@ -8,7 +8,6 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/omniledger/darc"
-	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -115,17 +114,17 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 
 // ContractConfig can only be instantiated once per skipchain, and only for
 // the genesis block.
-func (s *Service) ContractConfig(cdb CollectionView, scID skipchain.SkipBlockID, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+func (s *Service) ContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	if inst.GetType() == SpawnType {
 		return s.spawnContractConfig(cdb, inst, coins)
 	} else if inst.GetType() == InvokeType {
-		return s.invokeContractConfig(cdb, scID, inst, coins)
+		return s.invokeContractConfig(cdb, inst, coins)
 	} else {
 		return nil, coins, errors.New("unsupported instruction type")
 	}
 }
 
-func (s *Service) invokeContractConfig(cdb CollectionView, scID skipchain.SkipBlockID, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
+func (s *Service) invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
 	cOut = coins
 	// There are two situations where we need to change the roster, first
 	// is when it is initiated by the client(s) that holds the genesis
@@ -166,7 +165,7 @@ func (s *Service) invokeContractConfig(cdb CollectionView, scID skipchain.SkipBl
 		if err = validRotation(config.Roster, newRoster); err != nil {
 			return
 		}
-		if err = s.withinInterval(scID, inst.Signatures[0].Signer.Ed25519.Point); err != nil {
+		if err = s.withinInterval(cdb.GetSkipchainID(), inst.Signatures[0].Signer.Ed25519.Point); err != nil {
 			return
 		}
 		sc, err = updateRosterScs(cdb, inst.InstanceID.DarcID, newRoster)
@@ -278,8 +277,7 @@ func (s *Service) spawnContractConfig(cdb CollectionView, inst Instruction, coin
 // ContractDarc accepts the following instructions:
 //   - Spawn - creates a new darc
 //   - Invoke.Evolve - evolves an existing darc
-func (s *Service) ContractDarc(coll CollectionView, scID skipchain.SkipBlockID, inst Instruction,
-	coins []Coin) ([]StateChange, []Coin, error) {
+func (s *Service) ContractDarc(coll CollectionView, inst Instruction, coins []Coin) ([]StateChange, []Coin, error) {
 	switch {
 	case inst.Spawn != nil:
 		if inst.Spawn.ContractID == ContractDarcID {
@@ -301,7 +299,7 @@ func (s *Service) ContractDarc(coll CollectionView, scID skipchain.SkipBlockID, 
 		if !found {
 			return nil, nil, errors.New("couldn't find this contract type")
 		}
-		return c(coll, scID, inst, coins)
+		return c(coll, inst, coins)
 	case inst.Invoke != nil:
 		switch inst.Invoke.Command {
 		case "evolve":
