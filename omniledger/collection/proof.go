@@ -9,15 +9,27 @@ import (
 
 // Constructors
 
-func dumpNode(node *node) (dump dump) {
-	dump.Label = node.label
-	dump.Values = node.values
+func dumpNode(n *node) (d dump) {
+	// To avoid race conditions, we want a deep copy here.
+	var nodeCopy node
+	n.copyTo(&nodeCopy)
 
-	if node.leaf() {
-		dump.Key = node.key
+	d.Label = nodeCopy.label
+	d.Values = nodeCopy.values
+
+	// NOTE: this is the same as node.leaf() without the locks.
+	if nodeCopy.children.left == nil {
+		d.Key = nodeCopy.key
 	} else {
-		dump.Children.Left = node.children.left.label
-		dump.Children.Right = node.children.right.label
+		// Do we still need locking when we copy?
+		nodeCopy.children.left.Lock()
+		nodeCopy.children.right.Lock()
+		// label is an array, not a slice, so we don't need
+		// do explicitly do a deep copy here.
+		d.Children.Left = nodeCopy.children.left.label
+		d.Children.Right = nodeCopy.children.right.label
+		nodeCopy.children.left.Unlock()
+		nodeCopy.children.right.Unlock()
 	}
 
 	return

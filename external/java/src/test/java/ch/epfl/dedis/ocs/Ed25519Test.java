@@ -53,7 +53,7 @@ class Ed25519Test {
         assertTrue(pub.equals(kp.point));
 
         Scalar onep = kp.scalar.addOne();
-        assertEquals(onep.getLittleEndian()[0], kp.scalar.getLittleEndian()[0] + 1);
+        assertEquals(onep.getLittleEndian()[0], ((kp.scalar.getLittleEndian()[0] + 129)%256)-128);
     }
 
     @Test

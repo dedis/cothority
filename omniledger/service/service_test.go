@@ -21,6 +21,7 @@ import (
 
 var tSuite = suites.MustFind("Ed25519")
 var dummyKind = "dummy"
+var slowKind = "slow"
 var invalidKind = "invalid"
 var testInterval = 200 * time.Millisecond
 
@@ -245,7 +246,7 @@ func waitInclusion(t *testing.T, client int) {
 
 // Sends too many transactions to the ledger and waits for all blocks to be done.
 func TestService_FloodLedger(t *testing.T) {
-	s := newSer(t, 2, testInterval)
+	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
 	// Store the latest block
@@ -253,20 +254,19 @@ func TestService_FloodLedger(t *testing.T) {
 	require.Nil(t, err)
 	before := reply.Update[len(reply.Update)-1]
 
-	// Create a transaction without waiting
-	log.Lvl1("Create transaction and don't wait")
-	for i := 0; i < 50; i++ {
-		sendTransaction(t, s, 0, dummyKind, 0)
+	log.Lvl1("Create 10 transactions and don't wait")
+	for i := 0; i < 10; i++ {
+		sendTransaction(t, s, 0, slowKind, 0)
 	}
 	// Send a last transaction and wait for it to be included
 	sendTransaction(t, s, 0, dummyKind, 100)
 
-	// Suppose we need at least 2 blocks
+	// Suppose we need at least 2 blocks (slowKind waits 1/2 interval for each execution)
 	reply, err = skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
 	require.Nil(t, err)
 	latest := reply.Update[len(reply.Update)-1]
-	if latest.Index-before.Index <= 2 {
-		require.Fail(t, "didn't get at least 2 blocks!")
+	if latest.Index-before.Index < 2 {
+		t.Fatalf("didn't get at least 2 blocks: %d %d", latest.Index, before.Index)
 	}
 }
 
@@ -282,6 +282,8 @@ func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) Pr
 	})
 	switch kind {
 	case dummyKind:
+		require.Nil(t, err)
+	case slowKind:
 		require.Nil(t, err)
 	case invalidKind:
 		require.NotNil(t, err)
@@ -906,7 +908,7 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 	}
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
-		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config"}, s.signer.Identity())
+		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config", "spawn:slow"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
@@ -956,11 +958,28 @@ func dummyContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateC
 	}, nil, nil
 }
 
+func slowContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	// This has to sleep for less than testInterval / 2 or else it will
+	// block the system from processing txs. See #1359.
+
+	time.Sleep(testInterval / 5)
+
+	args := inst.Spawn.Args[0].Value
+	cid, _, err := inst.GetContractState(cdb)
+	if err != nil {
+		return nil, nil, err
+	}
+	return []StateChange{
+		NewStateChange(Create, inst.InstanceID, cid, args),
+	}, nil, nil
+}
+
 func registerDummy(servers []*onet.Server) {
 	// For testing - there must be a better way to do that. But putting
 	// services []skipchain.GetService in the method signature doesn't work :(
 	for _, s := range servers {
 		RegisterContract(s, dummyKind, dummyContractFunc)
+		RegisterContract(s, slowKind, slowContractFunc)
 		RegisterContract(s, invalidKind, invalidContractFunc)
 	}
 }
