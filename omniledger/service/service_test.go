@@ -468,7 +468,7 @@ func TestService_StateChange(t *testing.T) {
 		},
 	}
 
-	_, ctsOK, scs, err := s.service().createStateChanges(cdb.coll, cts)
+	_, ctsOK, scs, err := s.service().createStateChanges(cdb.coll, s.sb.SkipChainID(), cts)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(ctsOK))
 	require.Equal(t, n, len(scs))
@@ -627,7 +627,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	require.True(t, pr.InclusionProof.Match())
 }
 
-func TestService_SetLeader(t *testing.T) {
+func TestService_GetLeader(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
@@ -657,7 +657,6 @@ func TestService_SetConfig(t *testing.T) {
 			return
 		}
 	}
-
 	require.Fail(t, "did not find new config in time")
 }
 
@@ -680,12 +679,71 @@ func TestService_SetBadConfig(t *testing.T) {
 	}
 }
 
+// TestService_RotateLeader is an end-to-end test for view-change. We kill the
+// current leader, at index 0. Then the node at index 1 becomes the new leader.
+// Then, we try to send a transaction to a follower, at index 2. The new leader
+// should poll for new transactions and eventually make a new block containing
+// that transaction. The new transaction should be stored on all followers.
+func TestService_RotateLeader(t *testing.T) {
+	interval := 2 * time.Second
+	s := newSerN(t, 1, interval, 4, true)
+	defer s.local.CloseAll()
+
+	for _, service := range s.services {
+		service.SetPropagationTimeout(interval / 2)
+	}
+
+	// Stop the leader, then the next node should take over.
+	s.service().TestClose()
+	s.hosts[0].Pause()
+
+	// wait for the new block
+	var ok bool
+	for i := 0; i < 5; i++ {
+		time.Sleep(2 * s.interval)
+		config, err := s.services[1].LoadConfig(s.sb.SkipChainID())
+		require.NoError(t, err)
+
+		if config.Roster.List[0].Equal(s.services[1].ServerIdentity()) {
+			ok = true
+			break
+		}
+	}
+	require.True(t, ok, "leader rotation failed")
+
+	// check that the leader is updated for all nodes
+	for _, service := range s.services[1:] {
+		// everyone should have the same leader after the genesis block is stored
+		leader, err := service.getLeader(s.sb.SkipChainID())
+		require.NoError(t, err)
+		require.NotNil(t, leader)
+		require.True(t, leader.Equal(s.services[1].ServerIdentity()))
+	}
+
+	// try to send a transaction to the node on index 2, which is a
+	// follower (not the new leader)
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, s.value, s.signer)
+	require.NoError(t, err)
+	s.sendTxTo(t, tx1, 2)
+
+	// wait for the transaction to be stored on the new leader, because it
+	// polls for new transactions
+	pr := s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID, 1)
+	require.True(t, pr.InclusionProof.Match())
+
+	// the transaction should also be stored on followers, at index 2 and 3
+	pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID, 2)
+	require.True(t, pr.InclusionProof.Match())
+	pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID, 3)
+	require.True(t, pr.InclusionProof.Match())
+}
+
 func createConfigTx(t *testing.T, s *ser, isgood bool) (ClientTransaction, ChainConfig) {
 	var config ChainConfig
 	if isgood {
 		config = ChainConfig{420 * time.Millisecond, *s.roster}
 	} else {
-		config = ChainConfig{400 * time.Millisecond, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2)}
+		config = ChainConfig{-1, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2)}
 	}
 	configBuf, err := protobuf.Encode(&config)
 	require.NoError(t, err)
@@ -758,10 +816,14 @@ func (s *ser) service() *Service {
 }
 
 func (s *ser) waitProof(t *testing.T, id InstanceID) Proof {
+	return s.waitProofWithIdx(t, id, 0)
+}
+
+func (s *ser) waitProofWithIdx(t *testing.T, id InstanceID, idx int) Proof {
 	var pr Proof
 	for i := 0; i < 10; i++ {
 		// try to get the darc back, we should get the genesis back instead
-		resp, err := s.service().GetProof(&GetProof{
+		resp, err := s.services[idx].GetProof(&GetProof{
 			Version: CurrentVersion,
 			Key:     id.Slice(),
 			ID:      s.sb.SkipChainID(),
@@ -820,18 +882,28 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 }
 
 func newSer(t *testing.T, step int, interval time.Duration) *ser {
+	return newSerN(t, step, interval, 3, false)
+}
+
+func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange bool) *ser {
 	s := &ser{
 		local:  onet.NewLocalTestT(tSuite, t),
 		value:  []byte("anyvalue"),
 		signer: darc.NewSignerEd25519(nil, nil),
 	}
-	s.hosts, s.roster, _ = s.local.GenTree(3, true)
+	s.hosts, s.roster, _ = s.local.GenTree(n, true)
 
 	for _, sv := range s.local.GetServices(s.hosts, OmniledgerID) {
 		service := sv.(*Service)
 		s.services = append(s.services, service)
 	}
 	registerDummy(s.hosts)
+
+	if viewchange {
+		for _, service := range s.services {
+			service.EnableViewChange()
+		}
+	}
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
 		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config"}, s.signer.Identity())

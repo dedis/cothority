@@ -550,7 +550,25 @@ func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
 	if bytes.Compare(fl.Signature.Msg, fl.Hash()) != 0 {
 		return errors.New("wrong hash of forward link")
 	}
-	// this calculation must match the one in omnicon/byzcoinx
+	// If we allow view-change, then we should try to verify the signature
+	// using all the valid rotations of the given public key slice.
+	if enableViewChange {
+		n := len(pubs)
+		if n == 0 {
+			return errors.New("no public keys")
+		}
+		for i := 0; i < n; i++ {
+			err := cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig,
+				cosi.NewThresholdPolicy(byzcoinx.Threshold(n)))
+			if err == nil {
+				return nil
+			}
+			pubs = append(pubs[1:], pubs[0])
+			continue
+		}
+		return errors.New("no successful view-change verification")
+	}
+	// This calculation must match the one in byzcoinx.
 	return cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig,
 		cosi.NewThresholdPolicy(byzcoinx.Threshold(len(pubs))))
 }

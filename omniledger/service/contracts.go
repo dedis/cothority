@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dedis/cothority"
@@ -115,39 +116,112 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 // the genesis block.
 func (s *Service) ContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	if inst.GetType() == SpawnType {
-		return spawnContractConfig(cdb, inst, coins)
+		return s.spawnContractConfig(cdb, inst, coins)
 	} else if inst.GetType() == InvokeType {
-		return invokeContractConfig(cdb, inst, coins)
+		return s.invokeContractConfig(cdb, inst, coins)
 	} else {
 		return nil, coins, errors.New("unsupported instruction type")
 	}
 }
 
-func invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
-	c = coins
-	if inst.Invoke.Command != "update_config" {
+func (s *Service) invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
+	cOut = coins
+	// There are two situations where we need to change the roster, first
+	// is when it is initiated by the client(s) that holds the genesis
+	// signing key, in this case we trust the client to do the right
+	// thing. The second is during a view-change, so we need to do
+	// additional validation to make sure a malicious node doesn't freely
+	// change the roster.
+	if inst.Invoke.Command == "update_config" {
+		configBuf := inst.Invoke.Args.Search("config")
+		newConfig := ChainConfig{}
+		err = protobuf.DecodeWithConstructors(configBuf, &newConfig, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return
+		}
+		if newConfig.BlockInterval <= 0 {
+			err = errors.New("block interval is less than or equal to zero")
+			return
+		}
+		sc = []StateChange{
+			NewStateChange(Update, InstanceID{
+				DarcID: inst.InstanceID.DarcID,
+				SubID:  oneSubID,
+			}, ContractConfigID, configBuf),
+		}
+		return
+	} else if inst.Invoke.Command == "view_change" {
+		config := &ChainConfig{}
+		config, err = LoadConfigFromColl(cdb)
+		if err != nil {
+			return
+		}
+		newRosterBuf := inst.Invoke.Args.Search("roster")
+		newRoster := onet.Roster{}
+		err = protobuf.DecodeWithConstructors(newRosterBuf, &newRoster, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return
+		}
+		if err = validRotation(config.Roster, newRoster); err != nil {
+			return
+		}
+		if err = s.withinInterval(cdb.GetSkipchainID(), inst.Signatures[0].Signer.Ed25519.Point); err != nil {
+			return
+		}
+		sc, err = updateRosterScs(cdb, inst.InstanceID.DarcID, newRoster)
 		return
 	}
-	configBuf := inst.Invoke.Args.Search("config")
-	newConfig := ChainConfig{}
-	err = protobuf.DecodeWithConstructors(configBuf, &newConfig, network.DefaultConstructors(cothority.Suite))
-	if err != nil {
-		return
-	}
-
-	if newConfig.BlockInterval <= 0 {
-		err = errors.New("block interval is less or equal to zero")
-	}
-
-	return []StateChange{
-		NewStateChange(Update, InstanceID{
-			DarcID: inst.InstanceID.DarcID,
-			SubID:  oneSubID,
-		}, ContractConfigID, configBuf),
-	}, c, nil
+	err = errors.New("invalid invoke command: " + inst.Invoke.Command)
+	return
 }
 
-func spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+func updateRosterScs(cdb CollectionView, darcID darc.ID, newRoster onet.Roster) (StateChanges, error) {
+	config, err := LoadConfigFromColl(cdb)
+	if err != nil {
+		return nil, err
+	}
+	config.Roster = newRoster
+	configBuf, err := protobuf.Encode(config)
+	if err != nil {
+		return nil, err
+	}
+	return []StateChange{
+		NewStateChange(Update, InstanceID{
+			DarcID: darcID,
+			SubID:  oneSubID,
+		}, ContractConfigID, configBuf),
+	}, nil
+}
+
+func validRotation(oldRoster, newRoster onet.Roster) error {
+	n := len(oldRoster.List)
+	if n != len(newRoster.List) {
+		return fmt.Errorf("rosters lengths are not equal, need %d but got %d", n, len(newRoster.List))
+	}
+
+	var offset int
+	for _, sid := range newRoster.List {
+		if sid.Equal(oldRoster.List[0]) {
+			break
+		}
+		offset++
+	}
+	for i := 0; i < n; i++ {
+		if !oldRoster.List[i].Equal(newRoster.List[(i+offset)%n]) {
+			return errors.New("invalid rotation")
+		}
+	}
+	newRoster2 := onet.NewRoster(newRoster.List)
+	if !newRoster2.ID.Equal(newRoster.ID) {
+		return errors.New("re-created roster does not have the same ID")
+	}
+	if !newRoster2.Aggregate.Equal(newRoster.Aggregate) {
+		return errors.New("re-created roster does not have the same aggregate public key")
+	}
+	return nil
+}
+
+func (s *Service) spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	c = coins
 	darcBuf := inst.Spawn.Args.Search("darc")
 	d, err := darc.NewFromProtobuf(darcBuf)
@@ -203,8 +277,7 @@ func spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc
 // ContractDarc accepts the following instructions:
 //   - Spawn - creates a new darc
 //   - Invoke.Evolve - evolves an existing darc
-func (s *Service) ContractDarc(coll CollectionView, inst Instruction,
-	coins []Coin) ([]StateChange, []Coin, error) {
+func (s *Service) ContractDarc(coll CollectionView, inst Instruction, coins []Coin) ([]StateChange, []Coin, error) {
 	switch {
 	case inst.Spawn != nil:
 		if inst.Spawn.ContractID == ContractDarcID {
