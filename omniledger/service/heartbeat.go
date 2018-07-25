@@ -6,6 +6,11 @@ import (
 	"time"
 )
 
+// heartbeat is used for monitoring signals (or heartbeats) that are suppose to
+// come in periodically. The signals are received in beatChan. If a heartbeat
+// is missed (when no heartbeats are heard within timeout duration), then
+// another signal will be sent to timeoutChan so that the outside listener can
+// react to it.
 type heartbeat struct {
 	beatChan    chan bool
 	closeChan   chan bool

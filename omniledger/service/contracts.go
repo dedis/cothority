@@ -117,7 +117,7 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 // the genesis block.
 func (s *Service) ContractConfig(cdb CollectionView, scID skipchain.SkipBlockID, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	if inst.GetType() == SpawnType {
-		return spawnContractConfig(cdb, inst, coins)
+		return s.spawnContractConfig(cdb, inst, coins)
 	} else if inst.GetType() == InvokeType {
 		return s.invokeContractConfig(cdb, scID, inst, coins)
 	} else {
@@ -125,11 +125,11 @@ func (s *Service) ContractConfig(cdb CollectionView, scID skipchain.SkipBlockID,
 	}
 }
 
-func (s *Service) invokeContractConfig(cdb CollectionView, scID skipchain.SkipBlockID, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
-	c = coins
+func (s *Service) invokeContractConfig(cdb CollectionView, scID skipchain.SkipBlockID, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
+	cOut = coins
 	// There are two situations where we need to change the roster, first
 	// is when it is initiated by the client(s) that holds the genesis
-	// signing key, in thise case we trust the client to do the right
+	// signing key, in this case we trust the client to do the right
 	// thing. The second is during a view-change, so we need to do
 	// additional validation to make sure a malicious node doesn't freely
 	// change the roster.
@@ -140,18 +140,17 @@ func (s *Service) invokeContractConfig(cdb CollectionView, scID skipchain.SkipBl
 		if err != nil {
 			return
 		}
-
 		if newConfig.BlockInterval <= 0 {
-			err = errors.New("block interval is less or equal to zero")
+			err = errors.New("block interval is less than or equal to zero")
 			return
 		}
-
-		return []StateChange{
+		sc = []StateChange{
 			NewStateChange(Update, InstanceID{
 				DarcID: inst.InstanceID.DarcID,
 				SubID:  oneSubID,
 			}, ContractConfigID, configBuf),
-		}, c, nil
+		}
+		return
 	} else if inst.Invoke.Command == "view_change" {
 		config := &ChainConfig{}
 		config, err = LoadConfigFromColl(cdb)
@@ -223,7 +222,7 @@ func validRotation(oldRoster, newRoster onet.Roster) error {
 	return nil
 }
 
-func spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+func (s *Service) spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	c = coins
 	darcBuf := inst.Spawn.Args.Search("darc")
 	d, err := darc.NewFromProtobuf(darcBuf)

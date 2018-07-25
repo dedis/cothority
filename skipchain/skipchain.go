@@ -40,8 +40,15 @@ const bftFollowBlock = "SkipchainBFTFollow"
 
 var storageKey = []byte("skipchainconfig")
 
-// enableViewChange should ideally be the service configuration, but other
-// structs depend on it too, e.g., SkipBlock, so we keep it in a global.
+// If this flag is set, then we relax our forward-link signature verification
+// to accept the aggregate signature by the public keys of the rotated roster.
+// View-change should only be enabled if there are no security implications
+// when the forward-links are signed by the rotated roster instead of the
+// roster in the skipblock that points to it. The security implication depends
+// on the services that use skipchain, so it is disabled by default. The option
+// can be changed from outside of the package by calling EnableViewChange. This
+// flag should ideally be the service configuration, but other structs depend
+// on it too, e.g., SkipBlock, so we keep it in a global.
 var enableViewChange bool
 
 var sid onet.ServiceID
@@ -849,6 +856,7 @@ func (s *Service) verifySigs(msg, sig []byte) bool {
 	return false
 }
 
+// TODO move to onet.Roster - https://github.com/dedis/cothority/issues/1362
 func isRotation(roster1, roster2 *onet.Roster) bool {
 	n := len(roster1.List)
 	if n < 2 {

@@ -716,10 +716,6 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		log.Error("rosters have unequal IDs")
 		return false
 	}
-	if len(config.Roster.List) != len(newSB.Roster.List) {
-		log.Error("roster lengths are unequal")
-		return false
-	}
 	for i := range config.Roster.List {
 		if !newSB.Roster.List[i].Equal(config.Roster.List[i]) {
 			log.Error("roster in config is not equal to the one in skipblock")
@@ -820,8 +816,12 @@ func (s *Service) getTxs(leader *network.ServerIdentity, scID skipchain.SkipBloc
 	return s.txBuffer.take(string(scID))
 }
 
-// TestClose closes the go-routines that are polling for transactions.
+// TestClose closes the go-routines that are polling for transactions. It is
+// exported because we need it in tests, it should not be used in non-test code
+// outside of this package.
 func (s *Service) TestClose() {
+	// No need to use locks because the only non-test code tryLoad that
+	// uses this function holds the pollChanMut lock.
 	for k, c := range s.pollChan {
 		close(c)
 		delete(s.pollChan, k)
@@ -833,9 +833,14 @@ func (s *Service) TestClose() {
 	s.pollChanWG.Wait()
 }
 
-func (s *Service) heartbeatTimeoutMonitor() {
+func (s *Service) monitorLeaderFailure() {
 	go func() {
-		// empty the messages in heartbeatsClose
+		// Here we empty the messages in heartbeatsClose. This is
+		// needed because tests may try to close the heartbeat monitor
+		// multiple times. Further, if there's already something in the
+		// close channel, and then we try to start the heartbeat
+		// monitor, it will close immediately which would cause
+		// confussion.
 	emptyMessagesLabel:
 		for {
 			select {
@@ -1065,7 +1070,7 @@ func (s *Service) isOurChain(gen skipchain.SkipBlockID) bool {
 func (s *Service) EnableViewChange() {
 	s.skService().EnableViewChange()
 	s.heartbeats = newHeartbeats()
-	s.heartbeatTimeoutMonitor()
+	s.monitorLeaderFailure()
 }
 
 // saves this service's config information

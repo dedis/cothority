@@ -258,9 +258,9 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 		d.Rules.AddRule(darc.Action(r), d.Rules.GetSignExpr())
 	}
 
-	// Add an additional rules that allows nodes in the roster to update
-	// the genesis configuration, this is so that we can change the leader
-	// if one fails.
+	// Add an additional rule that allows nodes in the roster to update the
+	// genesis configuration, so that we can change the leader if one
+	// fails.
 	rosterPubs := make([]string, len(r.List))
 	for i, sid := range r.List {
 		rosterPubs[i] = darc.NewIdentityEd25519(sid.Public).String()

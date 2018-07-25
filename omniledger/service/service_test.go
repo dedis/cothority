@@ -679,17 +679,15 @@ func TestService_SetBadConfig(t *testing.T) {
 	}
 }
 
+// TestService_RotateLeader is an end-to-end test for view-change. We kill the
+// current leader, at index 0. Then the node at index 1 becomes the new leader.
+// Then, we try to send a transaction to a follower, at index 2. The new leader
+// should poll for new transactions and eventually make a new block containing
+// that transaction. The new transaction should be stored on all followers.
 func TestService_RotateLeader(t *testing.T) {
 	interval := 2 * time.Second
 	s := newSerN(t, 1, interval, 4, true)
 	defer s.local.CloseAll()
-	// We close only the servers that are alive, service 0 is closed to
-	// simulate failure.
-	defer func() {
-		for _, service := range s.services[1:] {
-			service.TestClose()
-		}
-	}()
 
 	for _, service := range s.services {
 		service.SetPropagationTimeout(interval / 2)
@@ -713,7 +711,7 @@ func TestService_RotateLeader(t *testing.T) {
 	}
 	require.True(t, ok, "leader rotation failed")
 
-	// check the leader for all nodes
+	// check that the leader is updated for all nodes
 	for _, service := range s.services[1:] {
 		// everyone should have the same leader after the genesis block is stored
 		leader, err := service.getLeader(s.sb.SkipChainID())
@@ -722,11 +720,21 @@ func TestService_RotateLeader(t *testing.T) {
 		require.True(t, leader.Equal(s.services[1].ServerIdentity()))
 	}
 
-	// try to send a transaction to the node on index 2 (not the current leader)
+	// try to send a transaction to the node on index 2, which is a
+	// follower (not the new leader)
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, s.value, s.signer)
 	require.NoError(t, err)
 	s.sendTxTo(t, tx1, 2)
-	pr := s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID, 2)
+
+	// wait for the transaction to be stored on the new leader, because it
+	// polls for new transactions
+	pr := s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID, 1)
+	require.True(t, pr.InclusionProof.Match())
+
+	// the transaction should also be stored on followers, at index 2 and 3
+	pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID, 2)
+	require.True(t, pr.InclusionProof.Match())
+	pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID, 3)
 	require.True(t, pr.InclusionProof.Match())
 }
 
@@ -735,7 +743,7 @@ func createConfigTx(t *testing.T, s *ser, isgood bool) (ClientTransaction, Chain
 	if isgood {
 		config = ChainConfig{420 * time.Millisecond, *s.roster}
 	} else {
-		config = ChainConfig{400 * time.Millisecond, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2)}
+		config = ChainConfig{-1, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2)}
 	}
 	configBuf, err := protobuf.Encode(&config)
 	require.NoError(t, err)

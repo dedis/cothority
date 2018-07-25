@@ -57,8 +57,10 @@ enough time has past since the current leader stopped responding.
 
 The current implementation has some limitations. The system makes progress when
 only one leader node fails, we have not tested the scenario where multiple
-nodes fail. We have no implemented the "catch-up" functionality for when a node
-comes back up. For these reasons, view-change is disable by default.
+nodes fail. We have not implemented the "catch-up" functionality for when a
+node comes back up. For these reasons, view-change is disabled by default. To
+enable view-change, refer to the `EnableViewChange` function in the OmniLedger
+service package.
 
 
 # Structure Definitions
