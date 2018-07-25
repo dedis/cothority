@@ -5,6 +5,7 @@ import (
 
 	"github.com/dedis/cothority/omniledger/collection"
 	omniledger "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/skipchain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -194,4 +195,7 @@ func (ct cvTest) GetValue(key []byte) ([]byte, error) {
 }
 func (ct cvTest) GetContractID(key []byte) (string, error) {
 	return ct.contractIDs[string(key)], nil
+}
+func (ct cvTest) GetSkipchainID() skipchain.SkipBlockID {
+	return nil
 }
