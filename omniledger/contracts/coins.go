@@ -184,8 +184,11 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 	return
 }
 
-// iid uses sha256(in)x2 to get 64 bytes from in, and makes an InstanceID from it.
-// TODO: Find a more appropriate way to make well-known instance ID's.
+// iid uses darc=sha256(in) and subid=sha256(in) in order to manufacture an
+// InstanceID from in.
+//
+// TODO: Find a more appropriate way to make well-known instance ID's, depends
+// on getting rid of subids.
 func iid(in string) omniledger.InstanceID {
 	h := sha256.New()
 	h.Write([]byte(in))

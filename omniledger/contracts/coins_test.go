@@ -111,7 +111,7 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 		},
 	}
 
-	// Try once with no enough coins avail.
+	// Try once with not enough coins available.
 	sc, co, err = ContractCoin(ct, inst, nil)
 	require.Error(t, err)
 
