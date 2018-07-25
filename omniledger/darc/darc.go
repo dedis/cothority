@@ -614,9 +614,9 @@ func (s Signer) Type() int {
 func (s Signer) Identity() Identity {
 	switch s.Type() {
 	case 1:
-		return Identity{Ed25519: &IdentityEd25519{Point: s.Ed25519.Point}}
+		return NewIdentityEd25519(s.Ed25519.Point)
 	case 2:
-		return Identity{X509EC: &IdentityX509EC{Public: s.X509EC.Point}}
+		return NewIdentityX509EC(s.X509EC.Point)
 	default:
 		return Identity{}
 	}

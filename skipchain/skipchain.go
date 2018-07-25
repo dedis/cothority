@@ -40,6 +40,17 @@ const bftFollowBlock = "SkipchainBFTFollow"
 
 var storageKey = []byte("skipchainconfig")
 
+// If this flag is set, then we relax our forward-link signature verification
+// to accept the aggregate signature by the public keys of the rotated roster.
+// View-change should only be enabled if there are no security implications
+// when the forward-links are signed by the rotated roster instead of the
+// roster in the skipblock that points to it. The security implication depends
+// on the services that use skipchain, so it is disabled by default. The option
+// can be changed from outside of the package by calling EnableViewChange. This
+// flag should ideally be the service configuration, but other structs depend
+// on it too, e.g., SkipBlock, so we keep it in a global.
+var enableViewChange bool
+
 var sid onet.ServiceID
 
 func init() {
@@ -826,6 +837,11 @@ func (s *Service) SetPropTimeout(t time.Duration) {
 	s.propTimeout = t
 }
 
+// EnableViewChange enables view-change, it cannot be turned off afterwards.
+func (s *Service) EnableViewChange() {
+	enableViewChange = true
+}
+
 func (s *Service) verifySigs(msg, sig []byte) bool {
 	// If there are no clients, all signatures verify.
 	if len(s.Storage.Clients) == 0 {
@@ -838,6 +854,37 @@ func (s *Service) verifySigs(msg, sig []byte) bool {
 		}
 	}
 	return false
+}
+
+// TODO move to onet.Roster - https://github.com/dedis/cothority/issues/1362
+func isRotation(roster1, roster2 *onet.Roster) bool {
+	n := len(roster1.List)
+	if n < 2 {
+		return false
+	}
+	if n != len(roster2.List) {
+		return false
+	}
+
+	// find the first element of roster1 in roster2
+	var offset int
+	for _, sid := range roster2.List {
+		if sid.Equal(roster1.List[0]) {
+			break
+		}
+		offset++
+	}
+	if offset == 0 || offset >= n {
+		return false
+	}
+
+	// check that the identities are the same, starting at the offset
+	for i, sid := range roster1.List {
+		if !sid.Equal(roster2.List[(i+offset)%n]) {
+			return false
+		}
+	}
+	return true
 }
 
 // forwardLinkLevel0 is used to add a new block to the skipchain.
@@ -855,6 +902,16 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 
 	// create the message we want to sign for this round
 	roster := src.Roster
+
+	if enableViewChange {
+		// If the server identities in the two rosters are the same,
+		// then it might be a view-change, so we use the second roster
+		// with the new leader.
+		if isRotation(src.Roster, dst.Roster) {
+			roster = dst.Roster
+		}
+	}
+
 	log.Lvlf2("%s is adding forward-link level 0 to: %d->%d with roster %s", s.ServerIdentity(),
 		src.Index, dst.Index, roster.List)
 	fs := &ForwardSignature{
@@ -880,10 +937,12 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	if len(fwl) > 0 {
 		return errors.New("forward-link got signed during our signing")
 	}
+
 	src.ForwardLink = []*ForwardLink{fwd}
 	if err = src.VerifyForwardSignatures(); err != nil {
 		return errors.New("Wrong BFT-signature: " + err.Error())
 	}
+
 	if _, err := s.db.StoreBlocks([]*SkipBlock{src, dst}); err != nil {
 		return errors.New("couldn't store new forward link or new block: " + err.Error())
 	}
@@ -1150,7 +1209,6 @@ func (s *Service) bftForwardLinkAck(msg, data []byte) bool {
 // startBFT starts a BFT-protocol with the given parameters. We can only
 // start the bft protocol if we're the root.
 func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) (*byzcoinx.FinalSignature, error) {
-
 	if len(roster.List) == 0 {
 		return nil, errors.New("found empty Roster")
 	}

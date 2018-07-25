@@ -84,7 +84,7 @@ func (p *CollectTxProtocol) Start() error {
 	// do not return an error if we fail to send to some children
 	if errs := p.SendToChildrenInParallel(req); len(errs) > 0 {
 		for _, err := range errs {
-			log.Error(err)
+			log.Error(p.ServerIdentity(), err)
 		}
 	}
 	return nil
