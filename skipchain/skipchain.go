@@ -856,37 +856,6 @@ func (s *Service) verifySigs(msg, sig []byte) bool {
 	return false
 }
 
-// TODO move to onet.Roster - https://github.com/dedis/cothority/issues/1362
-func isRotation(roster1, roster2 *onet.Roster) bool {
-	n := len(roster1.List)
-	if n < 2 {
-		return false
-	}
-	if n != len(roster2.List) {
-		return false
-	}
-
-	// find the first element of roster1 in roster2
-	var offset int
-	for _, sid := range roster2.List {
-		if sid.Equal(roster1.List[0]) {
-			break
-		}
-		offset++
-	}
-	if offset == 0 || offset >= n {
-		return false
-	}
-
-	// check that the identities are the same, starting at the offset
-	for i, sid := range roster1.List {
-		if !sid.Equal(roster2.List[(i+offset)%n]) {
-			return false
-		}
-	}
-	return true
-}
-
 // forwardLinkLevel0 is used to add a new block to the skipchain.
 // It verifies if the new block is valid. If it is not valid, it
 // returns with an error.
@@ -907,7 +876,7 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 		// If the server identities in the two rosters are the same,
 		// then it might be a view-change, so we use the second roster
 		// with the new leader.
-		if isRotation(src.Roster, dst.Roster) {
+		if src.Roster.IsRotation(dst.Roster) {
 			roster = dst.Roster
 		}
 	}
