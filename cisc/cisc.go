@@ -1007,277 +1007,284 @@ func followUpdate(c *cli.Context) error {
 // the keys and the fullchain will be stored the and the www path to complete
 // the challenge
 func certRequest(c *cli.Context) error {
-	cfg := loadConfigOrFail(c)
-	if c.NArg() < 3 {
-		return errors.New("Please give a domain name, the path to the certificate repository and the path to the www folder")
-	}
+	return errors.New("no longer implemented")
+	// cfg := loadConfigOrFail(c)
+	// if c.NArg() < 3 {
+	// 	return errors.New("Please give a domain name, the path to the certificate repository and the path to the www folder")
+	// }
 
-	domain := c.Args().Get(0)
-	certDir := c.Args().Get(1)
-	wwwDir := c.Args().Get(2)
-	certPath := path.Join(certDir, domain)
+	// domain := c.Args().Get(0)
+	// certDir := c.Args().Get(1)
+	// wwwDir := c.Args().Get(2)
+	// certPath := path.Join(certDir, domain)
 
-	// Request Certificate (see certificate.go)
-	cert, err := getCert(wwwDir, certDir, domain)
-	if err != nil {
-		// Delete generated files if an error happens
-		os.Remove(path.Join(certPath, "registerkey.pem"))
-		os.Remove(path.Join(certPath, "privkey.pem"))
-		return errors.New("Error in requesting certificate: " + err.Error())
-	}
+	// // Request Certificate (see certificate.go)
+	// cert, err := getCert(wwwDir, certDir, domain)
+	// if err != nil {
+	// 	// Delete generated files if an error happens
+	// 	os.Remove(path.Join(certPath, "registerkey.pem"))
+	// 	os.Remove(path.Join(certPath, "privkey.pem"))
+	// 	return errors.New("Error in requesting certificate: " + err.Error())
+	// }
 
-	// Check the validity of the certificate(see certificate.go)
-	log.Info("Verify the validity of the cert:")
-	if !isValid(cert) {
-		return errors.New("Certificate is not valid, can't add it to proposal storage")
-	}
+	// // Check the validity of the certificate(see certificate.go)
+	// log.Info("Verify the validity of the cert:")
+	// if !isValid(cert) {
+	// 	return errors.New("Certificate is not valid, can't add it to proposal storage")
+	// }
 
-	id, err := cfg.findSCOrList(c, c.Args().Get(3))
-	if err != nil {
-		return err
-	}
+	// id, err := cfg.findSCOrList(c, c.Args().Get(3))
+	// if err != nil {
+	// 	return err
+	// }
 
-	prop := id.GetProposed()
-	log.Info("Valid Certificate, added to proposal storage")
-	prop.Storage[domain] = string(cert)
-	cfg.CertPath[domain] = certPath
+	// prop := id.GetProposed()
+	// log.Info("Valid Certificate, added to proposal storage")
+	// prop.Storage[domain] = string(cert)
+	// cfg.CertPath[domain] = certPath
 
-	// Send the certificate to proposal
-	cfg.proposeSendVoteUpdate(id, prop)
-	return cfg.saveConfig(c)
+	// // Send the certificate to proposal
+	// cfg.proposeSendVoteUpdate(id, prop)
+	// return cfg.saveConfig(c)
 }
 
 // List all the certificates stored in the skipchain, by giving -v it displays
 // the fullchain.pem by giving -p only the domain certificate and by giving -c
 // it only displays the chain certificate
 func certList(c *cli.Context) error {
-	cfg := loadConfigOrFail(c)
+	return errors.New("no longer implemented")
+	// cfg := loadConfigOrFail(c)
 
-	id, err := cfg.findSCOrList(c, c.Args().First())
-	if err != nil {
-		return err
-	}
+	// id, err := cfg.findSCOrList(c, c.Args().First())
+	// if err != nil {
+	// 	return err
+	// }
 
-	log.Infof("config for id %x", id.ID)
+	// log.Infof("config for id %x", id.ID)
 
-	for k, v := range id.Data.Storage {
-		if isCert([]byte(v)) {
-			certLE, err := pemToCertificate([]byte(v))
-			if err != nil {
-				return errors.New("Error in conversion to x509 certificate: " + err.Error())
-			}
-			certPath := cfg.CertPath[k]
-			if certPath == "" {
-				certPath = "Not defined"
-			}
-			public, chain := splitCertPublicChain(v)
-			log.Infof("%s - Expiry Date: %s - Certificate directory: %s", k, certLE.NotAfter, certPath)
-			if c.Bool("v") || c.Bool("p") && c.Bool("c") {
-				log.Infof("%s", v)
-			} else if c.Bool("p") {
-				log.Info("Certificate of the domain")
-				log.Infof("%s", public)
-			} else if c.Bool("c") {
-				log.Info("Chain certificate")
-				log.Infof("%s", chain)
-			}
-		}
-	}
+	// for k, v := range id.Data.Storage {
+	// 	if isCert([]byte(v)) {
+	// 		certLE, err := pemToCertificate([]byte(v))
+	// 		if err != nil {
+	// 			return errors.New("Error in conversion to x509 certificate: " + err.Error())
+	// 		}
+	// 		certPath := cfg.CertPath[k]
+	// 		if certPath == "" {
+	// 			certPath = "Not defined"
+	// 		}
+	// 		public, chain := splitCertPublicChain(v)
+	// 		log.Infof("%s - Expiry Date: %s - Certificate directory: %s", k, certLE.NotAfter, certPath)
+	// 		if c.Bool("v") || c.Bool("p") && c.Bool("c") {
+	// 			log.Infof("%s", v)
+	// 		} else if c.Bool("p") {
+	// 			log.Info("Certificate of the domain")
+	// 			log.Infof("%s", public)
+	// 		} else if c.Bool("c") {
+	// 			log.Info("Chain certificate")
+	// 			log.Infof("%s", chain)
+	// 		}
+	// 	}
+	// }
 
-	return cfg.saveConfig(c)
+	// return cfg.saveConfig(c)
 }
 
 // Store a non-requested certificate by giving as argument the key this one will
 // correspond to the key stored in the skipchain and the .pem file corresponding
 // to the certificate file
 func certStore(c *cli.Context) error {
-	cfg := loadConfigOrFail(c)
-	if c.NArg() < 2 {
-		return errors.New("Please give a key certificate pair")
-	}
-	domain := c.Args().Get(0)
-	path := c.Args().Get(1)
+	return errors.New("no longer implemented")
+	// cfg := loadConfigOrFail(c)
+	// if c.NArg() < 2 {
+	// 	return errors.New("Please give a key certificate pair")
+	// }
+	// domain := c.Args().Get(0)
+	// path := c.Args().Get(1)
 
-	// Check the validity of the certificate
-	cert, err := ioutil.ReadFile(path)
+	// // Check the validity of the certificate
+	// cert, err := ioutil.ReadFile(path)
 
-	if err != nil {
-		return err
-	}
+	// if err != nil {
+	// 	return err
+	// }
 
-	if !isCert(cert) {
-		return errors.New("Please give a certificate")
-	}
-	log.Info("Verify the validity of the cert:")
-	if !isValid(cert) {
-		return errors.New("Certificate is not valid, can't add it to proposal storage ")
-	}
+	// if !isCert(cert) {
+	// 	return errors.New("Please give a certificate")
+	// }
+	// log.Info("Verify the validity of the cert:")
+	// if !isValid(cert) {
+	// 	return errors.New("Certificate is not valid, can't add it to proposal storage ")
+	// }
 
-	id, err := cfg.findSCOrList(c, c.Args().Get(2))
-	if err != nil {
-		return err
-	}
+	// id, err := cfg.findSCOrList(c, c.Args().Get(2))
+	// if err != nil {
+	// 	return err
+	// }
 
-	prop := id.GetProposed()
-	log.Info("Valid Certificate, added to proposal storage")
-	prop.Storage[domain] = string(cert)
-	cfg.proposeSendVoteUpdate(id, prop)
-	return cfg.saveConfig(c)
+	// prop := id.GetProposed()
+	// log.Info("Valid Certificate, added to proposal storage")
+	// prop.Storage[domain] = string(cert)
+	// cfg.proposeSendVoteUpdate(id, prop)
+	// return cfg.saveConfig(c)
 }
 
 // Verify the validity of a certificate by giving as argument the key
 // corresponding to this latter
 func certVerify(c *cli.Context) error {
-	if c.NArg() < 1 {
-		return errors.New("Please give the certificate key for verification")
-	}
-	cfg := loadConfigOrFail(c)
-	id, err := cfg.findSCOrList(c, c.Args().Get(1))
-	if err != nil {
-		return err
-	}
+	return errors.New("no longer implemented")
+	// if c.NArg() < 1 {
+	// 	return errors.New("Please give the certificate key for verification")
+	// }
+	// cfg := loadConfigOrFail(c)
+	// id, err := cfg.findSCOrList(c, c.Args().Get(1))
+	// if err != nil {
+	// 	return err
+	// }
 
-	k := c.Args().Get(0)
+	// k := c.Args().Get(0)
 
-	cert := []byte(id.Data.Storage[k])
+	// cert := []byte(id.Data.Storage[k])
 
-	if !isCert(cert) {
-		return errors.New("The values do not correspond to a certificate")
-	}
-	log.Info("Verify the validity of the cert:")
-	if !isValid(cert) {
-		return errors.New("Certificate is not valid")
-	}
-	return cfg.saveConfig(c)
+	// if !isCert(cert) {
+	// 	return errors.New("The values do not correspond to a certificate")
+	// }
+	// log.Info("Verify the validity of the cert:")
+	// if !isValid(cert) {
+	// 	return errors.New("Certificate is not valid")
+	// }
+	// return cfg.saveConfig(c)
 }
 
 // Renew a certificate by giving the domain name/key
 func certRenew(c *cli.Context) error {
-	cfg := loadConfigOrFail(c)
-	if c.NArg() < 1 {
-		return errors.New("Please give a domain name")
-	}
+	return errors.New("no longer implemented")
+	// cfg := loadConfigOrFail(c)
+	// if c.NArg() < 1 {
+	// 	return errors.New("Please give a domain name")
+	// }
 
-	domain := c.Args().Get(0)
-	id, err := cfg.findSCOrList(c, c.Args().Get(1))
-	if err != nil {
-		return err
-	}
+	// domain := c.Args().Get(0)
+	// id, err := cfg.findSCOrList(c, c.Args().Get(1))
+	// if err != nil {
+	// 	return err
+	// }
 
-	log.Info("Checking the certificate")
+	// log.Info("Checking the certificate")
 
-	if _, ok := id.Data.Storage[domain]; !ok {
-		return errors.New("Didn't find key " + domain + " in the config")
-	}
+	// if _, ok := id.Data.Storage[domain]; !ok {
+	// 	return errors.New("Didn't find key " + domain + " in the config")
+	// }
 
-	cert := []byte(id.Data.Storage[domain])
-	if !isCert(cert) {
-		return errors.New("The values do not correspond to a certificate")
-	}
+	// cert := []byte(id.Data.Storage[domain])
+	// if !isCert(cert) {
+	// 	return errors.New("The values do not correspond to a certificate")
+	// }
 
-	// Renew the cert (see certificate.go)
-	newcert, err := renewCert(cert)
-	if err != nil {
-		return errors.New("Error while renewing certificate: " + err.Error())
-	}
+	// // Renew the cert (see certificate.go)
+	// newcert, err := renewCert(cert)
+	// if err != nil {
+	// 	return errors.New("Error while renewing certificate: " + err.Error())
+	// }
 
-	err = ioutil.WriteFile(path.Join(cfg.CertPath[domain], "fullchain.pem"), newcert, 0644)
-	if err != nil {
-		return errors.New("Can't create fullchain.pem" + err.Error())
-	}
-	log.Info("Certificate successfully renewed")
+	// err = ioutil.WriteFile(path.Join(cfg.CertPath[domain], "fullchain.pem"), newcert, 0644)
+	// if err != nil {
+	// 	return errors.New("Can't create fullchain.pem" + err.Error())
+	// }
+	// log.Info("Certificate successfully renewed")
 
-	// Check the certificate
-	log.Info("Verify the validity of the cert:")
-	if !isValid(newcert) {
-		return errors.New("Certificate is not valid, can't add it to proposal storage ")
-	}
-	prop := id.GetProposed()
-	log.Info("Valid Certificate, added to proposal storage")
-	prop.Storage[domain] = string(newcert)
-	cfg.proposeSendVoteUpdate(id, prop)
-	return cfg.saveConfig(c)
+	// // Check the certificate
+	// log.Info("Verify the validity of the cert:")
+	// if !isValid(newcert) {
+	// 	return errors.New("Certificate is not valid, can't add it to proposal storage ")
+	// }
+	// prop := id.GetProposed()
+	// log.Info("Valid Certificate, added to proposal storage")
+	// prop.Storage[domain] = string(newcert)
+	// cfg.proposeSendVoteUpdate(id, prop)
+	// return cfg.saveConfig(c)
 }
 
 // Revoke a certificate by giving the key corresponding to the certificate and
 // the register key of this certificate. This certificate will be then deleted
 // from the skipchain
 func certRevoke(c *cli.Context) error {
-	cfg := loadConfigOrFail(c)
-	if c.NArg() < 2 {
-		return errors.New("Please give the certificate to delete and the register key of the certificate")
-	}
+	return errors.New("no longer implemented")
+	// cfg := loadConfigOrFail(c)
+	// if c.NArg() < 2 {
+	// 	return errors.New("Please give the certificate to delete and the register key of the certificate")
+	// }
 
-	id, err := cfg.findSCOrList(c, c.Args().Get(2))
-	if err != nil {
-		return err
-	}
+	// id, err := cfg.findSCOrList(c, c.Args().Get(2))
+	// if err != nil {
+	// 	return err
+	// }
 
-	key := c.Args().First()
-	prop := id.GetProposed()
-	if _, ok := prop.Storage[key]; !ok {
-		return errors.New("Didn't find key " + key + " in the config")
-	}
-	cert := []byte(prop.Storage[key])
-	if !isCert(cert) {
-		return errors.New("The values are not a certificate")
-	}
+	// key := c.Args().First()
+	// prop := id.GetProposed()
+	// if _, ok := prop.Storage[key]; !ok {
+	// 	return errors.New("Didn't find key " + key + " in the config")
+	// }
+	// cert := []byte(prop.Storage[key])
+	// if !isCert(cert) {
+	// 	return errors.New("The values are not a certificate")
+	// }
 
-	// Revoke the certificate (see certificate.go)
-	err = revokeCert(c.Args().Get(1), cert)
-	if err != nil {
-		return errors.New("Error revoking the certificate: " + err.Error())
-	}
-	delete(prop.Storage, key)
-	log.Info("Succesfully revoked")
-	cfg.proposeSendVoteUpdate(id, prop)
-	return cfg.saveConfig(c)
+	// // Revoke the certificate (see certificate.go)
+	// err = revokeCert(c.Args().Get(1), cert)
+	// if err != nil {
+	// 	return errors.New("Error revoking the certificate: " + err.Error())
+	// }
+	// delete(prop.Storage, key)
+	// log.Info("Succesfully revoked")
+	// cfg.proposeSendVoteUpdate(id, prop)
+	// return cfg.saveConfig(c)
 }
 
 // Retrieve the fullchain.pem by giving the key corresponding to the certificate
 // in the skipchain, you can give optionally a directory to write the certificates on it
 func certRetrieve(c *cli.Context) error {
-	if c.NArg() < 1 {
-		return errors.New("Please give the key of the certificate")
-	}
-	k := c.Args().Get(0)
-	cfg := loadConfigOrFail(c)
-	id, err := cfg.findSCOrList(c, c.Args().Get(1))
-	if err != nil {
-		return err
-	}
+	return errors.New("no longer implemented")
+	// if c.NArg() < 1 {
+	// 	return errors.New("Please give the key of the certificate")
+	// }
+	// k := c.Args().Get(0)
+	// cfg := loadConfigOrFail(c)
+	// id, err := cfg.findSCOrList(c, c.Args().Get(1))
+	// if err != nil {
+	// 	return err
+	// }
 
-	cert := []byte(id.Data.Storage[k])
-	public, chain := splitCertPublicChain(string(cert))
+	// cert := []byte(id.Data.Storage[k])
+	// public, chain := splitCertPublicChain(string(cert))
 
-	if cert == nil {
-		return errors.New("Cisc do not store a certificate for this key")
-	}
-	if !isCert(cert) {
-		return errors.New("The value corresponding to the key is not a certificate")
-	}
-	log.Info("Verify the validity of the cert:")
-	if !isValid(cert) {
-		return errors.New("Certificate is not valid")
-	}
-	log.Info("Valid certificate")
-	if c.String("d") != "" {
-		if _, err = os.Stat(c.String("d")); os.IsNotExist(err) {
-			os.MkdirAll(c.String("d"), 0777)
-		}
-	}
-	log.Info("Retrieves the domain certificate to: " + path.Join(c.String("directory"), k+".pem"))
-	err = ioutil.WriteFile(path.Join(c.String("d"), k+".pem"), []byte(public), 0644)
-	if err != nil {
-		return err
-	}
-	if chain != "" {
-		log.Info("Retrieve the fullchain certificate to: " + path.Join(c.String("d"), k+"_fullchain.pem"))
-		err = ioutil.WriteFile(path.Join(c.String("d"), k+"_fullchain.pem"), cert, 0644)
-		if err != nil {
-			return err
-		}
-	}
+	// if cert == nil {
+	// 	return errors.New("Cisc do not store a certificate for this key")
+	// }
+	// if !isCert(cert) {
+	// 	return errors.New("The value corresponding to the key is not a certificate")
+	// }
+	// log.Info("Verify the validity of the cert:")
+	// if !isValid(cert) {
+	// 	return errors.New("Certificate is not valid")
+	// }
+	// log.Info("Valid certificate")
+	// if c.String("d") != "" {
+	// 	if _, err = os.Stat(c.String("d")); os.IsNotExist(err) {
+	// 		os.MkdirAll(c.String("d"), 0777)
+	// 	}
+	// }
+	// log.Info("Retrieves the domain certificate to: " + path.Join(c.String("directory"), k+".pem"))
+	// err = ioutil.WriteFile(path.Join(c.String("d"), k+".pem"), []byte(public), 0644)
+	// if err != nil {
+	// 	return err
+	// }
+	// if chain != "" {
+	// 	log.Info("Retrieve the fullchain certificate to: " + path.Join(c.String("d"), k+"_fullchain.pem"))
+	// 	err = ioutil.WriteFile(path.Join(c.String("d"), k+"_fullchain.pem"), cert, 0644)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// }
 
-	return cfg.saveConfig(c)
+	// return cfg.saveConfig(c)
 }
