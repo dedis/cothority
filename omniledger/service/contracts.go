@@ -164,7 +164,7 @@ func (s *Service) invokeContractConfig(cdb CollectionView, inst Instruction, coi
 		if err = validRotation(config.Roster, newRoster); err != nil {
 			return
 		}
-		if err = s.withinInterval(cdb.GetSkipchainID(), inst.Signatures[0].Signer.Ed25519.Point); err != nil {
+		if err = s.withinInterval(inst.InstanceID.DarcID, inst.Signatures[0].Signer.Ed25519.Point); err != nil {
 			return
 		}
 		sc, err = updateRosterScs(cdb, inst.InstanceID.DarcID, newRoster)
