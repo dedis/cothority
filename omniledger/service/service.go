@@ -88,6 +88,9 @@ type Service struct {
 	storage *omniStorage
 
 	createSkipChainMut sync.Mutex
+
+	darcToSc    map[string]skipchain.SkipBlockID
+	darcToScMut sync.Mutex
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -499,13 +502,27 @@ func (s *Service) updateCollection(msg network.Message) {
 		}
 		s.pollChanMut.Unlock()
 	}
+
+	// If we are adding a genesis block, then look into it for the darc ID
+	// and add it to the darcToSc hash map.
+	if sb.Index == 0 {
+		// the information should already be in the collections
+		d, err := s.LoadGenesisDarc(sb.SkipChainID())
+		if err != nil {
+			log.Error(err)
+			return
+		}
+		s.darcToScMut.Lock()
+		s.darcToSc[string(d.GetBaseID())] = sb.SkipChainID()
+		s.darcToScMut.Unlock()
+	}
 }
 
 // GetCollectionView returns a read-only accessor to the collection
 // for the given skipchain.
 func (s *Service) GetCollectionView(scID skipchain.SkipBlockID) CollectionView {
 	cdb := s.getCollection(scID)
-	return &roCollection{cdb.coll, scID}
+	return &roCollection{cdb.coll}
 }
 
 func (s *Service) getCollection(id skipchain.SkipBlockID) *collectionDB {
@@ -531,11 +548,28 @@ func (s *Service) db() *skipchain.SkipBlockDB {
 
 // LoadConfig loads the configuration from a skipchain ID.
 func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
-	collDb := s.getCollection(scID)
-	if collDb == nil {
+	coll := s.GetCollectionView(scID)
+	if coll == nil {
 		return nil, errors.New("nil collection DB")
 	}
-	return LoadConfigFromColl(&roCollection{collDb.coll, scID})
+	return LoadConfigFromColl(coll)
+}
+
+// LoadGenesisDarc loads the genesis darc of the given skipchain ID.
+func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error) {
+	coll := s.GetCollectionView(scID)
+	// Find the genesis-darc ID.
+	val, contract, err := getValueContract(coll, GenesisReferenceID.Slice())
+	if err != nil {
+		return nil, err
+	}
+	if string(contract) != ContractConfigID {
+		return nil, errors.New("did not get " + ContractConfigID)
+	}
+	if len(val) != 32 {
+		return nil, errors.New("value has a invalid length")
+	}
+	return s.loadLatestDarc(scID, darc.ID(val))
 }
 
 // LoadBlockInterval loads the block interval from the skipchain ID.
@@ -544,7 +578,7 @@ func (s *Service) LoadBlockInterval(scID skipchain.SkipBlockID) (time.Duration, 
 	if collDb == nil {
 		return defaultInterval, errors.New("nil collection DB")
 	}
-	return LoadBlockIntervalFromColl(&roCollection{collDb.coll, scID})
+	return LoadBlockIntervalFromColl(&roCollection{collDb.coll})
 }
 
 func (s *Service) loadLatestDarc(scID skipchain.SkipBlockID, dID darc.ID) (*darc.Darc, error) {
@@ -552,7 +586,7 @@ func (s *Service) loadLatestDarc(scID skipchain.SkipBlockID, dID darc.ID) (*darc
 	if colldb == nil {
 		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", scID.Short())
 	}
-	value, contract, err := getValueContract(&roCollection{colldb.coll, scID}, toInstanceID(dID).Slice())
+	value, contract, err := getValueContract(&roCollection{colldb.coll}, toInstanceID(dID).Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -719,7 +753,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			return false
 		}
 	}
-	config, err := LoadConfigFromColl(&roCollection{collClone, newSB.SkipChainID()})
+	config, err := LoadConfigFromColl(&roCollection{collClone})
 	if err != nil {
 		log.Error(err)
 		return false
@@ -753,7 +787,7 @@ clientTransactions:
 		// Make a new collection for each instruction. If the instruction is sucessfully
 		// implemented and changes applied, then keep it (via cdbTemp = cdbI.c),
 		// otherwise dump it.
-		cdbI := &roCollection{cdbTemp.Clone(), scID}
+		cdbI := &roCollection{cdbTemp.Clone()}
 		for _, instr := range ct.Instructions {
 			scs, cout, err := s.executeInstruction(cdbI, cin, instr)
 			if err != nil {
@@ -936,10 +970,25 @@ func (s *Service) getPrivateKey() kyber.Scalar {
 	return tni.Private()
 }
 
-// withinInterval checks whether public key targetPk in skipchain scID has the
-// right to be the new leader at the current time. This function should only be
-// called when view-change is enabled.
-func (s *Service) withinInterval(scID skipchain.SkipBlockID, targetPk kyber.Point) error {
+func (s *Service) scIDFromGenesisDarc(genesisDarcID darc.ID) (skipchain.SkipBlockID, error) {
+	s.darcToScMut.Lock()
+	scID, ok := s.darcToSc[string(genesisDarcID)]
+	s.darcToScMut.Unlock()
+	if !ok {
+		return nil, errors.New("the specified genesis darc ID does not exist")
+	}
+	return scID, nil
+}
+
+// withinInterval checks whether public key targetPk in skipchain that has the
+// genesis darc genesisDarcID has the right to be the new leader at the current
+// time. This function should only be called when view-change is enabled.
+func (s *Service) withinInterval(genesisDarcID darc.ID, targetPk kyber.Point) error {
+	scID, err := s.scIDFromGenesisDarc(genesisDarcID)
+	if err != nil {
+		return err
+	}
+
 	interval, err := s.LoadBlockInterval(scID)
 	if err != nil {
 		return err
@@ -1047,6 +1096,15 @@ func (s *Service) tryLoad() error {
 			return err
 		}
 		s.state.setLast(sb)
+
+		// populate the darcID to skipchainID mapping
+		d, err := s.LoadGenesisDarc(gen)
+		if err != nil {
+			return err
+		}
+		s.darcToScMut.Lock()
+		s.darcToSc[string(d.GetBaseID())] = gen
+		s.darcToScMut.Unlock()
 	}
 
 	return nil
@@ -1100,6 +1158,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		heartbeatsTimeout: make(chan string, 1),
 		heartbeatsClose:   make(chan bool, 1),
 		storage:           &omniStorage{},
+		darcToSc:          make(map[string]skipchain.SkipBlockID),
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
 		s.GetProof); err != nil {

@@ -740,6 +740,30 @@ func TestService_RotateLeader(t *testing.T) {
 	require.True(t, pr.InclusionProof.Match())
 }
 
+func TestService_DarcToSc(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	darcID := s.darc.GetBaseID()
+	scID := s.sb.SkipChainID()
+
+	// check that the mapping is correct
+	for _, service := range s.services {
+		require.True(t, service.darcToSc[string(darcID)].Equal(scID))
+	}
+
+	// remove the mapping and then load it again
+	for _, service := range s.services {
+		service.darcToSc = make(map[string]skipchain.SkipBlockID)
+		require.NoError(t, service.tryLoad())
+	}
+
+	// check that the mapping is still correct
+	for _, service := range s.services {
+		require.True(t, service.darcToSc[string(darcID)].Equal(scID))
+	}
+}
+
 func createConfigTx(t *testing.T, s *ser, isgood bool) (ClientTransaction, ChainConfig) {
 	var config ChainConfig
 	if isgood {
