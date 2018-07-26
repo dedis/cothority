@@ -238,5 +238,11 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		confirm.Record()
 		roundM.Record()
 	}
+	// We wait a bit before closing because c.GetProof is sent to the
+	// leader, but at this point some of the children might still be doing
+	// updateCollection. If we stop the simulation immediately, then the
+	// database gets closed and updateCollection on the children fails to
+	// complete.
+	time.Sleep(time.Second)
 	return nil
 }
