@@ -3,7 +3,6 @@ package service
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/dedis/cothority"
@@ -194,22 +193,8 @@ func updateRosterScs(cdb CollectionView, darcID darc.ID, newRoster onet.Roster) 
 }
 
 func validRotation(oldRoster, newRoster onet.Roster) error {
-	n := len(oldRoster.List)
-	if n != len(newRoster.List) {
-		return fmt.Errorf("rosters lengths are not equal, need %d but got %d", n, len(newRoster.List))
-	}
-
-	var offset int
-	for _, sid := range newRoster.List {
-		if sid.Equal(oldRoster.List[0]) {
-			break
-		}
-		offset++
-	}
-	for i := 0; i < n; i++ {
-		if !oldRoster.List[i].Equal(newRoster.List[(i+offset)%n]) {
-			return errors.New("invalid rotation")
-		}
+	if !oldRoster.IsRotation(&newRoster) {
+		return errors.New("the new roster is not a valid rotation of the old roster")
 	}
 	newRoster2 := onet.NewRoster(newRoster.List)
 	if !newRoster2.ID.Equal(newRoster.ID) {
