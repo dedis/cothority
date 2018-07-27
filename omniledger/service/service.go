@@ -460,11 +460,9 @@ func (s *Service) updateCollection(msg network.Message) {
 	}
 
 	log.Lvlf3("%s: Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
-	for _, sc := range scs {
-		err = cdb.Store(&sc)
-		if err != nil {
-			log.Error("error while storing in collection: " + err.Error())
-		}
+	if err = cdb.StoreAll(scs); err != nil {
+		log.Error("error while storing in collection: " + err.Error())
+		return
 	}
 	if !bytes.Equal(cdb.RootHash(), data.CollectionRoot) {
 		log.Error("hash of collection doesn't correspond to root hash")
