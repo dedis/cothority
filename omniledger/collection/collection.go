@@ -119,5 +119,5 @@ func (c *Collection) Clone() (collection *Collection) {
 func (c *Collection) GetRoot() []byte {
 	c.Lock()
 	defer c.Unlock()
-	return c.root.key
+	return c.root.label[:]
 }
