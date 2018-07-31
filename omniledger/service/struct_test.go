@@ -24,15 +24,15 @@ func TestCollectionDBStrange(t *testing.T) {
 	cdb := newCollectionDB(db, testName)
 	key := []byte("first")
 	value := []byte("value")
-	contract := []byte("mycontract")
+	contract := "mycontract"
 	err = cdb.Store(&StateChange{
 		StateAction: Create,
 		InstanceID:  key,
 		Value:       value,
-		ContractID:  contract,
+		ContractID:  []byte(contract),
 	})
 	require.Nil(t, err)
-	v, c, err := cdb.GetValueContract([]byte("first"))
+	v, c, err := cdb.GetValues([]byte("first"))
 	require.Nil(t, err)
 	require.Equal(t, value, v)
 	require.Equal(t, contract, c)
@@ -51,7 +51,7 @@ func TestCollectionDB(t *testing.T) {
 
 	cdb := newCollectionDB(db, testName)
 	pairs := map[string]string{}
-	myContract := []byte("myContract")
+	myContract := "myContract"
 	for i := 0; i < kvPairs; i++ {
 		pairs[fmt.Sprintf("Key%d", i)] = fmt.Sprintf("value%d", i)
 	}
@@ -62,14 +62,14 @@ func TestCollectionDB(t *testing.T) {
 			StateAction: Create,
 			InstanceID:  []byte(k),
 			Value:       []byte(v),
-			ContractID:  myContract,
+			ContractID:  []byte(myContract),
 		}
 		require.Nil(t, cdb.Store(sc))
 	}
 
 	// Verify it's all there
 	for c, v := range pairs {
-		stored, contract, err := cdb.GetValueContract([]byte(c))
+		stored, contract, err := cdb.GetValues([]byte(c))
 		require.Nil(t, err)
 		require.Equal(t, v, string(stored))
 		require.Equal(t, myContract, contract)
@@ -80,7 +80,7 @@ func TestCollectionDB(t *testing.T) {
 
 	// Verify it's all there
 	for c, v := range pairs {
-		stored, _, err := cdb2.GetValueContract([]byte(c))
+		stored, _, err := cdb2.GetValues([]byte(c))
 		require.Nil(t, err)
 		require.Equal(t, v, string(stored))
 	}
@@ -94,12 +94,12 @@ func TestCollectionDB(t *testing.T) {
 			StateAction: Update,
 			InstanceID:  []byte(k),
 			Value:       []byte(v),
-			ContractID:  myContract,
+			ContractID:  []byte(myContract),
 		}
 		require.Nil(t, cdb2.Store(sc), k)
 	}
 	for k, v := range pairs {
-		stored, contract, err := cdb2.GetValueContract([]byte(k))
+		stored, contract, err := cdb2.GetValues([]byte(k))
 		require.Nil(t, err)
 		require.Equal(t, v, string(stored))
 		require.Equal(t, myContract, contract)
@@ -110,12 +110,12 @@ func TestCollectionDB(t *testing.T) {
 		sc := &StateChange{
 			StateAction: Remove,
 			InstanceID:  []byte(c),
-			ContractID:  myContract,
+			ContractID:  []byte(myContract),
 		}
 		require.Nil(t, cdb2.Store(sc))
 	}
 	for c := range pairs {
-		_, _, err := cdb2.GetValueContract([]byte(c))
+		_, _, err := cdb2.GetValues([]byte(c))
 		require.NotNil(t, err, c)
 	}
 }
@@ -146,9 +146,9 @@ func TestCollectionDBtryHash(t *testing.T) {
 	}
 	mrTrial, err := cdb.tryHash(scs)
 	require.Nil(t, err)
-	_, _, err = cdb.GetValueContract([]byte("key1"))
+	_, _, err = cdb.GetValues([]byte("key1"))
 	require.EqualError(t, err, "no match found")
-	_, _, err = cdb.GetValueContract([]byte("key2"))
+	_, _, err = cdb.GetValues([]byte("key2"))
 	require.EqualError(t, err, "no match found")
 	cdb.Store(&scs[0])
 	cdb.Store(&scs[1])

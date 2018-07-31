@@ -53,11 +53,7 @@ func (r *roCollection) Get(key []byte) collection.Getter {
 // GetValues returns the value of the key and the contractID. If the key
 // does not exist, it returns an error.
 func (r *roCollection) GetValues(key []byte) (value []byte, contractID string, err error) {
-	record, err := r.c.Get(key).Record()
-	if err != nil {
-		return
-	}
-	return getValuesFromRecord(record, key)
+	return getValueContract(r, key)
 }
 
 // OmniLedgerContract is the type signature of the class functions
@@ -140,11 +136,7 @@ func (c *collectionDB) Get(key []byte) collection.Getter {
 }
 
 func (c *collectionDB) GetValues(key []byte) (value []byte, contractID string, err error) {
-	record, err := c.coll.Get(key).Record()
-	if err != nil {
-		return
-	}
-	return getValuesFromRecord(record, key)
+	return getValueContract(c, key)
 }
 
 // FIXME: if there is a failure in boltdb update, then our state will be
@@ -220,58 +212,35 @@ func (c *collectionDB) StoreAll(ts StateChanges) error {
 	})
 }
 
-func (c *collectionDB) GetValueContract(key []byte) ([]byte, []byte, error) {
-	// getValueContract does not use skipchain ID, so we just set it to nil
-	return getValueContract(&roCollection{c.coll}, key)
-}
-
-// TODO this function can be merged with getValuesFromRecord
-func getValueContract(coll CollectionView, key []byte) (value, contract []byte, err error) {
-	proof, err := coll.Get(key).Record()
-	if err != nil {
-		return
-	}
-	hashes, err := proof.Values()
-	if err != nil {
-		return
-	}
-	if len(hashes) == 0 {
-		err = errors.New("nothing stored under that key")
-		return
-	}
-	value, ok := hashes[0].([]byte)
-	if !ok {
-		err = errors.New("the value is not of type []byte")
-		return
-	}
-	contract, ok = hashes[1].([]byte)
-	if !ok {
-		err = errors.New("the contract is not of type []byte")
-		return
-	}
-	return
-}
-
 // RootHash returns the hash of the root node in the merkle tree.
 func (c *collectionDB) RootHash() []byte {
 	return c.coll.GetRoot()
 }
 
-func getValuesFromRecord(record collection.Record, key []byte) (value []byte, contractID string, err error) {
+func getValueContract(coll CollectionView, key []byte) (value []byte, contract string, err error) {
+	record, err := coll.Get(key).Record()
+	if err != nil {
+		return
+	}
 	values, err := record.Values()
 	if err != nil {
 		return
 	}
-	var ok bool
-	value, ok = values[0].([]byte)
-	if !ok {
-		err = errors.New("first value is not a slice of bytes")
+	if len(values) == 0 {
+		err = errors.New("nothing stored under that key")
 		return
 	}
-	contractID, ok = values[1].(string)
+	value, ok := values[0].([]byte)
 	if !ok {
-		contractID = string(values[1].([]byte))
+		err = errors.New("the value is not of type []byte")
+		return
 	}
+	contractBytes, ok := values[1].([]byte)
+	if !ok {
+		err = errors.New("the contract is not of type []byte")
+		return
+	}
+	contract = string(contractBytes)
 	return
 }
 
