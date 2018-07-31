@@ -68,7 +68,7 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen, fail int, refuse bool) {
 	servers, _, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	log.Lvl3(tree.Dump())
 
-	// 1 - setting up - in real life uses SetupDKG-protocol
+	// 1 - setting up - in real life uses Setup-protocol
 	// Store the dkgs in the services
 	dkgs, err := CreateDKGs(tSuite.(dkg.Suite), nbrNodes, threshold)
 	require.Nil(t, err)

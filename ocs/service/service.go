@@ -17,7 +17,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/dkg"
+	dkgprotocol "github.com/dedis/cothority/dkg"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/ocs/darc"
 	"github.com/dedis/cothority/ocs/protocol"
@@ -72,7 +72,7 @@ type pubPoly struct {
 
 // Storage holds the skipblock-bunches for the OCS-skipchain.
 type Storage struct {
-	Shared map[string]*dkg.SharedSecret
+	Shared map[string]*dkgprotocol.SharedSecret
 	Polys  map[string]*pubPoly
 	Admins map[string]*darc.Darc
 }
@@ -125,8 +125,8 @@ func (s *Service) CreateSkipchains(req *CreateSkipchainsRequest) (reply *CreateS
 
 	// Do DKG on the nodes
 	tree := req.Roster.GenerateNaryTreeWithRoot(len(req.Roster.List), s.ServerIdentity())
-	pi, err := s.CreateProtocol(dkg.NameDKG, tree)
-	setupDKG := pi.(*dkg.SetupDKG)
+	pi, err := s.CreateProtocol(dkgprotocol.Name, tree)
+	setupDKG := pi.(*dkgprotocol.Setup)
 	setupDKG.Wait = true
 	setupDKG.SetConfig(&onet.GenericConfig{Data: reply.OCS.Hash})
 	log.Lvl3(s.ServerIdentity(), reply.OCS.Hash)
@@ -502,12 +502,12 @@ func (s *Service) DecryptKeyRequest(req *DecryptKeyRequest) (reply *DecryptKeyRe
 func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
 	log.Lvl3(s.ServerIdentity(), tn.ProtocolName(), conf)
 	switch tn.ProtocolName() {
-	case dkg.NameDKG:
-		pi, err := dkg.NewSetupDKG(tn)
+	case dkgprotocol.Name:
+		pi, err := dkgprotocol.NewSetup(tn)
 		if err != nil {
 			return nil, err
 		}
-		setupDKG := pi.(*dkg.SetupDKG)
+		setupDKG := pi.(*dkgprotocol.Setup)
 		go func(conf *onet.GenericConfig) {
 			<-setupDKG.Finished
 			shared, err := setupDKG.SharedSecret()
@@ -861,7 +861,7 @@ func (s *Service) save() {
 func (s *Service) tryLoad() error {
 	defer func() {
 		if len(s.Storage.Shared) == 0 {
-			s.Storage.Shared = map[string]*dkg.SharedSecret{}
+			s.Storage.Shared = map[string]*dkgprotocol.SharedSecret{}
 		}
 		if len(s.Storage.Polys) == 0 {
 			s.Storage.Polys = map[string]*pubPoly{}

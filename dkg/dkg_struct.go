@@ -11,7 +11,7 @@ import (
 	"errors"
 
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/share/dkg/rabin"
+	dkgrabin "github.com/dedis/kyber/share/dkg/rabin"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
 )
@@ -35,14 +35,14 @@ type SharedSecret struct {
 
 // NewSharedSecret takes an initialized DistKeyGenerator and returns the
 // minimal set of values necessary to do shared encryption/decryption.
-func NewSharedSecret(dkg *dkg.DistKeyGenerator) (*SharedSecret, error) {
-	if dkg == nil {
+func NewSharedSecret(gen *dkgrabin.DistKeyGenerator) (*SharedSecret, error) {
+	if gen == nil {
 		return nil, errors.New("no valid dkg given")
 	}
-	if !dkg.Finished() {
+	if !gen.Finished() {
 		return nil, errors.New("dkg is not finished yet")
 	}
-	dks, err := dkg.DistKeyShare()
+	dks, err := gen.DistKeyShare()
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ type structStartDeal struct {
 
 // Deal sends the deals for the shared secret.
 type Deal struct {
-	Deal *dkg.Deal
+	Deal *dkgrabin.Deal
 }
 
 type structDeal struct {
@@ -99,7 +99,7 @@ type structDeal struct {
 
 // Response is sent to all other nodes.
 type Response struct {
-	Response *dkg.Response
+	Response *dkgrabin.Response
 }
 
 type structResponse struct {
@@ -109,7 +109,7 @@ type structResponse struct {
 
 // SecretCommit is sent to all other nodes.
 type SecretCommit struct {
-	SecretCommit *dkg.SecretCommits
+	SecretCommit *dkgrabin.SecretCommits
 }
 
 type structSecretCommit struct {

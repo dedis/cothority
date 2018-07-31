@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/dkg"
+	dkgprotocol "github.com/dedis/cothority/dkg"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
 	"github.com/dedis/onet"
@@ -27,11 +27,11 @@ func init() {
 // DKG and U must be initialized by the caller.
 type OCS struct {
 	*onet.TreeNodeInstance
-	Shared    *dkg.SharedSecret // Shared represents the private key
-	Poly      *share.PubPoly    // Represents all public keys
-	U         kyber.Point       // U is the encrypted secret
-	Xc        kyber.Point       // The client's public key
-	Threshold int               // How many replies are needed to re-create the secret
+	Shared    *dkgprotocol.SharedSecret // Shared represents the private key
+	Poly      *share.PubPoly            // Represents all public keys
+	U         kyber.Point               // U is the encrypted secret
+	Xc        kyber.Point               // The client's public key
+	Threshold int                       // How many replies are needed to re-create the secret
 	// VerificationData is given to the VerifyRequest and has to hold everything
 	// needed to verify the request is valid.
 	VerificationData []byte

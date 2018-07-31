@@ -24,7 +24,7 @@ import (
 	"github.com/dedis/onet/network"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/dkg"
+	dkgprotocol "github.com/dedis/cothority/dkg"
 	"github.com/dedis/cothority/evoting"
 	"github.com/dedis/cothority/evoting/lib"
 	"github.com/dedis/cothority/evoting/protocol"
@@ -155,8 +155,8 @@ func (s *Service) Open(req *evoting.Open) (*evoting.OpenReply, error) {
 		return nil, errors.New("error while creating the tree")
 	}
 
-	instance, _ := s.CreateProtocol(dkg.NameDKG, tree)
-	proto := instance.(*dkg.SetupDKG)
+	instance, _ := s.CreateProtocol(dkgprotocol.Name, tree)
+	proto := instance.(*dkgprotocol.Setup)
 	config, _ := network.Marshal(&synchronizer{
 		ID:        genesis.Hash,
 		User:      req.User,
@@ -632,9 +632,9 @@ func (s *Service) NewProtocol(node *onet.TreeNodeInstance, conf *onet.GenericCon
 	sync := blob.(*synchronizer)
 
 	switch node.ProtocolName() {
-	case dkg.NameDKG:
-		instance, _ := dkg.NewSetupDKG(node)
-		protocol := instance.(*dkg.SetupDKG)
+	case dkgprotocol.Name:
+		instance, _ := dkgprotocol.NewSetup(node)
+		protocol := instance.(*dkgprotocol.Setup)
 		go func() {
 			<-protocol.Finished
 			secret, _ := lib.NewSharedSecret(protocol.DKG)
