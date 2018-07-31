@@ -17,6 +17,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/dkg"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/ocs/darc"
 	"github.com/dedis/cothority/ocs/protocol"
@@ -71,7 +72,7 @@ type pubPoly struct {
 
 // Storage holds the skipblock-bunches for the OCS-skipchain.
 type Storage struct {
-	Shared map[string]*protocol.SharedSecret
+	Shared map[string]*dkg.SharedSecret
 	Polys  map[string]*pubPoly
 	Admins map[string]*darc.Darc
 }
@@ -124,8 +125,8 @@ func (s *Service) CreateSkipchains(req *CreateSkipchainsRequest) (reply *CreateS
 
 	// Do DKG on the nodes
 	tree := req.Roster.GenerateNaryTreeWithRoot(len(req.Roster.List), s.ServerIdentity())
-	pi, err := s.CreateProtocol(protocol.NameDKG, tree)
-	setupDKG := pi.(*protocol.SetupDKG)
+	pi, err := s.CreateProtocol(dkg.NameDKG, tree)
+	setupDKG := pi.(*dkg.SetupDKG)
 	setupDKG.Wait = true
 	setupDKG.SetConfig(&onet.GenericConfig{Data: reply.OCS.Hash})
 	log.Lvl3(s.ServerIdentity(), reply.OCS.Hash)
@@ -134,7 +135,7 @@ func (s *Service) CreateSkipchains(req *CreateSkipchainsRequest) (reply *CreateS
 	}
 	log.Lvl3("Started DKG-protocol - waiting for done", len(req.Roster.List))
 	select {
-	case <-setupDKG.SetupDone:
+	case <-setupDKG.Finished:
 		shared, err := setupDKG.SharedSecret()
 		if err != nil {
 			return nil, err
@@ -501,14 +502,14 @@ func (s *Service) DecryptKeyRequest(req *DecryptKeyRequest) (reply *DecryptKeyRe
 func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
 	log.Lvl3(s.ServerIdentity(), tn.ProtocolName(), conf)
 	switch tn.ProtocolName() {
-	case protocol.NameDKG:
-		pi, err := protocol.NewSetupDKG(tn)
+	case dkg.NameDKG:
+		pi, err := dkg.NewSetupDKG(tn)
 		if err != nil {
 			return nil, err
 		}
-		setupDKG := pi.(*protocol.SetupDKG)
+		setupDKG := pi.(*dkg.SetupDKG)
 		go func(conf *onet.GenericConfig) {
-			<-setupDKG.SetupDone
+			<-setupDKG.Finished
 			shared, err := setupDKG.SharedSecret()
 			if err != nil {
 				log.Error(err)
@@ -860,7 +861,7 @@ func (s *Service) save() {
 func (s *Service) tryLoad() error {
 	defer func() {
 		if len(s.Storage.Shared) == 0 {
-			s.Storage.Shared = map[string]*protocol.SharedSecret{}
+			s.Storage.Shared = map[string]*dkg.SharedSecret{}
 		}
 		if len(s.Storage.Polys) == 0 {
 			s.Storage.Polys = map[string]*pubPoly{}

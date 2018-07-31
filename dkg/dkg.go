@@ -1,9 +1,4 @@
-package protocol
-
-/*
-The onchain-protocol implements the key-reencryption described in Lefteris'
-paper-draft about onchain-secrets (called BlockMage).
-*/
+package dkg
 
 import (
 	"errors"
@@ -16,6 +11,9 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
+
+// NameDKG is the protocol identifier string.
+const NameDKG = "DKG"
 
 func init() {
 	onet.GlobalProtocolRegister(NameDKG, NewSetupDKG)
@@ -31,9 +29,9 @@ type SetupDKG struct {
 	keypair *key.Pair
 	publics []kyber.Point
 	// Whether we started the `DKG.SecretCommits`
-	commit    bool
-	Wait      bool
-	SetupDone chan bool
+	commit   bool
+	Wait     bool
+	Finished chan bool
 
 	structStartDeal    chan structStartDeal
 	structDeal         chan structDeal
@@ -48,7 +46,7 @@ func NewSetupDKG(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	o := &SetupDKG{
 		TreeNodeInstance: n,
 		keypair:          key.NewKeyPair(cothority.Suite),
-		SetupDone:        make(chan bool, 1),
+		Finished:         make(chan bool, 1),
 		Threshold:        uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3),
 		nodes:            n.List(),
 	}
@@ -70,7 +68,7 @@ func NewSetupDKG(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 func (o *SetupDKG) Start() error {
 	log.Lvl3("Starting Protocol")
 	// 1a - root asks children to send their public key
-	errs := o.Broadcast(&InitDKG{Wait: o.Wait})
+	errs := o.Broadcast(&Init{Wait: o.Wait})
 	if len(errs) != 0 {
 		return fmt.Errorf("boradcast failed with error(s): %v", errs)
 	}
@@ -117,7 +115,7 @@ func (o *SetupDKG) Dispatch() error {
 	}
 
 	if o.DKG.Finished() {
-		o.SetupDone <- true
+		o.Finished <- true
 		return nil
 	}
 	err = errors.New("protocol is finished but dkg is not")
@@ -132,10 +130,10 @@ func (o *SetupDKG) SharedSecret() (*SharedSecret, error) {
 }
 
 // Children reactions
-func (o *SetupDKG) childInit(i structInitDKG) error {
+func (o *SetupDKG) childInit(i structInit) error {
 	o.Wait = i.Wait
 	log.Lvl3(o.Name(), o.Wait)
-	return o.SendToParent(&InitDKGReply{Public: o.keypair.Public})
+	return o.SendToParent(&InitReply{Public: o.keypair.Public})
 }
 
 // Root-node messages
