@@ -73,7 +73,7 @@ func (d *dump) to(node *node) {
 
 // TreeRootHash returns the hash of the merkle tree root.
 func (p Proof) TreeRootHash() []byte {
-	return p.Root.Key
+	return p.Root.Label[:]
 }
 
 // Methods
