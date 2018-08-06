@@ -4,12 +4,11 @@ package service
 import (
 	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
 	"time"
-
-	"encoding/hex"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/messaging"
@@ -91,6 +90,8 @@ type Service struct {
 
 	darcToSc    map[string]skipchain.SkipBlockID
 	darcToScMut sync.Mutex
+
+	stateChangeCache stateChangeCache
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -773,6 +774,14 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 // the appropriate StateChanges. If any of the transactions are invalid,
 // it returns an error.
 func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain.SkipBlockID, cts ClientTransactions) (merkleRoot []byte, ctsOK ClientTransactions, states StateChanges, err error) {
+	// If what we want is in the cache, then take it from there. Otherwise
+	// ignore the error and compute the state changes.
+	merkleRoot, ctsOK, states, err = s.stateChangeCache.get(scID, cts.Hash())
+	if err == nil {
+		log.Lvl3(s.ServerIdentity(), "loaded state changes from cache")
+		return
+	}
+	err = nil
 
 	// TODO: Because we depend on making at least one clone per transaction
 	// we need to find out if this is as expensive as it looks, and if so if
@@ -804,7 +813,11 @@ clientTransactions:
 		cdbTemp = cdbI.c
 		ctsOK = append(ctsOK, ct)
 	}
-	return cdbTemp.GetRoot(), ctsOK, states, nil
+
+	// Store the result in the cache before returning.
+	merkleRoot = cdbTemp.GetRoot()
+	s.stateChangeCache.update(scID, cts.Hash(), merkleRoot, ctsOK, states)
+	return
 }
 
 func (s *Service) executeInstruction(cdbI CollectionView, cin []Coin, instr Instruction) (scs StateChanges, cout []Coin, err error) {
@@ -1157,6 +1170,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		heartbeatsClose:   make(chan bool, 1),
 		storage:           &omniStorage{},
 		darcToSc:          make(map[string]skipchain.SkipBlockID),
+		stateChangeCache:  newStateChangeCache(),
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
 		s.GetProof); err != nil {
