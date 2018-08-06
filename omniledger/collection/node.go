@@ -2,12 +2,10 @@ package collection
 
 import (
 	"crypto/sha256"
-	"sync"
 )
 
 //A node represents one element of the Merkle tree like data-structure.
 type node struct {
-	sync.Mutex
 	label [sha256.Size]byte
 
 	known bool
@@ -30,29 +28,20 @@ type node struct {
 // Getters
 
 func (n *node) root() bool {
-	n.Lock()
-	defer n.Unlock()
 	return n.parent == nil
 }
 
 func (n *node) leaf() bool {
-	n.Lock()
-	defer n.Unlock()
 	return n.children.left == nil
 }
 
 func (n *node) placeholder() bool {
-	isLeaf := n.leaf()
-	n.Lock()
-	defer n.Unlock()
-	return isLeaf && (len(n.key) == 0)
+	return n.leaf() && (len(n.key) == 0)
 }
 
 // Methods
 
 func (n *node) backup() {
-	n.Lock()
-	defer n.Unlock()
 	if n.transaction.backup == nil {
 		n.transaction.backup = new(node)
 		n.transaction.backup.overwrite(n)
@@ -100,14 +89,10 @@ func (n *node) overwrite(other *node) {
 }
 
 func (n *node) copyTo(dst *node) {
-	n.Lock()
 	dst.overwrite(n)
-	n.Unlock()
 }
 
 func (n *node) restore() {
-	n.Lock()
-	defer n.Unlock()
 	if n.transaction.backup != nil {
 		backup := n.transaction.backup
 		n.overwrite(backup)
@@ -116,8 +101,6 @@ func (n *node) restore() {
 }
 
 func (n *node) branch() {
-	n.Lock()
-	defer n.Unlock()
 	n.children.left = new(node)
 	n.children.right = new(node)
 
@@ -126,8 +109,6 @@ func (n *node) branch() {
 }
 
 func (n *node) prune() {
-	n.Lock()
-	defer n.Unlock()
 	n.children.left = nil
 	n.children.right = nil
 }

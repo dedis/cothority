@@ -147,11 +147,13 @@ func (c *collectionDB) GetValues(key []byte) (value []byte, contractID string, e
 	return getValuesFromRecord(record, key)
 }
 
+// FIXME: if there is a failure in boltdb update, then our state will be
+// inconsistent, an entry in collection may not be in boltdb.
 func (c *collectionDB) Store(t *StateChange) error {
 	if err := storeInColl(c.coll, t); err != nil {
 		return err
 	}
-	err := c.db.Update(func(tx *bolt.Tx) error {
+	return c.db.Update(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(c.bucketName))
 
 		// The contract type is stored in a key starting with C
@@ -174,7 +176,48 @@ func (c *collectionDB) Store(t *StateChange) error {
 			return errors.New("invalid state action")
 		}
 	})
-	return err
+}
+
+// FIXME: if there is an error, the data in collection may not be consistent
+// with boltdb.
+func (c *collectionDB) StoreAll(ts StateChanges) error {
+	for _, t := range ts {
+		if err := storeInColl(c.coll, &t); err != nil {
+			return err
+		}
+	}
+	return c.db.Update(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(c.bucketName))
+		if bucket == nil {
+			return errors.New("bucket does not exist")
+		}
+		for _, t := range ts {
+			// The contract type is stored in a key starting with C
+			keyC := make([]byte, 1+len(t.InstanceID))
+			keyC[0] = byte('C')
+			copy(keyC[1:], t.InstanceID)
+
+			switch t.StateAction {
+			case Create, Update:
+				if err := bucket.Put(t.InstanceID, t.Value); err != nil {
+					return err
+				}
+				if err := bucket.Put(keyC, t.ContractID); err != nil {
+					return err
+				}
+			case Remove:
+				if err := bucket.Delete(t.InstanceID); err != nil {
+					return err
+				}
+				if err := bucket.Delete(keyC); err != nil {
+					return err
+				}
+			default:
+				return errors.New("invalid state action")
+			}
+		}
+		return nil
+	})
 }
 
 func (c *collectionDB) GetValueContract(key []byte) ([]byte, []byte, error) {
