@@ -68,15 +68,27 @@ func padDarc(key []byte) []byte {
 }
 
 func TestService_AddTransaction(t *testing.T) {
-	testAddTransaction(t, 0)
+	testAddTransaction(t, 0, false)
 }
 
-func TestService_AddTransactionToFollower(t *testing.T) {
-	testAddTransaction(t, 1)
+func TestService_AddTransaction_ToFollower(t *testing.T) {
+	testAddTransaction(t, 1, false)
 }
 
-func testAddTransaction(t *testing.T, sendToIdx int) {
-	s := newSer(t, 1, testInterval)
+func TestService_AddTransaction_WithFailure(t *testing.T) {
+	testAddTransaction(t, 0, true)
+}
+
+func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
+	var s *ser
+	if failure {
+		s = newSerN(t, 1, time.Second, 4, false)
+		for _, service := range s.services {
+			service.SetPropagationTimeout(time.Second)
+		}
+	} else {
+		s = newSer(t, 1, testInterval)
+	}
 	defer s.local.CloseAll()
 
 	// wrong version
@@ -97,6 +109,12 @@ func testAddTransaction(t *testing.T, sendToIdx int) {
 		SkipchainID: s.sb.SkipChainID(),
 	})
 	require.NotNil(t, err)
+
+	if failure {
+		// kill a child conode and adding tx should still succeed
+		s.hosts[len(s.hosts)-1].Pause()
+		defer s.hosts[len(s.hosts)-1].Unpause()
+	}
 
 	// the operations below should succeed
 	// add the first tx
