@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	dkgprotocol "github.com/dedis/cothority/dkg"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
 	dkg "github.com/dedis/kyber/share/dkg/rabin"
@@ -16,6 +17,8 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
 )
+
+var tSuite = cothority.Suite
 
 // Used for tests
 var testServiceID onet.ServiceID
@@ -65,13 +68,13 @@ func ocs(t *testing.T, nbrNodes, threshold, keylen, fail int, refuse bool) {
 	servers, _, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	log.Lvl3(tree.Dump())
 
-	// 1 - setting up - in real life uses SetupDKG-protocol
+	// 1 - setting up - in real life uses Setup-protocol
 	// Store the dkgs in the services
 	dkgs, err := CreateDKGs(tSuite.(dkg.Suite), nbrNodes, threshold)
 	require.Nil(t, err)
 	services := local.GetServices(servers, testServiceID)
 	for i := range services {
-		services[i].(*testService).Shared, err = NewSharedSecret(dkgs[i])
+		services[i].(*testService).Shared, err = dkgprotocol.NewSharedSecret(dkgs[i])
 		require.Nil(t, err)
 	}
 
@@ -143,7 +146,7 @@ type testService struct {
 	*onet.ServiceProcessor
 
 	// Has to be initialised by the test
-	Shared *SharedSecret
+	Shared *dkgprotocol.SharedSecret
 	Poly   *share.PubPoly
 }
 

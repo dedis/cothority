@@ -1,16 +1,14 @@
-package protocol
+package dkg
 
 import (
 	"testing"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
-
 	"github.com/stretchr/testify/require"
-
-	"github.com/dedis/cothority"
 )
 
 func TestMain(m *testing.M) {
@@ -32,8 +30,8 @@ func setupDKG(t *testing.T, nbrNodes int) {
 	_, _, tree := local.GenBigTree(nbrNodes, nbrNodes, nbrNodes, true)
 	log.Lvl3(tree.Dump())
 
-	pi, err := local.CreateProtocol(NameDKG, tree)
-	protocol := pi.(*SetupDKG)
+	pi, err := local.CreateProtocol(Name, tree)
+	protocol := pi.(*Setup)
 	protocol.Wait = true
 	if err != nil {
 		t.Fatal("Couldn't start protocol:", err)

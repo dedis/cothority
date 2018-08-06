@@ -1,9 +1,4 @@
-package protocol
-
-/*
-The onchain-protocol implements the key-reencryption described in Lefteris'
-paper-draft about onchain-secrets (called BlockMage).
-*/
+package dkg
 
 import (
 	"errors"
@@ -11,29 +6,32 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
-	dkg "github.com/dedis/kyber/share/dkg/rabin"
+	dkgrabin "github.com/dedis/kyber/share/dkg/rabin"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
 
+// Name is the protocol identifier string.
+const Name = "DKG"
+
 func init() {
-	onet.GlobalProtocolRegister(NameDKG, NewSetupDKG)
+	onet.GlobalProtocolRegister(Name, NewSetup)
 }
 
-// SetupDKG can give the DKG that can be used to get the shared public key.
-type SetupDKG struct {
+// Setup can give the DKG that can be used to get the shared public key.
+type Setup struct {
 	*onet.TreeNodeInstance
-	DKG       *dkg.DistKeyGenerator
+	DKG       *dkgrabin.DistKeyGenerator
 	Threshold uint32
 
 	nodes   []*onet.TreeNode
 	keypair *key.Pair
 	publics []kyber.Point
 	// Whether we started the `DKG.SecretCommits`
-	commit    bool
-	Wait      bool
-	SetupDone chan bool
+	commit   bool
+	Wait     bool
+	Finished chan bool
 
 	structStartDeal    chan structStartDeal
 	structDeal         chan structDeal
@@ -43,12 +41,12 @@ type SetupDKG struct {
 	structWaitReply    chan []structWaitReply
 }
 
-// NewSetupDKG initialises the structure for use in one round
-func NewSetupDKG(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	o := &SetupDKG{
+// NewSetup initialises the structure for use in one round
+func NewSetup(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+	o := &Setup{
 		TreeNodeInstance: n,
 		keypair:          key.NewKeyPair(cothority.Suite),
-		SetupDone:        make(chan bool, 1),
+		Finished:         make(chan bool, 1),
 		Threshold:        uint32(len(n.Roster().List) - (len(n.Roster().List)-1)/3),
 		nodes:            n.List(),
 	}
@@ -67,10 +65,10 @@ func NewSetupDKG(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 }
 
 // Start sends the Announce-message to all children
-func (o *SetupDKG) Start() error {
+func (o *Setup) Start() error {
 	log.Lvl3("Starting Protocol")
 	// 1a - root asks children to send their public key
-	errs := o.Broadcast(&InitDKG{Wait: o.Wait})
+	errs := o.Broadcast(&Init{Wait: o.Wait})
 	if len(errs) != 0 {
 		return fmt.Errorf("boradcast failed with error(s): %v", errs)
 	}
@@ -78,7 +76,7 @@ func (o *SetupDKG) Start() error {
 }
 
 // Dispatch takes care for channel-messages that need to be treated in the correct order.
-func (o *SetupDKG) Dispatch() error {
+func (o *Setup) Dispatch() error {
 	defer o.Done()
 	err := o.allStartDeal(<-o.structStartDeal)
 	if err != nil {
@@ -117,7 +115,7 @@ func (o *SetupDKG) Dispatch() error {
 	}
 
 	if o.DKG.Finished() {
-		o.SetupDone <- true
+		o.Finished <- true
 		return nil
 	}
 	err = errors.New("protocol is finished but dkg is not")
@@ -127,19 +125,19 @@ func (o *SetupDKG) Dispatch() error {
 
 // SharedSecret returns the necessary information for doing shared
 // encryption and decryption.
-func (o *SetupDKG) SharedSecret() (*SharedSecret, error) {
+func (o *Setup) SharedSecret() (*SharedSecret, error) {
 	return NewSharedSecret(o.DKG)
 }
 
 // Children reactions
-func (o *SetupDKG) childInit(i structInitDKG) error {
+func (o *Setup) childInit(i structInit) error {
 	o.Wait = i.Wait
 	log.Lvl3(o.Name(), o.Wait)
-	return o.SendToParent(&InitDKGReply{Public: o.keypair.Public})
+	return o.SendToParent(&InitReply{Public: o.keypair.Public})
 }
 
 // Root-node messages
-func (o *SetupDKG) rootStartDeal(replies []structInitReply) error {
+func (o *Setup) rootStartDeal(replies []structInitReply) error {
 	log.Lvl3(o.Name(), replies)
 	o.publics[0] = o.keypair.Public
 	for _, r := range replies {
@@ -156,10 +154,10 @@ func (o *SetupDKG) rootStartDeal(replies []structInitReply) error {
 }
 
 // Messages for both
-func (o *SetupDKG) allStartDeal(ssd structStartDeal) error {
+func (o *Setup) allStartDeal(ssd structStartDeal) error {
 	log.Lvl3(o.Name(), "received startDeal from:", ssd.ServerIdentity)
 	var err error
-	o.DKG, err = dkg.NewDistKeyGenerator(cothority.Suite, o.keypair.Private,
+	o.DKG, err = dkgrabin.NewDistKeyGenerator(cothority.Suite, o.keypair.Private,
 		ssd.Publics, int(ssd.Threshold))
 	if err != nil {
 		return err
@@ -178,7 +176,7 @@ func (o *SetupDKG) allStartDeal(ssd structStartDeal) error {
 	return nil
 }
 
-func (o *SetupDKG) allDeal(sd structDeal) error {
+func (o *Setup) allDeal(sd structDeal) error {
 	log.Lvl3(o.Name(), sd.ServerIdentity)
 	resp, err := o.DKG.ProcessDeal(sd.Deal.Deal)
 	if err != nil {
@@ -188,7 +186,7 @@ func (o *SetupDKG) allDeal(sd structDeal) error {
 	return o.fullBroadcast(&Response{resp})
 }
 
-func (o *SetupDKG) allResponse(resp structResponse) error {
+func (o *Setup) allResponse(resp structResponse) error {
 	log.Lvl3(o.Name(), resp.ServerIdentity)
 	just, err := o.DKG.ProcessResponse(resp.Response.Response)
 	if err != nil {
@@ -207,7 +205,7 @@ func (o *SetupDKG) allResponse(resp structResponse) error {
 	return err
 }
 
-func (o *SetupDKG) allSecretCommit(comm structSecretCommit) error {
+func (o *Setup) allSecretCommit(comm structSecretCommit) error {
 	log.Lvl3(o.Name(), comm)
 	compl, err := o.DKG.ProcessSecretCommits(comm.SecretCommit.SecretCommit)
 	if err != nil {
@@ -221,7 +219,7 @@ func (o *SetupDKG) allSecretCommit(comm structSecretCommit) error {
 }
 
 // Convenience functions
-func (o *SetupDKG) fullBroadcast(msg interface{}) error {
+func (o *Setup) fullBroadcast(msg interface{}) error {
 	errs := o.Multicast(msg, o.nodes...)
 	if len(errs) != 0 {
 		return fmt.Errorf("multicast failed with error(s): %v", errs)
