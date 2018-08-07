@@ -41,7 +41,7 @@ func init() {
 	var err error
 	OmniledgerID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
-	network.RegisterMessages(&omniStorage{}, &DataHeader{}, &updateCollection{})
+	network.RegisterMessages(&omniStorage{}, &DataHeader{})
 }
 
 // GenNonce returns a random nonce.
@@ -109,10 +109,6 @@ type omniStorage struct {
 	PropTimeout time.Duration
 
 	sync.Mutex
-}
-
-type updateCollection struct {
-	ID skipchain.SkipBlockID
 }
 
 // CreateGenesisBlock asks the service to create a new skipchain ready to
@@ -407,63 +403,54 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 	if err != nil {
 		return nil, err
 	}
-
-	s.storage.Lock()
-	pto := s.storage.PropTimeout
-	s.storage.Unlock()
-	// TODO: replace this with some kind of callback from the skipchain-service
-	log.Lvl3("Asking all nodes to update their collections")
-	replies, err := s.propagateTransactions(sb.Roster, &updateCollection{sb.Hash}, pto)
-	if err != nil {
-		log.Lvl1("Propagation-error:", err.Error())
-	}
-	if replies != len(sb.Roster.List) {
-		log.Lvlf1("%s: only got %d out of %d for block %x", s.ServerIdentity(), replies, len(sb.Roster.List), sb.Hash)
-	}
-	log.Lvl3("All nodes have the latest transactions stored")
 	return ssbReply.Latest, nil
 }
 
-// updateCollection is called once a skipblock has been stored.
-// It is called by the leader, and every node will add the
-// transactions in the block to its collection.
-func (s *Service) updateCollection(msg network.Message) {
-	uc, ok := msg.(*updateCollection)
-	if !ok {
-		log.Error("updateCollection cast failure")
-		return
+// updateCollectionCallback is registered in skipchain and is called after a
+// skipblock is updated. When this function is called, it is not always after
+// the addition of a new block, but an updates to forward links, for example.
+// Hence, we need to figure out when a new block is added. This can be done by
+// looking at the latest skipblock cache from Service.state.
+func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
+	log.Lvlf4("%s: callback on %x", s.ServerIdentity(), sbID)
+	sb := s.db().GetByID(sbID)
+	if sb == nil {
+		panic("This should never happen because the callback runs " +
+			"only after the skipblock is stored. There is a " +
+			"programmer error if you see this message.")
 	}
-
-	sb, err := s.db().GetLatestByID(uc.ID)
-	if err != nil {
-		log.Errorf("didn't find latest block for %x", uc.ID)
-		return
+	prevSB := s.db().GetByID(s.state.getLast(sb.SkipChainID()))
+	var prevIdx int
+	if prevSB == nil {
+		prevIdx = -1
+	} else {
+		prevIdx = prevSB.Index
+	}
+	if prevIdx+1 != sb.Index {
+		log.Lvl4(s.ServerIdentity(), "not updating collection because it is not a new block")
+		return nil
 	}
 	_, dataI, err := network.Unmarshal(sb.Data, cothority.Suite)
 	data, ok := dataI.(*DataHeader)
 	if err != nil || !ok {
-		log.Error("couldn't unmarshal header")
-		return
+		return errors.New("couldn't unmarshal header")
 	}
 	_, bodyI, err := network.Unmarshal(sb.Payload, cothority.Suite)
 	body, ok := bodyI.(*DataBody)
 	if err != nil || !ok {
-		log.Error("couldn't unmarshal body", err, ok)
-		return
+		return errors.New("couldn't unmarshal body")
 	}
 
 	log.Lvlf2("%s: Updating transactions for %x", s.ServerIdentity(), sb.SkipChainID())
 	cdb := s.getCollection(sb.SkipChainID())
 	_, _, scs, err := s.createStateChanges(cdb.coll, sb.SkipChainID(), body.Transactions)
 	if err != nil {
-		log.Error("Couldn't recreate state changes:", err.Error())
-		return
+		return err
 	}
 
 	log.Lvlf3("%s: Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
 	if err = cdb.StoreAll(scs); err != nil {
-		log.Error("error while storing in collection: " + err.Error())
-		return
+		return err
 	}
 	if !bytes.Equal(cdb.RootHash(), data.CollectionRoot) {
 		log.Error("hash of collection doesn't correspond to root hash")
@@ -479,8 +466,7 @@ func (s *Service) updateCollection(msg network.Message) {
 	// new one
 	interval, err := s.LoadBlockInterval(sb.SkipChainID())
 	if err != nil {
-		log.Error(s.ServerIdentity(), err)
-		return
+		return err
 	}
 	if s.heartbeats.enabled() && sb.Index == 0 {
 		if s.heartbeats.exists(string(sb.SkipChainID())) {
@@ -508,13 +494,13 @@ func (s *Service) updateCollection(msg network.Message) {
 		// the information should already be in the collections
 		d, err := s.LoadGenesisDarc(sb.SkipChainID())
 		if err != nil {
-			log.Error(err)
-			return
+			return err
 		}
 		s.darcToScMut.Lock()
 		s.darcToSc[string(d.GetBaseID())] = sb.SkipChainID()
 		s.darcToScMut.Unlock()
 	}
+	return nil
 }
 
 // GetCollectionView returns a read-only accessor to the collection
@@ -767,6 +753,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			return false
 		}
 	}
+	log.Lvl4(s.ServerIdentity(), "verification completed")
 	return true
 }
 
@@ -1181,17 +1168,12 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
-	var err error
-	s.propagateTransactions, err = messaging.NewPropagationFunc(c, "OmniLedgerPropagate", s.updateCollection, -1)
-	if err != nil {
-		return nil, err
-	}
-
 	s.registerContract(ContractConfigID, s.ContractConfig)
 	s.registerContract(ContractDarcID, s.ContractDarc)
 	skipchain.RegisterVerification(c, verifyOmniLedger, s.verifySkipBlock)
 	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {
 		return nil, err
 	}
+	s.skService().RegisterStoreSkipblockCallback(s.updateCollectionCallback)
 	return s, nil
 }

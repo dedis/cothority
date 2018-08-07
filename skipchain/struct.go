@@ -588,6 +588,7 @@ type SkipBlockDB struct {
 	// latestBlocks is used as a simple caching mechanism
 	latestBlocks map[string]SkipBlockID
 	latestMutex  sync.Mutex
+	callback     func(SkipBlockID) error
 }
 
 // NewSkipBlockDB returns an initialized SkipBlockDB structure.
@@ -697,6 +698,17 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 		}
 		return nil
 	})
+
+	// Run the callback if it exists, we have to do this outside of the
+	// boltdb transaction because the callback might also make updates to
+	// the database. Otherwise there will be a deadlock.
+	if db.callback != nil {
+		for _, r := range result {
+			if err := db.callback(r); err != nil {
+				log.Error(err)
+			}
+		}
+	}
 
 	return result, err
 }
