@@ -35,8 +35,6 @@ func TestHeartbeat_Timeout(t *testing.T) {
 	k1 := "k1"
 	require.NoError(t, hb.start(k1, time.Millisecond, timeoutChan))
 	require.Error(t, hb.beat("zz"))
-
-	expected := time.Now()
 	require.NoError(t, hb.beat(k1))
 
 	select {
@@ -46,25 +44,18 @@ func TestHeartbeat_Timeout(t *testing.T) {
 		require.Fail(t, "did not get message in timeoutChan")
 	}
 
-	// NOTE the following tests might be flaky on Travis because they
-	// depend on timing. If it becomes a big problem then consider an
-	// alternative solution, e.g., inject the current time into the
-	// heartbeat go-routine.
+	// Wait for a bit and beat again, we expect the latest heartbeat to
+	// change.
 
 	lastBeat, err := hb.getLatestHeartbeat(k1)
 	require.NoError(t, err)
-	if lastBeat.After(expected.Add(time.Millisecond/2)) || lastBeat.Before(expected.Add(-time.Microsecond/2)) {
-		require.Fail(t, "lastBeat is not within a millisecond of the expected range")
-	}
 
-	// if we beat again, then the latest heartbeat should be updated
-	time.Sleep(2 * time.Millisecond)
-	expected = time.Now()
+	time.Sleep(time.Millisecond)
 	require.NoError(t, hb.beat(k1))
 
-	lastBeat, err = hb.getLatestHeartbeat(k1)
+	newBeat, err := hb.getLatestHeartbeat(k1)
 	require.NoError(t, err)
-	if lastBeat.After(expected.Add(time.Millisecond/2)) || lastBeat.Before(expected.Add(-time.Microsecond/2)) {
-		require.Fail(t, "lastBeat is not within a millisecond of the expected range")
+	if !newBeat.After(lastBeat) {
+		require.Fail(t, "heartbeat was not updated")
 	}
 }
