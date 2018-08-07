@@ -673,7 +673,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 				cdbI := s.GetCollectionView(scID)
 				now := time.Now()
 				for len(txs) > 0 {
-					if err := s.verifyClientTx(scID, txs[0]); err == nil {
+					if s.verifyClientTx(scID, txs[0]) == nil {
 						var cin []Coin
 						for _, instr := range txs[0].Instructions {
 							_, cin, err = s.executeInstruction(cdbI, cin, instr)
