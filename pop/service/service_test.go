@@ -93,6 +93,44 @@ func TestService_StoreConfig(t *testing.T) {
 	require.True(t, ok)
 }
 
+func TestService_Proposals(t *testing.T) {
+	suiteSkip(t)
+	local := onet.NewTCPTest(tSuite)
+	defer local.CloseAll()
+
+	nodes, r, _ := local.GenTree(3, true)
+	services := local.GetServices(nodes, serviceID)
+	s0 := services[0].(*Service)
+	s1 := services[1].(*Service)
+	s2 := services[2].(*Service)
+
+	desc := &PopDesc{
+		Name:     "test",
+		DateTime: "tomorrow",
+		Roster:   onet.NewRoster(r.List),
+	}
+	kp := key.NewKeyPair(tSuite)
+
+	s0.data.Public = kp.Public
+	s1.data.Public = kp.Public
+	hash := desc.Hash()
+	sg, err := schnorr.Sign(tSuite, kp.Private, hash)
+	require.Nil(t, err)
+	msg, err := s0.StoreConfig(&StoreConfig{desc, sg})
+	require.Nil(t, err)
+	_, ok := msg.(*StoreConfigReply)
+	require.True(t, ok)
+	_, ok = s0.data.Finals[string(desc.Hash())]
+	require.True(t, ok)
+	require.Equal(t, 1, len(s1.proposedDescription))
+	require.Equal(t, 1, len(s2.proposedDescription))
+
+	msg, err = s1.StoreConfig(&StoreConfig{desc, sg})
+	require.Nil(t, err)
+	require.Equal(t, 0, len(s0.proposedDescription))
+	require.Equal(t, 1, len(s2.proposedDescription))
+}
+
 func TestService_CheckConfigMessage(t *testing.T) {
 	suiteSkip(t)
 	local := onet.NewTCPTest(tSuite)

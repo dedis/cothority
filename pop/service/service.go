@@ -196,17 +196,34 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Message, error) {
 
 	// And send the proposed config to all other nodes, so that an eventual client
 	// can fetch it from there.
-	replies, err := s.propagateDescription(req.Desc.Roster, req.Desc, 10*time.Second)
-	if err != nil {
-		return nil, err
-	}
-	if replies != len(req.Desc.Roster.List) {
-		log.Warn("Did only get", replies)
+	if req.Desc.Roster.List[0].Equal(s.ServerIdentity()) {
+		log.Lvl2(s.ServerIdentity(), "sending configuration to other nodes")
+		replies, err := s.propagateDescription(req.Desc.Roster, req.Desc, 10*time.Second)
+		if err != nil {
+			return nil, err
+		}
+		if replies != len(req.Desc.Roster.List) {
+			log.Warn("Did only get", replies)
+		}
+	} else {
+		// Search if the given configuration is stored in the proposition, so that
+		// it can be deleted.
+		index := -1
+		for i, cfg := range s.proposedDescription {
+			if bytes.Compare(cfg.Hash(), hash) == 0 {
+				index = i
+			}
+		}
+		log.Lvl2("Deleting stored proposition")
+		if index >= 0 {
+			s.proposedDescription = append(s.proposedDescription[0:index],
+				s.proposedDescription[index+1:]...)
+		}
 	}
 	return &StoreConfigReply{hash}, nil
 }
 
-// GetProposals returns all collected proposals so far and deletes the proposals.
+// GetProposals returns all collected proposals so far.
 func (s *Service) GetProposals(req *GetProposals) (*GetProposalsReply, error) {
 	tmp := s.proposedDescription
 	s.proposedDescription = make([]PopDesc, 0)
