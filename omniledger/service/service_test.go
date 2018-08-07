@@ -782,6 +782,53 @@ func TestService_DarcToSc(t *testing.T) {
 	}
 }
 
+func TestService_StateChangeCache(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	// Register a stateful contract, so we can monitor how many times that
+	// the contract gets called. Using the state change cache, we should
+	// only call it once.
+	contractID := "stateShangeCacheTest"
+	var ctr int
+	contract := func(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+		ctr++
+		return []StateChange{}, []Coin{}, nil
+	}
+	s.service().registerContract(contractID, contract)
+
+	scID := s.sb.SkipChainID()
+	coll := s.service().getCollection(scID).coll
+	tx, err := createOneClientTx(s.darc.GetBaseID(), contractID, []byte{}, s.signer)
+	txs := ClientTransactions([]ClientTransaction{tx})
+	require.NoError(t, err)
+	root, ctsOK, states, err := s.service().createStateChanges(coll, scID, txs)
+	require.NoError(t, err)
+	require.Equal(t, ctr, 1)
+
+	// If we call createStateChanges again, then it should load it from the
+	// cache, which means that ctr is still one (we do not call the
+	// contract twice).
+	root1, ctsOK1, states1, err := s.service().createStateChanges(coll, scID, txs)
+	require.NoError(t, err)
+	require.Equal(t, ctr, 1)
+
+	require.Equal(t, root, root1)
+	require.Equal(t, ctsOK, ctsOK1)
+	require.Equal(t, states, states1)
+
+	// If we remove the cache, then we expect the contract to be called
+	// again, i.e., ctr == 2.
+	s.service().stateChangeCache = newStateChangeCache()
+	require.NoError(t, err)
+	root2, ctsOK2, states2, err := s.service().createStateChanges(coll, scID, txs)
+	require.NoError(t, err)
+	require.Equal(t, root, root2)
+	require.Equal(t, ctsOK, ctsOK2)
+	require.Equal(t, states, states2)
+	require.Equal(t, ctr, 2)
+}
+
 func createConfigTx(t *testing.T, s *ser, isgood bool) (ClientTransaction, ChainConfig) {
 	var config ChainConfig
 	if isgood {
