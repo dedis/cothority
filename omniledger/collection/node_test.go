@@ -1,6 +1,9 @@
 package collection
 
-import "testing"
+import (
+	"bytes"
+	"testing"
+)
 
 func TestNodeGetters(test *testing.T) {
 	root := node{}
@@ -63,7 +66,7 @@ func TestNodeBackupRestore(test *testing.T) {
 		test.Error("[node.go]", "[backup]", "backup() has no effect on non-previously backed up node.")
 	}
 
-	if !equal(root.transaction.backup.key, root.key) || (root.transaction.backup.label[0] != 11) || (root.transaction.backup.label[1] != 12) {
+	if !bytes.Equal(root.transaction.backup.key, root.key) || (root.transaction.backup.label[0] != 11) || (root.transaction.backup.label[1] != 12) {
 		test.Error("[node.go]", "[backup]", "backup() doesn't properly copy data to the backup item.")
 	}
 
@@ -76,13 +79,13 @@ func TestNodeBackupRestore(test *testing.T) {
 
 	root.backup()
 
-	if equal(root.transaction.backup.key, root.key) || (root.transaction.backup.label[0] == 0) || (root.transaction.backup.label[1] == 0) {
+	if bytes.Equal(root.transaction.backup.key, root.key) || (root.transaction.backup.label[0] == 0) || (root.transaction.backup.label[1] == 0) {
 		test.Error("[node.go]", "[backup]", "backup() is run again on a node that was already backed up.")
 	}
 
 	root.restore()
 
-	if !equal(root.key, []byte("mykey")) || (root.label[0] != 11) || (root.label[1] != 12) {
+	if !bytes.Equal(root.key, []byte("mykey")) || (root.label[0] != 11) || (root.label[1] != 12) {
 		test.Error("[node.go]", "[restore]", "restore() does not restore values on previously backed up node.")
 	}
 
@@ -94,7 +97,7 @@ func TestNodeBackupRestore(test *testing.T) {
 		test.Error("[node.go]", "[restore]", "restore() does not restore children.")
 	}
 
-	if !equal(root.children.left.key, []byte("leftkey")) || !equal(root.children.right.key, []byte("rightkey")) {
+	if !bytes.Equal(root.children.left.key, []byte("leftkey")) || !bytes.Equal(root.children.right.key, []byte("rightkey")) {
 		test.Error("[node.go]", "[restore]", "restore() does not correctly restore children.")
 	}
 }

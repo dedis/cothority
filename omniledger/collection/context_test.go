@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"testing"
 )
@@ -82,7 +83,7 @@ func (t testCtxVerifier) node(prefix string, collection *Collection, node *node)
 					t.test.Error(t.file, prefix, "malformed children values")
 				}
 
-				if !equal(parentValue, node.values[index]) {
+				if !bytes.Equal(parentValue, node.values[index]) {
 					t.test.Error(t.file, prefix, "one or more internal node values conflict with the corresponding children values")
 					return
 				}
@@ -180,7 +181,7 @@ func (t testCtxVerifier) scope(prefix string, collection *Collection) {
 
 func (t testCtxVerifier) keyRecursion(key []byte, node *node) *node {
 	if node.leaf() {
-		if equal(node.key, key) {
+		if bytes.Equal(node.key, key) {
 			return node
 		}
 		return nil
@@ -215,7 +216,7 @@ func (t testCtxVerifier) values(prefix string, collection *Collection, key []byt
 
 	for index := 0; index < len(collection.fields); index++ {
 		rawValue := collection.fields[index].Encode(values[index])
-		if !(equal(rawValue, node.values[index])) {
+		if !bytes.Equal(rawValue, node.values[index]) {
 			t.test.Error(t.file, prefix, "wrong values")
 		}
 	}

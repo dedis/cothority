@@ -4,20 +4,6 @@ import "crypto/sha256"
 
 // utility functions for slices of bytes
 
-func equal(lho []byte, rho []byte) bool {
-	if len(lho) != len(rho) {
-		return false
-	}
-
-	for index := 0; index < len(lho); index++ {
-		if lho[index] != rho[index] {
-			return false
-		}
-	}
-
-	return true
-}
-
 func bit(buffer []byte, index int) bool {
 	byteIdx := uint(index) / 8
 	bitIdx := 7 - (uint(index) % 8)

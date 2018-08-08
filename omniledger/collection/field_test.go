@@ -1,12 +1,15 @@
 package collection
 
-import "testing"
-import "math/rand"
+import (
+	"bytes"
+	"math/rand"
+	"testing"
+)
 
 func TestFieldData(test *testing.T) {
 	var data Data
 
-	if !equal(data.Encode([]byte("mydata")), []byte("mydata")) {
+	if !bytes.Equal(data.Encode([]byte("mydata")), []byte("mydata")) {
 		test.Error("[field.go]", "[encode]", "Data encode() function is not the identity function.")
 	}
 
@@ -16,7 +19,7 @@ func TestFieldData(test *testing.T) {
 		test.Error("[field.go]", "[decode]", "Data decode() yields an error.")
 	}
 
-	if !equal(value.([]byte), []byte("mydata")) {
+	if !bytes.Equal(value.([]byte), []byte("mydata")) {
 		test.Error("[field.go]", "[decode]", "Data decode() function is not the identity function.")
 	}
 

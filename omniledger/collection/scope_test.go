@@ -1,7 +1,10 @@
 package collection
 
-import "testing"
-import "encoding/hex"
+import (
+	"bytes"
+	"encoding/hex"
+	"testing"
+)
 
 func TestScopeMask(test *testing.T) {
 	type round struct {
@@ -161,7 +164,7 @@ func TestScopeClone(test *testing.T) {
 			test.Error("[scope.go]", "[clone]", "clone() does not properly copy the number of bits in a mask.")
 		}
 
-		if !equal(clone.masks[index].value, scope.masks[index].value) {
+		if !bytes.Equal(clone.masks[index].value, scope.masks[index].value) {
 			test.Error("[scope.go]", "[clone]", "clone() does not properly copy the mask value.")
 		}
 	}

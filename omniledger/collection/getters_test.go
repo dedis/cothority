@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"testing"
@@ -14,7 +15,7 @@ func TestGettersConstructors(test *testing.T) {
 		test.Error("[getters.go]", "[constructors]", "Getter constructor sets wrong collection pointer.")
 	}
 
-	if !equal(getter.key, []byte("mykey")) {
+	if !bytes.Equal(getter.key, []byte("mykey")) {
 		test.Error("[getters.go]", "[constructors]", "Getter constructor sets wrong key.")
 	}
 }
@@ -39,7 +40,7 @@ func TestGettersRecord(test *testing.T) {
 			test.Error("[getters.go]", "[record]", "Record() yields an error on valid key query.")
 		}
 
-		if !equal(record.Key(), key) {
+		if !bytes.Equal(record.Key(), key) {
 			test.Error("[getters.go]", "[record]", "Record() returns a record with wrong key.")
 		}
 
@@ -82,7 +83,7 @@ func TestGettersProof(test *testing.T) {
 			test.Error("[getters.go]", "[proof]", "Proof() yields an error on valid key query.")
 		}
 
-		if !equal(proof.Key, key) {
+		if !bytes.Equal(proof.Key, key) {
 			test.Error("[getters.go]", "[proof]", "Proof() returns a record with wrong key.")
 		}
 

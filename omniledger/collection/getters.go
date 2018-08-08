@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"errors"
 )
@@ -42,7 +43,7 @@ func (g Getter) Record() (Record, error) {
 		}
 
 		if cursor.leaf() {
-			if equal(cursor.key, g.key) {
+			if bytes.Equal(cursor.key, g.key) {
 				return recordKeyMatch(g.collection, cursor), nil
 			}
 			return recordKeyMismatch(g.collection, g.key), nil

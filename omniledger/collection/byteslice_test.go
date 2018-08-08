@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"math/rand"
@@ -13,15 +14,15 @@ func TestBytesliceEqual(test *testing.T) {
 	cutRho, _ := hex.DecodeString("85f46bd1ba19d1014b1179edd451ece95296e4a8c765ba8bba86c168939063")
 	alterRho, _ := hex.DecodeString("85f46bd1ba19d1014b1179edd452ece95296e4a8c765ba8bba86c16893906398")
 
-	if !(equal(lho, rho)) {
+	if !bytes.Equal(lho, rho) {
 		test.Error("[byteslice.go]", "[equal]", "equal() returns false on two equal buffers.")
 	}
 
-	if equal(lho, cutRho) {
+	if bytes.Equal(lho, cutRho) {
 		test.Error("[byteslice.go]", "[equal]", "equal() returns true on two buffers of different length.")
 	}
 
-	if equal(lho, alterRho) {
+	if bytes.Equal(lho, alterRho) {
 		test.Error("[byteslice.go]", "[equal]", "equal() returns true on two different buffers.")
 	}
 }
@@ -48,7 +49,7 @@ func TestByteSliceSetBit(test *testing.T) {
 		setBit(destination, index, bit(source, index))
 	}
 
-	if !(equal(source, destination)) {
+	if !bytes.Equal(source, destination) {
 		test.Error("[byteslice.go]", "[setBit]", "Wrong bit set by setBit.")
 	}
 
@@ -60,7 +61,7 @@ func TestByteSliceSetBit(test *testing.T) {
 		setBit(destination, index, bit(source, index))
 	}
 
-	if !(equal(source, destination)) {
+	if !bytes.Equal(source, destination) {
 		test.Error("[byteslice.go]", "[setBit]", "Wrong bit set by setBit.")
 	}
 }

@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -65,7 +66,7 @@ func (c *Collection) Add(key []byte, values ...interface{}) error {
 
 			break
 		} else if cursor.leaf() {
-			if equal(key, cursor.key) {
+			if bytes.Equal(key, cursor.key) {
 				return fmt.Errorf("key collision - %x", key)
 			}
 
@@ -152,7 +153,7 @@ func (c *Collection) set(key []byte, values ...interface{}) error {
 		}
 
 		if cursor.leaf() {
-			if !(equal(cursor.key, key)) {
+			if !bytes.Equal(cursor.key, key) {
 				return errors.New("key not found")
 			}
 			if c.transaction.ongoing {
@@ -255,7 +256,7 @@ func (c *Collection) Remove(key []byte) error {
 		}
 
 		if cursor.leaf() {
-			if !(equal(cursor.key, key)) {
+			if !bytes.Equal(cursor.key, key) {
 				return errors.New("key not found")
 			}
 			if c.transaction.ongoing {
