@@ -174,6 +174,9 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Message, error) {
 	if req.Desc.Roster == nil {
 		return nil, errors.New("no roster set")
 	}
+	if i, _ := req.Desc.Roster.Search(s.ServerIdentity().ID); i < 0 {
+		return nil, errors.New("this node is not in the roster")
+	}
 	if s.data.Public == nil {
 		return nil, errors.New("Not linked yet")
 	}
