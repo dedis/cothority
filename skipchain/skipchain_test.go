@@ -391,11 +391,17 @@ func TestService_RegisterVerification(t *testing.T) {
 	log.ErrFatal(err)
 	require.NotNil(t, sb.Data)
 	require.Equal(t, 0, len(ver))
+	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sb.Hash, NewBlock: sb})
+	require.Nil(t, err)
+	require.Equal(t, 3, len(ver))
 
 	sb, err = makeGenesisRosterArgs(s1, el, nil, []VerifierID{ServiceVerifier}, 1, 1)
 	log.ErrFatal(err)
 	require.NotNil(t, sb.Data)
 	require.Equal(t, 0, len(ServiceVerifierChan))
+	_, err = s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sb.Hash, NewBlock: sb})
+	require.Nil(t, err)
+	require.Equal(t, 3, len(ServiceVerifierChan))
 }
 
 func TestService_StoreSkipBlock2(t *testing.T) {
