@@ -346,7 +346,7 @@ func TestService_ProtocolVerification(t *testing.T) {
 
 func TestService_ProtocolVerificationPanic(t *testing.T) {
 	// Testing whether we sign correctly the SkipBlocks
-	local := onet.NewLocalTest(cothority.Suite)
+	local := onet.NewLocalTestT(cothority.Suite, t)
 	defer waitPropagationFinished(t, local)
 	defer local.CloseAll()
 	_, el, s := local.MakeSRS(cothority.Suite, 3, skipchainSID)
