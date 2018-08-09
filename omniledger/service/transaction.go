@@ -18,13 +18,20 @@ import (
 	"github.com/dedis/protobuf"
 )
 
-func init() {
-	network.RegisterMessages(Instruction{}, ClientTransaction{},
-		StateChange{})
+// An InstanceID is a unique identifier for one instance of a contract.
+type InstanceID [32]byte
+
+func (iID InstanceID) String() string {
+	return fmt.Sprintf("%x", iID.Slice())
 }
 
 // Nonce is used to prevent replay attacks in instructions.
 type Nonce [32]byte
+
+func init() {
+	network.RegisterMessages(Instruction{}, ClientTransaction{},
+		StateChange{})
+}
 
 // NewNonce returns a nonce given a slice of bytes.
 func NewNonce(buf []byte) Nonce {
@@ -36,41 +43,22 @@ func NewNonce(buf []byte) Nonce {
 	return n
 }
 
-// NewInstanceID returns a new InstanceID given a slice of bytes. If the length
-// of the slice is not 64 bytes, it will return an all zero InstanceID.
-func NewInstanceID(buf []byte) InstanceID {
-	if len(buf) != 64 {
-		return InstanceID{zeroDarc, SubID{}}
-	}
-	return InstanceID{buf[0:32], NewSubID(buf[32:64])}
-}
-
-// Slice returns concatenated DarcID and InstanceID.
-func (iID InstanceID) Slice() []byte {
-	var out []byte
-	out = append(out, iID.DarcID[:]...)
-	return append(out, iID.SubID[:]...)
+// NewInstanceID converts the first 32 bytes of in into
+// an InstanceID.
+func NewInstanceID(in []byte) InstanceID {
+	var i InstanceID
+	copy(i[:], in)
+	return i
 }
 
 // Equal returns if both InstanceIDs point to the same instance.
 func (iID InstanceID) Equal(other InstanceID) bool {
-	return bytes.Compare(iID.DarcID, other.DarcID) == 0 &&
-		bytes.Compare(iID.SubID[:], other.SubID[:]) == 0
+	return bytes.Equal(iID[:], other[:])
 }
 
-// SubID is a 32-byte id.
-type SubID [32]byte
-
-// NewSubID returns a SubID given a slice of bytes. If buf is of
-// length 32 bytes it will copy it to a new SubID, else it will return
-// a SubID filled with zeroes.
-func NewSubID(buf []byte) SubID {
-	if len(buf) != 32 {
-		return SubID{}
-	}
-	n := SubID{}
-	copy(n[:], buf)
-	return n
+// Slice returns the InstanceID as a []byte.
+func (iID InstanceID) Slice() []byte {
+	return iID[:]
 }
 
 // Arguments is a searchable list of arguments.
@@ -92,8 +80,7 @@ func (args Arguments) Search(name string) []byte {
 // Hash computes the digest of the hash function
 func (instr Instruction) Hash() []byte {
 	h := sha256.New()
-	h.Write(instr.InstanceID.DarcID)
-	h.Write(instr.InstanceID.SubID[:])
+	h.Write(instr.InstanceID[:])
 	h.Write(instr.Nonce[:])
 	b := make([]byte, 4)
 	binary.LittleEndian.PutUint32(b, uint32(instr.Index))
@@ -123,25 +110,21 @@ func (instr Instruction) Hash() []byte {
 // InstanceID, the given string, and the hash of the Instruction.
 func (instr Instruction) DeriveID(what string) InstanceID {
 	h := sha256.New()
-	h.Write([]byte(what))
 	h.Write(instr.Hash())
+	h.Write([]byte{0})
 	for _, s := range instr.Signatures {
-		// h.Write(s.Signer)
 		h.Write(s.Signature)
+		h.Write([]byte{0})
 	}
-	sum := h.Sum(nil)
-
-	var sub SubID
-	copy(sub[:], sum)
-
-	return InstanceID{
-		DarcID: instr.InstanceID.DarcID,
-		SubID:  sub,
-	}
+	h.Write([]byte(what))
+	h.Write([]byte{0})
+	return NewInstanceID(h.Sum(nil))
 }
 
 // GetContractState searches for the contract kind of this instruction and the
 // attached state to it. It needs the collection to do so.
+//
+// TODO: Deprecate/remove this; the state return is almost always ignored.
 func (instr Instruction) GetContractState(coll CollectionView) (contractID string, state []byte, err error) {
 	// Getting the kind is different for instructions that create a key
 	// and for instructions that send a call to an existing key.
@@ -198,7 +181,7 @@ func (instr Instruction) Action() string {
 func (instr Instruction) String() string {
 	var out string
 	out += fmt.Sprintf("instr: %x\n", instr.Hash())
-	out += fmt.Sprintf("\tdarc ID: %x\n", instr.InstanceID.DarcID)
+	out += fmt.Sprintf("\tinstID: %v\n", instr.InstanceID)
 	out += fmt.Sprintf("\tnonce: %x\n", instr.Nonce)
 	out += fmt.Sprintf("\tindex: %d\n\tlength: %d\n", instr.Index, instr.Length)
 	out += fmt.Sprintf("\taction: %s\n", instr.Action())
@@ -206,18 +189,19 @@ func (instr Instruction) String() string {
 	return out
 }
 
-// SignBy gets signers to sign the (receiver) transaction.
-func (instr *Instruction) SignBy(signers ...darc.Signer) error {
+// SignBy gets one signature from each of the given signers
+// and adds them into the Instruction.
+func (instr *Instruction) SignBy(darcID darc.ID, signers ...darc.Signer) error {
 	// Create the request and populate it with the right identities.  We
 	// need to do this prior to signing because identities are a part of
-	// the digest.
+	// the digest of the Instruction.
 	sigs := make([]darc.Signature, len(signers))
 	for i, signer := range signers {
 		sigs[i].Signer = signer.Identity()
 	}
 	instr.Signatures = sigs
 
-	req, err := instr.ToDarcRequest()
+	req, err := instr.ToDarcRequest(darcID)
 	if err != nil {
 		return err
 	}
@@ -243,8 +227,7 @@ func (instr *Instruction) SignBy(signers ...darc.Signer) error {
 }
 
 // ToDarcRequest converts the Instruction content into a darc.Request.
-func (instr Instruction) ToDarcRequest() (*darc.Request, error) {
-	baseID := instr.InstanceID.DarcID
+func (instr Instruction) ToDarcRequest(baseID darc.ID) (*darc.Request, error) {
 	action := instr.Action()
 	ids := make([]darc.Identity, len(instr.Signatures))
 	sigs := make([][]byte, len(instr.Signatures))
@@ -305,12 +288,13 @@ func (cts ClientTransactions) IsEmpty() bool {
 
 // NewStateChange is a convenience function that fills out a StateChange
 // structure.
-func NewStateChange(sa StateAction, iID InstanceID, contractID string, value []byte) StateChange {
+func NewStateChange(sa StateAction, iID InstanceID, contractID string, value []byte, darcID darc.ID) StateChange {
 	return StateChange{
 		StateAction: sa,
 		InstanceID:  iID.Slice(),
 		ContractID:  []byte(contractID),
 		Value:       value,
+		DarcID:      darcID,
 	}
 }
 

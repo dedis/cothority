@@ -4,9 +4,12 @@ import ch.epfl.dedis.lib.HashId;
 import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.omniledger.darc.DarcId;
+import ch.epfl.dedis.lib.omniledger.darc.Signature;
 import ch.epfl.dedis.proto.OmniLedgerProto;
 import com.google.protobuf.ByteString;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /**
@@ -14,17 +17,11 @@ import java.util.Arrays;
  */
 public class InstanceId implements HashId {
     private final byte[] id;
-    public final static int length = 64;
-
-    public InstanceId(DarcId did, SubId sid) throws CothorityCryptoException{
-        id = new byte[length];
-        System.arraycopy(did.getId(), 0, id, 0, 32);
-        System.arraycopy(sid.getId(), 0, id, 32, 32);
-    }
+    public final static int length = 32;
 
     public InstanceId(byte[] id) throws CothorityCryptoException {
         if (id.length != length) {
-            throw new CothorityCryptoException("need 64 bytes for instanceID, only got " + id.length);
+            throw new CothorityCryptoException("need 32 bytes for instanceID, only got " + id.length);
         }
         this.id = Arrays.copyOf(id, id.length);
     }
@@ -32,22 +29,6 @@ public class InstanceId implements HashId {
     @Override
     public byte[] getId() {
         return Arrays.copyOf(id, id.length);
-    }
-
-    /**
-     * @return the baseId of the darc responsible for this instance
-     * @throws CothorityCryptoException
-     */
-    public DarcId getDarcId() throws CothorityCryptoException {
-        return new DarcId(Arrays.copyOf(id, 32));
-    }
-
-    /**
-     * @return the subId of the instance in the responsible darc-namespace
-     * @throws CothorityCryptoException
-     */
-    public SubId getSubId() throws CothorityCryptoException{
-        return new SubId(Arrays.copyOfRange(id, 32, 64));
     }
 
     @Override
@@ -72,23 +53,31 @@ public class InstanceId implements HashId {
         return ByteString.copyFrom(id);
     }
 
-    public OmniLedgerProto.InstanceID toProto(){
+    /**
+     * Creates an instance ID of all zeros.
+     * @return the zero instance ID
+     */
+    public static InstanceId zero() {
+        byte[] z = new byte[length];
         try {
-            OmniLedgerProto.InstanceID.Builder ret = OmniLedgerProto.InstanceID.newBuilder();
-            ret.setDarcid(ByteString.copyFrom(getDarcId().getId()));
-            ret.setSubid(ByteString.copyFrom(getSubId().getId()));
-            return ret.build();
-        } catch (CothorityCryptoException e){
+            return new InstanceId(z);
+        } catch (CothorityCryptoException e) {
+            // This "can't happen", since we know z is the right length.
             throw new RuntimeException(e);
         }
     }
 
-    /**
-     * Creates an instance ID of all zeros.
-     * @return the zero instance ID
-     * @throws CothorityCryptoException
-     */
-    public static InstanceId zero() throws CothorityCryptoException {
-        return new InstanceId(DarcId.zero(), SubId.zero());
+    public static InstanceId deriveConfigId(DarcId id) throws CothorityCryptoException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(id.getId());
+            byte zero = 0;
+            digest.update(zero);
+            digest.update("config".getBytes());
+            return new InstanceId(digest.digest());
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
     }
+
 }

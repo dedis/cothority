@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
+import ch.epfl.dedis.lib.omniledger.darc.DarcId;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
 public class Instance {
     private InstanceId id;
     private String contractId;
+    private DarcId darcId;
     private byte[] data;
 
     /**
@@ -27,6 +29,7 @@ public class Instance {
         List<byte[]> values = p.getValues();
         data = values.get(0);
         contractId = new String(values.get(1));
+        darcId = new DarcId(values.get(2));
     }
 
     /**
@@ -42,6 +45,11 @@ public class Instance {
     public String getContractId() {
         return contractId;
     }
+
+    /**
+     * @return the darcid of this instance
+     */
+    public DarcId getDarcId() { return darcId; }
 
     /**
      * @return the data of this instance.

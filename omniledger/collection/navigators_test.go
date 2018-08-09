@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"sort"
@@ -24,7 +25,7 @@ func TestNavigatorsConstructors(test *testing.T) {
 		test.Error("[navigators.go]", "[constructors]", "Navigator constructor sets wrong field number.")
 	}
 
-	if !equal(navigator.query, stake64.Encode(uint64(14))) {
+	if !bytes.Equal(navigator.query, stake64.Encode(uint64(14))) {
 		test.Error("[navigators.go]", "[constructors]", "Navigator constructor sets wrong field value.")
 	}
 

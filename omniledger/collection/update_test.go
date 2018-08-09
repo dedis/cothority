@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"testing"
 )
@@ -223,7 +224,7 @@ func TestUpdatePrepare(test *testing.T) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets wrong transaction id.")
 	}
 
-	if !equal(update.update.Records()[0].Key, []byte("mykey")) {
+	if !bytes.Equal(update.update.Records()[0].Key, []byte("mykey")) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets wrong user update.")
 	}
 
@@ -260,7 +261,7 @@ func TestUpdatePrepare(test *testing.T) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets wrong transaction id.")
 	}
 
-	if !equal(update.update.Records()[0].Key, []byte("mykey")) || !equal(update.update.Records()[1].Key, []byte("myotherkey")) {
+	if !bytes.Equal(update.update.Records()[0].Key, []byte("mykey")) || !bytes.Equal(update.update.Records()[1].Key, []byte("myotherkey")) {
 		test.Error("[update.go]", "[prepare]", "Prepare() sets wrong user update.")
 	}
 

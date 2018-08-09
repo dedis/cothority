@@ -1,6 +1,7 @@
 package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.omniledger.darc.DarcId;
 import ch.epfl.dedis.proto.CollectionProto;
 import ch.epfl.dedis.proto.OmniLedgerProto;
 import com.google.protobuf.ByteString;

@@ -144,7 +144,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 		return nil, nil, fmt.Errorf("failed to collect commitments with errors %v", errs)
 	}
 	if !thresholdReachable {
-		return nil, nil, fmt.Errorf("too many refusals (got %d), the threshold %d is no more reachable",
+		return nil, nil, fmt.Errorf("too many refusals (got %d), the threshold of %d cannot be achieved",
 			sumRefusals(commitmentsMap), p.Threshold)
 	}
 

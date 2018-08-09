@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"errors"
 
@@ -89,9 +90,9 @@ func (p Proof) Match() bool {
 	depth := len(p.Steps) - 1
 
 	if bit(path[:], depth) {
-		return equal(p.Key, p.Steps[depth].Right.Key)
+		return bytes.Equal(p.Key, p.Steps[depth].Right.Key)
 	}
-	return equal(p.Key, p.Steps[depth].Left.Key)
+	return bytes.Equal(p.Key, p.Steps[depth].Left.Key)
 }
 
 // RawValues returns the raw values stored in the proof. This can be used if
@@ -108,12 +109,12 @@ func (p Proof) RawValues() ([][]byte, error) {
 	var rawValues [][]byte
 
 	if bit(path[:], depth) {
-		if equal(p.Key, p.Steps[depth].Right.Key) {
+		if bytes.Equal(p.Key, p.Steps[depth].Right.Key) {
 			match = true
 			rawValues = p.Steps[depth].Right.Values
 		}
 	} else {
-		if equal(p.Key, p.Steps[depth].Left.Key) {
+		if bytes.Equal(p.Key, p.Steps[depth].Left.Key) {
 			match = true
 			rawValues = p.Steps[depth].Left.Values
 		}

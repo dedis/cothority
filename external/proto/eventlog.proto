@@ -2,8 +2,6 @@ syntax = "proto2";
 
 package eventlog;
 
-import "omniledger.proto";
-
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "EventLogProto";
 
@@ -16,7 +14,7 @@ option java_outer_classname = "EventLogProto";
 // event", and To == 0 means "until now". From and To should be set using the
 // UnixNano() method in package time.
 message SearchRequest {
-  required omniledger.InstanceID eventlogid = 1;
+  required bytes instance = 1;
   required bytes id = 2;
   // Return events where Event.Topic == Topic, if Topic != "".
   required string topic = 3;

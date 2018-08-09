@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"testing"
@@ -29,7 +30,7 @@ func TestProofDumpNode(test *testing.T) {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong number of values on internal node.")
 	}
 
-	if !equal(rootDump.Values[0], collection.root.values[0]) || !equal(rootDump.Values[1], collection.root.values[1]) {
+	if !bytes.Equal(rootDump.Values[0], collection.root.values[0]) || !bytes.Equal(rootDump.Values[1], collection.root.values[1]) {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong values on internal node.")
 	}
 
@@ -51,7 +52,7 @@ func TestProofDumpNode(test *testing.T) {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets wrong label on dump of leaf.")
 	}
 
-	if !equal(leafDump.Key, leaf.key) {
+	if !bytes.Equal(leafDump.Key, leaf.key) {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets wrong key on leaf.")
 	}
 
@@ -59,7 +60,7 @@ func TestProofDumpNode(test *testing.T) {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong number of values on leaf.")
 	}
 
-	if !equal(leafDump.Values[0], leaf.values[0]) || !equal(leafDump.Values[1], leaf.values[1]) {
+	if !bytes.Equal(leafDump.Values[0], leaf.values[0]) || !bytes.Equal(leafDump.Values[1], leaf.values[1]) {
 		test.Error("[proof.go]", "[dumpNode]", "dumpNode() sets the wrong values on leaf.")
 	}
 
@@ -204,7 +205,7 @@ func TestProofGetters(test *testing.T) {
 	proof := Proof{}
 	proof.Key = []byte("mykey")
 
-	if !equal(proof.Key, []byte("mykey")) {
+	if !bytes.Equal(proof.Key, []byte("mykey")) {
 		test.Error("[proof.go]", "[proofgetters]", "Key() returns wrong key.")
 	}
 }
@@ -265,7 +266,7 @@ func TestProofMatchValues(test *testing.T) {
 		test.Error("[proof.go]", "[values]", "Proof Values() returns wrong number of values.")
 	}
 
-	if (firstValues[0].(uint64) != 66) || !equal(firstValues[1].([]byte), []byte("firstvalue")) {
+	if (firstValues[0].(uint64) != 66) || !bytes.Equal(firstValues[1].([]byte), []byte("firstvalue")) {
 		test.Error("[proof.go]", "[values]", "Proof Values() returns wrong values.")
 	}
 
@@ -285,7 +286,7 @@ func TestProofMatchValues(test *testing.T) {
 		test.Error("[proof.go]", "[values]", "Proof Values() returns wrong number of values.")
 	}
 
-	if (secondValues[0].(uint64) != 99) || !equal(secondValues[1].([]byte), []byte("secondvalue")) {
+	if (secondValues[0].(uint64) != 99) || !bytes.Equal(secondValues[1].([]byte), []byte("secondvalue")) {
 		test.Error("[proof.go]", "[values]", "Proof Values() returns wrong values.")
 	}
 

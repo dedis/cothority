@@ -148,30 +148,33 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		if i == 1 {
 			// Now read the key/values from a new service
 			log.Lvl1("Recreate services and fetch keys again")
-			s.service().tryLoad()
+			require.NoError(t, s.service().tryLoad())
 		}
 		for _, tx := range txs {
-			for {
+			newId := tx.Instructions[0].Hash()
+			ok := false
+			for ct := 0; ct < 10; ct++ {
 				time.Sleep(2 * s.interval)
 				pr, err := s.service().GetProof(&GetProof{
 					Version: CurrentVersion,
 					ID:      s.sb.SkipChainID(),
-					Key:     tx.Instructions[0].InstanceID.Slice(),
+					Key:     newId,
 				})
 				if err != nil {
 					log.Error(err)
 					continue
 				}
 				require.Equal(t, CurrentVersion, pr.Version)
-				require.Nil(t, pr.Proof.Verify(s.sb.SkipChainID()))
 				if pr.Proof.InclusionProof.Match() {
+					require.Nil(t, pr.Proof.Verify(s.sb.SkipChainID()))
 					_, vs, err := pr.Proof.KeyValue()
 					require.Nil(t, err)
-					require.Equal(t, 0, bytes.Compare(tx.Instructions[0].Spawn.Args[0].Value, vs[0]))
+					require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, vs[0]))
+					ok = true
 					break
-				} else {
 				}
 			}
+			require.True(t, ok)
 		}
 	}
 }
@@ -180,7 +183,7 @@ func TestService_GetProof(t *testing.T) {
 	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
 
-	serKey := s.tx.Instructions[0].InstanceID.Slice()
+	serKey := s.tx.Instructions[0].Hash()
 
 	var rep *GetProofResponse
 	var i int
@@ -214,6 +217,56 @@ func TestService_GetProof(t *testing.T) {
 	require.Nil(t, rep.Proof.Verify(s.sb.SkipChainID()))
 	key, values, err = rep.Proof.KeyValue()
 	require.NotNil(t, err)
+}
+
+// TODO: Fix issue #1379.
+//
+// This test currently fails because of:
+// E : (       service.(*Service).verifyClientTx: 277) - local://127.0.0.1:2000 instr #1, darc not found: no match found
+// E : (   service.(*Service).verifyAndFilterTxs: 266) - local://127.0.0.1:2000 tx #0, darc not found: no match found
+//
+// This is because inter-instruction dependencies are not correctly handled by verifyAndFilterTxs,
+// which is operating on the live database to find the darcID, so it cannot find the darcID associated
+// with the instance created in the first instruction while trying to check the second instruction.
+func TestService_Depending(t *testing.T) {
+	t.Skip("Issue #1379.")
+
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	// Create a client tx with two instructions in it where the second one depends on
+	// the first one having executed.
+
+	// First instruction: spawn a dummy value.
+	in1, err := createInstr(s.darc.GetBaseID(), dummyKind, []byte("something to delete"), s.signer)
+	require.NoError(t, err)
+
+	// Set the length to reflect there are two.
+	// Need to sign it again because we hacked on it.
+	in1.Length = 2
+	in1.SignBy(s.darc.GetBaseID(), s.signer)
+
+	// Second instruction: delete the value we just spawned.
+	in2 := Instruction{
+		InstanceID: NewInstanceID(in1.Hash()),
+		Delete:     &Delete{},
+		Nonce:      GenNonce(),
+		Index:      1,
+		Length:     2,
+	}
+	in2.SignBy(s.darc.GetBaseID(), s.signer)
+
+	tx := ClientTransaction{
+		Instructions: []Instruction{in1, in2},
+	}
+
+	_, err = s.services[0].AddTransaction(&AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.sb.SkipChainID(),
+		Transaction:   tx,
+		InclusionWait: 2,
+	})
+	require.Nil(t, err)
 }
 
 func TestService_WaitInclusion(t *testing.T) {
@@ -279,12 +332,12 @@ func TestService_FloodLedger(t *testing.T) {
 	// Send a last transaction and wait for it to be included
 	sendTransaction(t, s, 0, dummyKind, 100)
 
-	// Suppose we need at least 2 blocks (slowKind waits 1/2 interval for each execution)
+	// Suppose we need at least 2 blocks (slowKind waits 1/5 interval for each execution)
 	reply, err = skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
 	require.Nil(t, err)
 	latest := reply.Update[len(reply.Update)-1]
 	if latest.Index-before.Index < 2 {
-		t.Fatalf("didn't get at least 2 blocks: %d %d", latest.Index, before.Index)
+		t.Fatalf("didn't get at least 2 blocks: index before %d, index after %v", before.Index, latest.Index)
 	}
 }
 
@@ -310,7 +363,7 @@ func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) Pr
 	rep, err := ser.GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
-		Key:     tx.Instructions[0].InstanceID.Slice(),
+		Key:     tx.Instructions[0].Hash(),
 	})
 	require.Nil(t, err)
 	return rep.Proof
@@ -367,7 +420,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	pr, err := s.service().GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
-		Key:     tx1.Instructions[0].InstanceID.Slice(),
+		Key:     tx1.Instructions[0].Hash(),
 	})
 	require.Nil(t, err)
 	match := pr.Proof.InclusionProof.Match()
@@ -377,7 +430,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	pr, err = s.service().GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
-		Key:     tx2.Instructions[0].InstanceID.Slice(),
+		Key:     tx2.Instructions[0].Hash(),
 	})
 	require.Nil(t, err)
 	match = pr.Proof.InclusionProof.Match()
@@ -460,18 +513,15 @@ func TestService_StateChange(t *testing.T) {
 	require.NotNil(t, cdb)
 
 	n := 5
-	inst := genSubID()
+	inst := genID()
 	nonce := GenNonce()
 	instrs := make([]Instruction, n)
 	for i := range instrs {
 		instrs[i] = Instruction{
-			InstanceID: InstanceID{
-				DarcID: s.darc.GetBaseID(),
-				SubID:  inst,
-			},
-			Nonce:  nonce,
-			Index:  i,
-			Length: n,
+			InstanceID: inst,
+			Nonce:      nonce,
+			Index:      i,
+			Length:     n,
 		}
 		if i == 0 {
 			instrs[i].Spawn = &Spawn{
@@ -482,15 +532,30 @@ func TestService_StateChange(t *testing.T) {
 		}
 	}
 
+	instrs2 := make([]Instruction, 1)
+	instrs2[0] = Instruction{
+		InstanceID: inst,
+		Nonce:      nonce,
+		Index:      0,
+		Length:     1,
+		Spawn: &Spawn{
+			ContractID: "not-add",
+		},
+	}
+
 	cts := []ClientTransaction{
 		ClientTransaction{
 			Instructions: instrs,
 		},
+		ClientTransaction{
+			Instructions: instrs2,
+		},
 	}
 
-	_, ctsOK, scs, err := s.service().createStateChanges(cdb.coll, s.sb.SkipChainID(), cts)
+	_, ctsOK, ctsBad, scs, err := s.service().createStateChanges(cdb.coll, s.sb.SkipChainID(), cts, noTimeout)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(ctsOK))
+	require.Equal(t, 1, len(ctsBad))
 	require.Equal(t, n, len(scs))
 	require.Equal(t, latest, int64(n-1))
 }
@@ -549,13 +614,10 @@ func TestService_DarcSpawn(t *testing.T) {
 
 	ctx := ClientTransaction{
 		Instructions: []Instruction{{
-			InstanceID: InstanceID{
-				DarcID: s.darc.GetBaseID(),
-				SubID:  SubID{},
-			},
-			Nonce:  GenNonce(),
-			Index:  0,
-			Length: 1,
+			InstanceID: NewInstanceID(s.darc.GetBaseID()),
+			Nonce:      GenNonce(),
+			Index:      0,
+			Length:     1,
 			Spawn: &Spawn{
 				ContractID: ContractDarcID,
 				Args: []Argument{{
@@ -565,10 +627,10 @@ func TestService_DarcSpawn(t *testing.T) {
 			},
 		}},
 	}
-	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
+	require.Nil(t, ctx.Instructions[0].SignBy(s.darc.GetBaseID(), s.signer))
 
 	s.sendTx(t, ctx)
-	pr := s.waitProof(t, InstanceID{darc2.GetBaseID(), SubID{}})
+	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
 	require.True(t, pr.InclusionProof.Match())
 }
 
@@ -590,13 +652,10 @@ func TestService_DarcDelegation(t *testing.T) {
 	require.True(t, darc2.Equal(darc2Copy))
 	ctx := ClientTransaction{
 		Instructions: []Instruction{{
-			InstanceID: InstanceID{
-				DarcID: s.darc.GetBaseID(),
-				SubID:  SubID{},
-			},
-			Nonce:  GenNonce(),
-			Index:  0,
-			Length: 1,
+			InstanceID: NewInstanceID(s.darc.GetBaseID()),
+			Nonce:      GenNonce(),
+			Index:      0,
+			Length:     1,
 			Spawn: &Spawn{
 				ContractID: ContractDarcID,
 				Args: []Argument{{
@@ -606,9 +665,9 @@ func TestService_DarcDelegation(t *testing.T) {
 			},
 		}},
 	}
-	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
+	require.Nil(t, ctx.Instructions[0].SignBy(s.darc.GetBaseID(), s.signer))
 	s.sendTx(t, ctx)
-	pr := s.waitProof(t, InstanceID{darc2.GetBaseID(), SubID{}})
+	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
 	require.True(t, pr.InclusionProof.Match())
 
 	// Spawn third darc from the second one, but sign the request with
@@ -624,13 +683,10 @@ func TestService_DarcDelegation(t *testing.T) {
 	require.True(t, darc3.Equal(darc3Copy))
 	ctx = ClientTransaction{
 		Instructions: []Instruction{{
-			InstanceID: InstanceID{
-				DarcID: darc2.GetBaseID(),
-				SubID:  SubID{},
-			},
-			Nonce:  GenNonce(),
-			Index:  0,
-			Length: 1,
+			InstanceID: NewInstanceID(darc2.GetBaseID()),
+			Nonce:      GenNonce(),
+			Index:      0,
+			Length:     1,
 			Spawn: &Spawn{
 				ContractID: ContractDarcID,
 				Args: []Argument{{
@@ -641,9 +697,9 @@ func TestService_DarcDelegation(t *testing.T) {
 		}},
 	}
 
-	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
+	require.Nil(t, ctx.Instructions[0].SignBy(darc2.GetBaseID(), s.signer))
 	s.sendTx(t, ctx)
-	pr = s.waitProof(t, InstanceID{darc3.GetBaseID(), SubID{}})
+	pr = s.waitProof(t, NewInstanceID(darc3.GetBaseID()))
 	require.True(t, pr.InclusionProof.Match())
 }
 
@@ -802,29 +858,31 @@ func TestService_StateChangeCache(t *testing.T) {
 	tx, err := createOneClientTx(s.darc.GetBaseID(), contractID, []byte{}, s.signer)
 	txs := ClientTransactions([]ClientTransaction{tx})
 	require.NoError(t, err)
-	root, ctsOK, states, err := s.service().createStateChanges(coll, scID, txs)
+	root, ctsOK, ctsBad, states, err := s.service().createStateChanges(coll, scID, txs, noTimeout)
 	require.NoError(t, err)
 	require.Equal(t, ctr, 1)
 
 	// If we call createStateChanges again, then it should load it from the
 	// cache, which means that ctr is still one (we do not call the
 	// contract twice).
-	root1, ctsOK1, states1, err := s.service().createStateChanges(coll, scID, txs)
+	root1, ctsOK1, ctsBad1, states1, err := s.service().createStateChanges(coll, scID, txs, noTimeout)
 	require.NoError(t, err)
 	require.Equal(t, ctr, 1)
 
 	require.Equal(t, root, root1)
 	require.Equal(t, ctsOK, ctsOK1)
+	require.Equal(t, ctsBad, ctsBad1)
 	require.Equal(t, states, states1)
 
 	// If we remove the cache, then we expect the contract to be called
 	// again, i.e., ctr == 2.
 	s.service().stateChangeCache = newStateChangeCache()
 	require.NoError(t, err)
-	root2, ctsOK2, states2, err := s.service().createStateChanges(coll, scID, txs)
+	root2, ctsOK2, ctsBad2, states2, err := s.service().createStateChanges(coll, scID, txs, noTimeout)
 	require.NoError(t, err)
 	require.Equal(t, root, root2)
 	require.Equal(t, ctsOK, ctsOK2)
+	require.Equal(t, ctsBad, ctsBad2)
 	require.Equal(t, states, states2)
 	require.Equal(t, ctr, 2)
 }
@@ -839,15 +897,14 @@ func createConfigTx(t *testing.T, s *ser, isgood bool) (ClientTransaction, Chain
 	configBuf, err := protobuf.Encode(&config)
 	require.NoError(t, err)
 
+	cfgid := DeriveConfigID(s.darc.GetBaseID())
+
 	ctx := ClientTransaction{
 		Instructions: []Instruction{{
-			InstanceID: InstanceID{
-				DarcID: s.darc.GetBaseID(),
-				SubID:  oneSubID,
-			},
-			Nonce:  GenNonce(),
-			Index:  0,
-			Length: 1,
+			InstanceID: cfgid,
+			Nonce:      GenNonce(),
+			Index:      0,
+			Length:     1,
 			Invoke: &Invoke{
 				Command: "update_config",
 				Args: []Argument{{
@@ -857,7 +914,7 @@ func createConfigTx(t *testing.T, s *ser, isgood bool) (ClientTransaction, Chain
 			},
 		}},
 	}
-	require.NoError(t, ctx.Instructions[0].SignBy(s.signer))
+	require.NoError(t, ctx.Instructions[0].SignBy(s.darc.GetBaseID(), s.signer))
 	return ctx, config
 }
 
@@ -874,16 +931,13 @@ func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction 
 		},
 	}
 	instr := Instruction{
-		InstanceID: InstanceID{
-			DarcID: d2.GetBaseID(),
-			SubID:  SubID{},
-		},
-		Nonce:  GenNonce(),
-		Index:  0,
-		Length: 1,
-		Invoke: &invoke,
+		InstanceID: NewInstanceID(d2.GetBaseID()),
+		Nonce:      GenNonce(),
+		Index:      0,
+		Length:     1,
+		Invoke:     &invoke,
 	}
-	require.Nil(t, instr.SignBy(signer))
+	require.Nil(t, instr.SignBy(d2.GetBaseID(), signer))
 	return ClientTransaction{
 		Instructions: []Instruction{instr},
 	}
@@ -913,7 +967,6 @@ func (s *ser) waitProof(t *testing.T, id InstanceID) Proof {
 func (s *ser) waitProofWithIdx(t *testing.T, id InstanceID, idx int) Proof {
 	var pr Proof
 	for i := 0; i < 10; i++ {
-		// try to get the darc back, we should get the genesis back instead
 		resp, err := s.services[idx].GetProof(&GetProof{
 			Version: CurrentVersion,
 			Key:     id.Slice(),
@@ -952,7 +1005,7 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 	for i := 0; i < 10; i++ {
 		resp, err := s.service().GetProof(&GetProof{
 			Version: CurrentVersion,
-			Key:     InstanceID{d2.GetBaseID(), SubID{}}.Slice(),
+			Key:     d2.GetBaseID(),
 			ID:      s.sb.SkipChainID(),
 		})
 		require.Nil(t, err)
@@ -1037,30 +1090,35 @@ func panicContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateC
 }
 
 func dummyContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
-	args := inst.Spawn.Args[0].Value
 	cid, _, err := inst.GetContractState(cdb)
 	if err != nil {
 		return nil, nil, err
 	}
-	return []StateChange{
-		NewStateChange(Create, inst.InstanceID, cid, args),
-	}, nil, nil
+
+	_, _, darcID, err := cdb.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return nil, nil, err
+	}
+
+	switch inst.GetType() {
+	case SpawnType:
+		return []StateChange{
+			NewStateChange(Create, NewInstanceID(inst.Hash()), cid, inst.Spawn.Args[0].Value, darcID),
+		}, nil, nil
+	case DeleteType:
+		return []StateChange{
+			NewStateChange(Remove, inst.InstanceID, cid, nil, darcID),
+		}, nil, nil
+	default:
+		panic("should not get here")
+	}
 }
 
 func slowContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	// This has to sleep for less than testInterval / 2 or else it will
 	// block the system from processing txs. See #1359.
-
 	time.Sleep(testInterval / 5)
-
-	args := inst.Spawn.Args[0].Value
-	cid, _, err := inst.GetContractState(cdb)
-	if err != nil {
-		return nil, nil, err
-	}
-	return []StateChange{
-		NewStateChange(Create, inst.InstanceID, cid, args),
-	}, nil, nil
+	return dummyContractFunc(cdb, inst, c)
 }
 
 func registerDummy(servers []*onet.Server) {
@@ -1073,7 +1131,7 @@ func registerDummy(servers []*onet.Server) {
 	}
 }
 
-func genSubID() (n SubID) {
-	random.Bytes(n[:], random.New())
-	return n
+func genID() (i InstanceID) {
+	random.Bytes(i[:], random.New())
+	return i
 }

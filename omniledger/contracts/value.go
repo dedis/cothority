@@ -3,6 +3,7 @@ package contracts
 import (
 	"errors"
 
+	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/omniledger/service"
 )
 
@@ -19,12 +20,20 @@ var ContractValueID = "value"
 // It can spawn new value instances and will store the "value" argument in these
 // new instances.
 // Existing value instances can be "update"d and deleted.
-func ContractValue(cdb service.CollectionView, inst service.Instruction, c []service.Coin) ([]service.StateChange, []service.Coin, error) {
+func ContractValue(cdb service.CollectionView, inst service.Instruction, c []service.Coin) (sc []service.StateChange, cOut []service.Coin, err error) {
+	cOut = c
+
+	var darcID darc.ID
+	_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return
+	}
+
 	switch {
 	case inst.Spawn != nil:
 		return []service.StateChange{
 			service.NewStateChange(service.Create, inst.DeriveID(ContractValueID),
-				ContractValueID, inst.Spawn.Args.Search("value")),
+				ContractValueID, inst.Spawn.Args.Search("value"), darcID),
 		}, c, nil
 	case inst.Invoke != nil:
 		if inst.Invoke.Command != "update" {
@@ -32,11 +41,11 @@ func ContractValue(cdb service.CollectionView, inst service.Instruction, c []ser
 		}
 		return []service.StateChange{
 			service.NewStateChange(service.Update, inst.InstanceID,
-				ContractValueID, inst.Invoke.Args.Search("value")),
+				ContractValueID, inst.Invoke.Args.Search("value"), darcID),
 		}, c, nil
 	case inst.Delete != nil:
 		return service.StateChanges{
-			service.NewStateChange(service.Remove, inst.InstanceID, ContractValueID, nil),
+			service.NewStateChange(service.Remove, inst.InstanceID, ContractValueID, nil, darcID),
 		}, c, nil
 	}
 	return nil, nil, errors.New("didn't find any instruction")

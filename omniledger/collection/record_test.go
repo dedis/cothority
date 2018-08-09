@@ -1,6 +1,7 @@
 package collection
 
 import (
+	"bytes"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -33,7 +34,7 @@ func TestRecord(test *testing.T) {
 		test.Error("[record.go]", "[constructors]", "Constructors don't set match appropriately.")
 	}
 
-	if !equal(keyMatch.key, []byte("mykey")) || !equal(queryMatch.key, []byte("mykey")) || !equal(keyMismatch.key, []byte("wrongkey")) {
+	if !bytes.Equal(keyMatch.key, []byte("mykey")) || !bytes.Equal(queryMatch.key, []byte("mykey")) || !bytes.Equal(keyMismatch.key, []byte("wrongkey")) {
 		test.Error("[record.go]", "[constructors]", "Constructors don't set key appropriately")
 	}
 
@@ -41,7 +42,7 @@ func TestRecord(test *testing.T) {
 		test.Error("[record.go]", "[constructors]", "Constructors don't set the appropriate number of values.")
 	}
 
-	if !equal(keyMatch.values[0], leaf.values[0]) || !equal(keyMatch.values[1], leaf.values[1]) || !equal(queryMatch.values[0], leaf.values[0]) || !equal(queryMatch.values[1], leaf.values[1]) {
+	if !bytes.Equal(keyMatch.values[0], leaf.values[0]) || !bytes.Equal(keyMatch.values[1], leaf.values[1]) || !bytes.Equal(queryMatch.values[0], leaf.values[0]) || !bytes.Equal(queryMatch.values[1], leaf.values[1]) {
 		test.Error("[record.go]", "[constructors]", "Constructors set the wrong values.")
 	}
 
@@ -49,7 +50,7 @@ func TestRecord(test *testing.T) {
 		test.Error("[record.go]", "[match]", "Match() returns the wrong value.")
 	}
 
-	if !equal(keyMatch.Key(), []byte("mykey")) || !equal(queryMatch.Key(), []byte("mykey")) || !equal(keyMismatch.Key(), []byte("wrongkey")) {
+	if !bytes.Equal(keyMatch.Key(), []byte("mykey")) || !bytes.Equal(queryMatch.Key(), []byte("mykey")) || !bytes.Equal(keyMismatch.Key(), []byte("wrongkey")) {
 		test.Error("[record.go]", "[key]", "Key() returns the wrong value.")
 	}
 
@@ -64,7 +65,7 @@ func TestRecord(test *testing.T) {
 		test.Error("[record.go]", "[values]", "Values() returns the wrong number of values")
 	}
 
-	if (keyMatchValues[0].(uint64) != 66) || !equal(keyMatchValues[1].([]byte), leaf.values[1]) || (queryMatchValues[0].(uint64) != 66) || !equal(queryMatchValues[1].([]byte), leaf.values[1]) {
+	if (keyMatchValues[0].(uint64) != 66) || !bytes.Equal(keyMatchValues[1].([]byte), leaf.values[1]) || (queryMatchValues[0].(uint64) != 66) || !bytes.Equal(queryMatchValues[1].([]byte), leaf.values[1]) {
 		test.Error("[record.go]", "[values]", "Values() returns the wrong values.")
 	}
 
