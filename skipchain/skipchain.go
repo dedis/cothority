@@ -412,6 +412,12 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 	return reply, nil
 }
 
+// RegisterStoreSkipblockCallback sets a callback function in SkipBlockDB,
+// which is called just before a skipblock is added/updated.
+func (s *Service) RegisterStoreSkipblockCallback(f func(SkipBlockID) error) {
+	s.db.callback = f
+}
+
 // SyncChain communicates with conodes in the Roster via getBlocks
 // in order traverse the chain and save the blocks locally. It starts with
 // the given 'latest' skipblockid and fetches all blocks up to the latest block.

@@ -413,6 +413,18 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 	s2 := local.Services[hosts[1].ServerIdentity.ID][skipchainSID].(*Service)
 	s3 := local.Services[hosts[2].ServerIdentity.ID][skipchainSID].(*Service)
 
+	var cbMut sync.Mutex
+	var cbCtr int
+	cb := func(sbID SkipBlockID) error {
+		cbMut.Lock()
+		cbCtr++
+		cbMut.Unlock()
+		return nil
+	}
+	s1.RegisterStoreSkipblockCallback(cb)
+	s2.RegisterStoreSkipblockCallback(cb)
+	s3.RegisterStoreSkipblockCallback(cb)
+
 	log.Lvl1("Creating root and control chain")
 	sbRoot := &SkipBlock{
 		SkipBlockFix: &SkipBlockFix{
@@ -423,7 +435,8 @@ func TestService_StoreSkipBlock2(t *testing.T) {
 		},
 	}
 	ssbr, err := s1.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: nil, NewBlock: sbRoot})
-	log.ErrFatal(err)
+	require.NoError(t, err)
+	require.Equal(t, nbrHosts, cbCtr)
 	roster2 := onet.NewRoster(roster.List[:nbrHosts-1])
 	log.Lvl1("Proposing roster", roster2)
 	sb1 := ssbr.Latest.Copy()
