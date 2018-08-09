@@ -355,11 +355,6 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 		coll = s.getCollection(scID).coll
 	}
 
-	// Note that the transactions are sorted in-place.
-	if err := sortTransactions(cts); err != nil {
-		return nil, err
-	}
-
 	// Create header of skipblock containing only hashes
 	var scs StateChanges
 	var err error
