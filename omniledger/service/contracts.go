@@ -238,6 +238,7 @@ func (s *Service) spawnContractConfig(cdb CollectionView, inst Instruction, coin
 		return
 	}
 
+	// TODO: Simplify, removing DeriveConfigID. See issue #1390.
 	id := d.GetBaseID()
 	return []StateChange{
 		NewStateChange(Create, GenesisReferenceID, ContractConfigID, id, id),

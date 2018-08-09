@@ -15,6 +15,7 @@ import (
 // type :Arguments:[]Argument
 // type :Instructions:[]Instruction
 // type :ClientTransactions:[]ClientTransaction
+// type :InstanceID:bytes
 // package omniledger;
 // import "skipchain.proto";
 // import "onet.proto";
@@ -138,12 +139,12 @@ type Proof struct {
 
 // Instruction holds only one of Spawn, Invoke, or Delete
 type Instruction struct {
-	// InstanceID is either the object that can spawn a new object, or a the object
+	// InstanceID is either the instance that can spawn a new instance, or the instance
 	// that will be invoked or deleted.
 	InstanceID InstanceID
 	// Nonce is monotonically increasing with regard to the Darc controlling
 	// access to the instance. It is used to prevent replay attacks.
-	// The client has to track what the next nonce should be for a given instance.
+	// The client has to track what the next nonce should be for a given Darc.
 	Nonce Nonce
 	// Index and length prevent a leader from censoring specific instructions from
 	// a client and still keep the other instructions valid.
@@ -151,40 +152,41 @@ type Instruction struct {
 	Index int
 	// Length is the total number of instructions in this clientTransaction
 	Length int
-	// Spawn creates a new object.
+	// Spawn creates a new instance.
 	Spawn *Spawn
-	// Invoke calls a method of an existing object.
+	// Invoke calls a method of an existing instance.
 	Invoke *Invoke
-	// Delete removes the given object.
+	// Delete removes the given instance.
 	Delete *Delete
-	// Signatures that will be used while attempting to verify the Darc read request.
+	// Signatures that are verified using the Darc controlling access to the instance.
 	Signatures []darc.Signature
 }
 
-// Spawn is called upon an existing object that will spawn a new object.
+// Spawn is called upon an existing instance that will spawn a new instance.
 type Spawn struct {
 	// ContractID represents the kind of contract that needs to be spawn.
 	ContractID string
-	// Args holds all data necessary to spawn the new object.
+	// Args holds all data necessary to spawn the new instance.
 	Args Arguments
 }
 
-// Invoke calls a method of an existing object which will update its internal
+// Invoke calls a method of an existing instance which will update its internal
 // state.
 type Invoke struct {
-	// Command is object specific and interpreted by the object.
+	// Command is interpreted by the contract.
 	Command string
 	// Args holds all data necessary for the successful execution of the command.
 	Args Arguments
 }
 
-// Delete removes the object.
+// Delete removes the instance. The contract might enforce conditions that
+// must be true before a Delete is executed.
 type Delete struct {
 }
 
-// Argument is a name/value pair that will be passed to the object.
+// Argument is a name/value pair that will be passed to the contract.
 type Argument struct {
-	// Name can be any name recognized by the object.
+	// Name can be any name recognized by the contract.
 	Name string
 	// Value must be binary marshalled
 	Value []byte
@@ -211,9 +213,9 @@ type StateChange struct {
 }
 
 // Coin is a generic structure holding any type of coin. Coins are defined
-// by a genesis coin object that is unique for each type of coin.
+// by a genesis coin instance that is unique for each type of coin.
 type Coin struct {
-	// Name points to the genesis object of that coin.
+	// Name points to the genesis instance of that coin.
 	Name InstanceID
 	// Value is the total number of coins of that type.
 	Value uint64

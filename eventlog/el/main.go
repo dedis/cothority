@@ -141,6 +141,11 @@ func main() {
 	log.ErrFatal(cliApp.Run(os.Args))
 }
 
+// getClient will create a new eventlog.Client, given the input
+// available in the commandline. If priv is false, then it will not
+// look for a private key and set up the signers. (This is used for
+// searching, which does not require having a private key available
+// because it does not submit transactions.)
 func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
 	fn := c.String("ol")
 	if fn == "" {

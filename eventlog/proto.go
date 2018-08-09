@@ -27,6 +27,7 @@ func NewEvent(topic, content string) Event {
 
 // PROTOSTART
 // type :skipchain.SkipBlockID:bytes
+// type :omniledger.InstanceID:bytes
 //
 // package eventlog;
 //

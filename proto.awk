@@ -6,7 +6,6 @@ BEGIN {
 	tr["abstract.Point"]="bytes"
 	tr["StateAction"]="int"
 	tr["omniledger.InstanceID"]="bytes"
-	tr["InstanceID"]="bytes"
 	tr["Nonce"]="bytes"
 	tr["Version"]="sint32"
 	print "syntax = \"proto2\";"

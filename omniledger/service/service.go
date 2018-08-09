@@ -294,6 +294,7 @@ func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instructio
 	// Verify the request is signed by appropriate identities.
 	// A callback is required to get any delegated DARC(s) during
 	// expression evaluation.
+	view := s.GetCollectionView(scID)
 	err = req.VerifyWithCB(d, func(str string, latest bool) *darc.Darc {
 		if len(str) < 5 || string(str[0:5]) != "darc:" {
 			return nil
@@ -302,7 +303,7 @@ func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instructio
 		if err != nil {
 			return nil
 		}
-		d, err := LoadDarcFromColl(s.GetCollectionView(scID), darcID)
+		d, err := LoadDarcFromColl(view, darcID)
 		if err != nil {
 			return nil
 		}
@@ -578,7 +579,7 @@ func (s *Service) LoadBlockInterval(scID skipchain.SkipBlockID) (time.Duration, 
 	return LoadBlockIntervalFromColl(&roCollection{collDb.coll})
 }
 
-func (s *Service) loadLatestDarc(scID skipchain.SkipBlockID, i InstanceID) (*darc.Darc, error) {
+func (s *Service) loadLatestDarc(scID skipchain.SkipBlockID, iid InstanceID) (*darc.Darc, error) {
 	colldb := s.getCollection(scID)
 	if colldb == nil {
 		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", scID.Short())
@@ -586,7 +587,7 @@ func (s *Service) loadLatestDarc(scID skipchain.SkipBlockID, i InstanceID) (*dar
 	coll := &roCollection{colldb.coll}
 
 	// From instance ID, find the darcID that controls access to it.
-	_, _, dID, err := coll.GetValues(i.Slice())
+	_, _, dID, err := coll.GetValues(iid.Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -598,7 +599,7 @@ func (s *Service) loadLatestDarc(scID skipchain.SkipBlockID, i InstanceID) (*dar
 	}
 
 	if string(contract) != ContractDarcID {
-		return nil, fmt.Errorf("for instance %v, expected Kind to be 'darc' but got '%v'", i, string(contract))
+		return nil, fmt.Errorf("for instance %v, expected Kind to be 'darc' but got '%v'", iid, string(contract))
 	}
 	return darc.NewFromProtobuf(value)
 }
@@ -686,7 +687,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 
 				txs = txs[len(txOut)+len(txBad):]
 				if len(txs) > 0 {
-					log.Lvlf3("Got more transactions than can be done in half the blockInterval. "+
+					log.Warn("Got more transactions than can be done in half the blockInterval. "+
 						"%d transactions left", len(txs))
 				}
 				_, err = s.createNewBlock(scID, sb.Roster, txOut)
@@ -806,6 +807,7 @@ clientTransactions:
 			for _, sc := range scs {
 				if err := storeInColl(cdbI.c, &sc); err != nil {
 					log.Error("failed to add to collections with error: " + err.Error())
+					ctsBad = append(ctsBad, ct)
 					continue clientTransactions
 				}
 			}

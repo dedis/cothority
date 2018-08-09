@@ -152,7 +152,7 @@ public class DarcInstance {
     public Instruction spawnContractInstruction(String contractID, Signer s, List<Argument> args, int pos, int len)
             throws CothorityCryptoException {
         Spawn sp = new Spawn(contractID, args);
-        Instruction inst = new Instruction(darc.getBaseId(), Instruction.genNonce(), pos, len, sp);
+        Instruction inst = new Instruction(Instruction.genNonce(), pos, len, sp);
         try {
             Request r = new Request(darc.getBaseId(), "spawn:" + contractID, inst.hash(),
                     Arrays.asList(s.getIdentity()), null);
@@ -163,6 +163,22 @@ public class DarcInstance {
             throw new CothorityCryptoException(e.getMessage());
         }
         return inst;
+    }
+
+    /**
+     * Like spawnContractInstruction, but creates a ClientTransaction with only this instruction and sends it
+     * to the omniledger.
+     *
+     * @param contractID the id of the contract to create
+     * @param s          the signer that is authorized to spawn this contract
+     * @param args       arguments to give to the contract
+     * @throws CothorityException
+     */
+    public void spawnContract(String contractID, Signer s, List<Argument> args) throws CothorityException {
+        Instruction inst = spawnContractInstruction(contractID, s, args, 0, 1);
+        ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ol.sendTransaction(ct);
+        return;
     }
 
     /**

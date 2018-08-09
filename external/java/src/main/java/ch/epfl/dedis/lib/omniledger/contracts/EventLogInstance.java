@@ -63,7 +63,7 @@ public class EventLogInstance {
      */
     public EventLogInstance(OmniledgerRPC ol, List<Signer> signers, DarcId darcId) throws CothorityException {
         this.ol = ol;
-        InstanceId id = this.initEventlogInstance(signers, darcId);
+        InstanceId id = this.initEventlogInstance(darcId, signers);
 
         // wait for omniledger to commit the transaction in block
         try {
@@ -176,12 +176,12 @@ public class EventLogInstance {
         return instance.getId();
     }
 
-    private InstanceId initEventlogInstance(List<Signer> signers, DarcId darcId) throws CothorityException {
+    private InstanceId initEventlogInstance( DarcId darcId, List<Signer> signers) throws CothorityException {
         if (this.instance != null) {
             throw new CothorityException("already have an instance");
         }
         Spawn spawn = new Spawn("eventlog", new ArrayList<>());
-        Instruction instr = new Instruction(darcId, Instruction.genNonce(), 0, 1, spawn);
+        Instruction instr = new Instruction(Instruction.genNonce(), 0, 1, spawn);
         instr.signBy(darcId, signers);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));

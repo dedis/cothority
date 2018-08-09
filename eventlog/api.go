@@ -3,7 +3,6 @@ package eventlog
 import (
 	"bytes"
 	"errors"
-	"time"
 
 	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/omniledger/darc/expression"
@@ -65,29 +64,7 @@ func (c *Client) Create() error {
 		return err
 	}
 
-	// Wait for GetProof to see it or timeout.
-	cfg, err := c.OmniLedger.GetChainConfig()
-	if err != nil {
-		return err
-	}
-
-	in := instr.DeriveID("eventlog")
-	found := false
-	for ct := 0; ct < 10; ct++ {
-		resp, err := c.OmniLedger.GetProof(in.Slice())
-		if err == nil {
-			if resp.Proof.InclusionProof.Match() {
-				found = true
-				break
-			}
-		}
-		time.Sleep(cfg.BlockInterval)
-	}
-	if !found {
-		return errors.New("timeout waiting for creation")
-	}
-
-	c.Instance = in
+	c.Instance = instr.DeriveID("eventlog")
 	return nil
 }
 

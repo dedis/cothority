@@ -60,8 +60,9 @@ func (s safeUint64) sub(a uint64) (safeUint64, error) {
 func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c []omniledger.Coin) (sc []omniledger.StateChange, cOut []omniledger.Coin, err error) {
 	cOut = c
 
+	var value []byte
 	var darcID darc.ID
-	_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+	value, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return
 	}
@@ -72,18 +73,11 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 		ca := omniledger.InstanceIDFromSlice(inst.Hash())
 		log.Lvlf3("Spawning coin to %x", ca.Slice())
 		sc = []omniledger.StateChange{
-			omniledger.NewStateChange(omniledger.Create, ca,
-				ContractCoinID, make([]byte, 8),
-				inst.InstanceID.Slice()),
+			omniledger.NewStateChange(omniledger.Create, ca, ContractCoinID, make([]byte, 8), darcID),
 		}
 		return
 	case omniledger.InvokeType:
 		// Invoke is one of "mint", "transfer", "fetch", or "store".
-		var value []byte
-		value, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
-		if err != nil {
-			return
-		}
 		coinsCurrent := newSafeUint64(value)
 		var coinsArg uint64
 

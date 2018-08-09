@@ -9139,7 +9139,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * InstanceID is either the object that can spawn a new object, or a the object
+     * InstanceID is either the instance that can spawn a new instance, or the instance
      * that will be invoked or deleted.
      * </pre>
      *
@@ -9148,7 +9148,7 @@ public final class OmniLedgerProto {
     boolean hasInstanceid();
     /**
      * <pre>
-     * InstanceID is either the object that can spawn a new object, or a the object
+     * InstanceID is either the instance that can spawn a new instance, or the instance
      * that will be invoked or deleted.
      * </pre>
      *
@@ -9160,7 +9160,7 @@ public final class OmniLedgerProto {
      * <pre>
      * Nonce is monotonically increasing with regard to the Darc controlling
      * access to the instance. It is used to prevent replay attacks.
-     * The client has to track what the next nonce should be for a given instance.
+     * The client has to track what the next nonce should be for a given Darc.
      * </pre>
      *
      * <code>required bytes nonce = 2;</code>
@@ -9170,7 +9170,7 @@ public final class OmniLedgerProto {
      * <pre>
      * Nonce is monotonically increasing with regard to the Darc controlling
      * access to the instance. It is used to prevent replay attacks.
-     * The client has to track what the next nonce should be for a given instance.
+     * The client has to track what the next nonce should be for a given Darc.
      * </pre>
      *
      * <code>required bytes nonce = 2;</code>
@@ -9217,7 +9217,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * Spawn creates a new object.
+     * Spawn creates a new instance.
      * </pre>
      *
      * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -9225,7 +9225,7 @@ public final class OmniLedgerProto {
     boolean hasSpawn();
     /**
      * <pre>
-     * Spawn creates a new object.
+     * Spawn creates a new instance.
      * </pre>
      *
      * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -9233,7 +9233,7 @@ public final class OmniLedgerProto {
     ch.epfl.dedis.proto.OmniLedgerProto.Spawn getSpawn();
     /**
      * <pre>
-     * Spawn creates a new object.
+     * Spawn creates a new instance.
      * </pre>
      *
      * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -9242,7 +9242,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * Invoke calls a method of an existing object.
+     * Invoke calls a method of an existing instance.
      * </pre>
      *
      * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -9250,7 +9250,7 @@ public final class OmniLedgerProto {
     boolean hasInvoke();
     /**
      * <pre>
-     * Invoke calls a method of an existing object.
+     * Invoke calls a method of an existing instance.
      * </pre>
      *
      * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -9258,7 +9258,7 @@ public final class OmniLedgerProto {
     ch.epfl.dedis.proto.OmniLedgerProto.Invoke getInvoke();
     /**
      * <pre>
-     * Invoke calls a method of an existing object.
+     * Invoke calls a method of an existing instance.
      * </pre>
      *
      * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -9267,7 +9267,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * Delete removes the given object.
+     * Delete removes the given instance.
      * </pre>
      *
      * <code>optional .omniledger.Delete delete = 7;</code>
@@ -9275,7 +9275,7 @@ public final class OmniLedgerProto {
     boolean hasDelete();
     /**
      * <pre>
-     * Delete removes the given object.
+     * Delete removes the given instance.
      * </pre>
      *
      * <code>optional .omniledger.Delete delete = 7;</code>
@@ -9283,7 +9283,7 @@ public final class OmniLedgerProto {
     ch.epfl.dedis.proto.OmniLedgerProto.Delete getDelete();
     /**
      * <pre>
-     * Delete removes the given object.
+     * Delete removes the given instance.
      * </pre>
      *
      * <code>optional .omniledger.Delete delete = 7;</code>
@@ -9292,7 +9292,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * Signatures that will be used while attempting to verify the Darc read request.
+     * Signatures that are verified using the Darc controlling access to the instance.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9301,7 +9301,7 @@ public final class OmniLedgerProto {
         getSignaturesList();
     /**
      * <pre>
-     * Signatures that will be used while attempting to verify the Darc read request.
+     * Signatures that are verified using the Darc controlling access to the instance.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9309,7 +9309,7 @@ public final class OmniLedgerProto {
     ch.epfl.dedis.proto.DarcProto.Signature getSignatures(int index);
     /**
      * <pre>
-     * Signatures that will be used while attempting to verify the Darc read request.
+     * Signatures that are verified using the Darc controlling access to the instance.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9317,7 +9317,7 @@ public final class OmniLedgerProto {
     int getSignaturesCount();
     /**
      * <pre>
-     * Signatures that will be used while attempting to verify the Darc read request.
+     * Signatures that are verified using the Darc controlling access to the instance.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9326,7 +9326,7 @@ public final class OmniLedgerProto {
         getSignaturesOrBuilderList();
     /**
      * <pre>
-     * Signatures that will be used while attempting to verify the Darc read request.
+     * Signatures that are verified using the Darc controlling access to the instance.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9489,7 +9489,7 @@ public final class OmniLedgerProto {
     private com.google.protobuf.ByteString instanceid_;
     /**
      * <pre>
-     * InstanceID is either the object that can spawn a new object, or a the object
+     * InstanceID is either the instance that can spawn a new instance, or the instance
      * that will be invoked or deleted.
      * </pre>
      *
@@ -9500,7 +9500,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * InstanceID is either the object that can spawn a new object, or a the object
+     * InstanceID is either the instance that can spawn a new instance, or the instance
      * that will be invoked or deleted.
      * </pre>
      *
@@ -9516,7 +9516,7 @@ public final class OmniLedgerProto {
      * <pre>
      * Nonce is monotonically increasing with regard to the Darc controlling
      * access to the instance. It is used to prevent replay attacks.
-     * The client has to track what the next nonce should be for a given instance.
+     * The client has to track what the next nonce should be for a given Darc.
      * </pre>
      *
      * <code>required bytes nonce = 2;</code>
@@ -9528,7 +9528,7 @@ public final class OmniLedgerProto {
      * <pre>
      * Nonce is monotonically increasing with regard to the Darc controlling
      * access to the instance. It is used to prevent replay attacks.
-     * The client has to track what the next nonce should be for a given instance.
+     * The client has to track what the next nonce should be for a given Darc.
      * </pre>
      *
      * <code>required bytes nonce = 2;</code>
@@ -9591,7 +9591,7 @@ public final class OmniLedgerProto {
     private ch.epfl.dedis.proto.OmniLedgerProto.Spawn spawn_;
     /**
      * <pre>
-     * Spawn creates a new object.
+     * Spawn creates a new instance.
      * </pre>
      *
      * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -9601,7 +9601,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Spawn creates a new object.
+     * Spawn creates a new instance.
      * </pre>
      *
      * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -9611,7 +9611,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Spawn creates a new object.
+     * Spawn creates a new instance.
      * </pre>
      *
      * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -9624,7 +9624,7 @@ public final class OmniLedgerProto {
     private ch.epfl.dedis.proto.OmniLedgerProto.Invoke invoke_;
     /**
      * <pre>
-     * Invoke calls a method of an existing object.
+     * Invoke calls a method of an existing instance.
      * </pre>
      *
      * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -9634,7 +9634,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Invoke calls a method of an existing object.
+     * Invoke calls a method of an existing instance.
      * </pre>
      *
      * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -9644,7 +9644,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Invoke calls a method of an existing object.
+     * Invoke calls a method of an existing instance.
      * </pre>
      *
      * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -9657,7 +9657,7 @@ public final class OmniLedgerProto {
     private ch.epfl.dedis.proto.OmniLedgerProto.Delete delete_;
     /**
      * <pre>
-     * Delete removes the given object.
+     * Delete removes the given instance.
      * </pre>
      *
      * <code>optional .omniledger.Delete delete = 7;</code>
@@ -9667,7 +9667,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Delete removes the given object.
+     * Delete removes the given instance.
      * </pre>
      *
      * <code>optional .omniledger.Delete delete = 7;</code>
@@ -9677,7 +9677,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Delete removes the given object.
+     * Delete removes the given instance.
      * </pre>
      *
      * <code>optional .omniledger.Delete delete = 7;</code>
@@ -9690,7 +9690,7 @@ public final class OmniLedgerProto {
     private java.util.List<ch.epfl.dedis.proto.DarcProto.Signature> signatures_;
     /**
      * <pre>
-     * Signatures that will be used while attempting to verify the Darc read request.
+     * Signatures that are verified using the Darc controlling access to the instance.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9700,7 +9700,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Signatures that will be used while attempting to verify the Darc read request.
+     * Signatures that are verified using the Darc controlling access to the instance.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9711,7 +9711,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Signatures that will be used while attempting to verify the Darc read request.
+     * Signatures that are verified using the Darc controlling access to the instance.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9721,7 +9721,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Signatures that will be used while attempting to verify the Darc read request.
+     * Signatures that are verified using the Darc controlling access to the instance.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -9731,7 +9731,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Signatures that will be used while attempting to verify the Darc read request.
+     * Signatures that are verified using the Darc controlling access to the instance.
      * </pre>
      *
      * <code>repeated .darc.Signature signatures = 8;</code>
@@ -10336,7 +10336,7 @@ public final class OmniLedgerProto {
       private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * InstanceID is either the object that can spawn a new object, or a the object
+       * InstanceID is either the instance that can spawn a new instance, or the instance
        * that will be invoked or deleted.
        * </pre>
        *
@@ -10347,7 +10347,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * InstanceID is either the object that can spawn a new object, or a the object
+       * InstanceID is either the instance that can spawn a new instance, or the instance
        * that will be invoked or deleted.
        * </pre>
        *
@@ -10358,7 +10358,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * InstanceID is either the object that can spawn a new object, or a the object
+       * InstanceID is either the instance that can spawn a new instance, or the instance
        * that will be invoked or deleted.
        * </pre>
        *
@@ -10375,7 +10375,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * InstanceID is either the object that can spawn a new object, or a the object
+       * InstanceID is either the instance that can spawn a new instance, or the instance
        * that will be invoked or deleted.
        * </pre>
        *
@@ -10393,7 +10393,7 @@ public final class OmniLedgerProto {
        * <pre>
        * Nonce is monotonically increasing with regard to the Darc controlling
        * access to the instance. It is used to prevent replay attacks.
-       * The client has to track what the next nonce should be for a given instance.
+       * The client has to track what the next nonce should be for a given Darc.
        * </pre>
        *
        * <code>required bytes nonce = 2;</code>
@@ -10405,7 +10405,7 @@ public final class OmniLedgerProto {
        * <pre>
        * Nonce is monotonically increasing with regard to the Darc controlling
        * access to the instance. It is used to prevent replay attacks.
-       * The client has to track what the next nonce should be for a given instance.
+       * The client has to track what the next nonce should be for a given Darc.
        * </pre>
        *
        * <code>required bytes nonce = 2;</code>
@@ -10417,7 +10417,7 @@ public final class OmniLedgerProto {
        * <pre>
        * Nonce is monotonically increasing with regard to the Darc controlling
        * access to the instance. It is used to prevent replay attacks.
-       * The client has to track what the next nonce should be for a given instance.
+       * The client has to track what the next nonce should be for a given Darc.
        * </pre>
        *
        * <code>required bytes nonce = 2;</code>
@@ -10435,7 +10435,7 @@ public final class OmniLedgerProto {
        * <pre>
        * Nonce is monotonically increasing with regard to the Darc controlling
        * access to the instance. It is used to prevent replay attacks.
-       * The client has to track what the next nonce should be for a given instance.
+       * The client has to track what the next nonce should be for a given Darc.
        * </pre>
        *
        * <code>required bytes nonce = 2;</code>
@@ -10556,7 +10556,7 @@ public final class OmniLedgerProto {
           ch.epfl.dedis.proto.OmniLedgerProto.Spawn, ch.epfl.dedis.proto.OmniLedgerProto.Spawn.Builder, ch.epfl.dedis.proto.OmniLedgerProto.SpawnOrBuilder> spawnBuilder_;
       /**
        * <pre>
-       * Spawn creates a new object.
+       * Spawn creates a new instance.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10566,7 +10566,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object.
+       * Spawn creates a new instance.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10580,7 +10580,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object.
+       * Spawn creates a new instance.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10600,7 +10600,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object.
+       * Spawn creates a new instance.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10618,7 +10618,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object.
+       * Spawn creates a new instance.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10642,7 +10642,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object.
+       * Spawn creates a new instance.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10659,7 +10659,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object.
+       * Spawn creates a new instance.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10671,7 +10671,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object.
+       * Spawn creates a new instance.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10686,7 +10686,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Spawn creates a new object.
+       * Spawn creates a new instance.
        * </pre>
        *
        * <code>optional .omniledger.Spawn spawn = 5;</code>
@@ -10710,7 +10710,7 @@ public final class OmniLedgerProto {
           ch.epfl.dedis.proto.OmniLedgerProto.Invoke, ch.epfl.dedis.proto.OmniLedgerProto.Invoke.Builder, ch.epfl.dedis.proto.OmniLedgerProto.InvokeOrBuilder> invokeBuilder_;
       /**
        * <pre>
-       * Invoke calls a method of an existing object.
+       * Invoke calls a method of an existing instance.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10720,7 +10720,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object.
+       * Invoke calls a method of an existing instance.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10734,7 +10734,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object.
+       * Invoke calls a method of an existing instance.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10754,7 +10754,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object.
+       * Invoke calls a method of an existing instance.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10772,7 +10772,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object.
+       * Invoke calls a method of an existing instance.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10796,7 +10796,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object.
+       * Invoke calls a method of an existing instance.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10813,7 +10813,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object.
+       * Invoke calls a method of an existing instance.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10825,7 +10825,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object.
+       * Invoke calls a method of an existing instance.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10840,7 +10840,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Invoke calls a method of an existing object.
+       * Invoke calls a method of an existing instance.
        * </pre>
        *
        * <code>optional .omniledger.Invoke invoke = 6;</code>
@@ -10864,7 +10864,7 @@ public final class OmniLedgerProto {
           ch.epfl.dedis.proto.OmniLedgerProto.Delete, ch.epfl.dedis.proto.OmniLedgerProto.Delete.Builder, ch.epfl.dedis.proto.OmniLedgerProto.DeleteOrBuilder> deleteBuilder_;
       /**
        * <pre>
-       * Delete removes the given object.
+       * Delete removes the given instance.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -10874,7 +10874,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object.
+       * Delete removes the given instance.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -10888,7 +10888,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object.
+       * Delete removes the given instance.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -10908,7 +10908,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object.
+       * Delete removes the given instance.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -10926,7 +10926,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object.
+       * Delete removes the given instance.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -10950,7 +10950,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object.
+       * Delete removes the given instance.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -10967,7 +10967,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object.
+       * Delete removes the given instance.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -10979,7 +10979,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object.
+       * Delete removes the given instance.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -10994,7 +10994,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Delete removes the given object.
+       * Delete removes the given instance.
        * </pre>
        *
        * <code>optional .omniledger.Delete delete = 7;</code>
@@ -11027,7 +11027,7 @@ public final class OmniLedgerProto {
 
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11041,7 +11041,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11055,7 +11055,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11069,7 +11069,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11090,7 +11090,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11108,7 +11108,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11128,7 +11128,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11149,7 +11149,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11167,7 +11167,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11185,7 +11185,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11204,7 +11204,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11221,7 +11221,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11238,7 +11238,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11249,7 +11249,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11263,7 +11263,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11278,7 +11278,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11289,7 +11289,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11301,7 +11301,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Signatures that will be used while attempting to verify the Darc read request.
+       * Signatures that are verified using the Darc controlling access to the instance.
        * </pre>
        *
        * <code>repeated .darc.Signature signatures = 8;</code>
@@ -11405,7 +11405,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * Args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new instance.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -11414,7 +11414,7 @@ public final class OmniLedgerProto {
         getArgsList();
     /**
      * <pre>
-     * Args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new instance.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -11422,7 +11422,7 @@ public final class OmniLedgerProto {
     ch.epfl.dedis.proto.OmniLedgerProto.Argument getArgs(int index);
     /**
      * <pre>
-     * Args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new instance.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -11430,7 +11430,7 @@ public final class OmniLedgerProto {
     int getArgsCount();
     /**
      * <pre>
-     * Args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new instance.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -11439,7 +11439,7 @@ public final class OmniLedgerProto {
         getArgsOrBuilderList();
     /**
      * <pre>
-     * Args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new instance.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -11449,7 +11449,7 @@ public final class OmniLedgerProto {
   }
   /**
    * <pre>
-   * Spawn is called upon an existing object that will spawn a new object.
+   * Spawn is called upon an existing instance that will spawn a new instance.
    * </pre>
    *
    * Protobuf type {@code omniledger.Spawn}
@@ -11600,7 +11600,7 @@ public final class OmniLedgerProto {
     private java.util.List<ch.epfl.dedis.proto.OmniLedgerProto.Argument> args_;
     /**
      * <pre>
-     * Args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new instance.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -11610,7 +11610,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new instance.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -11621,7 +11621,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new instance.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -11631,7 +11631,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new instance.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -11641,7 +11641,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Args holds all data necessary to spawn the new object.
+     * Args holds all data necessary to spawn the new instance.
      * </pre>
      *
      * <code>repeated .omniledger.Argument args = 2;</code>
@@ -11831,7 +11831,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Spawn is called upon an existing object that will spawn a new object.
+     * Spawn is called upon an existing instance that will spawn a new instance.
      * </pre>
      *
      * Protobuf type {@code omniledger.Spawn}
@@ -12138,7 +12138,7 @@ public final class OmniLedgerProto {
 
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12152,7 +12152,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12166,7 +12166,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12180,7 +12180,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12201,7 +12201,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12219,7 +12219,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12239,7 +12239,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12260,7 +12260,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12278,7 +12278,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12296,7 +12296,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12315,7 +12315,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12332,7 +12332,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12349,7 +12349,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12360,7 +12360,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12374,7 +12374,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12389,7 +12389,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12400,7 +12400,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12412,7 +12412,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Args holds all data necessary to spawn the new object.
+       * Args holds all data necessary to spawn the new instance.
        * </pre>
        *
        * <code>repeated .omniledger.Argument args = 2;</code>
@@ -12490,7 +12490,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * Command is object specific and interpreted by the object.
+     * Command is interpreted by the contract.
      * </pre>
      *
      * <code>required string command = 1;</code>
@@ -12498,7 +12498,7 @@ public final class OmniLedgerProto {
     boolean hasCommand();
     /**
      * <pre>
-     * Command is object specific and interpreted by the object.
+     * Command is interpreted by the contract.
      * </pre>
      *
      * <code>required string command = 1;</code>
@@ -12506,7 +12506,7 @@ public final class OmniLedgerProto {
     java.lang.String getCommand();
     /**
      * <pre>
-     * Command is object specific and interpreted by the object.
+     * Command is interpreted by the contract.
      * </pre>
      *
      * <code>required string command = 1;</code>
@@ -12560,7 +12560,7 @@ public final class OmniLedgerProto {
   }
   /**
    * <pre>
-   * Invoke calls a method of an existing object which will update its internal
+   * Invoke calls a method of an existing instance which will update its internal
    * state.
    * </pre>
    *
@@ -12658,7 +12658,7 @@ public final class OmniLedgerProto {
     private volatile java.lang.Object command_;
     /**
      * <pre>
-     * Command is object specific and interpreted by the object.
+     * Command is interpreted by the contract.
      * </pre>
      *
      * <code>required string command = 1;</code>
@@ -12668,7 +12668,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Command is object specific and interpreted by the object.
+     * Command is interpreted by the contract.
      * </pre>
      *
      * <code>required string command = 1;</code>
@@ -12689,7 +12689,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Command is object specific and interpreted by the object.
+     * Command is interpreted by the contract.
      * </pre>
      *
      * <code>required string command = 1;</code>
@@ -12943,7 +12943,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Invoke calls a method of an existing object which will update its internal
+     * Invoke calls a method of an existing instance which will update its internal
      * state.
      * </pre>
      *
@@ -13140,7 +13140,7 @@ public final class OmniLedgerProto {
       private java.lang.Object command_ = "";
       /**
        * <pre>
-       * Command is object specific and interpreted by the object.
+       * Command is interpreted by the contract.
        * </pre>
        *
        * <code>required string command = 1;</code>
@@ -13150,7 +13150,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Command is object specific and interpreted by the object.
+       * Command is interpreted by the contract.
        * </pre>
        *
        * <code>required string command = 1;</code>
@@ -13171,7 +13171,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Command is object specific and interpreted by the object.
+       * Command is interpreted by the contract.
        * </pre>
        *
        * <code>required string command = 1;</code>
@@ -13191,7 +13191,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Command is object specific and interpreted by the object.
+       * Command is interpreted by the contract.
        * </pre>
        *
        * <code>required string command = 1;</code>
@@ -13208,7 +13208,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Command is object specific and interpreted by the object.
+       * Command is interpreted by the contract.
        * </pre>
        *
        * <code>required string command = 1;</code>
@@ -13221,7 +13221,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Command is object specific and interpreted by the object.
+       * Command is interpreted by the contract.
        * </pre>
        *
        * <code>required string command = 1;</code>
@@ -13603,7 +13603,8 @@ public final class OmniLedgerProto {
   }
   /**
    * <pre>
-   * Delete removes the object.
+   * Delete removes the instance. The contract might enforce conditions that
+   * must be true before a Delete is executed.
    * </pre>
    *
    * Protobuf type {@code omniledger.Delete}
@@ -13816,7 +13817,8 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Delete removes the object.
+     * Delete removes the instance. The contract might enforce conditions that
+     * must be true before a Delete is executed.
      * </pre>
      *
      * Protobuf type {@code omniledger.Delete}
@@ -13998,7 +14000,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * Name can be any name recognized by the object.
+     * Name can be any name recognized by the contract.
      * </pre>
      *
      * <code>required string name = 1;</code>
@@ -14006,7 +14008,7 @@ public final class OmniLedgerProto {
     boolean hasName();
     /**
      * <pre>
-     * Name can be any name recognized by the object.
+     * Name can be any name recognized by the contract.
      * </pre>
      *
      * <code>required string name = 1;</code>
@@ -14014,7 +14016,7 @@ public final class OmniLedgerProto {
     java.lang.String getName();
     /**
      * <pre>
-     * Name can be any name recognized by the object.
+     * Name can be any name recognized by the contract.
      * </pre>
      *
      * <code>required string name = 1;</code>
@@ -14041,7 +14043,7 @@ public final class OmniLedgerProto {
   }
   /**
    * <pre>
-   * Argument is a name/value pair that will be passed to the object.
+   * Argument is a name/value pair that will be passed to the contract.
    * </pre>
    *
    * Protobuf type {@code omniledger.Argument}
@@ -14131,7 +14133,7 @@ public final class OmniLedgerProto {
     private volatile java.lang.Object name_;
     /**
      * <pre>
-     * Name can be any name recognized by the object.
+     * Name can be any name recognized by the contract.
      * </pre>
      *
      * <code>required string name = 1;</code>
@@ -14141,7 +14143,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Name can be any name recognized by the object.
+     * Name can be any name recognized by the contract.
      * </pre>
      *
      * <code>required string name = 1;</code>
@@ -14162,7 +14164,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Name can be any name recognized by the object.
+     * Name can be any name recognized by the contract.
      * </pre>
      *
      * <code>required string name = 1;</code>
@@ -14385,7 +14387,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Argument is a name/value pair that will be passed to the object.
+     * Argument is a name/value pair that will be passed to the contract.
      * </pre>
      *
      * Protobuf type {@code omniledger.Argument}
@@ -14546,7 +14548,7 @@ public final class OmniLedgerProto {
       private java.lang.Object name_ = "";
       /**
        * <pre>
-       * Name can be any name recognized by the object.
+       * Name can be any name recognized by the contract.
        * </pre>
        *
        * <code>required string name = 1;</code>
@@ -14556,7 +14558,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Name can be any name recognized by the object.
+       * Name can be any name recognized by the contract.
        * </pre>
        *
        * <code>required string name = 1;</code>
@@ -14577,7 +14579,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Name can be any name recognized by the object.
+       * Name can be any name recognized by the contract.
        * </pre>
        *
        * <code>required string name = 1;</code>
@@ -14597,7 +14599,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Name can be any name recognized by the object.
+       * Name can be any name recognized by the contract.
        * </pre>
        *
        * <code>required string name = 1;</code>
@@ -14614,7 +14616,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Name can be any name recognized by the object.
+       * Name can be any name recognized by the contract.
        * </pre>
        *
        * <code>required string name = 1;</code>
@@ -14627,7 +14629,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Name can be any name recognized by the object.
+       * Name can be any name recognized by the contract.
        * </pre>
        *
        * <code>required string name = 1;</code>
@@ -16569,7 +16571,7 @@ public final class OmniLedgerProto {
 
     /**
      * <pre>
-     * Name points to the genesis object of that coin.
+     * Name points to the genesis instance of that coin.
      * </pre>
      *
      * <code>required bytes name = 1;</code>
@@ -16577,7 +16579,7 @@ public final class OmniLedgerProto {
     boolean hasName();
     /**
      * <pre>
-     * Name points to the genesis object of that coin.
+     * Name points to the genesis instance of that coin.
      * </pre>
      *
      * <code>required bytes name = 1;</code>
@@ -16604,7 +16606,7 @@ public final class OmniLedgerProto {
   /**
    * <pre>
    * Coin is a generic structure holding any type of coin. Coins are defined
-   * by a genesis coin object that is unique for each type of coin.
+   * by a genesis coin instance that is unique for each type of coin.
    * </pre>
    *
    * Protobuf type {@code omniledger.Coin}
@@ -16693,7 +16695,7 @@ public final class OmniLedgerProto {
     private com.google.protobuf.ByteString name_;
     /**
      * <pre>
-     * Name points to the genesis object of that coin.
+     * Name points to the genesis instance of that coin.
      * </pre>
      *
      * <code>required bytes name = 1;</code>
@@ -16703,7 +16705,7 @@ public final class OmniLedgerProto {
     }
     /**
      * <pre>
-     * Name points to the genesis object of that coin.
+     * Name points to the genesis instance of that coin.
      * </pre>
      *
      * <code>required bytes name = 1;</code>
@@ -16919,7 +16921,7 @@ public final class OmniLedgerProto {
     /**
      * <pre>
      * Coin is a generic structure holding any type of coin. Coins are defined
-     * by a genesis coin object that is unique for each type of coin.
+     * by a genesis coin instance that is unique for each type of coin.
      * </pre>
      *
      * Protobuf type {@code omniledger.Coin}
@@ -17078,7 +17080,7 @@ public final class OmniLedgerProto {
       private com.google.protobuf.ByteString name_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * Name points to the genesis object of that coin.
+       * Name points to the genesis instance of that coin.
        * </pre>
        *
        * <code>required bytes name = 1;</code>
@@ -17088,7 +17090,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Name points to the genesis object of that coin.
+       * Name points to the genesis instance of that coin.
        * </pre>
        *
        * <code>required bytes name = 1;</code>
@@ -17098,7 +17100,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Name points to the genesis object of that coin.
+       * Name points to the genesis instance of that coin.
        * </pre>
        *
        * <code>required bytes name = 1;</code>
@@ -17114,7 +17116,7 @@ public final class OmniLedgerProto {
       }
       /**
        * <pre>
-       * Name points to the genesis object of that coin.
+       * Name points to the genesis instance of that coin.
        * </pre>
        *
        * <code>required bytes name = 1;</code>

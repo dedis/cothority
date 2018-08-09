@@ -51,9 +51,14 @@ func InstanceIDFromSlice(in []byte) InstanceID {
 	return i
 }
 
+// Equal returns if both InstanceIDs point to the same instance.
+func (iID InstanceID) Equal(other InstanceID) bool {
+	return bytes.Equal(iID[:], other[:])
+}
+
 // Slice returns the InstanceID as a []byte.
-func (i InstanceID) Slice() []byte {
-	return i[:]
+func (iID InstanceID) Slice() []byte {
+	return iID[:]
 }
 
 // Arguments is a searchable list of arguments.

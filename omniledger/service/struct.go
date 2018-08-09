@@ -94,6 +94,12 @@ func dup(in []byte) []byte {
 	return append([]byte{}, in...)
 }
 
+const (
+	dbValue byte = iota
+	dbContract
+	dbDarcID
+)
+
 func (c *collectionDB) loadAll() error {
 	return c.db.View(func(tx *bolt.Tx) error {
 		// Assume bucket exists and has keys
@@ -102,18 +108,18 @@ func (c *collectionDB) loadAll() error {
 
 		for k, v := cur.First(); k != nil; k, v = cur.Next() {
 			// Only look at value keys
-			if len(k) > 0 && k[0] != 0 {
+			if len(k) > 0 && k[0] != dbValue {
 				continue
 			}
 
 			k2 := dup(k)
-			k2[0] = 1
+			k2[0] = dbContract
 			cv := b.Get(k2)
 			if cv == nil {
 				return fmt.Errorf("contract type missing for object ID %x", k[1:])
 			}
 
-			k2[0] = 2
+			k2[0] = dbDarcID
 			dv := b.Get(k2)
 			if dv == nil {
 				return fmt.Errorf("darcID missing for object ID %x", k[1:])
@@ -166,29 +172,29 @@ func (c *collectionDB) Store(sc *StateChange) error {
 
 		switch sc.StateAction {
 		case Create, Update:
-			key[0] = 0
+			key[0] = dbValue
 			if err := bucket.Put(key, sc.Value); err != nil {
 				return err
 			}
-			key[0] = 1
+			key[0] = dbContract
 			if err := bucket.Put(key, sc.ContractID); err != nil {
 				return err
 			}
-			key[0] = 2
+			key[0] = dbDarcID
 			if err := bucket.Put(key, []byte(sc.DarcID)); err != nil {
 				return err
 			}
 			return nil
 		case Remove:
-			key[0] = 0
+			key[0] = dbValue
 			if err := bucket.Delete(key); err != nil {
 				return err
 			}
-			key[0] = 1
+			key[0] = dbContract
 			if err := bucket.Delete(key); err != nil {
 				return err
 			}
-			key[0] = 2
+			key[0] = dbDarcID
 			if err := bucket.Delete(key); err != nil {
 				return err
 			}
