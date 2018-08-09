@@ -242,7 +242,7 @@ func (s *Service) spawnContractConfig(cdb CollectionView, inst Instruction, coin
 	id := d.GetBaseID()
 	return []StateChange{
 		NewStateChange(Create, GenesisReferenceID, ContractConfigID, id, id),
-		NewStateChange(Create, InstanceIDFromSlice(id), ContractDarcID, darcBuf, id),
+		NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
 		NewStateChange(Create, DeriveConfigID(id), ContractConfigID, configBuf, id),
 	}, c, nil
 
@@ -256,7 +256,7 @@ func DeriveConfigID(id darc.ID) InstanceID {
 	h.Write([]byte{0})
 	h.Write([]byte("config"))
 	sum := h.Sum(nil)
-	return InstanceIDFromSlice(sum)
+	return NewInstanceID(sum)
 }
 
 // ContractDarc accepts the following instructions:
@@ -274,7 +274,7 @@ func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coi
 			}
 			id := d.GetBaseID()
 			return []StateChange{
-				NewStateChange(Create, InstanceIDFromSlice(id), ContractDarcID, darcBuf, id),
+				NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
 			}, coins, nil
 		}
 		// TODO The code below will never get called because this

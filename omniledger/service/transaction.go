@@ -21,8 +21,8 @@ import (
 // An InstanceID is a unique identifier for one instance of a contract.
 type InstanceID [32]byte
 
-func (i InstanceID) String() string {
-	return fmt.Sprintf("%x", i.Slice())
+func (iID InstanceID) String() string {
+	return fmt.Sprintf("%x", iID.Slice())
 }
 
 // Nonce is used to prevent replay attacks in instructions.
@@ -43,9 +43,9 @@ func NewNonce(buf []byte) Nonce {
 	return n
 }
 
-// InstanceIDFromSlice converts the first 32 bytes of in into
+// NewInstanceID converts the first 32 bytes of in into
 // an InstanceID.
-func InstanceIDFromSlice(in []byte) InstanceID {
+func NewInstanceID(in []byte) InstanceID {
 	var i InstanceID
 	copy(i[:], in)
 	return i
@@ -118,7 +118,7 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 	}
 	h.Write([]byte(what))
 	h.Write([]byte{0})
-	return InstanceIDFromSlice(h.Sum(nil))
+	return NewInstanceID(h.Sum(nil))
 }
 
 // GetContractState searches for the contract kind of this instruction and the

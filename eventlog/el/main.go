@@ -220,7 +220,7 @@ func doLog(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	cl.Instance = omniledger.InstanceIDFromSlice(eb)
+	cl.Instance = omniledger.NewInstanceID(eb)
 
 	t := c.String("topic")
 	content := c.String("content")
@@ -303,7 +303,7 @@ func search(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	cl.Instance = omniledger.InstanceIDFromSlice(eb)
+	cl.Instance = omniledger.NewInstanceID(eb)
 
 	resp, err := cl.Search(req)
 	if err != nil {

@@ -248,7 +248,7 @@ func TestService_Depending(t *testing.T) {
 
 	// Second instruction: delete the value we just spawned.
 	in2 := Instruction{
-		InstanceID: InstanceIDFromSlice(in1.Hash()),
+		InstanceID: NewInstanceID(in1.Hash()),
 		Delete:     &Delete{},
 		Nonce:      GenNonce(),
 		Index:      1,
@@ -614,7 +614,7 @@ func TestService_DarcSpawn(t *testing.T) {
 
 	ctx := ClientTransaction{
 		Instructions: []Instruction{{
-			InstanceID: InstanceIDFromSlice(s.darc.GetBaseID()),
+			InstanceID: NewInstanceID(s.darc.GetBaseID()),
 			Nonce:      GenNonce(),
 			Index:      0,
 			Length:     1,
@@ -630,7 +630,7 @@ func TestService_DarcSpawn(t *testing.T) {
 	require.Nil(t, ctx.Instructions[0].SignBy(s.darc.GetBaseID(), s.signer))
 
 	s.sendTx(t, ctx)
-	pr := s.waitProof(t, InstanceIDFromSlice(darc2.GetBaseID()))
+	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
 	require.True(t, pr.InclusionProof.Match())
 }
 
@@ -652,7 +652,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	require.True(t, darc2.Equal(darc2Copy))
 	ctx := ClientTransaction{
 		Instructions: []Instruction{{
-			InstanceID: InstanceIDFromSlice(s.darc.GetBaseID()),
+			InstanceID: NewInstanceID(s.darc.GetBaseID()),
 			Nonce:      GenNonce(),
 			Index:      0,
 			Length:     1,
@@ -667,7 +667,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	}
 	require.Nil(t, ctx.Instructions[0].SignBy(s.darc.GetBaseID(), s.signer))
 	s.sendTx(t, ctx)
-	pr := s.waitProof(t, InstanceIDFromSlice(darc2.GetBaseID()))
+	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
 	require.True(t, pr.InclusionProof.Match())
 
 	// Spawn third darc from the second one, but sign the request with
@@ -683,7 +683,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	require.True(t, darc3.Equal(darc3Copy))
 	ctx = ClientTransaction{
 		Instructions: []Instruction{{
-			InstanceID: InstanceIDFromSlice(darc2.GetBaseID()),
+			InstanceID: NewInstanceID(darc2.GetBaseID()),
 			Nonce:      GenNonce(),
 			Index:      0,
 			Length:     1,
@@ -699,7 +699,7 @@ func TestService_DarcDelegation(t *testing.T) {
 
 	require.Nil(t, ctx.Instructions[0].SignBy(darc2.GetBaseID(), s.signer))
 	s.sendTx(t, ctx)
-	pr = s.waitProof(t, InstanceIDFromSlice(darc3.GetBaseID()))
+	pr = s.waitProof(t, NewInstanceID(darc3.GetBaseID()))
 	require.True(t, pr.InclusionProof.Match())
 }
 
@@ -931,7 +931,7 @@ func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction 
 		},
 	}
 	instr := Instruction{
-		InstanceID: InstanceIDFromSlice(d2.GetBaseID()),
+		InstanceID: NewInstanceID(d2.GetBaseID()),
 		Nonce:      GenNonce(),
 		Index:      0,
 		Length:     1,
@@ -1103,7 +1103,7 @@ func dummyContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateC
 	switch inst.GetType() {
 	case SpawnType:
 		return []StateChange{
-			NewStateChange(Create, InstanceIDFromSlice(inst.Hash()), cid, inst.Spawn.Args[0].Value, darcID),
+			NewStateChange(Create, NewInstanceID(inst.Hash()), cid, inst.Spawn.Args[0].Value, darcID),
 		}, nil, nil
 	case DeleteType:
 		return []StateChange{

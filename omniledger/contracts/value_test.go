@@ -32,7 +32,7 @@ func TestValue_Spawn(t *testing.T) {
 	myvalue := []byte("1234")
 	ctx := omniledger.ClientTransaction{
 		Instructions: []omniledger.Instruction{{
-			InstanceID: omniledger.InstanceIDFromSlice(gDarc.GetBaseID()),
+			InstanceID: omniledger.NewInstanceID(gDarc.GetBaseID()),
 			Nonce:      omniledger.Nonce{},
 			Index:      0,
 			Length:     1,

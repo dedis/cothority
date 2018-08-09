@@ -168,7 +168,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	// reference to the actual genesis transaction.
 	transaction := []ClientTransaction{{
 		Instructions: []Instruction{{
-			InstanceID: InstanceIDFromSlice(req.GenesisDarc.GetID()),
+			InstanceID: NewInstanceID(req.GenesisDarc.GetID()),
 			Nonce:      Nonce{},
 			Index:      0,
 			Length:     1,
@@ -567,7 +567,7 @@ func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error
 	if len(val) != 32 {
 		return nil, errors.New("value has a invalid length")
 	}
-	return s.loadLatestDarc(scID, InstanceIDFromSlice(val))
+	return s.loadLatestDarc(scID, NewInstanceID(val))
 }
 
 // LoadBlockInterval loads the block interval from the skipchain ID.

@@ -8,7 +8,7 @@ import (
 )
 
 func id(s string) InstanceID {
-	return InstanceIDFromSlice([]byte(s))
+	return NewInstanceID([]byte(s))
 }
 
 func TestSortTransactions(t *testing.T) {
@@ -97,7 +97,7 @@ func createOneClientTx(dID darc.ID, kind string, value []byte, signer darc.Signe
 
 func createInstr(dID darc.ID, contractID string, value []byte, signer darc.Signer) (Instruction, error) {
 	instr := Instruction{
-		InstanceID: InstanceIDFromSlice(dID),
+		InstanceID: NewInstanceID(dID),
 		Spawn: &Spawn{
 			ContractID: contractID,
 			Args:       Arguments{{Name: "data", Value: value}},

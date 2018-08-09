@@ -32,7 +32,7 @@ func TestCoin_Spawn(t *testing.T) {
 	sc, co, err := ContractCoin(ct, inst, c)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(sc))
-	ca := omniledger.InstanceIDFromSlice(inst.Hash())
+	ca := omniledger.NewInstanceID(inst.Hash())
 	require.Equal(t, omniledger.NewStateChange(omniledger.Create, ca,
 		ContractCoinID, coinZero, nil), sc[0])
 	require.Equal(t, 0, len(co))
@@ -134,7 +134,7 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 	coAddr1 := omniledger.InstanceID{}
 	one := make([]byte, 32)
 	one[31] = 1
-	coAddr2 := omniledger.InstanceIDFromSlice(one)
+	coAddr2 := omniledger.NewInstanceID(one)
 
 	ct.Store(coAddr1, coinOne, ContractCoinID, nil)
 	ct.Store(coAddr2, coinZero, ContractCoinID, nil)

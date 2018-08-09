@@ -103,7 +103,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	tx := service.ClientTransaction{
 		Instructions: []service.Instruction{
 			{
-				InstanceID: service.InstanceIDFromSlice(gm.GenesisDarc.GetBaseID()),
+				InstanceID: service.NewInstanceID(gm.GenesisDarc.GetBaseID()),
 				Nonce:      service.GenNonce(),
 				Index:      0,
 				Length:     2,
@@ -112,7 +112,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 				},
 			},
 			{
-				InstanceID: service.InstanceIDFromSlice(gm.GenesisDarc.GetBaseID()),
+				InstanceID: service.NewInstanceID(gm.GenesisDarc.GetBaseID()),
 				Nonce:      service.GenNonce(),
 				Index:      1,
 				Length:     2,
@@ -125,11 +125,11 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 
 	// The first instruction will create an account with the InstanceID equal to the
 	// hash of the first instruction.
-	coinAddr1 := service.InstanceIDFromSlice(tx.Instructions[0].Hash())
+	coinAddr1 := service.NewInstanceID(tx.Instructions[0].Hash())
 
 	// We'll also want to remember this addr so that we can monitor
 	// it for coins arriving.
-	coinAddr2 := service.InstanceIDFromSlice(tx.Instructions[1].Hash())
+	coinAddr2 := service.NewInstanceID(tx.Instructions[1].Hash())
 
 	// Now sign all the instructions
 	for i := range tx.Instructions {

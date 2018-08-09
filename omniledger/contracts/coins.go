@@ -70,7 +70,7 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 	switch inst.GetType() {
 	case omniledger.SpawnType:
 		// Spawn creates a new coin account as a separate instance.
-		ca := omniledger.InstanceIDFromSlice(inst.Hash())
+		ca := omniledger.NewInstanceID(inst.Hash())
 		log.Lvlf3("Spawning coin to %x", ca.Slice())
 		sc = []omniledger.StateChange{
 			omniledger.NewStateChange(omniledger.Create, ca, ContractCoinID, make([]byte, 8), darcID),
@@ -127,7 +127,7 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 			binary.Write(&w, binary.LittleEndian, targetCoin)
 
 			log.Lvlf3("transferring %d to %x", coinsArg, target)
-			sc = append(sc, omniledger.NewStateChange(omniledger.Update, omniledger.InstanceIDFromSlice(target),
+			sc = append(sc, omniledger.NewStateChange(omniledger.Update, omniledger.NewInstanceID(target),
 				ContractCoinID, w.Bytes(), did))
 		case "fetch":
 			// fetch removes coins from the account and passes it on to the next
@@ -192,5 +192,5 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 func iid(in string) omniledger.InstanceID {
 	h := sha256.New()
 	h.Write([]byte(in))
-	return omniledger.InstanceIDFromSlice(h.Sum(nil))
+	return omniledger.NewInstanceID(h.Sum(nil))
 }

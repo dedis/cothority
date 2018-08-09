@@ -236,7 +236,7 @@ func add(c *cli.Context) error {
 		},
 	}
 	instr := omniledger.Instruction{
-		InstanceID: omniledger.InstanceIDFromSlice(d2.GetBaseID()),
+		InstanceID: omniledger.NewInstanceID(d2.GetBaseID()),
 		Index:      0,
 		Length:     1,
 		Invoke:     &invoke,
