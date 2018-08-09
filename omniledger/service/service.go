@@ -870,12 +870,12 @@ func (s *Service) getTxs(leader *network.ServerIdentity, scID skipchain.SkipBloc
 // exported because we need it in tests, it should not be used in non-test code
 // outside of this package.
 func (s *Service) TestClose() {
-	// No need to use locks because the only non-test code tryLoad that
-	// uses this function holds the pollChanMut lock.
+	s.pollChanMut.Lock()
 	for k, c := range s.pollChan {
 		close(c)
 		delete(s.pollChan, k)
 	}
+	s.pollChanMut.Unlock()
 	if s.heartbeats.enabled() {
 		s.heartbeats.closeAll()
 		s.heartbeatsClose <- true
@@ -1072,9 +1072,11 @@ func (s *Service) tryLoad() error {
 	// NOTE: Usually tryLoad is only called when services start up. but for
 	// testing, we might re-initialise the service. So we need to clean up
 	// the go-routines.
+	s.TestClose()
+
+	// Recreate the polling channles.
 	s.pollChanMut.Lock()
 	defer s.pollChanMut.Unlock()
-	s.TestClose()
 	s.pollChan = make(map[string]chan bool)
 
 	gas := &skipchain.GetAllSkipChainIDs{}
