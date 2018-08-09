@@ -30,6 +30,10 @@ var cmds = cli.Commands{
 				Name:  "roster, r",
 				Usage: "the roster of the cothority that will host the ledger",
 			},
+			cli.StringFlag{
+				Name:  "config",
+				Usage: "override the default config file location",
+			},
 			cli.DurationFlag{
 				Name:  "interval, i",
 				Usage: "the block interval for this ledger",
@@ -132,7 +136,7 @@ func create(c *cli.Context) error {
 		Roster:  *r,
 		OwnerID: owner.Identity(),
 	}
-	fn, err = save(cfg)
+	fn, err = save(c.String("config"), cfg)
 	if err != nil {
 		return err
 	}
@@ -304,12 +308,13 @@ func loadPrivate(fn string) (*configPrivate, error) {
 	return nil, errors.New("unexpected private config format")
 }
 
-func save(cfg *omniledger.Config) (string, error) {
-	cfgDir := getDataPath(cliApp.Name)
-	os.MkdirAll(cfgDir, 0755)
-
-	fn := fmt.Sprintf("%x.cfg", cfg.ID[0:8])
-	fn = filepath.Join(cfgDir, fn)
+func save(fn string, cfg *omniledger.Config) (string, error) {
+	if fn == "" {
+		cfgDir := getDataPath(cliApp.Name)
+		os.MkdirAll(cfgDir, 0755)
+		fn = fmt.Sprintf("%x.cfg", cfg.ID[0:8])
+		fn = filepath.Join(cfgDir, fn)
+	}
 
 	buf, err := network.Marshal(cfg)
 	if err != nil {

@@ -1,6 +1,7 @@
 FROM golang:1.10
 WORKDIR /root/
 COPY exe/conode.Linux.x86_64 ./conode
+COPY exe/ol ./ol
 COPY setup-then-start.sh .
 COPY run_conode.sh .
 RUN mkdir /conode_data
