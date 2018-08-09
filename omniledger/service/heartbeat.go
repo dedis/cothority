@@ -61,6 +61,8 @@ func (r *heartbeats) closeAll() {
 }
 
 func (r *heartbeats) enabled() bool {
+	r.Lock()
+	defer r.Unlock()
 	if r.heartbeatMap == nil {
 		return false
 	}
