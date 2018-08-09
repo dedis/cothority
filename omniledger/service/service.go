@@ -543,17 +543,14 @@ func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
 func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error) {
 	coll := s.GetCollectionView(scID)
 	// Find the genesis-darc ID.
-	val, contract, _, err := getValueContract(coll, GenesisReferenceID.Slice())
+	_, contract, darcID, err := getValueContract(coll, NewInstanceID(nil).Slice())
 	if err != nil {
 		return nil, err
 	}
 	if string(contract) != ContractConfigID {
 		return nil, errors.New("did not get " + ContractConfigID)
 	}
-	if len(val) != 32 {
-		return nil, errors.New("value has a invalid length")
-	}
-	return s.loadLatestDarc(scID, NewInstanceID(val))
+	return s.loadLatestDarc(scID, NewInstanceID(darcID))
 }
 
 // LoadBlockInterval loads the block interval from the skipchain ID.
@@ -673,7 +670,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 
 				txs = txs[len(txOut)+len(txBad):]
 				if len(txs) > 0 {
-					log.Warn("Got more transactions than can be done in half the blockInterval. "+
+					log.Warnf("Got more transactions than can be done in half the blockInterval. "+
 						"%d transactions left", len(txs))
 				}
 				_, err = s.createNewBlock(scID, sb.Roster, txOut)
@@ -933,11 +930,12 @@ func (s *Service) startViewChange(scID skipchain.SkipBlockID) error {
 		return nil
 	}
 
-	newRoster := onet.NewRoster(append(sb.Roster.List[1:], sb.Roster.List[0]))
-	genesisDarcID, _, _, err := s.GetCollectionView(scID).GetValues(GenesisReferenceID.Slice())
+	_, _, genDarcID, err := s.GetCollectionView(scID).GetValues(NewInstanceID(nil).Slice())
 	if err != nil {
 		return err
 	}
+
+	newRoster := onet.NewRoster(append(sb.Roster.List[1:], sb.Roster.List[0]))
 	newRosterBuf, err := protobuf.Encode(newRoster)
 	if err != nil {
 		return err
@@ -945,7 +943,7 @@ func (s *Service) startViewChange(scID skipchain.SkipBlockID) error {
 
 	ctx := ClientTransaction{
 		Instructions: []Instruction{{
-			InstanceID: DeriveConfigID(genesisDarcID),
+			InstanceID: NewInstanceID(nil),
 			Nonce:      GenNonce(),
 			Index:      0,
 			Length:     1,
@@ -959,7 +957,7 @@ func (s *Service) startViewChange(scID skipchain.SkipBlockID) error {
 		}},
 	}
 	signer := darc.NewSignerEd25519(s.ServerIdentity().Public, s.getPrivateKey())
-	if err = ctx.Instructions[0].SignBy(genesisDarcID, signer); err != nil {
+	if err = ctx.Instructions[0].SignBy(genDarcID, signer); err != nil {
 		return err
 	}
 

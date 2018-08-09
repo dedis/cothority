@@ -1,7 +1,6 @@
 package service
 
 import (
-	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 	"time"
@@ -13,9 +12,6 @@ import (
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
-
-// GenesisReferenceID is all zeroes. Its value is a reference to the genesis-darc.
-var GenesisReferenceID = InstanceID{}
 
 // ContractConfigID denotes a config-contract
 var ContractConfigID = "config"
@@ -29,20 +25,7 @@ var CmdDarcEvolve = "evolve"
 // LoadConfigFromColl loads the configuration data from the collections.
 func LoadConfigFromColl(coll CollectionView) (*ChainConfig, error) {
 	// Find the genesis-darc ID.
-	val, contract, _, err := getValueContract(coll, GenesisReferenceID.Slice())
-	if err != nil {
-		return nil, err
-	}
-	if string(contract) != ContractConfigID {
-		return nil, errors.New("did not get " + ContractConfigID)
-	}
-	if len(val) != 32 {
-		return nil, errors.New("value has invalid length")
-	}
-
-	// Use the genesis-darc ID to create the config key and read the config.
-	cfgid := DeriveConfigID(darc.ID(val))
-	val, contract, _, err = getValueContract(coll, cfgid.Slice())
+	val, contract, _, err := getValueContract(coll, NewInstanceID(nil).Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +122,7 @@ func (s *Service) invokeContractConfig(cdb CollectionView, inst Instruction, coi
 			return
 		}
 		sc = []StateChange{
-			NewStateChange(Update, DeriveConfigID(darcID), ContractConfigID, configBuf, darcID),
+			NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
 		}
 		return
 	} else if inst.Invoke.Command == "view_change" {
@@ -179,7 +162,7 @@ func updateRosterScs(cdb CollectionView, darcID darc.ID, newRoster onet.Roster) 
 	}
 
 	return []StateChange{
-		NewStateChange(Update, DeriveConfigID(darcID), ContractConfigID, configBuf, darcID),
+		NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
 	}, nil
 }
 
@@ -238,25 +221,12 @@ func (s *Service) spawnContractConfig(cdb CollectionView, inst Instruction, coin
 		return
 	}
 
-	// TODO: Simplify, removing DeriveConfigID. See issue #1390.
 	id := d.GetBaseID()
 	return []StateChange{
-		NewStateChange(Create, GenesisReferenceID, ContractConfigID, id, id),
+		NewStateChange(Create, NewInstanceID(nil), ContractConfigID, configBuf, id),
 		NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
-		NewStateChange(Create, DeriveConfigID(id), ContractConfigID, configBuf, id),
 	}, c, nil
 
-}
-
-// DeriveConfigID derives the InstanceID for the config key from the genesis
-// Darc's ID.
-func DeriveConfigID(id darc.ID) InstanceID {
-	h := sha256.New()
-	h.Write(id)
-	h.Write([]byte{0})
-	h.Write([]byte("config"))
-	sum := h.Sum(nil)
-	return NewInstanceID(sum)
 }
 
 // ContractDarc accepts the following instructions:
