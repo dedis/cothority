@@ -111,8 +111,7 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 // GetGenDarc uses the GetProof method to fetch the latest version of the
 // Genesis Darc from OmniLedger and parses it.
 func (c *Client) GetGenDarc() (*darc.Darc, error) {
-	configId := NewInstanceID(nil)
-	p, err := c.GetProof(configId.Slice())
+	p, err := c.GetProof(NewInstanceID(nil).Slice())
 	if err != nil {
 		return nil, err
 	}
