@@ -15,7 +15,7 @@ var testSuite = cothority.Suite
 
 func TestCollectTx(t *testing.T) {
 	protoPrefix := "TestCollectTx"
-	getTx := func(leader *network.ServerIdentity, scID skipchain.SkipBlockID) ClientTransactions {
+	getTx := func(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID) ClientTransactions {
 		tx := ClientTransaction{
 			Instructions: []Instruction{Instruction{}},
 		}
@@ -34,6 +34,7 @@ func TestCollectTx(t *testing.T) {
 
 		root := p.(*CollectTxProtocol)
 		root.SkipchainID = skipchain.SkipBlockID("hello")
+		root.LatestID = skipchain.SkipBlockID("goodbye")
 		require.NoError(t, root.Start())
 
 		var txs ClientTransactions

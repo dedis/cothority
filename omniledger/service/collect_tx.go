@@ -10,6 +10,8 @@ import (
 	"github.com/dedis/onet/network"
 )
 
+type getTxsCallback func(*network.ServerIdentity, *onet.Roster, skipchain.SkipBlockID, skipchain.SkipBlockID) ClientTransactions
+
 func init() {
 	network.RegisterMessages(CollectTxRequest{}, CollectTxResponse{})
 }
@@ -19,9 +21,10 @@ type CollectTxProtocol struct {
 	*onet.TreeNodeInstance
 	TxsChan      chan ClientTransactions
 	SkipchainID  skipchain.SkipBlockID
+	LatestID     skipchain.SkipBlockID
 	requestChan  chan structCollectTxRequest
 	responseChan chan structCollectTxResponse
-	getTxs       func(*network.ServerIdentity, skipchain.SkipBlockID) ClientTransactions
+	getTxs       getTxsCallback
 	Finish       chan bool
 }
 
@@ -29,6 +32,7 @@ type CollectTxProtocol struct {
 // pending transactions back to the leader.
 type CollectTxRequest struct {
 	SkipchainID skipchain.SkipBlockID
+	LatestID    skipchain.SkipBlockID
 }
 
 // CollectTxResponse is the response message that contains all the pending
@@ -48,7 +52,7 @@ type structCollectTxResponse struct {
 }
 
 // NewCollectTxProtocol is used for registering the protocol.
-func NewCollectTxProtocol(getTxs func(*network.ServerIdentity, skipchain.SkipBlockID) ClientTransactions) func(*onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+func NewCollectTxProtocol(getTxs getTxsCallback) func(*onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	return func(node *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		c := &CollectTxProtocol{
 			TreeNodeInstance: node,
@@ -74,8 +78,12 @@ func (p *CollectTxProtocol) Start() error {
 	if len(p.SkipchainID) == 0 {
 		return errors.New("missing skipchain ID")
 	}
+	if len(p.LatestID) == 0 {
+		return errors.New("missing latest skipblock ID")
+	}
 	req := &CollectTxRequest{
 		SkipchainID: p.SkipchainID,
+		LatestID:    p.LatestID,
 	}
 	// send to myself and the children
 	if err := p.SendTo(p.TreeNode(), req); err != nil {
@@ -107,7 +115,7 @@ func (p *CollectTxProtocol) Dispatch() error {
 
 	// send the result of the callback to the root
 	resp := &CollectTxResponse{
-		Txs: p.getTxs(req.ServerIdentity, req.SkipchainID),
+		Txs: p.getTxs(req.ServerIdentity, p.Roster(), req.SkipchainID, req.LatestID),
 	}
 	if p.IsRoot() {
 		if err := p.SendTo(p.TreeNode(), resp); err != nil {

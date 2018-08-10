@@ -30,10 +30,12 @@ const invokeEvolve darc.Action = darc.Action("invoke:evolve")
 
 const rotationWindow time.Duration = 5
 
-// OmniledgerID can be used to refer to this service
-var OmniledgerID onet.ServiceID
+const noTimeout time.Duration = 0
 
 const collectTxProtocol = "CollectTxProtocol"
+
+// OmniledgerID can be used to refer to this service
+var OmniledgerID onet.ServiceID
 
 var verifyOmniLedger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OmniLedger"))
 
@@ -557,6 +559,16 @@ func (s *Service) LoadBlockInterval(scID skipchain.SkipBlockID) (time.Duration, 
 	return LoadBlockIntervalFromColl(&roCollection{collDb.coll})
 }
 
+// EnableViewChange enables the view-change functionality. View-change is
+// highly time sensitive, if the block interval is very low (e.g., when using
+// tests), then we may see unexpected view-change requests while transactions
+// are still being processed if it is enabled in tests.
+func (s *Service) EnableViewChange() {
+	s.skService().EnableViewChange()
+	s.heartbeats = newHeartbeats()
+	s.monitorLeaderFailure()
+}
+
 func (s *Service) loadLatestDarc(scID skipchain.SkipBlockID, iid InstanceID) (*darc.Darc, error) {
 	colldb := s.getCollection(scID)
 	if colldb == nil {
@@ -617,6 +629,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 				}
 				root := proto.(*CollectTxProtocol)
 				root.SkipchainID = scID
+				root.LatestID = sb.Hash
 				if err := root.Start(); err != nil {
 					panic("Failed to start the protocol with error: " + err.Error() +
 						" Start() only returns an error when the protocol is not initialised correctly," +
@@ -745,8 +758,6 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	return true
 }
 
-const noTimeout time.Duration = 0
-
 // createStateChanges goes through all ClientTransactions and creates
 // the appropriate StateChanges. If any of the transactions are invalid,
 // it returns an error. If timeout is not 0, createStateChanges will stop
@@ -847,7 +858,11 @@ func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity
 	return sb.Roster.List[0], nil
 }
 
-func (s *Service) getTxs(leader *network.ServerIdentity, scID skipchain.SkipBlockID) ClientTransactions {
+// getTxs is primarily used as a callback in the CollectTx protocol to retrieve
+// a set of pending transactions. However, it is a very useful way to piggy
+// back additional functionalities that need to be executed at every interval,
+// such as updating the heartbeat monitor and synchronising the state.
+func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID) ClientTransactions {
 	actualLeader, err := s.getLeader(scID)
 	if err != nil {
 		log.Lvlf1("could not find a leader on %x with error %s", scID, err)
@@ -860,6 +875,28 @@ func (s *Service) getTxs(leader *network.ServerIdentity, scID skipchain.SkipBloc
 	if s.heartbeats.enabled() {
 		s.heartbeats.beat(string(scID))
 	}
+
+	// If the leader's latestID is something we do not know about, then we
+	// need to synchronise.
+	// NOTE: there is a potential denial of service when the leader sends
+	// an invalid latestID, but our current implementation assumes that the
+	// leader cannot be byzantine (i.e., it can only exhibit crash
+	// failure).
+	ourLatest, err := s.db().GetLatestByID(scID)
+	if err != nil {
+		log.Warn(s.ServerIdentity(), "we do not know about the skipchain ID")
+		return []ClientTransaction{}
+	}
+	latestSB := s.db().GetByID(latestID)
+	if latestSB == nil {
+		log.Lvl3(s.ServerIdentity(), "chain is out of date")
+		if err := s.skService().SyncChain(roster, ourLatest.Hash); err != nil {
+			log.Error(s.ServerIdentity(), err)
+		}
+	} else {
+		log.Lvl3(s.ServerIdentity(), "chain is up to date")
+	}
+
 	return s.txBuffer.take(string(scID))
 }
 
@@ -1133,16 +1170,6 @@ func (s *Service) isOurChain(gen skipchain.SkipBlockID) bool {
 		}
 	}
 	return false
-}
-
-// EnableViewChange enables the view-change functionality. View-change is
-// highly time sensitive, if the block interval is very low (e.g., when using
-// tests), then we may see unexpected view-change requests while transactions
-// are still being processed if it is enabled in tests.
-func (s *Service) EnableViewChange() {
-	s.skService().EnableViewChange()
-	s.heartbeats = newHeartbeats()
-	s.monitorLeaderFailure()
 }
 
 // saves this service's config information
