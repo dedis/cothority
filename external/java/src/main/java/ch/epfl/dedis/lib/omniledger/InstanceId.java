@@ -54,7 +54,9 @@ public class InstanceId implements HashId {
     }
 
     /**
-     * Creates an instance ID of all zeros.
+     * Creates an instance ID of all zeros, which is the place where the OmniLedger
+     * config is stored.
+     *
      * @return the zero instance ID
      */
     public static InstanceId zero() {
@@ -66,18 +68,4 @@ public class InstanceId implements HashId {
             throw new RuntimeException(e);
         }
     }
-
-    public static InstanceId deriveConfigId(DarcId id) throws CothorityCryptoException {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(id.getId());
-            byte zero = 0;
-            digest.update(zero);
-            digest.update("config".getBytes());
-            return new InstanceId(digest.digest());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
 }

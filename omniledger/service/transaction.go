@@ -41,8 +41,9 @@ func NewNonce(buf []byte) Nonce {
 	return n
 }
 
-// NewInstanceID converts the first 32 bytes of in into
-// an InstanceID.
+// NewInstanceID converts the first 32 bytes of in into an InstanceID.
+// Giving nil as in results in the zero InstanceID, which is the special
+// key that holds the OmniLedger config.
 func NewInstanceID(in []byte) InstanceID {
 	var i InstanceID
 	copy(i[:], in)

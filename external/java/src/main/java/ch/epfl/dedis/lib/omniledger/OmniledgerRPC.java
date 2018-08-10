@@ -80,25 +80,14 @@ public class OmniledgerRPC {
      * @param skipchainId the ID of the genesis skipblock, aka skipchain ID
      * @throws CothorityException
      */
-    public OmniledgerRPC(Roster roster, SkipblockId skipchainId) throws CothorityException {
-        // find the darc ID
+    public OmniledgerRPC(Roster roster, SkipblockId skipchainId) throws CothorityException, InvalidProtocolBufferException {
         Proof proof = OmniledgerRPC.getProof(roster, skipchainId, InstanceId.zero());
         OmniledgerRPC.checkProof(proof, "config");
-        DarcId darcId = new DarcId(proof.getValues().get(0));
-
-        // find the actual darc
-        proof = OmniledgerRPC.getProof(roster, skipchainId, new InstanceId(darcId.getId()));
-        OmniledgerRPC.checkProof(proof, "darc");
-        try {
-            genesisDarc = new Darc(proof.getValues().get(0));
-        } catch (InvalidProtocolBufferException e) {
-            throw new CothorityCommunicationException(e);
-        }
-
-        // find the config info
-        proof = OmniledgerRPC.getProof(roster, skipchainId, InstanceId.deriveConfigId(darcId));
-        OmniledgerRPC.checkProof(proof, "config");
         config = new Config(proof.getValues().get(0));
+
+        Proof proof2 = OmniledgerRPC.getProof(roster, skipchainId, new InstanceId(proof.getValues().get(2)));
+        OmniledgerRPC.checkProof(proof2, "darc");
+        genesisDarc = new Darc(proof2.getValues().get(0));
 
         // find the skipchain info
         skipchain = new SkipchainRPC(roster, skipchainId);

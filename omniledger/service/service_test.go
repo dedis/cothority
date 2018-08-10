@@ -897,11 +897,9 @@ func createConfigTx(t *testing.T, s *ser, isgood bool) (ClientTransaction, Chain
 	configBuf, err := protobuf.Encode(&config)
 	require.NoError(t, err)
 
-	cfgid := DeriveConfigID(s.darc.GetBaseID())
-
 	ctx := ClientTransaction{
 		Instructions: []Instruction{{
-			InstanceID: cfgid,
+			InstanceID: NewInstanceID(nil),
 			Nonce:      GenNonce(),
 			Index:      0,
 			Length:     1,

@@ -111,7 +111,7 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 // GetGenDarc uses the GetProof method to fetch the latest version of the
 // Genesis Darc from OmniLedger and parses it.
 func (c *Client) GetGenDarc() (*darc.Darc, error) {
-	p, err := c.GetProof(GenesisReferenceID.Slice())
+	p, err := c.GetProof(NewInstanceID(nil).Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -121,14 +121,14 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 
 	_, vs, err := p.Proof.KeyValue()
 
-	if len(vs) < 2 {
+	if len(vs) < 3 {
 		return nil, errors.New("not enough records")
 	}
 	contractBuf := vs[1]
 	if string(contractBuf) != ContractConfigID {
 		return nil, errors.New("expected contract to be config but got: " + string(contractBuf))
 	}
-	darcID := vs[0]
+	darcID := vs[2]
 	if len(darcID) != 32 {
 		return nil, errors.New("genesis darc ID is wrong length")
 	}
@@ -160,10 +160,7 @@ func (c *Client) GetGenDarc() (*darc.Darc, error) {
 // GetChainConfig uses the GetProof method to fetch the chain config
 // from OmniLedger.
 func (c *Client) GetChainConfig() (*ChainConfig, error) {
-	d, err := c.GetGenDarc()
-	cfid := DeriveConfigID(d.GetBaseID())
-
-	p, err := c.GetProof(cfid.Slice())
+	p, err := c.GetProof(NewInstanceID(nil).Slice())
 	if err != nil {
 		return nil, err
 	}
