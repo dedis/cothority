@@ -79,6 +79,10 @@ func TestService_AddTransaction_WithFailure(t *testing.T) {
 	testAddTransaction(t, 0, true)
 }
 
+func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
+	testAddTransaction(t, 1, true)
+}
+
 func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	var s *ser
 	if failure {
@@ -113,7 +117,6 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	if failure {
 		// kill a child conode and adding tx should still succeed
 		s.hosts[len(s.hosts)-1].Pause()
-		defer s.hosts[len(s.hosts)-1].Unpause()
 	}
 
 	// the operations below should succeed
@@ -151,31 +154,29 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 			require.NoError(t, s.service().tryLoad())
 		}
 		for _, tx := range txs {
-			newId := tx.Instructions[0].Hash()
-			ok := false
-			for ct := 0; ct < 10; ct++ {
-				time.Sleep(2 * s.interval)
-				pr, err := s.service().GetProof(&GetProof{
-					Version: CurrentVersion,
-					ID:      s.sb.SkipChainID(),
-					Key:     newId,
-				})
-				if err != nil {
-					log.Error(err)
-					continue
-				}
-				require.Equal(t, CurrentVersion, pr.Version)
-				if pr.Proof.InclusionProof.Match() {
-					require.Nil(t, pr.Proof.Verify(s.sb.SkipChainID()))
-					_, vs, err := pr.Proof.KeyValue()
-					require.Nil(t, err)
-					require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, vs[0]))
-					ok = true
-					break
-				}
-			}
-			require.True(t, ok)
+			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), 0)
+			require.Nil(t, pr.Verify(s.sb.SkipChainID()))
+			_, vs, err := pr.KeyValue()
+			require.Nil(t, err)
+			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, vs[0]))
 		}
+	}
+
+	// Bring the failed node back up and it should also see the transactions.
+	if failure {
+		s.hosts[len(s.hosts)-1].Unpause()
+		time.Sleep(s.interval)
+		for _, tx := range txs {
+			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), len(s.hosts)-1)
+			require.Nil(t, pr.Verify(s.sb.SkipChainID()))
+			_, vs, err := pr.KeyValue()
+			require.Nil(t, err)
+			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, vs[0]))
+		}
+		// Try to add a new transaction to the node that failed (but is
+		// now running) and it should work.
+		pr := sendTransaction(t, s, len(s.hosts)-1, dummyKind, 10)
+		require.True(t, pr.InclusionProof.Match())
 	}
 }
 
@@ -804,13 +805,13 @@ func TestService_RotateLeader(t *testing.T) {
 
 	// wait for the transaction to be stored on the new leader, because it
 	// polls for new transactions
-	pr := s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID, 1)
+	pr := s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), 1)
 	require.True(t, pr.InclusionProof.Match())
 
 	// the transaction should also be stored on followers, at index 2 and 3
-	pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID, 2)
+	pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), 2)
 	require.True(t, pr.InclusionProof.Match())
-	pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID, 3)
+	pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), 3)
 	require.True(t, pr.InclusionProof.Match())
 }
 
@@ -959,27 +960,30 @@ func (s *ser) service() *Service {
 }
 
 func (s *ser) waitProof(t *testing.T, id InstanceID) Proof {
-	return s.waitProofWithIdx(t, id, 0)
+	return s.waitProofWithIdx(t, id.Slice(), 0)
 }
 
-func (s *ser) waitProofWithIdx(t *testing.T, id InstanceID, idx int) Proof {
+func (s *ser) waitProofWithIdx(t *testing.T, key []byte, idx int) Proof {
 	var pr Proof
+	var ok bool
 	for i := 0; i < 10; i++ {
+		// wait for the block to be processed
+		time.Sleep(2 * s.interval)
+
 		resp, err := s.services[idx].GetProof(&GetProof{
 			Version: CurrentVersion,
-			Key:     id.Slice(),
+			Key:     key,
 			ID:      s.sb.SkipChainID(),
 		})
 		require.Nil(t, err)
 		pr = resp.Proof
 		if pr.InclusionProof.Match() {
+			ok = true
 			break
 		}
-
-		// wait for the block to be processed
-		time.Sleep(s.interval)
 	}
 
+	require.True(t, ok, "got not match")
 	return pr
 }
 
