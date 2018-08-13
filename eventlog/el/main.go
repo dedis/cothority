@@ -182,8 +182,8 @@ func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
 func create(c *cli.Context) error {
 	if c.Bool("keys") {
 		s := darc.NewSignerEd25519(nil, nil)
-		fmt.Println("Identity:", s.Identity())
-		fmt.Printf("export PRIVATE_KEY=%v\n", s.Ed25519.Secret)
+		fmt.Fprintln(c.App.Writer, "Identity:", s.Identity())
+		fmt.Fprintf(c.App.Writer, "export PRIVATE_KEY=%v\n", s.Ed25519.Secret)
 		return nil
 	}
 
@@ -204,6 +204,8 @@ func create(c *cli.Context) error {
 	}
 
 	fmt.Fprintf(c.App.Writer, "export EL=%x\n", cl.Instance.Slice())
+	c.App.Metadata["el"] = cl.Instance.String()
+
 	return nil
 }
 

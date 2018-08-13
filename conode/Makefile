@@ -24,7 +24,7 @@ docker: clean Dockerfile
 	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):$(VERSION)
 
 # Use this target to build from local source instead of from publish sources.
-docker_dev: clean Dockerfile-dev exe/conode.Linux.x86_64
+docker_dev: clean Dockerfile-dev exe/conode.Linux.x86_64 exe/ol
 	docker build -t $(IMAGE_NAME):$(TAG) -f Dockerfile-dev .
 	docker tag $(IMAGE_NAME):$(TAG) $(IMAGE_NAME):$(VERSION)
 
@@ -61,6 +61,9 @@ clean:
 # This is in it's own rule because the Docker build needs it also.
 exe/conode.Linux.x86_64:
 	GOOS=linux GOARCH=amd64 go build $(flags) -o $@
+
+exe/ol:
+	GOOS=linux GOARCH=amd64 go build $(flags) -o $@ ../omniledger/ol
 
 bindist: clean exe/conode.Linux.x86_64
 	rm -rf $(OUTPUT_DIR)
