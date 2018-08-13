@@ -13,10 +13,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -105,6 +102,42 @@ public class Darc {
      */
     public void setRule(String action, byte[] expression) {
         rules.put(action, expression);
+    }
+
+    /**
+     * Returns a copy of the expression stored in the rule. If the expression has not been found,
+     * it returns null.
+     *
+     * @param action - which expression to return
+     * @return the expression corresponding to the action, or null if not found.
+     */
+    public byte[] getExpression(String action) {
+        byte[] exp = rules.get(action);
+        if (exp != null) {
+            return Arrays.copyOf(exp, exp.length);
+        }
+        return null;
+    }
+
+    /**
+     * @return A list of all actions stored in this darc.
+     */
+    public List<String> getActions() {
+        List<String> actions = new ArrayList<>();
+        for (String s : rules.keySet()) {
+            actions.add(s);
+        }
+        return actions;
+    }
+
+    /**
+     * Removes the given action.
+     *
+     * @param action if that action is in the set of rules, removes it.
+     * @return the expression of the action, or null if it didn't exist
+     */
+    public byte[] removeAction(String action) {
+        return rules.remove(action);
     }
 
     /**
@@ -275,8 +308,10 @@ public class Darc {
         List<String> ownerIDs = owners.stream().map(Identity::toString).collect(Collectors.toList());
         rs.put("invoke:evolve", String.join(" & ", ownerIDs).getBytes());
 
-        List<String> signerIDs = signers.stream().map(Identity::toString).collect(Collectors.toList());
-        rs.put("_sign", String.join(" | ", signerIDs).getBytes());
+        if (signers != null) {
+            List<String> signerIDs = signers.stream().map(Identity::toString).collect(Collectors.toList());
+            rs.put("_sign", String.join(" | ", signerIDs).getBytes());
+        }
         return rs;
     }
 
