@@ -39,66 +39,55 @@ An instruction is created by a client. It has the following format:
 ```
 // Instruction holds only one of Spawn, Invoke, or Delete
 message Instruction {
-	// ObjectID holds the id of the existing object that can spawn new objects.
-	ObjectID ObjectID = 1;
-	// Nonce is monotonically increasing with regard to the darc in the objectID
-	// and used to prevent replay attacks.
-	// The client has to track which is the current nonce of a darc-ID.
-	bytes Nonce = 2;
-	// Index and length prevent a leader from censoring specific instructions from
-	// a client and still keep the other instructions valid.
-	// Index is relative to the beginning of the clientTransaction.
-	int32 Index = 3;
-	// Length is the total number of instructions in this clientTransaction
-	int32 Length = 4;
-	// Spawn creates a new object
-	Spawn spawn = 5;
-	// Invoke calls a method of an existing object
-	Invoke invoke = 6;
-	// Delete removes the given object
-	Delete delete = 7;
-	// Signatures that can be verified using the darc defined by the objectID.
-	repeated DarcSignature Signatures = 8;
+  // InstanceID is either the instance that can spawn a new instance, or the instance
+  // that will be invoked or deleted.
+  required bytes instanceid = 1;
+  // Nonce is monotonically increasing with regard to the Darc controlling
+  // access to the instance. It is used to prevent replay attacks.
+  // The client has to track what the next nonce should be for a given Darc.
+  required bytes nonce = 2;
+  // Index and length prevent a leader from censoring specific instructions from
+  // a client and still keep the other instructions valid.
+  // Index is relative to the beginning of the clientTransaction.
+  required sint32 index = 3;
+  // Length is the total number of instructions in this clientTransaction
+  required sint32 length = 4;
+  // Spawn creates a new instance.
+  optional Spawn spawn = 5;
+  // Invoke calls a method of an existing instance.
+  optional Invoke invoke = 6;
+  // Delete removes the given instance.
+  optional Delete delete = 7;
+  // Signatures that are verified using the Darc controlling access to the instance.
+  repeated darc.Signature signatures = 8;
 }
 
-// ObjectID points to an object that holds the state of a contract.
-message ObjectID {
-	// DarcID points to the darc controlling access to this object
-	DarcID DarcID = 1;
-	// InstanceID is taken from the Instruction.Nonce when the Spawn instruction is
-	// sent.
-	bytes InstanceID = 2;
-}
-
-// Spawn is called upon an existing object that will spawn a new object.
+// Spawn is called upon an existing instance that will spawn a new instance.
 message Spawn {
-	// ContractID represents the kind of contract that needs to be spawn.
-	string ContractID = 1;
-	// args holds all data necessary to authenticate and spawn the new object.
-	repeated Argument args = 2;
+  // ContractID represents the kind of contract that needs to be spawn.
+  required string contractid = 1;
+  // Args holds all data necessary to spawn the new instance.
+  repeated Argument args = 2;
 }
 
-// Invoke calls a method of an existing object which will update its internal
+// Invoke calls a method of an existing instance which will update its internal
 // state.
 message Invoke {
-	// Command is object specific and interpreted by the object.
-	string Command = 1;
-	// args holds all data necessary to authenticate and spawn the new object.
-	repeat Argument args = 2;
+  // Command is interpreted by the contract.
+  required string command = 1;
+  // Args holds all data necessary for the successful execution of the command.
+  repeated Argument args = 2;
 }
 
-// Delete removes the object.
+// Delete removes the instance. The contract might enforce conditions that
+// must be true before a Delete is executed.
 message Delete {
 }
-
-// Argument is a name/value pair that will be passed to the object.
-message Argument {
-	// Name can be any name recognized by the object.
-	string Name = 1;
-	// Value must be binary marshalled
-	bytes Value = 2;
-}
 ```
+
+An InstanceID is a series of 32 bytes. The spawn implementation in the contract
+chooses the new instance ID, and after that it is the client's responsibility to
+track it in order to be able to send in Invoke instructions on it later.
 
 ## StateChange
 
@@ -106,6 +95,7 @@ Once the leader receives the ClientTransactions, it will send the individual
 instructions to the corresponding contracts and/or objects. Each call to a
 contract/object will return 0 or more StateChanges that define how to update the
 state of the collection.
+
 OmniLedger will take care that the following instruction/StateChanges are
 respected. *This might be too restrictive*:
 - Spawn: only Create-Actions
@@ -113,26 +103,27 @@ respected. *This might be too restrictive*:
 - Delete: only Delete-Action on the invoked object
 
 ```
-message StateChange{
-	// StateAction can be any of Create, Update, Delete
-	StateAction StateAction = 1;
-	// ObjectID is the identifier of the key
-	bytes ObjectID = 2;
-	// ContractID points to the contract that can interpret the value
-	bytes ContractID = 3;
-	// Value is the data needed by the contract
-	bytes Value = 4;
+// StateChange is one new state that will be applied to the collection.
+message StateChange {
+  // StateAction can be any of Create, Update, Remove
+  required sint32 stateaction = 1;
+  // InstanceID of the state to change
+  required bytes instanceid = 2;
+  // ContractID points to the contract that can interpret the value
+  required bytes contractid = 3;
+  // Value is the data needed by the contract
+  required bytes value = 4;
+  // DarcID is the Darc controlling access to this key.
+  required bytes darcid = 5;
 }
 ```
-
-The *ObjectID* is a random key chosen by OmniLedger and must correspond to
-further Instructions sent by the client.
 
 ## Proof
 
 The proof in OmniLedger proves the absence or the presence of a key in the state
-of the given skipchain. If the key is present, the proof also contains the kind
-and the value of that key.
+of the given OmniLedger. If the key is present, the proof also contains the value
+of the key, as well as the contract that wrote it, and the DarcID of the Darc
+that controls access to it.
 
 To verify the proof, all the verifier needs is the skipchain-ID of where the
 key is supposed to be stored. The proof has three parts:
@@ -226,10 +217,10 @@ message Rule {
 }
 ```
 
-The primary type is a darc. Which contains a set of rules that what type of
-permission are granted for any identity. A darc can be updated by performing an
-evolution.  That is, the identities that have the "evolve" permission in the
-old darc can creates a signature that signs off the new darc. Evolutions can be
+The primary type is a darc, which contains a set of rules that what type of
+permission are granted for each identity. A darc can be updated by performing an
+evolution.  The identities that have the "evolve" permission in the
+old darc can creates a signature that approves the new darc. Evolutions can be
 performed any number of times, which creates a chain of darcs, also known as a
 path. A path can be verified by starting at the oldest darc (also known as the
 base darc), walking down the path and verifying the signature at every step.
