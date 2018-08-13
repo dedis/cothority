@@ -75,17 +75,7 @@ function Socket(addr, service) {
       ws.onmessage = event => {
         ws.close();
         const { data } = event;
-        let buffer;
-        if (ws.android) {
-          data.rewind();
-          const len = data.limit();
-          buffer = new Uint8Array(len);
-          for (let i = 0; i < len; i++) {
-            buffer[i] = data.get(i);
-          }
-        } else {
-          buffer = new Uint8Array(data);
-        }
+        let buffer = new Uint8Array(data);
         const unmarshal = responseModel.decode(buffer);
         resolve(unmarshal);
       };
