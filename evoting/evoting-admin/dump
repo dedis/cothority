@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -e
+
+elec=$1
+if [ -z "$elec" ]; then
+	echo "Expected election id as first argument."
+	exit 1
+fi
+
+last=0
+out="${elec}.txt"
+
+rm -f $out
+for i in *.db
+do
+	#echo Dumping from $i, last=$last
+	dt=`echo $i | awk -F- '{print $2}' | sed 's/.db//'`
+	evoting-admin -dump $i -id $elec -from $last | awk "{print \"$dt\\t\" \$_ }" >> $out
+	last=`wc -l $out|awk '{print $1}'`
+done

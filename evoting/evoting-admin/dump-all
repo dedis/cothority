@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -e
+
+for i in `evoting-admin -dump f4fc9718c096f9bfc76bd23a7056a4102770e4450a8f00f3c363bce804e61509-2018.06.01.0100.db -dumpMaster | awk '/^link/ {print $2}'`
+do
+	echo dumping election $i
+	./dump $i
+done

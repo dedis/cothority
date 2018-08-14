@@ -31,3 +31,9 @@ $ ./evoting-admin -show -roster ../../conode/public.toml -id 39df9bb2cd69f8471c2
 ```
 
 Note that -show requires both `-id` and `-roster` arguments.
+
+# Dumping votes
+
+- `extract` was used to get the DB files from the backup files Marc-Andre gave us.
+- `dump` dumps one election at a time
+- `dumpa-all` dumps all the elections that were on the master chain for the production election.

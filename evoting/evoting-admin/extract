@@ -1,0 +1,8 @@
+#!/bin/sh
+
+for i in *.tar
+do
+	dt=`echo $i | awk -F- '{print $2"."$3}' | sed 's/.tar//'`
+	tar xvf $i home/conode/.local/share/conode/f4fc9718c096f9bfc76bd23a7056a4102770e4450a8f00f3c363bce804e61509.db
+	mv home/conode/.local/share/conode/f4fc9718c096f9bfc76bd23a7056a4102770e4450a8f00f3c363bce804e61509.db f4fc9718c096f9bfc76bd23a7056a4102770e4450a8f00f3c363bce804e61509-$dt.db
+done
