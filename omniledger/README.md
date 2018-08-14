@@ -26,31 +26,48 @@ created with https://draw.io and can be imported there.
 Our OmniLedger service currently implements:
 
 1. multiple transactions per block
-2. queuing of transactions at each node and periodical creation of a new
+2. queuing of transactions at each node and periodic creation of a new
 block by the leader
 3. contracts that define the behaviour of how to change the global state
+4. view-change in case the leader fails
 
 The following points are scheduled to be done before end of '18:
 
-4. view-change in case the leader fails
 5. sharding of the nodes
 6. inter-shard transactions
 
-1-4 are issues that should've been included in skipchains for a long time, but
-never got in. Only 5-6 are 'real' OmniLedger improvements as described in the
+Items 5 and 6 are the 'real' OmniLedger improvements as described in the
 [OmniLedger Paper](https://eprint.iacr.org/2017/406.pdf).
 
-The current implementation is doing 1-3.
+## Transaction collection and View Change
 
-## View Change
+Transactions can be submitted by end-users to any conode in the roster for
+the Skipchain that is holding the OmniLedger.
+
+At the beginning of each block creation, the leader launches a protocol to
+contact all the followers in parallel and to request the outstanding
+transactions they have. Once a follower answers this request, they are
+counting on the leader to faithfully attempt to include their transaction.
+There is no retry mechanism.
+
+With the collected transactions now in the leader, it runs them in order
+to find out how many it can fit into 1/2 of a block interval. It then sends
+the proposed block to the followers for them to validate. If there are transactions
+remaining to be run, they will be prepended to the next collected set of
+transactions when the next block interval expires.
+
+A "view change" (change of leader) is needed when the leader stops performing
+its duties correctly. Followers notice the need for a new leader by way of a
+heartbeat mechanism triggering on the absence of new blocks.
+
 We implement a simple view-change that re-uses all of existing functionalities 
 in OmniLedger (e.g., block creation and smart contracts). However, it does not
 prevent Byzantine leaders yet. We assume the roster is ordered and every node
 observes the same order. Further, the leader polls the followers once every
-`blockInterval`. Using these assumptions, when the current leader stop polling,
+`blockInterval`. Using these assumptions, when the current leader stops polling,
 then next leader (according to the roster list) will send out a new
 transaction. This transaction contains the `invoke:view_change` action which
-shifts the order of the roster by 1. As a result, the failed leader moves to
+shifts the order of the roster by one. As a result, the failed leader moves to
 the end of the roster and the new leader becomes the first. In the contract,
 every node should verify that the new node is the correct next leader and
 enough time has past since the current leader stopped responding.
@@ -62,7 +79,6 @@ node comes back up. For these reasons, view-change is disabled by default. To
 enable view-change, refer to the `EnableViewChange` function in the OmniLedger
 service package.
 
-
 # Structure Definitions
 
 Following is an overview of the most important structures defined in OmniLedger.
@@ -72,23 +88,21 @@ For a more programmatic description of these structures, go to the
 ## Skipchain Block
 
 Whenever OmniLedger stores a new Skipchain Block, the header will only contain
-hashes, while the clientTransactions will be stored in the body. This allows
+hashes, while the ClientTransactions will be stored in the body. This allows
 for a reduced proof size.
 
 Block header:
 - Merkle tree root of the global state
-- Hash of all clientTransactions in this block
-- Hash of all stateChanges resulting from the clientTransactions
+- Hash of all ClientTransactions in this block
+- Hash of all StateChanges resulting from the clientTransactions
 
 Block body:
-- List of all clientTransactions
+- List of all ClientTransactions
 
 ## Smart Contracts in OmniLedger
 
-Previous name was _Precompiled Smart Contracts_, but looking at how we want
-it to work, we decided to call it simply a set of Contracts. A contract defines
-how to interpret the methods sent by the client. It is identified by the
-contractID which is a string pointing to a given contract.
+A contract defines how to interpret the methods sent by the client. It is
+identified by the contractID which is a string pointing to a given contract.
 
 Contracts receive as an input a list of coins that are available to them. As
 an output, a contract needs to give the new list of coins that is available.
@@ -106,6 +120,14 @@ Output arguments:
 - updated key/value pairs of coins still available
 - error that will abort the clientTransaction if it is non-zero. No global
 state will be changed if any of the contracts returns non-zero.
+
+The contracts are compiled into the conode binary. A set of conodes making
+up a cothority may have differing implementations of a given contract,
+but if they do not create the same output StateChanges, the cothority might not
+be able to reach the threshold of agreeing conodes in order to commit the
+transactions onto the OmniLedger. If one conode is creating differing contract outputs
+(for example, it is cheating), it's output will not be integrated into the
+global shared state.
 
 ## From Client to the Collection
 
@@ -153,11 +175,7 @@ evolving description of who is allowed or not to access a certain resource.
 
 For more information, see [darc/README.md](darc/README.md).
 
-## Further reading
+## Contracts
 
-Some documents that might get evolved later:
-
-- [Child Transactions](ChildTransactions.md) describes how we can implement
-a leader fetching new transactions from children.
 - [Contracts](Contracts.md) gives a short overview how contracts work and
 some examples how to use them.

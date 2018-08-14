@@ -8,7 +8,9 @@ Contracts and Instances
 
 A contract in OmniLedger is similar to a smart contract in Ethereum, except that
 it is pre-compiled in the code and all nodes need to have the same version of
-the contract available in order to reach consensus.
+the contract available in order to reach consensus. Or, if there are variations
+in the implementation of the contract, the output of the various implementations
+must be equal.
 
 A contract can spawn new instances that are tied to another contract type. All
 instances are stored in the global state of OmniLedger. Every instance points
@@ -23,20 +25,13 @@ Authorizations are handled using Darcs. Each Darc has a set of rules that define
 a pair of action / expression that need to be fulfilled to execute any instruction
 on the instances governed by that Darc.
 
-A Darc is always stored with the following `InstanceID`:
-
-`[32]byte{DarcBaseID}[32]byte{0}`
-
-If a Darc is updated (evolved), it will overwrite the existing Darc. All
-instances spawned by that Darc (except for other Darcs) will share the same
-first half of the `InstanceID`. The second half is pseudo-randomly chosen by the
-contract having spawned this new instance. The current implementation takes the
-hash of the instruction for the `subID` (the second part of the `InstanceID`).
+A Darc is always stored with an `InstanceID` equal to the Darc's base ID.
+If a Darc is updated (evolved), it will overwrite the existing Darc.
 
 Given the following instruction sent by a client (some fields are omitted for
 clarity):
 
-- `InstanceID`: `[32]byte{GenesisDarc}[32]byte{0x01}`
+- `InstanceID`: `[32]byte{GenesisDarcID}`
 - `Invoke`:
   - `Command`: `Update`
   - `Args`: `{"Roster": NewRoster}`
@@ -44,10 +39,9 @@ clarity):
 
 OmniLedger will do the following:
 
-1. find the Darc instance by looking at the first 32 bytes of the `InstanceID` given in
-the instruction, here the `GenesisDarc`, and adding 32 x 0x00 bytes
+1. find the Darc instance using the `InstanceID`.
 2. create a `DarcRequest` using the `InstanceID` and the `Args`
-3. verify the request corresponds to the expression of the `Invoke_Update` rule
+3. verify the request corresponds to the expression of the `invoke:update` rule
 in the Darc instance found in 1.
 
 ## Contract Arguments
@@ -61,19 +55,19 @@ type OmniLedgerContract func(coll CollectionView, tx Instruction, inCoins []Coin
 
 Input:
 - `coll` is a read-only reference to the collection representing the global state
-of all instances
+of all instances.
 - `tx` is the instruction sent by the client, which also holds the `InstanceID`
-pointing to the data the contract should work on
-- `inCoins` is mostly ignored for the moment, but can be used to pass around
-coins between different instructions
+pointing to the data the contract should work on.
+- `inCoins` is a list of coins given as input to this instruction.
 
 Output:
 - `sc` is the slice of stateChanges the contract wants to apply to the global
 state. They will only be applied if all instructions in the `ClientTransaction`
-are valid, else they will be discarded
-- `outCoins` can be used to pass around coins
+are valid, else they will be discarded.
+- `outCoins` is a list of coins remaining as output from this instruction, and will
+be passed as input to the next instruction.
 - `err` if not nil, the contract indicates it failed, and all instructions in that
-`ClientTransaction` will be discarded
+`ClientTransaction` will be discarded.
 
 The contract itself has access to all elements of the collection, but will mainly
 work on the data pointed to by the `tx Instruction` given as a parameter. It is
@@ -84,24 +78,21 @@ The `StateChange`s are applied between all instructions to a temporary copy of
 the collection, and only committed if all instructions are successful, else all
 `StateChange`s from this `ClientTransaction` will be discarded.
 
-If there is more than one `ClientTransaction` in a block, the contracts called
+If there are more than one `ClientTransaction`s in a block, the contracts called
 in the second `ClientTransaction` will see all changes applied from the first
-`ClientTransaction.`
+`ClientTransaction.` (But see issue #1379 for why this is currently not true.)
 
 ## Instance Structure
 
 Every instance in OmniLedger is stored with the following information in the
 global state:
 
-- `InstanceID` is a globally unique identifier of that instance, composed of:
-  - `DarcID`, defining the access rights to that instance
-  - `SubID`, which is randomly chosen, currently implemented as taking the hash
-  of the instruction, so that the client can now what instance he will create
-  when `Spawn`ing an instance. The special `SubID` of `0` indicates the Darc
-  responsible for all the instances starting with the same `DarcID`
+- `InstanceID` is a globally unique identifier of that instance, composed
+of 32 bytes.
 - `ContractID` points to the contract that will be called if that instance
 receives an instruction from the client
 - `Data` is interpreted by the contract and can change over time
+- `DarcID` of the Darc that controls access to this instance.
 
 ## Interaction between Instructions and Instances
 
