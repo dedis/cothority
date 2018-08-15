@@ -21,6 +21,9 @@ import java.util.List;
  * If you evolve the DarcInstance, it will update its internal darc.
  */
 public class DarcInstance {
+    // ContractId is how the contract for a darc is represented.
+    public static String ContractId = "darc";
+
     private Instance instance;
     private Darc darc;
     private OmniledgerRPC ol;
@@ -41,7 +44,7 @@ public class DarcInstance {
         this.ol = ol;
         Proof p = ol.getProof(id);
         instance = new Instance(p);
-        if (!instance.getContractId().equals("darc")) {
+        if (!instance.getContractId().equals(ContractId)) {
             logger.error("wrong instance: {}", instance.getContractId());
             throw new CothorityNotFoundException("this is not a darc instance");
         }
@@ -86,7 +89,7 @@ public class DarcInstance {
                 newDarc.getVersion() != darc.getVersion() + 1) {
             throw new CothorityCryptoException("not correct darc to evolve");
         }
-        Invoke inv = new Invoke("evolve", "darc", newDarc.toProto().toByteArray());
+        Invoke inv = new Invoke("evolve", ContractId, newDarc.toProto().toByteArray());
         byte[] d = newDarc.getBaseId().getId();
         Instruction inst = new Instruction(new InstanceId(d), Instruction.genNonce(), pos, len, inv);
         try {
@@ -194,7 +197,7 @@ public class DarcInstance {
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ol.sendTransactionAndWait(ct, wait);
         InstanceId iid = inst.deriveId(contractID);
-        if (contractID.equals("darc")) {
+        if (contractID.equals(ContractId)) {
             // Special case for a darc, then the resulting instanceId is based
             // on the darc itself.
             try {

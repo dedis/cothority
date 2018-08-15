@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.bind.DatatypeConverter;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
@@ -38,7 +39,7 @@ public class OmniledgerRPCTest {
                 Arrays.asList(admin.getIdentity()));
         genesisDarc = new Darc(rules, "genesis".getBytes());
 
-        ol = new OmniledgerRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(100, MILLIS));
+        ol = new OmniledgerRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
         if (!ol.checkLiveness()){
             throw new CothorityCommunicationException("liveness check failed");
         }
@@ -51,8 +52,6 @@ public class OmniledgerRPCTest {
 
     @Test
     void updateDarc() throws Exception {
-        SkipBlock previous = ol.getLatest();
-        logger.info("Previous skipblock is: {}", previous.getIndex());
         DarcInstance dc = new DarcInstance(ol, genesisDarc);
         logger.info("DC is: {}", dc.getId());
         logger.info("genesisDarc is: {}", genesisDarc.getId());
@@ -60,22 +59,11 @@ public class OmniledgerRPCTest {
         newDarc.setRule("spawn:darc", "all".getBytes());
         Instruction instr = dc.evolveDarcInstruction(newDarc, admin, 0, 1);
         logger.info("DC is: {}", dc.getId());
-        ol.sendTransaction(new ClientTransaction(Arrays.asList(instr)));
-        Thread.sleep(2000);
-        ol.update();
-        SkipBlock latest = ol.getLatest();
-        logger.info("Previous skipblock is: {}", previous.getIndex());
-        logger.info("Latest skipblock is: {}", latest.getIndex());
-        assertFalse(previous.equals(latest));
-        assertFalse(previous.getIndex() == latest.getIndex());
+        ol.sendTransactionAndWait(new ClientTransaction(Arrays.asList(instr)), 10);
 
         dc.update();
         logger.info("darc-version is: {}", dc.getDarc().getVersion());
-        assertEquals(dc.getDarc().getVersion(), newDarc.getVersion());
-
-        dc.evolveDarcAndWait(newDarc, admin);
-        logger.info("darc-version is: {}", dc.getDarc().getVersion());
-        assertEquals(dc.getDarc().getVersion(), newDarc.getVersion());
+        assertEquals(newDarc.getVersion(), dc.getDarc().getVersion());
     }
 
     @Test
@@ -88,7 +76,7 @@ public class OmniledgerRPCTest {
         List<Identity> id = Arrays.asList(admin.getIdentity());
         Darc newDarc = new Darc(id, id, "new darc".getBytes());
 
-        Proof p = dc.spawnContractAndWait("darc", admin,
+        Proof p = dc.spawnContractAndWait(DarcInstance.ContractId, admin,
                 Argument.NewList("darc", newDarc.toProto().toByteArray()), 10);
         assertTrue(p.matches());
 
@@ -109,7 +97,7 @@ public class OmniledgerRPCTest {
         dc.evolveDarcAndWait(darc2, admin);
 
         byte[] myvalue = "314159".getBytes();
-        Proof p = dc.spawnContractAndWait("value", admin, Argument.NewList("value", myvalue), 10);
+        Proof p = dc.spawnContractAndWait(ValueInstance.ContractId, admin, Argument.NewList("value", myvalue), 10);
         assertTrue(p.matches());
 
         ValueInstance vi = new ValueInstance(ol, p);
@@ -121,14 +109,14 @@ public class OmniledgerRPCTest {
 
     @Test
     @Disabled
-    void getLatest() throws Exception{
+    void getLatestSkipblock() throws Exception{
         ol.update();
-        SkipBlock previous = ol.getLatest();
+        SkipBlock previous = ol.getSkipchain().getLatestSkipblock();
         assertNotNull(previous);
 
         Thread.sleep(200);
         ol.update();
-        SkipBlock latest = ol.getLatest();
+        SkipBlock latest = ol.getSkipchain().getLatestSkipblock();
         assertNotNull(latest);
         assertNotEquals(previous, latest);
         assertFalse(previous.getIndex() == latest.getIndex());
@@ -144,9 +132,10 @@ public class OmniledgerRPCTest {
      */
     @Test
     void reconnect() throws Exception {
+        logger.info("Genesis darc is at {}", DatatypeConverter.printHexBinary(genesisDarc.getId().getId()));
         OmniledgerRPC ol2 = new OmniledgerRPC(ol.getRoster(), ol.getGenesis().getSkipchainId());
         assertEquals(ol.getConfig(), ol2.getConfig());
-        assertEquals(ol.getLatest().getId(), ol2.getLatest().getId());
+        assertEquals(ol.getSkipchain().getLatestSkipblock().getId(), ol2.getSkipchain().getLatestSkipblock().getId());
         assertEquals(ol.getGenesisDarc().getBaseId(), ol2.getGenesisDarc().getBaseId());
     }
 }
