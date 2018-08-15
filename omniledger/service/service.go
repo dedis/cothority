@@ -768,9 +768,10 @@ func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain
 	// ignore the error and compute the state changes.
 	merkleRoot, ctsOK, ctsBad, states, err = s.stateChangeCache.get(scID, cts.Hash())
 	if err == nil {
-		log.Lvl3(s.ServerIdentity(), "loaded state changes from cache")
+		log.Lvl4(s.ServerIdentity(), "state changes from cache: HIT")
 		return
 	}
+	log.Lvl4(s.ServerIdentity(), "state changes from cache: MISS")
 	err = nil
 
 	deadline := time.Now().Add(timeout)
@@ -818,7 +819,7 @@ clientTransactions:
 
 	// Store the result in the cache before returning.
 	merkleRoot = cdbTemp.GetRoot()
-	s.stateChangeCache.update(scID, cts.Hash(), merkleRoot, ctsOK, ctsBad, states)
+	s.stateChangeCache.update(scID, ctsOK.Hash(), merkleRoot, ctsOK, ctsBad, states)
 	return
 }
 

@@ -13,7 +13,7 @@ import (
 // should only happen at block interval boundaries. So we do not expect
 // interleaving state changes for the same skipchain. The advantage of this
 // approach is that we do not need to worry about deleting used cache because
-// the memory useage stays constant per skipchain.
+// the memory usage stays constant at one entry per Skipchain.
 type stateChangeCache struct {
 	sync.Mutex
 	cache map[string]*stateChangeValue
