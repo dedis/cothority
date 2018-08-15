@@ -47,18 +47,16 @@ var VerificationIdentity = []skipchain.VerifierID{skipchain.VerifyBase, VerifyId
 // VerifyIdentity makes sure that each new block is signed by a threshold of devices.
 var VerifyIdentity = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "Identity"))
 
-var storageKey = []byte("storage")
-
 func init() {
 	identityService, _ = onet.RegisterNewService(ServiceName, newIdentityService)
-	network.RegisterMessage(&Storage{})
+	network.RegisterMessage(&storage1{})
 	network.RegisterMessage(&IDBlock{})
 }
 
 // Service handles.Storage.Identities
 type Service struct {
 	*onet.ServiceProcessor
-	Storage            *Storage
+	Storage            *storage1
 	anonSuite          anon.Suite
 	propagateIdentity  messaging.PropagationFunc
 	propagateSkipBlock messaging.PropagationFunc
@@ -69,35 +67,6 @@ type Service struct {
 	tagsLimits map[string]int8
 	// limits on number of skipchain creation. Map keys are public keys
 	pointsLimits map[string]int8
-}
-
-// Storage holds the map to the storages so it can be marshaled.
-type Storage struct {
-	Identities map[string]*IDBlock
-	// OldSkipchainKey is a placeholder for protobuf being able to read old config-files
-	OldSkipchainKey kyber.Scalar
-	// The key that is stored in the skipchain service to authenticate
-	// new blocks.
-	SkipchainKeyPair *key.Pair
-	// Auth is a list of all authentications allowed for this service
-	Auth *authData
-}
-
-type authData struct {
-	// set of Pins and keys
-	Pins map[string]bool
-	// Sets of public keys to verify linkable ring signatures
-	Sets []anonSet
-	// list of public Keys to verify simple authentication with Schnorr sig
-	Keys []kyber.Point
-	// list of AdminKeys
-	AdminKeys []kyber.Point
-	// set of Nonces
-	Nonces map[string]bool
-}
-
-type anonSet struct {
-	Set anon.Set
 }
 
 /*
@@ -196,7 +165,7 @@ func (s *Service) StoreKeys(req *StoreKeys) (network.Message, error) {
 	}
 	switch req.Type {
 	case PoPAuth:
-		s.Storage.Auth.Sets = append(s.Storage.Auth.Sets, anonSet{Set: anon.Set(req.Final.Attendees)})
+		s.Storage.Auth.Sets = append(s.Storage.Auth.Sets, anonSet1{Set: anon.Set(req.Final.Attendees)})
 	case PublicAuth:
 		s.Storage.Auth.Keys = append(s.Storage.Auth.Keys, req.Publics...)
 	}
@@ -756,25 +725,19 @@ func (s *Service) clearIdentities() {
 // Tries to load the configuration and updates if a configuration
 // is found, else it returns an error.
 func (s *Service) tryLoad() error {
-	msg, err := s.Load(storageKey)
+	var err error
+	s.Storage, err = loadVersion(s)
 	if err != nil {
 		return err
 	}
-	if msg != nil {
-		var ok bool
-		s.Storage, ok = msg.(*Storage)
-		if !ok {
-			return errors.New("Data of wrong type")
-		}
-	}
 	if s.Storage == nil {
-		s.Storage = &Storage{}
+		s.Storage = &storage1{}
 	}
 	if s.Storage.Identities == nil {
 		s.Storage.Identities = make(map[string]*IDBlock)
 	}
 	if s.Storage.Auth == nil {
-		s.Storage.Auth = &authData{}
+		s.Storage.Auth = &authData1{}
 	}
 	if len(s.Storage.Auth.Pins) == 0 {
 		s.Storage.Auth.Pins = map[string]bool{}
@@ -783,7 +746,7 @@ func (s *Service) tryLoad() error {
 		s.Storage.Auth.Nonces = map[string]bool{}
 	}
 	if s.Storage.Auth.Sets == nil {
-		s.Storage.Auth.Sets = []anonSet{}
+		s.Storage.Auth.Sets = []anonSet1{}
 	}
 	if s.Storage.Auth.AdminKeys == nil {
 		s.Storage.Auth.AdminKeys = []kyber.Point{}

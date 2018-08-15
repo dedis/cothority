@@ -98,7 +98,7 @@ type Service struct {
 
 // storageID reflects the data we're storing - we could store more
 // than one structure.
-const storageID = "OmniLedger"
+var storageID = []byte("OmniLedger")
 
 // defaultInterval is used if the BlockInterval field in the genesis
 // transaction is not set.
@@ -408,6 +408,10 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 // looking at the latest skipblock cache from Service.state.
 func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 	log.Lvlf4("%s: callback on %x", s.ServerIdentity(), sbID)
+	if !s.isOurChain(sbID) {
+		log.Lvl4("Not our chain...")
+		return nil
+	}
 	sb := s.db().GetByID(sbID)
 	if sb == nil {
 		panic("This should never happen because the callback runs " +
@@ -428,6 +432,7 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 	_, dataI, err := network.Unmarshal(sb.Data, cothority.Suite)
 	data, ok := dataI.(*DataHeader)
 	if err != nil || !ok {
+		log.Error(s.ServerIdentity(), ok, err)
 		return errors.New("couldn't unmarshal header")
 	}
 	_, bodyI, err := network.Unmarshal(sb.Payload, cothority.Suite)
@@ -1088,7 +1093,7 @@ func (s *Service) registerContract(contractID string, c OmniLedgerContract) erro
 func (s *Service) tryLoad() error {
 	s.SetPropagationTimeout(120 * time.Second)
 
-	msg, err := s.Load([]byte(storageID))
+	msg, err := s.Load(storageID)
 	if err != nil {
 		return err
 	}
@@ -1127,7 +1132,8 @@ func (s *Service) tryLoad() error {
 		}
 		interval, err := s.LoadBlockInterval(gen)
 		if err != nil {
-			return err
+			log.Errorf("Ignoring chain %x because we can't load blockInterval: %s", gen, err)
+			continue
 		}
 
 		leader, err := s.getLeader(gen)
@@ -1177,7 +1183,7 @@ func (s *Service) isOurChain(gen skipchain.SkipBlockID) bool {
 func (s *Service) save() {
 	s.storage.Lock()
 	defer s.storage.Unlock()
-	err := s.Save([]byte(storageID), s.storage)
+	err := s.Save(storageID, s.storage)
 	if err != nil {
 		log.Error("Couldn't save file:", err)
 	}

@@ -39,6 +39,7 @@ const bftNewBlock = "SkipchainBFTNew"
 const bftFollowBlock = "SkipchainBFTFollow"
 
 var storageKey = []byte("skipchainconfig")
+var dbVersion = 1
 
 // If this flag is set, then we relax our forward-link signature verification
 // to accept the aggregate signature by the public keys of the rotated roster.
@@ -1409,6 +1410,7 @@ func (s *Service) save() {
 	if err != nil {
 		log.Error("Couldn't save file:", err)
 	}
+	s.SaveVersion(dbVersion)
 }
 
 // Tries to load the configuration and updates the data in the service
