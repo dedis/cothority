@@ -856,19 +856,32 @@ func TestService_StateChangeCache(t *testing.T) {
 
 	scID := s.sb.SkipChainID()
 	coll := s.service().getCollection(scID).coll
-	tx, err := createOneClientTx(s.darc.GetBaseID(), contractID, []byte{}, s.signer)
-	txs := ClientTransactions([]ClientTransaction{tx})
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), contractID, []byte{}, s.signer)
+	require.Nil(t, err)
+
+	// Add a second tx that is invalid because it is for an unknown contract.
+	// It will end up in ctsBad, and both cts(ok,bad) will be cached correctly
+	// under the hash for ctsOK, so that the next call will result in a cache hit.
+	tx2, err := createOneClientTx(s.darc.GetBaseID(), contractID+"x", []byte{}, s.signer)
+	require.Nil(t, err)
+
+	txs := ClientTransactions([]ClientTransaction{tx1, tx2})
 	require.NoError(t, err)
 	root, ctsOK, ctsBad, states, err := s.service().createStateChanges(coll, scID, txs, noTimeout)
 	require.NoError(t, err)
-	require.Equal(t, ctr, 1)
+	require.Equal(t, 1, len(ctsBad))
+	require.Equal(t, 1, len(ctsOK))
+	require.Equal(t, 0, len(states))
+	require.Equal(t, 1, ctr)
 
-	// If we call createStateChanges again, then it should load it from the
+	// If we call createStateChanges on the new ctsOK (as it will happen in production
+	// when the tx set is reduced by the selection step, and then ctsOK are sent to
+	// createStateChanges when making the block), then it should load it from the
 	// cache, which means that ctr is still one (we do not call the
 	// contract twice).
-	root1, ctsOK1, ctsBad1, states1, err := s.service().createStateChanges(coll, scID, txs, noTimeout)
+	root1, ctsOK1, ctsBad1, states1, err := s.service().createStateChanges(coll, scID, ctsOK, noTimeout)
 	require.NoError(t, err)
-	require.Equal(t, ctr, 1)
+	require.Equal(t, 1, ctr)
 
 	require.Equal(t, root, root1)
 	require.Equal(t, ctsOK, ctsOK1)
@@ -885,7 +898,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	require.Equal(t, ctsOK, ctsOK2)
 	require.Equal(t, ctsBad, ctsBad2)
 	require.Equal(t, states, states2)
-	require.Equal(t, ctr, 2)
+	require.Equal(t, 2, ctr)
 }
 
 func createConfigTx(t *testing.T, s *ser, isgood bool) (ClientTransaction, ChainConfig) {
