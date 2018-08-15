@@ -9,18 +9,18 @@ DBG_SRV=2
 NBR=3
 NBR_SERVERS_GROUP=3
 
-. $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
+. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
 
 main(){
     startTest
     mkdir -p cl{1..3}
     buildConode
-    test Build
-    test Create
-    test ManageJoin
-    #test Write
-    #test Read
-    test SCRead
+    run testBuild
+    run testCreate
+    run testManageJoin
+    #run testWrite
+    #run testRead
+    run testSCRead
     stopTest
 }
 

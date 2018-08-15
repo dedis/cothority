@@ -5,26 +5,26 @@ DBG_TEST=1
 DBG_APP=2
 # DBG_SRV=2
 
-. $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
+. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
 
 main(){
 	startTest
 	buildConode github.com/dedis/cothority/skipchain
 	CFG=$BUILDDIR/scmgr_config
-	test DNSUpdate
-	test Restart
-	test Config
-	test Create
-	test Join
-	test Add
-	test Index
-	test Fetch
-	test Link
-	test Linklist
-	test Unlink
-	test Follow
-	test NewChain
-	test Failure
+	run testDNSUpdate
+	run testRestart
+	run testConfig
+	run testCreate
+	run testJoin
+	run testAdd
+	run testIndex
+	run testFetch
+	run testLink
+	run testLinklist
+	run testUnlink
+	run testFollow
+	run testNewChain
+	run testFailure
 	stopTest
 }
 

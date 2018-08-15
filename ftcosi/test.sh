@@ -4,7 +4,7 @@ DBG_TEST=1
 # Debug-level for app
 DBG_APP=2
 
-. $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
+. "$(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh"
 
 main(){
     startTest
@@ -16,11 +16,11 @@ main(){
         rm -rf $cl
         mkdir $cl
     done
-    test Build
-    test ServerCfg
-    test SignFile
-    test Check
-    test Reconnect
+    run testBuild
+    run testServerCfg
+    run testSignFile
+    run testCheck
+    run testReconnect
     stopTest
 }
 

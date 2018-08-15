@@ -2,14 +2,14 @@
 
 DBG_TEST=1
 
-. "$(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh"
+. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
 
 main(){
     startTest
     setupConode
-    test Build
-    test Conode
-    test Database
+    run testBuild
+    run testConode
+    run testDatabase
     stopTest
 }
 

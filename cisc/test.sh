@@ -14,7 +14,7 @@ pop=./`basename $PACKAGE_POP`
 scmgr=./`basename $PACKAGE_SCMGR`
 PACKAGE_IDEN="github.com/dedis/cothority/identity"
 
-. $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
+. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
 
 main(){
   startTest
@@ -29,29 +29,29 @@ main(){
   createFinal 2 > /dev/null
   createToken 2
 
-  test Build
-  test Link
-  test Final
-  test ClientSetup
-  test ScCreate
-  test ScCreate2
-  test ScCreate3
-  test DataList
-  test DataVote
-  test DataRoster
-  test IdConnect
-  test IdLeave
-  test KeyAdd
-  test KeyFile
-  test KeyAdd2
-  test KeyAddWeb
-  test KeyDel
-  test SSHAdd
-  test SSHDel
-  test Follow
-  test SymLink
-  test Revoke
-  test RosterEdit
+  run testBuild
+  run testLink
+  run testFinal
+  run testClientSetup
+  run testScCreate
+  run testScCreate2
+  run testScCreate3
+  run testDataList
+  run testDataVote
+  run testDataRoster
+  run testIdConnect
+  run testIdLeave
+  run testKeyAdd
+  run testKeyFile
+  run testKeyAdd2
+  run testKeyAddWeb
+  run testKeyDel
+  run testSSHAdd
+  run testSSHDel
+  run testFollow
+  run testSymLink
+  run testRevoke
+  run testRosterEdit
   stopTest
 }
 

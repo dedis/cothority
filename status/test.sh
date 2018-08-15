@@ -3,13 +3,13 @@
 DBG_TEST=1
 DBG_APP=2
 
-. $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
+. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
 
 main(){
     startTest
     buildConode
-    test Build
-    test Network
+    run testBuild
+    run testNetwork
     stopTest
 }
 
