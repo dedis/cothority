@@ -195,31 +195,6 @@ public class Instruction {
         }
     }
 
-    /**
-     * This function derives an instance ID from the instruction with the given string. The derived instance ID if
-     * useful as a key to this instruction.
-     * @param what - the string that gets mixed into the derived instance ID
-     * @return the instance ID
-     * @throws CothorityCryptoException
-     */
-    public InstanceId deriveId(String what) throws CothorityCryptoException {
-        final byte zero = 0;
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            digest.update(this.hash());
-            digest.update(zero);
-            for (Signature sig : this.signatures) {
-                digest.update(sig.signature);
-                digest.update(zero);
-            }
-            digest.update(what.getBytes());
-            digest.update(zero);
-            return new InstanceId(digest.digest());
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
     private static byte[] intToArr4(int x) {
         ByteBuffer b = ByteBuffer.allocate(4);
         b.order(ByteOrder.LITTLE_ENDIAN);

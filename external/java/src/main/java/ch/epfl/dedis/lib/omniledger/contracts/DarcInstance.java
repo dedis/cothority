@@ -193,7 +193,7 @@ public class DarcInstance {
         Instruction inst = spawnContractInstruction(contractID, s, args, 0, 1);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
         ol.sendTransactionAndWait(ct, wait);
-        InstanceId iid = inst.deriveId("value");
+        InstanceId iid = new InstanceId(inst.hash());
         if (contractID.equals("darc")) {
             // Special case for a darc, then the resulting instanceId is based
             // on the darc itself.

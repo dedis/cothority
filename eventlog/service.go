@@ -186,8 +186,7 @@ func (s *Service) invoke(v omniledger.CollectionView, inst omniledger.Instructio
 		return nil, nil, err
 	}
 
-	// Get a new instance ID for storing this event.
-	eventID := inst.DeriveID("event")
+	eventID := omniledger.NewInstanceID(inst.Hash())
 
 	sc = append(sc, omniledger.NewStateChange(omniledger.Create, eventID, cid, eventBuf, darcID))
 
@@ -297,7 +296,7 @@ func (s *Service) spawn(v omniledger.CollectionView, inst omniledger.Instruction
 	// Store zeros as the pointer to the first bucket because there are not yet
 	// any events in this event log.
 	return []omniledger.StateChange{
-		omniledger.NewStateChange(omniledger.Create, inst.DeriveID("eventlog"),
+		omniledger.NewStateChange(omniledger.Create, omniledger.NewInstanceID(inst.Hash()),
 			cid, make([]byte, 32), darcID),
 	}, nil, nil
 }
