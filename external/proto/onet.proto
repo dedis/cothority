@@ -1,8 +1,8 @@
+// This package should come from onet but is manually created here.
+
 syntax = "proto2";
 
 package onet;
-
-// This package should come from onet but is manually created here.
 
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "OnetProto";
@@ -10,7 +10,7 @@ option java_outer_classname = "OnetProto";
 import "network.proto";
 
 message Roster {
-    required bytes id = 1;
+    optional bytes id = 1;
     repeated network.ServerIdentity list = 2;
     required bytes aggregate = 3;
 }

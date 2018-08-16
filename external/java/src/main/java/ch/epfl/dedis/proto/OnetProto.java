@@ -19,11 +19,11 @@ public final class OnetProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required bytes id = 1;</code>
+     * <code>optional bytes id = 1;</code>
      */
     boolean hasId();
     /**
-     * <code>required bytes id = 1;</code>
+     * <code>optional bytes id = 1;</code>
      */
     com.google.protobuf.ByteString getId();
 
@@ -159,13 +159,13 @@ public final class OnetProto {
     public static final int ID_FIELD_NUMBER = 1;
     private com.google.protobuf.ByteString id_;
     /**
-     * <code>required bytes id = 1;</code>
+     * <code>optional bytes id = 1;</code>
      */
     public boolean hasId() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required bytes id = 1;</code>
+     * <code>optional bytes id = 1;</code>
      */
     public com.google.protobuf.ByteString getId() {
       return id_;
@@ -227,10 +227,6 @@ public final class OnetProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasId()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
       if (!hasAggregate()) {
         memoizedIsInitialized = 0;
         return false;
@@ -588,9 +584,6 @@ public final class OnetProto {
       }
 
       public final boolean isInitialized() {
-        if (!hasId()) {
-          return false;
-        }
         if (!hasAggregate()) {
           return false;
         }
@@ -623,19 +616,19 @@ public final class OnetProto {
 
       private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes id = 1;</code>
+       * <code>optional bytes id = 1;</code>
        */
       public boolean hasId() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required bytes id = 1;</code>
+       * <code>optional bytes id = 1;</code>
        */
       public com.google.protobuf.ByteString getId() {
         return id_;
       }
       /**
-       * <code>required bytes id = 1;</code>
+       * <code>optional bytes id = 1;</code>
        */
       public Builder setId(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -647,7 +640,7 @@ public final class OnetProto {
         return this;
       }
       /**
-       * <code>required bytes id = 1;</code>
+       * <code>optional bytes id = 1;</code>
        */
       public Builder clearId() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -1700,7 +1693,7 @@ public final class OnetProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\nonet.proto\022\004onet\032\rnetwork.proto\"N\n\006Ros" +
-      "ter\022\n\n\002id\030\001 \002(\014\022%\n\004list\030\002 \003(\0132\027.network." +
+      "ter\022\n\n\002id\030\001 \001(\014\022%\n\004list\030\002 \003(\0132\027.network." +
       "ServerIdentity\022\021\n\taggregate\030\003 \002(\014\"^\n\006Sta" +
       "tus\022&\n\005field\030\001 \003(\0132\027.onet.Status.FieldEn" +
       "try\032,\n\nFieldEntry\022\013\n\003key\030\001 \001(\t\022\r\n\005value\030" +
