@@ -409,7 +409,7 @@ func (r *Request) VerifyWithCB(d *Darc, getDarc GetDarc) error {
 		}
 	}
 	validIDs := r.GetIdentityStrings()
-	err := evalExpr(d.Rules[r.Action], getDarc, validIDs...)
+	err := EvalExpr(d.Rules[r.Action], getDarc, validIDs...)
 	if err != nil {
 		return err
 	}
@@ -503,7 +503,7 @@ func verifyOneEvolution(newDarc, prevDarc *Darc, getDarc func(string, bool) *Dar
 	}
 
 	// check that signers have the permission
-	if err := evalExprWithSigs(
+	if err := EvalExprWithSigs(
 		prevDarc.Rules.GetEvolutionExpr(),
 		getDarc,
 		newDarc.Signatures...); err != nil {
@@ -542,22 +542,22 @@ func verifyEvolutionRecursive(newDarc, prevDarc *Darc, getDarc func(string, bool
 	return prevDarc.VerifyWithCB(getDarc, true)
 }
 
-// evalExprWithSigs is a simple wrapper around evalExpr that extracts Signer
+// EvalExprWithSigs is a simple wrapper around EvalExpr that extracts Signer
 // from Signature.
-func evalExprWithSigs(expr expression.Expr, getDarc GetDarc, sigs ...Signature) error {
+func EvalExprWithSigs(expr expression.Expr, getDarc GetDarc, sigs ...Signature) error {
 	signers := make([]string, len(sigs))
 	for i, sig := range sigs {
 		signers[i] = sig.Signer.String()
 	}
-	if err := evalExpr(expr, getDarc, signers...); err != nil {
+	if err := EvalExpr(expr, getDarc, signers...); err != nil {
 		return err
 	}
 	return nil
 }
 
-// evalExpr checks whether the expression evaluates to true given a list of
+// EvalExpr checks whether the expression evaluates to true given a list of
 // identities.
-func evalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
+func EvalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 	Y := expression.InitParser(func(s string) bool {
 		if strings.HasPrefix(s, "darc") {
 			// getDarc is responsible for returning the latest Darc
@@ -574,7 +574,7 @@ func evalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 			}
 			// Recursively evaluate the sign expression until we
 			// find the final signer with a ed25519 key.
-			if err := evalExpr(d.Rules[sign], getDarc, ids...); err != nil {
+			if err := EvalExpr(d.Rules[sign], getDarc, ids...); err != nil {
 				return false
 			}
 			return true
