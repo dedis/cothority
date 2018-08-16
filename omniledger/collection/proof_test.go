@@ -521,7 +521,7 @@ func TestProofSerialization(test *testing.T) {
 		}
 	}
 
-	_, err := collection.Deserialize([]byte("definitelynotaproof"))
+	_, err := collection.Deserialize([]byte{0})
 
 	if err == nil {
 		test.Error("[proof.go]", "[serialization]", "Deserialize() does not yield an error when provided with an invalid byte slice.")
