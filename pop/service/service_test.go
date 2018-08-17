@@ -505,6 +505,17 @@ func TestService_MergeRequest(t *testing.T) {
 
 }
 
+func TestService_GetFinalStatement(t *testing.T) {
+	suiteSkip(t)
+	local := onet.NewTCPTest(tSuite)
+	defer local.CloseAll()
+	nodes, r, _ := local.GenTree(2, true)
+	svcs := local.GetServices(nodes, serviceID)
+	_, _, srvcs, _ := storeDesc(svcs, r, 2, 2)
+	_, err := srvcs[0].GetFinalStatements(nil)
+	require.Nil(t, err)
+}
+
 func storeDesc(srvcs []onet.Service, el *onet.Roster, nbr int,
 	nprts int) ([]*PopDesc, []kyber.Point, []*Service, []kyber.Scalar) {
 	descs := make([]*PopDesc, nprts)

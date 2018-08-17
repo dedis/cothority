@@ -71,6 +71,10 @@ var cmds = cli.Commands{
 }
 
 var cliApp = cli.NewApp()
+var configPath = ""
+
+// getDataPath is a function pointer so that tests can hook and modify this.
+var getDataPath = cfgpath.GetDataPath
 
 func init() {
 	cliApp.Name = "ol"
@@ -83,9 +87,18 @@ func init() {
 			Value: 0,
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
+		cli.StringFlag{
+			Name:  "config, c",
+			Value: "",
+			Usage: "path to configuration-directory",
+		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
+		configPath = c.String("config")
+		if configPath == "" {
+			configPath = getDataPath(cliApp.Name)
+		}
 		return nil
 	}
 }
@@ -128,19 +141,17 @@ func create(c *cli.Context) error {
 	}
 
 	cfg := &omniledger.Config{
-		ID:      resp.Skipblock.SkipChainID(),
-		Roster:  *r,
-		OwnerID: owner.Identity(),
+		ID:          resp.Skipblock.SkipChainID(),
+		Roster:      *r,
+		OwnerID:     owner.Identity(),
+		GenesisDarc: req.GenesisDarc,
 	}
 	fn, err = save(cfg)
 	if err != nil {
 		return err
 	}
 
-	cfgp := &configPrivate{
-		Owner: owner,
-	}
-	err = cfgp.save()
+	err = saveKey(owner)
 	if err != nil {
 		return err
 	}
@@ -166,7 +177,7 @@ func show(c *cli.Context) error {
 
 	cfg := &omniledger.Config{
 		ID:     cl.ID,
-		Roster: *cl.Roster,
+		Roster: cl.Roster,
 	}
 
 	fmt.Fprintln(c.App.Writer, cfg)
@@ -195,7 +206,7 @@ func add(c *cli.Context) error {
 		return err
 	}
 
-	private, err := loadKey(cl.OwnerID)
+	signer, err := loadKey(cl.OwnerID)
 	if err != nil {
 		return err
 	}
@@ -241,10 +252,10 @@ func add(c *cli.Context) error {
 		Length:     1,
 		Invoke:     &invoke,
 		Signatures: []darc.Signature{
-			darc.Signature{Signer: private.Owner.Identity()},
+			darc.Signature{Signer: signer.Identity()},
 		},
 	}
-	err = instr.SignBy(d2.GetBaseID(), private.Owner)
+	err = instr.SignBy(d2.GetBaseID(), *signer)
 	if err != nil {
 		return err
 	}
@@ -277,39 +288,31 @@ func readRoster(r io.Reader) (*onet.Roster, error) {
 	return group.Roster, nil
 }
 
-// getDataPath is a function pointer so that tests can hook and modify this.
-var getDataPath = cfgpath.GetDataPath
-
-func loadKey(id darc.Identity) (*configPrivate, error) {
+func loadKey(id darc.Identity) (*darc.Signer, error) {
 	// Find private key file.
-	cfgDir := getDataPath(cliApp.Name)
-	fn := fmt.Sprintf("key-%x.cfg", id)
-	fn = filepath.Join(cfgDir, fn)
-	return loadPrivate(fn)
+	fn := fmt.Sprintf("key-%s.cfg", id)
+	fn = filepath.Join(configPath, fn)
+	return loadSigner(fn)
 }
 
-func loadPrivate(fn string) (*configPrivate, error) {
+func loadSigner(fn string) (*darc.Signer, error) {
 	buf, err := ioutil.ReadFile(fn)
 	if err != nil {
 		return nil, err
 	}
 
-	_, val, err := network.Unmarshal(buf, cothority.Suite)
+	_, msg, err := network.Unmarshal(buf, cothority.Suite)
 	if err != nil {
 		return nil, err
 	}
-	if cfg, ok := val.(*configPrivate); ok {
-		return cfg, nil
-	}
-	return nil, errors.New("unexpected private config format")
+	return msg.(*darc.Signer), nil
 }
 
 func save(cfg *omniledger.Config) (string, error) {
-	cfgDir := getDataPath(cliApp.Name)
-	os.MkdirAll(cfgDir, 0755)
+	os.MkdirAll(configPath, 0755)
 
-	fn := fmt.Sprintf("%x.cfg", cfg.ID[0:8])
-	fn = filepath.Join(cfgDir, fn)
+	fn := fmt.Sprintf("ol-%x.cfg", cfg.ID)
+	fn = filepath.Join(configPath, fn)
 
 	buf, err := network.Marshal(cfg)
 	if err != nil {
@@ -323,12 +326,11 @@ func save(cfg *omniledger.Config) (string, error) {
 	return fn, nil
 }
 
-func (cfg *configPrivate) save() error {
-	cfgDir := getDataPath(cliApp.Name)
-	os.MkdirAll(cfgDir, 0755)
+func saveKey(signer darc.Signer) error {
+	os.MkdirAll(configPath, 0755)
 
-	fn := fmt.Sprintf("key-%x.cfg", cfg.Owner.Identity())
-	fn = filepath.Join(cfgDir, fn)
+	fn := fmt.Sprintf("key-%s.cfg", signer.Identity())
+	fn = filepath.Join(configPath, fn)
 
 	// perms = 0400 because there is key material inside this file.
 	f, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE, 0400)
@@ -336,7 +338,7 @@ func (cfg *configPrivate) save() error {
 		return fmt.Errorf("could not write %v: %v", fn, err)
 	}
 
-	buf, err := network.Marshal(cfg)
+	buf, err := network.Marshal(&signer)
 	if err != nil {
 		return err
 	}

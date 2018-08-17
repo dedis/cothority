@@ -19,6 +19,10 @@ import (
 	"github.com/dedis/cothority/ftcosi/check"
 	_ "github.com/dedis/cothority/ftcosi/protocol"
 	_ "github.com/dedis/cothority/ftcosi/service"
+	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/darc/expression"
+	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/protobuf"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/pop/service"
@@ -76,6 +80,7 @@ func main() {
 	appCli.Version = "0.1"
 	appCli.Commands = []cli.Command{}
 	appCli.Commands = []cli.Command{
+		commandOmniledger,
 		commandOrg,
 		commandAttendee,
 		commandAuth,
@@ -601,6 +606,182 @@ func authStore(c *cli.Context) error {
 	cfg.write()
 	log.Lvlf1("Stored final statement, hash: %s", hash)
 	return nil
+}
+
+// omniStore creates a new PopParty instance together with a darc that is
+// allowed to invoke methods on it.
+func omniStore(c *cli.Context) error {
+	if c.NArg() < 2 || c.NArg() > 3 {
+		return errors.New("please give: omniledger.cfg key-xxx.cfg [final-id]")
+	}
+
+	// Load the omniledger configuration
+	buf, err := ioutil.ReadFile(c.Args().First())
+	if err != nil {
+		return err
+	}
+	_, msgCfg, err := network.Unmarshal(buf, cothority.Suite)
+	if err != nil {
+		return err
+	}
+	cfg := msgCfg.(*ol.Config)
+
+	// Load the signer
+	buf, err = ioutil.ReadFile(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
+	_, msgSigner, err := network.Unmarshal(buf, cothority.Suite)
+	if err != nil {
+		return err
+	}
+	signer := msgSigner.(*darc.Signer)
+
+	log.Info("Finished loading configuration and signer.")
+
+	// And get the final statement - either we get a hint of the first bytes of
+	// the final statement on the command line, or we will display all final
+	// statements to the user.
+	var finalId []byte
+	if c.NArg() == 3 {
+		finalId, err = hex.DecodeString(c.Args().Get(2))
+		if err != nil {
+			return err
+		}
+	}
+
+	// Fetch all final statements from all nodes in the roster of omniledger.
+	// This supposes that there is at least an overlap of the servers who were
+	// involved in the pop-party and the servers holding omniledger.
+	finalStatements := map[string]*service.FinalStatement{}
+	for _, s := range cfg.Roster.List {
+		log.Info("Looking up final statements on host", s)
+		fs, err := service.NewClient().GetFinalStatements(s.Address)
+		if err != nil {
+			log.Error("Error while fetching final statement:", err, "going on")
+			continue
+		}
+		for k, v := range fs {
+			finalStatements[k] = v
+		}
+	}
+
+	if len(finalId) > 0 {
+		// Filter using finalId
+		for k := range finalStatements {
+			if bytes.Compare([]byte(k[0:len(finalId)]), finalId) == 0 {
+				delete(finalStatements, k)
+			}
+		}
+	}
+
+	if len(finalStatements) == 0 {
+		if len(finalId) > 0 {
+			return errors.New("didn't find a final statement starting with the bytes given. Try no search")
+		}
+		return errors.New("none of the conodes of omniledger has any party stored")
+	}
+
+	if len(finalStatements) > 1 {
+		for k, v := range finalStatements {
+			log.Infof("%x: '%s' in '%s' at '%s'", k, v.Desc.Name, v.Desc.Location, v.Desc.DateTime)
+		}
+		return errors.New("found more than one final statement - please chose by giving the first (or more) bytes")
+	}
+
+	var finalStatement *service.FinalStatement
+	for _, v := range finalStatements {
+		finalStatement = v
+	}
+	fsString := fmt.Sprintf("'%s' in '%s' at '%s'", finalStatement.Desc.Name,
+		finalStatement.Desc.Location, finalStatement.Desc.DateTime)
+
+	log.Info("Contacting nodes to get the public keys of the organizers")
+	var identities []darc.Identity
+	for _, s := range cfg.Roster.List {
+		log.Info("Contacting", s)
+		link, err := service.NewClient().GetLink(s.Address)
+		if err != nil {
+			return errors.New("need all public keys of all organizers: " + err.Error())
+		}
+		identities = append(identities, darc.NewIdentityEd25519(link))
+	}
+
+	log.Info("Creating darc for the organizers")
+	rules := darc.InitRules(identities, identities)
+	var exprSlice []string
+	for _, id := range identities {
+		exprSlice = append(exprSlice, id.String())
+	}
+	// The master signer has the right to create a new party.
+	rules.AddRule("spawn:popParty", expression.Expr(signer.Identity().String()))
+	// We allow any of the organizers to update the final statement. The contract
+	// will make sure that it is correctly signed.
+	rules.AddRule("invoke:Finalize", expression.Expr(strings.Join(exprSlice, " | ")))
+	orgDarc := darc.NewDarc(rules, []byte("For party "+fsString))
+	orgDarcBuf, err := orgDarc.ToProto()
+	if err != nil {
+		return err
+	}
+	inst := ol.Instruction{
+		InstanceID: ol.NewInstanceID(cfg.GenesisDarc.GetBaseID()),
+		Nonce:      ol.Nonce{},
+		Index:      0,
+		Length:     1,
+		Spawn: &ol.Spawn{
+			ContractID: ol.ContractDarcID,
+			Args: ol.Arguments{{
+				Name:  "darc",
+				Value: orgDarcBuf,
+			}},
+		},
+	}
+	err = inst.SignBy(cfg.GenesisDarc.GetBaseID(), *signer)
+	if err != nil {
+		return err
+	}
+	ct := ol.ClientTransaction{
+		Instructions: ol.Instructions{inst},
+	}
+	log.Info("Contacting omniledger to store the new darc")
+	olc := ol.NewClientConfig(*cfg)
+	_, err = olc.AddTransactionAndWait(ct, 10)
+	if err != nil {
+		return err
+	}
+
+	partyConfigBuf, err := protobuf.Encode(finalStatement)
+	if err != nil {
+		return err
+	}
+	inst = ol.Instruction{
+		InstanceID: ol.NewInstanceID(orgDarc.GetBaseID()),
+		Nonce:      ol.Nonce{},
+		Index:      0,
+		Length:     1,
+		Spawn: &ol.Spawn{
+			ContractID: service.ContractPopParty,
+			Args: ol.Arguments{{
+				Name:  "PartyConfig",
+				Value: partyConfigBuf,
+			}},
+		},
+	}
+	err = inst.SignBy(cfg.GenesisDarc.GetBaseID(), *signer)
+	// err = inst.SignBy(orgDarc.GetBaseID(), *signer)
+	if err != nil {
+		return err
+	}
+	ct = ol.ClientTransaction{
+		Instructions: ol.Instructions{inst},
+	}
+	log.Info("Contacting omniledger to spawn the new party")
+	_, err = olc.AddTransactionAndWait(ct, 10)
+	if err != nil {
+		return err
+	}
+
+	return errors.New("not yet implemented")
 }
 
 // getConfigClient returns the configuration and a client-structure.

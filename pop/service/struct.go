@@ -18,7 +18,9 @@ func init() {
 		PinRequest{}, FetchRequest{}, MergeRequest{},
 		StoreConfig{}, StoreConfigReply{},
 		GetProposals{}, GetProposalsReply{},
-		VerifyLink{}, VerifyLinkReply{})
+		VerifyLink{}, VerifyLinkReply{},
+		GetLink{}, GetLinkReply{},
+		GetFinalStatements{}, GetFinalStatementsReply{})
 }
 
 func newMerge() *merge {

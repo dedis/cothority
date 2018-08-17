@@ -57,7 +57,7 @@ type FinalStatement struct {
 	Attendees []kyber.Point
 	// Signature is created by all conodes responsible for that pop-party
 	Signature []byte
-	// Flag indicates, that party was merged
+	// Flag indicates that party was merged
 	Merged bool
 }
 
@@ -161,4 +161,21 @@ type VerifyLink struct {
 // VerifyLinkReply returns true if the public key is in the admin-list.
 type VerifyLinkReply struct {
 	Exists bool
+}
+
+// GetLink returns the public key of the linked organizer.
+type GetLink struct{}
+
+// GetLinkReply holds the public key of the linked organizer.
+type GetLinkReply struct {
+	Public kyber.Point
+}
+
+// GetFinalStatements returns all stored final statements.
+type GetFinalStatements struct {
+}
+
+// GetFinalStatementsReply returns all stored final statements.
+type GetFinalStatementsReply struct {
+	FinalStatements map[string]*FinalStatement
 }

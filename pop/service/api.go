@@ -144,6 +144,30 @@ func (c *Client) Merge(dst network.Address, p *PopDesc, priv kyber.Scalar) (
 	return res.Final, nil
 }
 
+// GetLink returns the link of the organizer, if available.
+func (c *Client) GetLink(dst network.Address) (kyber.Point, error) {
+	si := &network.ServerIdentity{Address: dst}
+	res := &GetLinkReply{}
+
+	e := c.SendProtobuf(si, &GetLink{}, res)
+	if e != nil {
+		return nil, e
+	}
+	return res.Public, nil
+}
+
+// GetFinalStatements returns a map of all final statements.
+func (c *Client) GetFinalStatements(dst network.Address) (map[string]*FinalStatement, error) {
+	si := &network.ServerIdentity{Address: dst}
+	res := &GetFinalStatementsReply{}
+
+	e := c.SendProtobuf(si, &GetFinalStatements{}, res)
+	if e != nil {
+		return nil, e
+	}
+	return res.FinalStatements, nil
+}
+
 // The toml-structure for (un)marshaling with toml
 type finalStatementToml struct {
 	Desc      *popDescToml

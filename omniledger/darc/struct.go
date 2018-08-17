@@ -2,7 +2,12 @@ package darc
 
 import (
 	"github.com/dedis/cothority/omniledger/darc/expression"
+	"github.com/dedis/onet/network"
 )
+
+func init() {
+	network.RegisterMessages(&Darc{}, &Identity{}, &Signer{})
+}
 
 // ID is the identity of a Darc - which is the sha256 of its protobuf representation
 // over invariant fields [Owners, Users, Version, Description]. Signature is excluded.

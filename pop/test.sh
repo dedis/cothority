@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=3
 DBG_APP=2
-# DBG_SRV=2
+DBG_SRV=2
 
 NBR_CLIENTS=4
 NBR_SERVERS=3
@@ -13,6 +13,8 @@ NBR_SERVERS_GROUP=$NBR_SERVERS
 MERGE_FILE=""
 main(){
 	startTest
+	pwd
+	build ../../omniledger/ol
 	buildConode github.com/dedis/cothority/cosi/service github.com/dedis/cothority/pop/service
 	echo "Creating directories"
 	for n in $(seq $NBR_CLIENTS); do
@@ -25,25 +27,35 @@ main(){
 	addr[2]=localhost:2004
 	addr[3]=localhost:2006
 
-	run testBuild
-	run testCheck
-	run testOrgLink
-	run testSave
-	run testOrgConfig
-	run testAtCreate
-	run testOrgPublic
-	run testOrgPublic2
-	run testOrgFinal1
-	run testOrgFinal2
-	run testOrgFinal3
-	run testAtJoin
-	run testAtSign
-	run testAuthStore
-	run testAtVerify
-	run testAtMultipleKey
-	run testMerge
-	run testPropagateConfig
+	# run testBuild
+	# run testCheck
+	# run testOrgLink
+	# run testSave
+	# run testOrgConfig
+	# run testAtCreate
+	# run testOrgPublic
+	# run testOrgPublic2
+	# run testOrgFinal1
+	# run testOrgFinal2
+	# run testOrgFinal3
+	# run testAtJoin
+	# run testAtSign
+	# run testAuthStore
+	# run testAtVerify
+	# run testAtMultipleKey
+	# run testMerge
+	# run testPropagateConfig
+	run testOlStore
 	stopTest
+}
+
+testOlStore(){
+	mkConfig 3 1 1 3
+	testOK runOl 1 create -roster public.toml -interval 1s
+	OL=cl1/ol*
+	KEY=cl1/key*
+	testOK runCl 1 ol store $OL $KEY
+#	testOK runCl 1 auth store final1.toml
 }
 
 testPropagateConfig(){
@@ -477,6 +489,19 @@ testCheck(){
 testBuild(){
 	testOK dbgRun ./conode --help
 	testOK dbgRun ./$APP --help
+}
+
+runOl(){
+	local CFG=cl$1
+	shift
+	dbgRun ./ol -d $DBG_APP -c $CFG $@
+}
+
+runDbgOl(){
+	local DBG=$1
+	local CFG=cl$2
+	shift 2
+	DEBUG_COLOR="" ./ol -d $DBG -c $CFG $@
 }
 
 runCl(){

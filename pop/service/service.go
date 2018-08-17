@@ -35,6 +35,7 @@ import (
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/messaging"
+	"github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/suites"
@@ -401,6 +402,22 @@ func (s *Service) MergeRequest(req *MergeRequest) (network.Message,
 
 	s.save()
 	return &FinalizeResponse{newFinal}, nil
+}
+
+// GetLink returns the public key of the linked organizer.
+func (s *Service) GetLink(req *GetLink) (*GetLinkReply, error) {
+	return &GetLinkReply{s.data.Public}, nil
+}
+
+// GetFinalStatements returns all final statements stored in this service.
+func (s *Service) GetFinalStatements(req *GetFinalStatements) (*GetFinalStatementsReply, error) {
+	rep := &GetFinalStatementsReply{
+		FinalStatements: make(map[string]*FinalStatement),
+	}
+	for k, v := range s.data.Finals {
+		rep.FinalStatements[k] = v
+	}
+	return rep, nil
 }
 
 // MergeConfig receives a final statement of requesting party,
@@ -1056,7 +1073,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		data:             &saveData{},
 	}
 	err := s.RegisterHandlers(s.PinRequest, s.VerifyLink, s.StoreConfig, s.FinalizeRequest,
-		s.FetchFinal, s.MergeRequest, s.GetProposals)
+		s.FetchFinal, s.MergeRequest, s.GetProposals, s.GetLink, s.GetFinalStatements)
 	if err != nil {
 		return nil, err
 	}
@@ -1091,5 +1108,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.bftVerifyMerge, s.bftVerifyMergeAck, bftSignMerge); err != nil {
 		return nil, err
 	}
+
+	service.RegisterContract(c, ContractPopParty, s.ContractPopParty)
+	service.RegisterContract(c, ContractPopCoinAccount, s.ContractPopCoinAccount)
+
 	return s, nil
 }
