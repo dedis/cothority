@@ -258,10 +258,21 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.skService().SetPropTimeout(p)
 }
 
-func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransaction, view CollectionView) error {
-	log.Printf("%s: verifying client Tx", s.ServerIdentity())
+func (s *Service) verifyAndFilterTxs(scID skipchain.SkipBlockID, ts []ClientTransaction) []ClientTransaction {
+	var validTxs []ClientTransaction
+	for i, t := range ts {
+		if err := s.verifyClientTx(scID, t); err != nil {
+			log.Errorf("%v tx #%v, %v", s.ServerIdentity(), i, err)
+			continue
+		}
+		validTxs = append(validTxs, t)
+	}
+	return validTxs
+}
+
+func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransaction) error {
 	for i, instr := range tx.Instructions {
-		if err := s.verifyInstruction(scID, instr, view); err != nil {
+		if err := s.verifyInstruction(scID, instr); err != nil {
 			log.Errorf("%v instr #%v, %v", s.ServerIdentity(), i, err)
 			return err
 		}
@@ -269,7 +280,7 @@ func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransactio
 	return nil
 }
 
-func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction, view CollectionView) error {
+func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
 	d, err := s.loadLatestDarc(scID, instr.InstanceID)
 	if err != nil {
 		return errors.New("darc not found: " + err.Error())
@@ -281,6 +292,7 @@ func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instructio
 	// Verify the request is signed by appropriate identities.
 	// A callback is required to get any delegated DARC(s) during
 	// expression evaluation.
+	view := s.GetCollectionView(scID)
 	err = req.VerifyWithCB(d, func(str string, latest bool) *darc.Darc {
 		if len(str) < 5 || string(str[0:5]) != "darc:" {
 			return nil
@@ -338,6 +350,10 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 			sb.Roster = r
 		}
 
+		cts = s.verifyAndFilterTxs(sb.SkipChainID(), cts)
+		if len(cts) == 0 {
+			return nil, errors.New("no valid transaction")
+		}
 		coll = s.getCollection(scID).coll
 	}
 
@@ -757,10 +773,9 @@ func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain
 	// ignore the error and compute the state changes.
 	merkleRoot, ctsOK, ctsBad, states, err = s.stateChangeCache.get(scID, cts.Hash())
 	if err == nil {
-		log.Lvl4(s.ServerIdentity(), "state changes from cache: HIT")
+		log.Lvl3(s.ServerIdentity(), "loaded state changes from cache")
 		return
 	}
-	log.Lvl4(s.ServerIdentity(), "state changes from cache: MISS")
 	err = nil
 
 	deadline := time.Now().Add(timeout)
@@ -776,13 +791,6 @@ clientTransactions:
 		// Make a new collection for each instruction. If the instruction is sucessfully
 		// implemented and changes applied, then keep it (via cdbTemp = cdbI.c),
 		// otherwise dump it.
-		log.Printf("%+v", ct)
-		err = s.verifyClientTx(scID, ct, &roCollection{cdbTemp})
-		if err != nil {
-			log.Errorf("%s: wrong signature in transaction: %s", s.ServerIdentity(), err)
-			ctsBad = append(ctsBad, ct)
-			continue clientTransactions
-		}
 		cdbI := &roCollection{cdbTemp.Clone()}
 		for _, instr := range ct.Instructions {
 			scs, cout, err := s.executeInstruction(cdbI, cin, instr)
@@ -800,6 +808,7 @@ clientTransactions:
 			}
 			states = append(states, scs...)
 			cin = cout
+
 		}
 		// timeout is ONLY used when the leader calls createStateChanges as
 		// part of planning which ClientTransactions fit into one block.
@@ -814,7 +823,7 @@ clientTransactions:
 
 	// Store the result in the cache before returning.
 	merkleRoot = cdbTemp.GetRoot()
-	s.stateChangeCache.update(scID, ctsOK.Hash(), merkleRoot, ctsOK, ctsBad, states)
+	s.stateChangeCache.update(scID, cts.Hash(), merkleRoot, ctsOK, ctsBad, states)
 	return
 }
 
