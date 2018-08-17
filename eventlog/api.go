@@ -64,7 +64,7 @@ func (c *Client) Create() error {
 		return err
 	}
 
-	c.Instance = instr.DeriveID("eventlog")
+	c.Instance = omniledger.NewInstanceID(instr.Hash())
 	return nil
 }
 
@@ -165,7 +165,7 @@ func makeTx(darcID darc.ID, id omniledger.InstanceID, msgs []Event, signers []da
 			}
 		}
 		tx.Instructions[i].Signatures = darcSigs
-		keys[i] = LogID(tx.Instructions[i].DeriveID("event").Slice())
+		keys[i] = LogID(tx.Instructions[i].Hash())
 	}
 	return &tx, keys, nil
 }

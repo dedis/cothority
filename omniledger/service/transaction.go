@@ -105,8 +105,12 @@ func (instr Instruction) Hash() []byte {
 	return h.Sum(nil)
 }
 
-// DeriveID derives a new InstanceID from the instruction's
-// InstanceID, the given string, and the hash of the Instruction.
+// DeriveID derives a new InstanceID from the hash of the instruction, its signatures,
+// and the given string.
+//
+// DeriveID is used inside of contracts that need to create additional keys in
+// the collection. Newly spawned instances should, by convention, always use the
+// Hash() of the instruction as the new InstanceID.
 func (instr Instruction) DeriveID(what string) InstanceID {
 	h := sha256.New()
 	h.Write(instr.Hash())

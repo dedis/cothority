@@ -158,6 +158,10 @@ to create a new instance with the given ContractID, which can be different from
 the Darc itself. The client must be able to authenticate against a
 `Spawn_contractid` rule defined in the Darc instance.
 
+The new instance spawned will have an instance ID equal to the hash of
+the Spawn instruction. The client can remember this instance ID in order
+to invoke methods on it later.
+
 ### Invoke
 
 The only method that a client can invoke on a Darc instance is `Evolve`, which
