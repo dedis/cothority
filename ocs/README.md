@@ -7,7 +7,7 @@ Onchain Secrets
 
 This directory contains a specialized skipchain that implements the
 onchain-secrets protocol, developed by DEDIS/EPFL and presented in the
-[SCARAB](https://eprint.iacr.org/2018/209.pdf) paper. It allows the storage of
+[CALYPSO](https://eprint.iacr.org/2018/209.pdf) paper. It allows the storage of
 encrypted data on the skipchain with a read-access list and then re-encrypts
 that data so that only one of the readers can have access to it. It does so in
 a way that the access to the data is always logged, and eventual leakage can be
@@ -49,15 +49,30 @@ This is how onchain-secrets work:
     - An **auditor** can traverse the skipchain and see when a reader accessed
     a certain document.
 
+The implementation described above has some different details than the one
+described in the paper (the long-term secrets version of the on-chain secrets
+protocol). Concretely, the paper describes two cothorities, the
+access-management cothority and the secret-management cothority, in this
+implementation, the two are combined to run on the same service. Additionally,
+we perform server-side secret reconstruction described at the end of Appendix B
+instead of doing it on the client-side, which is what is described in the main
+protocol in the paper (Section IV.B).
+
+there is no re-encryption
+protocol. Instead, the client contacts every trustee in the secret-management
+cothority to obtain a blinded share and then reconstructs and decrypts the
+ciphertext himself.
+
 ## Links
 
 - [OCS Command Line Interface](CLI.md)
 - [OCS Reencryption Protocol](protocol/Reencrypt.md)
-- [OCS Distributed Key Generation](protocol/DKG.md)
+- [Distributed Key Generation](../dkg/DKG.md)
 - [Client API](service/README.md) offers an API to connect from a client to an
 OCS service
 - [Distributed Access Rights Control](darc/README.md) - the data structure used
 to define access control
-- [SCARAB](https://eprint.iacr.org/2018/209.pdf) - Hidden in Plain Sight
+- [CALYPSO](https://eprint.iacr.org/2018/209.pdf) - Auditable Sharing of
+  Private Data over Blockchains
 - [Skipchain](../skipchain/README.md) is the storage data structure used for the
 transactions

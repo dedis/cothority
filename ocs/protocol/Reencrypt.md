@@ -5,8 +5,8 @@ Distributed Reencryption
 
 # Distributed Reencryption
 
-Once a [DKG](DKG.md) has been set up, its aggregated public
-key can be used to encrypt data, for example using ElGamal encryption. In some
+Once a [DKG](../../dkg/DKG.md) has been set up, its aggregated public key can
+be used to encrypt data, for example using ElGamal encryption. In some
 circumstances you don't want to directly decrypt that data, but merely give
 access to another user, without the distributed setup seeing what the original
 data is.
@@ -31,5 +31,5 @@ The re-encryption protocol is called _ocs_ and is defined in the following files
 
 ## Research Papers
 
-- [SCARAB](https://eprint.iacr.org/2018/209) - Hidden in Plain Sight: Storing
-and Managing Secrets on a Public Ledger
+- [CALYPSO](https://eprint.iacr.org/2018/209.pdf) - Auditable Sharing of
+  Private Data over Blockchains
