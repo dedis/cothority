@@ -60,6 +60,11 @@ func (s safeUint64) sub(a uint64) (safeUint64, error) {
 func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c []omniledger.Coin) (sc []omniledger.StateChange, cOut []omniledger.Coin, err error) {
 	cOut = c
 
+	err = inst.VerifyDarcSignature(cdb)
+	if err != nil {
+		return
+	}
+
 	var value []byte
 	var darcID darc.ID
 	value, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())

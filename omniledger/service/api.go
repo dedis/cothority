@@ -291,12 +291,12 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 func SignInstruction(inst *Instruction, darcID darc.ID, signers ...darc.Signer) error {
 	inst.Signatures = make([]darc.Signature, 0)
 	var action string
-	switch {
-	case inst.Spawn != nil:
+	switch inst.GetType() {
+	case SpawnType:
 		action = "spawn:" + inst.Spawn.ContractID
-	case inst.Invoke != nil:
+	case InvokeType:
 		action = "invoke:" + inst.Invoke.Command
-	case inst.Delete != nil:
+	case DeleteType:
 		action = "delete"
 	}
 	req, err := darc.InitAndSignRequest(darcID, darc.Action(action),

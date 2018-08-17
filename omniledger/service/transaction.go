@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
@@ -87,15 +88,15 @@ func (instr Instruction) Hash() []byte {
 	binary.LittleEndian.PutUint32(b, uint32(instr.Length))
 	h.Write(b)
 	var args []Argument
-	switch {
-	case instr.Spawn != nil:
+	switch instr.GetType() {
+	case SpawnType:
 		h.Write([]byte{0})
 		h.Write([]byte(instr.Spawn.ContractID))
 		args = instr.Spawn.Args
-	case instr.Invoke != nil:
+	case InvokeType:
 		h.Write([]byte{1})
 		args = instr.Invoke.Args
-	case instr.Delete != nil:
+	case DeleteType:
 		h.Write([]byte{2})
 	}
 	for _, a := range args {
@@ -129,15 +130,7 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 //
 // TODO: Deprecate/remove this; the state return is almost always ignored.
 func (instr Instruction) GetContractState(coll CollectionView) (contractID string, state []byte, err error) {
-	// Getting the kind is different for instructions that create a key
-	// and for instructions that send a call to an existing key.
-	if instr.Spawn != nil {
-		// Spawning instructions have the contractID directly in the instruction.
-		return instr.Spawn.ContractID, nil, nil
-	}
-
-	// For existing keys, we need to go look the kind up in our database
-	// to find the kind.
+	// Look the kind up in our database to find the kind.
 	kv := coll.Get(instr.InstanceID.Slice())
 	var record collection.Record
 	record, err = kv.Record()
@@ -147,6 +140,11 @@ func (instr Instruction) GetContractState(coll CollectionView) (contractID strin
 	var cv []interface{}
 	cv, err = record.Values()
 	if err != nil {
+		if ConfigInstanceID.Equal(instr.InstanceID) {
+			// Special case: first time call to genesis-configuration must return
+			// correct contract type.
+			return ContractConfigID, nil, nil
+		}
 		return
 	}
 	var ok bool
@@ -169,12 +167,12 @@ func (instr Instruction) GetContractState(coll CollectionView) (contractID strin
 // instruction.
 func (instr Instruction) Action() string {
 	a := "invalid"
-	switch {
-	case instr.Spawn != nil:
+	switch instr.GetType() {
+	case SpawnType:
 		a = "spawn:" + instr.Spawn.ContractID
-	case instr.Invoke != nil:
+	case InvokeType:
 		a = "invoke:" + instr.Invoke.Command
-	case instr.Delete != nil:
+	case DeleteType:
 		a = "Delete"
 	}
 	return a
@@ -253,6 +251,42 @@ func (instr Instruction) ToDarcRequest(baseID darc.ID) (*darc.Request, error) {
 		req = darc.InitRequest(baseID, darc.Action(action), instr.Hash(), ids, sigs)
 	}
 	return &req, nil
+}
+
+// VerifyDarcSignature will look up the darc of the instance pointed to by
+// the instruction and then verify if the signature on the instruction
+// can satisfy the rules of the darc. It returns an error if it couldn't
+// find the darc or if the signature is wrong.
+func (instr Instruction) VerifyDarcSignature(coll CollectionView) error {
+	d, err := getInstanceDarc(coll, instr.InstanceID)
+	if err != nil {
+		return errors.New("darc not found: " + err.Error())
+	}
+	req, err := instr.ToDarcRequest(d.GetBaseID())
+	if err != nil {
+		return errors.New("couldn't create darc request: " + err.Error())
+	}
+	// Verify the request is signed by appropriate identities.
+	// A callback is required to get any delegated DARC(s) during
+	// expression evaluation.
+	err = req.VerifyWithCB(d, func(str string, latest bool) *darc.Darc {
+		if len(str) < 5 || string(str[0:5]) != "darc:" {
+			return nil
+		}
+		darcID, err := hex.DecodeString(str[5:])
+		if err != nil {
+			return nil
+		}
+		d, err := LoadDarcFromColl(coll, darcID)
+		if err != nil {
+			return nil
+		}
+		return d
+	})
+	if err != nil {
+		return errors.New("request verification failed: " + err.Error())
+	}
+	return nil
 }
 
 // Instructions is a slice of Instruction

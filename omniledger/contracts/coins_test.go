@@ -5,7 +5,9 @@ import (
 
 	"github.com/dedis/cothority/omniledger/collection"
 	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/darc/expression"
 	omniledger "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,12 +23,15 @@ func init() {
 
 func TestCoin_Spawn(t *testing.T) {
 	// Testing spawning of a new coin and checking it has zero coins in it.
-	ct := cvTest{}
+	ct := newCT("spawn:coin")
 	inst := omniledger.Instruction{
+		InstanceID: omniledger.NewInstanceID(gdarc.GetBaseID()),
 		Spawn: &omniledger.Spawn{
 			ContractID: ContractCoinID,
 		},
 	}
+	err := inst.SignBy(gdarc.GetBaseID(), gsigner)
+	require.Nil(t, err)
 
 	c := []omniledger.Coin{}
 	sc, co, err := ContractCoin(ct, inst, c)
@@ -34,15 +39,15 @@ func TestCoin_Spawn(t *testing.T) {
 	require.Equal(t, 1, len(sc))
 	ca := omniledger.NewInstanceID(inst.Hash())
 	require.Equal(t, omniledger.NewStateChange(omniledger.Create, ca,
-		ContractCoinID, coinZero, nil), sc[0])
+		ContractCoinID, coinZero, gdarc.GetBaseID()), sc[0])
 	require.Equal(t, 0, len(co))
 }
 
 func TestCoin_InvokeMint(t *testing.T) {
 	// Test that a coin can be minted
-	ct := newCT()
+	ct := newCT("invoke:mint")
 	coAddr := omniledger.InstanceID{}
-	ct.Store(coAddr, coinZero, ContractCoinID, nil)
+	ct.Store(coAddr, coinZero, ContractCoinID, gdarc.GetBaseID())
 
 	inst := omniledger.Instruction{
 		InstanceID: coAddr,
@@ -51,19 +56,22 @@ func TestCoin_InvokeMint(t *testing.T) {
 			Args:    omniledger.Arguments{{Name: "coins", Value: coinOne}},
 		},
 	}
+	err := inst.SignBy(gdarc.GetBaseID(), gsigner)
+	require.Nil(t, err)
+
 	sc, co, err := ContractCoin(ct, inst, []omniledger.Coin{})
 	require.Nil(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 1, len(sc))
-	require.Equal(t, omniledger.NewStateChange(omniledger.Update, coAddr, ContractCoinID, coinOne, nil),
+	require.Equal(t, omniledger.NewStateChange(omniledger.Update, coAddr, ContractCoinID, coinOne, gdarc.GetBaseID()),
 		sc[0])
 }
 
 func TestCoin_InvokeOverflow(t *testing.T) {
 	uint64max := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
-	ct := newCT()
+	ct := newCT("invoke:mint")
 	coAddr := omniledger.InstanceID{}
-	ct.Store(coAddr, uint64max, ContractCoinID, nil)
+	ct.Store(coAddr, uint64max, ContractCoinID, gdarc.GetBaseID())
 
 	inst := omniledger.Instruction{
 		InstanceID: coAddr,
@@ -72,6 +80,8 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 			Args:    omniledger.Arguments{{Name: "coins", Value: coinOne}},
 		},
 	}
+	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
+
 	sc, co, err := ContractCoin(ct, inst, []omniledger.Coin{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "overflow")
@@ -80,9 +90,9 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 }
 
 func TestCoin_InvokeStoreFetch(t *testing.T) {
-	ct := newCT()
+	ct := newCT("invoke:store", "invoke:fetch")
 	coAddr := omniledger.InstanceID{}
-	ct.Store(coAddr, coinZero, ContractCoinID, nil)
+	ct.Store(coAddr, coinZero, ContractCoinID, gdarc.GetBaseID())
 
 	inst := omniledger.Instruction{
 		InstanceID: coAddr,
@@ -91,6 +101,8 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 			Args:    nil,
 		},
 	}
+	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
+
 	c1 := omniledger.Coin{Name: CoinName, Value: 1}
 	notOlCoin := iid("notOlCoin")
 	c2 := omniledger.Coin{Name: notOlCoin, Value: 1}
@@ -100,7 +112,7 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 	require.Equal(t, 1, len(co))
 	require.Equal(t, co[0].Name, notOlCoin)
 	require.Equal(t, 1, len(sc))
-	require.Equal(t, omniledger.NewStateChange(omniledger.Update, coAddr, ContractCoinID, coinOne, nil),
+	require.Equal(t, omniledger.NewStateChange(omniledger.Update, coAddr, ContractCoinID, coinOne, gdarc.GetBaseID()),
 		sc[0])
 
 	inst = omniledger.Instruction{
@@ -110,13 +122,14 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 			Args:    omniledger.Arguments{{Name: "coins", Value: coinOne}},
 		},
 	}
+	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
 
 	// Try once with not enough coins available.
 	sc, co, err = ContractCoin(ct, inst, nil)
 	require.Error(t, err)
 
 	// Apply the changes to the mock collection.
-	ct.Store(coAddr, coinOne, ContractCoinID, nil)
+	ct.Store(coAddr, coinOne, ContractCoinID, gdarc.GetBaseID())
 
 	sc, co, err = ContractCoin(ct, inst, nil)
 	require.Nil(t, err)
@@ -124,20 +137,20 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 	require.Equal(t, co[0].Name, CoinName)
 	require.Equal(t, uint64(1), co[0].Value)
 	require.Equal(t, 1, len(sc))
-	require.Equal(t, omniledger.NewStateChange(omniledger.Update, coAddr, ContractCoinID, coinZero, nil),
+	require.Equal(t, omniledger.NewStateChange(omniledger.Update, coAddr, ContractCoinID, coinZero, gdarc.GetBaseID()),
 		sc[0])
 }
 
 func TestCoin_InvokeTransfer(t *testing.T) {
 	// Test that a coin can be transferred
-	ct := newCT()
+	ct := newCT("invoke:transfer")
 	coAddr1 := omniledger.InstanceID{}
 	one := make([]byte, 32)
 	one[31] = 1
 	coAddr2 := omniledger.NewInstanceID(one)
 
-	ct.Store(coAddr1, coinOne, ContractCoinID, nil)
-	ct.Store(coAddr2, coinZero, ContractCoinID, nil)
+	ct.Store(coAddr1, coinOne, ContractCoinID, gdarc.GetBaseID())
+	ct.Store(coAddr2, coinZero, ContractCoinID, gdarc.GetBaseID())
 
 	// First create an instruction where the transfer should fail
 	inst := omniledger.Instruction{
@@ -150,6 +163,7 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 			},
 		},
 	}
+	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
 	sc, co, err := ContractCoin(ct, inst, []omniledger.Coin{})
 	require.Error(t, err)
 
@@ -163,12 +177,13 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 			},
 		},
 	}
+	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
 	sc, co, err = ContractCoin(ct, inst, []omniledger.Coin{})
 	require.Nil(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 2, len(sc))
-	require.Equal(t, omniledger.NewStateChange(omniledger.Update, coAddr2, ContractCoinID, coinOne, nil), sc[0])
-	require.Equal(t, omniledger.NewStateChange(omniledger.Update, coAddr1, ContractCoinID, coinZero, nil), sc[1])
+	require.Equal(t, omniledger.NewStateChange(omniledger.Update, coAddr2, ContractCoinID, coinOne, gdarc.GetBaseID()), sc[0])
+	require.Equal(t, omniledger.NewStateChange(omniledger.Update, coAddr1, ContractCoinID, coinZero, gdarc.GetBaseID()), sc[1])
 }
 
 type cvTest struct {
@@ -177,12 +192,26 @@ type cvTest struct {
 	darcIDs     map[string]darc.ID
 }
 
-func newCT() *cvTest {
-	return &cvTest{
+var gdarc *darc.Darc
+var gsigner darc.Signer
+
+func newCT(rStr ...string) *cvTest {
+	ct := &cvTest{
 		make(map[string][]byte),
 		make(map[string]string),
 		make(map[string]darc.ID),
 	}
+	gsigner = darc.NewSignerEd25519(nil, nil)
+	rules := darc.InitRules([]darc.Identity{gsigner.Identity()},
+		[]darc.Identity{gsigner.Identity()})
+	for _, r := range rStr {
+		rules.AddRule(darc.Action(r), expression.Expr(gsigner.Identity().String()))
+	}
+	gdarc = darc.NewDarc(rules, []byte{})
+	dBuf, err := gdarc.ToProto()
+	log.ErrFatal(err)
+	ct.Store(omniledger.NewInstanceID(gdarc.GetBaseID()), dBuf, "darc", gdarc.GetBaseID())
+	return ct
 }
 
 func (ct cvTest) Get(key []byte) collection.Getter {
