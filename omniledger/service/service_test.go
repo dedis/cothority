@@ -464,57 +464,64 @@ func TestService_StateChange(t *testing.T) {
 			return nil, nil, err
 		}
 
+		zeroBuf := make([]byte, 8)
+		switch {
 		// create the object if it doesn't exist
-		if !rec.Match() {
-			if inst.Spawn == nil {
-				return nil, nil, errors.New("expected spawn")
+		case inst.Spawn != nil:
+			if inst.Spawn.ContractID != "add" {
+				return nil, nil, errors.New("can only spawn add contracts")
 			}
-			zeroBuf := make([]byte, 8)
 			binary.PutVarint(zeroBuf, 0)
 			return []StateChange{
 				StateChange{
 					StateAction: Create,
-					InstanceID:  inst.InstanceID.Slice(),
+					InstanceID:  inst.DeriveID("add").Slice(),
 					ContractID:  []byte(cid),
 					Value:       zeroBuf,
 				},
 			}, nil, nil
+		case inst.Invoke != nil:
+
+			// increment the object value
+			vals, err := rec.Values()
+			if err != nil {
+				return nil, nil, err
+			}
+			v, _ := binary.Varint(vals[0].([]byte))
+			v++
+
+			// we read v back to check later in the test
+			latest = v
+
+			vBuf := make([]byte, 8)
+			binary.PutVarint(vBuf, v)
+			return []StateChange{
+				StateChange{
+					StateAction: Update,
+					InstanceID:  inst.InstanceID.Slice(),
+					ContractID:  []byte(cid),
+					Value:       vBuf,
+				},
+			}, nil, nil
 		}
-
-		if inst.Invoke == nil {
-			return nil, nil, errors.New("expected invoke")
-		}
-
-		// increment the object value
-		vals, err := rec.Values()
-		if err != nil {
-			return nil, nil, err
-		}
-		v, _ := binary.Varint(vals[0].([]byte))
-		v++
-
-		// we read v back to check later in the test
-		latest = v
-
-		vBuf := make([]byte, 8)
-		binary.PutVarint(vBuf, v)
-		return []StateChange{
-			StateChange{
-				StateAction: Update,
-				InstanceID:  inst.InstanceID.Slice(),
-				ContractID:  []byte(cid),
-				Value:       vBuf,
-			},
-		}, nil, nil
-
+		return nil, nil, errors.New("need spawn or invoke")
 	}
 	RegisterContract(s.hosts[0], "add", f)
 
 	cdb := s.service().getCollection(s.sb.SkipChainID())
 	require.NotNil(t, cdb)
 
-	n := 5
+	// Manually create the add contract
 	inst := genID()
+	err := cdb.Store(&StateChange{
+		StateAction: Create,
+		InstanceID:  inst.Slice(),
+		ContractID:  []byte("add"),
+		Value:       make([]byte, 8),
+	})
+	require.Nil(t, err)
+
+	n := 5
 	nonce := GenNonce()
 	instrs := make([]Instruction, n)
 	for i := range instrs {
@@ -529,6 +536,7 @@ func TestService_StateChange(t *testing.T) {
 				ContractID: "add",
 			}
 		} else {
+			instrs[i].InstanceID = instrs[0].DeriveID("add")
 			instrs[i].Invoke = &Invoke{}
 		}
 	}
@@ -855,7 +863,14 @@ func TestService_StateChangeCache(t *testing.T) {
 	s.service().registerContract(contractID, contract)
 
 	scID := s.sb.SkipChainID()
-	coll := s.service().getCollection(scID).coll
+	collDB := s.service().getCollection(scID)
+	collDB.Store(&StateChange{
+		StateAction: Create,
+		InstanceID:  NewInstanceID(s.darc.GetBaseID()).Slice(),
+		ContractID:  []byte(contractID),
+		Value:       []byte{},
+	})
+	coll := collDB.coll
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), contractID, []byte{}, s.signer)
 	require.Nil(t, err)
 

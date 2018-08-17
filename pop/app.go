@@ -767,8 +767,7 @@ func omniStore(c *cli.Context) error {
 			}},
 		},
 	}
-	err = inst.SignBy(cfg.GenesisDarc.GetBaseID(), *signer)
-	// err = inst.SignBy(orgDarc.GetBaseID(), *signer)
+	err = inst.SignBy(orgDarc.GetBaseID(), *signer)
 	if err != nil {
 		return err
 	}
@@ -781,7 +780,7 @@ func omniStore(c *cli.Context) error {
 		return err
 	}
 
-	return errors.New("not yet implemented")
+	return nil
 }
 
 // getConfigClient returns the configuration and a client-structure.

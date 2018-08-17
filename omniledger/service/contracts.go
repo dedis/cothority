@@ -234,6 +234,7 @@ func (s *Service) spawnContractConfig(cdb CollectionView, inst Instruction, coin
 //   - Invoke.Evolve - evolves an existing darc
 func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
 	cOut = coins
+	if cdb.verifyInstruction(scID, inst)
 	switch {
 	case inst.Spawn != nil:
 		if inst.Spawn.ContractID == ContractDarcID {
@@ -247,11 +248,7 @@ func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coi
 				NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
 			}, coins, nil
 		}
-		// TODO The code below will never get called because this
-		// contract is used only when tx.Spawn.ContractID is "darc", so
-		// the if statement above gets executed and this contract
-		// returns. Why do we need this part, if we do, how should we
-		// fix it?
+
 		c, found := s.contracts[inst.Spawn.ContractID]
 		if !found {
 			return nil, nil, errors.New("couldn't find this contract type")

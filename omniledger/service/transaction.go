@@ -129,15 +129,7 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 //
 // TODO: Deprecate/remove this; the state return is almost always ignored.
 func (instr Instruction) GetContractState(coll CollectionView) (contractID string, state []byte, err error) {
-	// Getting the kind is different for instructions that create a key
-	// and for instructions that send a call to an existing key.
-	if instr.Spawn != nil {
-		// Spawning instructions have the contractID directly in the instruction.
-		return instr.Spawn.ContractID, nil, nil
-	}
-
-	// For existing keys, we need to go look the kind up in our database
-	// to find the kind.
+	// Look the kind up in our database to find the kind.
 	kv := coll.Get(instr.InstanceID.Slice())
 	var record collection.Record
 	record, err = kv.Record()
@@ -147,6 +139,12 @@ func (instr Instruction) GetContractState(coll CollectionView) (contractID strin
 	var cv []interface{}
 	cv, err = record.Values()
 	if err != nil {
+		configIID := InstanceID{}
+		if bytes.Compare(instr.InstanceID[:], configIID[:]) == 0 {
+			// Special case: first time call to genesis-configuration must return
+			// correct contract type.
+			return ContractConfigID, nil, nil
+		}
 		return
 	}
 	var ok bool

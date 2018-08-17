@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
@@ -35,6 +36,10 @@ type CollectionView interface {
 	// an error if something went wrong. A non-existing key returns an
 	// error.
 	GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error)
+
+	verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error
+
+	getInstanceDarc(iid InstanceID) (*darc.Darc, error)
 }
 
 // roCollection is a wrapper for a collection that satisfies interface
@@ -55,6 +60,14 @@ func (r *roCollection) Get(key []byte) collection.Getter {
 // does not exist, it returns an error.
 func (r *roCollection) GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error) {
 	return getValueContract(r, key)
+}
+
+func (r *roCollection) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
+	return verifyInstruction(r, scID, instr)
+}
+
+func (r *roCollection) getInstanceDarc(iid InstanceID) (*darc.Darc, error) {
+	return getInstanceDarc(r, iid)
 }
 
 // OmniLedgerContract is the type signature of the class functions
@@ -323,6 +336,64 @@ func (c *collectionDB) tryHash(ts []StateChange) (mr []byte, rerr error) {
 	}
 	mr = c.coll.GetRoot()
 	return
+}
+
+func (c *collectionDB) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
+	return verifyInstruction(&roCollection{c.coll}, scID, instr)
+}
+func verifyInstruction(c CollectionView, scID skipchain.SkipBlockID, instr Instruction) error {
+	d, err := getInstanceDarc(c, instr.InstanceID)
+	if err != nil {
+		return errors.New("darc not found: " + err.Error())
+	}
+	req, err := instr.ToDarcRequest(d.GetBaseID())
+	if err != nil {
+		return errors.New("couldn't create darc request: " + err.Error())
+	}
+	// Verify the request is signed by appropriate identities.
+	// A callback is required to get any delegated DARC(s) during
+	// expression evaluation.
+	err = req.VerifyWithCB(d, func(str string, latest bool) *darc.Darc {
+		if len(str) < 5 || string(str[0:5]) != "darc:" {
+			return nil
+		}
+		darcID, err := hex.DecodeString(str[5:])
+		if err != nil {
+			return nil
+		}
+		d, err := LoadDarcFromColl(c, darcID)
+		if err != nil {
+			return nil
+		}
+		return d
+	})
+	if err != nil {
+		return errors.New("request verification failed: " + err.Error())
+	}
+	return nil
+}
+
+func (c *collectionDB) getInstanceDarc(iid InstanceID) (*darc.Darc, error) {
+	return getInstanceDarc(&roCollection{c.coll}, iid)
+}
+
+func getInstanceDarc(c CollectionView, iid InstanceID) (*darc.Darc, error) {
+	// From instance ID, find the darcID that controls access to it.
+	_, _, dID, err := c.GetValues(iid.Slice())
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch the darc itself.
+	value, contract, _, err := c.GetValues(dID)
+	if err != nil {
+		return nil, err
+	}
+
+	if string(contract) != ContractDarcID {
+		return nil, fmt.Errorf("for instance %v, expected Kind to be 'darc' but got '%v'", iid, string(contract))
+	}
+	return darc.NewFromProtobuf(value)
 }
 
 // RegisterContract stores the contract in a map and will
