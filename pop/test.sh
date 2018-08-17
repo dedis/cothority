@@ -7,7 +7,8 @@ DBG_APP=2
 NBR_CLIENTS=4
 NBR_SERVERS=3
 NBR_SERVERS_GROUP=$NBR_SERVERS
-. $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
+
+. "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
 
 MERGE_FILE=""
 main(){
@@ -24,24 +25,24 @@ main(){
 	addr[2]=localhost:2004
 	addr[3]=localhost:2006
 
-	test Build
-	test Check
-	test OrgLink
-	test Save
-	test OrgConfig
-	test AtCreate
-	test OrgPublic
-	test OrgPublic2
-	test OrgFinal1
-	test OrgFinal2
-	test OrgFinal3
-	test AtJoin
-	test AtSign
-	test AuthStore
-	test AtVerify
-	test AtMultipleKey
-	test Merge
-	test PropagateConfig
+	run testBuild
+	run testCheck
+	run testOrgLink
+	run testSave
+	run testOrgConfig
+	run testAtCreate
+	run testOrgPublic
+	run testOrgPublic2
+	run testOrgFinal1
+	run testOrgFinal2
+	run testOrgFinal3
+	run testAtJoin
+	run testAtSign
+	run testAuthStore
+	run testAtVerify
+	run testAtMultipleKey
+	run testMerge
+	run testPropagateConfig
 	stopTest
 }
 
