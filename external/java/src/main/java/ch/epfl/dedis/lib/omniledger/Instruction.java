@@ -28,10 +28,11 @@ public class Instruction {
 
     /**
      * Use this constructor if it is a spawn instruction, i.e. you want to create a new object.
-     * @param nonce The nonce of the object.
-     * @param index The index of the instruction in the atomic set.
+     *
+     * @param nonce  The nonce of the object.
+     * @param index  The index of the instruction in the atomic set.
      * @param length The length of the atomic set.
-     * @param spawn The spawn object, which contains the value and the argument.
+     * @param spawn  The spawn object, which contains the value and the argument.
      */
     public Instruction(InstanceId instId, byte[] nonce, int index, int length, Spawn spawn) {
         this.instId = instId;
@@ -43,9 +44,10 @@ public class Instruction {
 
     /**
      * Use this constructor if it is an invoke instruction, i.e. you want to mutate an object.
+     *
      * @param instId The ID of the object, which must be unique.
-     * @param nonce The nonce of the object.
-     * @param index The index of the instruction in the atomic set.
+     * @param nonce  The nonce of the object.
+     * @param index  The index of the instruction in the atomic set.
      * @param length The length of the atomic set.
      * @param invoke The invoke object.
      */
@@ -59,9 +61,10 @@ public class Instruction {
 
     /**
      * Use this constructor if it is a delete instruction, i.e. you want to delete an object.
+     *
      * @param instId The ID of the object, which must be unique.
-     * @param nonce The nonce of the object.
-     * @param index The index of the instruction in the atomic set.
+     * @param nonce  The nonce of the object.
+     * @param index  The index of the instruction in the atomic set.
      * @param length The length of the atomic set.
      * @param delete The delete object.
      */
@@ -89,6 +92,7 @@ public class Instruction {
 
     /**
      * This method computes the sha256 hash of the instruction.
+     *
      * @return The digest.
      */
     public byte[] hash() {
@@ -98,16 +102,16 @@ public class Instruction {
             digest.update(this.nonce);
             digest.update(intToArr4(this.index));
             digest.update(intToArr4(this.length));
-            List<Argument> args= new ArrayList<>();
+            List<Argument> args = new ArrayList<>();
             if (this.spawn != null) {
-                digest.update((byte)(0));
+                digest.update((byte) (0));
                 digest.update(this.spawn.getContractId().getBytes());
                 args = this.spawn.getArguments();
             } else if (this.invoke != null) {
-                digest.update((byte)(1));
+                digest.update((byte) (1));
                 args = this.invoke.getArguments();
             } else if (this.delete != null) {
-                digest.update((byte)(2));
+                digest.update((byte) (2));
             }
             for (Argument a : args) {
                 digest.update(a.getName().getBytes());
@@ -121,6 +125,7 @@ public class Instruction {
 
     /**
      * Converts this object to the protobuf representation.
+     *
      * @return The protobuf representation.
      */
     public OmniLedgerProto.Instruction toProto() {
@@ -145,11 +150,12 @@ public class Instruction {
     /**
      * Outputs the action of the instruction, this action be the same as an action in the corresponding darc. Otherwise
      * this instruction may not be accepted.
+     *
      * @return The action.
      */
     public String action() {
         String a = "invalid";
-        if (this.spawn != null ) {
+        if (this.spawn != null) {
             a = "spawn:" + this.spawn.getContractId();
         } else if (this.invoke != null) {
             a = "invoke:" + this.invoke.getCommand();
@@ -161,6 +167,7 @@ public class Instruction {
 
     /**
      * Converts the instruction to a Darc request representation.
+     *
      * @return The Darc request.
      */
     public Request toDarcRequest(DarcId darcId) {
@@ -176,6 +183,7 @@ public class Instruction {
     /**
      * Have a list of signers sign the instruction. The instruction will *not* be accepted by omniledger if it is not
      * signed. The signature will not be valid if the instruction is modified after signing.
+     *
      * @param signers - the list of signers.
      * @throws CothorityCryptoException
      */
@@ -195,6 +203,33 @@ public class Instruction {
         }
     }
 
+    /**
+     * This function derives an instance ID from the instruction with the given string. The derived instance ID if
+     * useful as a key to this instruction.
+     *
+     * @param what - the string that gets mixed into the derived instance ID
+     * @return the instance ID
+     * @throws CothorityCryptoException
+     */
+    public InstanceId deriveId(String what) throws CothorityCryptoException {
+        final byte zero = 0;
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            digest.update(this.hash());
+            digest.update(zero);
+            for (Signature sig : this.signatures) {
+                digest.update(sig.signature);
+                digest.update(zero);
+            }
+            digest.update(what.getBytes());
+            digest.update(zero);
+            return new InstanceId(digest.digest());
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     private static byte[] intToArr4(int x) {
         ByteBuffer b = ByteBuffer.allocate(4);
         b.order(ByteOrder.LITTLE_ENDIAN);
@@ -202,9 +237,9 @@ public class Instruction {
         return b.array();
     }
 
-    public static byte[] genNonce()  {
+    public static byte[] genNonce() {
         SecureRandom sr = new SecureRandom();
-        byte[] nonce  = new byte[32];
+        byte[] nonce = new byte[32];
         sr.nextBytes(nonce);
         return nonce;
     }
