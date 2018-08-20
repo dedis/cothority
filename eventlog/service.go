@@ -304,6 +304,12 @@ func (s *Service) spawn(v omniledger.CollectionView, inst omniledger.Instruction
 // contractFunction is the function that runs to process a transaction of
 // type "eventlog"
 func (s *Service) contractFunction(v omniledger.CollectionView, inst omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
+
+	err := inst.VerifyDarcSignature(v)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	switch inst.GetType() {
 	case omniledger.InvokeType:
 		return s.invoke(v, inst, c)

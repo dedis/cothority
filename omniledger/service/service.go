@@ -4,7 +4,6 @@ package service
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
@@ -166,7 +165,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	// reference to the actual genesis transaction.
 	transaction := []ClientTransaction{{
 		Instructions: []Instruction{{
-			InstanceID: NewInstanceID(req.GenesisDarc.GetID()),
+			InstanceID: ConfigInstanceID,
 			Nonce:      Nonce{},
 			Index:      0,
 			Length:     1,
@@ -258,61 +257,6 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 	s.skService().SetPropTimeout(p)
 }
 
-func (s *Service) verifyAndFilterTxs(scID skipchain.SkipBlockID, ts []ClientTransaction) []ClientTransaction {
-	var validTxs []ClientTransaction
-	for i, t := range ts {
-		if err := s.verifyClientTx(scID, t); err != nil {
-			log.Errorf("%v tx #%v, %v", s.ServerIdentity(), i, err)
-			continue
-		}
-		validTxs = append(validTxs, t)
-	}
-	return validTxs
-}
-
-func (s *Service) verifyClientTx(scID skipchain.SkipBlockID, tx ClientTransaction) error {
-	for i, instr := range tx.Instructions {
-		if err := s.verifyInstruction(scID, instr); err != nil {
-			log.Errorf("%v instr #%v, %v", s.ServerIdentity(), i, err)
-			return err
-		}
-	}
-	return nil
-}
-
-func (s *Service) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
-	d, err := s.loadLatestDarc(scID, instr.InstanceID)
-	if err != nil {
-		return errors.New("darc not found: " + err.Error())
-	}
-	req, err := instr.ToDarcRequest(d.GetBaseID())
-	if err != nil {
-		return errors.New("couldn't create darc request: " + err.Error())
-	}
-	// Verify the request is signed by appropriate identities.
-	// A callback is required to get any delegated DARC(s) during
-	// expression evaluation.
-	view := s.GetCollectionView(scID)
-	err = req.VerifyWithCB(d, func(str string, latest bool) *darc.Darc {
-		if len(str) < 5 || string(str[0:5]) != "darc:" {
-			return nil
-		}
-		darcID, err := hex.DecodeString(str[5:])
-		if err != nil {
-			return nil
-		}
-		d, err := LoadDarcFromColl(view, darcID)
-		if err != nil {
-			return nil
-		}
-		return d
-	})
-	if err != nil {
-		return errors.New("request verification failed: " + err.Error())
-	}
-	return nil
-}
-
 // createNewBlock creates a new block and proposes it to the
 // skipchain-service. Once the block has been created, we
 // inform all nodes to update their internal collections
@@ -350,10 +294,6 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 			sb.Roster = r
 		}
 
-		cts = s.verifyAndFilterTxs(sb.SkipChainID(), cts)
-		if len(cts) == 0 {
-			return nil, errors.New("no valid transaction")
-		}
 		coll = s.getCollection(scID).coll
 	}
 
@@ -544,15 +484,7 @@ func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
 // LoadGenesisDarc loads the genesis darc of the given skipchain ID.
 func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error) {
 	coll := s.GetCollectionView(scID)
-	// Find the genesis-darc ID.
-	_, contract, darcID, err := getValueContract(coll, NewInstanceID(nil).Slice())
-	if err != nil {
-		return nil, err
-	}
-	if string(contract) != ContractConfigID {
-		return nil, errors.New("did not get " + ContractConfigID)
-	}
-	return s.loadLatestDarc(scID, NewInstanceID(darcID))
+	return getInstanceDarc(coll, ConfigInstanceID)
 }
 
 // LoadBlockInterval loads the block interval from the skipchain ID.
@@ -572,31 +504,6 @@ func (s *Service) EnableViewChange() {
 	s.skService().EnableViewChange()
 	s.heartbeats = newHeartbeats()
 	s.monitorLeaderFailure()
-}
-
-func (s *Service) loadLatestDarc(scID skipchain.SkipBlockID, iid InstanceID) (*darc.Darc, error) {
-	colldb := s.getCollection(scID)
-	if colldb == nil {
-		return nil, fmt.Errorf("collection for skipchain ID %s does not exist", scID.Short())
-	}
-	coll := &roCollection{colldb.coll}
-
-	// From instance ID, find the darcID that controls access to it.
-	_, _, dID, err := coll.GetValues(iid.Slice())
-	if err != nil {
-		return nil, err
-	}
-
-	// Fetch the darc itself.
-	value, contract, _, err := coll.GetValues(dID)
-	if err != nil {
-		return nil, err
-	}
-
-	if string(contract) != ContractDarcID {
-		return nil, fmt.Errorf("for instance %v, expected Kind to be 'darc' but got '%v'", iid, string(contract))
-	}
-	return darc.NewFromProtobuf(value)
 }
 
 func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duration) chan bool {
@@ -702,6 +609,10 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 // We use the OmniLedger as a receiver (as is done in the identity service),
 // so we can access e.g. the collectionDBs of the service.
 func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
+	start := time.Now()
+	defer func() {
+		log.Lvlf3("%s: Verify done after %s", s.ServerIdentity(), time.Now().Sub(start))
+	}()
 	_, headerI, err := network.Unmarshal(newSB.Data, cothority.Suite)
 	header, ok := headerI.(*DataHeader)
 	if err != nil || !ok {
@@ -773,10 +684,10 @@ func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain
 	// ignore the error and compute the state changes.
 	merkleRoot, ctsOK, ctsBad, states, err = s.stateChangeCache.get(scID, cts.Hash())
 	if err == nil {
-		log.Lvl4(s.ServerIdentity(), "state changes from cache: HIT")
+		log.Lvl3(s.ServerIdentity(), "loaded state changes from cache")
 		return
 	}
-	log.Lvl4(s.ServerIdentity(), "state changes from cache: MISS")
+	log.Lvl3(s.ServerIdentity(), "state changes from cache: MISS")
 	err = nil
 
 	deadline := time.Now().Add(timeout)

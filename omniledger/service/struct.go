@@ -325,6 +325,25 @@ func (c *collectionDB) tryHash(ts []StateChange) (mr []byte, rerr error) {
 	return
 }
 
+func getInstanceDarc(c CollectionView, iid InstanceID) (*darc.Darc, error) {
+	// From instance ID, find the darcID that controls access to it.
+	_, _, dID, err := c.GetValues(iid.Slice())
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch the darc itself.
+	value, contract, _, err := c.GetValues(dID)
+	if err != nil {
+		return nil, err
+	}
+
+	if string(contract) != ContractDarcID {
+		return nil, fmt.Errorf("for instance %v, expected Kind to be 'darc' but got '%v'", iid, string(contract))
+	}
+	return darc.NewFromProtobuf(value)
+}
+
 // RegisterContract stores the contract in a map and will
 // call it whenever a contract needs to be done.
 // GetService makes it possible to give either an `onet.Context` or
