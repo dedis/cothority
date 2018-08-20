@@ -234,7 +234,6 @@ func (s *Service) spawnContractConfig(cdb CollectionView, inst Instruction, coin
 //   - Invoke.Evolve - evolves an existing darc
 func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
 	cOut = coins
-	if cdb.verifyInstruction(scID, inst)
 	switch {
 	case inst.Spawn != nil:
 		if inst.Spawn.ContractID == ContractDarcID {
