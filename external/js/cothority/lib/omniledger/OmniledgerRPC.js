@@ -19,8 +19,8 @@ class OmniledgerRPC {
    * @param {Config} config - the configuration of the OmniLedger
    * @param {cothority.Roster} roster - the roster of the OmniLedger
    * @param {Darc} genesisDarc - the genesis Darc
-   * @param {SkipBlock} genesis - the first block of the skipchain
-   * @param {SkipBlock} latest - the last block of the skipchain
+   * @param {Object} genesis - the first block of the skipchain, in Protobuf literral JS object
+   * @param {Object} latest - the last block of the skipchain, in Protobuf literral JS object
    * @param {Uint8Array} skipchainID - the ID of the skipchain (aka the
    * ID of the genesis skipblock)
    * @param {SkipchainClient} skipchain - an RPC to talk with the skipchain
