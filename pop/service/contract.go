@@ -3,8 +3,11 @@ package service
 import (
 	"errors"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/omniledger/darc"
 	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
 )
 
 // This file holds the contracts for the pop-party. The following contracts
@@ -23,9 +26,25 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 	cOut = coins
 	switch {
 	case inst.Spawn != nil:
-		cfg := inst.Spawn.Args.Search("PartyConfig")
+		fsBuf := inst.Spawn.Args.Search("FinalStatement")
+		if fsBuf == nil {
+			return nil, nil, errors.New("need FinalStatement argument")
+		}
+		ppData := &PopPartyInstance{
+			State:          1,
+			FinalStatement: &FinalStatement{},
+		}
+		err = protobuf.DecodeWithConstructors(fsBuf, ppData.
+			FinalStatement, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return nil, nil, errors.New("couldn't unmarshal the final statement: " + err.Error())
+		}
+		ppiBuf, err := protobuf.Encode(ppData)
+		if err != nil {
+			return nil, nil, errors.New("couldn't marshal PopPartyInstance: " + err.Error())
+		}
 		return ol.StateChanges{
-			ol.NewStateChange(ol.Create, inst.DeriveID("config"), inst.Spawn.ContractID, cfg, darc.ID(inst.InstanceID[:])),
+			ol.NewStateChange(ol.Create, inst.DeriveID(""), inst.Spawn.ContractID, ppiBuf, darc.ID(inst.InstanceID[:])),
 		}, cOut, nil
 	case inst.Invoke != nil:
 		// switch inst.Invoke.Command {

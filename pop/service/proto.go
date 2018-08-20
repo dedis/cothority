@@ -16,7 +16,8 @@ func init() {
 		PinRequest{}, FetchRequest{}, MergeRequest{},
 		StoreConfig{}, StoreConfigReply{},
 		GetProposals{}, GetProposalsReply{},
-		VerifyLink{}, VerifyLinkReply{})
+		VerifyLink{}, VerifyLinkReply{},
+		PopPartyInstance{})
 }
 
 // PROTOSTART
@@ -178,4 +179,15 @@ type GetFinalStatements struct {
 // GetFinalStatementsReply returns all stored final statements.
 type GetFinalStatementsReply struct {
 	FinalStatements map[string]*FinalStatement
+}
+
+// PopPartyInstance is the data that is stored in a pop-party instance.
+type PopPartyInstance struct {
+	// State has one of the following values:
+	// 1: it is a configuration only
+	// 2: it is a finalized pop-party
+	State int
+	// FinalStatement has either only the Desc inside if State == 1, or all fields
+	// set if State == 2.
+	FinalStatement *FinalStatement
 }

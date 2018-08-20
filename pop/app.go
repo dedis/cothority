@@ -762,7 +762,7 @@ func omniStore(c *cli.Context) error {
 		Spawn: &ol.Spawn{
 			ContractID: service.ContractPopParty,
 			Args: ol.Arguments{{
-				Name:  "PartyConfig",
+				Name:  "FinalStatement",
 				Value: partyConfigBuf,
 			}},
 		},
