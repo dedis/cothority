@@ -1,5 +1,5 @@
-// Package service is a SCARAB implementation,  a  secure  and  decentralized
-// data-sharing  platform  with access-control and auditability.
+// Package service is a CALYPSO implementation, a secure and decentralized
+// data-sharing platform with access-control and auditability.
 //
 // Please see
 // https://github.com/dedis/cothority/blob/master/ocs/service/README.md for
