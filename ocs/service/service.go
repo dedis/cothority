@@ -38,6 +38,7 @@ const timestampRange = 60
 
 var storageKey = []byte("storage")
 var darcsKey = []byte("darcs")
+var dbVersion = 1
 
 func init() {
 	network.RegisterMessages(Storage{}, vData{})
@@ -854,6 +855,7 @@ func (s *Service) save() {
 	if err != nil {
 		log.Error("Couldn't save file:", err)
 	}
+	s.SaveVersion(dbVersion)
 }
 
 // Tries to load the configuration and updates if a configuration

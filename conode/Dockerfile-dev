@@ -1,12 +1,12 @@
 FROM golang:1.10
 WORKDIR /root/
-COPY exe/conode.Linux.x86_64 ./conode
 COPY setup-then-start.sh .
 COPY run_conode.sh .
 RUN mkdir /conode_data
 RUN mkdir -p .local/share .config
 RUN ln -s /conode_data .local/share/conode
 RUN ln -s /conode_data .config/conode
+COPY exe/conode.Linux.x86_64 ./conode
 
 EXPOSE 6879 6880
 

@@ -325,7 +325,7 @@ func TestCrashAfterRevocation(t *testing.T) {
 	for _, srvc := range services {
 		s := srvc.(*Service)
 		log.Lvl3(s.Storage.Identities)
-		s.Storage.Auth.Sets = append(s.Storage.Auth.Sets, anonSet{Set: set})
+		s.Storage.Auth.Sets = append(s.Storage.Auth.Sets, anonSet1{Set: set})
 	}
 
 	c1 := NewIdentity(roster, 2, "one", kp1)
@@ -439,7 +439,7 @@ func createIdentity(l *onet.LocalTest, services []onet.Service, roster *onet.Ros
 	set := anon.Set([]kyber.Point{kp1.Public, kp2.Public})
 	for _, srvc := range services {
 		s := srvc.(*Service)
-		s.Storage.Auth.Sets = append(s.Storage.Auth.Sets, anonSet{Set: set})
+		s.Storage.Auth.Sets = append(s.Storage.Auth.Sets, anonSet1{Set: set})
 	}
 
 	c := NewTestIdentity(roster, 50, name, l, kp1)

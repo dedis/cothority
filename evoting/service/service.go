@@ -46,6 +46,7 @@ var serviceID onet.ServiceID
 
 // storageKey identifies the on-disk storage.
 var storageKey = []byte("storage")
+var dbVersion = 1
 
 // Service is the core structure of the application.
 type Service struct {
@@ -738,6 +739,9 @@ func (s *Service) save() {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
 	if err := s.Save(storageKey, s.storage); err != nil {
+		log.Error(err)
+	}
+	if err := s.SaveVersion(dbVersion); err != nil {
 		log.Error(err)
 	}
 }

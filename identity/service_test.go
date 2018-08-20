@@ -26,7 +26,7 @@ func TestService_CreateIdentity2(t *testing.T) {
 	kp := key.NewKeyPair(tSuite)
 	kp2 := key.NewKeyPair(tSuite)
 	set := anon.Set([]kyber.Point{kp.Public, kp2.Public})
-	service.Storage.Auth.Sets = append(service.Storage.Auth.Sets, anonSet{Set: set})
+	service.Storage.Auth.Sets = append(service.Storage.Auth.Sets, anonSet1{Set: set})
 
 	da := NewData(ro, 50, kp.Public, "one")
 	ci := &CreateIdentity{}

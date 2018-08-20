@@ -82,6 +82,7 @@ var mergeCheckID network.MessageTypeID
 var mergeCheckReplyID network.MessageTypeID
 
 var storageKey = []byte("storage")
+var dbVersion = 1
 
 // Service represents data needed for one pop-party.
 type Service struct {
@@ -974,6 +975,7 @@ func (s *Service) save() {
 	if err != nil {
 		log.Error("Couldn't save data:", err)
 	}
+	s.SaveVersion(dbVersion)
 }
 
 // Tries to load the configuration and updates if a configuration
