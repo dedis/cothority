@@ -76,9 +76,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -780,7 +777,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ShortDesc(input, extensionRegistry);
+          return new ShortDesc(input, extensionRegistry);
       }
     };
 
@@ -986,9 +983,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2613,7 +2607,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new PopDesc(input, extensionRegistry);
+          return new PopDesc(input, extensionRegistry);
       }
     };
 
@@ -2705,7 +2699,7 @@ public final class PoPProto {
 
     /**
      * <pre>
-     * Flag indicates, that party was merged
+     * Flag indicates that party was merged
      * </pre>
      *
      * <code>required bool merged = 4;</code>
@@ -2713,7 +2707,7 @@ public final class PoPProto {
     boolean hasMerged();
     /**
      * <pre>
-     * Flag indicates, that party was merged
+     * Flag indicates that party was merged
      * </pre>
      *
      * <code>required bool merged = 4;</code>
@@ -2753,9 +2747,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2927,7 +2918,7 @@ public final class PoPProto {
     private boolean merged_;
     /**
      * <pre>
-     * Flag indicates, that party was merged
+     * Flag indicates that party was merged
      * </pre>
      *
      * <code>required bool merged = 4;</code>
@@ -2937,7 +2928,7 @@ public final class PoPProto {
     }
     /**
      * <pre>
-     * Flag indicates, that party was merged
+     * Flag indicates that party was merged
      * </pre>
      *
      * <code>required bool merged = 4;</code>
@@ -3674,7 +3665,7 @@ public final class PoPProto {
       private boolean merged_ ;
       /**
        * <pre>
-       * Flag indicates, that party was merged
+       * Flag indicates that party was merged
        * </pre>
        *
        * <code>required bool merged = 4;</code>
@@ -3684,7 +3675,7 @@ public final class PoPProto {
       }
       /**
        * <pre>
-       * Flag indicates, that party was merged
+       * Flag indicates that party was merged
        * </pre>
        *
        * <code>required bool merged = 4;</code>
@@ -3694,7 +3685,7 @@ public final class PoPProto {
       }
       /**
        * <pre>
-       * Flag indicates, that party was merged
+       * Flag indicates that party was merged
        * </pre>
        *
        * <code>required bool merged = 4;</code>
@@ -3707,7 +3698,7 @@ public final class PoPProto {
       }
       /**
        * <pre>
-       * Flag indicates, that party was merged
+       * Flag indicates that party was merged
        * </pre>
        *
        * <code>required bool merged = 4;</code>
@@ -3748,7 +3739,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FinalStatement(input, extensionRegistry);
+          return new FinalStatement(input, extensionRegistry);
       }
     };
 
@@ -3824,9 +3815,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4400,7 +4388,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CheckConfig(input, extensionRegistry);
+          return new CheckConfig(input, extensionRegistry);
       }
     };
 
@@ -4489,9 +4477,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5152,7 +5137,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CheckConfigReply(input, extensionRegistry);
+          return new CheckConfigReply(input, extensionRegistry);
       }
     };
 
@@ -5247,9 +5232,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5952,7 +5934,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new MergeConfig(input, extensionRegistry);
+          return new MergeConfig(input, extensionRegistry);
       }
     };
 
@@ -6065,9 +6047,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6878,7 +6857,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new MergeConfigReply(input, extensionRegistry);
+          return new MergeConfigReply(input, extensionRegistry);
       }
     };
 
@@ -6957,9 +6936,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7552,7 +7528,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new PinRequest(input, extensionRegistry);
+          return new PinRequest(input, extensionRegistry);
       }
     };
 
@@ -7627,9 +7603,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8260,7 +8233,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreConfig(input, extensionRegistry);
+          return new StoreConfig(input, extensionRegistry);
       }
     };
 
@@ -8324,9 +8297,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8762,7 +8732,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreConfigReply(input, extensionRegistry);
+          return new StoreConfigReply(input, extensionRegistry);
       }
     };
 
@@ -8848,9 +8818,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9511,7 +9478,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FinalizeRequest(input, extensionRegistry);
+          return new FinalizeRequest(input, extensionRegistry);
       }
     };
 
@@ -9578,9 +9545,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -10126,7 +10090,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FinalizeResponse(input, extensionRegistry);
+          return new FinalizeResponse(input, extensionRegistry);
       }
     };
 
@@ -10198,9 +10162,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -10712,7 +10673,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FetchRequest(input, extensionRegistry);
+          return new FetchRequest(input, extensionRegistry);
       }
     };
 
@@ -10784,9 +10745,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -11307,7 +11265,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new MergeRequest(input, extensionRegistry);
+          return new MergeRequest(input, extensionRegistry);
       }
     };
 
@@ -11361,9 +11319,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -11706,7 +11661,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetProposals(input, extensionRegistry);
+          return new GetProposals(input, extensionRegistry);
       }
     };
 
@@ -11783,9 +11738,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12482,7 +12434,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetProposalsReply(input, extensionRegistry);
+          return new GetProposalsReply(input, extensionRegistry);
       }
     };
 
@@ -12544,9 +12496,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12980,7 +12929,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new VerifyLink(input, extensionRegistry);
+          return new VerifyLink(input, extensionRegistry);
       }
     };
 
@@ -13042,9 +12991,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -13476,7 +13422,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new VerifyLinkReply(input, extensionRegistry);
+          return new VerifyLinkReply(input, extensionRegistry);
       }
     };
 
@@ -13490,6 +13436,2822 @@ public final class PoPProto {
     }
 
     public ch.epfl.dedis.proto.PoPProto.VerifyLinkReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetLinkOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetLink)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * GetLink returns the public key of the linked organizer.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetLink}
+   */
+  public  static final class GetLink extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetLink)
+      GetLinkOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetLink.newBuilder() to construct.
+    private GetLink(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetLink() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetLink(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLink_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLink_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetLink.class, ch.epfl.dedis.proto.PoPProto.GetLink.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetLink)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetLink other = (ch.epfl.dedis.proto.PoPProto.GetLink) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetLink prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetLink returns the public key of the linked organizer.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetLink}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetLink)
+        ch.epfl.dedis.proto.PoPProto.GetLinkOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLink_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLink_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetLink.class, ch.epfl.dedis.proto.PoPProto.GetLink.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetLink.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLink_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetLink getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetLink.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetLink build() {
+        ch.epfl.dedis.proto.PoPProto.GetLink result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetLink buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetLink result = new ch.epfl.dedis.proto.PoPProto.GetLink(this);
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetLink) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetLink)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetLink other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetLink.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetLink parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetLink) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetLink)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetLink)
+    private static final ch.epfl.dedis.proto.PoPProto.GetLink DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetLink();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetLink getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetLink>
+        PARSER = new com.google.protobuf.AbstractParser<GetLink>() {
+      public GetLink parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetLink(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetLink> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetLink> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetLink getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetLinkReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetLinkReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    boolean hasPublic();
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    com.google.protobuf.ByteString getPublic();
+  }
+  /**
+   * <pre>
+   * GetLinkReply holds the public key of the linked organizer.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetLinkReply}
+   */
+  public  static final class GetLinkReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetLinkReply)
+      GetLinkReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetLinkReply.newBuilder() to construct.
+    private GetLinkReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetLinkReply() {
+      public_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetLinkReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              public_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLinkReply_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLinkReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetLinkReply.class, ch.epfl.dedis.proto.PoPProto.GetLinkReply.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PUBLIC_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString public_;
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    public boolean hasPublic() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPublic() {
+      return public_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPublic()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, public_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, public_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetLinkReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetLinkReply other = (ch.epfl.dedis.proto.PoPProto.GetLinkReply) obj;
+
+      boolean result = true;
+      result = result && (hasPublic() == other.hasPublic());
+      if (hasPublic()) {
+        result = result && getPublic()
+            .equals(other.getPublic());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPublic()) {
+        hash = (37 * hash) + PUBLIC_FIELD_NUMBER;
+        hash = (53 * hash) + getPublic().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetLinkReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetLinkReply holds the public key of the linked organizer.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetLinkReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetLinkReply)
+        ch.epfl.dedis.proto.PoPProto.GetLinkReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLinkReply_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLinkReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetLinkReply.class, ch.epfl.dedis.proto.PoPProto.GetLinkReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetLinkReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        public_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLinkReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetLinkReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetLinkReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetLinkReply build() {
+        ch.epfl.dedis.proto.PoPProto.GetLinkReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetLinkReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetLinkReply result = new ch.epfl.dedis.proto.PoPProto.GetLinkReply(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.public_ = public_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetLinkReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetLinkReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetLinkReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetLinkReply.getDefaultInstance()) return this;
+        if (other.hasPublic()) {
+          setPublic(other.getPublic());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPublic()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetLinkReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetLinkReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public boolean hasPublic() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPublic() {
+        return public_;
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public Builder setPublic(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        public_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public Builder clearPublic() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        public_ = getDefaultInstance().getPublic();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetLinkReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetLinkReply)
+    private static final ch.epfl.dedis.proto.PoPProto.GetLinkReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetLinkReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetLinkReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetLinkReply>() {
+      public GetLinkReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetLinkReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetLinkReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetLinkReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetLinkReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetFinalStatementsOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetFinalStatements)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * GetFinalStatements returns all stored final statements.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetFinalStatements}
+   */
+  public  static final class GetFinalStatements extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetFinalStatements)
+      GetFinalStatementsOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetFinalStatements.newBuilder() to construct.
+    private GetFinalStatements(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetFinalStatements() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetFinalStatements(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatements_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatements_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetFinalStatements.class, ch.epfl.dedis.proto.PoPProto.GetFinalStatements.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetFinalStatements)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetFinalStatements other = (ch.epfl.dedis.proto.PoPProto.GetFinalStatements) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetFinalStatements prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetFinalStatements returns all stored final statements.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetFinalStatements}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetFinalStatements)
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatementsOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatements_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatements_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetFinalStatements.class, ch.epfl.dedis.proto.PoPProto.GetFinalStatements.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetFinalStatements.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatements_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetFinalStatements getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetFinalStatements.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetFinalStatements build() {
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatements result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetFinalStatements buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatements result = new ch.epfl.dedis.proto.PoPProto.GetFinalStatements(this);
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetFinalStatements) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetFinalStatements)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetFinalStatements other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetFinalStatements.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatements parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetFinalStatements) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetFinalStatements)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetFinalStatements)
+    private static final ch.epfl.dedis.proto.PoPProto.GetFinalStatements DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetFinalStatements();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetFinalStatements>
+        PARSER = new com.google.protobuf.AbstractParser<GetFinalStatements>() {
+      public GetFinalStatements parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetFinalStatements(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetFinalStatements> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetFinalStatements> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetFinalStatements getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetFinalStatementsReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetFinalStatementsReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+    int getFinalstatementsCount();
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+    boolean containsFinalstatements(
+        java.lang.String key);
+    /**
+     * Use {@link #getFinalstatementsMap()} instead.
+     */
+    @java.lang.Deprecated
+    java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+    getFinalstatements();
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+    java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+    getFinalstatementsMap();
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+
+    ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatementsOrDefault(
+        java.lang.String key,
+        ch.epfl.dedis.proto.PoPProto.FinalStatement defaultValue);
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+
+    ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatementsOrThrow(
+        java.lang.String key);
+  }
+  /**
+   * <pre>
+   * GetFinalStatementsReply returns all stored final statements.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetFinalStatementsReply}
+   */
+  public  static final class GetFinalStatementsReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetFinalStatementsReply)
+      GetFinalStatementsReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetFinalStatementsReply.newBuilder() to construct.
+    private GetFinalStatementsReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetFinalStatementsReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetFinalStatementsReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                finalstatements_ = com.google.protobuf.MapField.newMapField(
+                    FinalstatementsDefaultEntryHolder.defaultEntry);
+                mutable_bitField0_ |= 0x00000001;
+              }
+              com.google.protobuf.MapEntry<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+              finalstatements__ = input.readMessage(
+                  FinalstatementsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+              finalstatements_.getMutableMap().put(
+                  finalstatements__.getKey(), finalstatements__.getValue());
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_descriptor;
+    }
+
+    @SuppressWarnings({"rawtypes"})
+    protected com.google.protobuf.MapField internalGetMapField(
+        int number) {
+      switch (number) {
+        case 1:
+          return internalGetFinalstatements();
+        default:
+          throw new RuntimeException(
+              "Invalid map field number: " + number);
+      }
+    }
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.class, ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.Builder.class);
+    }
+
+    public static final int FINALSTATEMENTS_FIELD_NUMBER = 1;
+    private static final class FinalstatementsDefaultEntryHolder {
+      static final com.google.protobuf.MapEntry<
+          java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> defaultEntry =
+              com.google.protobuf.MapEntry
+              .<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>newDefaultInstance(
+                  ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_descriptor, 
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "",
+                  com.google.protobuf.WireFormat.FieldType.MESSAGE,
+                  ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance());
+    }
+    private com.google.protobuf.MapField<
+        java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> finalstatements_;
+    private com.google.protobuf.MapField<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+    internalGetFinalstatements() {
+      if (finalstatements_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(
+            FinalstatementsDefaultEntryHolder.defaultEntry);
+      }
+      return finalstatements_;
+    }
+
+    public int getFinalstatementsCount() {
+      return internalGetFinalstatements().getMap().size();
+    }
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+
+    public boolean containsFinalstatements(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      return internalGetFinalstatements().getMap().containsKey(key);
+    }
+    /**
+     * Use {@link #getFinalstatementsMap()} instead.
+     */
+    @java.lang.Deprecated
+    public java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> getFinalstatements() {
+      return getFinalstatementsMap();
+    }
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+
+    public java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> getFinalstatementsMap() {
+      return internalGetFinalstatements().getMap();
+    }
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+
+    public ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatementsOrDefault(
+        java.lang.String key,
+        ch.epfl.dedis.proto.PoPProto.FinalStatement defaultValue) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> map =
+          internalGetFinalstatements().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+
+    public ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatementsOrThrow(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> map =
+          internalGetFinalstatements().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
+      }
+      return map.get(key);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      for (ch.epfl.dedis.proto.PoPProto.FinalStatement item : getFinalstatementsMap().values()) {
+        if (!item.isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      com.google.protobuf.GeneratedMessageV3
+        .serializeStringMapTo(
+          output,
+          internalGetFinalstatements(),
+          FinalstatementsDefaultEntryHolder.defaultEntry,
+          1);
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (java.util.Map.Entry<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> entry
+           : internalGetFinalstatements().getMap().entrySet()) {
+        com.google.protobuf.MapEntry<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+        finalstatements__ = FinalstatementsDefaultEntryHolder.defaultEntry.newBuilderForType()
+            .setKey(entry.getKey())
+            .setValue(entry.getValue())
+            .build();
+        size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, finalstatements__);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply other = (ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply) obj;
+
+      boolean result = true;
+      result = result && internalGetFinalstatements().equals(
+          other.internalGetFinalstatements());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (!internalGetFinalstatements().getMap().isEmpty()) {
+        hash = (37 * hash) + FINALSTATEMENTS_FIELD_NUMBER;
+        hash = (53 * hash) + internalGetFinalstatements().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetFinalStatementsReply returns all stored final statements.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetFinalStatementsReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetFinalStatementsReply)
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_descriptor;
+      }
+
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMapField(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetFinalstatements();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMutableMapField(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetMutableFinalstatements();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.class, ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        internalGetMutableFinalstatements().clear();
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply build() {
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply result = new ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply(this);
+        int from_bitField0_ = bitField0_;
+        result.finalstatements_ = internalGetFinalstatements();
+        result.finalstatements_.makeImmutable();
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.getDefaultInstance()) return this;
+        internalGetMutableFinalstatements().mergeFrom(
+            other.internalGetFinalstatements());
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        for (ch.epfl.dedis.proto.PoPProto.FinalStatement item : getFinalstatementsMap().values()) {
+          if (!item.isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.MapField<
+          java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> finalstatements_;
+      private com.google.protobuf.MapField<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+      internalGetFinalstatements() {
+        if (finalstatements_ == null) {
+          return com.google.protobuf.MapField.emptyMapField(
+              FinalstatementsDefaultEntryHolder.defaultEntry);
+        }
+        return finalstatements_;
+      }
+      private com.google.protobuf.MapField<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+      internalGetMutableFinalstatements() {
+        onChanged();;
+        if (finalstatements_ == null) {
+          finalstatements_ = com.google.protobuf.MapField.newMapField(
+              FinalstatementsDefaultEntryHolder.defaultEntry);
+        }
+        if (!finalstatements_.isMutable()) {
+          finalstatements_ = finalstatements_.copy();
+        }
+        return finalstatements_;
+      }
+
+      public int getFinalstatementsCount() {
+        return internalGetFinalstatements().getMap().size();
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+
+      public boolean containsFinalstatements(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        return internalGetFinalstatements().getMap().containsKey(key);
+      }
+      /**
+       * Use {@link #getFinalstatementsMap()} instead.
+       */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> getFinalstatements() {
+        return getFinalstatementsMap();
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+
+      public java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> getFinalstatementsMap() {
+        return internalGetFinalstatements().getMap();
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+
+      public ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatementsOrDefault(
+          java.lang.String key,
+          ch.epfl.dedis.proto.PoPProto.FinalStatement defaultValue) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> map =
+            internalGetFinalstatements().getMap();
+        return map.containsKey(key) ? map.get(key) : defaultValue;
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+
+      public ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatementsOrThrow(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> map =
+            internalGetFinalstatements().getMap();
+        if (!map.containsKey(key)) {
+          throw new java.lang.IllegalArgumentException();
+        }
+        return map.get(key);
+      }
+
+      public Builder clearFinalstatements() {
+        internalGetMutableFinalstatements().getMutableMap()
+            .clear();
+        return this;
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+
+      public Builder removeFinalstatements(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableFinalstatements().getMutableMap()
+            .remove(key);
+        return this;
+      }
+      /**
+       * Use alternate mutation accessors instead.
+       */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+      getMutableFinalstatements() {
+        return internalGetMutableFinalstatements().getMutableMap();
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+      public Builder putFinalstatements(
+          java.lang.String key,
+          ch.epfl.dedis.proto.PoPProto.FinalStatement value) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        if (value == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableFinalstatements().getMutableMap()
+            .put(key, value);
+        return this;
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+
+      public Builder putAllFinalstatements(
+          java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> values) {
+        internalGetMutableFinalstatements().getMutableMap()
+            .putAll(values);
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetFinalStatementsReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetFinalStatementsReply)
+    private static final ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetFinalStatementsReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetFinalStatementsReply>() {
+      public GetFinalStatementsReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetFinalStatementsReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetFinalStatementsReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetFinalStatementsReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface PopPartyInstanceOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.PopPartyInstance)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * State has one of the following values:
+     * 1: it is a configuration only
+     * 2: it is a finalized pop-party
+     * </pre>
+     *
+     * <code>required sint32 state = 1;</code>
+     */
+    boolean hasState();
+    /**
+     * <pre>
+     * State has one of the following values:
+     * 1: it is a configuration only
+     * 2: it is a finalized pop-party
+     * </pre>
+     *
+     * <code>required sint32 state = 1;</code>
+     */
+    int getState();
+
+    /**
+     * <pre>
+     * FinalStatement has either only the Desc inside if State == 1, or all fields
+     * set if State == 2.
+     * </pre>
+     *
+     * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+     */
+    boolean hasFinalstatement();
+    /**
+     * <pre>
+     * FinalStatement has either only the Desc inside if State == 1, or all fields
+     * set if State == 2.
+     * </pre>
+     *
+     * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+     */
+    ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatement();
+    /**
+     * <pre>
+     * FinalStatement has either only the Desc inside if State == 1, or all fields
+     * set if State == 2.
+     * </pre>
+     *
+     * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+     */
+    ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder getFinalstatementOrBuilder();
+  }
+  /**
+   * <pre>
+   * PopPartyInstance is the data that is stored in a pop-party instance.
+   * </pre>
+   *
+   * Protobuf type {@code pop.PopPartyInstance}
+   */
+  public  static final class PopPartyInstance extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.PopPartyInstance)
+      PopPartyInstanceOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use PopPartyInstance.newBuilder() to construct.
+    private PopPartyInstance(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private PopPartyInstance() {
+      state_ = 0;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private PopPartyInstance(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              state_ = input.readSInt32();
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = finalstatement_.toBuilder();
+              }
+              finalstatement_ = input.readMessage(ch.epfl.dedis.proto.PoPProto.FinalStatement.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(finalstatement_);
+                finalstatement_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopPartyInstance_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopPartyInstance_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.PopPartyInstance.class, ch.epfl.dedis.proto.PoPProto.PopPartyInstance.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int STATE_FIELD_NUMBER = 1;
+    private int state_;
+    /**
+     * <pre>
+     * State has one of the following values:
+     * 1: it is a configuration only
+     * 2: it is a finalized pop-party
+     * </pre>
+     *
+     * <code>required sint32 state = 1;</code>
+     */
+    public boolean hasState() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * State has one of the following values:
+     * 1: it is a configuration only
+     * 2: it is a finalized pop-party
+     * </pre>
+     *
+     * <code>required sint32 state = 1;</code>
+     */
+    public int getState() {
+      return state_;
+    }
+
+    public static final int FINALSTATEMENT_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.proto.PoPProto.FinalStatement finalstatement_;
+    /**
+     * <pre>
+     * FinalStatement has either only the Desc inside if State == 1, or all fields
+     * set if State == 2.
+     * </pre>
+     *
+     * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+     */
+    public boolean hasFinalstatement() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * FinalStatement has either only the Desc inside if State == 1, or all fields
+     * set if State == 2.
+     * </pre>
+     *
+     * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+     */
+    public ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatement() {
+      return finalstatement_ == null ? ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance() : finalstatement_;
+    }
+    /**
+     * <pre>
+     * FinalStatement has either only the Desc inside if State == 1, or all fields
+     * set if State == 2.
+     * </pre>
+     *
+     * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+     */
+    public ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder getFinalstatementOrBuilder() {
+      return finalstatement_ == null ? ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance() : finalstatement_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasState()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (hasFinalstatement()) {
+        if (!getFinalstatement().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeSInt32(1, state_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getFinalstatement());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(1, state_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getFinalstatement());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.PopPartyInstance)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.PopPartyInstance other = (ch.epfl.dedis.proto.PoPProto.PopPartyInstance) obj;
+
+      boolean result = true;
+      result = result && (hasState() == other.hasState());
+      if (hasState()) {
+        result = result && (getState()
+            == other.getState());
+      }
+      result = result && (hasFinalstatement() == other.hasFinalstatement());
+      if (hasFinalstatement()) {
+        result = result && getFinalstatement()
+            .equals(other.getFinalstatement());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasState()) {
+        hash = (37 * hash) + STATE_FIELD_NUMBER;
+        hash = (53 * hash) + getState();
+      }
+      if (hasFinalstatement()) {
+        hash = (37 * hash) + FINALSTATEMENT_FIELD_NUMBER;
+        hash = (53 * hash) + getFinalstatement().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.PopPartyInstance prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * PopPartyInstance is the data that is stored in a pop-party instance.
+     * </pre>
+     *
+     * Protobuf type {@code pop.PopPartyInstance}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.PopPartyInstance)
+        ch.epfl.dedis.proto.PoPProto.PopPartyInstanceOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopPartyInstance_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopPartyInstance_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.PopPartyInstance.class, ch.epfl.dedis.proto.PoPProto.PopPartyInstance.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.PopPartyInstance.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getFinalstatementFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        state_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (finalstatementBuilder_ == null) {
+          finalstatement_ = null;
+        } else {
+          finalstatementBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopPartyInstance_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.PopPartyInstance getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.PopPartyInstance.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.PopPartyInstance build() {
+        ch.epfl.dedis.proto.PoPProto.PopPartyInstance result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.PopPartyInstance buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.PopPartyInstance result = new ch.epfl.dedis.proto.PoPProto.PopPartyInstance(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.state_ = state_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (finalstatementBuilder_ == null) {
+          result.finalstatement_ = finalstatement_;
+        } else {
+          result.finalstatement_ = finalstatementBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.PopPartyInstance) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.PopPartyInstance)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.PopPartyInstance other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.PopPartyInstance.getDefaultInstance()) return this;
+        if (other.hasState()) {
+          setState(other.getState());
+        }
+        if (other.hasFinalstatement()) {
+          mergeFinalstatement(other.getFinalstatement());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasState()) {
+          return false;
+        }
+        if (hasFinalstatement()) {
+          if (!getFinalstatement().isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.PopPartyInstance parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.PopPartyInstance) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int state_ ;
+      /**
+       * <pre>
+       * State has one of the following values:
+       * 1: it is a configuration only
+       * 2: it is a finalized pop-party
+       * </pre>
+       *
+       * <code>required sint32 state = 1;</code>
+       */
+      public boolean hasState() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * State has one of the following values:
+       * 1: it is a configuration only
+       * 2: it is a finalized pop-party
+       * </pre>
+       *
+       * <code>required sint32 state = 1;</code>
+       */
+      public int getState() {
+        return state_;
+      }
+      /**
+       * <pre>
+       * State has one of the following values:
+       * 1: it is a configuration only
+       * 2: it is a finalized pop-party
+       * </pre>
+       *
+       * <code>required sint32 state = 1;</code>
+       */
+      public Builder setState(int value) {
+        bitField0_ |= 0x00000001;
+        state_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * State has one of the following values:
+       * 1: it is a configuration only
+       * 2: it is a finalized pop-party
+       * </pre>
+       *
+       * <code>required sint32 state = 1;</code>
+       */
+      public Builder clearState() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        state_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.proto.PoPProto.FinalStatement finalstatement_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.PoPProto.FinalStatement, ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder> finalstatementBuilder_;
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public boolean hasFinalstatement() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatement() {
+        if (finalstatementBuilder_ == null) {
+          return finalstatement_ == null ? ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance() : finalstatement_;
+        } else {
+          return finalstatementBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public Builder setFinalstatement(ch.epfl.dedis.proto.PoPProto.FinalStatement value) {
+        if (finalstatementBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          finalstatement_ = value;
+          onChanged();
+        } else {
+          finalstatementBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public Builder setFinalstatement(
+          ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder builderForValue) {
+        if (finalstatementBuilder_ == null) {
+          finalstatement_ = builderForValue.build();
+          onChanged();
+        } else {
+          finalstatementBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public Builder mergeFinalstatement(ch.epfl.dedis.proto.PoPProto.FinalStatement value) {
+        if (finalstatementBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              finalstatement_ != null &&
+              finalstatement_ != ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance()) {
+            finalstatement_ =
+              ch.epfl.dedis.proto.PoPProto.FinalStatement.newBuilder(finalstatement_).mergeFrom(value).buildPartial();
+          } else {
+            finalstatement_ = value;
+          }
+          onChanged();
+        } else {
+          finalstatementBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public Builder clearFinalstatement() {
+        if (finalstatementBuilder_ == null) {
+          finalstatement_ = null;
+          onChanged();
+        } else {
+          finalstatementBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder getFinalstatementBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getFinalstatementFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder getFinalstatementOrBuilder() {
+        if (finalstatementBuilder_ != null) {
+          return finalstatementBuilder_.getMessageOrBuilder();
+        } else {
+          return finalstatement_ == null ?
+              ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance() : finalstatement_;
+        }
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.PoPProto.FinalStatement, ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder> 
+          getFinalstatementFieldBuilder() {
+        if (finalstatementBuilder_ == null) {
+          finalstatementBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.PoPProto.FinalStatement, ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder>(
+                  getFinalstatement(),
+                  getParentForChildren(),
+                  isClean());
+          finalstatement_ = null;
+        }
+        return finalstatementBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.PopPartyInstance)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.PopPartyInstance)
+    private static final ch.epfl.dedis.proto.PoPProto.PopPartyInstance DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.PopPartyInstance();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<PopPartyInstance>
+        PARSER = new com.google.protobuf.AbstractParser<PopPartyInstance>() {
+      public PopPartyInstance parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new PopPartyInstance(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<PopPartyInstance> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PopPartyInstance> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.PopPartyInstance getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -13585,6 +16347,36 @@ public final class PoPProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_VerifyLinkReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetLink_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetLink_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetLinkReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetLinkReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetFinalStatements_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetFinalStatements_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetFinalStatementsReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetFinalStatementsReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_PopPartyInstance_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_PopPartyInstance_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -13603,7 +16395,7 @@ public final class PoPProto {
       "\001 \001(\0132\014.pop.PopDesc\022\021\n\tattendees\030\002 \003(\014\022\021" +
       "\n\tsignature\030\003 \002(\014\022\016\n\006merged\030\004 \002(\010\"1\n\013Che" +
       "ckConfig\022\017\n\007pophash\030\001 \002(\014\022\021\n\tattendees\030\002" +
-      " \003(\014\"I\n\020CheckConfigReply\022\021\n\tpopstatus\030\001 " +
+      " \003(\014\"I\n\020CheckConfigReply\022\021\n\tpopstatus\030\001 ",
       "\002(\021\022\017\n\007pophash\030\002 \002(\014\022\021\n\tattendees\030\003 \003(\014\"" +
       "=\n\013MergeConfig\022\"\n\005final\030\001 \001(\0132\023.pop.Fina" +
       "lStatement\022\n\n\002id\030\002 \002(\014\"Z\n\020MergeConfigRep" +
@@ -13613,7 +16405,7 @@ public final class PoPProto {
       "\013StoreConfig\022\032\n\004desc\030\001 \001(\0132\014.pop.PopDesc" +
       "\022\021\n\tsignature\030\002 \002(\014\"\036\n\020StoreConfigReply\022" +
       "\n\n\002id\030\001 \002(\014\"G\n\017FinalizeRequest\022\016\n\006descid" +
-      "\030\001 \002(\014\022\021\n\tattendees\030\002 \003(\014\022\021\n\tsignature\030\003" +
+      "\030\001 \002(\014\022\021\n\tattendees\030\002 \003(\014\022\021\n\tsignature\030\003",
       " \002(\014\"6\n\020FinalizeResponse\022\"\n\005final\030\001 \001(\0132" +
       "\023.pop.FinalStatement\"4\n\014FetchRequest\022\n\n\002" +
       "id\030\001 \002(\014\022\030\n\020returnuncomplete\030\002 \001(\010\"-\n\014Me" +
@@ -13621,8 +16413,16 @@ public final class PoPProto {
       "\014\"\016\n\014GetProposals\"4\n\021GetProposalsReply\022\037" +
       "\n\tproposals\030\001 \003(\0132\014.pop.PopDesc\"\034\n\nVerif" +
       "yLink\022\016\n\006public\030\001 \002(\014\"!\n\017VerifyLinkReply" +
-      "\022\016\n\006exists\030\001 \002(\010B\037\n\023ch.epfl.dedis.protoB" +
-      "\010PoPProto"
+      "\022\016\n\006exists\030\001 \002(\010\"\t\n\007GetLink\"\036\n\014GetLinkRe" +
+      "ply\022\016\n\006public\030\001 \002(\014\"\024\n\022GetFinalStatement" +
+      "s\"\262\001\n\027GetFinalStatementsReply\022J\n\017finalst",
+      "atements\030\001 \003(\01321.pop.GetFinalStatementsR" +
+      "eply.FinalstatementsEntry\032K\n\024Finalstatem" +
+      "entsEntry\022\013\n\003key\030\001 \001(\t\022\"\n\005value\030\002 \001(\0132\023." +
+      "pop.FinalStatement:\0028\001\"N\n\020PopPartyInstan" +
+      "ce\022\r\n\005state\030\001 \002(\021\022+\n\016finalstatement\030\002 \001(" +
+      "\0132\023.pop.FinalStatementB\037\n\023ch.epfl.dedis." +
+      "protoB\010PoPProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -13745,6 +16545,42 @@ public final class PoPProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_VerifyLinkReply_descriptor,
         new java.lang.String[] { "Exists", });
+    internal_static_pop_GetLink_descriptor =
+      getDescriptor().getMessageTypes().get(18);
+    internal_static_pop_GetLink_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetLink_descriptor,
+        new java.lang.String[] { });
+    internal_static_pop_GetLinkReply_descriptor =
+      getDescriptor().getMessageTypes().get(19);
+    internal_static_pop_GetLinkReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetLinkReply_descriptor,
+        new java.lang.String[] { "Public", });
+    internal_static_pop_GetFinalStatements_descriptor =
+      getDescriptor().getMessageTypes().get(20);
+    internal_static_pop_GetFinalStatements_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetFinalStatements_descriptor,
+        new java.lang.String[] { });
+    internal_static_pop_GetFinalStatementsReply_descriptor =
+      getDescriptor().getMessageTypes().get(21);
+    internal_static_pop_GetFinalStatementsReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetFinalStatementsReply_descriptor,
+        new java.lang.String[] { "Finalstatements", });
+    internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_descriptor =
+      internal_static_pop_GetFinalStatementsReply_descriptor.getNestedTypes().get(0);
+    internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_descriptor,
+        new java.lang.String[] { "Key", "Value", });
+    internal_static_pop_PopPartyInstance_descriptor =
+      getDescriptor().getMessageTypes().get(22);
+    internal_static_pop_PopPartyInstance_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_PopPartyInstance_descriptor,
+        new java.lang.String[] { "State", "Finalstatement", });
     ch.epfl.dedis.proto.OnetProto.getDescriptor();
   }
 

@@ -36,7 +36,7 @@ message FinalStatement {
   repeated bytes attendees = 2;
   // Signature is created by all conodes responsible for that pop-party
   required bytes signature = 3;
-  // Flag indicates, that party was merged
+  // Flag indicates that party was merged
   required bool merged = 4;
 }
 
@@ -140,4 +140,33 @@ message VerifyLink {
 // VerifyLinkReply returns true if the public key is in the admin-list.
 message VerifyLinkReply {
   required bool exists = 1;
+}
+
+// GetLink returns the public key of the linked organizer.
+message GetLink {
+}
+
+// GetLinkReply holds the public key of the linked organizer.
+message GetLinkReply {
+  required bytes public = 1;
+}
+
+// GetFinalStatements returns all stored final statements.
+message GetFinalStatements {
+}
+
+// GetFinalStatementsReply returns all stored final statements.
+message GetFinalStatementsReply {
+   map<string, FinalStatement> finalstatements = 1;
+}
+
+// PopPartyInstance is the data that is stored in a pop-party instance.
+message PopPartyInstance {
+  // State has one of the following values:
+  // 1: it is a configuration only
+  // 2: it is a finalized pop-party
+  required sint32 state = 1;
+  // FinalStatement has either only the Desc inside if State == 1, or all fields
+  // set if State == 2.
+  optional FinalStatement finalstatement = 2;
 }

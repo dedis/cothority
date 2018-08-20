@@ -57,9 +57,6 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -493,7 +490,7 @@ public final class SkipchainProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetSingleBlock(input, extensionRegistry);
+          return new GetSingleBlock(input, extensionRegistry);
       }
     };
 
@@ -565,9 +562,6 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1027,7 +1021,7 @@ public final class SkipchainProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetUpdateChain(input, extensionRegistry);
+          return new GetUpdateChain(input, extensionRegistry);
       }
     };
 
@@ -1130,9 +1124,6 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1945,7 +1936,7 @@ public final class SkipchainProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetUpdateChainReply(input, extensionRegistry);
+          return new GetUpdateChainReply(input, extensionRegistry);
       }
     };
 
@@ -2163,9 +2154,6 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4238,7 +4226,7 @@ public final class SkipchainProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SkipBlock(input, extensionRegistry);
+          return new SkipBlock(input, extensionRegistry);
       }
     };
 
@@ -4332,9 +4320,6 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5248,7 +5233,7 @@ public final class SkipchainProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ForwardLink(input, extensionRegistry);
+          return new ForwardLink(input, extensionRegistry);
       }
     };
 
@@ -5316,9 +5301,6 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5835,7 +5817,7 @@ public final class SkipchainProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ByzcoinSig(input, extensionRegistry);
+          return new ByzcoinSig(input, extensionRegistry);
       }
     };
 
@@ -5903,9 +5885,6 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6422,7 +6401,7 @@ public final class SkipchainProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SchnorrSig(input, extensionRegistry);
+          return new SchnorrSig(input, extensionRegistry);
       }
     };
 
@@ -6490,9 +6469,6 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7006,7 +6982,7 @@ public final class SkipchainProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Exception(input, extensionRegistry);
+          return new Exception(input, extensionRegistry);
       }
     };
 
@@ -7083,7 +7059,7 @@ public final class SkipchainProto {
       "_height\030\004 \002(\005\022\021\n\tbacklinks\030\005 \003(\014\022\021\n\tveri" +
       "fiers\030\006 \003(\014\022\016\n\006parent\030\007 \001(\014\022\017\n\007genesis\030\010" +
       " \002(\014\022\014\n\004data\030\t \002(\014\022\034\n\006roster\030\n \002(\0132\014.one" +
-      "t.Roster\022\014\n\004hash\030\013 \002(\014\022\'\n\007forward\030\014 \003(\0132" +
+      "t.Roster\022\014\n\004hash\030\013 \002(\014\022\'\n\007forward\030\014 \003(\0132",
       "\026.skipchain.ForwardLink\022\020\n\010children\030\r \003(" +
       "\014\022\017\n\007payload\030\016 \001(\014\"r\n\013ForwardLink\022\014\n\004fro" +
       "m\030\001 \002(\014\022\n\n\002to\030\002 \002(\014\022\037\n\tnewRoster\030\003 \001(\0132\014" +

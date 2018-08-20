@@ -123,9 +123,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -926,7 +923,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DataHeader(input, extensionRegistry);
+          return new DataHeader(input, extensionRegistry);
       }
     };
 
@@ -1004,9 +1001,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1704,7 +1698,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DataBody(input, extensionRegistry);
+          return new DataBody(input, extensionRegistry);
       }
     };
 
@@ -1842,9 +1836,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2904,7 +2895,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateGenesisBlock(input, extensionRegistry);
+          return new CreateGenesisBlock(input, extensionRegistry);
       }
     };
 
@@ -2999,9 +2990,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3701,7 +3689,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateGenesisBlockResponse(input, extensionRegistry);
+          return new CreateGenesisBlockResponse(input, extensionRegistry);
       }
     };
 
@@ -3834,9 +3822,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4757,7 +4742,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new AddTxRequest(input, extensionRegistry);
+          return new AddTxRequest(input, extensionRegistry);
       }
     };
 
@@ -4827,9 +4812,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5284,7 +5266,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new AddTxResponse(input, extensionRegistry);
+          return new AddTxResponse(input, extensionRegistry);
       }
     };
 
@@ -5392,9 +5374,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6077,7 +6056,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetProof(input, extensionRegistry);
+          return new GetProof(input, extensionRegistry);
       }
     };
 
@@ -6176,9 +6155,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6894,7 +6870,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetProofResponse(input, extensionRegistry);
+          return new GetProofResponse(input, extensionRegistry);
       }
     };
 
@@ -6971,9 +6947,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7607,7 +7580,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ChainConfig(input, extensionRegistry);
+          return new ChainConfig(input, extensionRegistry);
       }
     };
 
@@ -7771,9 +7744,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9114,7 +9084,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Proof(input, extensionRegistry);
+          return new Proof(input, extensionRegistry);
       }
     };
 
@@ -9368,9 +9338,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -11354,7 +11321,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Instruction(input, extensionRegistry);
+          return new Instruction(input, extensionRegistry);
       }
     };
 
@@ -11478,9 +11445,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12465,7 +12429,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Spawn(input, extensionRegistry);
+          return new Spawn(input, extensionRegistry);
       }
     };
 
@@ -12590,9 +12554,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -13578,7 +13539,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Invoke(input, extensionRegistry);
+          return new Invoke(input, extensionRegistry);
       }
     };
 
@@ -13631,9 +13592,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -13975,7 +13933,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Delete(input, extensionRegistry);
+          return new Delete(input, extensionRegistry);
       }
     };
 
@@ -14072,9 +14030,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -14725,7 +14680,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Argument(input, extensionRegistry);
+          return new Argument(input, extensionRegistry);
       }
     };
 
@@ -14803,9 +14758,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -15503,7 +15455,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ClientTransaction(input, extensionRegistry);
+          return new ClientTransaction(input, extensionRegistry);
       }
     };
 
@@ -15645,9 +15597,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -16546,7 +16495,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StateChange(input, extensionRegistry);
+          return new StateChange(input, extensionRegistry);
       }
     };
 
@@ -16635,9 +16584,6 @@ public final class OmniLedgerProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -17205,7 +17151,7 @@ public final class OmniLedgerProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Coin(input, extensionRegistry);
+          return new Coin(input, extensionRegistry);
       }
     };
 
@@ -17332,7 +17278,7 @@ public final class OmniLedgerProto {
       "omniledger.ClientTransaction\"{\n\022CreateGe" +
       "nesisBlock\022\017\n\007version\030\001 \002(\021\022\034\n\006roster\030\002 " +
       "\002(\0132\014.onet.Roster\022\037\n\013genesisdarc\030\003 \002(\0132\n" +
-      ".darc.Darc\022\025\n\rblockinterval\030\004 \002(\022\"V\n\032Cre" +
+      ".darc.Darc\022\025\n\rblockinterval\030\004 \002(\022\"V\n\032Cre",
       "ateGenesisBlockResponse\022\017\n\007version\030\001 \002(\021" +
       "\022\'\n\tskipblock\030\002 \001(\0132\024.skipchain.SkipBloc" +
       "k\"\177\n\014AddTxRequest\022\017\n\007version\030\001 \002(\021\022\023\n\013sk" +
@@ -17342,7 +17288,7 @@ public final class OmniLedgerProto {
       " \002(\021\"4\n\010GetProof\022\017\n\007version\030\001 \002(\021\022\013\n\003key" +
       "\030\002 \002(\014\022\n\n\002id\030\003 \002(\014\"E\n\020GetProofResponse\022\017" +
       "\n\007version\030\001 \002(\021\022 \n\005proof\030\002 \002(\0132\021.omniled" +
-      "ger.Proof\"B\n\013ChainConfig\022\025\n\rblockinterva" +
+      "ger.Proof\"B\n\013ChainConfig\022\025\n\rblockinterva",
       "l\030\001 \002(\022\022\034\n\006roster\030\002 \002(\0132\014.onet.Roster\"\177\n" +
       "\005Proof\022)\n\016inclusionproof\030\001 \002(\0132\021.collect" +
       "ion.Proof\022$\n\006latest\030\002 \002(\0132\024.skipchain.Sk" +
@@ -17352,7 +17298,7 @@ public final class OmniLedgerProto {
       "th\030\004 \002(\021\022 \n\005spawn\030\005 \001(\0132\021.omniledger.Spa" +
       "wn\022\"\n\006invoke\030\006 \001(\0132\022.omniledger.Invoke\022\"" +
       "\n\006delete\030\007 \001(\0132\022.omniledger.Delete\022#\n\nsi" +
-      "gnatures\030\010 \003(\0132\017.darc.Signature\"?\n\005Spawn" +
+      "gnatures\030\010 \003(\0132\017.darc.Signature\"?\n\005Spawn",
       "\022\022\n\ncontractid\030\001 \002(\t\022\"\n\004args\030\002 \003(\0132\024.omn" +
       "iledger.Argument\"=\n\006Invoke\022\017\n\007command\030\001 " +
       "\002(\t\022\"\n\004args\030\002 \003(\0132\024.omniledger.Argument\"" +
@@ -17362,7 +17308,7 @@ public final class OmniLedgerProto {
       "\n\013StateChange\022\023\n\013stateaction\030\001 \002(\021\022\022\n\nin" +
       "stanceid\030\002 \002(\014\022\022\n\ncontractid\030\003 \002(\014\022\r\n\005va" +
       "lue\030\004 \002(\014\022\016\n\006darcid\030\005 \002(\014\"#\n\004Coin\022\014\n\004nam" +
-      "e\030\001 \002(\014\022\r\n\005value\030\002 \002(\004B&\n\023ch.epfl.dedis." +
+      "e\030\001 \002(\014\022\r\n\005value\030\002 \002(\004B&\n\023ch.epfl.dedis.",
       "protoB\017OmniLedgerProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =

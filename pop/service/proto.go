@@ -22,6 +22,7 @@ func init() {
 
 // PROTOSTART
 // package pop;
+// type :map\[string\]FinalStatement:map<string, FinalStatement>
 // import "onet.proto";
 //
 // option java_package = "ch.epfl.dedis.proto";
@@ -165,7 +166,8 @@ type VerifyLinkReply struct {
 }
 
 // GetLink returns the public key of the linked organizer.
-type GetLink struct{}
+type GetLink struct {
+}
 
 // GetLinkReply holds the public key of the linked organizer.
 type GetLinkReply struct {
