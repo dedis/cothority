@@ -152,7 +152,7 @@ public class DarcInstance {
     public Instruction spawnContractInstruction(String contractID, Signer s, List<Argument> args, int pos, int len)
             throws CothorityCryptoException {
         Spawn sp = new Spawn(contractID, args);
-        Instruction inst = new Instruction(Instruction.genNonce(), pos, len, sp);
+        Instruction inst = new Instruction(new InstanceId(darc.getBaseId().getId()), Instruction.genNonce(), pos, len, sp);
         try {
             Request r = new Request(darc.getBaseId(), "spawn:" + contractID, inst.hash(),
                     Arrays.asList(s.getIdentity()), null);

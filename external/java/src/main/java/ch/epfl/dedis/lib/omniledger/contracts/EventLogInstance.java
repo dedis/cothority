@@ -181,7 +181,7 @@ public class EventLogInstance {
             throw new CothorityException("already have an instance");
         }
         Spawn spawn = new Spawn("eventlog", new ArrayList<>());
-        Instruction instr = new Instruction(Instruction.genNonce(), 0, 1, spawn);
+        Instruction instr = new Instruction(new InstanceId(darcId.getId()), Instruction.genNonce(), 0, 1, spawn);
         instr.signBy(darcId, signers);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));

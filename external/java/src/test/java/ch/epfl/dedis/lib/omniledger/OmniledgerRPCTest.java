@@ -83,7 +83,6 @@ public class OmniledgerRPCTest {
 
     @Test
     void spawnDarc() throws Exception{
-        SkipBlock previous = ol.getLatest();
         DarcInstance dc = new DarcInstance(ol, genesisDarc);
         Darc darc2 = genesisDarc.copy();
         darc2.setRule("spawn:darc", admin.getIdentity().toString().getBytes());
@@ -106,7 +105,6 @@ public class OmniledgerRPCTest {
 
     @Test
     void spawnValue() throws Exception{
-        SkipBlock previous = ol.getLatest();
         DarcInstance dc = new DarcInstance(ol, genesisDarc);
         Darc darc2 = genesisDarc.copy();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());

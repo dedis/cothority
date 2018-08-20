@@ -609,6 +609,10 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 // We use the OmniLedger as a receiver (as is done in the identity service),
 // so we can access e.g. the collectionDBs of the service.
 func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
+	start := time.Now()
+	defer func() {
+		log.Lvlf3("%s: Verify done after %s", s.ServerIdentity(), time.Now().Sub(start))
+	}()
 	_, headerI, err := network.Unmarshal(newSB.Data, cothority.Suite)
 	header, ok := headerI.(*DataHeader)
 	if err != nil || !ok {

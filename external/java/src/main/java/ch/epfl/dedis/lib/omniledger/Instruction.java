@@ -33,8 +33,8 @@ public class Instruction {
      * @param length The length of the atomic set.
      * @param spawn The spawn object, which contains the value and the argument.
      */
-    public Instruction(byte[] nonce, int index, int length, Spawn spawn) {
-        this.instId = InstanceId.zero();
+    public Instruction(InstanceId instId, byte[] nonce, int index, int length, Spawn spawn) {
+        this.instId = instId;
         this.nonce = nonce;
         this.index = index;
         this.length = length;

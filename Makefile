@@ -11,7 +11,8 @@ EXCLUDE_LINT = "should be.*UI|_test.go"
 test_playground:
 	cd omniledger/simulation; \
 	for a in $$( seq 100 ); do \
-		if DEBUG_TIME=true go test -v -race > log.txt 2>&1; then \
+		# if DEBUG_TIME=true go test -v -race > log.txt 2>&1; then \
+		if DEBUG_TIME=true go test -v -race; then \
 			echo Successfully ran \#$$a at $$(date); \
 		else \
 			echo Failed at $$(date); \
