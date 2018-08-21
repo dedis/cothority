@@ -114,7 +114,6 @@ class OmniledgerRPC {
     return rosterSocket
       .send("GetProof", "GetProofResponse", getProofMessage)
       .then(reply => {
-        console.log(util.inspect(reply, { showHidden: false, depth: null }));
         return Promise.resolve(new Proof(reply.proof));
       })
       .catch(err => {
