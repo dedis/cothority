@@ -50,7 +50,7 @@ main(){
 }
 
 testOlStore(){
-	att=1
+	att=2
   mkConfig 3 1 1 $att
   testOK runOl 1 create -roster public.toml -interval 2s
   OL=cl1/ol*
@@ -74,6 +74,12 @@ testOlStore(){
 
   runGrepSed "Coin balance" "s/.* //" runCl 1 ol coin show $OL $PARTYID ${pub[1]}
   testGrep 100000 echo $SED
+
+	testOK runCl 1 ol coin transfer $OL $PARTYID ${priv[1]} ${pub[2]} 100000
+	runGrepSed "Coin balance" "s/.* //" runCl 1 ol coin show $OL $PARTYID ${pub[1]}
+  testGrep 90000 echo $SED
+	runGrepSed "Coin balance" "s/.* //" runCl 1 ol coin show $OL $PARTYID ${pub[2]}
+  testGrep 110000 echo $SED
 }
 
 testPropagateConfig(){

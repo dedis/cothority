@@ -157,6 +157,13 @@ func init() {
 						ArgsUsage: "omniledger.cfg partyID (public-key|accountID)",
 						Action:    omniCoinShow,
 					},
+					{
+						Name:      "transfer",
+						Aliases:   []string{"t"},
+						Usage:     "transfer money from one account to another",
+						ArgsUsage: "omniledger.cfg partyID source_private_key dst_public_key amount",
+						Action:    omniCoinTransfer,
+					},
 				},
 			},
 		},

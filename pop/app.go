@@ -8,12 +8,14 @@ import (
 	"bufio"
 	"bytes"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 
 	"github.com/dedis/cothority"
@@ -935,6 +937,127 @@ func omniCoinShow(c *cli.Context) error {
 		return errors.New("couldn't unmarshal coin balance: " + err.Error())
 	}
 	log.Info("Coin balance is: ", ci.Balance)
+	return nil
+}
+
+func omniCoinTransfer(c *cli.Context) error {
+	if c.NArg() != 5 {
+		return errors.New("please give: omniledger.cfg partyID source_private_key dst_public_key amount")
+	}
+
+	// Load the omniledger configuration
+	buf, err := ioutil.ReadFile(c.Args().First())
+	if err != nil {
+		return err
+	}
+	_, msgCfg, err := network.Unmarshal(buf, cothority.Suite)
+	if err != nil {
+		return err
+	}
+	cfg := msgCfg.(*ol.Config)
+
+	partyID, err := hex.DecodeString(c.Args().Get(1))
+	if err != nil {
+		return errors.New("couldn't parse partyID: " + err.Error())
+	}
+
+	// Get the private key for the source
+	srcPriv, err := encoding.StringHexToScalar(cothority.Suite, c.Args().Get(2))
+	if err != nil {
+		return errors.New("couldn't parse private key: " + err.Error())
+	}
+	srcPub := cothority.Suite.Point().Mul(srcPriv, nil)
+	srcSigner := darc.NewSignerEd25519(srcPub, srcPriv)
+	srcAddrHash := sha256.New()
+	srcAddrHash.Write(partyID)
+	srcPubBuf, err := srcPub.MarshalBinary()
+	if err != nil {
+		return errors.New("couldn't marshal public key: " + err.Error())
+	}
+	srcAddrHash.Write(srcPubBuf)
+	srcAddr := srcAddrHash.Sum(nil)
+
+	dstPub, err := encoding.StringHexToPoint(cothority.Suite, c.Args().Get(3))
+	if err != nil {
+		return errors.New("couldn't parse public key: " + err.Error())
+	}
+	dstAddrHash := sha256.New()
+	dstAddrHash.Write(partyID)
+	dstPubBuf, err := dstPub.MarshalBinary()
+	if err != nil {
+		return errors.New("couldn't marshal public key: " + err.Error())
+	}
+	dstAddrHash.Write(dstPubBuf)
+	dstAddr := dstAddrHash.Sum(nil)
+
+	amount, err := strconv.ParseUint(c.Args().Get(4), 10, 64)
+	if err != nil {
+		return errors.New("couldn't get amount")
+	}
+
+	log.Info("Getting account of source")
+	olc := ol.NewClientConfig(*cfg)
+	srcInstanceProof, err := olc.GetProof(srcAddr)
+	if err != nil {
+		return errors.New("couldn't get source instance: " + err.Error())
+	}
+	if !srcInstanceProof.Proof.InclusionProof.Match() {
+		return errors.New("source instance doesn't exist")
+	}
+	_, srcInstanceValues, err := srcInstanceProof.Proof.KeyValue()
+	if err != nil {
+		return errors.New("cannot get proof for source instance: " + err.Error())
+	}
+
+	log.Info("Getting darc for source account")
+	dID := srcInstanceValues[2]
+	// dProof, err := olc.GetProof(dID)
+	// if err != nil {
+	// 	return errors.New("couldn't get source darc instance: " + err.Error())
+	// }
+	// if !dProof.Proof.InclusionProof.Match() {
+	// 	return errors.New("source instance darc doesn't exist")
+	// }
+	// _, dValues, err := dProof.Proof.KeyValue()
+	// if err != nil {
+	// 	return errors.New("cannot get proof for source instance darc: " + err.Error())
+	// }
+	// d, err := darc.NewFromProtobuf(dValues[1])
+	// if err != nil {
+	// 	return errors.New("cannot unmarshal source darc: " + err.Error())
+	// }
+
+	log.Info("Transferring coins")
+	amountBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(amountBuf, amount)
+	ctx := ol.ClientTransaction{
+		Instructions: ol.Instructions{ol.Instruction{
+			InstanceID: ol.NewInstanceID(srcAddr),
+			Index:      0,
+			Length:     1,
+			Invoke: &ol.Invoke{
+				Command: "transfer",
+				Args: ol.Arguments{{
+					Name:  "coins",
+					Value: amountBuf,
+				},
+					{
+						Name:  "destination",
+						Value: dstAddr,
+					}},
+			},
+		}},
+	}
+	err = ctx.Instructions[0].SignBy(dID, srcSigner)
+	if err != nil {
+		return errors.New("couldn't sign transaction: " + err.Error())
+	}
+
+	_, err = olc.AddTransactionAndWait(ctx, 10)
+	if err != nil {
+		return errors.New("couldn't add transaction: " + err.Error())
+	}
+
 	return nil
 }
 
