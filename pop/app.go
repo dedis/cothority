@@ -20,6 +20,7 @@ import (
 	"github.com/dedis/cothority/ftcosi/check"
 	_ "github.com/dedis/cothority/ftcosi/protocol"
 	_ "github.com/dedis/cothority/ftcosi/service"
+	"github.com/dedis/cothority/omniledger/contracts"
 	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/omniledger/darc/expression"
 	ol "github.com/dedis/cothority/omniledger/service"
@@ -707,6 +708,7 @@ func omniStore(c *cli.Context) error {
 		}
 		identities = append(identities, darc.NewIdentityEd25519(link))
 	}
+	identities = append(identities, signer.Identity())
 
 	log.Info("Creating darc for the organizers")
 	rules := darc.InitRules(identities, identities)
@@ -785,6 +787,91 @@ func omniStore(c *cli.Context) error {
 	return nil
 }
 
+// omniFinalize stores a final statement of a party in Omniledger
+func omniFinalize(c *cli.Context) error {
+	if c.NArg() != 4 {
+		return errors.New("please give: omniledger.cfg key-xxx.cfg partyID partyInstance")
+	}
+
+	// Load the omniledger configuration
+	buf, err := ioutil.ReadFile(c.Args().First())
+	if err != nil {
+		return err
+	}
+	_, msgCfg, err := network.Unmarshal(buf, cothority.Suite)
+	if err != nil {
+		return err
+	}
+	cfg := msgCfg.(*ol.Config)
+
+	// Load the signer
+	buf, err = ioutil.ReadFile(c.Args().Get(1))
+	if err != nil {
+		return err
+	}
+	_, msgSigner, err := network.Unmarshal(buf, cothority.Suite)
+	if err != nil {
+		return err
+	}
+	signer := msgSigner.(*darc.Signer)
+
+	// Get the party-id
+	partyID, err := hex.DecodeString(c.Args().Get(2))
+	if err != nil {
+		return errors.New("couldn't parse partyID: " + err.Error())
+	}
+
+	log.Info("Fetching final statement from conode")
+	fsMap, err := service.NewClient().GetFinalStatements(cfg.Roster.List[0].Address)
+	if err != nil {
+		return errors.New("error while fetching final statement: " + err.Error())
+	}
+	fs, ok := fsMap[string(partyID)]
+	if !ok {
+		for k := range fsMap {
+			log.Printf("%x", k)
+		}
+		return errors.New("didn't find final statement")
+	}
+	if fs.Signature == nil || len(fs.Attendees) == 0 {
+		log.Printf("%+v", fs)
+		return errors.New("final statement not finalized")
+	}
+	fsBuf, err := protobuf.Encode(fs)
+
+	partyInstance, err := hex.DecodeString(c.Args().Get(3))
+	if err != nil {
+		return errors.New("couldn't decode partyInstance: " + err.Error())
+	}
+
+	log.Info("Sending finalize-instruction to omniledger")
+	ctx := ol.ClientTransaction{
+		Instructions: ol.Instructions{ol.Instruction{
+			InstanceID: ol.NewInstanceID(partyInstance),
+			Index:      0,
+			Length:     1,
+			Invoke: &ol.Invoke{
+				Command: "Finalize",
+				Args: ol.Arguments{ol.Argument{
+					Name:  "FinalStatement",
+					Value: fsBuf,
+				}},
+			},
+		}},
+	}
+	err = ctx.Instructions[0].SignBy(cfg.GenesisDarc.GetBaseID(), *signer)
+	if err != nil {
+		return errors.New("couldn't sign instruction: " + err.Error())
+	}
+
+	olc := ol.NewClientConfig(*cfg)
+	_, err = olc.AddTransactionAndWait(ctx, 10)
+	if err != nil {
+		return errors.New("error while sending transaction: " + err.Error())
+	}
+	return nil
+}
+
 // omniCoinShow returns the number of coins in the account of the user.
 func omniCoinShow(c *cli.Context) error {
 	if c.NArg() != 3 {
@@ -809,7 +896,7 @@ func omniCoinShow(c *cli.Context) error {
 
 	// Check if we got the public-key or the accountID. First suppose it's the accountID
 	// and verify if that instance exists.
-	accountID, err := hex.DecodeString(c.Args().Get(1))
+	accountID, err := hex.DecodeString(c.Args().Get(2))
 	if err != nil {
 		return errors.New("couldn't parse public-key or accountID: " + err.Error())
 	}
@@ -822,6 +909,7 @@ func omniCoinShow(c *cli.Context) error {
 	if !accountProof.Proof.InclusionProof.Match() {
 		// This account doesn't exist - try with the account, supposing we got a
 		// public key.
+		log.Info("Interpreting argument as public key")
 		h := sha256.New()
 		h.Write(partyID)
 		h.Write(accountID)
@@ -833,10 +921,21 @@ func omniCoinShow(c *cli.Context) error {
 		if !accountProof.Proof.InclusionProof.Match() {
 			return errors.New("didn't find this account - neither as accountID, nor as public key")
 		}
+	} else {
+		log.Info("Interpreting argument as account ID")
 	}
 
-	balance :=
-		log.Info("Coin balance is: ")
+	_, v, err := accountProof.Proof.KeyValue()
+	if err != nil {
+		return errors.New("couldn't get value from proof: " + err.Error())
+	}
+	ci := contracts.CoinInstance{}
+	err = protobuf.Decode(v[0], &ci)
+	if err != nil {
+		return errors.New("couldn't unmarshal coin balance: " + err.Error())
+	}
+	log.Info("Coin balance is: ", ci.Balance)
+	return nil
 }
 
 // getConfigClient returns the configuration and a client-structure.

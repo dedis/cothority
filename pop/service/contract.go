@@ -1,11 +1,16 @@
 package service
 
 import (
+	"bytes"
+	"crypto/sha256"
 	"errors"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/omniledger/contracts"
 	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/darc/expression"
 	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
@@ -24,6 +29,12 @@ var ContractPopCoinAccount = "popCoinAccount"
 
 func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, coins []ol.Coin) (sc []ol.StateChange, cOut []ol.Coin, err error) {
 	cOut = coins
+	var darcID darc.ID
+	if inst.Spawn == nil {
+		_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+	} else {
+		darcID = inst.InstanceID.Slice()
+	}
 	switch {
 	case inst.Spawn != nil:
 		fsBuf := inst.Spawn.Args.Search("FinalStatement")
@@ -43,36 +54,84 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 		if err != nil {
 			return nil, nil, errors.New("couldn't marshal PopPartyInstance: " + err.Error())
 		}
+		// partyID, err := ppData.FinalStatement.Hash()
+		// if err != nil {
+		// 	return nil, nil, errors.New("couldn't get party id: " + err.Error())
+		// }
+		// log.Printf("New party: %x", partyID)
 		return ol.StateChanges{
 			ol.NewStateChange(ol.Create, inst.DeriveID(""), inst.Spawn.ContractID, ppiBuf, darc.ID(inst.InstanceID[:])),
 		}, cOut, nil
 	case inst.Invoke != nil:
-		// switch inst.Invoke.Command {
-		// case "evolve":
-		// 	var darcID darc.ID
-		// 	_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
-		// 	if err != nil {
-		// 		return
-		// 	}
-		//
-		// 	darcBuf := inst.Invoke.Args.Search("darc")
-		// 	newD, err := darc.NewFromProtobuf(darcBuf)
-		// 	if err != nil {
-		// 		return nil, nil, err
-		// 	}
-		// 	oldD, err := LoadDarcFromColl(cdb, darcID)
-		// 	if err != nil {
-		// 		return nil, nil, err
-		// 	}
-		// 	if err := newD.SanityCheck(oldD); err != nil {
-		// 		return nil, nil, err
-		// 	}
-		// 	return []StateChange{
-		// 		NewStateChange(Update, inst.InstanceID, ContractDarcID, darcBuf, darcID),
-		// 	}, coins, nil
-		// default:
-		return nil, nil, errors.New("invalid command: " + inst.Invoke.Command)
-		// }
+		if inst.Invoke.Command != "Finalize" {
+			return nil, nil, errors.New("can only finalize Pop-party contract")
+		}
+		fsBuf := inst.Invoke.Args.Search("FinalStatement")
+		if fsBuf == nil {
+			return nil, nil, errors.New("missing argument: FinalStatement")
+		}
+		fs := FinalStatement{}
+		err = protobuf.DecodeWithConstructors(fsBuf, &fs, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return nil, nil, errors.New("argument is not a valid FinalStatement")
+		}
+
+		// TODO: check for aggregate signature of all organizers
+		// Update existing final statement
+		scs := ol.StateChanges{
+			ol.NewStateChange(ol.Update, inst.InstanceID, ContractPopParty, fsBuf, darcID),
+		}
+
+		for i, pub := range fs.Attendees {
+			log.LLvl3("Creating darc for attendee", i)
+			id := darc.NewIdentityEd25519(pub)
+			rules := darc.InitRules([]darc.Identity{id}, []darc.Identity{id})
+			rules.AddRule(darc.Action("invoke:transfer"), expression.Expr(id.String()))
+			d := darc.NewDarc(rules, []byte("Attendee darc for pop-party"))
+			var darcBuf []byte
+			// Well, this is about the worst implementation you can do here - but there
+			// is not a lot of choice :( Darc has a map inside, so the `ToProto` call
+			// returns something different on each call. Each node _might_ have a
+			// different represenation of the darc, or it might not.
+			for i := 0; i < 100; i++ {
+				db, err := d.ToProto()
+				if err != nil {
+					return nil, nil, errors.New("couldn't marshal darc: " + err.Error())
+				}
+				if darcBuf == nil {
+					darcBuf = db
+				}
+				dbHash1 := sha256.Sum256(darcBuf)
+				dbHash2 := sha256.Sum256(db)
+				if bytes.Compare(dbHash1[:], dbHash2[:]) == 1 {
+					darcBuf = db
+				}
+			}
+			log.LLvlf3("%s: Final %x/%x", s.ServerIdentity(), d.GetBaseID(), sha256.Sum256(darcBuf))
+			scs = append(scs, ol.NewStateChange(ol.Create, ol.NewInstanceID(d.GetBaseID()),
+				ol.ContractDarcID, darcBuf, darcID))
+
+			log.LLvl3("Creating account for attendee", i)
+			iid := sha256.New()
+			iid.Write(inst.InstanceID.Slice())
+			pubBuf, err := pub.MarshalBinary()
+			if err != nil {
+				return nil, nil, errors.New("couldn't marshal public key: " + err.Error())
+			}
+			iid.Write(pubBuf)
+			cci := contracts.CoinInstance{
+				Type:    []byte("popcoins"),
+				Balance: uint64(1000000),
+			}
+			cciBuf, err := protobuf.Encode(&cci)
+			if err != nil {
+				return nil, nil, errors.New("couldn't encode CoinInstance: " + err.Error())
+			}
+			scs = append(scs, ol.NewStateChange(ol.Create, ol.NewInstanceID(iid.Sum(nil)),
+				contracts.ContractCoinID, cciBuf, d.GetBaseID()))
+		}
+
+		return scs, coins, nil
 	default:
 		return nil, nil, errors.New("Only invoke and spawn are defined yet")
 	}

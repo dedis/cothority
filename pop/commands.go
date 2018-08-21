@@ -134,9 +134,16 @@ func init() {
 			{
 				Name:      "store",
 				Aliases:   []string{"s"},
-				Usage:     "store the final statement in omniledger",
-				ArgsUsage: "omniledger.cfg key-xxx.cfg [final-id]",
+				Usage:     "store the proposition of a pop-party in omniledger",
+				ArgsUsage: "omniledger.cfg key-xxx.cfg final-id",
 				Action:    omniStore,
+			},
+			{
+				Name:      "finalize",
+				Aliases:   []string{"f"},
+				Usage:     "store a finalized pop-party in omniledger",
+				ArgsUsage: "omniledger.cfg key-xxx.cfg final-id",
+				Action:    omniFinalize,
 			},
 			{
 				Name:    "coin",
