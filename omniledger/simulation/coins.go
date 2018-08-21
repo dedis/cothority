@@ -177,11 +177,29 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		log.Lvl1("Starting round", round)
 		roundM := monitor.NewTimeMeasure("round")
 
+		if s.Transactions < 3 {
+			log.Warn("The 'send_sum' measurement will be very skewed, as the last transaction")
+			log.Warn("is not measured.")
+		}
+
 		txs := s.Transactions / s.BatchSize
 		insts := s.BatchSize
-		log.Lvlf2("Sending %d transactions with %d instructions each", txs, insts)
+		log.Lvlf1("Sending %d transactions with %d instructions each", txs, insts)
+		tx := service.ClientTransaction{}
+		// Inverse the prepare/send loop, so that the last transaction is not sent,
+		// but can be sent in the 'confirm' phase using 'AddTransactionAndWait'.
 		for t := 0; t < txs; t++ {
-			tx := service.ClientTransaction{}
+			if len(tx.Instructions) > 0 {
+				log.Lvlf1("Sending transaction %d", t)
+				send := monitor.NewTimeMeasure("send")
+				_, err = c.AddTransaction(tx)
+				if err != nil {
+					return errors.New("couldn't add transfer transaction: " + err.Error())
+				}
+				send.Record()
+				tx.Instructions = service.Instructions{}
+			}
+
 			prepare := monitor.NewTimeMeasure("prepare")
 			for i := 0; i < insts; i++ {
 				tx.Instructions = append(tx.Instructions, service.Instruction{
@@ -208,31 +226,29 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 				}
 			}
 			prepare.Record()
-			send := monitor.NewTimeMeasure("send")
-			_, err = c.AddTransaction(tx)
-			if err != nil {
-				return errors.New("couldn't add transfer transaction: " + err.Error())
-			}
-			send.Record()
 		}
+
+		// Confirm the transaction by sending the last transaction using
+		// AddTransactionAndWait. There is a small error in measurement,
+		// as we're missing one of the AddTransaction call in the measurements.
 		confirm := monitor.NewTimeMeasure("confirm")
-		var i int
-		for {
-			proof, err := c.GetProof(coinAddr2.Slice())
-			if err != nil {
-				return errors.New("couldn't get proof for transaction: " + err.Error())
-			}
-			_, v, err := proof.Proof.KeyValue()
-			if err != nil {
-				return errors.New("proof doesn't hold transaction: " + err.Error())
-			}
-			account := int(binary.LittleEndian.Uint64(v[0]))
-			log.Lvlf1("[%03d] account has %d", i, account)
-			if account == s.Transactions*(round+1) {
-				break
-			}
-			time.Sleep(time.Second / 10)
-			i++
+		log.Lvl1("Sending last transaction and waiting")
+		_, err = c.AddTransactionAndWait(tx, 20)
+		if err != nil {
+			return errors.New("while adding transaction and waiting: " + err.Error())
+		}
+		proof, err := c.GetProof(coinAddr2.Slice())
+		if err != nil {
+			return errors.New("couldn't get proof for transaction: " + err.Error())
+		}
+		_, v, err := proof.Proof.KeyValue()
+		if err != nil {
+			return errors.New("proof doesn't hold transaction: " + err.Error())
+		}
+		account := int(binary.LittleEndian.Uint64(v[0]))
+		log.Lvlf1("Account has %d", account)
+		if account != s.Transactions*(round+1) {
+			return errors.New("account has wrong amount")
 		}
 		confirm.Record()
 		roundM.Record()

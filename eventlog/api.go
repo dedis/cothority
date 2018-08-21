@@ -50,9 +50,10 @@ func AddWriter(r darc.Rules, expr expression.Expr) darc.Rules {
 // a timeout). Upon non-error return, c.Instance will be correctly set.
 func (c *Client) Create() error {
 	instr := omniledger.Instruction{
-		Index:  0,
-		Length: 1,
-		Spawn:  &omniledger.Spawn{ContractID: contractName},
+		InstanceID: omniledger.NewInstanceID(c.DarcID),
+		Index:      0,
+		Length:     1,
+		Spawn:      &omniledger.Spawn{ContractID: contractName},
 	}
 	if err := instr.SignBy(c.DarcID, c.Signers...); err != nil {
 		return err

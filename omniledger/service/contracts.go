@@ -19,6 +19,9 @@ var ContractConfigID = "config"
 // ContractDarcID denotes a darc-contract
 var ContractDarcID = "darc"
 
+// ConfigInstanceID represents the 0-id of the configuration instance.
+var ConfigInstanceID = InstanceID{}
+
 // CmdDarcEvolve is needed to evolve a darc.
 var CmdDarcEvolve = "evolve"
 
@@ -85,11 +88,23 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 // ContractConfig can only be instantiated once per skipchain, and only for
 // the genesis block.
 func (s *Service) ContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
-	if inst.GetType() == SpawnType {
+	// Verify the darc signature if the config instance does not exist yet.
+	pr, err := cdb.Get(ConfigInstanceID.Slice()).Proof()
+	if err != nil {
+		return
+	}
+	if pr.Match() {
+		err = inst.VerifyDarcSignature(cdb)
+		if err != nil {
+			return
+		}
+	}
+	switch inst.GetType() {
+	case SpawnType:
 		return s.spawnContractConfig(cdb, inst, coins)
-	} else if inst.GetType() == InvokeType {
+	case InvokeType:
 		return s.invokeContractConfig(cdb, inst, coins)
-	} else {
+	default:
 		return nil, coins, errors.New("unsupported instruction type")
 	}
 }
@@ -223,7 +238,7 @@ func (s *Service) spawnContractConfig(cdb CollectionView, inst Instruction, coin
 
 	id := d.GetBaseID()
 	return []StateChange{
-		NewStateChange(Create, NewInstanceID(nil), ContractConfigID, configBuf, id),
+		NewStateChange(Create, ConfigInstanceID, ContractConfigID, configBuf, id),
 		NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
 	}, c, nil
 
@@ -234,8 +249,12 @@ func (s *Service) spawnContractConfig(cdb CollectionView, inst Instruction, coin
 //   - Invoke.Evolve - evolves an existing darc
 func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
 	cOut = coins
-	switch {
-	case inst.Spawn != nil:
+	err = inst.VerifyDarcSignature(cdb)
+	if err != nil {
+		return
+	}
+	switch inst.GetType() {
+	case SpawnType:
 		if inst.Spawn.ContractID == ContractDarcID {
 			darcBuf := inst.Spawn.Args.Search("darc")
 			d, err := darc.NewFromProtobuf(darcBuf)
@@ -253,7 +272,8 @@ func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coi
 			return nil, nil, errors.New("couldn't find this contract type")
 		}
 		return c(cdb, inst, coins)
-	case inst.Invoke != nil:
+
+	case InvokeType:
 		switch inst.Invoke.Command {
 		case "evolve":
 			var darcID darc.ID
@@ -280,6 +300,7 @@ func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coi
 		default:
 			return nil, nil, errors.New("invalid command: " + inst.Invoke.Command)
 		}
+
 	default:
 		return nil, nil, errors.New("Only invoke and spawn are defined yet")
 	}

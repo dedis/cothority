@@ -8,6 +8,6 @@ Suite = "Ed25519"
 # of tests
 
 Keep,   Transactions, BatchSize,  Hosts,  Delay, BlockInterval
-true,   200,          5,          10,     10,    "2s"
+true,   200,          5,          5,     10,    "1s"
 # true,   200,          10,         10,     10,    "2s"
 # true,   200,          20,         10,     10,    "2s"

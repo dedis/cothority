@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"sync"
@@ -336,45 +335,6 @@ func (c *collectionDB) tryHash(ts []StateChange) (mr []byte, rerr error) {
 	}
 	mr = c.coll.GetRoot()
 	return
-}
-
-func (c *collectionDB) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
-	return verifyInstruction(&roCollection{c.coll}, scID, instr)
-}
-func verifyInstruction(c CollectionView, scID skipchain.SkipBlockID, instr Instruction) error {
-	d, err := getInstanceDarc(c, instr.InstanceID)
-	if err != nil {
-		return errors.New("darc not found: " + err.Error())
-	}
-	req, err := instr.ToDarcRequest(d.GetBaseID())
-	if err != nil {
-		return errors.New("couldn't create darc request: " + err.Error())
-	}
-	// Verify the request is signed by appropriate identities.
-	// A callback is required to get any delegated DARC(s) during
-	// expression evaluation.
-	err = req.VerifyWithCB(d, func(str string, latest bool) *darc.Darc {
-		if len(str) < 5 || string(str[0:5]) != "darc:" {
-			return nil
-		}
-		darcID, err := hex.DecodeString(str[5:])
-		if err != nil {
-			return nil
-		}
-		d, err := LoadDarcFromColl(c, darcID)
-		if err != nil {
-			return nil
-		}
-		return d
-	})
-	if err != nil {
-		return errors.New("request verification failed: " + err.Error())
-	}
-	return nil
-}
-
-func (c *collectionDB) getInstanceDarc(iid InstanceID) (*darc.Darc, error) {
-	return getInstanceDarc(&roCollection{c.coll}, iid)
 }
 
 func getInstanceDarc(c CollectionView, iid InstanceID) (*darc.Darc, error) {

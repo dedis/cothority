@@ -165,7 +165,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	// reference to the actual genesis transaction.
 	transaction := []ClientTransaction{{
 		Instructions: []Instruction{{
-			InstanceID: InstanceID{},
+			InstanceID: ConfigInstanceID,
 			Nonce:      Nonce{},
 			Index:      0,
 			Length:     1,
@@ -484,7 +484,7 @@ func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
 // LoadGenesisDarc loads the genesis darc of the given skipchain ID.
 func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error) {
 	coll := s.GetCollectionView(scID)
-	return coll.getInstanceDarc(InstanceID{})
+	return getInstanceDarc(coll, ConfigInstanceID)
 }
 
 // LoadBlockInterval loads the block interval from the skipchain ID.
@@ -609,6 +609,10 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 // We use the OmniLedger as a receiver (as is done in the identity service),
 // so we can access e.g. the collectionDBs of the service.
 func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
+	start := time.Now()
+	defer func() {
+		log.Lvlf3("%s: Verify done after %s", s.ServerIdentity(), time.Now().Sub(start))
+	}()
 	_, headerI, err := network.Unmarshal(newSB.Data, cothority.Suite)
 	header, ok := headerI.(*DataHeader)
 	if err != nil || !ok {
@@ -683,6 +687,7 @@ func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain
 		log.Lvl3(s.ServerIdentity(), "loaded state changes from cache")
 		return
 	}
+	log.Lvl3(s.ServerIdentity(), "state changes from cache: MISS")
 	err = nil
 
 	deadline := time.Now().Add(timeout)

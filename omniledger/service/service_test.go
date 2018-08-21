@@ -80,7 +80,10 @@ func TestService_AddTransaction_WithFailure(t *testing.T) {
 }
 
 func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
+	// for {
+	// 	log.Print("Starting test")
 	testAddTransaction(t, 1, true)
+	// }
 }
 
 func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
@@ -88,7 +91,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	if failure {
 		s = newSerN(t, 1, time.Second, 4, false)
 		for _, service := range s.services {
-			service.SetPropagationTimeout(time.Second)
+			service.SetPropagationTimeout(2 * time.Second)
 		}
 	} else {
 		s = newSer(t, 1, testInterval)
@@ -465,9 +468,15 @@ func TestService_StateChange(t *testing.T) {
 		}
 
 		zeroBuf := make([]byte, 8)
+<<<<<<< HEAD
 		switch {
 		// create the object if it doesn't exist
 		case inst.Spawn != nil:
+=======
+		switch inst.GetType() {
+		// create the object if it doesn't exist
+		case SpawnType:
+>>>>>>> origin/master
 			if inst.Spawn.ContractID != "add" {
 				return nil, nil, errors.New("can only spawn add contracts")
 			}
@@ -480,7 +489,11 @@ func TestService_StateChange(t *testing.T) {
 					Value:       zeroBuf,
 				},
 			}, nil, nil
+<<<<<<< HEAD
 		case inst.Invoke != nil:
+=======
+		case InvokeType:
+>>>>>>> origin/master
 
 			// increment the object value
 			vals, err := rec.Values()
@@ -764,63 +777,73 @@ func TestService_SetBadConfig(t *testing.T) {
 	}
 }
 
-// TestService_RotateLeader is an end-to-end test for view-change. We kill the
-// current leader, at index 0. Then the node at index 1 becomes the new leader.
-// Then, we try to send a transaction to a follower, at index 2. The new leader
-// should poll for new transactions and eventually make a new block containing
-// that transaction. The new transaction should be stored on all followers.
-func TestService_RotateLeader(t *testing.T) {
+// TestService_ViewChange is an end-to-end test for view-change. We kill the
+// first nFailures nodes, where the nodes at index 0 is the current leader. The
+// node at index nFailures should become the new leader. Then, we try to send a
+// transaction to a follower, at index nFailures+1. The new leader (at index
+// nFailures) should poll for new transactions and eventually make a new block
+// containing that transaction. The new transaction should be stored on all
+// followers. Finally, we bring the failed nodes back up and they should
+// contain the transactions that they missed (TODO this does not work yet
+// because the config contract fails).
+func TestService_ViewChange(t *testing.T) {
+	testViewChange(t, 4, 1)
+}
+
+func testViewChange(t *testing.T, nHosts, nFailures int) {
 	interval := 2 * time.Second
-	s := newSerN(t, 1, interval, 4, true)
+	s := newSerN(t, 1, interval, nHosts, true)
 	defer s.local.CloseAll()
 
 	for _, service := range s.services {
 		service.SetPropagationTimeout(interval / 2)
 	}
 
-	// Stop the leader, then the next node should take over.
-	s.service().TestClose()
-	s.hosts[0].Pause()
-
-	// wait for the new block
-	var ok bool
-	for i := 0; i < 5; i++ {
-		time.Sleep(2 * s.interval)
-		config, err := s.services[1].LoadConfig(s.sb.SkipChainID())
-		require.NoError(t, err)
-
-		if config.Roster.List[0].Equal(s.services[1].ServerIdentity()) {
-			ok = true
-			break
-		}
+	// Stop the first nFailures hosts then the node at index nFailures
+	// should take over.
+	for i := 0; i < nFailures; i++ {
+		s.services[i].TestClose()
+		s.hosts[i].Pause()
 	}
-	require.True(t, ok, "leader rotation failed")
+
+	// Wait for proof that the new expected leader, s.services[nFailures],
+	// has taken over. First, we sleep for the duration that an honest node
+	// will wait before starting a view-change. Then, we sleep a little
+	// longer for the view-change transaction to be stored in the block.
+	time.Sleep(time.Duration(nFailures) * s.interval * rotationWindow)
+	time.Sleep(interval)
+	config, err := s.services[nFailures].LoadConfig(s.sb.SkipChainID())
+	require.NoError(t, err)
+	require.True(t, config.Roster.List[0].Equal(s.services[nFailures].ServerIdentity()))
 
 	// check that the leader is updated for all nodes
-	for _, service := range s.services[1:] {
+	for _, service := range s.services[nFailures:] {
 		// everyone should have the same leader after the genesis block is stored
 		leader, err := service.getLeader(s.sb.SkipChainID())
 		require.NoError(t, err)
 		require.NotNil(t, leader)
-		require.True(t, leader.Equal(s.services[1].ServerIdentity()))
+		require.True(t, leader.Equal(s.services[nFailures].ServerIdentity()))
 	}
 
-	// try to send a transaction to the node on index 2, which is a
-	// follower (not the new leader)
+	// try to send a transaction to the node on index nFailures+1, which is
+	// a follower (not the new leader)
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, s.value, s.signer)
 	require.NoError(t, err)
-	s.sendTxTo(t, tx1, 2)
+	s.sendTxTo(t, tx1, nFailures+1)
 
 	// wait for the transaction to be stored on the new leader, because it
 	// polls for new transactions
-	pr := s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), 1)
+	pr := s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), nFailures)
 	require.True(t, pr.InclusionProof.Match())
 
-	// the transaction should also be stored on followers, at index 2 and 3
-	pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), 2)
-	require.True(t, pr.InclusionProof.Match())
-	pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), 3)
-	require.True(t, pr.InclusionProof.Match())
+	// The transaction should also be stored on followers
+	for i := nFailures + 1; i < nHosts; i++ {
+		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
+		require.True(t, pr.InclusionProof.Match())
+	}
+
+	// TODO we need to bring the failed (the first nFailures) nodes back up
+	// and check that they can synchronise to the latest state.
 }
 
 func TestService_DarcToSc(t *testing.T) {
@@ -1080,7 +1103,7 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 	}
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
-		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config", "spawn:slow"}, s.signer.Identity())
+		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config", "spawn:slow", "spawn:stateShangeCacheTest"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
