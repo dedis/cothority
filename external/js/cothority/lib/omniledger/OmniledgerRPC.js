@@ -137,21 +137,13 @@ class OmniledgerRPC {
    * @throws {Error} if the proof is not valid
    */
   static checkProof(proof, expectedContract) {
-    function bin2string(array) {
-      let result = "";
-      for (let i = 0; i < array.length; ++i) {
-        result += String.fromCharCode(array[i]);
-      }
-      return result;
-    }
-
     if (!proof.matches()) {
       throw "could'nt find darc";
     }
     if (proof.values.length !== 3) {
       throw "incorrect number of values in proof";
     }
-    let contract = bin2string(proof.values[1]);
+    let contract = Array.from(proof.values[1]).map(c => String.fromCharCode(c)).join("");
     if (!(contract === expectedContract)) {
       throw "contract name is not " + expectedContract + ", got " + contract;
     }
