@@ -54,8 +54,11 @@ testOlStore(){
 	testOK runOl 1 create -roster public.toml -interval 1s
 	OL=cl1/ol*
 	KEY=cl1/key*
-	testOK runCl 1 ol store $OL $KEY
-#	testOK runCl 1 auth store final1.toml
+	runGrepSed "New party" "s/.* //" runCl 1 ol store $OL $KEY
+	PARTYID=$SED
+	testGrep 0 "echo $PARTYID"
+	runGrepSed "Coin balance" "s/.* //" runCl 1 ol coin show $OL $PARTYID ${pub[0]}
+	testGrep 100000 "echo $SED"
 }
 
 testPropagateConfig(){

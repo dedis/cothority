@@ -7,6 +7,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -782,6 +783,60 @@ func omniStore(c *cli.Context) error {
 
 	log.Info("New party spawned with id:", inst.DeriveID(""))
 	return nil
+}
+
+// omniCoinShow returns the number of coins in the account of the user.
+func omniCoinShow(c *cli.Context) error {
+	if c.NArg() != 3 {
+		return errors.New("please give: omniledger.cfg partyID (public-key | accountID)")
+	}
+
+	// Load the omniledger configuration
+	buf, err := ioutil.ReadFile(c.Args().First())
+	if err != nil {
+		return err
+	}
+	_, msgCfg, err := network.Unmarshal(buf, cothority.Suite)
+	if err != nil {
+		return err
+	}
+	cfg := msgCfg.(*ol.Config)
+
+	partyID, err := hex.DecodeString(c.Args().Get(1))
+	if err != nil {
+		return errors.New("couldn't parse partyID: " + err.Error())
+	}
+
+	// Check if we got the public-key or the accountID. First suppose it's the accountID
+	// and verify if that instance exists.
+	accountID, err := hex.DecodeString(c.Args().Get(1))
+	if err != nil {
+		return errors.New("couldn't parse public-key or accountID: " + err.Error())
+	}
+
+	olc := ol.NewClientConfig(*cfg)
+	accountProof, err := olc.GetProof(accountID)
+	if err != nil {
+		return errors.New("couldn't get proof for account: " + err.Error())
+	}
+	if !accountProof.Proof.InclusionProof.Match() {
+		// This account doesn't exist - try with the account, supposing we got a
+		// public key.
+		h := sha256.New()
+		h.Write(partyID)
+		h.Write(accountID)
+		accountID = h.Sum(nil)
+		accountProof, err = olc.GetProof(accountID)
+		if err != nil {
+			return errors.New("couldn't get proof for account: " + err.Error())
+		}
+		if !accountProof.Proof.InclusionProof.Match() {
+			return errors.New("didn't find this account - neither as accountID, nor as public key")
+		}
+	}
+
+	balance :=
+		log.Info("Coin balance is: ")
 }
 
 // getConfigClient returns the configuration and a client-structure.

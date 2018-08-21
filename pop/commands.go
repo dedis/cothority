@@ -138,6 +138,20 @@ func init() {
 				ArgsUsage: "omniledger.cfg key-xxx.cfg [final-id]",
 				Action:    omniStore,
 			},
+			{
+				Name:    "coin",
+				Aliases: []string{"c"},
+				Usage:   "show and move coins",
+				Subcommands: cli.Commands{
+					{
+						Name:      "show",
+						Aliases:   []string{"s"},
+						Usage:     "show how many coins are left in the account",
+						ArgsUsage: "omniledger.cfg partyID (public-key|accountID)",
+						Action:    omniCoinShow,
+					},
+				},
+			},
 		},
 	}
 }
