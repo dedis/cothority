@@ -35,10 +35,6 @@ type CollectionView interface {
 	// an error if something went wrong. A non-existing key returns an
 	// error.
 	GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error)
-
-	verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error
-
-	getInstanceDarc(iid InstanceID) (*darc.Darc, error)
 }
 
 // roCollection is a wrapper for a collection that satisfies interface
@@ -59,14 +55,6 @@ func (r *roCollection) Get(key []byte) collection.Getter {
 // does not exist, it returns an error.
 func (r *roCollection) GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error) {
 	return getValueContract(r, key)
-}
-
-func (r *roCollection) verifyInstruction(scID skipchain.SkipBlockID, instr Instruction) error {
-	return verifyInstruction(r, scID, instr)
-}
-
-func (r *roCollection) getInstanceDarc(iid InstanceID) (*darc.Darc, error) {
-	return getInstanceDarc(r, iid)
 }
 
 // OmniLedgerContract is the type signature of the class functions
