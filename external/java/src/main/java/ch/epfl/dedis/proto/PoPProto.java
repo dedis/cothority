@@ -15432,6 +15432,1980 @@ public final class PoPProto {
 
   }
 
+  public interface StoreInstanceIDOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.StoreInstanceID)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    boolean hasPartyid();
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    com.google.protobuf.ByteString getPartyid();
+
+    /**
+     * <code>required bytes instanceid = 2;</code>
+     */
+    boolean hasInstanceid();
+    /**
+     * <code>required bytes instanceid = 2;</code>
+     */
+    com.google.protobuf.ByteString getInstanceid();
+  }
+  /**
+   * <pre>
+   * StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
+   * </pre>
+   *
+   * Protobuf type {@code pop.StoreInstanceID}
+   */
+  public  static final class StoreInstanceID extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.StoreInstanceID)
+      StoreInstanceIDOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use StoreInstanceID.newBuilder() to construct.
+    private StoreInstanceID(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private StoreInstanceID() {
+      partyid_ = com.google.protobuf.ByteString.EMPTY;
+      instanceid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StoreInstanceID(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              partyid_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              instanceid_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceID_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceID_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.StoreInstanceID.class, ch.epfl.dedis.proto.PoPProto.StoreInstanceID.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PARTYID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString partyid_;
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public boolean hasPartyid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPartyid() {
+      return partyid_;
+    }
+
+    public static final int INSTANCEID_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString instanceid_;
+    /**
+     * <code>required bytes instanceid = 2;</code>
+     */
+    public boolean hasInstanceid() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes instanceid = 2;</code>
+     */
+    public com.google.protobuf.ByteString getInstanceid() {
+      return instanceid_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPartyid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasInstanceid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, partyid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, instanceid_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, partyid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, instanceid_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.StoreInstanceID)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.StoreInstanceID other = (ch.epfl.dedis.proto.PoPProto.StoreInstanceID) obj;
+
+      boolean result = true;
+      result = result && (hasPartyid() == other.hasPartyid());
+      if (hasPartyid()) {
+        result = result && getPartyid()
+            .equals(other.getPartyid());
+      }
+      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid()) {
+        result = result && getInstanceid()
+            .equals(other.getInstanceid());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPartyid()) {
+        hash = (37 * hash) + PARTYID_FIELD_NUMBER;
+        hash = (53 * hash) + getPartyid().hashCode();
+      }
+      if (hasInstanceid()) {
+        hash = (37 * hash) + INSTANCEID_FIELD_NUMBER;
+        hash = (53 * hash) + getInstanceid().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreInstanceID prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
+     * </pre>
+     *
+     * Protobuf type {@code pop.StoreInstanceID}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.StoreInstanceID)
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceIDOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceID_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceID_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.StoreInstanceID.class, ch.epfl.dedis.proto.PoPProto.StoreInstanceID.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.StoreInstanceID.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        partyid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        instanceid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceID_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreInstanceID getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.StoreInstanceID.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreInstanceID build() {
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceID result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreInstanceID buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceID result = new ch.epfl.dedis.proto.PoPProto.StoreInstanceID(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.partyid_ = partyid_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.instanceid_ = instanceid_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreInstanceID) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreInstanceID)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.StoreInstanceID other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.StoreInstanceID.getDefaultInstance()) return this;
+        if (other.hasPartyid()) {
+          setPartyid(other.getPartyid());
+        }
+        if (other.hasInstanceid()) {
+          setInstanceid(other.getInstanceid());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPartyid()) {
+          return false;
+        }
+        if (!hasInstanceid()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceID parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.StoreInstanceID) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString partyid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public boolean hasPartyid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPartyid() {
+        return partyid_;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder setPartyid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        partyid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder clearPartyid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        partyid_ = getDefaultInstance().getPartyid();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes instanceid = 2;</code>
+       */
+      public boolean hasInstanceid() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes instanceid = 2;</code>
+       */
+      public com.google.protobuf.ByteString getInstanceid() {
+        return instanceid_;
+      }
+      /**
+       * <code>required bytes instanceid = 2;</code>
+       */
+      public Builder setInstanceid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        instanceid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes instanceid = 2;</code>
+       */
+      public Builder clearInstanceid() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        instanceid_ = getDefaultInstance().getInstanceid();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.StoreInstanceID)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.StoreInstanceID)
+    private static final ch.epfl.dedis.proto.PoPProto.StoreInstanceID DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.StoreInstanceID();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreInstanceID>
+        PARSER = new com.google.protobuf.AbstractParser<StoreInstanceID>() {
+      public StoreInstanceID parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new StoreInstanceID(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StoreInstanceID> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StoreInstanceID> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.StoreInstanceID getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface StoreInstanceIDReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.StoreInstanceIDReply)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * StoreInstanceIDReply is an empty reply
+   * </pre>
+   *
+   * Protobuf type {@code pop.StoreInstanceIDReply}
+   */
+  public  static final class StoreInstanceIDReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.StoreInstanceIDReply)
+      StoreInstanceIDReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use StoreInstanceIDReply.newBuilder() to construct.
+    private StoreInstanceIDReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private StoreInstanceIDReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StoreInstanceIDReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceIDReply_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceIDReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.class, ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply other = (ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * StoreInstanceIDReply is an empty reply
+     * </pre>
+     *
+     * Protobuf type {@code pop.StoreInstanceIDReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.StoreInstanceIDReply)
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceIDReply_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceIDReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.class, ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceIDReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply build() {
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply result = new ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply(this);
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.StoreInstanceIDReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.StoreInstanceIDReply)
+    private static final ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreInstanceIDReply>
+        PARSER = new com.google.protobuf.AbstractParser<StoreInstanceIDReply>() {
+      public StoreInstanceIDReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new StoreInstanceIDReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StoreInstanceIDReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StoreInstanceIDReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetInstanceIDOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetInstanceID)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    boolean hasPartyid();
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    com.google.protobuf.ByteString getPartyid();
+  }
+  /**
+   * <pre>
+   * GetInstanceID requests an InstanceID from OmniLedger to a FinalStatement.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetInstanceID}
+   */
+  public  static final class GetInstanceID extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetInstanceID)
+      GetInstanceIDOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetInstanceID.newBuilder() to construct.
+    private GetInstanceID(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetInstanceID() {
+      partyid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetInstanceID(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              partyid_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceID_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceID_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetInstanceID.class, ch.epfl.dedis.proto.PoPProto.GetInstanceID.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PARTYID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString partyid_;
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public boolean hasPartyid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPartyid() {
+      return partyid_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPartyid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, partyid_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, partyid_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetInstanceID)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetInstanceID other = (ch.epfl.dedis.proto.PoPProto.GetInstanceID) obj;
+
+      boolean result = true;
+      result = result && (hasPartyid() == other.hasPartyid());
+      if (hasPartyid()) {
+        result = result && getPartyid()
+            .equals(other.getPartyid());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPartyid()) {
+        hash = (37 * hash) + PARTYID_FIELD_NUMBER;
+        hash = (53 * hash) + getPartyid().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetInstanceID prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetInstanceID requests an InstanceID from OmniLedger to a FinalStatement.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetInstanceID}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetInstanceID)
+        ch.epfl.dedis.proto.PoPProto.GetInstanceIDOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceID_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceID_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetInstanceID.class, ch.epfl.dedis.proto.PoPProto.GetInstanceID.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetInstanceID.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        partyid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceID_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetInstanceID getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetInstanceID.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetInstanceID build() {
+        ch.epfl.dedis.proto.PoPProto.GetInstanceID result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetInstanceID buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetInstanceID result = new ch.epfl.dedis.proto.PoPProto.GetInstanceID(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.partyid_ = partyid_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetInstanceID) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetInstanceID)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetInstanceID other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetInstanceID.getDefaultInstance()) return this;
+        if (other.hasPartyid()) {
+          setPartyid(other.getPartyid());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPartyid()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetInstanceID parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetInstanceID) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString partyid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public boolean hasPartyid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPartyid() {
+        return partyid_;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder setPartyid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        partyid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder clearPartyid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        partyid_ = getDefaultInstance().getPartyid();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetInstanceID)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetInstanceID)
+    private static final ch.epfl.dedis.proto.PoPProto.GetInstanceID DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetInstanceID();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetInstanceID>
+        PARSER = new com.google.protobuf.AbstractParser<GetInstanceID>() {
+      public GetInstanceID parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetInstanceID(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetInstanceID> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetInstanceID> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetInstanceID getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetInstanceIDReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetInstanceIDReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes instanceid = 1;</code>
+     */
+    boolean hasInstanceid();
+    /**
+     * <code>required bytes instanceid = 1;</code>
+     */
+    com.google.protobuf.ByteString getInstanceid();
+  }
+  /**
+   * <pre>
+   * GetInstanceIDReply is the InstanceID for the party
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetInstanceIDReply}
+   */
+  public  static final class GetInstanceIDReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetInstanceIDReply)
+      GetInstanceIDReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetInstanceIDReply.newBuilder() to construct.
+    private GetInstanceIDReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetInstanceIDReply() {
+      instanceid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetInstanceIDReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              instanceid_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceIDReply_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceIDReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.class, ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int INSTANCEID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString instanceid_;
+    /**
+     * <code>required bytes instanceid = 1;</code>
+     */
+    public boolean hasInstanceid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes instanceid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getInstanceid() {
+      return instanceid_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasInstanceid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, instanceid_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, instanceid_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply other = (ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply) obj;
+
+      boolean result = true;
+      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid()) {
+        result = result && getInstanceid()
+            .equals(other.getInstanceid());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasInstanceid()) {
+        hash = (37 * hash) + INSTANCEID_FIELD_NUMBER;
+        hash = (53 * hash) + getInstanceid().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetInstanceIDReply is the InstanceID for the party
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetInstanceIDReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetInstanceIDReply)
+        ch.epfl.dedis.proto.PoPProto.GetInstanceIDReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceIDReply_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceIDReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.class, ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        instanceid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceIDReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply build() {
+        ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply result = new ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.instanceid_ = instanceid_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.getDefaultInstance()) return this;
+        if (other.hasInstanceid()) {
+          setInstanceid(other.getInstanceid());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasInstanceid()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes instanceid = 1;</code>
+       */
+      public boolean hasInstanceid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes instanceid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getInstanceid() {
+        return instanceid_;
+      }
+      /**
+       * <code>required bytes instanceid = 1;</code>
+       */
+      public Builder setInstanceid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        instanceid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes instanceid = 1;</code>
+       */
+      public Builder clearInstanceid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        instanceid_ = getDefaultInstance().getInstanceid();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetInstanceIDReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetInstanceIDReply)
+    private static final ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetInstanceIDReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetInstanceIDReply>() {
+      public GetInstanceIDReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetInstanceIDReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetInstanceIDReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetInstanceIDReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface StoreKeysOrBuilder extends
       // @@protoc_insertion_point(interface_extends:pop.StoreKeys)
       com.google.protobuf.MessageOrBuilder {
@@ -17868,6 +19842,44 @@ public final class PoPProto {
      * <code>optional .pop.FinalStatement finalstatement = 2;</code>
      */
     ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder getFinalstatementOrBuilder();
+
+    /**
+     * <pre>
+     * Previous is the link to the instanceID of the previous party, it can be
+     * nil for the first party.
+     * </pre>
+     *
+     * <code>required bytes previous = 3;</code>
+     */
+    boolean hasPrevious();
+    /**
+     * <pre>
+     * Previous is the link to the instanceID of the previous party, it can be
+     * nil for the first party.
+     * </pre>
+     *
+     * <code>required bytes previous = 3;</code>
+     */
+    com.google.protobuf.ByteString getPrevious();
+
+    /**
+     * <pre>
+     * Next is a link to the omniledger instanceID of the next party. It can be
+     * nil if there is no next party.
+     * </pre>
+     *
+     * <code>required bytes next = 4;</code>
+     */
+    boolean hasNext();
+    /**
+     * <pre>
+     * Next is a link to the omniledger instanceID of the next party. It can be
+     * nil if there is no next party.
+     * </pre>
+     *
+     * <code>required bytes next = 4;</code>
+     */
+    com.google.protobuf.ByteString getNext();
   }
   /**
    * <pre>
@@ -17887,6 +19899,8 @@ public final class PoPProto {
     }
     private PopPartyInstance() {
       state_ = 0;
+      previous_ = com.google.protobuf.ByteString.EMPTY;
+      next_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -17933,6 +19947,16 @@ public final class PoPProto {
                 finalstatement_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              previous_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              next_ = input.readBytes();
               break;
             }
           }
@@ -18023,6 +20047,56 @@ public final class PoPProto {
       return finalstatement_ == null ? ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance() : finalstatement_;
     }
 
+    public static final int PREVIOUS_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString previous_;
+    /**
+     * <pre>
+     * Previous is the link to the instanceID of the previous party, it can be
+     * nil for the first party.
+     * </pre>
+     *
+     * <code>required bytes previous = 3;</code>
+     */
+    public boolean hasPrevious() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * Previous is the link to the instanceID of the previous party, it can be
+     * nil for the first party.
+     * </pre>
+     *
+     * <code>required bytes previous = 3;</code>
+     */
+    public com.google.protobuf.ByteString getPrevious() {
+      return previous_;
+    }
+
+    public static final int NEXT_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString next_;
+    /**
+     * <pre>
+     * Next is a link to the omniledger instanceID of the next party. It can be
+     * nil if there is no next party.
+     * </pre>
+     *
+     * <code>required bytes next = 4;</code>
+     */
+    public boolean hasNext() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <pre>
+     * Next is a link to the omniledger instanceID of the next party. It can be
+     * nil if there is no next party.
+     * </pre>
+     *
+     * <code>required bytes next = 4;</code>
+     */
+    public com.google.protobuf.ByteString getNext() {
+      return next_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -18030,6 +20104,14 @@ public final class PoPProto {
       if (isInitialized == 0) return false;
 
       if (!hasState()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasPrevious()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasNext()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -18051,6 +20133,12 @@ public final class PoPProto {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeMessage(2, getFinalstatement());
       }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, previous_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, next_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -18066,6 +20154,14 @@ public final class PoPProto {
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, getFinalstatement());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, previous_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, next_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -18093,6 +20189,16 @@ public final class PoPProto {
         result = result && getFinalstatement()
             .equals(other.getFinalstatement());
       }
+      result = result && (hasPrevious() == other.hasPrevious());
+      if (hasPrevious()) {
+        result = result && getPrevious()
+            .equals(other.getPrevious());
+      }
+      result = result && (hasNext() == other.hasNext());
+      if (hasNext()) {
+        result = result && getNext()
+            .equals(other.getNext());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -18111,6 +20217,14 @@ public final class PoPProto {
       if (hasFinalstatement()) {
         hash = (37 * hash) + FINALSTATEMENT_FIELD_NUMBER;
         hash = (53 * hash) + getFinalstatement().hashCode();
+      }
+      if (hasPrevious()) {
+        hash = (37 * hash) + PREVIOUS_FIELD_NUMBER;
+        hash = (53 * hash) + getPrevious().hashCode();
+      }
+      if (hasNext()) {
+        hash = (37 * hash) + NEXT_FIELD_NUMBER;
+        hash = (53 * hash) + getNext().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -18254,6 +20368,10 @@ public final class PoPProto {
           finalstatementBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000002);
+        previous_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        next_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -18290,6 +20408,14 @@ public final class PoPProto {
         } else {
           result.finalstatement_ = finalstatementBuilder_.build();
         }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.previous_ = previous_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.next_ = next_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -18338,6 +20464,12 @@ public final class PoPProto {
         if (other.hasFinalstatement()) {
           mergeFinalstatement(other.getFinalstatement());
         }
+        if (other.hasPrevious()) {
+          setPrevious(other.getPrevious());
+        }
+        if (other.hasNext()) {
+          setNext(other.getNext());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -18345,6 +20477,12 @@ public final class PoPProto {
 
       public final boolean isInitialized() {
         if (!hasState()) {
+          return false;
+        }
+        if (!hasPrevious()) {
+          return false;
+        }
+        if (!hasNext()) {
           return false;
         }
         if (hasFinalstatement()) {
@@ -18592,6 +20730,116 @@ public final class PoPProto {
         }
         return finalstatementBuilder_;
       }
+
+      private com.google.protobuf.ByteString previous_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * Previous is the link to the instanceID of the previous party, it can be
+       * nil for the first party.
+       * </pre>
+       *
+       * <code>required bytes previous = 3;</code>
+       */
+      public boolean hasPrevious() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * Previous is the link to the instanceID of the previous party, it can be
+       * nil for the first party.
+       * </pre>
+       *
+       * <code>required bytes previous = 3;</code>
+       */
+      public com.google.protobuf.ByteString getPrevious() {
+        return previous_;
+      }
+      /**
+       * <pre>
+       * Previous is the link to the instanceID of the previous party, it can be
+       * nil for the first party.
+       * </pre>
+       *
+       * <code>required bytes previous = 3;</code>
+       */
+      public Builder setPrevious(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        previous_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Previous is the link to the instanceID of the previous party, it can be
+       * nil for the first party.
+       * </pre>
+       *
+       * <code>required bytes previous = 3;</code>
+       */
+      public Builder clearPrevious() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        previous_ = getDefaultInstance().getPrevious();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString next_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * Next is a link to the omniledger instanceID of the next party. It can be
+       * nil if there is no next party.
+       * </pre>
+       *
+       * <code>required bytes next = 4;</code>
+       */
+      public boolean hasNext() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <pre>
+       * Next is a link to the omniledger instanceID of the next party. It can be
+       * nil if there is no next party.
+       * </pre>
+       *
+       * <code>required bytes next = 4;</code>
+       */
+      public com.google.protobuf.ByteString getNext() {
+        return next_;
+      }
+      /**
+       * <pre>
+       * Next is a link to the omniledger instanceID of the next party. It can be
+       * nil if there is no next party.
+       * </pre>
+       *
+       * <code>required bytes next = 4;</code>
+       */
+      public Builder setNext(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        next_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Next is a link to the omniledger instanceID of the next party. It can be
+       * nil if there is no next party.
+       * </pre>
+       *
+       * <code>required bytes next = 4;</code>
+       */
+      public Builder clearNext() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        next_ = getDefaultInstance().getNext();
+        onChanged();
+        return this;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
@@ -18757,6 +21005,26 @@ public final class PoPProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_StoreInstanceID_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_StoreInstanceID_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_StoreInstanceIDReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_StoreInstanceIDReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetInstanceID_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetInstanceID_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetInstanceIDReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetInstanceIDReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_StoreKeys_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -18823,13 +21091,18 @@ public final class PoPProto {
       "atements\030\001 \003(\01321.pop.GetFinalStatementsR" +
       "eply.FinalstatementsEntry\032K\n\024Finalstatem" +
       "entsEntry\022\013\n\003key\030\001 \001(\t\022\"\n\005value\030\002 \001(\0132\023." +
-      "pop.FinalStatement:\0028\001\"8\n\tStoreKeys\022\n\n\002i" +
-      "d\030\001 \002(\014\022\014\n\004keys\030\002 \003(\014\022\021\n\tsignature\030\003 \002(\014" +
-      "\"\020\n\016StoreKeysReply\"\025\n\007GetKeys\022\n\n\002id\030\001 \002(" +
-      "\014\"(\n\014GetKeysReply\022\n\n\002id\030\001 \002(\014\022\014\n\004keys\030\002 " +
-      "\003(\014\"N\n\020PopPartyInstance\022\r\n\005state\030\001 \002(\021\022+" +
-      "\n\016finalstatement\030\002 \001(\0132\023.pop.FinalStatem" +
-      "entB\037\n\023ch.epfl.dedis.protoB\010PoPProto"
+      "pop.FinalStatement:\0028\001\"6\n\017StoreInstanceI" +
+      "D\022\017\n\007partyid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"\026" +
+      "\n\024StoreInstanceIDReply\" \n\rGetInstanceID\022" +
+      "\017\n\007partyid\030\001 \002(\014\"(\n\022GetInstanceIDReply\022\022" +
+      "\n\ninstanceid\030\001 \002(\014\"8\n\tStoreKeys\022\n\n\002id\030\001 " +
+      "\002(\014\022\014\n\004keys\030\002 \003(\014\022\021\n\tsignature\030\003 \002(\014\"\020\n\016" +
+      "StoreKeysReply\"\025\n\007GetKeys\022\n\n\002id\030\001 \002(\014\"(\n",
+      "\014GetKeysReply\022\n\n\002id\030\001 \002(\014\022\014\n\004keys\030\002 \003(\014\"" +
+      "n\n\020PopPartyInstance\022\r\n\005state\030\001 \002(\021\022+\n\016fi" +
+      "nalstatement\030\002 \001(\0132\023.pop.FinalStatement\022" +
+      "\020\n\010previous\030\003 \002(\014\022\014\n\004next\030\004 \002(\014B\037\n\023ch.ep" +
+      "fl.dedis.protoB\010PoPProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -18982,36 +21255,60 @@ public final class PoPProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_descriptor,
         new java.lang.String[] { "Key", "Value", });
-    internal_static_pop_StoreKeys_descriptor =
+    internal_static_pop_StoreInstanceID_descriptor =
       getDescriptor().getMessageTypes().get(22);
+    internal_static_pop_StoreInstanceID_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_StoreInstanceID_descriptor,
+        new java.lang.String[] { "Partyid", "Instanceid", });
+    internal_static_pop_StoreInstanceIDReply_descriptor =
+      getDescriptor().getMessageTypes().get(23);
+    internal_static_pop_StoreInstanceIDReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_StoreInstanceIDReply_descriptor,
+        new java.lang.String[] { });
+    internal_static_pop_GetInstanceID_descriptor =
+      getDescriptor().getMessageTypes().get(24);
+    internal_static_pop_GetInstanceID_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetInstanceID_descriptor,
+        new java.lang.String[] { "Partyid", });
+    internal_static_pop_GetInstanceIDReply_descriptor =
+      getDescriptor().getMessageTypes().get(25);
+    internal_static_pop_GetInstanceIDReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetInstanceIDReply_descriptor,
+        new java.lang.String[] { "Instanceid", });
+    internal_static_pop_StoreKeys_descriptor =
+      getDescriptor().getMessageTypes().get(26);
     internal_static_pop_StoreKeys_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_StoreKeys_descriptor,
         new java.lang.String[] { "Id", "Keys", "Signature", });
     internal_static_pop_StoreKeysReply_descriptor =
-      getDescriptor().getMessageTypes().get(23);
+      getDescriptor().getMessageTypes().get(27);
     internal_static_pop_StoreKeysReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_StoreKeysReply_descriptor,
         new java.lang.String[] { });
     internal_static_pop_GetKeys_descriptor =
-      getDescriptor().getMessageTypes().get(24);
+      getDescriptor().getMessageTypes().get(28);
     internal_static_pop_GetKeys_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_GetKeys_descriptor,
         new java.lang.String[] { "Id", });
     internal_static_pop_GetKeysReply_descriptor =
-      getDescriptor().getMessageTypes().get(25);
+      getDescriptor().getMessageTypes().get(29);
     internal_static_pop_GetKeysReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_GetKeysReply_descriptor,
         new java.lang.String[] { "Id", "Keys", });
     internal_static_pop_PopPartyInstance_descriptor =
-      getDescriptor().getMessageTypes().get(26);
+      getDescriptor().getMessageTypes().get(30);
     internal_static_pop_PopPartyInstance_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_PopPartyInstance_descriptor,
-        new java.lang.String[] { "State", "Finalstatement", });
+        new java.lang.String[] { "State", "Finalstatement", "Previous", "Next", });
     ch.epfl.dedis.proto.OnetProto.getDescriptor();
   }
 

@@ -160,6 +160,26 @@ message GetFinalStatementsReply {
    map<string, FinalStatement> finalstatements = 1;
 }
 
+// StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
+message StoreInstanceID {
+  required bytes partyid = 1;
+  required bytes instanceid = 2;
+}
+
+// StoreInstanceIDReply is an empty reply
+message StoreInstanceIDReply {
+}
+
+// GetInstanceID requests an InstanceID from OmniLedger to a FinalStatement.
+message GetInstanceID {
+  required bytes partyid = 1;
+}
+
+// GetInstanceIDReply is the InstanceID for the party
+message GetInstanceIDReply {
+  required bytes instanceid = 1;
+}
+
 // StoreKeys stores a list of keys for attendees to retrieve
 // later.
 message StoreKeys {
@@ -193,4 +213,10 @@ message PopPartyInstance {
   // FinalStatement has either only the Desc inside if State == 1, or all fields
   // set if State == 2.
   optional FinalStatement finalstatement = 2;
+  // Previous is the link to the instanceID of the previous party, it can be
+  // nil for the first party.
+  required bytes previous = 3;
+  // Next is a link to the omniledger instanceID of the next party. It can be
+  // nil if there is no next party.
+  required bytes next = 4;
 }
