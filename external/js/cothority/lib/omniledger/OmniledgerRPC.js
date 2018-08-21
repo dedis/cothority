@@ -7,7 +7,6 @@ const SkipchainClient = require("../skipchain").Client;
 const Kyber = require("@dedis/kyber-js");
 const misc = require("../misc");
 const protobuf = require("protobufjs");
-const util = require("util");
 
 /**
  * OmniledgerRPC interacts with the omniledger service of a conode.
@@ -16,6 +15,7 @@ const util = require("util");
 class OmniledgerRPC {
   /**
    * Constructs an OmniLedgerRPC when the complete configuration is known
+   *
    * @param {Config} config - the configuration of the OmniLedger
    * @param {cothority.Roster} roster - the roster of the OmniLedger
    * @param {Darc} genesisDarc - the genesis Darc
@@ -44,8 +44,8 @@ class OmniledgerRPC {
   }
 
   /**
-   * @return {Uint8Array} the ID of the skipchain (aka the
-   * ID of the genesis skipblock)
+   * @return {Uint8Array} the ID of the skipchain (aka the ID of the genesis
+   * skipblock)
    */
   get skipchainID() {
     return this._skipchainID;
@@ -66,11 +66,14 @@ class OmniledgerRPC {
   }
 
   /**
-   * Sends a transaction to omniledger and waits for up to 'wait' blocks for the transaction to be
-   * included in the global state. If more than 'wait' blocks are created and the transaction is not
-   * included, an exception will be raised.
-   * @param {TODO} transaction - is the client transaction holding one or more instructions to be sent to omniledger.
-   * @param {number} wait - indicates the number of blocks to wait for the transaction to be included
+   * Sends a transaction to omniledger and waits for up to 'wait' blocks for the
+   * transaction to be included in the global state. If more than 'wait' blocks
+   * are created and the transaction is not included, an exception will be raised.
+   *
+   * @param {ClientTransaction} transaction - is the client transaction holding
+   * one or more instructions to be sent to omniledger.
+   * @param {number} wait - indicates the number of blocks to wait for the
+   * transaction to be included
    * @return {Promise} - a promise that gets resolved if the block has been included
    */
   sendTransactionAndWait(transaction, wait) {
@@ -99,18 +102,21 @@ class OmniledgerRPC {
   }
 
   /**
+   * Gets a proof from omniledger to show that a given instance is in the
+   * global state.
    *
-   * @param {RosterSocket} rosterSocket
-   * @param skipchainId
-   * @param key
+   * @param {Roster} roster - the roster hosting the omniledger
+   * @param {Uint8Array} skipchainId - the skipchain ID (the ID of it's genesis block)
+   * @param {Uint8Array} key - the instance key
    * @return {Promise<Proof>}
    */
-  static getProof(rosterSocket, skipchainId, key) {
+  static getProof(roster, skipchainId, key) {
     const getProofMessage = {
       version: OmniledgerRPC.currentVersion,
       id: skipchainId,
       key: key
     };
+    const rosterSocket = new net.RosterSocket(roster, "OmniLedger");
     return rosterSocket
       .send("GetProof", "GetProofResponse", getProofMessage)
       .then(reply => {
@@ -124,6 +130,7 @@ class OmniledgerRPC {
   }
 
   /**
+   * Check the validity of the proof
    *
    * @param {Proof} proof
    * @param {string} expectedContract
@@ -144,7 +151,6 @@ class OmniledgerRPC {
     if (proof.values.length !== 3) {
       throw "incorrect number of values in proof";
     }
-    // let contract = new TextDecoder("utf-8").decode(proof.values[1]).toString();
     let contract = bin2string(proof.values[1]);
     if (!(contract === expectedContract)) {
       throw "contract name is not " + expectedContract + ", got " + contract;
@@ -152,6 +158,8 @@ class OmniledgerRPC {
   }
 
   /**
+   * Constructs an OmniLedgerRPC from known configuration. The constructor will communicate with the service to
+   * populate other fields and perform verification.
    *
    * @param roster - the roster of the omnileger
    * @param skipchainId - the ID of the skipchain (aka the
@@ -168,14 +176,13 @@ class OmniledgerRPC {
     }
     let config = undefined;
     let genesisDarc = undefined;
-    let rosterSocket = new net.RosterSocket(roster, "OmniLedger");
-    return this.getProof(rosterSocket, skipchainId, new Uint8Array(32))
+    return this.getProof(roster, skipchainId, new Uint8Array(32))
       .then(proof => {
         OmniledgerRPC.checkProof(proof, "config");
         config = Config.fromByteBuffer(proof.values[0]);
 
         return OmniledgerRPC.getProof(
-          rosterSocket,
+          roster,
           skipchainId,
           proof.values[2]
         );
@@ -197,7 +204,6 @@ class OmniledgerRPC {
             return skipchain.getLatestBlock();
           })
           .then(latest => {
-            console.log("BAH !");
             return Promise.resolve(
               new OmniledgerRPC(
                 config,
