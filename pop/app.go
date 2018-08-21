@@ -605,6 +605,21 @@ func authStore(c *cli.Context) error {
 
 // getConfigClient returns the configuration and a client-structure.
 func getConfigClient(c *cli.Context) (*Config, *service.Client) {
+
+	cfgPath := path.Join(c.GlobalString("config"), "config.bin")
+        dir := path.Dir(cfgPath)
+        _, err := os.Stat(dir)
+        if err != nil {
+                if os.IsNotExist(err) {
+                        err := os.MkdirAll(dir, 0770)
+                        if err != nil {
+                                return nil, err
+                        }
+                } else {
+                        return nil, err
+                }
+        }
+
 	cfg, err := newConfig(path.Join(c.GlobalString("config"), "config.bin"))
 	log.ErrFatal(err)
 	return cfg, service.NewClient()
