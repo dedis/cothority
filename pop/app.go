@@ -891,7 +891,7 @@ func omniCoinShow(c *cli.Context) error {
 	}
 	cfg := msgCfg.(*ol.Config)
 
-	partyID, err := hex.DecodeString(c.Args().Get(1))
+	partyInstanceID, err := hex.DecodeString(c.Args().Get(1))
 	if err != nil {
 		return errors.New("couldn't parse partyID: " + err.Error())
 	}
@@ -913,7 +913,7 @@ func omniCoinShow(c *cli.Context) error {
 		// public key.
 		log.Info("Interpreting argument as public key")
 		h := sha256.New()
-		h.Write(partyID)
+		h.Write(partyInstanceID)
 		h.Write(accountID)
 		accountID = h.Sum(nil)
 		accountProof, err = olc.GetProof(accountID)

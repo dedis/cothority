@@ -5,6 +5,7 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
+	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
@@ -23,6 +24,7 @@ func init() {
 // PROTOSTART
 // package pop;
 // type :map\[string\]FinalStatement:map<string, FinalStatement>
+// type :omniledger.InstanceID:bytes
 // import "onet.proto";
 //
 // option java_package = "ch.epfl.dedis.proto";
@@ -216,4 +218,10 @@ type PopPartyInstance struct {
 	// FinalStatement has either only the Desc inside if State == 1, or all fields
 	// set if State == 2.
 	FinalStatement *FinalStatement
+	// Previous is the link to the instanceID of the previous party, it can be
+	// nil for the first party.
+	Previous omniledger.InstanceID
+	// Next is a link to the omniledger instanceID of the next party. It can be
+	// nil if there is no next party.
+	Next omniledger.InstanceID
 }
