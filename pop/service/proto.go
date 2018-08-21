@@ -18,7 +18,9 @@ func init() {
 		StoreConfig{}, StoreConfigReply{},
 		GetProposals{}, GetProposalsReply{},
 		VerifyLink{}, VerifyLinkReply{},
-		PopPartyInstance{})
+		PopPartyInstance{}, StoreInstanceID{},
+		StoreInstanceIDReply{},
+		GetInstanceID{}, GetInstanceIDReply{})
 }
 
 // PROTOSTART
@@ -183,6 +185,26 @@ type GetFinalStatements struct {
 // GetFinalStatementsReply returns all stored final statements.
 type GetFinalStatementsReply struct {
 	FinalStatements map[string]*FinalStatement
+}
+
+// StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
+type StoreInstanceID struct {
+	PartyID    []byte
+	InstanceID omniledger.InstanceID
+}
+
+// StoreInstanceIDReply is an empty reply
+type StoreInstanceIDReply struct {
+}
+
+// GetInstanceID requests an InstanceID from OmniLedger to a FinalStatement.
+type GetInstanceID struct {
+	PartyID []byte
+}
+
+// GetInstanceIDReply is the InstanceID for the party
+type GetInstanceIDReply struct {
+	InstanceID omniledger.InstanceID
 }
 
 // StoreKeys stores a list of keys for attendees to retrieve

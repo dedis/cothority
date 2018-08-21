@@ -694,8 +694,13 @@ func omniStore(c *cli.Context) error {
 	}
 
 	var finalStatement *service.FinalStatement
-	for _, v := range finalStatements {
+	for k, v := range finalStatements {
+		log.Printf("Keeping final statement %x", k)
+		finalId = []byte(k)
 		finalStatement = v
+	}
+	if err != nil {
+		return errors.New("error while creating hash of final statement: " + err.Error())
 	}
 	fsString := fmt.Sprintf("'%s' in '%s' at '%s'", finalStatement.Desc.Name,
 		finalStatement.Desc.Location, finalStatement.Desc.DateTime)
@@ -785,14 +790,23 @@ func omniStore(c *cli.Context) error {
 		return err
 	}
 
-	log.Info("New party spawned with id:", inst.DeriveID(""))
+	log.Info("Storing InstanceID in pop-service")
+	iid := inst.DeriveID("")
+	for _, c := range cfg.Roster.List {
+		err = service.NewClient().StoreInstanceID(c.Address, finalId, iid)
+		if err != nil {
+			log.Error("couldn't store instanceID: " + err.Error())
+		}
+	}
+
+	log.Info("New party spawned with id:", iid)
 	return nil
 }
 
 // omniFinalize stores a final statement of a party in Omniledger
 func omniFinalize(c *cli.Context) error {
-	if c.NArg() != 4 {
-		return errors.New("please give: omniledger.cfg key-xxx.cfg partyID partyInstance")
+	if c.NArg() != 3 {
+		return errors.New("please give: omniledger.cfg key-xxx.cfg partyID")
 	}
 
 	// Load the omniledger configuration
@@ -823,8 +837,9 @@ func omniFinalize(c *cli.Context) error {
 		return errors.New("couldn't parse partyID: " + err.Error())
 	}
 
-	log.Info("Fetching final statement from conode")
-	fsMap, err := service.NewClient().GetFinalStatements(cfg.Roster.List[0].Address)
+	log.Info("Fetching final statement from conode", cfg.Roster.List[0])
+	cl := service.NewClient()
+	fsMap, err := cl.GetFinalStatements(cfg.Roster.List[0].Address)
 	if err != nil {
 		return errors.New("error while fetching final statement: " + err.Error())
 	}
@@ -840,16 +855,22 @@ func omniFinalize(c *cli.Context) error {
 		return errors.New("final statement not finalized")
 	}
 	fsBuf, err := protobuf.Encode(fs)
-
-	partyInstance, err := hex.DecodeString(c.Args().Get(3))
 	if err != nil {
-		return errors.New("couldn't decode partyInstance: " + err.Error())
+		return errors.New("couldn't encode final statement: " + err.Error())
+	}
+
+	partyInstance, err := cl.GetInstanceID(cfg.Roster.List[0].Address, partyID)
+	if err != nil {
+		return errors.New("couldn't get instanceID: " + err.Error())
+	}
+	if partyInstance.Equal(ol.InstanceID{}) {
+		return errors.New("No instanceID stored!")
 	}
 
 	log.Info("Sending finalize-instruction to omniledger")
 	ctx := ol.ClientTransaction{
 		Instructions: ol.Instructions{ol.Instruction{
-			InstanceID: ol.NewInstanceID(partyInstance),
+			InstanceID: partyInstance,
 			Index:      0,
 			Length:     1,
 			Invoke: &ol.Invoke{

@@ -7,6 +7,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
+	ol "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/eddsa"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -166,6 +167,23 @@ func (c *Client) GetFinalStatements(dst network.Address) (map[string]*FinalState
 		return nil, e
 	}
 	return res.FinalStatements, nil
+}
+
+// StoreInstanceID asks the service to store an instanceID for a given party.
+func (c *Client) StoreInstanceID(dst network.Address, partyID []byte, instanceID ol.InstanceID) error {
+	si := &network.ServerIdentity{Address: dst}
+	ret := &StoreInstanceIDReply{}
+
+	return c.SendProtobuf(si, &StoreInstanceID{partyID, instanceID}, ret)
+}
+
+// GetInstanceID asks the service for an instanceID for a given party.
+func (c *Client) GetInstanceID(dst network.Address, partyID []byte) (ol.InstanceID, error) {
+	si := &network.ServerIdentity{Address: dst}
+	ret := &GetInstanceIDReply{}
+
+	err := c.SendProtobuf(si, &GetInstanceID{partyID}, ret)
+	return ret.InstanceID, err
 }
 
 // The toml-structure for (un)marshaling with toml

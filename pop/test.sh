@@ -59,7 +59,7 @@ testOlStore(){
   PARTYINSTID=$SED
   testOK test -n "$PARTYINSTID"
   testFail runCl 1 ol coin show $OL $PARTYINSTID ${pub[1]}
-  testFail runCl 1 ol finalize $OL $KEY ${pop_hash[1]} $PARTYINSTID
+  testFail runCl 1 ol finalize $OL $KEY ${pop_hash[1]}
 
   for (( o=1; o<=3; o++ )); do
     for (( cl=1; cl<=$att; cl++ )); do
@@ -70,7 +70,7 @@ testOlStore(){
 	runCl 2 org final ${pop_hash[1]}
 	runCl 3 org final ${pop_hash[1]}
 
-	testOK runCl 1 ol finalize $OL $KEY ${pop_hash[1]} $PARTYINSTID
+	testOK runCl 1 ol finalize $OL $KEY ${pop_hash[1]}
 
   runGrepSed "Coin balance" "s/.* //" runCl 1 ol coin show $OL $PARTYINSTID ${pub[1]}
   testGrep 100000 echo $SED

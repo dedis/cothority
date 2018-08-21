@@ -128,6 +128,8 @@ type saveData struct {
 	// The final statements
 	// key of map is ID of party
 	Finals map[string]*FinalStatement
+	// InstanceIDs stores a map of partyID to InstanceID
+	InstanceIDs map[string]*service.InstanceID
 	// The info used in merge process
 	// key is ID of party
 	merges map[string]*merge
@@ -432,6 +434,23 @@ func (s *Service) StoreKeys(req *StoreKeys) (*StoreKeysReply, error) {
 	// TODO: verify signature
 	s.storedKeys[string(req.ID)] = &keyList{req.Keys}
 	return &StoreKeysReply{}, nil
+}
+
+// StoreInstanceID will store the instanceID in a given final statement
+func (s *Service) StoreInstanceID(req *StoreInstanceID) (*StoreInstanceIDReply, error) {
+	log.Printf("%s: storing %x = %x", s.ServerIdentity(), req.PartyID, req.InstanceID.Slice())
+	s.data.InstanceIDs[string(req.PartyID)] = &req.InstanceID
+	s.save()
+	return &StoreInstanceIDReply{}, nil
+}
+
+// GetInstanceID will return the instanceID of a final statement
+func (s *Service) GetInstanceID(req *GetInstanceID) (*GetInstanceIDReply, error) {
+	iid, ok := s.data.InstanceIDs[string(req.PartyID)]
+	if !ok {
+		return nil, errors.New("no such instanceID stored")
+	}
+	return &GetInstanceIDReply{*iid}, nil
 }
 
 func (s *Service) GetKeys(req *GetKeys) (*GetKeysReply, error) {
@@ -1096,7 +1115,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	err := s.RegisterHandlers(s.PinRequest, s.VerifyLink, s.StoreConfig, s.FinalizeRequest,
 		s.FetchFinal, s.MergeRequest, s.GetProposals, s.GetLink, s.GetFinalStatements,
-		s.StoreKeys)
+		s.StoreKeys, s.StoreInstanceID, s.GetInstanceID)
 	if err != nil {
 		return nil, err
 	}
@@ -1108,6 +1127,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	if s.data.merges == nil {
 		s.data.merges = make(map[string]*merge)
+	}
+	if len(s.data.InstanceIDs) == 0 {
+		s.data.InstanceIDs = map[string]*service.InstanceID{}
 	}
 	s.syncs = make(map[string]*syncChans)
 	s.propagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal, 0)
