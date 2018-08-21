@@ -613,10 +613,10 @@ func getConfigClient(c *cli.Context) (*Config, *service.Client) {
                 if os.IsNotExist(err) {
                         err := os.MkdirAll(dir, 0770)
                         if err != nil {
-                                return nil, err
+				log.ErrFatal(err)
                         }
                 } else {
-                        return nil, err
+			log.ErrFatal(err)
                 }
         }
 
