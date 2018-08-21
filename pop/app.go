@@ -669,7 +669,7 @@ func omniStore(c *cli.Context) error {
 	if len(finalId) > 0 {
 		// Filter using finalId
 		for k := range finalStatements {
-			if bytes.Compare([]byte(k[0:len(finalId)]), finalId) == 0 {
+			if bytes.Compare([]byte(k[0:len(finalId)]), finalId) != 0 {
 				delete(finalStatements, k)
 			}
 		}
@@ -780,6 +780,7 @@ func omniStore(c *cli.Context) error {
 		return err
 	}
 
+	log.Info("New party spawned with id:", inst.DeriveID(""))
 	return nil
 }
 
