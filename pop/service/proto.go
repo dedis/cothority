@@ -183,6 +183,30 @@ type GetFinalStatementsReply struct {
 	FinalStatements map[string]*FinalStatement
 }
 
+// StoreKeys stores a list of keys for attendees to retrieve
+// later.
+type StoreKeys struct {
+	// ID is the ID of the party where we want to store intermediate keys
+	ID []byte
+	// Keys is a list of public keys to store
+	Keys []kyber.Point
+	// Signature proves that the organizer updated the keys
+	Signature []byte
+}
+
+// StoreKeysReply is an empty message.
+type StoreKeysReply struct {
+}
+
+type GetKeys struct {
+	ID []byte
+}
+
+type GetKeysReply struct {
+	ID   []byte
+	Keys []kyber.Point
+}
+
 // PopPartyInstance is the data that is stored in a pop-party instance.
 type PopPartyInstance struct {
 	// State has one of the following values:

@@ -160,6 +160,30 @@ message GetFinalStatementsReply {
    map<string, FinalStatement> finalstatements = 1;
 }
 
+// StoreKeys stores a list of keys for attendees to retrieve
+// later.
+message StoreKeys {
+  // ID is the ID of the party where we want to store intermediate keys
+  required bytes id = 1;
+  // Keys is a list of public keys to store
+  repeated bytes keys = 2;
+  // Signature proves that the organizer updated the keys
+  required bytes signature = 3;
+}
+
+// StoreKeysReply is an empty message.
+message StoreKeysReply {
+}
+
+message GetKeys {
+  required bytes id = 1;
+}
+
+message GetKeysReply {
+  required bytes id = 1;
+  repeated bytes keys = 2;
+}
+
 // PopPartyInstance is the data that is stored in a pop-party instance.
 message PopPartyInstance {
   // State has one of the following values:

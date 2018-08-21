@@ -111,6 +111,13 @@ type Service struct {
 	// all proposed configurations - they don't need to be saved. Every time they
 	// are retrived, they will be deleted.
 	proposedDescription []PopDesc
+	// storedKeys is a temporary storage for saving keys of attendees while
+	// scanning.
+	storedKeys map[string]*keyList
+}
+
+type keyList struct {
+	Keys []kyber.Point
 }
 
 type saveData struct {
@@ -418,6 +425,20 @@ func (s *Service) GetFinalStatements(req *GetFinalStatements) (*GetFinalStatemen
 		rep.FinalStatements[k] = v
 	}
 	return rep, nil
+}
+
+// GetFinalStatements returns all final statements stored in this service.
+func (s *Service) StoreKeys(req *StoreKeys) (*StoreKeysReply, error) {
+	// TODO: verify signature
+	s.storedKeys[string(req.ID)] = &keyList{req.Keys}
+	return &StoreKeysReply{}, nil
+}
+
+func (s *Service) GetKeys(req *GetKeys) (*GetKeysReply, error) {
+	return &GetKeysReply{
+		ID:   req.ID,
+		Keys: s.storedKeys[string(req.ID)].Keys,
+	}, nil
 }
 
 // MergeConfig receives a final statement of requesting party,
@@ -1071,9 +1092,11 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		data:             &saveData{},
+		storedKeys:       map[string]*keyList{},
 	}
 	err := s.RegisterHandlers(s.PinRequest, s.VerifyLink, s.StoreConfig, s.FinalizeRequest,
-		s.FetchFinal, s.MergeRequest, s.GetProposals, s.GetLink, s.GetFinalStatements)
+		s.FetchFinal, s.MergeRequest, s.GetProposals, s.GetLink, s.GetFinalStatements,
+		s.StoreKeys)
 	if err != nil {
 		return nil, err
 	}
