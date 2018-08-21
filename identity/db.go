@@ -46,8 +46,8 @@ func loadVersion(l onet.ContextDB) (*storage1, error) {
 		// TODO: this is really ugly...
 		if c, ok := l.(*onet.Context); ok {
 			err = c.Save(storageKey, storage)
+			err = l.SaveVersion(dbVersion)
 		}
-		err = l.SaveVersion(dbVersion)
 		return storage, err
 	}
 	sBuf, err := l.LoadRaw(storageKey)

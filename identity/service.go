@@ -784,7 +784,7 @@ func newIdentityService(c *onet.Context) (onet.Service, error) {
 	}
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
-		return nil, err
+		// return nil, err
 	}
 	if err := s.RegisterHandlers(s.ProposeSend, s.ProposeVote,
 		s.CreateIdentity, s.ProposeUpdate, s.DataUpdate, s.PinRequest,
