@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority/omniledger/darc"
-	"github.com/dedis/cothority/omniledger/darc/expression"
 	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/protobuf"
 
@@ -31,18 +30,6 @@ func NewClient(ol *omniledger.Client) *Client {
 		OmniLedger: ol,
 		c:          onet.NewClient(cothority.Suite, ServiceName),
 	}
-}
-
-// AddWriter modifies the given darc.Rules to use expr as the authorized writer
-// to add new Event Logs. If expr is nil, the current evolution expression is
-// used instead.
-func AddWriter(r darc.Rules, expr expression.Expr) darc.Rules {
-	if expr == nil {
-		expr = r.GetEvolutionExpr()
-	}
-	r["spawn:eventlog"] = expr
-	r["invoke:eventlog"] = expr
-	return r
 }
 
 // Create creates a new event log. This method is synchronous: it will only

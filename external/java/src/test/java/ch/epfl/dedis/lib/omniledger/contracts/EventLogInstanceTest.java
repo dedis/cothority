@@ -4,6 +4,7 @@ import ch.epfl.dedis.lib.eventlog.Event;
 import ch.epfl.dedis.lib.eventlog.SearchResponse;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.omniledger.InstanceId;
+import ch.epfl.dedis.lib.omniledger.darc.Rules;
 import org.junit.jupiter.api.Test;
 
 import ch.epfl.dedis.integration.TestServerController;
@@ -38,10 +39,10 @@ class EventLogInstanceTest {
     void initAll() throws Exception {
         testInstanceController = TestServerInit.getInstance();
         admin = new SignerEd25519();
-        Map<String, byte[]> rules = Darc.initRules(Arrays.asList(admin.getIdentity()),
+        Rules rules = Darc.initRules(Arrays.asList(admin.getIdentity()),
                 Arrays.asList(admin.getIdentity()));
-        rules.put("spawn:eventlog", admin.getIdentity().toString().getBytes());
-        rules.put("invoke:eventlog", admin.getIdentity().toString().getBytes());
+        rules.addRule("spawn:eventlog", admin.getIdentity().toString().getBytes());
+        rules.addRule("invoke:eventlog", admin.getIdentity().toString().getBytes());
         Darc genesisDarc = new Darc(rules, "genesis".getBytes());
 
         ol = new OmniledgerRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(100, MILLIS));

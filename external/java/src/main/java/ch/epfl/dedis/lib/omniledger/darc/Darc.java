@@ -1,8 +1,10 @@
 package ch.epfl.dedis.lib.omniledger.darc;
 
 import ch.epfl.dedis.lib.crypto.Hex;
+import ch.epfl.dedis.lib.exception.CothorityAlreadyExistsException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.proto.DarcProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -15,7 +17,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Darc stands for distributed access right control. It provides a powerful access control policy that supports logical
@@ -27,7 +28,7 @@ public class Darc {
     private byte[] description;
     private DarcId baseID;
     private DarcId prevID;
-    private Map<String, byte[]> rules;
+    private Rules rules;
     private List<Signature> signatures;
     private List<Darc> verificationDarcs;
 
@@ -39,7 +40,7 @@ public class Darc {
      * @param rules The initial set of rules, consider using initRules to create them.
      * @param desc  The description.
      */
-    public Darc(Map<String, byte[]> rules, byte[] desc) {
+    public Darc(Rules rules, byte[] desc) {
         this.version = 0;
         this.description = desc;
         this.baseID = null;
@@ -77,11 +78,7 @@ public class Darc {
             baseID = new DarcId(proto.getBaseid());
         }
         prevID = new DarcId(proto.getPrevid());
-        rules = new HashMap<>();
-        Map<String, ByteString> protoRules = proto.getRulesMap();
-        for (String key : protoRules.keySet()) {
-            rules.put(key, protoRules.get(key).toByteArray());
-        }
+        rules = new Rules(proto.getRules());
         signatures = new ArrayList<>();
         for (DarcProto.Signature sig : proto.getSignaturesList()) {
             signatures.add(new Signature(sig));
@@ -101,7 +98,15 @@ public class Darc {
      * @param expression
      */
     public void setRule(String action, byte[] expression) {
-        rules.put(action, expression);
+        try {
+            if (rules.contains(action)) {
+                rules.updateRule(action, expression);
+            } else {
+                rules.addRule(action, expression);
+            }
+        } catch (CothorityAlreadyExistsException | CothorityNotFoundException e) {
+            throw new RuntimeException("cannot happen because we check for action existence first");
+        }
     }
 
     /**
@@ -112,9 +117,9 @@ public class Darc {
      * @return the expression corresponding to the action, or null if not found.
      */
     public byte[] getExpression(String action) {
-        byte[] exp = rules.get(action);
-        if (exp != null) {
-            return Arrays.copyOf(exp, exp.length);
+        Rule rule = rules.get(action);
+        if (rule != null) {
+            return Arrays.copyOf(rule.getExpr(), rule.getExpr().length);
         }
         return null;
     }
@@ -123,11 +128,7 @@ public class Darc {
      * @return A list of all actions stored in this darc.
      */
     public List<String> getActions() {
-        List<String> actions = new ArrayList<>();
-        for (String s : rules.keySet()) {
-            actions.add(s);
-        }
-        return actions;
+        return this.rules.getAllActions();
     }
 
     /**
@@ -137,7 +138,11 @@ public class Darc {
      * @return the expression of the action, or null if it didn't exist
      */
     public byte[] removeAction(String action) {
-        return rules.remove(action);
+        Rule result = rules.remove(action);
+        if (result == null) {
+            return null;
+        }
+        return result.getExpr();
     }
 
     /**
@@ -163,9 +168,7 @@ public class Darc {
             b.setBaseid(ByteString.copyFrom(this.baseID.getId()));
         }
         b.setPrevid(ByteString.copyFrom(this.prevID.getId()));
-        for (Map.Entry<String, byte[]> entry : this.rules.entrySet()) {
-            b.putRules(entry.getKey(), ByteString.copyFrom(entry.getValue()));
-        }
+        b.setRules(this.rules.toProto());
         this.verificationDarcs.forEach((d) -> b.addVerificationdarcs(d.toProto()));
         this.signatures.forEach((s) -> b.addSignatures(s.toProto()));
         return b.build();
@@ -186,11 +189,10 @@ public class Darc {
                 digest.update(this.baseID.getId());
             }
             digest.update(this.prevID.getId());
-            this.sortedAction().forEach((k) -> {
-                byte[] expr = this.rules.get(k);
-                digest.update(k.getBytes());
-                digest.update(expr);
-            });
+            for (Rule rule : this.rules.getAllRules()) {
+                digest.update(rule.getAction().getBytes());
+                digest.update(rule.getExpr());
+            }
             return new DarcId(digest.digest());
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
@@ -245,13 +247,11 @@ public class Darc {
 
     /**
      * @return a copy of the darc with the same version number.
+     * // TODO this part should be in a copy constructor
      * @throws CothorityCryptoException
      */
     public Darc copy() throws CothorityCryptoException {
-        Map<String, byte[]> rs = new HashMap<>();
-        for (String k : rules.keySet()) {
-            rs.put(k, rules.get(k));
-        }
+        Rules rs = new Rules(this.rules);
         Darc c = new Darc(rs, description.clone());
         c.version = version;
         return c;
@@ -262,10 +262,7 @@ public class Darc {
      * @throws CothorityCryptoException
      */
     public Darc copyEvolve() throws CothorityCryptoException {
-        Map<String, byte[]> rs = new HashMap<>();
-        for (String k : rules.keySet()) {
-            rs.put(k, rules.get(k));
-        }
+        Rules rs = new Rules(this.rules);
         Darc c = new Darc(rs, description.clone());
         c.version = version + 1;
         c.prevID = getId();
@@ -284,8 +281,8 @@ public class Darc {
                     Hex.printHexBinary(getId().getId()),
                     Hex.printHexBinary(getPrevID().getId()),
                     version);
-            for (String r : rules.keySet()) {
-                ret += String.format("\n%s - %s", r, Hex.printHexBinary(rules.get(r)));
+            for (Rule r : rules.getAllRules()) {
+                ret += String.format("\n%s - %s", r.getAction(), Hex.printHexBinary(r.getExpr()));
             }
             ret += String.format("\nDescription: %s", Hex.printHexBinary(description));
             return ret;
@@ -303,27 +300,24 @@ public class Darc {
      * @param signers A list of signers.
      * @return The action-expression mapping, also known as the rule.
      */
-    public static Map<String, byte[]> initRules(List<Identity> owners, List<Identity> signers) {
-        Map<String, byte[]> rs = new HashMap<>();
+    public static Rules initRules(List<Identity> owners, List<Identity> signers) {
+        Rules rs = new Rules();
         List<String> ownerIDs = owners.stream().map(Identity::toString).collect(Collectors.toList());
-        rs.put("invoke:evolve", String.join(" & ", ownerIDs).getBytes());
+        try {
+            rs.addRule("invoke:evolve", String.join(" & ", ownerIDs).getBytes());
+        } catch (CothorityAlreadyExistsException e) {
+            throw new RuntimeException("this should never happen because we are adding a rule to a new object");
+        }
 
         if (signers != null) {
             List<String> signerIDs = signers.stream().map(Identity::toString).collect(Collectors.toList());
-            rs.put("_sign", String.join(" | ", signerIDs).getBytes());
+            try {
+                rs.addRule("_sign", String.join(" | ", signerIDs).getBytes());
+            } catch (CothorityAlreadyExistsException e) {
+                throw new RuntimeException("this should never happen because we are adding a rule to a new object");
+            }
         }
         return rs;
-    }
-
-    private Stream<String> sortedAction() {
-        return this.rules.keySet().stream().sorted();
-    }
-
-    private static byte[] intToArr8(int x) {
-        ByteBuffer b = ByteBuffer.allocate(8);
-        b.order(ByteOrder.LITTLE_ENDIAN);
-        b.putInt(x);
-        return b.array();
     }
 
     private static byte[] longToArr8(long x) {

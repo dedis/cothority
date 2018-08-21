@@ -90,13 +90,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -116,6 +109,13 @@ public final class PoPProto {
               bitField0_ |= 0x00000002;
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -133,6 +133,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_ShortDesc_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_ShortDesc_fieldAccessorTable
@@ -205,6 +206,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -224,6 +226,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -235,6 +238,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -367,6 +371,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -374,6 +379,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.ShortDesc prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -402,6 +408,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_ShortDesc_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_ShortDesc_fieldAccessorTable
@@ -425,6 +432,7 @@ public final class PoPProto {
           getRosterFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         location_ = "";
@@ -438,15 +446,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_ShortDesc_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.ShortDesc getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.ShortDesc.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.ShortDesc build() {
         ch.epfl.dedis.proto.PoPProto.ShortDesc result = buildPartial();
         if (!result.isInitialized()) {
@@ -455,6 +466,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.ShortDesc buildPartial() {
         ch.epfl.dedis.proto.PoPProto.ShortDesc result = new ch.epfl.dedis.proto.PoPProto.ShortDesc(this);
         int from_bitField0_ = bitField0_;
@@ -476,32 +488,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.ShortDesc) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.ShortDesc)other);
@@ -526,6 +545,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasLocation()) {
           return false;
@@ -538,6 +558,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -750,11 +771,13 @@ public final class PoPProto {
         }
         return rosterBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -776,6 +799,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ShortDesc>
         PARSER = new com.google.protobuf.AbstractParser<ShortDesc>() {
+      @java.lang.Override
       public ShortDesc parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -793,6 +817,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.ShortDesc getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1000,13 +1025,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -1047,6 +1065,13 @@ public final class PoPProto {
                   input.readMessage(ch.epfl.dedis.proto.PoPProto.ShortDesc.PARSER, extensionRegistry));
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1067,6 +1092,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopDesc_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopDesc_fieldAccessorTable
@@ -1329,6 +1355,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1362,6 +1389,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1382,6 +1410,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -1548,6 +1577,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -1555,6 +1585,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.PopDesc prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -1582,6 +1613,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopDesc_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopDesc_fieldAccessorTable
@@ -1606,6 +1638,7 @@ public final class PoPProto {
           getPartiesFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         name_ = "";
@@ -1629,15 +1662,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopDesc_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.PopDesc getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.PopDesc.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.PopDesc build() {
         ch.epfl.dedis.proto.PoPProto.PopDesc result = buildPartial();
         if (!result.isInitialized()) {
@@ -1646,6 +1682,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.PopDesc buildPartial() {
         ch.epfl.dedis.proto.PoPProto.PopDesc result = new ch.epfl.dedis.proto.PoPProto.PopDesc(this);
         int from_bitField0_ = bitField0_;
@@ -1684,32 +1721,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.PopDesc) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.PopDesc)other);
@@ -1770,6 +1814,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasName()) {
           return false;
@@ -1793,6 +1838,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2583,11 +2629,13 @@ public final class PoPProto {
         }
         return partiesBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -2609,6 +2657,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<PopDesc>
         PARSER = new com.google.protobuf.AbstractParser<PopDesc>() {
+      @java.lang.Override
       public PopDesc parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2626,6 +2675,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.PopDesc getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -2767,13 +2817,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.proto.PoPProto.PopDesc.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2805,6 +2848,13 @@ public final class PoPProto {
               merged_ = input.readBool();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -2825,6 +2875,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalStatement_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalStatement_fieldAccessorTable
@@ -2947,6 +2998,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -2970,6 +3022,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2987,6 +3040,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -3149,6 +3203,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -3156,6 +3211,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.FinalStatement prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -3184,6 +3240,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalStatement_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalStatement_fieldAccessorTable
@@ -3207,6 +3264,7 @@ public final class PoPProto {
           getDescFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (descBuilder_ == null) {
@@ -3224,15 +3282,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalStatement_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalStatement getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalStatement build() {
         ch.epfl.dedis.proto.PoPProto.FinalStatement result = buildPartial();
         if (!result.isInitialized()) {
@@ -3241,6 +3302,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalStatement buildPartial() {
         ch.epfl.dedis.proto.PoPProto.FinalStatement result = new ch.epfl.dedis.proto.PoPProto.FinalStatement(this);
         int from_bitField0_ = bitField0_;
@@ -3271,32 +3333,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.FinalStatement) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.FinalStatement)other);
@@ -3332,6 +3401,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasSignature()) {
           return false;
@@ -3347,6 +3417,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3718,11 +3789,13 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -3744,6 +3817,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<FinalStatement>
         PARSER = new com.google.protobuf.AbstractParser<FinalStatement>() {
+      @java.lang.Override
       public FinalStatement parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3761,6 +3835,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.FinalStatement getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -3838,13 +3913,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               pophash_ = input.readBytes();
@@ -3856,6 +3924,13 @@ public final class PoPProto {
                 mutable_bitField0_ |= 0x00000002;
               }
               attendees_.add(input.readBytes());
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -3878,6 +3953,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfig_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfig_fieldAccessorTable
@@ -3924,6 +4000,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -3937,6 +4014,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3948,6 +4026,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4083,6 +4162,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4090,6 +4170,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.CheckConfig prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4117,6 +4198,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfig_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfig_fieldAccessorTable
@@ -4139,6 +4221,7 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         pophash_ = com.google.protobuf.ByteString.EMPTY;
@@ -4148,15 +4231,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfig_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.CheckConfig getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.CheckConfig.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.CheckConfig build() {
         ch.epfl.dedis.proto.PoPProto.CheckConfig result = buildPartial();
         if (!result.isInitialized()) {
@@ -4165,6 +4251,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.CheckConfig buildPartial() {
         ch.epfl.dedis.proto.PoPProto.CheckConfig result = new ch.epfl.dedis.proto.PoPProto.CheckConfig(this);
         int from_bitField0_ = bitField0_;
@@ -4183,32 +4270,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.CheckConfig) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.CheckConfig)other);
@@ -4238,6 +4332,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPophash()) {
           return false;
@@ -4245,6 +4340,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4370,11 +4466,13 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4396,6 +4494,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CheckConfig>
         PARSER = new com.google.protobuf.AbstractParser<CheckConfig>() {
+      @java.lang.Override
       public CheckConfig parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4413,6 +4512,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.CheckConfig getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -4503,13 +4603,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               popstatus_ = input.readSInt32();
@@ -4526,6 +4619,13 @@ public final class PoPProto {
                 mutable_bitField0_ |= 0x00000004;
               }
               attendees_.add(input.readBytes());
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -4548,6 +4648,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfigReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfigReply_fieldAccessorTable
@@ -4609,6 +4710,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4626,6 +4728,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4640,6 +4743,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4788,6 +4892,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4795,6 +4900,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.CheckConfigReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4825,6 +4931,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfigReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfigReply_fieldAccessorTable
@@ -4847,6 +4954,7 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         popstatus_ = 0;
@@ -4858,15 +4966,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfigReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.CheckConfigReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.CheckConfigReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.CheckConfigReply build() {
         ch.epfl.dedis.proto.PoPProto.CheckConfigReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -4875,6 +4986,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.CheckConfigReply buildPartial() {
         ch.epfl.dedis.proto.PoPProto.CheckConfigReply result = new ch.epfl.dedis.proto.PoPProto.CheckConfigReply(this);
         int from_bitField0_ = bitField0_;
@@ -4897,32 +5009,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.CheckConfigReply) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.CheckConfigReply)other);
@@ -4955,6 +5074,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPopstatus()) {
           return false;
@@ -4965,6 +5085,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5122,11 +5243,13 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5148,6 +5271,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CheckConfigReply>
         PARSER = new com.google.protobuf.AbstractParser<CheckConfigReply>() {
+      @java.lang.Override
       public CheckConfigReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5165,6 +5289,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.CheckConfigReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -5261,13 +5386,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5284,6 +5402,13 @@ public final class PoPProto {
             case 18: {
               bitField0_ |= 0x00000002;
               id_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -5303,6 +5428,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfig_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfig_fieldAccessorTable
@@ -5368,6 +5494,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5387,6 +5514,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5398,6 +5526,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5531,6 +5660,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5538,6 +5668,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.MergeConfig prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5565,6 +5696,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfig_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfig_fieldAccessorTable
@@ -5588,6 +5720,7 @@ public final class PoPProto {
           getFinalFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (finalBuilder_ == null) {
@@ -5601,15 +5734,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfig_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeConfig getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.MergeConfig.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeConfig build() {
         ch.epfl.dedis.proto.PoPProto.MergeConfig result = buildPartial();
         if (!result.isInitialized()) {
@@ -5618,6 +5754,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeConfig buildPartial() {
         ch.epfl.dedis.proto.PoPProto.MergeConfig result = new ch.epfl.dedis.proto.PoPProto.MergeConfig(this);
         int from_bitField0_ = bitField0_;
@@ -5639,32 +5776,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.MergeConfig) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.MergeConfig)other);
@@ -5687,6 +5831,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -5699,6 +5844,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5922,11 +6068,13 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5948,6 +6096,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<MergeConfig>
         PARSER = new com.google.protobuf.AbstractParser<MergeConfig>() {
+      @java.lang.Override
       public MergeConfig parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5965,6 +6114,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.MergeConfig getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6079,13 +6229,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               popstatus_ = input.readSInt32();
@@ -6109,6 +6252,13 @@ public final class PoPProto {
               bitField0_ |= 0x00000004;
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -6126,6 +6276,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfigReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfigReply_fieldAccessorTable
@@ -6214,6 +6365,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -6237,6 +6389,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6251,6 +6404,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -6397,6 +6551,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6404,6 +6559,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.MergeConfigReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6431,6 +6587,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfigReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfigReply_fieldAccessorTable
@@ -6454,6 +6611,7 @@ public final class PoPProto {
           getFinalFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         popstatus_ = 0;
@@ -6469,15 +6627,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfigReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeConfigReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.MergeConfigReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeConfigReply build() {
         ch.epfl.dedis.proto.PoPProto.MergeConfigReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -6486,6 +6647,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeConfigReply buildPartial() {
         ch.epfl.dedis.proto.PoPProto.MergeConfigReply result = new ch.epfl.dedis.proto.PoPProto.MergeConfigReply(this);
         int from_bitField0_ = bitField0_;
@@ -6511,32 +6673,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.MergeConfigReply) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.MergeConfigReply)other);
@@ -6562,6 +6731,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPopstatus()) {
           return false;
@@ -6577,6 +6747,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6848,11 +7019,13 @@ public final class PoPProto {
         }
         return finalBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6874,6 +7047,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<MergeConfigReply>
         PARSER = new com.google.protobuf.AbstractParser<MergeConfigReply>() {
+      @java.lang.Override
       public MergeConfigReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6891,6 +7065,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.MergeConfigReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6971,13 +7146,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -6987,6 +7155,13 @@ public final class PoPProto {
             case 18: {
               bitField0_ |= 0x00000002;
               public_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -7006,6 +7181,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PinRequest_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PinRequest_fieldAccessorTable
@@ -7072,6 +7248,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7089,6 +7266,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7100,6 +7278,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -7232,6 +7411,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -7239,6 +7419,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.PinRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -7268,6 +7449,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PinRequest_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PinRequest_fieldAccessorTable
@@ -7290,6 +7472,7 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         pin_ = "";
@@ -7299,15 +7482,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PinRequest_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.PinRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.PinRequest.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.PinRequest build() {
         ch.epfl.dedis.proto.PoPProto.PinRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -7316,6 +7502,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.PinRequest buildPartial() {
         ch.epfl.dedis.proto.PoPProto.PinRequest result = new ch.epfl.dedis.proto.PoPProto.PinRequest(this);
         int from_bitField0_ = bitField0_;
@@ -7333,32 +7520,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.PinRequest) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.PinRequest)other);
@@ -7383,6 +7577,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPin()) {
           return false;
@@ -7393,6 +7588,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7522,11 +7718,13 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -7548,6 +7746,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<PinRequest>
         PARSER = new com.google.protobuf.AbstractParser<PinRequest>() {
+      @java.lang.Override
       public PinRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7565,6 +7764,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.PinRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -7641,13 +7841,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.proto.PoPProto.PopDesc.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7664,6 +7857,13 @@ public final class PoPProto {
             case 18: {
               bitField0_ |= 0x00000002;
               signature_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -7683,6 +7883,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfig_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfig_fieldAccessorTable
@@ -7728,6 +7929,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7747,6 +7949,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7758,6 +7961,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -7891,6 +8095,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -7898,6 +8103,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreConfig prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -7925,6 +8131,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfig_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfig_fieldAccessorTable
@@ -7948,6 +8155,7 @@ public final class PoPProto {
           getDescFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (descBuilder_ == null) {
@@ -7961,15 +8169,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfig_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.StoreConfig getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.StoreConfig.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.StoreConfig build() {
         ch.epfl.dedis.proto.PoPProto.StoreConfig result = buildPartial();
         if (!result.isInitialized()) {
@@ -7978,6 +8189,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.StoreConfig buildPartial() {
         ch.epfl.dedis.proto.PoPProto.StoreConfig result = new ch.epfl.dedis.proto.PoPProto.StoreConfig(this);
         int from_bitField0_ = bitField0_;
@@ -7999,32 +8211,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreConfig) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreConfig)other);
@@ -8047,6 +8266,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasSignature()) {
           return false;
@@ -8059,6 +8279,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8230,11 +8451,13 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -8256,6 +8479,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreConfig>
         PARSER = new com.google.protobuf.AbstractParser<StoreConfig>() {
+      @java.lang.Override
       public StoreConfig parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8273,6 +8497,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.StoreConfig getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -8338,16 +8563,16 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              id_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              id_ = input.readBytes();
               break;
             }
           }
@@ -8367,6 +8592,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfigReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfigReply_fieldAccessorTable
@@ -8391,6 +8617,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -8404,6 +8631,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -8412,6 +8640,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -8532,6 +8761,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -8539,6 +8769,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreConfigReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -8568,6 +8799,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfigReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfigReply_fieldAccessorTable
@@ -8590,6 +8822,7 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -8597,15 +8830,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfigReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.StoreConfigReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.StoreConfigReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.StoreConfigReply build() {
         ch.epfl.dedis.proto.PoPProto.StoreConfigReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -8614,6 +8850,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.StoreConfigReply buildPartial() {
         ch.epfl.dedis.proto.PoPProto.StoreConfigReply result = new ch.epfl.dedis.proto.PoPProto.StoreConfigReply(this);
         int from_bitField0_ = bitField0_;
@@ -8627,32 +8864,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreConfigReply) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreConfigReply)other);
@@ -8672,6 +8916,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -8679,6 +8924,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8732,11 +8978,13 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -8758,6 +9006,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreConfigReply>
         PARSER = new com.google.protobuf.AbstractParser<StoreConfigReply>() {
+      @java.lang.Override
       public StoreConfigReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8775,6 +9024,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.StoreConfigReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -8862,13 +9112,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               descid_ = input.readBytes();
@@ -8885,6 +9128,13 @@ public final class PoPProto {
             case 26: {
               bitField0_ |= 0x00000002;
               signature_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -8907,6 +9157,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeRequest_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeRequest_fieldAccessorTable
@@ -8968,6 +9219,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -8985,6 +9237,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -8999,6 +9252,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -9147,6 +9401,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -9154,6 +9409,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.FinalizeRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -9181,6 +9437,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeRequest_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeRequest_fieldAccessorTable
@@ -9203,6 +9460,7 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         descid_ = com.google.protobuf.ByteString.EMPTY;
@@ -9214,15 +9472,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeRequest_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalizeRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.FinalizeRequest.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalizeRequest build() {
         ch.epfl.dedis.proto.PoPProto.FinalizeRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -9231,6 +9492,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalizeRequest buildPartial() {
         ch.epfl.dedis.proto.PoPProto.FinalizeRequest result = new ch.epfl.dedis.proto.PoPProto.FinalizeRequest(this);
         int from_bitField0_ = bitField0_;
@@ -9253,32 +9515,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.FinalizeRequest) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.FinalizeRequest)other);
@@ -9311,6 +9580,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasDescid()) {
           return false;
@@ -9321,6 +9591,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9481,11 +9752,13 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -9507,6 +9780,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<FinalizeRequest>
         PARSER = new com.google.protobuf.AbstractParser<FinalizeRequest>() {
+      @java.lang.Override
       public FinalizeRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9524,6 +9798,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.FinalizeRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -9592,13 +9867,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9610,6 +9878,13 @@ public final class PoPProto {
                 final_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -9629,6 +9904,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeResponse_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeResponse_fieldAccessorTable
@@ -9659,6 +9935,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -9674,6 +9951,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9682,6 +9960,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -9802,6 +10081,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -9809,6 +10089,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.FinalizeResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -9838,6 +10119,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeResponse_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeResponse_fieldAccessorTable
@@ -9861,6 +10143,7 @@ public final class PoPProto {
           getFinalFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (finalBuilder_ == null) {
@@ -9872,15 +10155,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeResponse_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalizeResponse getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.FinalizeResponse.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalizeResponse build() {
         ch.epfl.dedis.proto.PoPProto.FinalizeResponse result = buildPartial();
         if (!result.isInitialized()) {
@@ -9889,6 +10175,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalizeResponse buildPartial() {
         ch.epfl.dedis.proto.PoPProto.FinalizeResponse result = new ch.epfl.dedis.proto.PoPProto.FinalizeResponse(this);
         int from_bitField0_ = bitField0_;
@@ -9906,32 +10193,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.FinalizeResponse) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.FinalizeResponse)other);
@@ -9951,6 +10245,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (hasFinal()) {
           if (!getFinal().isInitialized()) {
@@ -9960,6 +10255,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10096,11 +10392,13 @@ public final class PoPProto {
         }
         return finalBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -10122,6 +10420,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<FinalizeResponse>
         PARSER = new com.google.protobuf.AbstractParser<FinalizeResponse>() {
+      @java.lang.Override
       public FinalizeResponse parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10139,6 +10438,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.FinalizeResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -10212,13 +10512,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               id_ = input.readBytes();
@@ -10227,6 +10520,13 @@ public final class PoPProto {
             case 16: {
               bitField0_ |= 0x00000002;
               returnuncomplete_ = input.readBool();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -10246,6 +10546,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FetchRequest_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FetchRequest_fieldAccessorTable
@@ -10285,6 +10586,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -10298,6 +10600,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -10309,6 +10612,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -10443,6 +10747,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -10450,6 +10755,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.FetchRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -10477,6 +10783,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FetchRequest_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FetchRequest_fieldAccessorTable
@@ -10499,6 +10806,7 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -10508,15 +10816,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FetchRequest_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FetchRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.FetchRequest.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FetchRequest build() {
         ch.epfl.dedis.proto.PoPProto.FetchRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -10525,6 +10836,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FetchRequest buildPartial() {
         ch.epfl.dedis.proto.PoPProto.FetchRequest result = new ch.epfl.dedis.proto.PoPProto.FetchRequest(this);
         int from_bitField0_ = bitField0_;
@@ -10542,32 +10854,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.FetchRequest) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.FetchRequest)other);
@@ -10590,6 +10909,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -10597,6 +10917,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10682,11 +11003,13 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -10708,6 +11031,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<FetchRequest>
         PARSER = new com.google.protobuf.AbstractParser<FetchRequest>() {
+      @java.lang.Override
       public FetchRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10725,6 +11049,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.FetchRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -10798,13 +11123,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               id_ = input.readBytes();
@@ -10813,6 +11131,13 @@ public final class PoPProto {
             case 18: {
               bitField0_ |= 0x00000002;
               signature_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -10832,6 +11157,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeRequest_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeRequest_fieldAccessorTable
@@ -10871,6 +11197,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -10888,6 +11215,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -10899,6 +11227,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -11032,6 +11361,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -11039,6 +11369,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.MergeRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -11066,6 +11397,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeRequest_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeRequest_fieldAccessorTable
@@ -11088,6 +11420,7 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -11097,15 +11430,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeRequest_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.MergeRequest.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeRequest build() {
         ch.epfl.dedis.proto.PoPProto.MergeRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -11114,6 +11450,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeRequest buildPartial() {
         ch.epfl.dedis.proto.PoPProto.MergeRequest result = new ch.epfl.dedis.proto.PoPProto.MergeRequest(this);
         int from_bitField0_ = bitField0_;
@@ -11131,32 +11468,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.MergeRequest) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.MergeRequest)other);
@@ -11179,6 +11523,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -11189,6 +11534,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11277,11 +11623,13 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -11303,6 +11651,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<MergeRequest>
         PARSER = new com.google.protobuf.AbstractParser<MergeRequest>() {
+      @java.lang.Override
       public MergeRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11320,6 +11669,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.MergeRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -11398,6 +11748,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposals_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposals_fieldAccessorTable
@@ -11406,6 +11757,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -11415,11 +11767,13 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -11527,6 +11881,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -11534,6 +11889,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetProposals prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -11563,6 +11919,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposals_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposals_fieldAccessorTable
@@ -11585,20 +11942,24 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposals_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.GetProposals getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.GetProposals.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.GetProposals build() {
         ch.epfl.dedis.proto.PoPProto.GetProposals result = buildPartial();
         if (!result.isInitialized()) {
@@ -11607,38 +11968,46 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.GetProposals buildPartial() {
         ch.epfl.dedis.proto.PoPProto.GetProposals result = new ch.epfl.dedis.proto.PoPProto.GetProposals(this);
         onBuilt();
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.GetProposals) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetProposals)other);
@@ -11655,10 +12024,12 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11676,11 +12047,13 @@ public final class PoPProto {
         }
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -11702,6 +12075,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetProposals>
         PARSER = new com.google.protobuf.AbstractParser<GetProposals>() {
+      @java.lang.Override
       public GetProposals parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11719,6 +12093,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.GetProposals getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -11797,13 +12172,6 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 proposals_ = new java.util.ArrayList<ch.epfl.dedis.proto.PoPProto.PopDesc>();
@@ -11811,6 +12179,13 @@ public final class PoPProto {
               }
               proposals_.add(
                   input.readMessage(ch.epfl.dedis.proto.PoPProto.PopDesc.PARSER, extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -11833,6 +12208,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposalsReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposalsReply_fieldAccessorTable
@@ -11876,6 +12252,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -11891,6 +12268,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < proposals_.size(); i++) {
@@ -11899,6 +12277,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -12016,6 +12395,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -12023,6 +12403,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetProposalsReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -12050,6 +12431,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposalsReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposalsReply_fieldAccessorTable
@@ -12073,6 +12455,7 @@ public final class PoPProto {
           getProposalsFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (proposalsBuilder_ == null) {
@@ -12084,15 +12467,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposalsReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.GetProposalsReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.GetProposalsReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.GetProposalsReply build() {
         ch.epfl.dedis.proto.PoPProto.GetProposalsReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -12101,6 +12487,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.GetProposalsReply buildPartial() {
         ch.epfl.dedis.proto.PoPProto.GetProposalsReply result = new ch.epfl.dedis.proto.PoPProto.GetProposalsReply(this);
         int from_bitField0_ = bitField0_;
@@ -12117,32 +12504,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.GetProposalsReply) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetProposalsReply)other);
@@ -12185,6 +12579,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getProposalsCount(); i++) {
           if (!getProposals(i).isInitialized()) {
@@ -12194,6 +12589,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12452,11 +12848,13 @@ public final class PoPProto {
         }
         return proposalsBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -12478,6 +12876,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetProposalsReply>
         PARSER = new com.google.protobuf.AbstractParser<GetProposalsReply>() {
+      @java.lang.Override
       public GetProposalsReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12495,6 +12894,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.GetProposalsReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -12558,16 +12958,16 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              public_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              public_ = input.readBytes();
               break;
             }
           }
@@ -12587,6 +12987,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLink_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLink_fieldAccessorTable
@@ -12611,6 +13012,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -12624,6 +13026,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -12632,6 +13035,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -12752,6 +13156,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -12759,6 +13164,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.VerifyLink prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -12786,6 +13192,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLink_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLink_fieldAccessorTable
@@ -12808,6 +13215,7 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         public_ = com.google.protobuf.ByteString.EMPTY;
@@ -12815,15 +13223,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLink_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.VerifyLink getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.VerifyLink.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.VerifyLink build() {
         ch.epfl.dedis.proto.PoPProto.VerifyLink result = buildPartial();
         if (!result.isInitialized()) {
@@ -12832,6 +13243,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.VerifyLink buildPartial() {
         ch.epfl.dedis.proto.PoPProto.VerifyLink result = new ch.epfl.dedis.proto.PoPProto.VerifyLink(this);
         int from_bitField0_ = bitField0_;
@@ -12845,32 +13257,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.VerifyLink) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.VerifyLink)other);
@@ -12890,6 +13309,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPublic()) {
           return false;
@@ -12897,6 +13317,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12950,11 +13371,13 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -12976,6 +13399,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<VerifyLink>
         PARSER = new com.google.protobuf.AbstractParser<VerifyLink>() {
+      @java.lang.Override
       public VerifyLink parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12993,6 +13417,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.VerifyLink getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -13056,16 +13481,16 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            case 8: {
+              bitField0_ |= 0x00000001;
+              exists_ = input.readBool();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 8: {
-              bitField0_ |= 0x00000001;
-              exists_ = input.readBool();
               break;
             }
           }
@@ -13085,6 +13510,7 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLinkReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLinkReply_fieldAccessorTable
@@ -13109,6 +13535,7 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -13122,6 +13549,7 @@ public final class PoPProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -13130,6 +13558,7 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -13251,6 +13680,7 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -13258,6 +13688,7 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.VerifyLinkReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -13285,6 +13716,7 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLinkReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLinkReply_fieldAccessorTable
@@ -13307,6 +13739,7 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         exists_ = false;
@@ -13314,15 +13747,18 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLinkReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.VerifyLinkReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.VerifyLinkReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.VerifyLinkReply build() {
         ch.epfl.dedis.proto.PoPProto.VerifyLinkReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -13331,6 +13767,7 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.VerifyLinkReply buildPartial() {
         ch.epfl.dedis.proto.PoPProto.VerifyLinkReply result = new ch.epfl.dedis.proto.PoPProto.VerifyLinkReply(this);
         int from_bitField0_ = bitField0_;
@@ -13344,32 +13781,39 @@ public final class PoPProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.VerifyLinkReply) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.VerifyLinkReply)other);
@@ -13389,6 +13833,7 @@ public final class PoPProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasExists()) {
           return false;
@@ -13396,6 +13841,7 @@ public final class PoPProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13446,11 +13892,13 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -13472,6 +13920,7 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<VerifyLinkReply>
         PARSER = new com.google.protobuf.AbstractParser<VerifyLinkReply>() {
+      @java.lang.Override
       public VerifyLinkReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13489,6 +13938,7 @@ public final class PoPProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.VerifyLinkReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }

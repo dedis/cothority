@@ -1,6 +1,7 @@
 package darc
 
 import (
+	"github.com/dedis/cothority/omniledger/darc/expression"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet/network"
 )
@@ -12,7 +13,7 @@ func init() {
 }
 
 // PROTOSTART
-// type :Rules:map<string, bytes>
+// type :expression.Expr:bytes
 // type :ID:bytes
 // type :Action:string
 // package darc;
@@ -115,4 +116,15 @@ type Request struct {
 	Msg        []byte
 	Identities []Identity
 	Signatures [][]byte
+}
+
+// Rules is a list of action-expression associations.
+type Rules struct {
+	List []Rule
+}
+
+// Rule is a pair of action and expression.
+type Rule struct {
+	Action Action
+	Expr   expression.Expr
 }
