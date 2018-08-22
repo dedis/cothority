@@ -1,5 +1,6 @@
 package ch.epfl.dedis.lib.omniledger;
 
+import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
@@ -43,6 +44,14 @@ public class Proof {
         for (SkipchainProto.ForwardLink fl: p.getLinksList()){
             links.add(new ForwardLink(fl));
         }
+    }
+
+    /**
+     * accessor for the skipblock assocaited with this proof.
+     * @return SkipBlock
+     */
+    public SkipBlock getLatest() {
+        return new SkipBlock(proof.getLatest());
     }
 
     /**

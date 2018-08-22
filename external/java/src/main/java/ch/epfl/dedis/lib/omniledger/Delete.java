@@ -14,4 +14,11 @@ public class Delete {
         OmniLedgerProto.Delete.Builder b = OmniLedgerProto.Delete.newBuilder();
         return b.build();
     }
+
+    /**
+     * Constructor from protobuf.
+     * @param proto
+     */
+    public Delete(OmniLedgerProto.Delete proto) {
+    }
 }

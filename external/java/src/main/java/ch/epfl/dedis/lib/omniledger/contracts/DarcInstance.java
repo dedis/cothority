@@ -177,11 +177,10 @@ public class DarcInstance {
      * @param args       arguments to give to the contract
      * @throws CothorityException
      */
-    public void spawnContract(String contractID, Signer s, List<Argument> args) throws CothorityException {
+    public ClientTransactionId spawnContract(String contractID, Signer s, List<Argument> args) throws CothorityException {
         Instruction inst = spawnContractInstruction(contractID, s, args, 0, 1);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
-        ol.sendTransaction(ct);
-        return;
+        return ol.sendTransaction(ct);
     }
 
     /**

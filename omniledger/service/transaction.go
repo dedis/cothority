@@ -28,7 +28,7 @@ func (iID InstanceID) String() string {
 type Nonce [32]byte
 
 func init() {
-	network.RegisterMessages(Instruction{}, ClientTransaction{},
+	network.RegisterMessages(Instruction{}, TxResult{},
 		StateChange{})
 }
 
@@ -328,26 +328,26 @@ func (instrs Instructions) Hash() []byte {
 	return h.Sum(nil)
 }
 
-// ClientTransactions is a slice of ClientTransaction
-type ClientTransactions []ClientTransaction
+// TxResults is a list of results from executed transactions.
+type TxResults []TxResult
 
-// Hash returns the sha256 hash of all client transactions.
-func (cts ClientTransactions) Hash() []byte {
-	h := sha256.New()
-	for _, ct := range cts {
-		h.Write(ct.Instructions.Hash())
+// NewTxResults takes a list of client transactions and wraps them up
+// in a TxResults with Accepted set to false for each.
+func NewTxResults(ct ...ClientTransaction) TxResults {
+	out := make([]TxResult, len(ct))
+	for i := range ct {
+		out[i].ClientTransaction = ct[i]
 	}
-	return h.Sum(nil)
+	return out
 }
 
-// IsEmpty checks whether the ClientTransactions is empty.
-func (cts ClientTransactions) IsEmpty() bool {
-	for _, ct := range cts {
-		for range ct.Instructions {
-			return false
-		}
+// Hash returns the sha256 hash of all of the transactions.
+func (txr TxResults) Hash() []byte {
+	h := sha256.New()
+	for _, tx := range txr {
+		h.Write(tx.ClientTransaction.Instructions.Hash())
 	}
-	return true
+	return h.Sum(nil)
 }
 
 // NewStateChange is a convenience function that fills out a StateChange
@@ -465,16 +465,16 @@ func (instr Instruction) GetType() InstrType {
 // txBuffer is thread-safe data structure that store client transactions.
 type txBuffer struct {
 	sync.Mutex
-	txsMap map[string]ClientTransactions
+	txsMap map[string][]ClientTransaction
 }
 
 func newTxBuffer() txBuffer {
 	return txBuffer{
-		txsMap: make(map[string]ClientTransactions),
+		txsMap: make(map[string][]ClientTransaction),
 	}
 }
 
-func (r *txBuffer) take(key string) ClientTransactions {
+func (r *txBuffer) take(key string) []ClientTransaction {
 	r.Lock()
 	defer r.Unlock()
 

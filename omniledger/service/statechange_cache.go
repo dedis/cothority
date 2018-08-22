@@ -22,8 +22,7 @@ type stateChangeCache struct {
 type stateChangeValue struct {
 	digest     []byte
 	merkleRoot []byte
-	ctsOK      ClientTransactions
-	ctsBad     ClientTransactions
+	txOut      []TxResult
 	states     StateChanges
 }
 
@@ -33,7 +32,7 @@ func newStateChangeCache() stateChangeCache {
 	}
 }
 
-func (c *stateChangeCache) get(scID skipchain.SkipBlockID, digest []byte) (merkleRoot []byte, ctsOK, ctsBad ClientTransactions, states StateChanges, err error) {
+func (c *stateChangeCache) get(scID skipchain.SkipBlockID, digest []byte) (merkleRoot []byte, txOut TxResults, states StateChanges, err error) {
 	c.Lock()
 	defer c.Unlock()
 	key := string(scID)
@@ -48,21 +47,19 @@ func (c *stateChangeCache) get(scID skipchain.SkipBlockID, digest []byte) (merkl
 	}
 
 	merkleRoot = out.merkleRoot
-	ctsOK = out.ctsOK
-	ctsBad = out.ctsBad
+	txOut = out.txOut
 	states = out.states
 	return
 }
 
-func (c *stateChangeCache) update(scID skipchain.SkipBlockID, digest []byte, merkleRoot []byte, ctsOK, ctsBad ClientTransactions, states StateChanges) {
+func (c *stateChangeCache) update(scID skipchain.SkipBlockID, digest []byte, merkleRoot []byte, txOut TxResults, states StateChanges) {
 	c.Lock()
 	defer c.Unlock()
 	key := string(scID)
 	c.cache[key] = &stateChangeValue{
 		digest:     digest,
 		merkleRoot: merkleRoot,
-		ctsOK:      ctsOK,
-		ctsBad:     ctsBad,
+		txOut:      txOut,
 		states:     states,
 	}
 }
