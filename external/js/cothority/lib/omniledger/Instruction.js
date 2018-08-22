@@ -1,3 +1,8 @@
+const crypto = require("crypto");
+const Request = require("./contracts/Request");
+const Signer = require("./darc/Signer");
+const Signature = require("./darc/Signature");
+
 /**
  * An instruction is sent and executed by OmniLedger.
  */
@@ -5,14 +10,14 @@ class Instruction {
   /**
    * Cunstruct an instruction when the complete configuration is known
    *
-   * @param {Uint8Array} [instanceId] - The ID of the object, which must be unique
+   * @param {Uint8Array} instanceId - The ID of the object, which must be unique
    * @param {Uint8Array} nonce - the nonce of the object
    * @param {number} index - the index of the instruction in the atomic set
    * @param {number} length - the length of the atomic set
    * @param {Spawn} [spawnInst] - the spawn object, which contains the value and the argument
    * @param {Invoke} [invokeInst] - the invoke object
    * @param {Delete} [deleteInst] - the delete object
-   * @param {Array} [signatures] - the list of signatures
+   * @param {Signature[]} [signatures] - the list of signatures
    */
   constructor(
     instanceId,
@@ -117,10 +122,100 @@ class Instruction {
   /**
    * Set the signatures for this instruction
    *
-   * @param sig
+   * @param {Signature[]} sig
    */
   set signatures(sig) {
     this._signatures = sig.slice(0);
+  }
+
+  /**
+   * This method computes the sha256 hash of the instruction.
+   *
+   * @return {Uint8Array} the digest
+   */
+  get hash() {
+    const hash = crypto.createHash("sha256");
+    hash.update(this._instanceId);
+    hash.update(this._nonce);
+    hash.update(this.intToArr4(this._index));
+    hash.update(this.intToArr4(this._length));
+    let args = [];
+    if (this._spawnInst !== undefined) {
+      hash.update(new Uint8Array([0]));
+      hash.update(this._spawnInst.contractId);
+      args = this._spawnInst.argumentsList;
+    } else if (this._invokeInst !== undefined) {
+      hash.update(new Uint8Array([1]));
+      args = this._invokeInst.argumentsList;
+    } else {
+      hash.update(new Uint8Array([2]));
+    }
+    for (let arg in args) {
+      hash.update(arg.name);
+      hash.update(arg.value);
+    }
+
+    const b = hash.digest();
+    return new Uint8Array(
+      b.buffer,
+      b.byteOffset,
+      b.byteLength / Uint8Array.BYTES_PER_ELEMENT
+    );
+  }
+
+  /**
+   * Outputs the action of the instruction, this action be the same as an action in the corresponding darc. Otherwise
+   * this instruction may not be accepted.
+
+   * @return {string} - the action
+   */
+  get action() {
+    let a = "invalid";
+    if (this._spawnInst !== undefined) {
+      a = "spawn:" + this._spawnInst.contractId;
+    } else if (this._invokeInst !== undefined) {
+      a = "invoke:" + this._invokeInst.command;
+    } else if (this._deleteInst !== undefined) {
+      a = "delete";
+    }
+
+    return a;
+  }
+
+  /**
+   *
+   * @param {Uint8Array} darcId
+   */
+  toDarcRequest(darcId) {
+    return new Request(
+      darcId,
+      this.action,
+      this.hash,
+      this._signatures.map(sig => sig.signer),
+      this._signatures.map(sig => sig.signature)
+    );
+  }
+
+  /**
+   * Have a list of signers sign the instruction. The instruction will *not* be accepted by omniledger if it is not
+   * signed. The signature will not be valid if the instruction is modified after signing.
+   *
+   * @param {Uint8Array} darcId
+   * @param {Signer[]} signers
+   */
+  signBy(darcId, signers) {
+    this._signatures = [];
+    signers.forEach(signer => {
+      this._signatures.push(new Signature(undefined, signer.identity));
+    });
+
+    const msg = this.toDarcRequest(darcId).hash();
+    for (let i = 0; i < this._signatures.length; i++) {
+      this._signatures[i] = new Signature(
+        signers[i].sign(msg),
+        signers[i].identity
+      );
+    }
   }
 
   /**
@@ -139,7 +234,18 @@ class Instruction {
       spawn: this._spawnInst,
       invoke: this._invokeInst,
       delete: this._deleteInst,
-      signatures: this._signatures
+      signatures: this._signatures.map(sig => sig.toProtobufValidMessage())
     };
+  }
+
+  /**
+   *
+   * @param {number} x
+   */
+  intToArr4(x) {
+    let buffer = new ArrayBuffer(4);
+    new DataView(buffer).setInt32(0, x, true);
+
+    return new Uint8Array(buffer);
   }
 }
