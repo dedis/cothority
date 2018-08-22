@@ -57,27 +57,17 @@ remaining to be run, they will be prepended to the next collected set of
 transactions when the next block interval expires.
 
 A "view change" (change of leader) is needed when the leader stops performing
-its duties correctly. Followers notice the need for a new leader by way of a
-heartbeat mechanism triggering on the absence of new blocks.
+its duties correctly. Followers notice the need for a new leader if the leader
+stops sending heartbeat messages within some time window or detect a malicious
+behaviour (not implemented yet).
 
-We implement a simple view-change that re-uses all of existing functionalities 
-in OmniLedger (e.g., block creation and smart contracts). However, it does not
-prevent Byzantine leaders yet. We assume the roster is ordered and every node
-observes the same order. Further, the leader polls the followers once every
-`blockInterval`. Using these assumptions, when the current leader stops polling,
-then next leader (according to the roster list) will send out a new
-transaction. This transaction contains the `invoke:view_change` action which
-shifts the order of the roster by one. As a result, the failed leader moves to
-the end of the roster and the new leader becomes the first. In the contract,
-every node should verify that the new node is the correct next leader and
-enough time has past since the current leader stopped responding.
-
-The current implementation has some limitations. The system makes progress when
-only one leader node fails, we have not tested the scenario where multiple
-nodes fail. We have not implemented the "catch-up" functionality for when a
-node comes back up. For these reasons, view-change is disabled by default. To
-enable view-change, refer to the `EnableViewChange` function in the OmniLedger
-service package.
+The design is similar to the view-change protocol in PBFT (OSDI99). We keep the
+view-change message that followers send when they detect an anomaly. But we
+replace the new-view message with the ftcosi protocol and block creation. The
+result of ftcosi is an aggregate signature of all the nodes that agree to
+perform the view-change. The signature is included in the block which nodes
+accept if the aggregate signature is correct. This technique enables nodes to
+synchronise and replay blocks to compute the most up-to-date leader.
 
 # Structure Definitions
 
