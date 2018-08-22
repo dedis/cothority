@@ -41,7 +41,6 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
-	"sort"
 	"strings"
 
 	"github.com/dedis/cothority"
@@ -83,19 +82,23 @@ func InitRules(owners []Identity, signers []Identity) Rules {
 // with logical-Or under "_sign". If other expressions are needed, please set
 // the rules manually.
 func InitRulesWith(owners, signers []Identity, evolveAction Action) Rules {
-	rs := make(Rules)
+	rs := NewRules()
 
 	ownerIDs := make([]string, len(owners))
 	for i, o := range owners {
 		ownerIDs[i] = o.String()
 	}
-	rs[evolveAction] = expression.InitAndExpr(ownerIDs...)
+	if err := rs.AddRule(evolveAction, expression.InitAndExpr(ownerIDs...)); err != nil {
+		panic("add rule should never fail on an empty rule list: " + err.Error())
+	}
 
 	signerIDs := make([]string, len(signers))
 	for i, s := range signers {
 		signerIDs[i] = s.String()
 	}
-	rs[sign] = expression.InitOrExpr(signerIDs...)
+	if err := rs.AddRule(sign, expression.InitOrExpr(signerIDs...)); err != nil {
+		panic("add rule should never fail on an empty rule list: " + err.Error())
+	}
 	return rs
 }
 
@@ -125,11 +128,7 @@ func (d *Darc) Copy() *Darc {
 	for i := range d.VerificationDarcs {
 		dCopy.VerificationDarcs[i] = d.VerificationDarcs[i]
 	}
-	newRules := make(Rules)
-	for k, v := range d.Rules {
-		newRules[k] = v
-	}
-	dCopy.Rules = newRules
+	dCopy.Rules = d.Rules.Copy()
 	return dCopy
 }
 
@@ -173,17 +172,9 @@ func (d Darc) GetID() ID {
 	h.Write(d.Description)
 	h.Write(d.BaseID)
 	h.Write(d.PrevID)
-
-	actions := make([]string, len(d.Rules))
-	var i int
-	for k := range d.Rules {
-		actions[i] = string(k)
-		i++
-	}
-	sort.Strings(actions)
-	for _, a := range actions {
-		h.Write([]byte(a))
-		h.Write(d.Rules[Action(a)])
+	for _, rule := range d.Rules.List {
+		h.Write([]byte(rule.Action))
+		h.Write(rule.Expr)
 	}
 	return h.Sum(nil)
 }
@@ -201,18 +192,23 @@ func (d Darc) GetBaseID() ID {
 	return d.BaseID
 }
 
+// NewRules creates an empty Rules.
+func NewRules() Rules {
+	return Rules{[]Rule{}}
+}
+
 // AddRule adds a new action expression-pair, the action must not exist.
-func (r Rules) AddRule(a Action, expr expression.Expr) error {
-	if _, ok := r[a]; ok {
+func (r *Rules) AddRule(a Action, expr expression.Expr) error {
+	if r.exists(a) != -1 {
 		return errors.New("action already exists")
 	}
-	r[a] = expr
+	r.List = append(r.List, Rule{a, expr})
 	return nil
 }
 
 // UpdateRule updates an existing action-expression pair, it cannot be the
 // evolve or sign action.
-func (r Rules) UpdateRule(a Action, expr expression.Expr) error {
+func (r *Rules) UpdateRule(a Action, expr expression.Expr) error {
 	if isDefault(a) {
 		return fmt.Errorf("cannot update action %s", a)
 	}
@@ -220,54 +216,88 @@ func (r Rules) UpdateRule(a Action, expr expression.Expr) error {
 }
 
 // DeleteRules deletes an action, it cannot delete the evolve or sign action.
-func (r Rules) DeleteRules(a Action) error {
+func (r *Rules) DeleteRules(a Action) error {
 	if isDefault(a) {
 		return fmt.Errorf("cannot delete action %s", a)
 	}
-	if _, ok := r[a]; !ok {
+	i := r.exists(a)
+	if i == -1 {
 		return fmt.Errorf("DeleteRules: action '%v' does not exist", a)
 	}
-	delete(r, a)
+	r.List = append(r.List[:i], r.List[i+1:]...)
 	return nil
-}
-
-// Contains checks if the action a is in the rules.
-func (r Rules) Contains(a Action) bool {
-	_, ok := r[a]
-	return ok
-}
-
-// GetEvolutionExpr returns the expression that describes the evolution action
-// under the default name "_evolve".
-func (r Rules) GetEvolutionExpr() expression.Expr {
-	return r[evolve]
-}
-
-// GetSignExpr returns the expression that describes the sign action under the
-// default name "_sign".
-func (r Rules) GetSignExpr() expression.Expr {
-	return r[sign]
 }
 
 // UpdateEvolution will update the "_evolve" action, which allows identities
 // that satisfies the expression to evolve the Darc. Take extreme care when
 // using this function.
-func (r Rules) UpdateEvolution(expr expression.Expr) error {
+func (r *Rules) UpdateEvolution(expr expression.Expr) error {
 	return r.updateRule(evolve, expr)
 }
 
 // UpdateSign will update the "_sign" action, which allows identities that
 // satisfies the expression to sign on behalf of another darc.
-func (r Rules) UpdateSign(expr expression.Expr) error {
+func (r *Rules) UpdateSign(expr expression.Expr) error {
 	return r.updateRule(sign, expr)
 }
 
-func (r Rules) updateRule(a Action, expr expression.Expr) error {
-	if _, ok := r[a]; !ok {
+func (r *Rules) updateRule(a Action, expr expression.Expr) error {
+	i := r.exists(a)
+	if i == -1 {
 		return fmt.Errorf("updateRule: action '%v' does not exist", a)
 	}
-	r[a] = expr
+	r.List[i] = Rule{a, expr}
 	return nil
+}
+
+// Contains checks if the action a is in the rules.
+func (r Rules) Contains(a Action) bool {
+	return r.exists(a) != -1
+}
+
+// Count the number of rules.
+func (r Rules) Count() int {
+	return len(r.List)
+}
+
+// GetEvolutionExpr returns the expression that describes the evolution action
+// under the default name "_evolve".
+func (r Rules) GetEvolutionExpr() expression.Expr {
+	return r.Get(evolve)
+}
+
+// GetSignExpr returns the expression that describes the sign action under the
+// default name "_sign".
+func (r Rules) GetSignExpr() expression.Expr {
+	return r.Get(sign)
+}
+
+// Get gets the expression for action a, it returns nil if the action does not
+// exist.
+func (r Rules) Get(a Action) expression.Expr {
+	for _, rule := range r.List {
+		if rule.Action == a {
+			return rule.Expr
+		}
+	}
+	return nil
+}
+
+// Copy copies the rules.
+func (r Rules) Copy() Rules {
+	rCopy := NewRules()
+	rCopy.List = make([]Rule, r.Count())
+	copy(rCopy.List, r.List)
+	return rCopy
+}
+
+func (r Rules) exists(a Action) int {
+	for i, rule := range r.List {
+		if rule.Action == a {
+			return i
+		}
+	}
+	return -1
 }
 
 func isDefault(action Action) bool {
@@ -409,7 +439,7 @@ func (r *Request) VerifyWithCB(d *Darc, getDarc GetDarc) error {
 		}
 	}
 	validIDs := r.GetIdentityStrings()
-	err := EvalExpr(d.Rules[r.Action], getDarc, validIDs...)
+	err := EvalExpr(d.Rules.Get(r.Action), getDarc, validIDs...)
 	if err != nil {
 		return err
 	}
@@ -419,9 +449,10 @@ func (r *Request) VerifyWithCB(d *Darc, getDarc GetDarc) error {
 // String returns a human-readable string representation of the darc.
 func (d Darc) String() string {
 	s := fmt.Sprintf("ID:\t%x\nBase:\t%x\nPrev:\t%x\nVer:\t%d\nRules:", d.GetID(), d.GetBaseID(), d.PrevID, d.Version)
-	for k, v := range d.Rules {
-		s += fmt.Sprintf("\n\t%s - \"%s\"", k, v)
+	for _, v := range d.Rules.List {
+		s += fmt.Sprintf("\n\t%s - \"%s\"", v.Action, v.Expr)
 	}
+	s += "\nSignatures:"
 	for i, sig := range d.Signatures {
 		s += fmt.Sprintf("\n\t%d - id: %s, sig: %x", i, sig.Signer.String(), sig.Signature)
 	}
@@ -574,7 +605,7 @@ func EvalExpr(expr expression.Expr, getDarc GetDarc, ids ...string) error {
 			}
 			// Recursively evaluate the sign expression until we
 			// find the final signer with a ed25519 key.
-			if err := EvalExpr(d.Rules[sign], getDarc, ids...); err != nil {
+			if err := EvalExpr(d.Rules.GetSignExpr(), getDarc, ids...); err != nil {
 				return false
 			}
 			return true

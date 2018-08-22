@@ -137,7 +137,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		return nil, err
 	}
 	if req.GenesisDarc.Verify(true) != nil ||
-		len(req.GenesisDarc.Rules) == 0 {
+		req.GenesisDarc.Rules.Count() == 0 {
 		return nil, errors.New("invalid genesis darc")
 	}
 

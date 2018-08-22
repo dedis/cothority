@@ -137,13 +137,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               collectionroot_ = input.readBytes();
@@ -164,6 +157,13 @@ public final class OmniLedgerProto {
               timestamp_ = input.readSInt64();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -181,6 +181,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataHeader_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataHeader_fieldAccessorTable
@@ -286,6 +287,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -311,6 +313,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -328,6 +331,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -488,6 +492,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -495,6 +500,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.DataHeader prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -522,6 +528,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataHeader_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataHeader_fieldAccessorTable
@@ -544,6 +551,7 @@ public final class OmniLedgerProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         collectionroot_ = com.google.protobuf.ByteString.EMPTY;
@@ -557,15 +565,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataHeader_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.DataHeader getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.DataHeader.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.DataHeader build() {
         ch.epfl.dedis.proto.OmniLedgerProto.DataHeader result = buildPartial();
         if (!result.isInitialized()) {
@@ -574,6 +585,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.DataHeader buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.DataHeader result = new ch.epfl.dedis.proto.OmniLedgerProto.DataHeader(this);
         int from_bitField0_ = bitField0_;
@@ -599,32 +611,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.DataHeader) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.DataHeader)other);
@@ -653,6 +672,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasCollectionroot()) {
           return false;
@@ -669,6 +689,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -896,11 +917,13 @@ public final class OmniLedgerProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -922,6 +945,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<DataHeader>
         PARSER = new com.google.protobuf.AbstractParser<DataHeader>() {
+      @java.lang.Override
       public DataHeader parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -939,6 +963,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.DataHeader getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1018,13 +1043,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 transactions_ = new java.util.ArrayList<ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction>();
@@ -1032,6 +1050,13 @@ public final class OmniLedgerProto {
               }
               transactions_.add(
                   input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.PARSER, extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -1054,6 +1079,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataBody_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataBody_fieldAccessorTable
@@ -1097,6 +1123,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1112,6 +1139,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < transactions_.size(); i++) {
@@ -1120,6 +1148,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -1237,6 +1266,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -1244,6 +1274,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.DataBody prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -1272,6 +1303,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataBody_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataBody_fieldAccessorTable
@@ -1295,6 +1327,7 @@ public final class OmniLedgerProto {
           getTransactionsFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (transactionsBuilder_ == null) {
@@ -1306,15 +1339,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_DataBody_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.DataBody getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.DataBody.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.DataBody build() {
         ch.epfl.dedis.proto.OmniLedgerProto.DataBody result = buildPartial();
         if (!result.isInitialized()) {
@@ -1323,6 +1359,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.DataBody buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.DataBody result = new ch.epfl.dedis.proto.OmniLedgerProto.DataBody(this);
         int from_bitField0_ = bitField0_;
@@ -1339,32 +1376,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.DataBody) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.DataBody)other);
@@ -1407,6 +1451,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getTransactionsCount(); i++) {
           if (!getTransactions(i).isInitialized()) {
@@ -1416,6 +1461,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1674,11 +1720,13 @@ public final class OmniLedgerProto {
         }
         return transactionsBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1700,6 +1748,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<DataBody>
         PARSER = new com.google.protobuf.AbstractParser<DataBody>() {
+      @java.lang.Override
       public DataBody parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1717,6 +1766,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.DataBody getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1856,13 +1906,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               version_ = input.readSInt32();
@@ -1899,6 +1942,13 @@ public final class OmniLedgerProto {
               blockinterval_ = input.readSInt64();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1916,6 +1966,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_CreateGenesisBlock_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_CreateGenesisBlock_fieldAccessorTable
@@ -2037,6 +2088,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -2070,6 +2122,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2087,6 +2140,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -2247,6 +2301,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -2254,6 +2309,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlock prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -2281,6 +2337,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_CreateGenesisBlock_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_CreateGenesisBlock_fieldAccessorTable
@@ -2305,6 +2362,7 @@ public final class OmniLedgerProto {
           getGenesisdarcFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         version_ = 0;
@@ -2326,15 +2384,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_CreateGenesisBlock_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlock getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlock.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlock build() {
         ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlock result = buildPartial();
         if (!result.isInitialized()) {
@@ -2343,6 +2404,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlock buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlock result = new ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlock(this);
         int from_bitField0_ = bitField0_;
@@ -2376,32 +2438,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlock) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlock)other);
@@ -2430,6 +2499,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasVersion()) {
           return false;
@@ -2452,6 +2522,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2874,11 +2945,13 @@ public final class OmniLedgerProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -2900,6 +2973,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CreateGenesisBlock>
         PARSER = new com.google.protobuf.AbstractParser<CreateGenesisBlock>() {
+      @java.lang.Override
       public CreateGenesisBlock parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2917,6 +2991,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlock getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -3013,13 +3088,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               version_ = input.readSInt32();
@@ -3036,6 +3104,13 @@ public final class OmniLedgerProto {
                 skipblock_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -3055,6 +3130,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_CreateGenesisBlockResponse_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_CreateGenesisBlockResponse_fieldAccessorTable
@@ -3120,6 +3196,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -3139,6 +3216,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3150,6 +3228,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -3283,6 +3362,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -3290,6 +3370,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlockResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -3317,6 +3398,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_CreateGenesisBlockResponse_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_CreateGenesisBlockResponse_fieldAccessorTable
@@ -3340,6 +3422,7 @@ public final class OmniLedgerProto {
           getSkipblockFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         version_ = 0;
@@ -3353,15 +3436,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_CreateGenesisBlockResponse_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlockResponse getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlockResponse.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlockResponse build() {
         ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlockResponse result = buildPartial();
         if (!result.isInitialized()) {
@@ -3370,6 +3456,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlockResponse buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlockResponse result = new ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlockResponse(this);
         int from_bitField0_ = bitField0_;
@@ -3391,32 +3478,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlockResponse) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlockResponse)other);
@@ -3439,6 +3533,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasVersion()) {
           return false;
@@ -3451,6 +3546,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3671,11 +3767,13 @@ public final class OmniLedgerProto {
         }
         return skipblockBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -3697,6 +3795,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CreateGenesisBlockResponse>
         PARSER = new com.google.protobuf.AbstractParser<CreateGenesisBlockResponse>() {
+      @java.lang.Override
       public CreateGenesisBlockResponse parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3714,6 +3813,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.CreateGenesisBlockResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -3848,13 +3948,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               version_ = input.readSInt32();
@@ -3883,6 +3976,13 @@ public final class OmniLedgerProto {
               inclusionwait_ = input.readSInt32();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -3900,6 +4000,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_AddTxRequest_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_AddTxRequest_fieldAccessorTable
@@ -4013,6 +4114,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4038,6 +4140,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4055,6 +4158,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4214,6 +4318,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4221,6 +4326,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.AddTxRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4248,6 +4354,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_AddTxRequest_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_AddTxRequest_fieldAccessorTable
@@ -4271,6 +4378,7 @@ public final class OmniLedgerProto {
           getTransactionFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         version_ = 0;
@@ -4288,15 +4396,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_AddTxRequest_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.AddTxRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.AddTxRequest.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.AddTxRequest build() {
         ch.epfl.dedis.proto.OmniLedgerProto.AddTxRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -4305,6 +4416,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.AddTxRequest buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.AddTxRequest result = new ch.epfl.dedis.proto.OmniLedgerProto.AddTxRequest(this);
         int from_bitField0_ = bitField0_;
@@ -4334,32 +4446,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.AddTxRequest) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.AddTxRequest)other);
@@ -4388,6 +4507,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasVersion()) {
           return false;
@@ -4404,6 +4524,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4727,11 +4848,13 @@ public final class OmniLedgerProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4753,6 +4876,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<AddTxRequest>
         PARSER = new com.google.protobuf.AbstractParser<AddTxRequest>() {
+      @java.lang.Override
       public AddTxRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4770,6 +4894,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.AddTxRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -4841,16 +4966,16 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
+            case 8: {
+              bitField0_ |= 0x00000001;
+              version_ = input.readSInt32();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 8: {
-              bitField0_ |= 0x00000001;
-              version_ = input.readSInt32();
               break;
             }
           }
@@ -4870,6 +4995,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_AddTxResponse_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_AddTxResponse_fieldAccessorTable
@@ -4902,6 +5028,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4915,6 +5042,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4923,6 +5051,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5043,6 +5172,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5050,6 +5180,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.AddTxResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5077,6 +5208,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_AddTxResponse_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_AddTxResponse_fieldAccessorTable
@@ -5099,6 +5231,7 @@ public final class OmniLedgerProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         version_ = 0;
@@ -5106,15 +5239,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_AddTxResponse_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.AddTxResponse getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.AddTxResponse.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.AddTxResponse build() {
         ch.epfl.dedis.proto.OmniLedgerProto.AddTxResponse result = buildPartial();
         if (!result.isInitialized()) {
@@ -5123,6 +5259,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.AddTxResponse buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.AddTxResponse result = new ch.epfl.dedis.proto.OmniLedgerProto.AddTxResponse(this);
         int from_bitField0_ = bitField0_;
@@ -5136,32 +5273,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.AddTxResponse) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.AddTxResponse)other);
@@ -5181,6 +5325,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasVersion()) {
           return false;
@@ -5188,6 +5333,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5254,11 +5400,13 @@ public final class OmniLedgerProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5280,6 +5428,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<AddTxResponse>
         PARSER = new com.google.protobuf.AbstractParser<AddTxResponse>() {
+      @java.lang.Override
       public AddTxResponse parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5297,6 +5446,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.AddTxResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -5406,13 +5556,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               version_ = input.readSInt32();
@@ -5426,6 +5569,13 @@ public final class OmniLedgerProto {
             case 26: {
               bitField0_ |= 0x00000004;
               id_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -5445,6 +5595,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_GetProof_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_GetProof_fieldAccessorTable
@@ -5525,6 +5676,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5546,6 +5698,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5560,6 +5713,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5706,6 +5860,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5713,6 +5868,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.GetProof prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5740,6 +5896,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_GetProof_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_GetProof_fieldAccessorTable
@@ -5762,6 +5919,7 @@ public final class OmniLedgerProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         version_ = 0;
@@ -5773,15 +5931,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_GetProof_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.GetProof getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.GetProof.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.GetProof build() {
         ch.epfl.dedis.proto.OmniLedgerProto.GetProof result = buildPartial();
         if (!result.isInitialized()) {
@@ -5790,6 +5951,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.GetProof buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.GetProof result = new ch.epfl.dedis.proto.OmniLedgerProto.GetProof(this);
         int from_bitField0_ = bitField0_;
@@ -5811,32 +5973,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.GetProof) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.GetProof)other);
@@ -5862,6 +6031,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasVersion()) {
           return false;
@@ -5875,6 +6045,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6047,11 +6218,13 @@ public final class OmniLedgerProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6073,6 +6246,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetProof>
         PARSER = new com.google.protobuf.AbstractParser<GetProof>() {
+      @java.lang.Override
       public GetProof parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6090,6 +6264,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.GetProof getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6190,13 +6365,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               version_ = input.readSInt32();
@@ -6213,6 +6381,13 @@ public final class OmniLedgerProto {
                 proof_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -6232,6 +6407,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_GetProofResponse_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_GetProofResponse_fieldAccessorTable
@@ -6300,6 +6476,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -6321,6 +6498,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6332,6 +6510,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -6465,6 +6644,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6472,6 +6652,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6500,6 +6681,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_GetProofResponse_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_GetProofResponse_fieldAccessorTable
@@ -6523,6 +6705,7 @@ public final class OmniLedgerProto {
           getProofFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         version_ = 0;
@@ -6536,15 +6719,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_GetProofResponse_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse build() {
         ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse result = buildPartial();
         if (!result.isInitialized()) {
@@ -6553,6 +6739,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse result = new ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse(this);
         int from_bitField0_ = bitField0_;
@@ -6574,32 +6761,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse)other);
@@ -6622,6 +6816,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasVersion()) {
           return false;
@@ -6635,6 +6830,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6864,11 +7060,13 @@ public final class OmniLedgerProto {
         }
         return proofBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6890,6 +7088,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetProofResponse>
         PARSER = new com.google.protobuf.AbstractParser<GetProofResponse>() {
+      @java.lang.Override
       public GetProofResponse parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6907,6 +7106,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.GetProofResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6985,13 +7185,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               blockinterval_ = input.readSInt64();
@@ -7008,6 +7201,13 @@ public final class OmniLedgerProto {
                 roster_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -7027,6 +7227,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_ChainConfig_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_ChainConfig_fieldAccessorTable
@@ -7072,6 +7273,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7093,6 +7295,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7104,6 +7307,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -7238,6 +7442,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -7245,6 +7450,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.ChainConfig prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -7274,6 +7480,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_ChainConfig_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_ChainConfig_fieldAccessorTable
@@ -7297,6 +7504,7 @@ public final class OmniLedgerProto {
           getRosterFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         blockinterval_ = 0L;
@@ -7310,15 +7518,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_ChainConfig_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.ChainConfig getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.ChainConfig.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.ChainConfig build() {
         ch.epfl.dedis.proto.OmniLedgerProto.ChainConfig result = buildPartial();
         if (!result.isInitialized()) {
@@ -7327,6 +7538,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.ChainConfig buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.ChainConfig result = new ch.epfl.dedis.proto.OmniLedgerProto.ChainConfig(this);
         int from_bitField0_ = bitField0_;
@@ -7348,32 +7560,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.ChainConfig) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.ChainConfig)other);
@@ -7396,6 +7615,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasBlockinterval()) {
           return false;
@@ -7409,6 +7629,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7577,11 +7798,13 @@ public final class OmniLedgerProto {
         }
         return rosterBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -7603,6 +7826,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ChainConfig>
         PARSER = new com.google.protobuf.AbstractParser<ChainConfig>() {
+      @java.lang.Override
       public ChainConfig parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7620,6 +7844,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.ChainConfig getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -7785,13 +8010,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.proto.CollectionProto.Proof.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7827,6 +8045,13 @@ public final class OmniLedgerProto {
                   input.readMessage(ch.epfl.dedis.proto.SkipchainProto.ForwardLink.PARSER, extensionRegistry));
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -7847,6 +8072,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Proof_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Proof_fieldAccessorTable
@@ -7987,6 +8213,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -8018,6 +8245,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -8032,6 +8260,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -8175,6 +8404,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -8182,6 +8412,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.Proof prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -8216,6 +8447,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Proof_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Proof_fieldAccessorTable
@@ -8241,6 +8473,7 @@ public final class OmniLedgerProto {
           getLinksFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (inclusionproofBuilder_ == null) {
@@ -8264,15 +8497,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Proof_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Proof getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Proof build() {
         ch.epfl.dedis.proto.OmniLedgerProto.Proof result = buildPartial();
         if (!result.isInitialized()) {
@@ -8281,6 +8517,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Proof buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.Proof result = new ch.epfl.dedis.proto.OmniLedgerProto.Proof(this);
         int from_bitField0_ = bitField0_;
@@ -8315,32 +8552,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.Proof) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.Proof)other);
@@ -8389,6 +8633,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasInclusionproof()) {
           return false;
@@ -8410,6 +8655,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9084,11 +9330,13 @@ public final class OmniLedgerProto {
         }
         return linksBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -9110,6 +9358,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Proof>
         PARSER = new com.google.protobuf.AbstractParser<Proof>() {
+      @java.lang.Override
       public Proof parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9127,6 +9376,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.Proof getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -9382,13 +9632,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               instanceid_ = input.readBytes();
@@ -9457,6 +9700,13 @@ public final class OmniLedgerProto {
                   input.readMessage(ch.epfl.dedis.proto.DarcProto.Signature.PARSER, extensionRegistry));
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -9477,6 +9727,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Instruction_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Instruction_fieldAccessorTable
@@ -9742,6 +9993,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -9785,6 +10037,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9814,6 +10067,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -10022,6 +10276,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -10029,6 +10284,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.Instruction prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -10056,6 +10312,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Instruction_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Instruction_fieldAccessorTable
@@ -10082,6 +10339,7 @@ public final class OmniLedgerProto {
           getSignaturesFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         instanceid_ = com.google.protobuf.ByteString.EMPTY;
@@ -10119,15 +10377,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Instruction_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Instruction getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.Instruction.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Instruction build() {
         ch.epfl.dedis.proto.OmniLedgerProto.Instruction result = buildPartial();
         if (!result.isInitialized()) {
@@ -10136,6 +10397,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Instruction buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.Instruction result = new ch.epfl.dedis.proto.OmniLedgerProto.Instruction(this);
         int from_bitField0_ = bitField0_;
@@ -10194,32 +10456,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.Instruction) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.Instruction)other);
@@ -10283,6 +10552,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasInstanceid()) {
           return false;
@@ -10314,6 +10584,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11324,11 +11595,13 @@ public final class OmniLedgerProto {
         }
         return signaturesBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -11350,6 +11623,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Instruction>
         PARSER = new com.google.protobuf.AbstractParser<Instruction>() {
+      @java.lang.Override
       public Instruction parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11367,6 +11641,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.Instruction getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -11492,13 +11767,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -11512,6 +11780,13 @@ public final class OmniLedgerProto {
               }
               args_.add(
                   input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.Argument.PARSER, extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -11534,6 +11809,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Spawn_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Spawn_fieldAccessorTable
@@ -11652,6 +11928,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -11671,6 +11948,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -11682,6 +11960,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -11811,6 +12090,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -11818,6 +12098,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.Spawn prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -11845,6 +12126,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Spawn_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Spawn_fieldAccessorTable
@@ -11868,6 +12150,7 @@ public final class OmniLedgerProto {
           getArgsFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         contractid_ = "";
@@ -11881,15 +12164,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Spawn_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Spawn getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.Spawn.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Spawn build() {
         ch.epfl.dedis.proto.OmniLedgerProto.Spawn result = buildPartial();
         if (!result.isInitialized()) {
@@ -11898,6 +12184,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Spawn buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.Spawn result = new ch.epfl.dedis.proto.OmniLedgerProto.Spawn(this);
         int from_bitField0_ = bitField0_;
@@ -11920,32 +12207,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.Spawn) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.Spawn)other);
@@ -11993,6 +12287,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasContractid()) {
           return false;
@@ -12005,6 +12300,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12435,11 +12731,13 @@ public final class OmniLedgerProto {
         }
         return argsBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -12461,6 +12759,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Spawn>
         PARSER = new com.google.protobuf.AbstractParser<Spawn>() {
+      @java.lang.Override
       public Spawn parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12478,6 +12777,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.Spawn getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -12604,13 +12904,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -12624,6 +12917,13 @@ public final class OmniLedgerProto {
               }
               args_.add(
                   input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.Argument.PARSER, extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -12646,6 +12946,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Invoke_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Invoke_fieldAccessorTable
@@ -12764,6 +13065,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -12783,6 +13085,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -12794,6 +13097,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -12923,6 +13227,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -12930,6 +13235,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.Invoke prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -12958,6 +13264,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Invoke_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Invoke_fieldAccessorTable
@@ -12981,6 +13288,7 @@ public final class OmniLedgerProto {
           getArgsFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         command_ = "";
@@ -12994,15 +13302,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Invoke_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Invoke getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.Invoke.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Invoke build() {
         ch.epfl.dedis.proto.OmniLedgerProto.Invoke result = buildPartial();
         if (!result.isInitialized()) {
@@ -13011,6 +13322,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Invoke buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.Invoke result = new ch.epfl.dedis.proto.OmniLedgerProto.Invoke(this);
         int from_bitField0_ = bitField0_;
@@ -13033,32 +13345,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.Invoke) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.Invoke)other);
@@ -13106,6 +13425,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasCommand()) {
           return false;
@@ -13118,6 +13438,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13548,11 +13869,13 @@ public final class OmniLedgerProto {
         }
         return argsBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -13574,6 +13897,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Invoke>
         PARSER = new com.google.protobuf.AbstractParser<Invoke>() {
+      @java.lang.Override
       public Invoke parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13591,6 +13915,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.Invoke getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -13668,6 +13993,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Delete_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Delete_fieldAccessorTable
@@ -13676,6 +14002,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -13685,11 +14012,13 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -13797,6 +14126,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -13804,6 +14134,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.Delete prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -13832,6 +14163,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Delete_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Delete_fieldAccessorTable
@@ -13854,20 +14186,24 @@ public final class OmniLedgerProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Delete_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Delete getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.Delete.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Delete build() {
         ch.epfl.dedis.proto.OmniLedgerProto.Delete result = buildPartial();
         if (!result.isInitialized()) {
@@ -13876,38 +14212,46 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Delete buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.Delete result = new ch.epfl.dedis.proto.OmniLedgerProto.Delete(this);
         onBuilt();
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.Delete) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.Delete)other);
@@ -13924,10 +14268,12 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13945,11 +14291,13 @@ public final class OmniLedgerProto {
         }
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -13971,6 +14319,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Delete>
         PARSER = new com.google.protobuf.AbstractParser<Delete>() {
+      @java.lang.Override
       public Delete parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13988,6 +14337,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.Delete getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -14086,13 +14436,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -14102,6 +14445,13 @@ public final class OmniLedgerProto {
             case 18: {
               bitField0_ |= 0x00000002;
               value_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -14121,6 +14471,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Argument_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Argument_fieldAccessorTable
@@ -14207,6 +14558,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -14224,6 +14576,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -14235,6 +14588,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -14367,6 +14721,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -14374,6 +14729,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.Argument prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -14401,6 +14757,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Argument_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Argument_fieldAccessorTable
@@ -14423,6 +14780,7 @@ public final class OmniLedgerProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         name_ = "";
@@ -14432,15 +14790,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Argument_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Argument getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.Argument.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Argument build() {
         ch.epfl.dedis.proto.OmniLedgerProto.Argument result = buildPartial();
         if (!result.isInitialized()) {
@@ -14449,6 +14810,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Argument buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.Argument result = new ch.epfl.dedis.proto.OmniLedgerProto.Argument(this);
         int from_bitField0_ = bitField0_;
@@ -14466,32 +14828,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.Argument) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.Argument)other);
@@ -14516,6 +14885,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasName()) {
           return false;
@@ -14526,6 +14896,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -14695,11 +15066,13 @@ public final class OmniLedgerProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -14721,6 +15094,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Argument>
         PARSER = new com.google.protobuf.AbstractParser<Argument>() {
+      @java.lang.Override
       public Argument parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -14738,6 +15112,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.Argument getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -14817,13 +15192,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 instructions_ = new java.util.ArrayList<ch.epfl.dedis.proto.OmniLedgerProto.Instruction>();
@@ -14831,6 +15199,13 @@ public final class OmniLedgerProto {
               }
               instructions_.add(
                   input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.Instruction.PARSER, extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -14853,6 +15228,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_ClientTransaction_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_ClientTransaction_fieldAccessorTable
@@ -14896,6 +15272,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -14911,6 +15288,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < instructions_.size(); i++) {
@@ -14919,6 +15297,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -15036,6 +15415,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -15043,6 +15423,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -15071,6 +15452,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_ClientTransaction_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_ClientTransaction_fieldAccessorTable
@@ -15094,6 +15476,7 @@ public final class OmniLedgerProto {
           getInstructionsFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (instructionsBuilder_ == null) {
@@ -15105,15 +15488,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_ClientTransaction_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction build() {
         ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction result = buildPartial();
         if (!result.isInitialized()) {
@@ -15122,6 +15508,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction result = new ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction(this);
         int from_bitField0_ = bitField0_;
@@ -15138,32 +15525,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction)other);
@@ -15206,6 +15600,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getInstructionsCount(); i++) {
           if (!getInstructions(i).isInitialized()) {
@@ -15215,6 +15610,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -15473,11 +15869,13 @@ public final class OmniLedgerProto {
         }
         return instructionsBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -15499,6 +15897,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ClientTransaction>
         PARSER = new com.google.protobuf.AbstractParser<ClientTransaction>() {
+      @java.lang.Override
       public ClientTransaction parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -15516,6 +15915,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.ClientTransaction getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -15659,13 +16059,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               stateaction_ = input.readSInt32();
@@ -15691,6 +16084,13 @@ public final class OmniLedgerProto {
               darcid_ = input.readBytes();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -15708,6 +16108,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_StateChange_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_StateChange_fieldAccessorTable
@@ -15832,6 +16233,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -15861,6 +16263,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -15881,6 +16284,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -16053,6 +16457,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -16060,6 +16465,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.StateChange prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -16087,6 +16493,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_StateChange_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_StateChange_fieldAccessorTable
@@ -16109,6 +16516,7 @@ public final class OmniLedgerProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         stateaction_ = 0;
@@ -16124,15 +16532,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_StateChange_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.StateChange getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.StateChange.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.StateChange build() {
         ch.epfl.dedis.proto.OmniLedgerProto.StateChange result = buildPartial();
         if (!result.isInitialized()) {
@@ -16141,6 +16552,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.StateChange buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.StateChange result = new ch.epfl.dedis.proto.OmniLedgerProto.StateChange(this);
         int from_bitField0_ = bitField0_;
@@ -16170,32 +16582,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.StateChange) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.StateChange)other);
@@ -16227,6 +16646,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasStateaction()) {
           return false;
@@ -16246,6 +16666,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -16516,11 +16937,13 @@ public final class OmniLedgerProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -16542,6 +16965,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<StateChange>
         PARSER = new com.google.protobuf.AbstractParser<StateChange>() {
+      @java.lang.Override
       public StateChange parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -16559,6 +16983,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.StateChange getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -16649,13 +17074,6 @@ public final class OmniLedgerProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               name_ = input.readBytes();
@@ -16664,6 +17082,13 @@ public final class OmniLedgerProto {
             case 16: {
               bitField0_ |= 0x00000002;
               value_ = input.readUInt64();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -16683,6 +17108,7 @@ public final class OmniLedgerProto {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Coin_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Coin_fieldAccessorTable
@@ -16738,6 +17164,7 @@ public final class OmniLedgerProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -16755,6 +17182,7 @@ public final class OmniLedgerProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -16766,6 +17194,7 @@ public final class OmniLedgerProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -16900,6 +17329,7 @@ public final class OmniLedgerProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -16907,6 +17337,7 @@ public final class OmniLedgerProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OmniLedgerProto.Coin prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -16935,6 +17366,7 @@ public final class OmniLedgerProto {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Coin_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Coin_fieldAccessorTable
@@ -16957,6 +17389,7 @@ public final class OmniLedgerProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         name_ = com.google.protobuf.ByteString.EMPTY;
@@ -16966,15 +17399,18 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.internal_static_omniledger_Coin_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Coin getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OmniLedgerProto.Coin.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Coin build() {
         ch.epfl.dedis.proto.OmniLedgerProto.Coin result = buildPartial();
         if (!result.isInitialized()) {
@@ -16983,6 +17419,7 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.OmniLedgerProto.Coin buildPartial() {
         ch.epfl.dedis.proto.OmniLedgerProto.Coin result = new ch.epfl.dedis.proto.OmniLedgerProto.Coin(this);
         int from_bitField0_ = bitField0_;
@@ -17000,32 +17437,39 @@ public final class OmniLedgerProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OmniLedgerProto.Coin) {
           return mergeFrom((ch.epfl.dedis.proto.OmniLedgerProto.Coin)other);
@@ -17048,6 +17492,7 @@ public final class OmniLedgerProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasName()) {
           return false;
@@ -17058,6 +17503,7 @@ public final class OmniLedgerProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -17175,11 +17621,13 @@ public final class OmniLedgerProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -17201,6 +17649,7 @@ public final class OmniLedgerProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Coin>
         PARSER = new com.google.protobuf.AbstractParser<Coin>() {
+      @java.lang.Override
       public Coin parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -17218,6 +17667,7 @@ public final class OmniLedgerProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.OmniLedgerProto.Coin getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }

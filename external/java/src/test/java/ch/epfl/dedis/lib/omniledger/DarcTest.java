@@ -36,7 +36,7 @@ public class DarcTest {
         byte[] rule = darc.getExpression(evolve);
 
         // Change existing rule.
-        darc.setRule(evolve, null);
+        darc.setRule(evolve, new byte[]{});
         assertFalse(Arrays.equals(rule, darc.getExpression(evolve)));
 
         // Add a new rule

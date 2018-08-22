@@ -203,7 +203,7 @@ func (s *Service) spawnContractConfig(cdb CollectionView, inst Instruction, coin
 		log.Error("couldn't decode darc")
 		return
 	}
-	if len(d.Rules) == 0 {
+	if d.Rules.Count() == 0 {
 		return nil, nil, errors.New("don't accept darc with empty rules")
 	}
 	if err = d.Verify(true); err != nil {
