@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/omniledger/darc/expression"
 	"github.com/dedis/cothority/skipchain"
@@ -14,15 +15,16 @@ import (
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 var tSuite = suites.MustFind("Ed25519")
-var dummyKind = "dummy"
-var slowKind = "slow"
-var invalidKind = "invalid"
+var dummyContract = "dummy"
+var slowContract = "slow"
+var invalidContract = "invalid"
 var testInterval = 200 * time.Millisecond
 
 func TestMain(m *testing.M) {
@@ -124,7 +126,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 
 	// the operations below should succeed
 	// add the first tx
-	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, s.value, s.signer)
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
 	require.Nil(t, err)
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
@@ -137,7 +139,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 
 	// add the second tx
 	value2 := []byte("value2")
-	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, value2, s.signer)
+	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, value2, s.signer)
 	require.Nil(t, err)
 	akvresp, err = s.services[sendToIdx].AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
@@ -178,7 +180,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		}
 		// Try to add a new transaction to the node that failed (but is
 		// now running) and it should work.
-		pr := sendTransaction(t, s, len(s.hosts)-1, dummyKind, 10)
+		pr := sendTransaction(t, s, len(s.hosts)-1, dummyContract, 10)
 		require.True(t, pr.InclusionProof.Match())
 	}
 }
@@ -242,7 +244,7 @@ func TestService_Depending(t *testing.T) {
 	// the first one having executed.
 
 	// First instruction: spawn a dummy value.
-	in1, err := createInstr(s.darc.GetBaseID(), dummyKind, []byte("something to delete"), s.signer)
+	in1, err := createInstr(s.darc.GetBaseID(), dummyContract, []byte("something to delete"), s.signer)
 	require.NoError(t, err)
 
 	// Set the length to reflect there are two.
@@ -273,6 +275,68 @@ func TestService_Depending(t *testing.T) {
 	require.Nil(t, err)
 }
 
+func TestService_BadDataHeader(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	// Hook the verifier in order to do nasty things.
+	c := s.services[0].Context
+	skipchain.RegisterVerification(c, verifyOmniLedger, func(newID []byte, newSB *skipchain.SkipBlock) bool {
+		// Make this block arrive late compared to it's timestamp.
+		time.Sleep(3 * s.interval)
+		ret := s.services[0].verifySkipBlock(newID, newSB)
+		return ret
+	})
+	// Put it back on exit.
+	defer skipchain.RegisterVerification(c, verifyOmniLedger, s.services[0].verifySkipBlock)
+
+	tx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	require.Nil(t, err)
+	ser := s.services[0]
+	_, err = ser.AddTransaction(&AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.sb.SkipChainID(),
+		Transaction:   tx,
+		InclusionWait: 5,
+	})
+	require.Error(t, err)
+
+	skipchain.RegisterVerification(c, verifyOmniLedger, func(newID []byte, newSB *skipchain.SkipBlock) bool {
+		// Hack up the DataHeader to make the CollectionRoot the wrong size.
+		_, dataI, _ := network.Unmarshal(newSB.Data, cothority.Suite)
+		dh := dataI.(*DataHeader)
+		dh.CollectionRoot = append(dh.CollectionRoot, 0xff)
+		newSB.Data, _ = network.Marshal(dh)
+		ret := s.services[0].verifySkipBlock(newID, newSB)
+		return ret
+	})
+
+	tx, err = createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	require.Nil(t, err)
+	_, err = ser.AddTransaction(&AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.sb.SkipChainID(),
+		Transaction:   tx,
+		InclusionWait: 5,
+	})
+	require.Error(t, err)
+}
+
+func TestService_CloseAllDeadlock(t *testing.T) {
+	t.Skip("This is not a useful test; it is just here to document something Jeff struggled with for hours and doesn't want to forget for later.")
+
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+	pr := sendTransaction(t, s, 0, dummyContract, 10)
+	require.True(t, pr.InclusionProof.Match())
+
+	// TODO: Why is this required? Without it, CloseAll gets deadlocked instead
+	// of finishing correctly. It has something to do with startPolling being
+	// busy in createNewBlock instead of sleeping on select, so that it does not
+	// exit as fast as omniledger.Service.TestClose wants it to.
+	time.Sleep(s.interval)
+}
+
 func TestService_WaitInclusion(t *testing.T) {
 	for i := 0; i < 3; i++ {
 		log.Lvl1("Testing inclusion when sending to service", i)
@@ -286,19 +350,19 @@ func waitInclusion(t *testing.T, client int) {
 
 	// Create a transaction without waiting
 	log.Lvl1("Create transaction and don't wait")
-	pr := sendTransaction(t, s, client, dummyKind, 0)
+	pr := sendTransaction(t, s, client, dummyContract, 0)
 	require.False(t, pr.InclusionProof.Match())
 
 	// Create a transaction and wait
 	log.Lvl1("Create correct transaction and wait")
-	pr = sendTransaction(t, s, client, dummyKind, 10)
+	pr = sendTransaction(t, s, client, dummyContract, 10)
 	require.True(t, pr.InclusionProof.Match())
 
 	// Create a failing transaction and wait
 	done := make(chan bool)
 	go func() {
 		log.Lvl1("Create wrong transaction and wait")
-		pr := sendTransaction(t, s, client, invalidKind, 10)
+		pr := sendTransaction(t, s, client, invalidContract, 10)
 		require.False(t, pr.InclusionProof.Match())
 		done <- true
 	}()
@@ -308,7 +372,7 @@ func waitInclusion(t *testing.T, client int) {
 
 	// Create a transaction and wait
 	log.Lvl1("Create second correct transaction and wait")
-	pr = sendTransaction(t, s, client, dummyKind, 10)
+	pr = sendTransaction(t, s, client, dummyContract, 10)
 	require.True(t, pr.InclusionProof.Match())
 	select {
 	case <-done:
@@ -331,12 +395,12 @@ func TestService_FloodLedger(t *testing.T) {
 
 	log.Lvl1("Create 10 transactions and don't wait")
 	for i := 0; i < 10; i++ {
-		sendTransaction(t, s, 0, slowKind, 0)
+		sendTransaction(t, s, 0, slowContract, 0)
 	}
 	// Send a last transaction and wait for it to be included
-	sendTransaction(t, s, 0, dummyKind, 100)
+	sendTransaction(t, s, 0, dummyContract, 100)
 
-	// Suppose we need at least 2 blocks (slowKind waits 1/5 interval for each execution)
+	// Suppose we need at least 2 blocks (slowContract waits 1/5 interval for each execution)
 	reply, err = skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
 	require.Nil(t, err)
 	latest := reply.Update[len(reply.Update)-1]
@@ -356,11 +420,11 @@ func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) Pr
 		InclusionWait: wait,
 	})
 	switch kind {
-	case dummyKind:
+	case dummyContract:
 		require.Nil(t, err)
-	case slowKind:
+	case slowContract:
 		require.Nil(t, err)
-	case invalidKind:
+	case invalidContract:
 		require.NotNil(t, err)
 	}
 	// The instruction should not be included (except if we're very unlucky)
@@ -395,7 +459,7 @@ func TestService_InvalidVerification(t *testing.T) {
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
 	// tx1 uses the invalid contract, so it should _not_ be stored.
-	tx1, err := createOneClientTx(s.darc.GetBaseID(), invalidKind, value1, s.signer)
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), invalidContract, value1, s.signer)
 	require.Nil(t, err)
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
@@ -408,7 +472,7 @@ func TestService_InvalidVerification(t *testing.T) {
 
 	// tx2 uses the dummy kind, its value should be stored.
 	value2 := []byte("b")
-	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, value2, s.signer)
+	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, value2, s.signer)
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
@@ -817,7 +881,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int) {
 
 	// try to send a transaction to the node on index nFailures+1, which is
 	// a follower (not the new leader)
-	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, s.value, s.signer)
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
 	require.NoError(t, err)
 	s.sendTxTo(t, tx1, nFailures+1)
 
@@ -1107,7 +1171,7 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 			require.Nil(t, err)
 			s.sb = resp.Skipblock
 		case 1:
-			tx, err := createOneClientTx(s.darc.GetBaseID(), dummyKind, s.value, s.signer)
+			tx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
 			require.Nil(t, err)
 			s.tx = tx
 			_, err = s.service().AddTransaction(&AddTxRequest{
@@ -1168,9 +1232,9 @@ func registerDummy(servers []*onet.Server) {
 	// For testing - there must be a better way to do that. But putting
 	// services []skipchain.GetService in the method signature doesn't work :(
 	for _, s := range servers {
-		RegisterContract(s, dummyKind, dummyContractFunc)
-		RegisterContract(s, slowKind, slowContractFunc)
-		RegisterContract(s, invalidKind, invalidContractFunc)
+		RegisterContract(s, dummyContract, dummyContractFunc)
+		RegisterContract(s, slowContract, slowContractFunc)
+		RegisterContract(s, invalidContract, invalidContractFunc)
 	}
 }
 
