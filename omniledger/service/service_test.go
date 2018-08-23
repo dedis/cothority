@@ -275,24 +275,21 @@ func TestService_Depending(t *testing.T) {
 	require.Nil(t, err)
 }
 
-func TestService_BadDataHeader(t *testing.T) {
+func TestService_LateBlock(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	// Hook the verifier in order to do nasty things.
-	c := s.services[0].Context
+	// Hook the verifier in order delay the arrival and test timestamp checking.
+	ser := s.services[0]
+	c := ser.Context
 	skipchain.RegisterVerification(c, verifyOmniLedger, func(newID []byte, newSB *skipchain.SkipBlock) bool {
 		// Make this block arrive late compared to it's timestamp.
 		time.Sleep(3 * s.interval)
-		ret := s.services[0].verifySkipBlock(newID, newSB)
-		return ret
+		return ser.verifySkipBlock(newID, newSB)
 	})
-	// Put it back on exit.
-	defer skipchain.RegisterVerification(c, verifyOmniLedger, s.services[0].verifySkipBlock)
 
 	tx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
 	require.Nil(t, err)
-	ser := s.services[0]
 	_, err = ser.AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.sb.SkipChainID(),
@@ -300,18 +297,25 @@ func TestService_BadDataHeader(t *testing.T) {
 		InclusionWait: 5,
 	})
 	require.Error(t, err)
+}
 
+func TestService_BadDataHeader(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	ser := s.services[0]
+	c := ser.Context
 	skipchain.RegisterVerification(c, verifyOmniLedger, func(newID []byte, newSB *skipchain.SkipBlock) bool {
 		// Hack up the DataHeader to make the CollectionRoot the wrong size.
 		_, dataI, _ := network.Unmarshal(newSB.Data, cothority.Suite)
 		dh := dataI.(*DataHeader)
 		dh.CollectionRoot = append(dh.CollectionRoot, 0xff)
 		newSB.Data, _ = network.Marshal(dh)
-		ret := s.services[0].verifySkipBlock(newID, newSB)
-		return ret
+
+		return ser.verifySkipBlock(newID, newSB)
 	})
 
-	tx, err = createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	tx, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
 	require.Nil(t, err)
 	_, err = ser.AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
