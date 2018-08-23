@@ -14,7 +14,7 @@ MERGE_FILE=""
 main(){
   startTest
   pwd
-  build ../../omniledger/ol
+  build "$APPDIR/../omniledger/ol"
   buildConode github.com/dedis/cothority/cosi/service github.com/dedis/cothority/pop/service
   echo "Creating directories"
   for n in $(seq $NBR_CLIENTS); do

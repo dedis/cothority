@@ -15,6 +15,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -55,7 +56,7 @@ type Config struct {
 	OrgPrivate kyber.Scalar
 	// Address of the linked conode.
 	Address network.Address
-	// Map of Final statements of the parties.
+	// Map of Final statements or configutations of the parties.
 	// indexed by hash of party desciption
 	Parties map[string]*PartyConfig
 	// config-file name
@@ -139,7 +140,10 @@ func orgLink(c *cli.Context) error {
 	}
 	cfg.Address = addr
 	log.Info("Successfully linked with", addr)
-	cfg.write()
+	err := cfg.write()
+	if err != nil {
+		return errors.New("couldn't write configuration file: " + err.Error())
+	}
 	return nil
 }
 
@@ -208,8 +212,7 @@ func orgConfig(c *cli.Context) error {
 		val.Final.Desc = desc
 	}
 	log.Infof("Stored new config with hash %x", desc.Hash())
-	cfg.write()
-	return nil
+	return cfg.write()
 }
 
 // read all newly proposed configs
@@ -293,8 +296,7 @@ func orgPublic(c *cli.Context) error {
 		}
 		party.Final.Attendees = append(party.Final.Attendees, pub)
 	}
-	cfg.write()
-	return nil
+	return cfg.write()
 }
 
 // finalizes the statement
@@ -330,7 +332,10 @@ func orgFinal(c *cli.Context) error {
 		return err
 	}
 	party.Final = fs
-	cfg.write()
+	err = cfg.write()
+	if err != nil {
+		return errors.New("couldn't write configuration file: " + err.Error())
+	}
 	finst, err := fs.ToToml()
 	if err != nil {
 		return err
@@ -364,7 +369,10 @@ func orgMerge(c *cli.Context) error {
 			log.Fatal("Fetched final statement is invalid")
 		}
 		party.Final = fs
-		cfg.write()
+		err = cfg.write()
+		if err != nil {
+			return errors.New("couldn't write configuration file: " + err.Error())
+		}
 	}
 	if party.Final.Merged {
 		var finst []byte
@@ -384,7 +392,10 @@ func orgMerge(c *cli.Context) error {
 		return err
 	}
 	party.Final = fs
-	cfg.write()
+	err = cfg.write()
+	if err != nil {
+		return errors.New("couldn't write configuration file: " + err.Error())
+	}
 	finst, err := fs.ToToml()
 	if err != nil {
 		return err
@@ -502,7 +513,10 @@ func attJoin(c *cli.Context) error {
 		}
 	}
 	cfg.Parties[hash] = party
-	cfg.write()
+	err = cfg.write()
+	if err != nil {
+		return errors.New("couldn't write configuration file: " + err.Error())
+	}
 	log.Lvl3("Stored final statement")
 	return nil
 }
@@ -607,7 +621,10 @@ func authStore(c *cli.Context) error {
 	party.Final = final
 	hash := hex.EncodeToString(final.Desc.Hash())
 	cfg.Parties[hash] = party
-	cfg.write()
+	err = cfg.write()
+	if err != nil {
+		return errors.New("couldn't write configuration file: " + err.Error())
+	}
 	log.Lvlf1("Stored final statement, hash: %s", hash)
 	return nil
 }
@@ -690,17 +707,17 @@ func omniStore(c *cli.Context) error {
 		for k, v := range finalStatements {
 			log.Infof("%x: '%s' in '%s' at '%s'", k, v.Desc.Name, v.Desc.Location, v.Desc.DateTime)
 		}
-		return errors.New("found more than one final statement - please chose by giving the first (or more) bytes")
+		return errors.New("found more than one proposed configuration - please chose by giving the first (or more) bytes")
 	}
 
 	var finalStatement *service.FinalStatement
 	for k, v := range finalStatements {
-		log.Printf("Keeping final statement %x", k)
+		log.Printf("Keeping proposed configuration %x", k)
 		finalId = []byte(k)
 		finalStatement = v
 	}
 	if err != nil {
-		return errors.New("error while creating hash of final statement: " + err.Error())
+		return errors.New("error while creating hash of proposed configuration: " + err.Error())
 	}
 	fsString := fmt.Sprintf("'%s' in '%s' at '%s'", finalStatement.Desc.Name,
 		finalStatement.Desc.Location, finalStatement.Desc.DateTime)
@@ -725,7 +742,7 @@ func omniStore(c *cli.Context) error {
 	}
 	// The master signer has the right to create a new party.
 	rules.AddRule("spawn:popParty", expression.Expr(signer.Identity().String()))
-	// We allow any of the organizers to update the final statement. The contract
+	// We allow any of the organizers to update the proposed configuration. The contract
 	// will make sure that it is correctly signed.
 	rules.AddRule("invoke:Finalize", expression.Expr(strings.Join(exprSlice, " | ")))
 	orgDarc := darc.NewDarc(rules, []byte("For party "+fsString))
@@ -799,7 +816,7 @@ func omniStore(c *cli.Context) error {
 		}
 	}
 
-	log.Info("New party spawned with id:", iid)
+	log.Info("New party spawned with instance-id:", iid)
 	return nil
 }
 
@@ -852,7 +869,7 @@ func omniFinalize(c *cli.Context) error {
 	}
 	if fs.Signature == nil || len(fs.Attendees) == 0 {
 		log.Printf("%+v", fs)
-		return errors.New("final statement not finalized")
+		return errors.New("proposed configuration not finalized")
 	}
 	fsBuf, err := protobuf.Encode(fs)
 	if err != nil {
@@ -1124,10 +1141,20 @@ func newConfig(fileConfig string) (*Config, error) {
 }
 
 // write saves the config to the given file.
-func (cfg *Config) write() {
+func (cfg *Config) write() error {
 	buf, err := network.Marshal(cfg)
-	log.ErrFatal(err)
-	log.ErrFatal(ioutil.WriteFile(cfg.name, buf, 0660))
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(filepath.Dir(cfg.name), os.ModePerm)
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(cfg.name, buf, 0660)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (cfg *Config) getPartybyHash(hash string) (*PartyConfig, error) {
