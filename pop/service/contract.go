@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/omniledger/contracts"
@@ -30,8 +31,17 @@ var ContractPopCoinAccount = "popCoinAccount"
 func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, coins []ol.Coin) (sc []ol.StateChange, cOut []ol.Coin, err error) {
 	cOut = coins
 	var darcID darc.ID
+	var ppi PopPartyInstance
 	if inst.Spawn == nil {
-		_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+		var ppiBuf []byte
+		ppiBuf, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+		if err != nil {
+			return nil, nil, errors.New("couldn't get instance data: " + err.Error())
+		}
+		err = protobuf.DecodeWithConstructors(ppiBuf, &ppi, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return nil, nil, errors.New("couldn't unmarshal existing PopPartyInstance: " + err.Error())
+		}
 	} else {
 		darcID = inst.InstanceID.Slice()
 	}
@@ -65,6 +75,10 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 	case inst.Invoke != nil:
 		switch inst.Invoke.Command {
 		case "Finalize":
+			if ppi.State != 1 {
+				return nil, nil, fmt.Errorf("can only finalize party with state 1, but current state is %d",
+					ppi.State)
+			}
 			fsBuf := inst.Invoke.Args.Search("FinalStatement")
 			if fsBuf == nil {
 				return nil, nil, errors.New("missing argument: FinalStatement")
