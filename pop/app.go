@@ -605,21 +605,6 @@ func authStore(c *cli.Context) error {
 
 // getConfigClient returns the configuration and a client-structure.
 func getConfigClient(c *cli.Context) (*Config, *service.Client) {
-
-	cfgPath := path.Join(c.GlobalString("config"), "config.bin")
-        dir := path.Dir(cfgPath)
-        _, err := os.Stat(dir)
-        if err != nil {
-                if os.IsNotExist(err) {
-                        err := os.MkdirAll(dir, 0770)
-                        if err != nil {
-				log.ErrFatal(err)
-                        }
-                } else {
-			log.ErrFatal(err)
-                }
-        }
-
 	cfg, err := newConfig(path.Join(c.GlobalString("config"), "config.bin"))
 	log.ErrFatal(err)
 	return cfg, service.NewClient()
@@ -661,6 +646,11 @@ func newConfig(fileConfig string) (*Config, error) {
 
 // write saves the config to the given file.
 func (cfg *Config) write() {
+	dir := path.Dir(cfg.name)
+	err := os.MkdirAll(dir, 0770)
+	if err != nil {
+		log.ErrFatal(err)
+	}
 	buf, err := network.Marshal(cfg)
 	log.ErrFatal(err)
 	log.ErrFatal(ioutil.WriteFile(cfg.name, buf, 0660))
