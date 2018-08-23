@@ -8,7 +8,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/omniledger/contracts"
 	"github.com/dedis/cothority/omniledger/darc"
-	"github.com/dedis/cothority/omniledger/service"
+	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/simul/monitor"
@@ -69,16 +69,16 @@ func (s *SimulationService) Node(config *onet.SimulationConfig) error {
 func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	size := config.Tree.Size()
 	log.Lvl2("Size is:", size, "rounds:", s.Rounds, "transactions:", s.Transactions)
-	var c *service.Client
+	var c *omniledger.Client
 	if s.Keep {
-		c = service.NewClientKeep()
+		c = omniledger.NewClientKeep()
 	} else {
-		c = service.NewClient()
+		c = omniledger.NewClient()
 	}
 	signer := darc.NewSignerEd25519(nil, nil)
 
 	// Create omniledger
-	gm, err := service.DefaultGenesisMsg(service.CurrentVersion, config.Roster,
+	gm, err := omniledger.DefaultGenesisMsg(omniledger.CurrentVersion, config.Roster,
 		[]string{"spawn:coin", "invoke:mint", "invoke:transfer"}, signer.Identity())
 	if err != nil {
 		return errors.New("couldn't setup genesis message: " + err.Error())
@@ -100,43 +100,37 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	// Create two accounts and mint 'Transaction' coins on first account.
 	coins := make([]byte, 8)
 	coins[7] = byte(1)
-	tx := service.ClientTransaction{
-		Instructions: []service.Instruction{
+	tx := omniledger.ClientTransaction{
+		Instructions: []omniledger.Instruction{
 			{
-				InstanceID: service.NewInstanceID(gm.GenesisDarc.GetBaseID()),
-				Nonce:      service.GenNonce(),
+				InstanceID: omniledger.NewInstanceID(gm.GenesisDarc.GetBaseID()),
+				Nonce:      omniledger.GenNonce(),
 				Index:      0,
 				Length:     2,
-				Spawn: &service.Spawn{
+				Spawn: &omniledger.Spawn{
 					ContractID: contracts.ContractCoinID,
 				},
 			},
 			{
-				InstanceID: service.NewInstanceID(gm.GenesisDarc.GetBaseID()),
-				Nonce:      service.GenNonce(),
+				InstanceID: omniledger.NewInstanceID(gm.GenesisDarc.GetBaseID()),
+				Nonce:      omniledger.GenNonce(),
 				Index:      1,
 				Length:     2,
-				Spawn: &service.Spawn{
+				Spawn: &omniledger.Spawn{
 					ContractID: contracts.ContractCoinID,
 				},
 			},
 		},
 	}
 
-	// The first instruction will create an account with the InstanceID equal to the
-	// hash of the first instruction.
-	coinAddr1 := service.NewInstanceID(tx.Instructions[0].Hash())
-
-	// We'll also want to remember this addr so that we can monitor
-	// it for coins arriving.
-	coinAddr2 := service.NewInstanceID(tx.Instructions[1].Hash())
-
 	// Now sign all the instructions
 	for i := range tx.Instructions {
-		if err = service.SignInstruction(&tx.Instructions[i], gm.GenesisDarc.GetBaseID(), signer); err != nil {
+		if err = omniledger.SignInstruction(&tx.Instructions[i], gm.GenesisDarc.GetBaseID(), signer); err != nil {
 			return errors.New("signing of instruction failed: " + err.Error())
 		}
 	}
+	coinAddr1 := tx.Instructions[0].DeriveID("")
+	coinAddr2 := tx.Instructions[1].DeriveID("")
 
 	// And send the instructions to omniledger
 	_, err = c.AddTransactionAndWait(tx, 2)
@@ -146,23 +140,23 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 
 	// Because of issue #1379, we need to do this in a separate tx, once we know
 	// the spawn is done.
-	tx = service.ClientTransaction{
-		Instructions: []service.Instruction{
+	tx = omniledger.ClientTransaction{
+		Instructions: []omniledger.Instruction{
 			{
 				InstanceID: coinAddr1,
-				Nonce:      service.GenNonce(),
+				Nonce:      omniledger.GenNonce(),
 				Index:      0,
 				Length:     1,
-				Invoke: &service.Invoke{
+				Invoke: &omniledger.Invoke{
 					Command: "mint",
-					Args: service.Arguments{{
+					Args: omniledger.Arguments{{
 						Name:  "coins",
 						Value: coins}},
 				},
 			},
 		},
 	}
-	if err = service.SignInstruction(&tx.Instructions[0], gm.GenesisDarc.GetBaseID(), signer); err != nil {
+	if err = omniledger.SignInstruction(&tx.Instructions[0], gm.GenesisDarc.GetBaseID(), signer); err != nil {
 		return errors.New("signing of instruction failed: " + err.Error())
 	}
 	_, err = c.AddTransactionAndWait(tx, 2)
@@ -185,7 +179,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		txs := s.Transactions / s.BatchSize
 		insts := s.BatchSize
 		log.Lvlf1("Sending %d transactions with %d instructions each", txs, insts)
-		tx := service.ClientTransaction{}
+		tx := omniledger.ClientTransaction{}
 		// Inverse the prepare/send loop, so that the last transaction is not sent,
 		// but can be sent in the 'confirm' phase using 'AddTransactionAndWait'.
 		for t := 0; t < txs; t++ {
@@ -197,19 +191,19 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 					return errors.New("couldn't add transfer transaction: " + err.Error())
 				}
 				send.Record()
-				tx.Instructions = service.Instructions{}
+				tx.Instructions = omniledger.Instructions{}
 			}
 
 			prepare := monitor.NewTimeMeasure("prepare")
 			for i := 0; i < insts; i++ {
-				tx.Instructions = append(tx.Instructions, service.Instruction{
+				tx.Instructions = append(tx.Instructions, omniledger.Instruction{
 					InstanceID: coinAddr1,
-					Nonce:      service.GenNonce(),
+					Nonce:      omniledger.GenNonce(),
 					Index:      i,
 					Length:     insts,
-					Invoke: &service.Invoke{
+					Invoke: &omniledger.Invoke{
 						Command: "transfer",
-						Args: service.Arguments{
+						Args: omniledger.Arguments{
 							{
 								Name:  "coins",
 								Value: coinOne,
@@ -220,7 +214,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 							}},
 					},
 				})
-				err = service.SignInstruction(&tx.Instructions[i], gm.GenesisDarc.GetBaseID(), signer)
+				err = omniledger.SignInstruction(&tx.Instructions[i], gm.GenesisDarc.GetBaseID(), signer)
 				if err != nil {
 					return errors.New("signature error: " + err.Error())
 				}

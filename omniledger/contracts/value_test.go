@@ -49,7 +49,7 @@ func TestValue_Spawn(t *testing.T) {
 
 	_, err = cl.AddTransaction(ctx)
 	require.Nil(t, err)
-	pr, err := cl.WaitProof(omniledger.NewInstanceID(ctx.Instructions[0].DeriveID(ContractValueID).Slice()), genesisMsg.BlockInterval, myvalue)
+	pr, err := cl.WaitProof(omniledger.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), genesisMsg.BlockInterval, myvalue)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match())
 	values, err := pr.InclusionProof.RawValues()

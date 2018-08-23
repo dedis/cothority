@@ -37,7 +37,7 @@ func TestCoin_Spawn(t *testing.T) {
 	sc, co, err := ContractCoin(ct, inst, c)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(sc))
-	ca := omniledger.NewInstanceID(inst.Hash())
+	ca := inst.DeriveID("")
 	require.Equal(t, omniledger.NewStateChange(omniledger.Create, ca,
 		ContractCoinID, coinZero, gdarc.GetBaseID()), sc[0])
 	require.Equal(t, 0, len(co))

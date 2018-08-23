@@ -110,19 +110,48 @@ func (instr Instruction) Hash() []byte {
 // and the given string.
 //
 // DeriveID is used inside of contracts that need to create additional keys in
-// the collection. Newly spawned instances should, by convention, always use the
-// Hash() of the instruction as the new InstanceID.
+// the collection. By convention newly spawned instances should have their
+// InstanceID derived via inst.DeriveID("").
 func (instr Instruction) DeriveID(what string) InstanceID {
+	var b [4]byte
+
+	// Une petit primer on domain separation in hashing:
+	// Domain separation is required when the input has variable lengths,
+	// because an attacker could try to construct two messages resulting in the
+	// same hash by moving bytes from one neighboring input to the
+	// other. With fixed-length inputs, moving bytes is not possible, so
+	// no domain separation is needed.
+
 	h := sha256.New()
 	h.Write(instr.Hash())
-	h.Write([]byte{0})
+
+	// Putting the length of instr.Signatures into the hash does not seem to
+	// be strictly required, but seems like a good idea anyway.
+	binary.LittleEndian.PutUint32(b[:], uint32(len(instr.Signatures)))
+	h.Write(b[:])
+
 	for _, s := range instr.Signatures {
+		binary.LittleEndian.PutUint32(b[:], uint32(len(s.Signature)))
+		h.Write(b[:])
 		h.Write(s.Signature)
-		h.Write([]byte{0})
 	}
+	// Because there is no attacker-controlled input after what, we do not need
+	// domain separation here.
 	h.Write([]byte(what))
-	h.Write([]byte{0})
+
 	return NewInstanceID(h.Sum(nil))
+
+	// Addendum:
+	//
+	// While considering this we also considered the possibility that
+	// allowing the attackers to mess with the signatures in order to
+	// attempt to create InstanceID collisions is not a risk, since moving
+	// a byte from sig[1] over to sig[0] would invalidate both signatures.
+	// This is true for the Schnorr sigs we use today, but if there's some
+	// other kind of data in the Signature field in the future, it might
+	// be tolerant of mutations, meaning that what seems unrisky today could
+	// be leaving a trap for later. So to be conservative, we are implementing
+	// strict domain separation now.
 }
 
 // GetContractState searches for the contract kind of this instruction and the

@@ -189,7 +189,7 @@ public class EventLogInstance {
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
         ol.sendTransaction(tx);
 
-        return new InstanceId(instr.hash());
+        return instr.deriveId("");
     }
 
 
@@ -225,7 +225,7 @@ public class EventLogInstance {
             Instruction instr = new Instruction(instance.getId(), Instruction.genNonce(), idx, events.size(), invoke);
             instr.signBy(darcId, signers);
             instrs.add(instr);
-            keys.add(new InstanceId(instr.hash()));
+            keys.add(instr.deriveId(""));
             idx++;
         }
         ClientTransaction tx = new ClientTransaction(instrs);

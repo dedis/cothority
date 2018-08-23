@@ -75,7 +75,7 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 	switch inst.GetType() {
 	case omniledger.SpawnType:
 		// Spawn creates a new coin account as a separate instance.
-		ca := omniledger.NewInstanceID(inst.Hash())
+		ca := inst.DeriveID("")
 		log.Lvlf3("Spawning coin to %x", ca.Slice())
 		sc = []omniledger.StateChange{
 			omniledger.NewStateChange(omniledger.Create, ca, ContractCoinID, make([]byte, 8), darcID),
