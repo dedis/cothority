@@ -1,7 +1,6 @@
 package service
 
 import (
-	"bytes"
 	"crypto/sha256"
 	"errors"
 	"fmt"
@@ -111,24 +110,9 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 				rules := darc.InitRules([]darc.Identity{id}, []darc.Identity{id})
 				rules.AddRule(darc.Action("invoke:transfer"), expression.Expr(id.String()))
 				d := darc.NewDarc(rules, []byte("Attendee darc for pop-party"))
-				var darcBuf []byte
-				// Well, this is about the worst implementation you can do here - but there
-				// is not a lot of choice :( Darc has a map inside, so the `ToProto` call
-				// returns something different on each call. Each node _might_ have a
-				// different represenation of the darc, or it might not.
-				for i := 0; i < 100; i++ {
-					db, err := d.ToProto()
-					if err != nil {
-						return nil, nil, errors.New("couldn't marshal darc: " + err.Error())
-					}
-					if darcBuf == nil {
-						darcBuf = db
-					}
-					dbHash1 := sha256.Sum256(darcBuf)
-					dbHash2 := sha256.Sum256(db)
-					if bytes.Compare(dbHash1[:], dbHash2[:]) == 1 {
-						darcBuf = db
-					}
+				darcBuf, err := d.ToProto()
+				if err != nil {
+					return nil, nil, errors.New("couldn't marshal darc: " + err.Error())
 				}
 				log.LLvlf3("%s: Final %x/%x", s.ServerIdentity(), d.GetBaseID(), sha256.Sum256(darcBuf))
 				scs = append(scs, ol.NewStateChange(ol.Create, ol.NewInstanceID(d.GetBaseID()),
