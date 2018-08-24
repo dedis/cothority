@@ -58,7 +58,6 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 		// Only if its NOT a spawn instruction is ther data in the instance
 		if value != nil {
 			err = protobuf.Decode(value, &ci)
-			log.Printf("%x", value)
 			if err != nil {
 				return nil, nil, errors.New("couldn't unmarshal instance data: " + err.Error())
 			}
