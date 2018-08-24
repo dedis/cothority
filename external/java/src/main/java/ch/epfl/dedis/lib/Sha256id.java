@@ -13,6 +13,10 @@ public class Sha256id implements HashId {
     private final byte[] id;
     public final static int length = 32;
 
+    public Sha256id(ByteString bs) throws CothorityCryptoException{
+        this(bs.toByteArray());
+    }
+
     public Sha256id(byte[] id) throws CothorityCryptoException {
         if (id.length != length) {
             throw new CothorityCryptoException("need 32 bytes for sha256-hash, only got " + id.length);

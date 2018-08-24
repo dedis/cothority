@@ -5,8 +5,10 @@ import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
+import ch.epfl.dedis.lib.omniledger.contracts.DarcInstance;
 import ch.epfl.dedis.lib.omniledger.darc.Darc;
 import ch.epfl.dedis.lib.omniledger.darc.DarcId;
 import ch.epfl.dedis.lib.skipchain.SkipchainRPC;
@@ -82,12 +84,16 @@ public class OmniledgerRPC {
      */
     public OmniledgerRPC(Roster roster, SkipblockId skipchainId) throws CothorityException, InvalidProtocolBufferException {
         Proof proof = OmniledgerRPC.getProof(roster, skipchainId, InstanceId.zero());
-        OmniledgerRPC.checkProof(proof, "config");
-        config = new Config(proof.getValues().get(0));
+        if (!proof.isContract("config", skipchainId)){
+            throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
+        }
+        config = new Config(proof.getValue());
 
-        Proof proof2 = OmniledgerRPC.getProof(roster, skipchainId, new InstanceId(proof.getValues().get(2)));
-        OmniledgerRPC.checkProof(proof2, "darc");
-        genesisDarc = new Darc(proof2.getValues().get(0));
+        Proof proof2 = OmniledgerRPC.getProof(roster, skipchainId, new InstanceId(proof.getDarcID().getId()));
+        if (!proof2.isContract(DarcInstance.ContractId, skipchainId)){
+            throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
+        }
+        genesisDarc = new Darc(proof2.getValue());
 
         // find the skipchain info
         skipchain = new SkipchainRPC(roster, skipchainId);
@@ -222,34 +228,53 @@ public class OmniledgerRPC {
     }
 
     /**
-     * @return latest skipblock - might be null if omniledger has been instantiated from a buffer and didn't
-     * 'update' yet.
+     * @return the genesis block of OmniLedger.
      */
-    public SkipBlock getLatest() {
-        return latest;
-    }
-
     public SkipBlock getGenesis() {
         return genesis;
     }
 
+    /**
+     * @return the roster responsible for OmniLedger.
+     */
     public Roster getRoster() {
         return roster;
     }
 
-    private static void checkProof(Proof proof, String expectedContract) throws CothorityNotFoundException {
-        if (!proof.matches()) {
-            throw new CothorityNotFoundException("couldn't find darc");
-        }
-        if (proof.getValues().size() != 3) {
-            throw new CothorityNotFoundException("incorrect number of values in proof");
-        }
-        String contract = new String(proof.getValues().get(1));
-        if (!contract.equals(expectedContract)) {
-            throw new CothorityNotFoundException("contract name is not " + expectedContract + ", got " + contract);
-        }
+    /**
+     * Fetches a given block from the skipchain and returns the corresponding OmniBlock that allows direct
+     * access to all relevant fields for OmniLedger.
+     *
+     * @param id hash of the skipblock to fetch
+     * @return an OmniBlock representation of the skipblock
+     * @throws CothorityCommunicationException if it couldn't contact the nodes
+     * @throws CothorityCryptoException if the omniblock is invalid
+     */
+    public OmniBlock getOmniBlock(SkipblockId id) throws CothorityCommunicationException, CothorityCryptoException{
+        SkipBlock sb = skipchain.getSkipblock(id);
+        return new OmniBlock(sb);
     }
 
+    /**
+     * This should be used with caution. Every time you use this, please open an issue in github and tell us
+     * why you think you need this. We'll try to fix it then!
+     *
+     * @return the underlying skipchain instance.
+     */
+    public SkipchainRPC getSkipchain() {
+        logger.warn("usually you should not need this - please tell us why you do anyway.");
+        return skipchain;
+    }
+
+   /**
+     * Static method to request a proof from OmniLedger. This is used in the instantiation method.
+     *
+     * @param roster where to contact the cothority
+     * @param skipchainId the id of the underlying skipchain
+     * @param key which key we're interested in
+     * @return a proof pointing to the instance. The proof can also be a proof that the instance does not exist.
+     * @throws CothorityCommunicationException
+     */
     private static Proof getProof(Roster roster, SkipblockId skipchainId, InstanceId key) throws CothorityCommunicationException {
         OmniLedgerProto.GetProof.Builder configBuilder = OmniLedgerProto.GetProof.newBuilder();
         configBuilder.setVersion(currentVersion);

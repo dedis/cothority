@@ -99,7 +99,7 @@ message Request {
   repeated bytes signatures = 5;
 }
 
-// Rules are action-expression associations.
+// Rules is a list of action-expression associations.
 message Rules {
   repeated Rule list = 1;
 }

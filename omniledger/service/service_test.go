@@ -61,6 +61,17 @@ func TestService_CreateSkipchain(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, CurrentVersion, resp.Version)
 	assert.NotNil(t, resp.Skipblock)
+
+	proof, err := s.service().GetProof(&GetProof{
+		Version: CurrentVersion,
+		Key:     genesisMsg.GenesisDarc.GetID(),
+		ID:      resp.Skipblock.SkipChainID(),
+	})
+	require.Nil(t, err)
+	require.Nil(t, proof.Proof.Verify(resp.Skipblock.SkipChainID()))
+	k, _, err := proof.Proof.KeyValue()
+	require.Nil(t, err)
+	require.EqualValues(t, genesisMsg.GenesisDarc.GetID(), k)
 }
 
 func padDarc(key []byte) []byte {
