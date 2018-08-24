@@ -38,6 +38,7 @@ class Request {
     }
     hash.update(this._action);
     hash.update(this._msg);
+    console.dir(this._identities);
     this._identities.forEach(identity => {
       hash.update(identity.toString());
     });
@@ -46,3 +47,5 @@ class Request {
     return new Uint8Array(b.buffer, b.byteOffset, b.byteLength / Uint8Array.BYTES_PER_ELEMENT);
   }
 }
+
+module.exports = Request;
