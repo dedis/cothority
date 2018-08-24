@@ -226,16 +226,23 @@ class Instruction {
    * @return {Object}
    */
   toProtobufValidMessage() {
-    return {
+    let object = {
       instanceid: this._instanceId,
       nonce: this._nonce,
       index: this._index,
       length: this._length,
-      spawn: this._spawnInst,
-      invoke: this._invokeInst,
-      delete: this._deleteInst,
       signatures: this._signatures.map(sig => sig.toProtobufValidMessage())
     };
+
+    if (this._spawnInst !== undefined) {
+      object.spawn = this._spawnInst.toProtobufValidMessage();
+    } else if (this._invokeInst !== undefined) {
+      object.invoke = this._invokeInst.toProtobufValidMessage();
+    } else if (this._deleteInst !== undefined) {
+      object.delete = this._deleteInst.toProtobufValidMessage();
+    }
+
+    return object;
   }
 
   /**

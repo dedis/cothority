@@ -67,7 +67,7 @@ class PopPartyInstance {
     );
     const inst = Instruction.createInvokeInstruction(
       this._instanceId,
-      new Uint8Array(),
+      new Uint8Array(32),
       0,
       1,
       invoke

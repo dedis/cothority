@@ -83,9 +83,6 @@ class OmniledgerRPC {
       transaction: transaction.toProtobufValidMessage(),
       inclusionwait: wait
     };
-    console.log("Trans = ");
-    console.dir(addTxRequest.transaction.instructions[0].signatures);
-
     let rosterSocket = new net.RosterSocket(this.roster, "OmniLedger");
     return rosterSocket
       .send("AddTxRequest", "AddTxResponse", addTxRequest)
