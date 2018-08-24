@@ -1,6 +1,8 @@
-*.proto    -diff -merge
+# To use this file, you have to enable the 'theirs' merge driver and run this line:
+# git config merge.theirs.driver 'echo "Overwriting %P with their version"; mv "%B" "%A"'
+*.proto    -diff merge=theirs
 *.proto    linguist-generated=true
-external/java/src/main/java/ch/epfl/dedis/proto/*.java     -diff -merge
+external/java/src/main/java/ch/epfl/dedis/proto/*.java     -diff merge=theirs
 external/java/src/main/java/ch/epfl/dedis/proto/*.java     linguist-generated=true
-external/js/cothority/lib/protobuf/models.json 	-diff -merge
+external/js/cothority/lib/protobuf/models.json 	-diff merge=theirs
 external/js/cothority/lib/protobuf/models.json  linguist-generated=true
