@@ -1,7 +1,6 @@
 package darc
 
 import (
-	"github.com/dedis/cothority/omniledger/darc/expression"
 	"github.com/dedis/onet/network"
 )
 
@@ -19,6 +18,3 @@ type ID []byte
 // are in all the darcs, "_evolve" and "_sign". The application can modify
 // these actions but should not change the semantics of these actions.
 type Action string
-
-// Rules are action-expression associations.
-type Rules map[Action]expression.Expr

@@ -6,10 +6,7 @@ import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.omniledger.contracts.DarcInstance;
 import ch.epfl.dedis.lib.omniledger.contracts.ValueInstance;
-import ch.epfl.dedis.lib.omniledger.darc.Darc;
-import ch.epfl.dedis.lib.omniledger.darc.Identity;
-import ch.epfl.dedis.lib.omniledger.darc.Signer;
-import ch.epfl.dedis.lib.omniledger.darc.SignerEd25519;
+import ch.epfl.dedis.lib.omniledger.darc.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -37,7 +34,7 @@ public class OmniledgerRPCTest {
     void initAll() throws Exception {
         testInstanceController = TestServerInit.getInstance();
         admin = new SignerEd25519();
-        Map<String, byte[]> rules = Darc.initRules(Arrays.asList(admin.getIdentity()),
+        Rules rules = Darc.initRules(Arrays.asList(admin.getIdentity()),
                 Arrays.asList(admin.getIdentity()));
         genesisDarc = new Darc(rules, "genesis".getBytes());
 

@@ -3,6 +3,7 @@ package service
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 	"fmt"
@@ -137,7 +138,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		return nil, err
 	}
 	if req.GenesisDarc.Verify(true) != nil ||
-		len(req.GenesisDarc.Rules) == 0 {
+		req.GenesisDarc.Rules.Count() == 0 {
 		return nil, errors.New("invalid genesis darc")
 	}
 
@@ -315,7 +316,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 		CollectionRoot:        mr,
 		ClientTransactionHash: ctsOK.Hash(),
 		StateChangesHash:      scs.Hash(),
-		Timestamp:             time.Now().Unix(),
+		Timestamp:             time.Now().UnixNano(),
 	}
 	sb.Data, err = network.Marshal(header)
 	if err != nil {
@@ -513,6 +514,9 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 		var txs ClientTransactions
 		for {
 			select {
+			case <-closeSignal:
+				log.Lvl2(s.ServerIdentity(), "stopping polling")
+				return
 			case <-time.After(interval):
 				sb, err := s.db().GetLatestByID(scID)
 				if err != nil {
@@ -593,13 +597,11 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 					log.Warnf("Got more transactions than can be done in half the blockInterval. "+
 						"%d transactions left", len(txs))
 				}
+
 				_, err = s.createNewBlock(scID, sb.Roster, txOut)
 				if err != nil {
 					log.Error("couldn't create new block: " + err.Error())
 				}
-			case <-closeSignal:
-				log.Lvl2(s.ServerIdentity(), "stopping polling")
-				return
 			}
 		}
 	}()
@@ -619,6 +621,27 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		log.Errorf("couldn't unmarshal header")
 		return false
 	}
+
+	// Check the contents of the DataHeader before proceeding.
+	// We'll check the timestamp later, once we have the config loaded.
+	err = func() error {
+		if len(header.CollectionRoot) != sha256.Size {
+			return errors.New("collection root is wrong size")
+		}
+		if len(header.ClientTransactionHash) != sha256.Size {
+			return errors.New("client transaction hash is wrong size")
+		}
+		if len(header.StateChangesHash) != sha256.Size {
+			return errors.New("state changes hash is wrong size")
+		}
+		return nil
+	}()
+
+	if err != nil {
+		log.Errorf("data header failed check: %v", err)
+		return false
+	}
+
 	_, bodyI, err := network.Unmarshal(newSB.Payload, cothority.Suite)
 	body, ok := bodyI.(*DataBody)
 	if err != nil || !ok {
@@ -670,6 +693,16 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			return false
 		}
 	}
+
+	now := time.Now()
+	t1 := now.Add(-2 * config.BlockInterval)
+	t2 := now.Add(2 * config.BlockInterval)
+	ts := time.Unix(0, header.Timestamp)
+	if ts.Before(t1) || ts.After(t2) {
+		log.Errorf("timestamp %v is outside the acceptable range %v to %v", ts, t1, t2)
+		return false
+	}
+
 	log.Lvl4(s.ServerIdentity(), "verification completed")
 	return true
 }
@@ -831,6 +864,7 @@ func (s *Service) TestClose() {
 		s.heartbeats.closeAll()
 		s.heartbeatsClose <- true
 	}
+
 	s.pollChanWG.Wait()
 }
 

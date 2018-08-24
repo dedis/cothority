@@ -24,7 +24,7 @@ message Darc {
   // PrevID is the previous darc ID in the chain of evolution.
   required bytes previd = 4;
   // Rules map an action to an expression.
-   map<string, bytes> rules = 5;
+  required Rules rules = 5;
   // Signature is calculated on the Request-representation of the darc.
   // It needs to be created by identities that have the "_evolve" action
   // from the previous valid Darc.
@@ -97,4 +97,15 @@ message Request {
   required bytes msg = 3;
   repeated Identity identities = 4;
   repeated bytes signatures = 5;
+}
+
+// Rules is a list of action-expression associations.
+message Rules {
+  repeated Rule list = 1;
+}
+
+// Rule is a pair of action and expression.
+message Rule {
+  required string action = 1;
+  required bytes expr = 2;
 }
