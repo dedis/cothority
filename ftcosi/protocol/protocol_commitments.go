@@ -45,7 +45,7 @@ func (p *FtCosi) collectCommitments(trees []*onet.Tree,
 					for _, child := range trees[i].Root.Children[0].Children {
 						nodes = append(nodes, child.RosterIndex)
 					}
-					if subleaderID > nodes[len(nodes)-1] {
+					if len(nodes) < 2 || subleaderID > nodes[1] {
 						errChan <- fmt.Errorf("(subprotocol %v) failed with every subleader, ignoring this subtree",
 							i)
 						return
