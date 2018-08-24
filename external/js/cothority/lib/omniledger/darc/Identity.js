@@ -6,6 +6,14 @@ class Identity {
   }
 
   /**
+   * Returns a serialized version of the public key
+   * @return {Uint8Array}
+   */
+  get public() {
+    throw new Error("Not implemented");
+  }
+
+  /**
    * Returns true if the verification of signature on the sha-256 of msg is
    * successful or false if not.
 

@@ -26,6 +26,10 @@ class IdentityEd25519 extends Identity {
     return new IdentityEd25519(point);
   }
 
+  get public() {
+    return this._pub.marshalBinary();
+  }
+
   /**
    * Creates an IdentityEd25519 from a SignerEd25519.
 

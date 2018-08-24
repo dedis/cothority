@@ -3,16 +3,20 @@ const Instance = require("../Instance");
 const Invoke = require("../Invoke");
 const Instruction = require("../Instruction");
 const ClientTransaction = require("../ClientTransaction");
+const crypto = require("crypto");
 
+/**
+ * Represents a PoP Party stored on the OmniLedger
+ */
 class PopPartyInstance {
   /**
-   * @param {OmniledgerRPC} ol
-   * @param {Uint8Array} instanceId
-   * @param {Instance} [instance]
-   * @param {number} [state]
-   * @param {Object} [finalStatement]
-   * @param {Uint8Array} [previous]
-   * @param {Uint8Array} [next]
+   * @param {OmniledgerRPC} ol - the omniledger instance
+   * @param {Uint8Array} instanceId - the contract instance id
+   * @param {Instance} [instance] - the complete instance
+   * @param {number} [state] - the state of the party (see the state getter for more information)
+   * @param {Object} [finalStatement] - the complete final statement
+   * @param {Uint8Array} [previous] - a link to the previous pop-party, if available
+   * @param {Uint8Array} [next] - a link to the next pop-party, if available
    */
   constructor(ol, instanceId, instance, state, finalStatement, previous, next) {
     this._ol = ol;
@@ -36,24 +40,29 @@ class PopPartyInstance {
   }
 
   /**
-   * @return {Object} - the literral object from decoded by Protobuf
+   * @return {Object} - the literal object decoded by Protobuf
    */
   get finalStatement() {
     return this._finalStatement;
   }
 
   /**
-   * @param {OmniledgerRPC} ol
-   * @param {Uint8Array} instanceId
+   * Creates a new PopPartyInstance from an instance ID and try to contact the
+   * omniledger to get the last data
+   *
+   * @param {OmniledgerRPC} ol - the omniledger instance
+   * @param {Uint8Array} instanceId - the contract instance id
    */
   static fromInstanceId(ol, instanceId) {
     return new PopPartyInstance(ol, instanceId).update();
   }
 
   /**
+   * Store the final statement on the OmniLedger. This happens after the
+   * party description has been published an the party finalized
    *
-   * @param {Object} finalStatement
-   * @param {Signer} signer
+   * @param {Object} finalStatement - the final statement
+   * @param {Signer} signer - one of the organizer of the party
    * @return {Promise}
    */
   storeFinalStatement(finalStatement, signer) {
@@ -79,6 +88,8 @@ class PopPartyInstance {
   }
 
   /**
+   * Contact the OmniLedger to try getting the last data
+   *
    * @return {Promise<PopPartyInstance>}
    */
   update() {
@@ -94,6 +105,23 @@ class PopPartyInstance {
 
       return Promise.resolve(this);
     });
+  }
+
+  /**
+   * After that the party has been finalized, each attendee receive a certain
+   * amount of coin on a personnal account. This method compute the instance
+   * id of this account, depending on the public key of the attendee
+   *
+   * @param {Identity} identity - the attendee whose account id has to be computed
+   * @return {Uint8Array} - the coin instance id of the attendee
+   */
+  getAccountInstanceId(identity) {
+    const hash = crypto.createHash("sha256");
+    hash.update(this._instanceId);
+    hash.update(identity.public);
+
+    let b = hash.digest();
+    return new Uint8Array(b.buffer, b.byteOffset, b.byteLength / Uint8Array.BYTES_PER_ELEMENT);
   }
 }
 
