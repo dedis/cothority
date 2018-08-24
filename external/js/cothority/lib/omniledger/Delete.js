@@ -15,3 +15,5 @@ class Delete {
     return {};
   }
 }
+
+module.exports = Delete;

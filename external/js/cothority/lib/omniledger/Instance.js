@@ -57,3 +57,5 @@ class Instance {
     return this._data;
   }
 }
+
+module.exports = Instance;

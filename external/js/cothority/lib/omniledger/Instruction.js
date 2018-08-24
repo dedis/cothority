@@ -1,5 +1,5 @@
 const crypto = require("crypto");
-const Request = require("./contracts/Request");
+const Request = require("./darc/Request");
 const Signer = require("./darc/Signer");
 const Signature = require("./darc/Signature");
 
@@ -150,10 +150,10 @@ class Instruction {
     } else {
       hash.update(new Uint8Array([2]));
     }
-    for (let arg in args) {
+    args.forEach(arg => {
       hash.update(arg.name);
       hash.update(arg.value);
-    }
+    });
 
     const b = hash.digest();
     return new Uint8Array(
@@ -249,3 +249,5 @@ class Instruction {
     return new Uint8Array(buffer);
   }
 }
+
+module.exports = Instruction;

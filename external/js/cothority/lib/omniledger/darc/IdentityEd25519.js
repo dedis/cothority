@@ -1,4 +1,4 @@
-const curve = require("@dedis/kyber-js").curve.newCurve("edwards255519");
+const curve = require("@dedis/kyber-js").curve.newCurve("edwards25519");
 const Schnorr = require("@dedis/kyber-js").sign.schnorr;
 const Identity = require("./Identity");
 
@@ -63,3 +63,5 @@ class IdentityEd25519 extends Identity {
     };
   }
 }
+
+module.exports = IdentityEd25519;

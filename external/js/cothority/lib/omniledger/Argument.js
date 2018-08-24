@@ -40,3 +40,5 @@ class Argument {
     };
   }
 }
+
+module.exports = Argument;

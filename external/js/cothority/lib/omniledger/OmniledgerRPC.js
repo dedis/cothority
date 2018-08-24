@@ -80,9 +80,11 @@ class OmniledgerRPC {
     let addTxRequest = {
       version: OmniledgerRPC.currentVersion,
       skipchainid: this.skipchainID,
-      transaction: transaction.toProto(),
+      transaction: transaction.toProtobufValidMessage(),
       inclusionwait: wait
     };
+    console.log("Trans = ");
+    console.dir(addTxRequest.transaction.instructions[0].signatures);
 
     let rosterSocket = new net.RosterSocket(this.roster, "OmniLedger");
     return rosterSocket
@@ -99,6 +101,17 @@ class OmniledgerRPC {
 
         return Promise.reject(e);
       });
+  }
+
+  /**
+   * Gets a proof from omniledger to show that a given instance is in the
+   * global state.
+
+   * @param {Uint8Array} id - the instance key
+   * @return {Promise<Proof>}
+   */
+  getProof(id) {
+    return OmniledgerRPC.getProof(this._roster, this._skipchainID, id);
   }
 
   /**

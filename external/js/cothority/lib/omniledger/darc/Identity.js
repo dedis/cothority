@@ -42,3 +42,5 @@ class Identity {
     throw new Error("Not implemented");
   }
 }
+
+module.exports = Identity;

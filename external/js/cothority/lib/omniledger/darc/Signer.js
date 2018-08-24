@@ -39,3 +39,5 @@ class Signer {
     throw new Error("Not implemented");
   }
 }
+
+module.exports = Signer;

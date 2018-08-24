@@ -41,3 +41,5 @@ class Spawn {
     };
   }
 }
+
+module.exports = Spawn;

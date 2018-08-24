@@ -34,3 +34,5 @@ class ClientTransaction {
     };
   }
 }
+
+module.exports = ClientTransaction;
