@@ -13,6 +13,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/dedis/cothority"
@@ -646,7 +647,7 @@ func newConfig(fileConfig string) (*Config, error) {
 
 // write saves the config to the given file.
 func (cfg *Config) write() {
-	dir := path.Dir(cfg.name)
+	dir := filepath.Dir(cfg.name)
 	err := os.MkdirAll(dir, 0770)
 	if err != nil {
 		log.ErrFatal(err)
