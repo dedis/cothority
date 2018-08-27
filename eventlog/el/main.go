@@ -254,7 +254,7 @@ func parseTime(in string) (time.Time, error) {
 		}
 		return time.Now().Add(-1 * d), nil
 	}
-	tm, err := time.Parse("01-02-2006", in)
+	tm, err := time.Parse("2006-01-02", in)
 	if err != nil {
 		return none, err
 	}

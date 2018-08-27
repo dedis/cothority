@@ -41,7 +41,7 @@ public class ForwardLink {
      * @throws CothorityCryptoException
      */
     public SkipblockId getTo() throws CothorityCryptoException{
-        return new SkipblockId(forwardLink.getFrom());
+        return new SkipblockId(forwardLink.getTo());
     }
 
     /**
