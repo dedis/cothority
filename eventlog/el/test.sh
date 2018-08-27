@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
+DBG_TEST=1
 DBG_SRV=0
 
 . "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
 
 main(){
 	build $APPDIR/../../omniledger/ol
-    startTest
-    buildConode github.com/dedis/cothority/eventlog
+	startTest
+	buildConode github.com/dedis/cothority/eventlog
 
 	# This must succeed before any others will work.
-    run testCreate
+	run testCreate
 	
 	run testLogging
 	
-    stopTest
+	stopTest
 }
 
 testLogging(){
@@ -44,12 +44,12 @@ testCreate(){
 	[ -z "$ID" ] && exit 1
 	
 	runCoBG 1 2 3
-    runGrepSed "export OL=" "" ./ol create --roster public.toml --interval 0.5s
+	runGrepSed "export OL=" "" ./ol create --roster public.toml --interval 0.5s
 	eval $SED
 	[ -z "$OL" ] && exit 1
 	
-    testOK ./ol add spawn:eventlog -identity $ID
-    testOK ./ol add invoke:eventlog -identity $ID
+	testOK ./ol add spawn:eventlog -identity $ID
+	testOK ./ol add invoke:eventlog -identity $ID
 	testGrep $ID ./ol show
 	
 	runGrepSed "export EL=" "" ./el create
