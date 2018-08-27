@@ -334,7 +334,7 @@ func (p *FtCosi) startSubProtocol(tree *onet.Tree) (*SubFtCosi, error) {
 	cosiSubProtocol.Data = p.Data
 	// We allow for one subleader failure during the commit phase, and thus
 	// only allocate one third of the ftcosi budget to the subprotocol.
-	cosiSubProtocol.Timeout = p.Timeout / time.Duration(len(tree.List()))
+	cosiSubProtocol.Timeout = p.Timeout / 3
 
 	// the Threshold (minus root node) is divided evenly among the subtrees
 	subThreshold := int(math.Ceil(float64(p.Threshold-1) / float64(p.NSubtrees)))
