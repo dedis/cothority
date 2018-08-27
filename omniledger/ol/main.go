@@ -11,7 +11,7 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/omniledger/darc"
-	omniledger "github.com/dedis/cothority/omniledger/service"
+	ol "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"
@@ -113,21 +113,21 @@ func create(c *cli.Context) error {
 
 	owner := darc.NewSignerEd25519(nil, nil)
 
-	req, err := omniledger.DefaultGenesisMsg(omniledger.CurrentVersion, r, []string{"spawn:darc"}, owner.Identity())
+	req, err := ol.DefaultGenesisMsg(ol.CurrentVersion, r, []string{"spawn:darc"}, owner.Identity())
 	if err != nil {
 		return err
 	}
 	req.BlockInterval = interval
 
-	cl := onet.NewClient(cothority.Suite, omniledger.ServiceName)
+	cl := onet.NewClient(cothority.Suite, ol.ServiceName)
 
-	var resp omniledger.CreateGenesisBlockResponse
+	var resp ol.CreateGenesisBlockResponse
 	err = cl.SendProtobuf(r.List[0], req, &resp)
 	if err != nil {
 		return err
 	}
 
-	cfg := &omniledger.Config{
+	cfg := &ol.Config{
 		ID:      resp.Skipblock.SkipChainID(),
 		Roster:  *r,
 		OwnerID: owner.Identity(),
@@ -155,16 +155,16 @@ func create(c *cli.Context) error {
 }
 
 func show(c *cli.Context) error {
-	ol := c.String("ol")
-	if ol == "" {
+	olArg := c.String("ol")
+	if olArg == "" {
 		return errors.New("--ol flag is required")
 	}
-	cl, err := omniledger.NewClientFromConfig(ol)
+	cl, err := ol.NewClientFromConfig(olArg)
 	if err != nil {
 		return err
 	}
 
-	cfg := &omniledger.Config{
+	cfg := &ol.Config{
 		ID:     cl.ID,
 		Roster: *cl.Roster,
 	}
@@ -185,12 +185,12 @@ func show(c *cli.Context) error {
 }
 
 func add(c *cli.Context) error {
-	ol := c.String("ol")
-	if ol == "" {
+	olArg := c.String("ol")
+	if olArg == "" {
 		return errors.New("--ol flag is required")
 	}
 
-	cl, err := omniledger.NewClientFromConfig(ol)
+	cl, err := ol.NewClientFromConfig(olArg)
 	if err != nil {
 		return err
 	}
@@ -226,17 +226,17 @@ func add(c *cli.Context) error {
 		return err
 	}
 
-	invoke := omniledger.Invoke{
+	invoke := ol.Invoke{
 		Command: "evolve",
-		Args: []omniledger.Argument{
-			omniledger.Argument{
+		Args: []ol.Argument{
+			ol.Argument{
 				Name:  "darc",
 				Value: d2Buf,
 			},
 		},
 	}
-	instr := omniledger.Instruction{
-		InstanceID: omniledger.NewInstanceID(d2.GetBaseID()),
+	instr := ol.Instruction{
+		InstanceID: ol.NewInstanceID(d2.GetBaseID()),
 		Index:      0,
 		Length:     1,
 		Invoke:     &invoke,
@@ -249,8 +249,8 @@ func add(c *cli.Context) error {
 		return err
 	}
 
-	_, err = cl.AddTransactionAndWait(omniledger.ClientTransaction{
-		Instructions: []omniledger.Instruction{instr},
+	_, err = cl.AddTransactionAndWait(ol.ClientTransaction{
+		Instructions: []ol.Instruction{instr},
 	}, 10)
 	if err != nil {
 		return err
@@ -304,7 +304,7 @@ func loadPrivate(fn string) (*configPrivate, error) {
 	return nil, errors.New("unexpected private config format")
 }
 
-func save(cfg *omniledger.Config) (string, error) {
+func save(cfg *ol.Config) (string, error) {
 	cfgDir := getDataPath(cliApp.Name)
 	os.MkdirAll(cfgDir, 0755)
 

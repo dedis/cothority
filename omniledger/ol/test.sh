@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 
 DBG_TEST=1
-# Debug-level for app
-DBG_APP=0
 DBG_SRV=0
 
 . "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"

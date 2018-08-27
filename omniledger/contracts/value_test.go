@@ -6,7 +6,7 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/omniledger/darc"
-	omniledger "github.com/dedis/cothority/omniledger/service"
+	ol "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/onet"
 	"github.com/stretchr/testify/require"
 )
@@ -17,9 +17,9 @@ func TestValue_Spawn(t *testing.T) {
 
 	signer := darc.NewSignerEd25519(nil, nil)
 	_, roster, _ := local.GenTree(2, true)
-	cl := omniledger.NewClient()
+	cl := ol.NewClient()
 
-	genesisMsg, err := omniledger.DefaultGenesisMsg(omniledger.CurrentVersion, roster,
+	genesisMsg, err := ol.DefaultGenesisMsg(ol.CurrentVersion, roster,
 		[]string{"spawn:value", "spawn:darc"}, signer.Identity())
 	require.Nil(t, err)
 	gDarc := &genesisMsg.GenesisDarc
@@ -30,15 +30,15 @@ func TestValue_Spawn(t *testing.T) {
 	require.Nil(t, err)
 
 	myvalue := []byte("1234")
-	ctx := omniledger.ClientTransaction{
-		Instructions: []omniledger.Instruction{{
-			InstanceID: omniledger.NewInstanceID(gDarc.GetBaseID()),
-			Nonce:      omniledger.Nonce{},
+	ctx := ol.ClientTransaction{
+		Instructions: []ol.Instruction{{
+			InstanceID: ol.NewInstanceID(gDarc.GetBaseID()),
+			Nonce:      ol.Nonce{},
 			Index:      0,
 			Length:     1,
-			Spawn: &omniledger.Spawn{
+			Spawn: &ol.Spawn{
 				ContractID: ContractValueID,
-				Args: []omniledger.Argument{{
+				Args: []ol.Argument{{
 					Name:  "value",
 					Value: myvalue,
 				}},
@@ -49,7 +49,7 @@ func TestValue_Spawn(t *testing.T) {
 
 	_, err = cl.AddTransaction(ctx)
 	require.Nil(t, err)
-	pr, err := cl.WaitProof(omniledger.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), genesisMsg.BlockInterval, myvalue)
+	pr, err := cl.WaitProof(ol.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), genesisMsg.BlockInterval, myvalue)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match())
 	values, err := pr.InclusionProof.RawValues()

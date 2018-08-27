@@ -1,7 +1,7 @@
 package contracts
 
 import (
-	"github.com/dedis/cothority/omniledger/service"
+	ol "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -26,7 +26,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	service.RegisterContract(c, ContractValueID, ContractValue)
-	service.RegisterContract(c, ContractCoinID, ContractCoin)
+	ol.RegisterContract(c, ContractValueID, ContractValue)
+	ol.RegisterContract(c, ContractCoinID, ContractCoin)
 	return s, nil
 }

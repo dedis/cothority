@@ -125,8 +125,6 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 	h := sha256.New()
 	h.Write(instr.Hash())
 
-	// Putting the length of instr.Signatures into the hash does not seem to
-	// be strictly required, but seems like a good idea anyway.
 	binary.LittleEndian.PutUint32(b[:], uint32(len(instr.Signatures)))
 	h.Write(b[:])
 
