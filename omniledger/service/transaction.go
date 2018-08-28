@@ -343,9 +343,17 @@ func NewTxResults(ct ...ClientTransaction) TxResults {
 
 // Hash returns the sha256 hash of all of the transactions.
 func (txr TxResults) Hash() []byte {
+	one := []byte{1}
+	zero := []byte{0}
+
 	h := sha256.New()
 	for _, tx := range txr {
 		h.Write(tx.ClientTransaction.Instructions.Hash())
+		if tx.Accepted {
+			h.Write(one[:])
+		} else {
+			h.Write(zero[:])
+		}
 	}
 	return h.Sum(nil)
 }

@@ -203,9 +203,12 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 			if err == nil && len(r2.Update) != 0 {
 				break
 			}
-			time.Sleep(delay)
-			// exponential backoff
-			delay *= 2
+			// Don't want to sleep on the last time thru this loop.
+			if i < retries-1 {
+				time.Sleep(delay)
+				// exponential backoff
+				delay *= 2
+			}
 		}
 		if i == retries {
 			return nil, fmt.Errorf("too many retries; last error: %v", err)

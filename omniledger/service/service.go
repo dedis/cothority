@@ -614,7 +614,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	var header DataHeader
 	err := protobuf.DecodeWithConstructors(newSB.Data, &header, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		log.Errorf("verifySkipblock: couldn't unmarshal header")
+		log.Error("verifySkipblock: couldn't unmarshal header")
 		return false
 	}
 
@@ -641,7 +641,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	var body DataBody
 	err = protobuf.DecodeWithConstructors(newSB.Payload, &body, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
-		log.Errorf("verifySkipblock: couldn't unmarshal body")
+		log.Error("verifySkipblock: couldn't unmarshal body")
 		return false
 	}
 
@@ -714,12 +714,17 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	return true
 }
 
-// createStateChanges goes through all the proposed ClientTransactions and
-// creates the appropriate StateChanges, by sorting out which transactions can
-// be run, which fail, and which cannot be attempted yet (due to timeout).  If
-// timeout is not 0, createStateChanges will stop running instructions after
+// createStateChanges goes through all the proposed transactions one by one,
+// creating the appropriate StateChanges, by sorting out which transactions can
+// be run, which fail, and which cannot be attempted yet (due to timeout).
+//
+// If timeout is not 0, createStateChanges will stop running instructions after
 // that long, in order for the caller to determine how many instructions fit in
 // a block interval.
+//
+// State caching is implemented here, which is critical to performance, because
+// on the leader it reduces the number of contract executions by 1/3 and on
+// followers by 1/2.
 func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges) {
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
