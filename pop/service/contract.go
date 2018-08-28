@@ -143,7 +143,7 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 				return nil, nil, fmt.Errorf("can only add a service with a finalized party, but it's: %d",
 					ppi.State)
 			}
-			return scs, coins, nil
+			return nil, coins, nil
 		case "AddParty":
 			return nil, nil, errors.New("not yet implemented")
 		default:
