@@ -138,6 +138,12 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 					contracts.ContractCoinID, cciBuf, d.GetBaseID()))
 			}
 			return scs, coins, nil
+		case "AddService":
+			if ppi.State != 2 {
+				return nil, nil, fmt.Errorf("can only add a service with a finalized party, but it's: %d",
+					ppi.State)
+			}
+			return scs, coins, nil
 		case "AddParty":
 			return nil, nil, errors.New("not yet implemented")
 		default:
@@ -149,6 +155,37 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 	}
 }
 
-func (s *Service) ContractPopCoinAccount(cdb ol.CollectionView, inst ol.Instruction, coins []ol.Coin) (sc []ol.StateChange, c []ol.Coin, err error) {
-	return nil, coins, nil
+func NewPopPartyInstance(cdb ol.CollectionView, inst ol.Instruction, coins []ol.Coin) (ppi PopPartyInstance, err error) {
+	return PopPartyInstance{}, nil
+}
+
+func NewPopPartyInstanceFromProof(p *ol.Proof) (ppi PopPartyInstance, err error) {
+	if !p.InclusionProof.Match() {
+		return ppi, errors.New("this is a non-matching proof")
+	}
+	_, vs, err := p.KeyValue()
+	if err != nil {
+		return ppi, errors.New("couldn't get keyValue: " + err.Error())
+	}
+	if string(vs[1]) != ContractPopParty {
+		return ppi, errors.New("got a non-popParty instance")
+	}
+	err = protobuf.DecodeWithConstructors(vs[0], &ppi, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return ppi, errors.New("couldn't decode party: " + err.Error())
+	}
+	return
+}
+
+func (ppi *PopPartyInstance) Valid() error {
+	return nil
+}
+func (ppi *PopPartyInstance) Spawn() error {
+	return nil
+}
+func (ppi *PopPartyInstance) Invoke() error {
+	return nil
+}
+func (ppi *PopPartyInstance) Delete() error {
+	return nil
 }

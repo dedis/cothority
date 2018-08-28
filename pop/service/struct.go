@@ -73,7 +73,7 @@ const (
 	PopStatusOK
 )
 
-func (fr *FinalizeRequest) hash() ([]byte, error) {
+func (fr *FinalizeRequest) Hash() ([]byte, error) {
 	h := cothority.Suite.Hash()
 	_, err := h.Write(fr.DescID)
 	if err != nil {

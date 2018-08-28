@@ -108,7 +108,7 @@ func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []kyber.Poi
 	req := &FinalizeRequest{}
 	req.DescID = p.Hash()
 	req.Attendees = attendees
-	hash, err := req.hash()
+	hash, err := req.Hash()
 	if err != nil {
 		return nil, err
 	}

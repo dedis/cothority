@@ -250,12 +250,12 @@ func (s *Service) GetProposals(req *GetProposals) (*GetProposalsReply, error) {
 // FinalizeRequest returns the FinalStatement if all conodes already received
 // a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
 // pruned attendees-public-key-list and the collective signature.
-func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Message, error) {
+func (s *Service) FinalizeRequest(req *FinalizeRequest) (*FinalizeResponse, error) {
 	log.Lvlf2("Finalize: %s %+v", s.Context.ServerIdentity(), req)
 	if s.data.Public == nil {
 		return nil, errors.New("Not linked yet")
 	}
-	hash, err := req.hash()
+	hash, err := req.Hash()
 	if err != nil {
 		return nil, err
 	}
@@ -572,6 +572,7 @@ func (s *Service) CheckConfig(req *network.Envelope) {
 		} else {
 			final.Attendees = intersectAttendees(final.Attendees, cc.Attendees)
 			if len(final.Attendees) == 0 {
+				log.Print(final.Attendees, cc.Attendees)
 				ccr.PopStatus = PopStatusNoAttendees
 			} else {
 				ccr.PopStatus = PopStatusOK
@@ -656,6 +657,11 @@ func (final *FinalStatement) VerifyMergeStatement(mergeFinal *FinalStatement) in
 	}
 
 	return PopStatusOK
+}
+
+// StoreLink can be used by tests to directly store a pin.
+func (s *Service) StoreLink(pub kyber.Point) {
+	s.data.Public = pub
 }
 
 // Verification function for signing during Finalization
@@ -1155,7 +1161,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 
 	service.RegisterContract(c, ContractPopParty, s.ContractPopParty)
-	service.RegisterContract(c, ContractPopCoinAccount, s.ContractPopCoinAccount)
 
 	return s, nil
 }

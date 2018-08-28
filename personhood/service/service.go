@@ -9,6 +9,7 @@ import (
 	"errors"
 	"sync"
 
+	ol "github.com/dedis/cothority/omniledger/service"
 	template "github.com/dedis/cothority_template"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -42,13 +43,16 @@ var storageID = []byte("main")
 type storage struct {
 	Messages       []Message
 	Questionnaires []Questionnaire
+	Parties        map[ol.InstanceID]Party
+
 	sync.Mutex
 }
 
-// LinkPop stores a link to a pop-party to accept this configuration. It will
+// LinkPoP stores a link to a pop-party to accept this configuration. It will
 // try to create an account to receive payments from clients.
-func (s *Service) LinkPop(lp *LinkPop) (*StringReply, error) {
-	return nil, errors.New("not implemented yet")
+func (s *Service) LinkPoP(lp *LinkPoP) (*StringReply, error) {
+	s.storage.Parties[lp.PopInstance] = lp.Party
+	return nil, nil
 }
 
 func (s *Service) GetAccount(ga *GetAccount) (*GetAccountReply, error) {
@@ -126,7 +130,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	if err := s.RegisterHandlers(s.AnswerQuestionnaire, s.LinkPop, s.ListMessages,
+	if err := s.RegisterHandlers(s.AnswerQuestionnaire, s.LinkPoP, s.ListMessages,
 		s.ListQuestionnaires, s.ReadMessage, s.RegisterQuestionnaire, s.SendMessage,
 		s.TopupQuestionnaire, s.TopupMessage); err != nil {
 		return nil, errors.New("Couldn't register messages")

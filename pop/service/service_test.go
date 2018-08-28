@@ -222,7 +222,7 @@ func TestService_FinalizeRequest(t *testing.T) {
 		fr := &FinalizeRequest{}
 		fr.DescID = descHash
 		fr.Attendees = atts
-		hash, err := fr.hash()
+		hash, err := fr.Hash()
 		log.ErrFatal(err)
 		// Send a request to all services
 		for i, s := range services {
@@ -258,9 +258,7 @@ func TestService_FinalizeRequest(t *testing.T) {
 		final, err := services[0].FinalizeRequest(fr)
 		require.Nil(t, err)
 		require.NotNil(t, final)
-		fin, ok := final.(*FinalizeResponse)
-		require.True(t, ok)
-		require.Nil(t, fin.Final.Verify())
+		require.Nil(t, final.Final.Verify())
 	}
 }
 
@@ -281,7 +279,7 @@ func TestService_FetchFinal(t *testing.T) {
 		fr := &FinalizeRequest{}
 		fr.DescID = descHash
 		fr.Attendees = atts
-		hash, err := fr.hash()
+		hash, err := fr.Hash()
 		sg, err := schnorr.Sign(tSuite, priv[0], hash)
 		log.ErrFatal(err)
 		fr.Signature = sg
@@ -306,8 +304,6 @@ func TestService_FetchFinal(t *testing.T) {
 		msg, err := services[1].FinalizeRequest(fr)
 		require.Nil(t, err)
 		require.NotNil(t, msg)
-		_, ok := msg.(*FinalizeResponse)
-		require.True(t, ok)
 	}
 	for _, desc := range descs {
 		// Fetch final
@@ -360,7 +356,7 @@ func TestService_MergeConfig(t *testing.T) {
 		fr := &FinalizeRequest{}
 		fr.DescID = descHash
 		fr.Attendees = atts[2*i : 2*i+2]
-		hash, err := fr.hash()
+		hash, err := fr.Hash()
 		sg, err := schnorr.Sign(tSuite, priv[2*i], hash)
 		log.ErrFatal(err)
 		fr.Signature = sg
@@ -373,8 +369,6 @@ func TestService_MergeConfig(t *testing.T) {
 		msg, err := srvcs[2*i+1].FinalizeRequest(fr)
 		require.Nil(t, err)
 		require.NotNil(t, msg)
-		_, ok := msg.(*FinalizeResponse)
-		require.True(t, ok)
 	}
 
 	log.Lvl2("Group 1, Server:", srvcs[0].ServerIdentity())
@@ -450,7 +444,7 @@ func TestService_MergeRequest(t *testing.T) {
 		fr := &FinalizeRequest{}
 		fr.DescID = []byte(hash[i])
 		fr.Attendees = atts[2*i : 2*i+2]
-		hash_fr, err := fr.hash()
+		hash_fr, err := fr.Hash()
 		sg, err := schnorr.Sign(tSuite, priv[2*i], hash_fr)
 		log.ErrFatal(err)
 		fr.Signature = sg
@@ -463,8 +457,6 @@ func TestService_MergeRequest(t *testing.T) {
 		msg, err := srvcs[2*i+1].FinalizeRequest(fr)
 		require.Nil(t, err)
 		require.NotNil(t, msg)
-		_, ok := msg.(*FinalizeResponse)
-		require.True(t, ok)
 	}
 	// wrong Signature
 	mr.ID = []byte(hash[0])

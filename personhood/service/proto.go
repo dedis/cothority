@@ -2,6 +2,7 @@ package service
 
 import (
 	ol "github.com/dedis/cothority/omniledger/service"
+	pop "github.com/dedis/cothority/pop/service"
 	"github.com/dedis/cothority/skipchain"
 )
 
@@ -13,11 +14,17 @@ import (
 // option java_package = "ch.epfl.dedis.proto";
 // option java_outer_classname = "Personhood";
 
-// LinkPop stores a link to a pop-party to accept this configuration. It will
+// LinkPoP stores a link to a pop-party to accept this configuration. It will
 // try to create an account to receive payments from clients.
-type LinkPop struct {
-	OmniLedgerID skipchain.SkipBlockID
-	PopInstance  ol.InstanceID
+type LinkPoP struct {
+	PopInstance ol.InstanceID
+	Party       Party
+}
+
+type Party struct {
+	OmniLedgerID   skipchain.SkipBlockID
+	FinalStatement pop.FinalStatement
+	Account        ol.InstanceID
 }
 
 // StringReply can be used by all calls that need a string to be returned
