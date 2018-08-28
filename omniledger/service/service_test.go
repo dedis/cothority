@@ -191,7 +191,9 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		}
 		// Try to add a new transaction to the node that failed (but is
 		// now running) and it should work.
-		pr := sendTransaction(t, s, len(s.hosts)-1, dummyContract, 10)
+		pr, err, err2 := sendTransaction(t, s, len(s.hosts)-1, dummyContract, 10)
+		require.NoError(t, err)
+		require.NoError(t, err2)
 		require.True(t, pr.InclusionProof.Match())
 	}
 }
@@ -345,7 +347,9 @@ func TestService_CloseAllDeadlock(t *testing.T) {
 
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
-	pr := sendTransaction(t, s, 0, dummyContract, 10)
+	pr, err, err2 := sendTransaction(t, s, 0, dummyContract, 10)
+	require.NoError(t, err)
+	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match())
 
 	// TODO: Why is this required? Without it, CloseAll gets deadlocked instead
@@ -353,6 +357,15 @@ func TestService_CloseAllDeadlock(t *testing.T) {
 	// busy in createNewBlock instead of sleeping on select, so that it does not
 	// exit as fast as omniledger.Service.TestClose wants it to.
 	time.Sleep(s.interval)
+}
+
+func txResultsFromBlock(sb skipchain.SkipBlock) (TxResults, error) {
+	var body DataBody
+	err := protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, err
+	}
+	return body.TxResults, nil
 }
 
 func TestService_WaitInclusion(t *testing.T) {
@@ -368,37 +381,50 @@ func waitInclusion(t *testing.T, client int) {
 
 	// Create a transaction without waiting
 	log.Lvl1("Create transaction and don't wait")
-	pr := sendTransaction(t, s, client, dummyContract, 0)
+	pr, err, err2 := sendTransaction(t, s, client, dummyContract, 0)
+	require.NoError(t, err)
+	require.NoError(t, err2)
 	require.False(t, pr.InclusionProof.Match())
 
-	// Create a transaction and wait
 	log.Lvl1("Create correct transaction and wait")
-	pr = sendTransaction(t, s, client, dummyContract, 10)
+	pr, err, err2 = sendTransaction(t, s, client, dummyContract, 10)
+	require.NoError(t, err)
+	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match())
 
-	// Create a failing transaction and wait
-	done := make(chan bool)
-	go func() {
-		log.Lvl1("Create wrong transaction and wait")
-		pr := sendTransaction(t, s, client, invalidContract, 10)
-		require.False(t, pr.InclusionProof.Match())
-		done <- true
-	}()
+	// We expect to see both transactions in the block in pr.
+	txr, err := txResultsFromBlock(pr.Latest)
+	require.NoError(t, err)
+	require.Equal(t, len(txr), 2)
 
-	// Wait two intervals before sending a new transaction
-	time.Sleep(2 * s.interval)
+	log.Lvl1("Create wrong transaction and wait")
+	pr, err, err2 = sendTransaction(t, s, client, invalidContract, 2)
+	require.Contains(t, "transaction is in block, but got refused", err.Error())
+	require.NoError(t, err2)
 
-	// Create a transaction and wait
+	// We expect to see only the refused transaction in the block in pr.
+	require.True(t, len(pr.Latest.Payload) > 0)
+	txr, err = txResultsFromBlock(pr.Latest)
+	require.NoError(t, err)
+	require.Equal(t, len(txr), 1)
+	require.False(t, txr[0].Accepted)
+
+	log.Lvl1("Create wrong transaction, no wait")
+	sendTransaction(t, s, client, invalidContract, 0)
 	log.Lvl1("Create second correct transaction and wait")
-	pr = sendTransaction(t, s, client, dummyContract, 10)
+	pr, err, err2 = sendTransaction(t, s, client, dummyContract, 10)
+	require.NoError(t, err)
+	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match())
-	select {
-	case <-done:
-		require.Fail(t, "go-routine should not be done yet")
-	default:
-	}
 
-	<-done
+	// We expect to see the refused transaction and the good one in the block in pr.
+	txr, err = txResultsFromBlock(pr.Latest)
+	require.NoError(t, err)
+	require.Equal(t, len(txr), 2)
+
+	// TODO: This sleep is required for the same reason as the problem
+	// documented in TestService_CloseAllDeadlock. How to fix it correctly?
+	time.Sleep(s.interval)
 }
 
 // Sends too many transactions to the ledger and waits for all blocks to be done.
@@ -427,7 +453,7 @@ func TestService_FloodLedger(t *testing.T) {
 	}
 }
 
-func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) Proof {
+func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (Proof, error, error) {
 	tx, err := createOneClientTx(s.darc.GetBaseID(), kind, s.value, s.signer)
 	require.Nil(t, err)
 	ser := s.services[client]
@@ -437,22 +463,13 @@ func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) Pr
 		Transaction:   tx,
 		InclusionWait: wait,
 	})
-	switch kind {
-	case dummyContract:
-		require.Nil(t, err)
-	case slowContract:
-		require.Nil(t, err)
-	case invalidContract:
-		require.NotNil(t, err)
-	}
-	// The instruction should not be included (except if we're very unlucky)
-	rep, err := ser.GetProof(&GetProof{
+
+	rep, err2 := ser.GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
 		Key:     tx.Instructions[0].Hash(),
 	})
-	require.Nil(t, err)
-	return rep.Proof
+	return rep.Proof, err, err2
 }
 
 func TestService_InvalidVerification(t *testing.T) {
