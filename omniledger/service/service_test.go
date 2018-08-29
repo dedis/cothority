@@ -296,8 +296,9 @@ func TestService_LateBlock(t *testing.T) {
 	ser := s.services[0]
 	c := ser.Context
 	skipchain.RegisterVerification(c, verifyOmniLedger, func(newID []byte, newSB *skipchain.SkipBlock) bool {
-		// Make this block arrive late compared to it's timestamp.
-		time.Sleep(3 * s.interval)
+		// Make this block arrive late compared to it's timestamp. The window will be
+		// 1000ms, so sleep 100 more.
+		time.Sleep(1100 * time.Millisecond)
 		return ser.verifySkipBlock(newID, newSB)
 	})
 
