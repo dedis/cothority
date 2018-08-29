@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.omniledger;
 
-import ch.epfl.dedis.lib.Sha256id;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.omniledger.darc.Signature;
 import ch.epfl.dedis.proto.OmniLedgerProto;
 
 import java.security.MessageDigest;
@@ -23,10 +23,10 @@ public class ClientTransaction {
         this.instructions = instructions;
     }
 
-    public ClientTransaction(OmniLedgerProto.ClientTransaction ct) throws CothorityCryptoException{
-        instructions = new ArrayList<>();
-        for (OmniLedgerProto.Instruction inst: ct.getInstructionsList()){
-            instructions.add(new Instruction(inst));
+    public ClientTransaction(OmniLedgerProto.ClientTransaction proto) {
+        instructions = new ArrayList<Instruction>();
+        for (OmniLedgerProto.Instruction i : proto.getInstructionsList()) {
+            instructions.add(new Instruction(i));
         }
     }
 
@@ -50,17 +50,16 @@ public class ClientTransaction {
         return b.build();
     }
 
-    /**
-     * @return the hash of the clientTransaction
-     */
-    public Sha256id hash(){
+    public ClientTransactionId getId() {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            for (Instruction inst: instructions){
-                digest.update(inst.hash());
+            for (Instruction instr : this.instructions) {
+                digest.update(instr.hash());
             }
-            return new Sha256id(digest.digest());
-        } catch (NoSuchAlgorithmException | CothorityCryptoException e) {
+            return new ClientTransactionId(digest.digest());
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        } catch (CothorityCryptoException e) {
             throw new RuntimeException(e);
         }
     }

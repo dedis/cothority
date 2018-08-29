@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.proto.OmniLedgerProto;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -22,8 +23,26 @@ public class Invoke {
         this.arguments = arguments;
     }
 
-    public Invoke(String command, String argument, byte[] value){
-        this(command, Arrays.asList(new Argument(argument, value)));
+    /**
+     * Constructor from one name/value.
+     * @param command
+     * @param name
+     * @param value
+     */
+    public Invoke(String command, String name, byte[] value){
+        this(command, Arrays.asList(new Argument(name, value)));
+    }
+
+    /**
+     * Constructo from protobuf.
+     * @param proto
+     */
+    public Invoke(OmniLedgerProto.Invoke proto) {
+        command = proto.getCommand();
+        arguments = new ArrayList<Argument>();
+        for (OmniLedgerProto.Argument a : proto.getArgsList()) {
+            arguments.add(new Argument(a));
+        }
     }
 
     /**

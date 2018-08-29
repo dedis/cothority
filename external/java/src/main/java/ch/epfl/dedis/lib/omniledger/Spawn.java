@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.proto.OmniLedgerProto;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,6 +20,14 @@ public class Spawn {
     public Spawn(String contractId, List<Argument> arguments) {
         this.contractId = contractId;
         this.arguments = arguments;
+    }
+
+    public Spawn(OmniLedgerProto.Spawn proto) {
+        contractId = proto.getContractid();
+        arguments = new ArrayList<Argument>();
+        for (OmniLedgerProto.Argument a : proto.getArgsList()) {
+            arguments.add(new Argument(a));
+        }
     }
 
     /**

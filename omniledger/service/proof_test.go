@@ -15,6 +15,7 @@ import (
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
 )
 
@@ -43,7 +44,7 @@ func TestVerify(t *testing.T) {
 
 	require.Equal(t, ErrorVerifySkipchain, p.Verify(s.genesis2.SkipChainID()))
 
-	p.Latest.Data, err = network.Marshal(&DataHeader{
+	p.Latest.Data, err = protobuf.Encode(&DataHeader{
 		CollectionRoot: getSBID("123"),
 	})
 	require.Nil(t, err)
@@ -99,7 +100,7 @@ func createSC(t *testing.T) (s sc) {
 
 	s.sb2 = skipchain.NewSkipBlock()
 	s.sb2.Roster, _ = genRoster(2)
-	s.sb2.Data, err = network.Marshal(&DataHeader{
+	s.sb2.Data, err = protobuf.Encode(&DataHeader{
 		CollectionRoot: s.c.RootHash(),
 	})
 	require.Nil(t, err)
@@ -156,18 +157,4 @@ func genRoster(num int) (*onet.Roster, []kyber.Scalar) {
 		privs = append(privs, kp.Private)
 	}
 	return onet.NewRoster(ids), privs
-}
-
-func overwriteSB(t *testing.T, s sc, sb *skipchain.SkipBlock) {
-	// We have to update manually, because s.s.Store checks
-	// the validity of the block.
-	err := s.s.Update(func(tx *bolt.Tx) error {
-		key := sb.Hash
-		val, err := network.Marshal(sb)
-		if err != nil {
-			return err
-		}
-		return tx.Bucket([]byte("skipblock-test")).Put(key, val)
-	})
-	require.Nil(t, err)
 }

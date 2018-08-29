@@ -10,7 +10,7 @@ import (
 	"github.com/dedis/onet/network"
 )
 
-type getTxsCallback func(*network.ServerIdentity, *onet.Roster, skipchain.SkipBlockID, skipchain.SkipBlockID) ClientTransactions
+type getTxsCallback func(*network.ServerIdentity, *onet.Roster, skipchain.SkipBlockID, skipchain.SkipBlockID) []ClientTransaction
 
 func init() {
 	network.RegisterMessages(CollectTxRequest{}, CollectTxResponse{})
@@ -19,7 +19,7 @@ func init() {
 // CollectTxProtocol is a protocol for collecting pending transactions.
 type CollectTxProtocol struct {
 	*onet.TreeNodeInstance
-	TxsChan      chan ClientTransactions
+	TxsChan      chan []ClientTransaction
 	SkipchainID  skipchain.SkipBlockID
 	LatestID     skipchain.SkipBlockID
 	requestChan  chan structCollectTxRequest
@@ -38,7 +38,7 @@ type CollectTxRequest struct {
 // CollectTxResponse is the response message that contains all the pending
 // transactions on the node.
 type CollectTxResponse struct {
-	Txs ClientTransactions
+	Txs []ClientTransaction
 }
 
 type structCollectTxRequest struct {
@@ -59,7 +59,7 @@ func NewCollectTxProtocol(getTxs getTxsCallback) func(*onet.TreeNodeInstance) (o
 			// If we do not buffer this channel then the protocol
 			// might be blocked from stopping when the receiver
 			// stops reading from this channel.
-			TxsChan: make(chan ClientTransactions, len(node.List())),
+			TxsChan: make(chan []ClientTransaction, len(node.List())),
 			getTxs:  getTxs,
 			Finish:  make(chan bool),
 		}

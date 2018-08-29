@@ -191,7 +191,9 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		}
 		// Try to add a new transaction to the node that failed (but is
 		// now running) and it should work.
-		pr := sendTransaction(t, s, len(s.hosts)-1, dummyContract, 10)
+		pr, err, err2 := sendTransaction(t, s, len(s.hosts)-1, dummyContract, 10)
+		require.NoError(t, err)
+		require.NoError(t, err2)
 		require.True(t, pr.InclusionProof.Match())
 	}
 }
@@ -294,8 +296,9 @@ func TestService_LateBlock(t *testing.T) {
 	ser := s.services[0]
 	c := ser.Context
 	skipchain.RegisterVerification(c, verifyOmniLedger, func(newID []byte, newSB *skipchain.SkipBlock) bool {
-		// Make this block arrive late compared to it's timestamp.
-		time.Sleep(3 * s.interval)
+		// Make this block arrive late compared to it's timestamp. The window will be
+		// 1000ms, so sleep 100 more.
+		time.Sleep(1100 * time.Millisecond)
 		return ser.verifySkipBlock(newID, newSB)
 	})
 
@@ -318,10 +321,13 @@ func TestService_BadDataHeader(t *testing.T) {
 	c := ser.Context
 	skipchain.RegisterVerification(c, verifyOmniLedger, func(newID []byte, newSB *skipchain.SkipBlock) bool {
 		// Hack up the DataHeader to make the CollectionRoot the wrong size.
-		_, dataI, _ := network.Unmarshal(newSB.Data, cothority.Suite)
-		dh := dataI.(*DataHeader)
-		dh.CollectionRoot = append(dh.CollectionRoot, 0xff)
-		newSB.Data, _ = network.Marshal(dh)
+		var header DataHeader
+		err := protobuf.DecodeWithConstructors(newSB.Data, &header, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			t.Fatal(err)
+		}
+		header.CollectionRoot = append(header.CollectionRoot, 0xff)
+		newSB.Data, _ = protobuf.Encode(header)
 
 		return ser.verifySkipBlock(newID, newSB)
 	})
@@ -342,7 +348,9 @@ func TestService_CloseAllDeadlock(t *testing.T) {
 
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
-	pr := sendTransaction(t, s, 0, dummyContract, 10)
+	pr, err, err2 := sendTransaction(t, s, 0, dummyContract, 10)
+	require.NoError(t, err)
+	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match())
 
 	// TODO: Why is this required? Without it, CloseAll gets deadlocked instead
@@ -350,6 +358,15 @@ func TestService_CloseAllDeadlock(t *testing.T) {
 	// busy in createNewBlock instead of sleeping on select, so that it does not
 	// exit as fast as omniledger.Service.TestClose wants it to.
 	time.Sleep(s.interval)
+}
+
+func txResultsFromBlock(sb skipchain.SkipBlock) (TxResults, error) {
+	var body DataBody
+	err := protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, err
+	}
+	return body.TxResults, nil
 }
 
 func TestService_WaitInclusion(t *testing.T) {
@@ -365,42 +382,55 @@ func waitInclusion(t *testing.T, client int) {
 
 	// Create a transaction without waiting
 	log.Lvl1("Create transaction and don't wait")
-	pr := sendTransaction(t, s, client, dummyContract, 0)
+	pr, err, err2 := sendTransaction(t, s, client, dummyContract, 0)
+	require.NoError(t, err)
+	require.NoError(t, err2)
 	require.False(t, pr.InclusionProof.Match())
 
-	// Create a transaction and wait
 	log.Lvl1("Create correct transaction and wait")
-	pr = sendTransaction(t, s, client, dummyContract, 10)
+	pr, err, err2 = sendTransaction(t, s, client, dummyContract, 10)
+	require.NoError(t, err)
+	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match())
 
-	// Create a failing transaction and wait
-	done := make(chan bool)
-	go func() {
-		log.Lvl1("Create wrong transaction and wait")
-		pr := sendTransaction(t, s, client, invalidContract, 10)
-		require.False(t, pr.InclusionProof.Match())
-		done <- true
-	}()
+	// We expect to see both transactions in the block in pr.
+	txr, err := txResultsFromBlock(pr.Latest)
+	require.NoError(t, err)
+	require.Equal(t, len(txr), 2)
 
-	// Wait two intervals before sending a new transaction
-	time.Sleep(2 * s.interval)
+	log.Lvl1("Create wrong transaction and wait")
+	pr, err, err2 = sendTransaction(t, s, client, invalidContract, 10)
+	require.Contains(t, err.Error(), "transaction is in block, but got refused")
+	require.NoError(t, err2)
 
-	// Create a transaction and wait
+	// We expect to see only the refused transaction in the block in pr.
+	require.True(t, len(pr.Latest.Payload) > 0)
+	txr, err = txResultsFromBlock(pr.Latest)
+	require.NoError(t, err)
+	require.Equal(t, len(txr), 1)
+	require.False(t, txr[0].Accepted)
+
+	log.Lvl1("Create wrong transaction, no wait")
+	sendTransaction(t, s, client, invalidContract, 0)
 	log.Lvl1("Create second correct transaction and wait")
-	pr = sendTransaction(t, s, client, dummyContract, 10)
+	pr, err, err2 = sendTransaction(t, s, client, dummyContract, 10)
+	require.NoError(t, err)
+	require.NoError(t, err2)
 	require.True(t, pr.InclusionProof.Match())
-	select {
-	case <-done:
-		require.Fail(t, "go-routine should not be done yet")
-	default:
-	}
 
-	<-done
+	// We expect to see the refused transaction and the good one in the block in pr.
+	txr, err = txResultsFromBlock(pr.Latest)
+	require.NoError(t, err)
+	require.Equal(t, len(txr), 2)
+
+	// TODO: This sleep is required for the same reason as the problem
+	// documented in TestService_CloseAllDeadlock. How to fix it correctly?
+	time.Sleep(s.interval)
 }
 
 // Sends too many transactions to the ledger and waits for all blocks to be done.
 func TestService_FloodLedger(t *testing.T) {
-	s := newSer(t, 1, testInterval)
+	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
 
 	// Store the latest block
@@ -424,7 +454,7 @@ func TestService_FloodLedger(t *testing.T) {
 	}
 }
 
-func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) Proof {
+func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (Proof, error, error) {
 	tx, err := createOneClientTx(s.darc.GetBaseID(), kind, s.value, s.signer)
 	require.Nil(t, err)
 	ser := s.services[client]
@@ -434,22 +464,13 @@ func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) Pr
 		Transaction:   tx,
 		InclusionWait: wait,
 	})
-	switch kind {
-	case dummyContract:
-		require.Nil(t, err)
-	case slowContract:
-		require.Nil(t, err)
-	case invalidContract:
-		require.NotNil(t, err)
-	}
-	// The instruction should not be included (except if we're very unlucky)
-	rep, err := ser.GetProof(&GetProof{
+
+	rep, err2 := ser.GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
 		Key:     tx.Instructions[0].Hash(),
 	})
-	require.Nil(t, err)
-	return rep.Proof
+	return rep.Proof, err, err2
 }
 
 func TestService_InvalidVerification(t *testing.T) {
@@ -489,15 +510,14 @@ func TestService_InvalidVerification(t *testing.T) {
 	value2 := []byte("b")
 	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, value2, s.signer)
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
-		Version:     CurrentVersion,
-		SkipchainID: s.sb.SkipChainID(),
-		Transaction: tx2,
+		Version:       CurrentVersion,
+		SkipchainID:   s.sb.SkipChainID(),
+		Transaction:   tx2,
+		InclusionWait: 10,
 	})
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
-
-	time.Sleep(8 * s.interval)
 
 	// Check that tx1 is _not_ stored.
 	pr, err := s.service().GetProof(&GetProof{
@@ -518,6 +538,20 @@ func TestService_InvalidVerification(t *testing.T) {
 	require.Nil(t, err)
 	match = pr.Proof.InclusionProof.Match()
 	require.True(t, match)
+
+	// TODO: This sleep is required for the same reason as the problem
+	// documented in TestService_CloseAllDeadlock. How to fix it correctly?
+	time.Sleep(2 * s.interval)
+}
+
+func findTx(tx ClientTransaction, res TxResults) TxResult {
+	h := tx.Instructions.Hash()
+	for i := range res {
+		if bytes.Equal(res[i].ClientTransaction.Instructions.Hash(), h) {
+			return res[i]
+		}
+	}
+	panic("not found")
 }
 
 func TestService_LoadBlockInterval(t *testing.T) {
@@ -634,19 +668,13 @@ func TestService_StateChange(t *testing.T) {
 		},
 	}
 
-	cts := []ClientTransaction{
-		ClientTransaction{
-			Instructions: instrs,
-		},
-		ClientTransaction{
-			Instructions: instrs2,
-		},
-	}
+	ct1 := ClientTransaction{Instructions: instrs}
+	ct2 := ClientTransaction{Instructions: instrs2}
 
-	_, ctsOK, ctsBad, scs, err := s.service().createStateChanges(cdb.coll, s.sb.SkipChainID(), cts, noTimeout)
-	require.Nil(t, err)
-	require.Equal(t, 1, len(ctsOK))
-	require.Equal(t, 1, len(ctsBad))
+	_, txOut, scs := s.service().createStateChanges(cdb.coll, s.sb.SkipChainID(), NewTxResults(ct1, ct2), noTimeout)
+	require.Equal(t, 2, len(txOut))
+	require.True(t, txOut[0].Accepted)
+	require.False(t, txOut[1].Accepted)
 	require.Equal(t, n, len(scs))
 	require.Equal(t, latest, int64(n-1))
 }
@@ -967,43 +995,34 @@ func TestService_StateChangeCache(t *testing.T) {
 	require.Nil(t, err)
 
 	// Add a second tx that is invalid because it is for an unknown contract.
-	// It will end up in ctsBad, and both cts(ok,bad) will be cached correctly
-	// under the hash for ctsOK, so that the next call will result in a cache hit.
 	tx2, err := createOneClientTx(s.darc.GetBaseID(), contractID+"x", []byte{}, s.signer)
 	require.Nil(t, err)
 
-	txs := ClientTransactions([]ClientTransaction{tx1, tx2})
+	txs := NewTxResults(tx1, tx2)
 	require.NoError(t, err)
-	root, ctsOK, ctsBad, states, err := s.service().createStateChanges(coll, scID, txs, noTimeout)
-	require.NoError(t, err)
-	require.Equal(t, 1, len(ctsBad))
-	require.Equal(t, 1, len(ctsOK))
+	root, txOut, states := s.service().createStateChanges(coll, scID, txs, noTimeout)
+	require.Equal(t, 2, len(txOut))
 	require.Equal(t, 0, len(states))
 	require.Equal(t, 1, ctr)
 
-	// If we call createStateChanges on the new ctsOK (as it will happen in production
-	// when the tx set is reduced by the selection step, and then ctsOK are sent to
+	// If we call createStateChanges on the new txOut (as it will happen in production
+	// when the tx set is reduced by the selection step, and then txOut are sent to
 	// createStateChanges when making the block), then it should load it from the
 	// cache, which means that ctr is still one (we do not call the
 	// contract twice).
-	root1, ctsOK1, ctsBad1, states1, err := s.service().createStateChanges(coll, scID, ctsOK, noTimeout)
-	require.NoError(t, err)
+	root1, txOut1, states1 := s.service().createStateChanges(coll, scID, txOut, noTimeout)
 	require.Equal(t, 1, ctr)
-
 	require.Equal(t, root, root1)
-	require.Equal(t, ctsOK, ctsOK1)
-	require.Equal(t, ctsBad, ctsBad1)
+	require.Equal(t, txOut, txOut1)
 	require.Equal(t, states, states1)
 
 	// If we remove the cache, then we expect the contract to be called
 	// again, i.e., ctr == 2.
 	s.service().stateChangeCache = newStateChangeCache()
 	require.NoError(t, err)
-	root2, ctsOK2, ctsBad2, states2, err := s.service().createStateChanges(coll, scID, txs, noTimeout)
-	require.NoError(t, err)
+	root2, txOut2, states2 := s.service().createStateChanges(coll, scID, txs, noTimeout)
 	require.Equal(t, root, root2)
-	require.Equal(t, ctsOK, ctsOK2)
-	require.Equal(t, ctsBad, ctsBad2)
+	require.Equal(t, txOut, txOut2)
 	require.Equal(t, states, states2)
 	require.Equal(t, 2, ctr)
 }
@@ -1190,12 +1209,12 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 			require.Nil(t, err)
 			s.tx = tx
 			_, err = s.service().AddTransaction(&AddTxRequest{
-				Version:     CurrentVersion,
-				SkipchainID: s.sb.SkipChainID(),
-				Transaction: tx,
+				Version:       CurrentVersion,
+				SkipchainID:   s.sb.SkipChainID(),
+				Transaction:   tx,
+				InclusionWait: 10,
 			})
 			require.Nil(t, err)
-			time.Sleep(4 * s.interval)
 		default:
 			require.Fail(t, "no such step")
 		}

@@ -24,6 +24,15 @@ public class Argument {
     }
 
     /**
+     * Constructor from protobuf.
+     * @param proto
+     */
+    public Argument(OmniLedgerProto.Argument proto) {
+        name = proto.getName();
+        value = proto.getValue().toByteArray();
+    }
+
+    /**
      * Getter for the name.
      * @return The name.
      */

@@ -17,9 +17,8 @@ import java.util.List;
  * - body, which contains the actual data (currently ClientTransactions) and which is not directly hashed in the block
  */
 public class OmniBlock {
-    private SkipBlock skipBlock;
     private OmniLedgerProto.DataHeader dataHeader;
-    private OmniLedgerProto.DataBody dataBody;
+    private DataBody dataBody;
 
     /**
      * Instantiates a new OmniBlock given a skipblock.
@@ -31,7 +30,25 @@ public class OmniBlock {
         try {
             // TODO: check that it is actually an OmniBlock by looking at the verifiers
             dataHeader = OmniLedgerProto.DataHeader.parseFrom(sb.getData());
-            dataBody = OmniLedgerProto.DataBody.parseFrom(sb.getPayload());
+            dataBody = new DataBody(OmniLedgerProto.DataBody.parseFrom(sb.getPayload()));
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCryptoException(e.getMessage());
+        }
+    }
+
+    /**
+     * Constructor for the OmniBlock held in the given Proof.
+     * @param p
+     * @throws CothorityCryptoException
+     */
+    public OmniBlock(Proof p) throws CothorityCryptoException {
+        // TODO: How do we know that the block in the proof legitimately links back to the
+        // skipchain we think it does?
+        SkipBlock sb = p.getLatest();
+        try {
+            // TODO: check that it is actually an OmniBlock by looking at the verifiers
+            dataHeader = OmniLedgerProto.DataHeader.parseFrom(sb.getData());
+            dataBody = new DataBody(OmniLedgerProto.DataBody.parseFrom(sb.getPayload()));
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCryptoException(e.getMessage());
         }
@@ -76,14 +93,10 @@ public class OmniBlock {
     }
 
     /**
-     * @return the list of all clientTransactions that went into this block.
-     * @throws CothorityCryptoException
+     * Accessor for the transactions and results in the block.
+     * @return
      */
-    public List<ClientTransaction> getClientTransactions() throws CothorityCryptoException {
-        List<ClientTransaction> cts = new ArrayList<>();
-        for (OmniLedgerProto.ClientTransaction ct : dataBody.getTransactionsList()) {
-            cts.add(new ClientTransaction(ct));
-        }
-        return cts;
+    public List<TxResult> getTxResults() {
+        return dataBody.txResults;
     }
 }
