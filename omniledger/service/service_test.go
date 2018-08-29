@@ -399,7 +399,7 @@ func waitInclusion(t *testing.T, client int) {
 
 	log.Lvl1("Create wrong transaction and wait")
 	pr, err, err2 = sendTransaction(t, s, client, invalidContract, 2)
-	require.Contains(t, "transaction is in block, but got refused", err.Error())
+	require.Contains(t, err.Error(), "transaction is in block, but got refused")
 	require.NoError(t, err2)
 
 	// We expect to see only the refused transaction in the block in pr.
@@ -538,20 +538,9 @@ func TestService_InvalidVerification(t *testing.T) {
 	match = pr.Proof.InclusionProof.Match()
 	require.True(t, match)
 
-	// Check that the last block has the refused transactions in it.
-	reply, err := skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
-	require.Nil(t, err)
-	lastBlock := reply.Update[len(reply.Update)-1]
-	var body DataBody
-	err = protobuf.DecodeWithConstructors(lastBlock.Payload, &body, network.DefaultConstructors(cothority.Suite))
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	require.Equal(t, 3, len(body.TxResults))
-	require.False(t, findTx(tx0, body.TxResults).Accepted)
-	require.False(t, findTx(tx1, body.TxResults).Accepted)
-	require.True(t, findTx(tx2, body.TxResults).Accepted)
+	// TODO: This sleep is required for the same reason as the problem
+	// documented in TestService_CloseAllDeadlock. How to fix it correctly?
+	time.Sleep(2 * s.interval)
 }
 
 func findTx(tx ClientTransaction, res TxResults) TxResult {
