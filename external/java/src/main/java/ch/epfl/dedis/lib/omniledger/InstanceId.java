@@ -26,6 +26,10 @@ public class InstanceId implements HashId {
         this.id = Arrays.copyOf(id, id.length);
     }
 
+    public InstanceId(ByteString bs) throws CothorityCryptoException{
+        this(bs.toByteArray());
+    }
+
     @Override
     public byte[] getId() {
         return Arrays.copyOf(id, id.length);

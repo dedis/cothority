@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 
-DBG_TEST=2
-# Debug-level for app
-DBG_APP=2
-DBG_SRV=2
+DBG_TEST=1
+DBG_SRV=0
 
 . "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
 
@@ -21,10 +19,6 @@ testCreateStoreRead(){
 	[ -z "$OL" ] && exit 1
     testOK ./"$APP" add spawn:xxx -identity ed25519:foo
 	testGrep "ed25519:foo" ./"$APP" show
-}
-
-runOl(){
-    dbgRun ./"$APP" -d "$DBG_APP" "$@"
 }
 
 main

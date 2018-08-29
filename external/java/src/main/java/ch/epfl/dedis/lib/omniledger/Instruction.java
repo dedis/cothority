@@ -76,6 +76,10 @@ public class Instruction {
         this.delete = delete;
     }
 
+    public Instruction(OmniLedgerProto.Instruction inst) throws CothorityCryptoException{
+        this.instId = new InstanceId(inst.getInstanceid());
+    }
+
     /**
      * Getter for the instance ID.
      */
@@ -212,35 +216,85 @@ public class Instruction {
      * @throws CothorityCryptoException
      */
     public InstanceId deriveId(String what) throws CothorityCryptoException {
-        final byte zero = 0;
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             digest.update(this.hash());
-            digest.update(zero);
+            digest.update(intToArr4(this.signatures.size()));
             for (Signature sig : this.signatures) {
+                digest.update(intToArr4(sig.signature.length));
                 digest.update(sig.signature);
-                digest.update(zero);
             }
             digest.update(what.getBytes());
-            digest.update(zero);
             return new InstanceId(digest.digest());
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
     }
 
+    /**
+     * @return the nonce of the instruction.
+     */
+    public byte[] getNonce() {
+        return nonce;
+    }
+
+    /**
+     * @return the index of the instruction - should be always smaller than the length.
+     */
+    public int getIndex() {
+        return index;
+    }
+
+    /**
+     * @return the length of the instruction - should be always bigger than the index.
+     */
+    public int getLength() {
+        return length;
+    }
+
+    /**
+     * @return the spawn-argument of the instruction - only one of spawn, invoke, and delete should be present.
+     */
+    public Spawn getSpawn() {
+        return spawn;
+    }
+
+    /**
+     * @return the invoke-argument of the instruction - only one of spawn, invoke, and delete should be present.
+     */
+    public Invoke getInvoke() {
+        return invoke;
+    }
+
+    /**
+     * @return the delete-argument of the instruction - only one of spawn, invoke, and delete should be present.
+     */
+    public Delete getDelete() {
+        return delete;
+    }
+
+    /**
+     * @return the signatures in this instruction.
+     */
+    public List<Signature> getSignatures() {
+        return signatures;
+    }
+
+    /**
+     * TODO: define how nonces are used.
+     * @return generates a nonce to be used in the instructions.
+     */
+    public static byte[] genNonce()  {
+        SecureRandom sr = new SecureRandom();
+        byte[] nonce = new byte[32];
+        sr.nextBytes(nonce);
+        return nonce;
+    }
 
     private static byte[] intToArr4(int x) {
         ByteBuffer b = ByteBuffer.allocate(4);
         b.order(ByteOrder.LITTLE_ENDIAN);
         b.putInt(x);
         return b.array();
-    }
-
-    public static byte[] genNonce() {
-        SecureRandom sr = new SecureRandom();
-        byte[] nonce = new byte[32];
-        sr.nextBytes(nonce);
-        return nonce;
     }
 }

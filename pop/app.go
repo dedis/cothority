@@ -40,7 +40,6 @@ import (
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
-	"gopkg.in/urfave/cli.v1"
 )
 
 func init() {
