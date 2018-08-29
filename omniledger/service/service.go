@@ -354,15 +354,12 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 			"only after the skipblock is stored. There is a " +
 			"programmer error if you see this message.")
 	}
-	prevSB := s.db().GetByID(s.state.getLast(sb.SkipChainID()))
-	var prevIdx int
-	if prevSB == nil {
-		prevIdx = -1
-	} else {
-		prevIdx = prevSB.Index
-	}
-	if prevIdx+1 != sb.Index {
-		log.Lvl4(s.ServerIdentity(), "not updating collection because it is not a new block")
+
+	cdb := s.getCollection(sb.SkipChainID())
+	collectionIndex := cdb.getIndex()
+
+	if sb.Index != collectionIndex+1 {
+		log.Lvlf4("%v updating collection for block %d refused, current collection block is %d", s.ServerIdentity(), sb.Index, collectionIndex)
 		return nil
 	}
 
@@ -381,17 +378,16 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	log.Lvlf2("%s: Updating transactions for %x", s.ServerIdentity(), sb.SkipChainID())
-	cdb := s.getCollection(sb.SkipChainID())
 	_, _, scs := s.createStateChanges(cdb.coll, sb.SkipChainID(), body.TxResults, noTimeout)
 
 	log.Lvlf3("%s: Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
-	if err = cdb.StoreAll(scs); err != nil {
+	if err = cdb.StoreAll(scs, sb.Index); err != nil {
 		return err
 	}
 	if !bytes.Equal(cdb.RootHash(), header.CollectionRoot) {
+		// TODO: if this happens, we've now got a corrupted cdb. See issue #1447.
 		log.Error("hash of collection doesn't correspond to root hash")
 	}
-	s.state.setLast(sb)
 
 	// Notify all waiting channels
 	for _, t := range body.TxResults {
@@ -1079,7 +1075,6 @@ func (s *Service) tryLoad() error {
 	}
 	s.collectionDB = map[string]*collectionDB{}
 	s.state = olState{
-		lastBlock:    make(map[string]skipchain.SkipBlockID),
 		waitChannels: make(map[string]chan bool),
 	}
 
@@ -1117,11 +1112,6 @@ func (s *Service) tryLoad() error {
 			s.pollChanWG.Add(1)
 			s.pollChan[string(gen)] = s.startPolling(gen, interval)
 		}
-		sb, err := s.db().GetLatestByID(gen)
-		if err != nil {
-			return err
-		}
-		s.state.setLast(sb)
 
 		// populate the darcID to skipchainID mapping
 		d, err := s.LoadGenesisDarc(gen)

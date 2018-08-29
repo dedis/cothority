@@ -629,12 +629,12 @@ func TestService_StateChange(t *testing.T) {
 
 	// Manually create the add contract
 	inst := genID()
-	err := cdb.Store(&StateChange{
+	err := cdb.StoreAll([]StateChange{{
 		StateAction: Create,
 		InstanceID:  inst.Slice(),
 		ContractID:  []byte("add"),
 		Value:       make([]byte, 8),
-	})
+	}}, 0)
 	require.Nil(t, err)
 
 	n := 5
@@ -984,12 +984,12 @@ func TestService_StateChangeCache(t *testing.T) {
 
 	scID := s.sb.SkipChainID()
 	collDB := s.service().getCollection(scID)
-	collDB.Store(&StateChange{
+	collDB.StoreAll([]StateChange{{
 		StateAction: Create,
 		InstanceID:  NewInstanceID(s.darc.GetBaseID()).Slice(),
 		ContractID:  []byte(contractID),
 		Value:       []byte{},
-	})
+	}}, 0)
 	coll := collDB.coll
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), contractID, []byte{}, s.signer)
 	require.Nil(t, err)
