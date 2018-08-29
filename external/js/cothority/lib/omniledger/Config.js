@@ -1,4 +1,5 @@
 const root = require("../protobuf/index.js").root;
+const identity = require("../identity");
 
 /**
  * Config is the genesis configuration of an omniledger instance. It can be stored only once in omniledger
@@ -8,9 +9,11 @@ class Config {
   /**
    * Creates a config from knwon informations
    * @param {number} blockInterval
+   * @param {Roster} roster that hosts the OMniLedger
    */
-  constructor(blockInterval) {
+  constructor(blockInterval, roster) {
     this._blockInterval = blockInterval;
+    this._roster = roster;
   }
 
   /**
@@ -18,6 +21,13 @@ class Config {
    */
   get blockInterval() {
     return this._blockInterval;
+  }
+
+  /**
+   * @return {Roster} - the roster of the omniledger
+   */
+  get roster() {
+    return this._roster;
   }
 
   /**
@@ -32,7 +42,7 @@ class Config {
     const configModel = root.lookup("ChainConfig");
     let config = configModel.decode(buf);
 
-    return new Config(config.blockinterval);
+    return new Config(config.blockinterval, identity.Roster.fromProtobuf(config.roster, false));
   }
 
   /**
