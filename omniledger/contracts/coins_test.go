@@ -53,7 +53,7 @@ func TestCoin_Spawn(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 1, len(sc))
 	ca := inst.DeriveID("")
-	require.Equal(t, omniledger.NewStateChange(omniledger.Create, ca,
+	require.Equal(t, ol.NewStateChange(ol.Create, ca,
 		ContractCoinID, ciZero, gdarc.GetBaseID()), sc[0])
 	require.Equal(t, 0, len(co))
 }
@@ -201,8 +201,8 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 2, len(sc))
-	require.Equal(t, omniledger.NewStateChange(ol.Update, coAddr2, ContractCoinID, ciOne, gdarc.GetBaseID()), sc[0])
-	require.Equal(t, omniledger.NewStateChange(ol.Update, coAddr1, ContractCoinID, ciZero, gdarc.GetBaseID()), sc[1])
+	require.Equal(t, ol.NewStateChange(ol.Update, coAddr2, ContractCoinID, ciOne, gdarc.GetBaseID()), sc[0])
+	require.Equal(t, ol.NewStateChange(ol.Update, coAddr1, ContractCoinID, ciZero, gdarc.GetBaseID()), sc[1])
 }
 
 type cvTest struct {
