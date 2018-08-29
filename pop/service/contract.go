@@ -10,6 +10,7 @@ import (
 	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/omniledger/darc/expression"
 	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/kyber"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
@@ -27,7 +28,7 @@ var ContractPopParty = "popParty"
 // ContractPopCoinAccount holds popcoins of an attendee or a service.
 var ContractPopCoinAccount = "popCoinAccount"
 
-func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, coins []ol.Coin) (sc []ol.StateChange, cOut []ol.Coin, err error) {
+func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, coins []ol.Coin) (scs []ol.StateChange, cOut []ol.Coin, err error) {
 	cOut = coins
 	var darcID darc.ID
 	var ppi PopPartyInstance
@@ -100,50 +101,49 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 			}
 
 			// Update existing final statement
-			scs := ol.StateChanges{
+			scs = ol.StateChanges{
 				ol.NewStateChange(ol.Update, inst.InstanceID, ContractPopParty, ppiBuf, darcID),
 			}
 
 			for i, pub := range fs.Attendees {
-				log.LLvl3("Creating darc for attendee", i)
-				id := darc.NewIdentityEd25519(pub)
-				rules := darc.InitRules([]darc.Identity{id}, []darc.Identity{id})
-				rules.AddRule(darc.Action("invoke:transfer"), expression.Expr(id.String()))
-				d := darc.NewDarc(rules, []byte("Attendee darc for pop-party"))
-				darcBuf, err := d.ToProto()
+				log.Lvl3("Creating darc for attendee", i)
+				d, sc, err := createDarc(darcID, pub)
 				if err != nil {
-					return nil, nil, errors.New("couldn't marshal darc: " + err.Error())
+					return nil, nil, err
 				}
-				log.LLvlf3("%s: Final %x/%x", s.ServerIdentity(), d.GetBaseID(), sha256.Sum256(darcBuf))
-				scs = append(scs, ol.NewStateChange(ol.Create, ol.NewInstanceID(d.GetBaseID()),
-					ol.ContractDarcID, darcBuf, darcID))
+				scs = append(scs, sc)
 
-				log.LLvl3("Creating account for attendee", i)
-				iid := sha256.New()
-				iid.Write(inst.InstanceID.Slice())
-				pubBuf, err := pub.MarshalBinary()
+				log.Lvl3("Creating account for attendee", i)
+				sc, err = createCoin(inst, d, pub, 1000000)
 				if err != nil {
-					return nil, nil, errors.New("couldn't marshal public key: " + err.Error())
+					return nil, nil, err
 				}
-				iid.Write(pubBuf)
-				cci := contracts.CoinInstance{
-					Type:    []byte("popcoins"),
-					Balance: uint64(1000000),
-				}
-				cciBuf, err := protobuf.Encode(&cci)
+				scs = append(scs, sc)
+			}
+
+			// And add a service if the argument is given
+			sBuf := inst.Invoke.Args.Search("Service")
+			if sBuf != nil {
+				log.Lvl3("Appending service-darc and account")
+				pub := cothority.Suite.Point()
+				err = pub.UnmarshalBinary(sBuf)
 				if err != nil {
-					return nil, nil, errors.New("couldn't encode CoinInstance: " + err.Error())
+					return nil, nil, errors.New("couldn't unmarshal point: " + err.Error())
 				}
-				scs = append(scs, ol.NewStateChange(ol.Create, ol.NewInstanceID(iid.Sum(nil)),
-					contracts.ContractCoinID, cciBuf, d.GetBaseID()))
+				d, sc, err := createDarc(darcID, pub)
+				if err != nil {
+					return nil, nil, err
+				}
+				log.Printf("darc: %x", sc.InstanceID)
+				scs = append(scs, sc)
+				sc, err = createCoin(inst, d, pub, 0)
+				if err != nil {
+					return nil, nil, err
+				}
+				log.Printf("coin: %x / %s", sc.InstanceID, pub)
+				scs = append(scs, sc)
 			}
 			return scs, coins, nil
-		case "AddService":
-			if ppi.State != 2 {
-				return nil, nil, fmt.Errorf("can only add a service with a finalized party, but it's: %d",
-					ppi.State)
-			}
-			return nil, coins, nil
 		case "AddParty":
 			return nil, nil, errors.New("not yet implemented")
 		default:
@@ -153,6 +153,45 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 	default:
 		return nil, nil, errors.New("Only invoke and spawn are defined yet")
 	}
+}
+
+func createDarc(darcID darc.ID, pub kyber.Point) (d *darc.Darc, sc ol.StateChange, err error) {
+	id := darc.NewIdentityEd25519(pub)
+	rules := darc.InitRules([]darc.Identity{id}, []darc.Identity{id})
+	rules.AddRule(darc.Action("invoke:transfer"), expression.Expr(id.String()))
+	d = darc.NewDarc(rules, []byte("Attendee darc for pop-party"))
+	darcBuf, err := d.ToProto()
+	if err != nil {
+		err = errors.New("couldn't marshal darc: " + err.Error())
+		return
+	}
+	log.Lvlf3("Final %x/%x", d.GetBaseID(), sha256.Sum256(darcBuf))
+	sc = ol.NewStateChange(ol.Create, ol.NewInstanceID(d.GetBaseID()),
+		ol.ContractDarcID, darcBuf, darcID)
+	return
+}
+
+func createCoin(inst ol.Instruction, d *darc.Darc, pub kyber.Point, balance uint64) (sc ol.StateChange, err error) {
+	iid := sha256.New()
+	iid.Write(inst.InstanceID.Slice())
+	pubBuf, err := pub.MarshalBinary()
+	if err != nil {
+		err = errors.New("couldn't marshal public key: " + err.Error())
+		return
+	}
+	log.Printf("%x", pubBuf)
+	iid.Write(pubBuf)
+	cci := contracts.CoinInstance{
+		Type:    []byte("popcoins"),
+		Balance: balance,
+	}
+	cciBuf, err := protobuf.Encode(&cci)
+	if err != nil {
+		err = errors.New("couldn't encode CoinInstance: " + err.Error())
+		return
+	}
+	return ol.NewStateChange(ol.Create, inst.DeriveID("service"),
+		contracts.ContractCoinID, cciBuf, d.GetBaseID()), nil
 }
 
 func NewPopPartyInstance(cdb ol.CollectionView, inst ol.Instruction, coins []ol.Coin) (ppi PopPartyInstance, err error) {

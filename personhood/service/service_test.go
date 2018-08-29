@@ -38,6 +38,11 @@ func TestService_LinkPoP(t *testing.T) {
 		},
 	})
 	require.Nil(t, err)
+
+	s.ols.GetProof(&ol.GetProof{
+		Version: ol.CurrentVersion,
+		Key:     nil,
+	})
 }
 
 type sStruct struct {
@@ -50,6 +55,9 @@ type sStruct struct {
 	party     pop.FinalStatement
 	orgs      []*key.Pair
 	attendees []*key.Pair
+	service   *key.Pair
+	serDarc   *darc.Darc
+	serCoin   ol.InstanceID
 	ols       *ol.Service
 	olID      skipchain.SkipBlockID
 	signer    darc.Signer
@@ -192,6 +200,9 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 	log.Lvl2("finalizing the party in omniledger")
 	fsBuf, err := protobuf.Encode(&s.party)
 	require.Nil(t, err)
+	s.service = key.NewKeyPair(tSuite)
+	sBuf, err := s.service.Public.MarshalBinary()
+	require.Nil(t, err)
 	ctx := ol.ClientTransaction{
 		Instructions: ol.Instructions{ol.Instruction{
 			InstanceID: s.popI,
@@ -199,10 +210,16 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 			Length:     1,
 			Invoke: &ol.Invoke{
 				Command: "Finalize",
-				Args: ol.Arguments{{
-					Name:  "FinalStatement",
-					Value: fsBuf,
-				}},
+				Args: ol.Arguments{
+					{
+						Name:  "FinalStatement",
+						Value: fsBuf,
+					},
+					{
+						Name:  "Service",
+						Value: sBuf,
+					},
+				},
 			},
 		}},
 	}
@@ -215,5 +232,24 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 		Transaction:   ctx,
 		InclusionWait: 10,
 	})
+	require.Nil(t, err)
+	s.serCoin = ctx.Instructions[0].DeriveID("service")
+	gpr, err := s.ols.GetProof(&ol.GetProof{
+		Version: ol.CurrentVersion,
+		Key:     s.serCoin.Slice(),
+		ID:      s.olID,
+	})
+	require.Nil(t, err)
+	require.True(t, gpr.Proof.InclusionProof.Match())
+	_, vals, err := gpr.Proof.KeyValue()
+	require.Nil(t, err)
+	gpr, err = s.ols.GetProof(&ol.GetProof{
+		Version: ol.CurrentVersion,
+		Key:     vals[2],
+		ID:      s.olID,
+	})
+	require.Nil(t, err)
+	require.True(t, gpr.Proof.InclusionProof.Match())
+	s.serDarc, err = darc.NewFromProtobuf(vals[0])
 	require.Nil(t, err)
 }
