@@ -399,7 +399,7 @@ func waitInclusion(t *testing.T, client int) {
 	require.Equal(t, len(txr), 2)
 
 	log.Lvl1("Create wrong transaction and wait")
-	pr, err, err2 = sendTransaction(t, s, client, invalidContract, 2)
+	pr, err, err2 = sendTransaction(t, s, client, invalidContract, 10)
 	require.Contains(t, err.Error(), "transaction is in block, but got refused")
 	require.NoError(t, err2)
 
@@ -430,7 +430,7 @@ func waitInclusion(t *testing.T, client int) {
 
 // Sends too many transactions to the ledger and waits for all blocks to be done.
 func TestService_FloodLedger(t *testing.T) {
-	s := newSer(t, 1, testInterval)
+	s := newSer(t, 2, testInterval)
 	defer s.local.CloseAll()
 
 	// Store the latest block
@@ -1209,12 +1209,12 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 			require.Nil(t, err)
 			s.tx = tx
 			_, err = s.service().AddTransaction(&AddTxRequest{
-				Version:     CurrentVersion,
-				SkipchainID: s.sb.SkipChainID(),
-				Transaction: tx,
+				Version:       CurrentVersion,
+				SkipchainID:   s.sb.SkipChainID(),
+				Transaction:   tx,
+				InclusionWait: 10,
 			})
 			require.Nil(t, err)
-			time.Sleep(4 * s.interval)
 		default:
 			require.Fail(t, "no such step")
 		}
