@@ -2,6 +2,7 @@
   "name": "@dedis/cothority",
   "version": "1.1.16",
   "description": "module for interacting with cothority nodes",
+  "main": "dist/bundle.node.min.js",
   "browser": "dist/bundle.min.js",
   "repository": {
     "type": "git",
