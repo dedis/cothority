@@ -428,6 +428,8 @@ func waitInclusion(t *testing.T, client int) {
 	require.NoError(t, err)
 	require.Equal(t, len(txr), 2)
 
+	log.Lvl1("done with test")
+
 	// TODO: This sleep is required for the same reason as the problem
 	// documented in TestService_CloseAllDeadlock. How to fix it correctly?
 	time.Sleep(s.interval)
@@ -1182,7 +1184,6 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 		signer: darc.NewSignerEd25519(nil, nil),
 	}
 	s.hosts, s.roster, _ = s.local.GenTree(n, true)
-
 	for _, sv := range s.local.GetServices(s.hosts, OmniledgerID) {
 		service := sv.(*Service)
 		s.services = append(s.services, service)
