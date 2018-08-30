@@ -8,6 +8,7 @@ import (
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
 )
 
 // NewProof creates a proof for key in the skipchain with the given id. It uses
@@ -62,11 +63,12 @@ func (p Proof) Verify(scID skipchain.SkipBlockID) error {
 	if !p.InclusionProof.Consistent() {
 		return ErrorVerifyCollection
 	}
-	_, d, err := network.Unmarshal(p.Latest.Data, cothority.Suite)
+	var header DataHeader
+	err := protobuf.DecodeWithConstructors(p.Latest.Data, &header, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		return err
 	}
-	if !bytes.Equal(p.InclusionProof.TreeRootHash(), d.(*DataHeader).CollectionRoot) {
+	if !bytes.Equal(p.InclusionProof.TreeRootHash(), header.CollectionRoot) {
 		return ErrorVerifyCollectionRoot
 	}
 	var sbID skipchain.SkipBlockID

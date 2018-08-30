@@ -76,8 +76,20 @@ public class Instruction {
         this.delete = delete;
     }
 
-    public Instruction(OmniLedgerProto.Instruction inst) throws CothorityCryptoException{
+    public Instruction(OmniLedgerProto.Instruction inst) {
         this.instId = new InstanceId(inst.getInstanceid());
+        this.nonce = inst.getNonce().toByteArray();
+        this.index = inst.getIndex();
+        this.length = inst.getLength();
+        if (inst.hasSpawn()) {
+            this.spawn = new Spawn(inst.getSpawn());
+        }
+        if (inst.hasInvoke()) {
+            this.invoke = new Invoke(inst.getInvoke());
+        }
+        if (inst.hasDelete()) {
+            this.delete = new Delete(inst.getDelete());
+        }
     }
 
     /**

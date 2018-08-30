@@ -118,8 +118,8 @@ public class OmniledgerRPC {
      *
      * @param t is the client transaction holding one or more instructions to be sent to omniledger.
      */
-    public void sendTransaction(ClientTransaction t) throws CothorityException {
-        sendTransactionAndWait(t, 0);
+    public ClientTransactionId sendTransaction(ClientTransaction t) throws CothorityException {
+        return sendTransactionAndWait(t, 0);
     }
 
     /**
@@ -129,9 +129,10 @@ public class OmniledgerRPC {
      *
      * @param t is the client transaction holding one or more instructions to be sent to omniledger.
      * @param wait indicates the number of blocks to wait for the transaction to be included.
+     * @return ClientTransactionID the transaction ID
      * @throws CothorityException if the transaction has not been included within 'wait' blocks.
      */
-    public void sendTransactionAndWait(ClientTransaction t, int wait) throws CothorityException {
+    public ClientTransactionId sendTransactionAndWait(ClientTransaction t, int wait) throws CothorityException {
         OmniLedgerProto.AddTxRequest.Builder request =
                 OmniLedgerProto.AddTxRequest.newBuilder();
         request.setVersion(currentVersion);
@@ -148,6 +149,7 @@ public class OmniledgerRPC {
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
+        return t.getId();
     }
 
     /**
@@ -254,6 +256,20 @@ public class OmniledgerRPC {
         SkipBlock sb = skipchain.getSkipblock(id);
         return new OmniBlock(sb);
     }
+
+    /**
+     * Fetches the latest block from the Skipchain and returns the corresponding OmniBlock that allows direct
+     * access to all relevant fields for OmniLedger.
+     *
+     * @return an OmniBlock representation of the skipblock
+     * @throws CothorityCommunicationException if it couldn't contact the nodes
+     * @throws CothorityCryptoException if the omniblock is invalid
+     */
+    public OmniBlock getLatestOmniBlock() throws CothorityCommunicationException, CothorityException{
+        this.update();
+        return new OmniBlock(latest);
+    }
+
 
     /**
      * This should be used with caution. Every time you use this, please open an issue in github and tell us
