@@ -134,13 +134,11 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 				if err != nil {
 					return nil, nil, err
 				}
-				log.Printf("darc: %x", sc.InstanceID)
 				scs = append(scs, sc)
 				sc, err = createCoin(inst, d, pub, 0)
 				if err != nil {
 					return nil, nil, err
 				}
-				log.Printf("coin: %x / %s", sc.InstanceID, pub)
 				scs = append(scs, sc)
 			}
 			return scs, coins, nil
@@ -179,7 +177,6 @@ func createCoin(inst ol.Instruction, d *darc.Darc, pub kyber.Point, balance uint
 		err = errors.New("couldn't marshal public key: " + err.Error())
 		return
 	}
-	log.Printf("%x", pubBuf)
 	iid.Write(pubBuf)
 	cci := contracts.CoinInstance{
 		Type:    []byte("popcoins"),
@@ -190,7 +187,7 @@ func createCoin(inst ol.Instruction, d *darc.Darc, pub kyber.Point, balance uint
 		err = errors.New("couldn't encode CoinInstance: " + err.Error())
 		return
 	}
-	return ol.NewStateChange(ol.Create, inst.DeriveID("service"),
+	return ol.NewStateChange(ol.Create, ol.NewInstanceID(iid.Sum(nil)),
 		contracts.ContractCoinID, cciBuf, d.GetBaseID()), nil
 }
 

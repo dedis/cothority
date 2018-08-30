@@ -28,6 +28,7 @@ import (
 	"github.com/dedis/cothority/omniledger/darc/expression"
 	ol "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/protobuf"
+	cli "gopkg.in/urfave/cli.v1"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/pop/service"

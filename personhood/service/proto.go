@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/dedis/cothority/omniledger/darc"
 	ol "github.com/dedis/cothority/omniledger/service"
 	pop "github.com/dedis/cothority/pop/service"
 	"github.com/dedis/cothority/skipchain"
@@ -25,6 +26,8 @@ type Party struct {
 	OmniLedgerID   skipchain.SkipBlockID
 	FinalStatement pop.FinalStatement
 	Account        ol.InstanceID
+	Darc           darc.Darc
+	Signer         darc.Signer
 }
 
 // StringReply can be used by all calls that need a string to be returned
@@ -53,6 +56,12 @@ type Questionnaire struct {
 	Balance uint64
 	Reward  uint64
 	ID      []byte
+}
+
+type Reply struct {
+	Sum []int
+	// TODO: replace this with a linkable ring signature
+	Users []ol.InstanceID
 }
 
 // RegisterQuestionnaire creates a questionnaire with a number of questions to
@@ -106,11 +115,13 @@ type ListMessages struct {
 
 type ListMessagesReply struct {
 	Subjects []string
+	IDs      [][]byte
 }
 
 type ReadMessage struct {
-	Subject string
-	Reader  ol.InstanceID
+	ID     []byte
+	Party  []byte
+	Reader ol.InstanceID
 }
 
 type ReadMessageReply struct {

@@ -438,7 +438,6 @@ func (s *Service) StoreKeys(req *StoreKeys) (*StoreKeysReply, error) {
 
 // StoreInstanceID will store the instanceID in a given final statement
 func (s *Service) StoreInstanceID(req *StoreInstanceID) (*StoreInstanceIDReply, error) {
-	log.Printf("%s: storing %x = %x", s.ServerIdentity(), req.PartyID, req.InstanceID.Slice())
 	s.data.InstanceIDs[string(req.PartyID)] = &req.InstanceID
 	s.save()
 	return &StoreInstanceIDReply{}, nil
@@ -572,7 +571,6 @@ func (s *Service) CheckConfig(req *network.Envelope) {
 		} else {
 			final.Attendees = intersectAttendees(final.Attendees, cc.Attendees)
 			if len(final.Attendees) == 0 {
-				log.Print(final.Attendees, cc.Attendees)
 				ccr.PopStatus = PopStatusNoAttendees
 			} else {
 				ccr.PopStatus = PopStatusOK
