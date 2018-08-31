@@ -167,9 +167,17 @@ class Client {
     h.update(flink.from);
     h.update(flink.to);
     if (flink.roster !== undefined) {
-      return new Error("forwardlink verification with a roster change is not implemented yet");
+      return new Error(
+        "forwardlink verification with a roster change is not implemented yet"
+      );
     }
-    if (!h.digest().equals(message)) {
+    let b = h.digest();
+    let hash = new Uint8Array(
+      b.buffer,
+      b.byteOffset,
+      b.byteLength / Uint8Array.BYTES_PER_ELEMENT
+    );
+    if (!misc.uint8ArrayCompare(hash, message, false)) {
       return new Error("recreated message does not match");
     }
 
@@ -182,10 +190,7 @@ class Client {
       return new Error("signature length invalid");
 
     // compute the bitmask and the reduced public key
-    const bitmask = bftSig.sig.slice(
-      pointLen + scalarLen,
-      bftSig.sig.length
-    );
+    const bitmask = bftSig.sig.slice(pointLen + scalarLen, bftSig.sig.length);
     const bitmaskLength = misc.getBitmaskLength(bitmask);
     const expectedBitmaskLength = roster.length + 8 - roster.length % 8;
     if (bitmaskLength > expectedBitmaskLength)
