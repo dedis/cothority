@@ -249,18 +249,8 @@ func TestService_GetProof(t *testing.T) {
 	require.NotNil(t, err)
 }
 
-// TODO: Fix issue #1379.
-//
-// This test currently fails because of:
-// E : (       service.(*Service).verifyClientTx: 277) - local://127.0.0.1:2000 instr #1, darc not found: no match found
-// E : (   service.(*Service).verifyAndFilterTxs: 266) - local://127.0.0.1:2000 tx #0, darc not found: no match found
-//
-// This is because inter-instruction dependencies are not correctly handled by verifyAndFilterTxs,
-// which is operating on the live database to find the darcID, so it cannot find the darcID associated
-// with the instance created in the first instruction while trying to check the second instruction.
+// Test that inter-instruction dependencies are correctly handled.
 func TestService_Depending(t *testing.T) {
-	t.Skip("Issue #1379.")
-
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
@@ -297,6 +287,11 @@ func TestService_Depending(t *testing.T) {
 		InclusionWait: 2,
 	})
 	require.Nil(t, err)
+
+	cdb := s.service().getCollection(s.sb.SkipChainID())
+	_, _, _, err = cdb.GetValues(in1.Hash())
+	require.NotNil(t, err)
+	require.Equal(t, "no match found", err.Error())
 }
 
 func TestService_LateBlock(t *testing.T) {
@@ -1215,7 +1210,7 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 	registerDummy(s.hosts)
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
-		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config", "spawn:slow", "spawn:stateShangeCacheTest"}, s.signer.Identity())
+		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config", "spawn:slow", "spawn:stateShangeCacheTest", "delete"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
@@ -1255,7 +1250,7 @@ func panicContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateC
 }
 
 func dummyContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
-	cid, _, err := inst.GetContractState(cdb)
+	err := inst.VerifyDarcSignature(cdb)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1268,11 +1263,11 @@ func dummyContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateC
 	switch inst.GetType() {
 	case SpawnType:
 		return []StateChange{
-			NewStateChange(Create, NewInstanceID(inst.Hash()), cid, inst.Spawn.Args[0].Value, darcID),
+			NewStateChange(Create, NewInstanceID(inst.Hash()), inst.Spawn.ContractID, inst.Spawn.Args[0].Value, darcID),
 		}, nil, nil
 	case DeleteType:
 		return []StateChange{
-			NewStateChange(Remove, inst.InstanceID, cid, nil, darcID),
+			NewStateChange(Remove, inst.InstanceID, "", nil, darcID),
 		}, nil, nil
 	default:
 		panic("should not get here")

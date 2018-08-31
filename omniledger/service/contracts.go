@@ -299,8 +299,9 @@ func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coi
 		default:
 			return nil, nil, errors.New("invalid command: " + inst.Invoke.Command)
 		}
-
+	case DeleteType:
+		return nil, nil, errors.New("delete on a Darc instance is not supported")
 	default:
-		return nil, nil, errors.New("Only invoke and spawn are defined yet")
+		return nil, nil, errors.New("unknown instruction type")
 	}
 }
