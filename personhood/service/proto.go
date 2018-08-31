@@ -14,6 +14,9 @@ import (
 // type :ol.InstanceID:bytes
 // package personhood;
 //
+// import "darc.proto";
+// import "pop.proto";
+//
 // option java_package = "ch.epfl.dedis.proto";
 // option java_outer_classname = "Personhood";
 

@@ -1,14 +1,25 @@
 syntax = "proto2";
 package personhood;
 
+import "darc.proto";
+import "pop.proto";
+
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "Personhood";
 
-// LinkPop stores a link to a pop-party to accept this configuration. It will
+// LinkPoP stores a link to a pop-party to accept this configuration. It will
 // try to create an account to receive payments from clients.
-message LinkPop {
+message LinkPoP {
+  required bytes popinstance = 1;
+  required Party party = 2;
+}
+
+message Party {
   required bytes omniledgerid = 1;
-  required bytes popinstance = 2;
+  required pop.FinalStatement finalstatement = 2;
+  required bytes account = 3;
+  required darc.Darc darc = 4;
+  required darc.Signer signer = 5;
 }
 
 // StringReply can be used by all calls that need a string to be returned
@@ -37,6 +48,12 @@ message Questionnaire {
   required uint64 balance = 4;
   required uint64 reward = 5;
   required bytes id = 6;
+}
+
+message Reply {
+  repeated sint32 sum = 1;
+  // TODO: replace this with a linkable ring signature
+  repeated bytes users = 2;
 }
 
 // RegisterQuestionnaire creates a questionnaire with a number of questions to
@@ -90,11 +107,13 @@ message ListMessages {
 
 message ListMessagesReply {
   repeated string subjects = 1;
+  repeated bytes ids = 2;
 }
 
 message ReadMessage {
-  required string subject = 1;
-  required bytes reader = 2;
+  required bytes id = 1;
+  required bytes party = 2;
+  required bytes reader = 3;
 }
 
 message ReadMessageReply {
