@@ -112,6 +112,22 @@ testGrep(){
   fi
 }
 
+# Asserts the output of the command being run by `dbgRun` and all but the first
+# input argument is N lines long. Ignores the exit-code of the command.
+# Arguments:
+#   `N` - how many lines should be output
+#   `$@[1..]` - command to run
+testCountLines(){
+  N="$1"
+  shift
+  testOut "Assert wc -l is $N lines in '$@'"
+  runOutFile "$@"
+  lines=`wc -l < $RUNOUT`
+  if [ $lines != $N ]; then
+    fail "Found $lines lines in output of '$@'"
+  fi
+}
+
 # Asserts that `String` is NOT in the output of the command being run by `dbgRun`
 # and all but the first input argument. Ignores the exit-code of the command.
 # Arguments:
@@ -371,11 +387,11 @@ runCo(){
 
 cleanup(){
   pkill -9 conode 2> /dev/null
-  pkill -9 $APP 2> /dev/null
+  pkill -9 ^${APP}$ 2> /dev/null
   sleep .5
-  rm -f co*/*bin
-  rm -f cl*/*bin
-  rm -rf $CONODE_SERVICE_PATH
+  if [ -z "$KEEP_DB" ]; then
+	  rm -rf $CONODE_SERVICE_PATH
+  fi
 }
 
 stopTest(){

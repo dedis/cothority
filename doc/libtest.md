@@ -51,7 +51,7 @@ methods are defined before main is called.
 | Variable | Default | Explanation |
 | -------- | ------- | ----------- |
 | `DBG_TEST` | `0` | Show the output of the commands: 0=none, 1=test-names, 2=all |
-| `DBG_SRV` | `0` | DBG-level for server, passed as `-debug` to the `conode` command |
+| `DBG_SRV` | `0` | Debug level for server, passed as `-debug` to the `conode` command |
 | `NBR` | `3` | Highest number of servers and clients |
 | `NBR_SERVERS` | `NBR` | How many servers to configure |
 | `NBR_SERVERS_GROUP` | `NBR_SERVERS - 1` | How many servers to write to the group-file - per default, keep one server out of the group, to test what happens if a server gets added later |

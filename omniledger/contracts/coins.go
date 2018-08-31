@@ -7,7 +7,7 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority/omniledger/darc"
-	omniledger "github.com/dedis/cothority/omniledger/service"
+	ol "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
 )
@@ -39,7 +39,7 @@ var errUnderflow = errors.New("integer underflow")
 //    parameter for the next instruction to interpret.
 //  - store puts the coins given to the instance back into the account.
 // You can only delete a contractCoin instance if the account is empty.
-func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c []omniledger.Coin) (sc []omniledger.StateChange, cOut []omniledger.Coin, err error) {
+func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc []ol.StateChange, cOut []ol.Coin, err error) {
 	cOut = c
 
 	err = inst.VerifyDarcSignature(cdb)
@@ -65,9 +65,9 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 	}
 
 	switch inst.GetType() {
-	case omniledger.SpawnType:
+	case ol.SpawnType:
 		// Spawn creates a new coin account as a separate instance.
-		ca := omniledger.NewInstanceID(inst.Hash())
+		ca := inst.DeriveID("")
 		log.Lvlf3("Spawning coin to %x", ca.Slice())
 		if t := inst.Spawn.Args.Search("type"); t != nil {
 			ci.Type = t
@@ -79,11 +79,11 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 		if err != nil {
 			return nil, nil, errors.New("couldn't encode CoinInstance: " + err.Error())
 		}
-		sc = []omniledger.StateChange{
-			omniledger.NewStateChange(omniledger.Create, ca, ContractCoinID, ciBuf, darcID),
+		sc = []ol.StateChange{
+			ol.NewStateChange(ol.Create, ca, ContractCoinID, ciBuf, darcID),
 		}
 		return
-	case omniledger.InvokeType:
+	case ol.InvokeType:
 		// Invoke is one of "mint", "transfer", "fetch", or "store".
 		var coinsArg uint64
 
@@ -139,7 +139,7 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 			}
 
 			log.Lvlf3("transferring %d to %x", coinsArg, target)
-			sc = append(sc, omniledger.NewStateChange(omniledger.Update, omniledger.NewInstanceID(target),
+			sc = append(sc, ol.NewStateChange(ol.Update, ol.NewInstanceID(target),
 				ContractCoinID, targetBuf, did))
 		case "fetch":
 			// fetch removes coins from the account and passes it on to the next
@@ -148,10 +148,10 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 			if err != nil {
 				return
 			}
-			cOut = append(cOut, omniledger.Coin{Name: omniledger.NewInstanceID(ci.Type), Value: coinsArg})
+			cOut = append(cOut, ol.Coin{Name: ol.NewInstanceID(ci.Type), Value: coinsArg})
 		case "store":
 			// store moves all coins from this instruction into the account.
-			cOut = []omniledger.Coin{}
+			cOut = []ol.Coin{}
 			for _, co := range c {
 				if bytes.Equal(co.Name.Slice(), CoinName.Slice()) {
 					ci.Balance, err = safeAdd(ci.Balance, co.Value)
@@ -169,17 +169,17 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 		// Finally update the coin value.
 		var ciBuf []byte
 		ciBuf, err = protobuf.Encode(&ci)
-		sc = append(sc, omniledger.NewStateChange(omniledger.Update, inst.InstanceID,
+		sc = append(sc, ol.NewStateChange(ol.Update, inst.InstanceID,
 			ContractCoinID, ciBuf, darcID))
 		return
-	case omniledger.DeleteType:
+	case ol.DeleteType:
 		// Delete our coin address, but only if the current coin is empty.
 		if ci.Balance > 0 {
 			err = errors.New("cannot destroy a coinInstance that still has coins in it")
 			return
 		}
-		sc = omniledger.StateChanges{
-			omniledger.NewStateChange(omniledger.Remove, inst.InstanceID, ContractCoinID, nil, darcID),
+		sc = ol.StateChanges{
+			ol.NewStateChange(ol.Remove, inst.InstanceID, ContractCoinID, nil, darcID),
 		}
 		return
 	}
@@ -191,10 +191,10 @@ func ContractCoin(cdb omniledger.CollectionView, inst omniledger.Instruction, c 
 // thereby handling the case where len(in) != 32.
 //
 // TODO: Find a nicer way to make well-known instance IDs.
-func iid(in string) omniledger.InstanceID {
+func iid(in string) ol.InstanceID {
 	h := sha256.New()
 	h.Write([]byte(in))
-	return omniledger.NewInstanceID(h.Sum(nil))
+	return ol.NewInstanceID(h.Sum(nil))
 }
 
 func safeAdd(a, b uint64) (uint64, error) {

@@ -56,6 +56,8 @@ public class SkipBlock {
         return skipBlock.getData().toByteArray();
     }
 
+    public byte[] getPayload() { return skipBlock.getPayload().toByteArray(); }
+
     public int getIndex(){
         // Because we're using protobuf's zigzag encoding.
         return skipBlock.getIndex() / 2;

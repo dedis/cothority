@@ -15,11 +15,11 @@ var testSuite = cothority.Suite
 
 func TestCollectTx(t *testing.T) {
 	protoPrefix := "TestCollectTx"
-	getTx := func(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID) ClientTransactions {
+	getTx := func(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID) []ClientTransaction {
 		tx := ClientTransaction{
 			Instructions: []Instruction{Instruction{}},
 		}
-		return ClientTransactions{tx}
+		return []ClientTransaction{tx}
 	}
 	for _, n := range []int{2, 3, 10} {
 		protoName := fmt.Sprintf("%s_%d", protoPrefix, n)
@@ -37,7 +37,7 @@ func TestCollectTx(t *testing.T) {
 		root.LatestID = skipchain.SkipBlockID("goodbye")
 		require.NoError(t, root.Start())
 
-		var txs ClientTransactions
+		var txs []ClientTransaction
 	outer:
 		for {
 			select {

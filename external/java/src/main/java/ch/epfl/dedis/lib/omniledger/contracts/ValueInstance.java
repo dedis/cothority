@@ -16,6 +16,8 @@ import java.util.Arrays;
  * ValueInstance represents a simple value store on omniledger.
  */
 public class ValueInstance {
+    // ContractId is how a valueInstance is represented in OmniLedger.
+    public static String ContractId = "value";
     private Instance instance;
     private OmniledgerRPC ol;
     private byte[] value;
@@ -36,7 +38,7 @@ public class ValueInstance {
         this.ol = ol;
         Proof p = ol.getProof(id);
         instance = new Instance(p);
-        if (!instance.getContractId().equals("value")) {
+        if (!instance.getContractId().equals(ContractId)) {
             logger.error("wrong instance: {}", instance.getContractId());
             throw new CothorityNotFoundException("this is not a value instance");
         }
@@ -66,7 +68,7 @@ public class ValueInstance {
      * @throws CothorityCryptoException
      */
     public Instruction evolveValueInstruction(byte[] newValue, Signer owner, int pos, int len) throws CothorityCryptoException {
-        Invoke inv = new Invoke("update", "value", newValue);
+        Invoke inv = new Invoke("update", ContractId, newValue);
         Instruction inst = new Instruction(instance.getId(), Instruction.genNonce(), pos, len, inv);
         try {
             Request r = new Request(instance.getDarcId(), "invoke:update", inst.hash(),

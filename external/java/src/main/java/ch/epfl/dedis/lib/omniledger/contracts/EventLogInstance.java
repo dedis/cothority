@@ -48,6 +48,8 @@ import java.util.List;
  * </ul>
  */
 public class EventLogInstance {
+    // ContractId is how this contract is represented in OmniLedger;
+    public static String ContractId = "eventlog";
     private Instance instance;
     private OmniledgerRPC ol;
 
@@ -180,21 +182,21 @@ public class EventLogInstance {
         if (this.instance != null) {
             throw new CothorityException("already have an instance");
         }
-        Spawn spawn = new Spawn("eventlog", new ArrayList<>());
+        Spawn spawn = new Spawn(ContractId, new ArrayList<>());
         Instruction instr = new Instruction(new InstanceId(darcId.getId()), Instruction.genNonce(), 0, 1, spawn);
         instr.signBy(darcId, signers);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
         ol.sendTransaction(tx);
 
-        return new InstanceId(instr.hash());
+        return instr.deriveId("");
     }
 
 
     private void setInstance(InstanceId id) throws CothorityException {
         Proof p = ol.getProof(id);
         Instance inst = new Instance(p);
-        if (!inst.getContractId().equals("eventlog")) {
+        if (!inst.getContractId().equals(ContractId)) {
             logger.error("wrong instance: {}", inst.getContractId());
             throw new CothorityNotFoundException("this is not an eventlog instance");
         }
@@ -219,11 +221,11 @@ public class EventLogInstance {
         for (Event e : events) {
             List<Argument> args = new ArrayList<>();
             args.add(new Argument("event", e.toProto().toByteArray()));
-            Invoke invoke = new Invoke("eventlog", args);
+            Invoke invoke = new Invoke(ContractId, args);
             Instruction instr = new Instruction(instance.getId(), Instruction.genNonce(), idx, events.size(), invoke);
             instr.signBy(darcId, signers);
             instrs.add(instr);
-            keys.add(new InstanceId(instr.hash()));
+            keys.add(instr.deriveId(""));
             idx++;
         }
         ClientTransaction tx = new ClientTransaction(instrs);

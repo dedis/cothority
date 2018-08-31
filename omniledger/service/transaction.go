@@ -28,7 +28,7 @@ func (iID InstanceID) String() string {
 type Nonce [32]byte
 
 func init() {
-	network.RegisterMessages(Instruction{}, ClientTransaction{},
+	network.RegisterMessages(Instruction{}, TxResult{},
 		StateChange{})
 }
 
@@ -110,19 +110,46 @@ func (instr Instruction) Hash() []byte {
 // and the given string.
 //
 // DeriveID is used inside of contracts that need to create additional keys in
-// the collection. Newly spawned instances should, by convention, always use the
-// Hash() of the instruction as the new InstanceID.
+// the collection. By convention newly spawned instances should have their
+// InstanceID derived via inst.DeriveID("").
 func (instr Instruction) DeriveID(what string) InstanceID {
+	var b [4]byte
+
+	// Une petit primer on domain separation in hashing:
+	// Domain separation is required when the input has variable lengths,
+	// because an attacker could try to construct two messages resulting in the
+	// same hash by moving bytes from one neighboring input to the
+	// other. With fixed-length inputs, moving bytes is not possible, so
+	// no domain separation is needed.
+
 	h := sha256.New()
 	h.Write(instr.Hash())
-	h.Write([]byte{0})
+
+	binary.LittleEndian.PutUint32(b[:], uint32(len(instr.Signatures)))
+	h.Write(b[:])
+
 	for _, s := range instr.Signatures {
+		binary.LittleEndian.PutUint32(b[:], uint32(len(s.Signature)))
+		h.Write(b[:])
 		h.Write(s.Signature)
-		h.Write([]byte{0})
 	}
+	// Because there is no attacker-controlled input after what, we do not need
+	// domain separation here.
 	h.Write([]byte(what))
-	h.Write([]byte{0})
+
 	return NewInstanceID(h.Sum(nil))
+
+	// Addendum:
+	//
+	// While considering this we also considered the possibility that
+	// allowing the attackers to mess with the signatures in order to
+	// attempt to create InstanceID collisions is not a risk, since moving
+	// a byte from sig[1] over to sig[0] would invalidate both signatures.
+	// This is true for the Schnorr sigs we use today, but if there's some
+	// other kind of data in the Signature field in the future, it might
+	// be tolerant of mutations, meaning that what seems unrisky today could
+	// be leaving a trap for later. So to be conservative, we are implementing
+	// strict domain separation now.
 }
 
 // GetContractState searches for the contract kind of this instruction and the
@@ -301,26 +328,34 @@ func (instrs Instructions) Hash() []byte {
 	return h.Sum(nil)
 }
 
-// ClientTransactions is a slice of ClientTransaction
-type ClientTransactions []ClientTransaction
+// TxResults is a list of results from executed transactions.
+type TxResults []TxResult
 
-// Hash returns the sha256 hash of all client transactions.
-func (cts ClientTransactions) Hash() []byte {
-	h := sha256.New()
-	for _, ct := range cts {
-		h.Write(ct.Instructions.Hash())
+// NewTxResults takes a list of client transactions and wraps them up
+// in a TxResults with Accepted set to false for each.
+func NewTxResults(ct ...ClientTransaction) TxResults {
+	out := make([]TxResult, len(ct))
+	for i := range ct {
+		out[i].ClientTransaction = ct[i]
 	}
-	return h.Sum(nil)
+	return out
 }
 
-// IsEmpty checks whether the ClientTransactions is empty.
-func (cts ClientTransactions) IsEmpty() bool {
-	for _, ct := range cts {
-		for range ct.Instructions {
-			return false
+// Hash returns the sha256 hash of all of the transactions.
+func (txr TxResults) Hash() []byte {
+	one := []byte{1}
+	zero := []byte{0}
+
+	h := sha256.New()
+	for _, tx := range txr {
+		h.Write(tx.ClientTransaction.Instructions.Hash())
+		if tx.Accepted {
+			h.Write(one[:])
+		} else {
+			h.Write(zero[:])
 		}
 	}
-	return true
+	return h.Sum(nil)
 }
 
 // NewStateChange is a convenience function that fills out a StateChange
@@ -438,16 +473,16 @@ func (instr Instruction) GetType() InstrType {
 // txBuffer is thread-safe data structure that store client transactions.
 type txBuffer struct {
 	sync.Mutex
-	txsMap map[string]ClientTransactions
+	txsMap map[string][]ClientTransaction
 }
 
 func newTxBuffer() txBuffer {
 	return txBuffer{
-		txsMap: make(map[string]ClientTransactions),
+		txsMap: make(map[string][]ClientTransaction),
 	}
 }
 
-func (r *txBuffer) take(key string) ClientTransactions {
+func (r *txBuffer) take(key string) []ClientTransaction {
 	r.Lock()
 	defer r.Unlock()
 

@@ -37,7 +37,7 @@ func ContractValue(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc 
 	switch inst.GetType() {
 	case ol.SpawnType:
 		return []ol.StateChange{
-			ol.NewStateChange(ol.Create, inst.DeriveID(ContractValueID),
+			ol.NewStateChange(ol.Create, inst.DeriveID(""),
 				ContractValueID, inst.Spawn.Args.Search("value"), darcID),
 		}, c, nil
 	case ol.InvokeType:

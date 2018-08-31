@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"time"
 
 	"github.com/dedis/cothority"
 	status "github.com/dedis/cothority/status/service"
@@ -186,6 +187,7 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
 // 'latest' skipblock and the id (=hash) of the latest skipblock.
 func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply *GetUpdateChainReply, err error) {
 	const retries = 3
+	delay := 1 * time.Second
 
 	reply = &GetUpdateChainReply{}
 	for {
@@ -200,6 +202,12 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 			err = c.SendProtobuf(roster.List[perm[which]], &GetUpdateChain{LatestID: latest}, r2)
 			if err == nil && len(r2.Update) != 0 {
 				break
+			}
+			// Don't want to sleep on the last time thru this loop.
+			if i < retries-1 {
+				time.Sleep(delay)
+				// exponential backoff
+				delay *= 2
 			}
 		}
 		if i == retries {

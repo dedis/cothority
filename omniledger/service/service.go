@@ -24,8 +24,6 @@ import (
 	"gopkg.in/satori/go.uuid.v1"
 )
 
-const darcIDLen int = 32
-
 const invokeEvolve darc.Action = darc.Action("invoke:evolve")
 
 const rotationWindow time.Duration = 5
@@ -43,7 +41,7 @@ func init() {
 	var err error
 	OmniledgerID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
-	network.RegisterMessages(&omniStorage{}, &DataHeader{})
+	network.RegisterMessages(&omniStorage{}, &DataHeader{}, &DataBody{})
 }
 
 // GenNonce returns a random nonce.
@@ -164,7 +162,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 
 	// Create the genesis-transaction with a special key, it acts as a
 	// reference to the actual genesis transaction.
-	transaction := []ClientTransaction{{
+	transaction := NewTxResults(ClientTransaction{
 		Instructions: []Instruction{{
 			InstanceID: ConfigInstanceID,
 			Nonce:      Nonce{},
@@ -172,7 +170,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 			Length:     1,
 			Spawn:      spawn,
 		}},
-	}}
+	})
 
 	sb, err := s.createNewBlock(nil, &req.Roster, transaction)
 	if err != nil {
@@ -262,7 +260,7 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 // skipchain-service. Once the block has been created, we
 // inform all nodes to update their internal collections
 // to include the new transactions.
-func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts ClientTransactions) (*skipchain.SkipBlock, error) {
+func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx []TxResult) (*skipchain.SkipBlock, error) {
 	var sb *skipchain.SkipBlock
 	var mr []byte
 	var coll *collection.Collection
@@ -289,7 +287,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 				"Could not get latest block from the skipchain: " + err.Error())
 		}
 		log.Lvlf3("Creating block #%d with %d transactions", sbLatest.Index+1,
-			len(cts))
+			len(tx))
 		sb = sbLatest.Copy()
 		if r != nil {
 			sb.Roster = r
@@ -301,31 +299,28 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 	// Create header of skipblock containing only hashes
 	var scs StateChanges
 	var err error
-	var ctsOK ClientTransactions
+	var txRes TxResults
 
 	log.Lvl3("Creating state changes")
-	mr, ctsOK, _, scs, err = s.createStateChanges(coll, scID, cts, noTimeout)
+	mr, txRes, scs = s.createStateChanges(coll, scID, tx, noTimeout)
+	if len(txRes) == 0 {
+		return nil, errors.New("no transactions")
+	}
 
-	if err != nil {
-		return nil, err
-	}
-	if len(scs) == 0 {
-		return nil, errors.New("no state changes")
-	}
-	header := &DataHeader{
-		CollectionRoot:        mr,
-		ClientTransactionHash: ctsOK.Hash(),
-		StateChangesHash:      scs.Hash(),
-		Timestamp:             time.Now().UnixNano(),
-	}
-	sb.Data, err = network.Marshal(header)
+	// Store transactions in the body
+	body := &DataBody{TxResults: txRes}
+	sb.Payload, err = protobuf.Encode(body)
 	if err != nil {
 		return nil, errors.New("Couldn't marshal data: " + err.Error())
 	}
 
-	// Store transactions in the body
-	body := &DataBody{Transactions: ctsOK}
-	sb.Payload, err = network.Marshal(body)
+	header := &DataHeader{
+		CollectionRoot:        mr,
+		ClientTransactionHash: txRes.Hash(),
+		StateChangesHash:      scs.Hash(),
+		Timestamp:             time.Now().UnixNano(),
+	}
+	sb.Data, err = protobuf.Encode(header)
 	if err != nil {
 		return nil, errors.New("Couldn't marshal data: " + err.Error())
 	}
@@ -334,7 +329,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, cts
 		NewBlock:          sb,
 		TargetSkipChainID: scID,
 	}
-	log.Lvlf3("Storing skipblock with %d transactions.", len(ctsOK))
+	log.Lvlf3("Storing skipblock with %d transactions.", len(txRes))
 	ssbReply, err := s.skService().StoreSkipBlock(&ssb)
 	if err != nil {
 		return nil, err
@@ -370,38 +365,37 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 		log.Lvl4(s.ServerIdentity(), "not updating collection because it is not a new block")
 		return nil
 	}
-	_, dataI, err := network.Unmarshal(sb.Data, cothority.Suite)
-	data, ok := dataI.(*DataHeader)
-	if err != nil || !ok {
-		log.Error(s.ServerIdentity(), ok, err)
+
+	var header DataHeader
+	err := protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		log.Error(s.ServerIdentity(), "could not unmarshal header", err)
 		return errors.New("couldn't unmarshal header")
 	}
-	_, bodyI, err := network.Unmarshal(sb.Payload, cothority.Suite)
-	body, ok := bodyI.(*DataBody)
-	if err != nil || !ok {
+
+	var body DataBody
+	err = protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		log.Error(s.ServerIdentity(), "could not unmarshal body", err)
 		return errors.New("couldn't unmarshal body")
 	}
 
 	log.Lvlf2("%s: Updating transactions for %x", s.ServerIdentity(), sb.SkipChainID())
 	cdb := s.getCollection(sb.SkipChainID())
-	_, _, _, scs, err := s.createStateChanges(cdb.coll, sb.SkipChainID(), body.Transactions, noTimeout)
-	if err != nil {
-		return err
-	}
+	_, _, scs := s.createStateChanges(cdb.coll, sb.SkipChainID(), body.TxResults, noTimeout)
 
 	log.Lvlf3("%s: Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
 	if err = cdb.StoreAll(scs); err != nil {
 		return err
 	}
-	if !bytes.Equal(cdb.RootHash(), data.CollectionRoot) {
+	if !bytes.Equal(cdb.RootHash(), header.CollectionRoot) {
 		log.Error("hash of collection doesn't correspond to root hash")
 	}
 	s.state.setLast(sb)
 
-	// Send OK to all waiting channels
-	for _, ct := range body.Transactions {
-		// TODO: Where is the other call, for informWaitChannel(hash, false)?
-		s.state.informWaitChannel(ct.Instructions.Hash(), true)
+	// Notify all waiting channels
+	for _, t := range body.TxResults {
+		s.state.informWaitChannel(t.ClientTransaction.Instructions.Hash(), t.Accepted)
 	}
 
 	// check whether the heartbeat monitor exists, if it doesn't we start a
@@ -511,7 +505,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 	closeSignal := make(chan bool)
 	go func() {
 		defer s.pollChanWG.Done()
-		var txs ClientTransactions
+		var txs []ClientTransaction
 		for {
 			select {
 			case <-closeSignal:
@@ -577,22 +571,23 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 				}
 				log.Lvl3("Collected all new transactions:", len(txs))
 
-				if txs.IsEmpty() {
+				if len(txs) == 0 {
 					log.Lvl3(s.ServerIdentity(), "no new transactions, not creating new block")
 					continue
+				}
+
+				txIn := make([]TxResult, len(txs))
+				for i := range txIn {
+					txIn[i].ClientTransaction = txs[i]
 				}
 
 				// Pre-run transactions to look how many we can fit in the alloted time
 				// slot. Perhaps we can run this in parallel during the wait-phase?
 				log.Lvl3("Counting how many transactions fit in", interval/2)
 				cdb := s.getCollection(scID)
-				_, txOut, txBad, _, err := s.createStateChanges(cdb.coll, scID, txs, interval/2)
-				if err != nil {
-					log.Error("While choosing transactions, couldn't create state changes:", err)
-					continue
-				}
+				_, txOut, _ := s.createStateChanges(cdb.coll, scID, txIn, interval/2)
 
-				txs = txs[len(txOut)+len(txBad):]
+				txs = txs[len(txOut):]
 				if len(txs) > 0 {
 					log.Warnf("Got more transactions than can be done in half the blockInterval. "+
 						"%d transactions left", len(txs))
@@ -615,10 +610,11 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	defer func() {
 		log.Lvlf3("%s: Verify done after %s", s.ServerIdentity(), time.Now().Sub(start))
 	}()
-	_, headerI, err := network.Unmarshal(newSB.Data, cothority.Suite)
-	header, ok := headerI.(*DataHeader)
-	if err != nil || !ok {
-		log.Errorf("couldn't unmarshal header")
+
+	var header DataHeader
+	err := protobuf.DecodeWithConstructors(newSB.Data, &header, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		log.Error("verifySkipblock: couldn't unmarshal header")
 		return false
 	}
 
@@ -642,24 +638,35 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		return false
 	}
 
-	_, bodyI, err := network.Unmarshal(newSB.Payload, cothority.Suite)
-	body, ok := bodyI.(*DataBody)
-	if err != nil || !ok {
-		log.Error("couldn't unmarshal body", err, ok)
+	var body DataBody
+	err = protobuf.DecodeWithConstructors(newSB.Payload, &body, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		log.Error("verifySkipblock: couldn't unmarshal body")
 		return false
 	}
 
-	if bytes.Compare(header.ClientTransactionHash, body.Transactions.Hash()) != 0 {
+	cdb := s.getCollection(newSB.SkipChainID())
+	mtr, txOut, scs := s.createStateChanges(cdb.coll, newSB.SkipChainID(), body.TxResults, noTimeout)
+
+	// Check that the locally generated list of accepted/rejected txs match the list
+	// the leader proposed.
+	if len(txOut) != len(body.TxResults) {
+		log.Lvl2(s.ServerIdentity(), "transaction list length mismatch after execution")
+		return false
+	}
+	for i := range txOut {
+		if txOut[i].Accepted != body.TxResults[i].Accepted {
+			log.Lvl2(s.ServerIdentity(), "Client Transaction accept mistmatch on tx", i)
+			return false
+		}
+	}
+
+	// Check that the hashes in DataHeader are right.
+	if bytes.Compare(header.ClientTransactionHash, txOut.Hash()) != 0 {
 		log.Lvl2(s.ServerIdentity(), "Client Transaction Hash doesn't verify")
 		return false
 	}
-	ctx := body.Transactions
-	cdb := s.getCollection(newSB.SkipChainID())
-	mtr, _, _, scs, err := s.createStateChanges(cdb.coll, newSB.SkipChainID(), ctx, noTimeout)
-	if err != nil {
-		log.Error("Couldn't create state changes:", err)
-		return false
-	}
+
 	if bytes.Compare(header.CollectionRoot, mtr) != 0 {
 		log.Lvl2(s.ServerIdentity(), "Collection root doesn't verify")
 		return false
@@ -694,9 +701,20 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		}
 	}
 
+	// This is to boost the acceptable timestamp window when dealing with
+	// very short block intervals, like in testing. If a production OmniLedger
+	// had a block interval of 5 seconds, for example, this minimum
+	// not trigger, and the acceptable window would be ± 10 sec.
+	const minTimestampWindow = 1 * time.Second
+
+	window := 2 * config.BlockInterval
+	if window < minTimestampWindow {
+		window = minTimestampWindow
+	}
+
 	now := time.Now()
-	t1 := now.Add(-2 * config.BlockInterval)
-	t2 := now.Add(2 * config.BlockInterval)
+	t1 := now.Add(-window)
+	t2 := now.Add(window)
 	ts := time.Unix(0, header.Timestamp)
 	if ts.Before(t1) || ts.After(t2) {
 		log.Errorf("timestamp %v is outside the acceptable range %v to %v", ts, t1, t2)
@@ -707,15 +725,22 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	return true
 }
 
-// createStateChanges goes through all ClientTransactions and creates
-// the appropriate StateChanges. If any of the transactions are invalid,
-// it returns an error. If timeout is not 0, createStateChanges will stop
-// running instructions after that long, in order for the caller to determine
-// how many instructions fit in a block interval.
-func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain.SkipBlockID, cts ClientTransactions, timeout time.Duration) (merkleRoot []byte, ctsOK ClientTransactions, ctsBad ClientTransactions, states StateChanges, err error) {
+// createStateChanges goes through all the proposed transactions one by one,
+// creating the appropriate StateChanges, by sorting out which transactions can
+// be run, which fail, and which cannot be attempted yet (due to timeout).
+//
+// If timeout is not 0, createStateChanges will stop running instructions after
+// that long, in order for the caller to determine how many instructions fit in
+// a block interval.
+//
+// State caching is implemented here, which is critical to performance, because
+// on the leader it reduces the number of contract executions by 1/3 and on
+// followers by 1/2.
+func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges) {
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
-	merkleRoot, ctsOK, ctsBad, states, err = s.stateChangeCache.get(scID, cts.Hash())
+	var err error
+	merkleRoot, txOut, states, err = s.stateChangeCache.get(scID, txIn.Hash())
 	if err == nil {
 		log.Lvl3(s.ServerIdentity(), "loaded state changes from cache")
 		return
@@ -732,22 +757,24 @@ func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain
 	cdbTemp := coll.Clone()
 	var cin []Coin
 clientTransactions:
-	for _, ct := range cts {
+	for _, tx := range txIn {
 		// Make a new collection for each instruction. If the instruction is sucessfully
 		// implemented and changes applied, then keep it (via cdbTemp = cdbI.c),
 		// otherwise dump it.
 		cdbI := &roCollection{cdbTemp.Clone()}
-		for _, instr := range ct.Instructions {
+		for _, instr := range tx.ClientTransaction.Instructions {
 			scs, cout, err := s.executeInstruction(cdbI, cin, instr)
 			if err != nil {
 				log.Errorf("%s: Call to contract returned error: %s", s.ServerIdentity(), err)
-				ctsBad = append(ctsBad, ct)
+				tx.Accepted = false
+				txOut = append(txOut, tx)
 				continue clientTransactions
 			}
 			for _, sc := range scs {
 				if err := storeInColl(cdbI.c, &sc); err != nil {
 					log.Error("failed to add to collections with error: " + err.Error())
-					ctsBad = append(ctsBad, ct)
+					tx.Accepted = false
+					txOut = append(txOut, tx)
 					continue clientTransactions
 				}
 			}
@@ -763,12 +790,13 @@ clientTransactions:
 			}
 		}
 		cdbTemp = cdbI.c
-		ctsOK = append(ctsOK, ct)
+		tx.Accepted = true
+		txOut = append(txOut, tx)
 	}
 
 	// Store the result in the cache before returning.
 	merkleRoot = cdbTemp.GetRoot()
-	s.stateChangeCache.update(scID, ctsOK.Hash(), merkleRoot, ctsOK, ctsBad, states)
+	s.stateChangeCache.update(scID, txOut.Hash(), merkleRoot, txOut, states)
 	return
 }
 
@@ -812,7 +840,7 @@ func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity
 // a set of pending transactions. However, it is a very useful way to piggy
 // back additional functionalities that need to be executed at every interval,
 // such as updating the heartbeat monitor and synchronising the state.
-func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID) ClientTransactions {
+func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID) []ClientTransaction {
 	actualLeader, err := s.getLeader(scID)
 	if err != nil {
 		log.Lvlf1("could not find a leader on %x with error %s", scID, err)
@@ -945,7 +973,7 @@ func (s *Service) startViewChange(scID skipchain.SkipBlockID) error {
 	}
 
 	log.Lvlf2("%s: proposing view-change for %x", s.ServerIdentity(), scID)
-	_, err = s.createNewBlock(scID, newRoster, []ClientTransaction{ctx})
+	_, err = s.createNewBlock(scID, newRoster, []TxResult{{ClientTransaction: ctx}})
 	return err
 }
 

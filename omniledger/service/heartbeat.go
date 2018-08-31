@@ -21,6 +21,7 @@ type heartbeat struct {
 
 type heartbeats struct {
 	sync.Mutex
+	wg           sync.WaitGroup
 	heartbeatMap map[string]heartbeat
 }
 
@@ -58,6 +59,7 @@ func (r *heartbeats) closeAll() {
 	for _, c := range r.heartbeatMap {
 		c.closeChan <- true
 	}
+	r.wg.Wait()
 }
 
 func (r *heartbeats) enabled() bool {
@@ -87,7 +89,9 @@ func (r *heartbeats) start(key string, timeout time.Duration, timeoutChan chan s
 	closeChan := make(chan bool, 1)
 	getTimeChan := make(chan chan time.Time, 1)
 
+	r.wg.Add(1)
 	go func() {
+		defer r.wg.Done()
 		currTime := time.Now()
 		to := time.After(timeout)
 		for {
