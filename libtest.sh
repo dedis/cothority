@@ -389,8 +389,10 @@ cleanup(){
   pkill -9 conode 2> /dev/null
   pkill -9 ^${APP}$ 2> /dev/null
   sleep .5
+  rm -f co*/*bin
+  rm -f cl*/*bin
   if [ -z "$KEEP_DB" ]; then
-	  rm -rf $CONODE_SERVICE_PATH
+    rm -rf $CONODE_SERVICE_PATH
   fi
 }
 

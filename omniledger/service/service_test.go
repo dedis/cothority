@@ -175,6 +175,9 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 			_, vs, err := pr.KeyValue()
 			require.Nil(t, err)
 			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, vs[0]))
+
+			// check that the database has this new block's index recorded
+			require.Equal(t, pr.Latest.Index, s.services[0].getCollection(pr.Latest.SkipChainID()).getIndex())
 		}
 	}
 
@@ -188,6 +191,8 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 			_, vs, err := pr.KeyValue()
 			require.Nil(t, err)
 			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, vs[0]))
+			// check that the database has this new block's index recorded
+			require.Equal(t, pr.Latest.Index, s.services[len(s.hosts)-1].getCollection(pr.Latest.SkipChainID()).getIndex())
 		}
 		// Try to add a new transaction to the node that failed (but is
 		// now running) and it should work.
@@ -629,12 +634,12 @@ func TestService_StateChange(t *testing.T) {
 
 	// Manually create the add contract
 	inst := genID()
-	err := cdb.Store(&StateChange{
+	err := cdb.StoreAll([]StateChange{{
 		StateAction: Create,
 		InstanceID:  inst.Slice(),
 		ContractID:  []byte("add"),
 		Value:       make([]byte, 8),
-	})
+	}}, 0)
 	require.Nil(t, err)
 
 	n := 5
@@ -984,12 +989,12 @@ func TestService_StateChangeCache(t *testing.T) {
 
 	scID := s.sb.SkipChainID()
 	collDB := s.service().getCollection(scID)
-	collDB.Store(&StateChange{
+	collDB.StoreAll([]StateChange{{
 		StateAction: Create,
 		InstanceID:  NewInstanceID(s.darc.GetBaseID()).Slice(),
 		ContractID:  []byte(contractID),
 		Value:       []byte{},
-	})
+	}}, 0)
 	coll := collDB.coll
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), contractID, []byte{}, s.signer)
 	require.Nil(t, err)

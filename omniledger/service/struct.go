@@ -1,6 +1,7 @@
 package service
 
 import (
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"sync"
@@ -98,6 +99,11 @@ const (
 	dbValue byte = iota
 	dbContract
 	dbDarcID
+	dbMeta
+)
+
+const (
+	dbMetaIndex byte = iota
 )
 
 func (c *collectionDB) loadAll() error {
@@ -156,58 +162,36 @@ func (c *collectionDB) GetValues(key []byte) (value []byte, contractID string, d
 	return getValueContract(c, key)
 }
 
-// FIXME: if there is a failure in boltdb update, then our state will be
-// inconsistent, an entry in collection may not be in boltdb.
-func (c *collectionDB) Store(sc *StateChange) error {
-	if err := storeInColl(c.coll, sc); err != nil {
-		return err
-	}
-	return c.db.Update(func(tx *bolt.Tx) error {
+// Look up the index number of the skipblock that held the most recently
+// applied state changes. On error, it returns index -1, which callers
+// might want (new chain case) or might detect as an error (existing
+// chain, block arriving has index >=1, so getIndex() == -1 -> do not
+// accept.
+func (c *collectionDB) getIndex() int {
+	var out uint32
+	err := c.db.View(func(tx *bolt.Tx) error {
 		bucket := tx.Bucket([]byte(c.bucketName))
-
-		// The 3 pieces of data (value, contract, darcid) are stored under three keys
-		// starting with 0, 1, 2.
-		key := make([]byte, 1+len(sc.InstanceID))
-		copy(key[1:], sc.InstanceID)
-
-		switch sc.StateAction {
-		case Create, Update:
-			key[0] = dbValue
-			if err := bucket.Put(key, sc.Value); err != nil {
-				return err
-			}
-			key[0] = dbContract
-			if err := bucket.Put(key, sc.ContractID); err != nil {
-				return err
-			}
-			key[0] = dbDarcID
-			if err := bucket.Put(key, []byte(sc.DarcID)); err != nil {
-				return err
-			}
-			return nil
-		case Remove:
-			key[0] = dbValue
-			if err := bucket.Delete(key); err != nil {
-				return err
-			}
-			key[0] = dbContract
-			if err := bucket.Delete(key); err != nil {
-				return err
-			}
-			key[0] = dbDarcID
-			if err := bucket.Delete(key); err != nil {
-				return err
-			}
-			return nil
-		default:
-			return errors.New("invalid state action")
+		if bucket == nil {
+			return errors.New("bucket does not exist")
 		}
+
+		b := bucket.Get([]byte{dbMeta, dbMetaIndex})
+		if len(b) == 4 {
+			out = binary.LittleEndian.Uint32(b)
+		} else {
+			return errors.New("collection index not found")
+		}
+		return nil
 	})
+	if err != nil {
+		return -1
+	}
+	return int(out)
 }
 
 // FIXME: if there is an error, the data in collection may not be consistent
 // with boltdb.
-func (c *collectionDB) StoreAll(ts StateChanges) error {
+func (c *collectionDB) StoreAll(ts StateChanges, index int) error {
 	for _, t := range ts {
 		if err := storeInColl(c.coll, &t); err != nil {
 			return err
@@ -218,34 +202,41 @@ func (c *collectionDB) StoreAll(ts StateChanges) error {
 		if bucket == nil {
 			return errors.New("bucket does not exist")
 		}
+
+		b := make([]byte, 4)
+		binary.LittleEndian.PutUint32(b, uint32(index))
+		if err := bucket.Put([]byte{dbMeta, dbMetaIndex}, b); err != nil {
+			return err
+		}
+
 		for _, t := range ts {
 			key := make([]byte, 1+len(t.InstanceID))
 			copy(key[1:], t.InstanceID)
 
 			switch t.StateAction {
 			case Create, Update:
-				key[0] = 0
+				key[0] = dbValue
 				if err := bucket.Put(key, t.Value); err != nil {
 					return err
 				}
-				key[0] = 1
+				key[0] = dbContract
 				if err := bucket.Put(key, t.ContractID); err != nil {
 					return err
 				}
-				key[0] = 2
+				key[0] = dbDarcID
 				if err := bucket.Put(key, t.DarcID); err != nil {
 					return err
 				}
 			case Remove:
-				key[0] = 0
+				key[0] = dbValue
 				if err := bucket.Delete(key); err != nil {
 					return err
 				}
-				key[0] = 1
+				key[0] = dbContract
 				if err := bucket.Delete(key); err != nil {
 					return err
 				}
-				key[0] = 2
+				key[0] = dbDarcID
 				if err := bucket.Delete(key); err != nil {
 					return err
 				}
@@ -358,25 +349,11 @@ func RegisterContract(s skipchain.GetService, kind string, f OmniLedgerContract)
 
 type olState struct {
 	sync.Mutex
-	// lastBlock is the last integrated block into the collection
-	lastBlock map[string]skipchain.SkipBlockID
 	// waitChannels will be informed by Service.updateCollection that a
 	// given ClientTransaction has been included. updateCollection will
 	// send true for a valid ClientTransaction and false for an invalid
 	// ClientTransaction.
 	waitChannels map[string]chan bool
-}
-
-func (ol *olState) setLast(sb *skipchain.SkipBlock) {
-	ol.Lock()
-	defer ol.Unlock()
-	ol.lastBlock[string(sb.SkipChainID())] = sb.Hash
-}
-
-func (ol *olState) getLast(id skipchain.SkipBlockID) skipchain.SkipBlockID {
-	ol.Lock()
-	defer ol.Unlock()
-	return ol.lastBlock[string(id)]
 }
 
 func (ol *olState) createWaitChannel(ctxHash []byte) chan bool {
