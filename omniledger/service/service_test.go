@@ -175,6 +175,9 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 			_, vs, err := pr.KeyValue()
 			require.Nil(t, err)
 			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, vs[0]))
+
+			// check that the database has this new block's index recorded
+			require.Equal(t, pr.Latest.Index, s.services[0].getCollection(pr.Latest.SkipChainID()).getIndex())
 		}
 	}
 
@@ -188,6 +191,8 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 			_, vs, err := pr.KeyValue()
 			require.Nil(t, err)
 			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, vs[0]))
+			// check that the database has this new block's index recorded
+			require.Equal(t, pr.Latest.Index, s.services[len(s.hosts)-1].getCollection(pr.Latest.SkipChainID()).getIndex())
 		}
 		// Try to add a new transaction to the node that failed (but is
 		// now running) and it should work.
