@@ -8,6 +8,8 @@ import (
 // PROTOSTART
 // type :InstanceID:bytes
 // type :SkipBlockID:bytes
+// type :skipchain.SkipBlockID:bytes
+// type :ol.InstanceID:bytes
 // package personhood;
 //
 // option java_package = "ch.epfl.dedis.proto";
