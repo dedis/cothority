@@ -140,7 +140,12 @@ func (s *Service) AnswerQuestionnaire(aq *AnswerQuestionnaire) (*StringReply, er
 }
 
 func (s *Service) TopupQuestionnaire(tq *TopupQuestionnaire) (*StringReply, error) {
-	return nil, errors.New("not implemented yet")
+	quest := s.storage.Questionnaires[string(tq.ID)]
+	if quest == nil {
+		return nil, errors.New("this questionnaire doesn't exist")
+	}
+	quest.Balance += tq.Topup
+	return nil, nil
 }
 
 func (s *Service) SendMessage(sm *SendMessage) (*StringReply, error) {
@@ -239,7 +244,12 @@ func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 }
 
 func (s *Service) TopupMessage(tm *TopupMessage) (*StringReply, error) {
-	return nil, errors.New("not implemented yet")
+	msg := s.storage.Messages[string(tm.ID)]
+	if msg == nil {
+		return nil, errors.New("this message doesn't exist")
+	}
+	msg.Balance += tm.Amount
+	return nil, nil
 }
 
 func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {

@@ -228,7 +228,7 @@ func TestService_Messages(t *testing.T) {
 	require.Nil(t, err)
 	require.EqualValues(t, msgs[1].ID, rmr.Message.ID)
 	require.Equal(t, msgs[1].Balance-msgs[1].Reward, rmr.Message.Balance)
-	// Don't double-read
+	// Don't get reward for double-read
 	rmr, err = s.phs[0].ReadMessage(rm)
 	require.Nil(t, err)
 	require.Equal(t, msgs[1].Balance-msgs[1].Reward, rmr.Message.Balance)
@@ -238,8 +238,33 @@ func TestService_Messages(t *testing.T) {
 	ciAfter := s.coinGet(t, s.attCoin[1])
 	require.Equal(t, msgs[1].Reward, ciAfter.Balance-ciBefore.Balance)
 
-	require.Nil(t, s.local.WaitDone(time.Second))
-	log.Print("ok")
+	// Have other reader get message and put its balance to 0, thus
+	// making it disappear from the list of messages.
+	rm.Reader = s.attCoin[2]
+	rmr, err = s.phs[0].ReadMessage(rm)
+	require.Nil(t, err)
+	require.Equal(t, uint64(0), rmr.Message.Balance)
+
+	lmr, err := s.phs[0].ListMessages(&ListMessages{
+		Start:  0,
+		Number: len(msgs),
+	})
+	require.Nil(t, err)
+	require.Equal(t, len(msgs)-1, len(lmr.IDs))
+
+	// Top up message
+	_, err = s.phs[0].TopupMessage(&TopupMessage{
+		ID:     msgs[1].ID,
+		Amount: msgs[1].Reward,
+	})
+
+	// Should be here again
+	lmr, err = s.phs[0].ListMessages(&ListMessages{
+		Start:  0,
+		Number: len(msgs),
+	})
+	require.Nil(t, err)
+	require.Equal(t, len(msgs), len(lmr.IDs))
 }
 
 type sStruct struct {
