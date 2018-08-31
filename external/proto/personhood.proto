@@ -1,0 +1,107 @@
+syntax = "proto2";
+package personhood;
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "Personhood";
+
+// LinkPop stores a link to a pop-party to accept this configuration. It will
+// try to create an account to receive payments from clients.
+message LinkPop {
+  required bytes omniledgerid = 1;
+  required bytes popinstance = 2;
+}
+
+// StringReply can be used by all calls that need a string to be returned
+// to the caller.
+message StringReply {
+  required string reply = 1;
+}
+
+message GetAccount {
+  required bytes popinstance = 1;
+}
+
+message GetAccountReply {
+  required bytes account = 1;
+}
+
+//
+// * Questionnaires
+//
+
+message Questionnaire {
+  required string title = 1;
+  repeated string questions = 2;
+  // Replies indicates how many answers the player can chose.
+  required sint32 replies = 3;
+  required uint64 balance = 4;
+  required uint64 reward = 5;
+  required bytes id = 6;
+}
+
+// RegisterQuestionnaire creates a questionnaire with a number of questions to
+// chose from and how much each replier gets rewarded.
+message RegisterQuestionnaire {
+  required Questionnaire questionnaire = 1;
+}
+
+message ListQuestionnaires {
+  required sint32 start = 1;
+  required sint32 number = 2;
+}
+
+message ListQuestionnairesReply {
+  repeated Questionnaire questionnaires = 1;
+}
+
+message AnswerQuestionnaire {
+  required bytes id = 1;
+  repeated sint32 replies = 2;
+  required bytes account = 3;
+}
+
+message TopupQuestionnaire {
+  required bytes id = 1;
+  required uint64 topup = 2;
+}
+
+//
+// * Popper
+//
+
+message Message {
+  required string subject = 1;
+  required uint64 date = 2;
+  required string text = 3;
+  required bytes author = 4;
+  required uint64 balance = 5;
+  required uint64 reward = 6;
+  required bytes id = 7;
+}
+
+message SendMessage {
+  required Message message = 1;
+}
+
+message ListMessages {
+  required sint32 start = 1;
+  required sint32 number = 2;
+}
+
+message ListMessagesReply {
+  repeated string subjects = 1;
+}
+
+message ReadMessage {
+  required string subject = 1;
+  required bytes reader = 2;
+}
+
+message ReadMessageReply {
+  required Message message = 1;
+}
+
+message TopupMessage {
+  required bytes id = 1;
+  required uint64 amount = 2;
+}

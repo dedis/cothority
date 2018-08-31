@@ -26,6 +26,7 @@ const nodeConfig = {
     ]
   },
   externals: [nodeExternals()],
+  devtool: "inline-source-map",
   plugins: [
     new UglifyJsPlugin({
       uglifyOptions: {

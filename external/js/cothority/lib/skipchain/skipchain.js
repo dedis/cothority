@@ -36,6 +36,22 @@ class Client {
   }
 
   /**
+   * Returns the skipblock from the skipchain, given its id.
+   *
+   * @param {Uint8Array} skipblockID - the id of the block
+   * @return {Promise<SkipBlock>} - a promise which resolves with the specified
+   * block if correct
+   */
+  getSkipblock(skipblockID) {
+    const request = {
+      id: skipblockID
+    };
+    let socket = new net.RosterSocket(this.lastRoster, "Skipchain");
+
+    return socket.send("GetSingleBlock", "SkipBlock", request);
+  }
+
+  /**
    * updateChain asks for the latest block of the skipchain with all intermediate blocks.
    * It automatically verifies the transition from the last known skipblock ID to the
    * latest one returned. It also automatically remembers the latest good known
@@ -44,7 +60,7 @@ class Client {
    * all checks pass.
    */
   getLatestBlock() {
-    var fn = co.wrap(function*(client) {
+    var fn = co.wrap(function* (client) {
       const requestStr = "GetUpdateChain";
       const responseStr = "GetUpdateChainReply";
       const request = {
@@ -66,8 +82,9 @@ class Client {
         var lastBlock;
         try {
           lastBlock = client.verifyUpdateChainReply(data);
+          console.log("Verifying update 5...");
         } catch (err) {
-          console.log(err);
+          console.log("error in the process : " + err);
           // tries again with random conodes
           nbErr++;
           continue;
@@ -98,22 +115,26 @@ class Client {
     console.log("Verifying update...");
     const blocks = updateChainReply.update;
     if (blocks.length == 0) throw new Error("no block returned in the chain");
+    console.log("Verifying update 2...");
 
     // first verify the first block is the one we know
     const first = blocks[0];
     const id = new Uint8Array(first.hash);
     if (!misc.uint8ArrayCompare(id, this.lastID))
       throw new Error("the first ID is not the one we have");
+    console.log("Verifying update 3...");
 
     if (blocks.length == 1) return first;
     // then check the block links consecutively
     var currBlock = first;
+    console.log("Verifying update 4...");
     for (var i = 1; i < blocks.length; i++) {
+      console.log(i + "/" + blocks.length);
       const nextBlock = blocks[i];
 
       const forwardLinks = currBlock.forward;
       if (forwardLinks.length == 0)
-        //throw new Error("No forward links included in the skipblocks");
+      //throw new Error("No forward links included in the skipblocks");
         return currBlock;
 
       // only take the highest link since we move "as fast as possible" on
@@ -127,6 +148,7 @@ class Client {
       // move to the next block
       currBlock = nextBlock;
     }
+    console.log("Verifying is over :)");
     return currBlock;
   }
 
@@ -145,9 +167,17 @@ class Client {
     h.update(flink.from);
     h.update(flink.to);
     if (flink.roster !== undefined) {
-      return new Error("forwardlink verification with a roster change is not implemented yet");
+      return new Error(
+        "forwardlink verification with a roster change is not implemented yet"
+      );
     }
-    if (!h.digest().equals(message)) {
+    let b = h.digest();
+    let hash = new Uint8Array(
+      b.buffer,
+      b.byteOffset,
+      b.byteLength / Uint8Array.BYTES_PER_ELEMENT
+    );
+    if (!misc.uint8ArrayCompare(hash, message, false)) {
       return new Error("recreated message does not match");
     }
 
@@ -160,10 +190,7 @@ class Client {
       return new Error("signature length invalid");
 
     // compute the bitmask and the reduced public key
-    const bitmask = bftSig.sig.slice(
-      pointLen + scalarLen,
-      bftSig.sig.length
-    );
+    const bitmask = bftSig.sig.slice(pointLen + scalarLen, bftSig.sig.length);
     const bitmaskLength = misc.getBitmaskLength(bitmask);
     const expectedBitmaskLength = roster.length + 8 - roster.length % 8;
     if (bitmaskLength > expectedBitmaskLength)

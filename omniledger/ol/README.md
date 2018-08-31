@@ -1,4 +1,4 @@
-# ol - the CLI to configure OmniLedger permissions
+m# ol - the CLI to configure OmniLedger permissions
 
 ## Create a new OmniLedger, saving the config
 
