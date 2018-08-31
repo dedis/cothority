@@ -26,6 +26,20 @@ class IdentityEd25519 extends Identity {
     return new IdentityEd25519(point);
   }
 
+  /**
+   * Creates an identity from a public key
+   * @param {Uint8Array} publicKey - the key
+   * @return {IdentityEd25519} - the identity
+   */
+  static fromPublicKey(publicKey) {
+    let point = curve.point();
+    point.unmarshalBinary(publicKey);
+    return new IdentityEd25519(point);
+  }
+
+  /**
+   * @return {Uint8Array} - the public key, in a byte array format
+   */
   get public() {
     return this._pub.marshalBinary();
   }
@@ -37,11 +51,16 @@ class IdentityEd25519 extends Identity {
    * @return {IdentityEd25519}
    */
   static fromSigner(signer) {
-    let point = curve.point();
-    point.unmarshalBinary(signer.point);
-    return new IdentityEd25519(point);
+    return new IdentityEd25519(signer.public);
   }
 
+  /**
+   * Verify that a message is correctly signed
+   *
+   * @param msg
+   * @param signature
+   * @return {boolean}
+   */
   verify(msg, signature) {
     return Schnorr.verify(curve, this._pub, msg, signature);
   }
