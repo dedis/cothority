@@ -25,12 +25,12 @@ func TestCollectionDBStrange(t *testing.T) {
 	key := []byte("first")
 	value := []byte("value")
 	contract := "mycontract"
-	err = cdb.Store(&StateChange{
+	err = cdb.StoreAll([]StateChange{{
 		StateAction: Create,
 		InstanceID:  key,
 		Value:       value,
 		ContractID:  []byte(contract),
-	})
+	}}, 0)
 	require.Nil(t, err)
 	v, c, _, err := cdb.GetValues([]byte("first"))
 	require.Nil(t, err)
@@ -58,13 +58,13 @@ func TestCollectionDB(t *testing.T) {
 
 	// Store all key/value pairs
 	for k, v := range pairs {
-		sc := &StateChange{
+		sc := StateChange{
 			StateAction: Create,
 			InstanceID:  []byte(k),
 			Value:       []byte(v),
 			ContractID:  []byte(myContract),
 		}
-		require.Nil(t, cdb.Store(sc))
+		require.Nil(t, cdb.StoreAll([]StateChange{sc}, 0))
 	}
 
 	// Verify it's all there
@@ -90,13 +90,13 @@ func TestCollectionDB(t *testing.T) {
 		pairs[k] = v + "-2"
 	}
 	for k, v := range pairs {
-		sc := &StateChange{
+		sc := StateChange{
 			StateAction: Update,
 			InstanceID:  []byte(k),
 			Value:       []byte(v),
 			ContractID:  []byte(myContract),
 		}
-		require.Nil(t, cdb2.Store(sc), k)
+		require.Nil(t, cdb2.StoreAll([]StateChange{sc}, 0), k)
 	}
 	for k, v := range pairs {
 		stored, contract, _, err := cdb2.GetValues([]byte(k))
@@ -107,12 +107,12 @@ func TestCollectionDB(t *testing.T) {
 
 	// Delete
 	for c := range pairs {
-		sc := &StateChange{
+		sc := StateChange{
 			StateAction: Remove,
 			InstanceID:  []byte(c),
 			ContractID:  []byte(myContract),
 		}
-		require.Nil(t, cdb2.Store(sc))
+		require.Nil(t, cdb2.StoreAll([]StateChange{sc}, 0))
 	}
 	for c := range pairs {
 		_, _, _, err := cdb2.GetValues([]byte(c))
@@ -150,8 +150,8 @@ func TestCollectionDBtryHash(t *testing.T) {
 	require.EqualError(t, err, "no match found")
 	_, _, _, err = cdb.GetValues([]byte("key2"))
 	require.EqualError(t, err, "no match found")
-	cdb.Store(&scs[0])
-	cdb.Store(&scs[1])
+	cdb.StoreAll([]StateChange{scs[0]}, 0)
+	cdb.StoreAll([]StateChange{scs[1]}, 0)
 	mrReal := cdb.RootHash()
 	require.Equal(t, mrTrial, mrReal)
 }
