@@ -30,11 +30,11 @@ func newViewChangeManager() viewChangeManager {
 	}
 }
 
-func (m *viewChangeManager) add(sendVC viewchange.SendInitReqFunc,
-	sendNV viewchange.SendNewViewReqFunc, isLeader viewchange.IsLeaderFunc, k string) {
+func (m *viewChangeManager) add(SendInitReq viewchange.SendInitReqFunc,
+	sendNewView viewchange.SendNewViewReqFunc, isLeader viewchange.IsLeaderFunc, k string) {
 	m.Lock()
 	defer m.Unlock()
-	c := viewchange.NewController(sendVC, sendNV, isLeader)
+	c := viewchange.NewController(SendInitReq, sendNewView, isLeader)
 	m.controllers[k] = &c
 }
 
@@ -85,7 +85,7 @@ func (m *viewChangeManager) closeAll() {
 
 // sendViewChangeReq is called when the node detects that a view change is
 // needed. It uses SendRaw to send the message to all other nodes. This
-// function should only be used as a callback in ViewChangeLog.
+// function should only be used as a callback in viewchange.Controller.
 func (s *Service) sendViewChangeReq(view viewchange.View) error {
 	log.Lvl2(s.ServerIdentity(), "sending view-change request for view:", view)
 	latest, err := s.db().GetLatestByID(view.ID)
@@ -151,13 +151,12 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) {
 	}()
 }
 
-func (s *Service) computeInitialDuration(scID skipchain.SkipBlockID) time.Duration {
+func (s *Service) computeInitialDuration(scID skipchain.SkipBlockID) (time.Duration, error) {
 	interval, err := s.LoadBlockInterval(scID)
 	if err != nil {
-		panic("we should only computer the interval on a known block," +
-			" otherwise it is a progarmmer error: " + err.Error())
+		return 0, err
 	}
-	return rotationWindow * interval
+	return rotationWindow * interval, nil
 }
 
 func (s *Service) getFaultThreshold(sbID skipchain.SkipBlockID) int {
@@ -174,16 +173,15 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) {
 		log.Error(s.ServerIdentity(), "failed to cast to viewchange.ViewChangeReq")
 		return
 	}
-	// Should not be sending to ourselves.
+	// Should not be sending to ourself.
 	if req.SignerID.Equal(s.ServerIdentity().ID) {
-		log.Error(s.ServerIdentity(), "should not send to ourselve")
+		log.Error(s.ServerIdentity(), "should not send to ourself")
 		return
 	}
 
 	// Check that the genesis exists and the view is valid.
-	_, err := s.db().GetLatestByID(req.View.Gen)
-	if err != nil {
-		log.Error(s.ServerIdentity(), err)
+	if gen := s.db().GetByID(req.View.Gen); gen == nil || gen.Index != 0 {
+		log.Error(s.ServerIdentity(), "cannot find the genesis block in request")
 		return
 	}
 	reqLatest := s.db().GetByID(req.View.ID)
@@ -196,14 +194,13 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) {
 		log.Error(s.ServerIdentity(), "we do not know this view")
 		return
 	}
-	actualLatest, err := s.db().GetLatest(reqLatest)
-	if err != nil || !actualLatest.Hash.Equal(reqLatest.Hash) {
-		log.Error(s.ServerIdentity(), "viewchange should not happen for earlier blocks", err)
+	if len(reqLatest.ForwardLink) != 0 {
+		log.Error(s.ServerIdentity(), "view-change should not happen blocks that are not the latest")
 		return
 	}
 
 	// Check signature.
-	_, signerSID := actualLatest.Roster.Search(req.SignerID)
+	_, signerSID := reqLatest.Roster.Search(req.SignerID)
 	if signerSID == nil {
 		log.Error(s.ServerIdentity(), "signer does not exist")
 		return
@@ -298,9 +295,14 @@ func (s *Service) verifyViewChange(msg []byte, data []byte) bool {
 		log.Error(s.ServerIdentity(), "conflicting views")
 		return false
 	}
+	// Put the roster in a map so that it's more efficient to search.
+	rosterMap := make(map[network.ServerIdentityID]*network.ServerIdentity)
+	for _, sid := range sb.Roster.List {
+		rosterMap[sid.ID] = sid
+	}
 	for _, p := range req.Proof {
-		_, sid := sb.Roster.Search(p.SignerID)
-		if sid == nil {
+		sid, ok := rosterMap[p.SignerID]
+		if !ok {
 			log.Error(s.ServerIdentity(), "the signer is not in the roster")
 			return false
 		}
@@ -322,8 +324,8 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 	if err != nil {
 		return err
 	}
-	if len(sb.Roster.List) < 2 {
-		return errors.New("roster size is too small")
+	if len(sb.Roster.List) < 4 {
+		return errors.New("roster size is too small, must be >= 4")
 	}
 
 	_, _, genDarcID, err := s.GetCollectionView(req.GetGen()).GetValues(NewInstanceID(nil).Slice())

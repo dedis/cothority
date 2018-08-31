@@ -81,6 +81,9 @@ func TestViewChange_Normal(t *testing.T) {
 	_, view, vcl := testSetupViewChange2F1(t, mySignerID, dur, f)
 	defer vcl.Stop()
 
+	// Check that view-change is in progress.
+	require.True(t, vcl.Waiting())
+
 	// If we signal that the view-change completed successfully, then
 	// everything should be reset.
 	ctrChan := vcl.diagnoseStopTimer(func() {
@@ -92,6 +95,9 @@ func TestViewChange_Normal(t *testing.T) {
 	case <-time.After(dur):
 		require.Fail(t, "timer should have stopped on done")
 	}
+
+	// Check that view-change is finsihed.
+	require.False(t, vcl.Waiting())
 }
 
 func TestViewChange_Timeout(t *testing.T) {

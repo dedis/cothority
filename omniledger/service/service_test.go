@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -168,7 +169,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		if i == 1 {
 			// Now read the key/values from a new service
 			log.Lvl1("Recreate services and fetch keys again")
-			require.NoError(t, s.service().tryLoad())
+			require.NoError(t, s.service().startAllChains())
 		}
 		for _, tx := range txs {
 			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), 0)
@@ -187,7 +188,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		log.Lvl1("bringing the failed node back up")
 		s.services[len(s.hosts)-1].closed = false
 		s.hosts[len(s.hosts)-1].Unpause()
-		require.NoError(t, s.services[len(s.hosts)-1].tryLoad())
+		require.NoError(t, s.services[len(s.hosts)-1].startAllChains())
 
 		time.Sleep(s.interval)
 		for _, tx := range txs {
@@ -926,7 +927,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// will wait before starting a view-change. Then, we sleep a little
 	// longer for the view-change transaction to be stored in the block.
 	for i := 1; i <= nFailures; i++ {
-		time.Sleep(time.Duration(pow(2, i)) * s.interval * rotationWindow)
+		time.Sleep(time.Duration(math.Pow(2, float64(i))) * s.interval * rotationWindow)
 	}
 	time.Sleep(interval)
 	config, err := s.services[nFailures].LoadConfig(s.sb.SkipChainID())
@@ -965,7 +966,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 		log.Lvl1("starting node at index", i)
 		s.services[i].closed = false
 		s.hosts[i].Unpause()
-		require.NoError(t, s.services[i].tryLoad())
+		require.NoError(t, s.services[i].startAllChains())
 	}
 	for i := 0; i < nFailures; i++ {
 		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
@@ -988,7 +989,7 @@ func TestService_DarcToSc(t *testing.T) {
 	// remove the mapping and then load it again
 	for _, service := range s.services {
 		service.darcToSc = make(map[string]skipchain.SkipBlockID)
-		require.NoError(t, service.tryLoad())
+		require.NoError(t, service.startAllChains())
 	}
 
 	// check that the mapping is still correct
@@ -1298,17 +1299,4 @@ func registerDummy(servers []*onet.Server) {
 func genID() (i InstanceID) {
 	random.Bytes(i[:], random.New())
 	return i
-}
-
-// NOTE: this might overflow but this function is local in this package and is
-// only used for computing the next timeout duration and should not be used for
-// general computation.
-func pow(base, exponent int) int64 {
-	x := int64(1)
-	b := int64(base)
-	for exponent > 0 {
-		x = x * b
-		exponent--
-	}
-	return x
 }

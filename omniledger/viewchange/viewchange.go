@@ -15,6 +15,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/dedis/cothority"
@@ -96,15 +97,15 @@ type Controller struct {
 
 // NewController creates a new Controller. Upon creation, the controller is not
 // active, Start must be called to activate it.
-func NewController(sendVC SendInitReqFunc, sendNV SendNewViewReqFunc, isLeader IsLeaderFunc) Controller {
+func NewController(sendInitReq SendInitReqFunc, sendNewView SendNewViewReqFunc, isLeader IsLeaderFunc) Controller {
 	return Controller{
 		reqChan:          make(chan InitReq, 1),
 		anomalyChan:      make(chan InitReq, 1),
 		doneChan:         make(chan View, 1),
 		waiting:          make(chan chan bool, 1),
 		closeMonitorChan: make(chan bool),
-		sendInitReq:      sendVC,
-		sendNewViewReq:   sendNV,
+		sendInitReq:      sendInitReq,
+		sendNewViewReq:   sendNewView,
 		isLeader:         isLeader,
 
 		expireTimerChan: make(chan int),
@@ -156,7 +157,7 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				// To avoid starting the next view-change too
 				// soon, start view-change timer after
 				// receiving 2*f+1 view-change messages.
-				timer.Reset(time.Duration(pow(2, ctr)) * initialDuration)
+				timer.Reset(time.Duration(math.Pow(2, float64(ctr))) * initialDuration)
 				meta.nextStateFor(ctr)
 				select {
 				case c.startTimerChan <- ctr:
@@ -515,17 +516,4 @@ func stopTimer(timer *time.Timer, c chan int, i int) {
 	case c <- i:
 	default:
 	}
-}
-
-// NOTE: this might overflow but this function is local in this package and is
-// only used for computing the next timeout duration and should not be used for
-// general computation.
-func pow(base, exponent int) int64 {
-	x := int64(1)
-	b := int64(base)
-	for exponent > 0 {
-		x = x * b
-		exponent--
-	}
-	return x
 }

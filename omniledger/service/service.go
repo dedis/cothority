@@ -434,8 +434,13 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 		s.darcToSc[string(d.GetBaseID())] = sb.SkipChainID()
 		s.darcToScMut.Unlock()
 		// create the view-change manager entry
+		initialDur, err := s.computeInitialDuration(sb.Hash)
+		if err != nil {
+			return err
+		}
 		s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(sb.Hash))
-		s.viewChangeMan.start(s.ServerIdentity().ID, sb.SkipChainID(), s.computeInitialDuration(sb.Hash), s.getFaultThreshold(sb.Hash), string(sb.Hash)) // TODO fault threshold might change
+		s.viewChangeMan.start(s.ServerIdentity().ID, sb.SkipChainID(), initialDur, s.getFaultThreshold(sb.Hash), string(sb.Hash))
+		// TODO fault threshold might change
 
 		s.pollChanMut.Lock()
 		k := string(sb.SkipChainID())
@@ -447,11 +452,14 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 			}
 		}
 		s.pollChanMut.Unlock()
+		return nil
 	}
 
-	// If it is a view-change transaction, then
-	// (1) inform the view-change manager
-	// (2) if we are the new leader, then start polling; if we got demoted, then stop polling
+	// If it is a view-change transaction, then there are four cases
+	// (1) We are now the leader, and we were not polling, so start.
+	// (2) We are now the leader, but we were already polling (shouldn't happen, so we log a warning).
+	// (3) We are no longer the leader, but we were polling, so stop.
+	// (4) We are not the leader, and we weren't polling: do nothing.
 	view := isViewChangeTx(body.TxResults)
 	if view != nil {
 		s.viewChangeMan.done(*view)
@@ -462,6 +470,8 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 				log.Lvlf2("%s new leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
 				s.pollChanWG.Add(1)
 				s.pollChan[k] = s.startPolling(sb.SkipChainID(), interval)
+			} else {
+				log.Warn("%s we are a new leader but we were already polling for", s.ServerIdentity(), sb.SkipChainID())
 			}
 		} else {
 			if c, ok := s.pollChan[k]; ok {
@@ -476,6 +486,15 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 }
 
 func isViewChangeTx(txs TxResults) *viewchange.View {
+	if len(txs) != 1 {
+		// view-change block must only have one transaction
+		return nil
+	}
+	if len(txs[0].ClientTransaction.Instructions) != 1 {
+		// view-change transaction must have one instruction
+		return nil
+	}
+
 	invoke := txs[0].ClientTransaction.Instructions[0].Invoke
 	if invoke == nil {
 		return nil
@@ -977,33 +996,38 @@ func (s *Service) monitorLeaderFailure() {
 	s.working.Add(1)
 	s.closedMutex.Unlock()
 	defer s.working.Done()
-	select {
-	case <-s.closeLeaderMonitorChan:
-	default:
-	}
-	for {
+
+	go func() {
 		select {
-		case key := <-s.heartbeatsTimeout:
-			log.Lvl3(s.ServerIdentity(), "missed heartbeat")
-			gen := []byte(key)
-			latest, err := s.db().GetLatestByID(gen)
-			if err != nil {
-				panic("err")
-			}
-			req := viewchange.InitReq{
-				SignerID: s.ServerIdentity().ID,
-				View: viewchange.View{
-					ID:          latest.Hash,
-					Gen:         gen,
-					LeaderIndex: 1,
-				},
-			}
-			s.viewChangeMan.addAnomaly(req)
 		case <-s.closeLeaderMonitorChan:
-			log.Lvl2(s.ServerIdentity(), "closing heartbeat timeout monitor")
-			return
+		default:
 		}
-	}
+		for {
+			select {
+			case key := <-s.heartbeatsTimeout:
+				log.Lvl3(s.ServerIdentity(), "missed heartbeat")
+				gen := []byte(key)
+				latest, err := s.db().GetLatestByID(gen)
+				if err != nil {
+					panic("heartbeat monitors are started after " +
+						"the creation of the genesis block, " +
+						"so the block should always exist")
+				}
+				req := viewchange.InitReq{
+					SignerID: s.ServerIdentity().ID,
+					View: viewchange.View{
+						ID:          latest.Hash,
+						Gen:         gen,
+						LeaderIndex: 1,
+					},
+				}
+				s.viewChangeMan.addAnomaly(req)
+			case <-s.closeLeaderMonitorChan:
+				log.Lvl2(s.ServerIdentity(), "closing heartbeat timeout monitor")
+				return
+			}
+		}
+	}()
 }
 
 // getPrivateKey is a hack that creates a temporary TreeNodeInstance and gets
@@ -1090,9 +1114,10 @@ func (s *Service) registerContract(contractID string, c OmniLedgerContract) erro
 	return nil
 }
 
-// Tries to load the configuration and updates the data in the service
-// if it finds a valid config-file.
-func (s *Service) tryLoad() error {
+// startAllChains loads the configuration, updates the data in the service if
+// it finds a valid config-file and synchronises skipblocks if it can contact
+// other nodes.
+func (s *Service) startAllChains() error {
 	s.SetPropagationTimeout(120 * time.Second)
 
 	msg, err := s.Load(storageID)
@@ -1111,7 +1136,7 @@ func (s *Service) tryLoad() error {
 		waitChannels: make(map[string]chan bool),
 	}
 
-	// NOTE: Usually tryLoad is only called when services start up. but for
+	// NOTE: Usually startAllChains is only called when services start up. but for
 	// testing, we might re-initialise the service. So we need to clean up
 	// the go-routines.
 	s.cleanupGoroutines()
@@ -1160,18 +1185,23 @@ func (s *Service) tryLoad() error {
 
 		// start the heartbeat
 		if s.heartbeats.exists(string(gen)) {
-			panic("we are just starting the service, there should be no existing heartbeat monitors")
+			return errors.New("we are just starting the service, there should be no existing heartbeat monitors")
 		}
 		log.Lvlf2("%s started heartbeat monitor for %x", s.ServerIdentity(), gen)
 		s.heartbeats.start(string(gen), interval*rotationWindow, s.heartbeatsTimeout)
 
 		// initiate the view-change manager
+		initialDur, err := s.computeInitialDuration(gen)
+		if err != nil {
+			return err
+		}
 		s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(gen))
-		s.viewChangeMan.start(s.ServerIdentity().ID, gen, s.computeInitialDuration(gen), s.getFaultThreshold(gen), string(gen)) // TODO fault threshold might change
+		s.viewChangeMan.start(s.ServerIdentity().ID, gen, initialDur, s.getFaultThreshold(gen), string(gen))
+		// TODO fault threshold might change
 	}
 
 	s.trySyncAll()
-	go s.monitorLeaderFailure()
+	s.monitorLeaderFailure()
 
 	return nil
 }
@@ -1269,8 +1299,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
-	if err := s.tryLoad(); err != nil {
-		log.Error(err)
+	if err := s.startAllChains(); err != nil {
 		return nil, err
 	}
 	return s, nil
