@@ -55,7 +55,7 @@ class CoinsInstance {
    * Transfer a certain amount of coin to another account.
    *
    * @param {number} coins - the amount
-   * @param {Identity} to - the destination account
+   * @param {Uint8Array} to - the destination account (must be a coin contract instace id)
    * @param {Signer} signer - the signer (of the giver account)
    * @return {Promise} - a promisse that completes once the transaction has been
    * included in the OmniLedger.
@@ -63,10 +63,10 @@ class CoinsInstance {
   transfer(coins, to, signer) {
     let args = [];
     let buffer = new ArrayBuffer(8);
-    new DataView(buffer).setBigUint64(0, coins, true);
+    new DataView(buffer).setBigUint64(0, BigInt(coins), true);
 
     args.push(new Argument("coins", new Uint8Array(buffer)));
-    args.push(new Argument("destination", to.public));
+    args.push(new Argument("destination", to));
 
     let invoke = new Invoke("transfer", args);
     let inst = Instruction.createInvokeInstruction(
