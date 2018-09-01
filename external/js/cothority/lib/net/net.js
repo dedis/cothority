@@ -51,6 +51,7 @@ function Socket(addr, service) {
       }
 
       // This makes the API consistent with nativescript-websockets
+
       if (typeof ws.open === "function") {
         ws._notify = ws._notifyBrowser;
         Object.defineProperty(WS.prototype, "_notify", {

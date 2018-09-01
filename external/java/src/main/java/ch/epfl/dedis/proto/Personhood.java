@@ -11122,6 +11122,32 @@ public final class Personhood {
      * <code>repeated bytes ids = 2;</code>
      */
     com.google.protobuf.ByteString getIds(int index);
+
+    /**
+     * <code>repeated uint64 balances = 3;</code>
+     */
+    java.util.List<java.lang.Long> getBalancesList();
+    /**
+     * <code>repeated uint64 balances = 3;</code>
+     */
+    int getBalancesCount();
+    /**
+     * <code>repeated uint64 balances = 3;</code>
+     */
+    long getBalances(int index);
+
+    /**
+     * <code>repeated uint64 rewards = 4;</code>
+     */
+    java.util.List<java.lang.Long> getRewardsList();
+    /**
+     * <code>repeated uint64 rewards = 4;</code>
+     */
+    int getRewardsCount();
+    /**
+     * <code>repeated uint64 rewards = 4;</code>
+     */
+    long getRewards(int index);
   }
   /**
    * Protobuf type {@code personhood.ListMessagesReply}
@@ -11138,6 +11164,8 @@ public final class Personhood {
     private ListMessagesReply() {
       subjects_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       ids_ = java.util.Collections.emptyList();
+      balances_ = java.util.Collections.emptyList();
+      rewards_ = java.util.Collections.emptyList();
     }
 
     @java.lang.Override
@@ -11185,6 +11213,48 @@ public final class Personhood {
               ids_.add(input.readBytes());
               break;
             }
+            case 24: {
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                balances_ = new java.util.ArrayList<java.lang.Long>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              balances_.add(input.readUInt64());
+              break;
+            }
+            case 26: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004) && input.getBytesUntilLimit() > 0) {
+                balances_ = new java.util.ArrayList<java.lang.Long>();
+                mutable_bitField0_ |= 0x00000004;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                balances_.add(input.readUInt64());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 32: {
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                rewards_ = new java.util.ArrayList<java.lang.Long>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              rewards_.add(input.readUInt64());
+              break;
+            }
+            case 34: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008) && input.getBytesUntilLimit() > 0) {
+                rewards_ = new java.util.ArrayList<java.lang.Long>();
+                mutable_bitField0_ |= 0x00000008;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                rewards_.add(input.readUInt64());
+              }
+              input.popLimit(limit);
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -11198,6 +11268,12 @@ public final class Personhood {
         }
         if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
           ids_ = java.util.Collections.unmodifiableList(ids_);
+        }
+        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+          balances_ = java.util.Collections.unmodifiableList(balances_);
+        }
+        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+          rewards_ = java.util.Collections.unmodifiableList(rewards_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -11266,6 +11342,50 @@ public final class Personhood {
       return ids_.get(index);
     }
 
+    public static final int BALANCES_FIELD_NUMBER = 3;
+    private java.util.List<java.lang.Long> balances_;
+    /**
+     * <code>repeated uint64 balances = 3;</code>
+     */
+    public java.util.List<java.lang.Long>
+        getBalancesList() {
+      return balances_;
+    }
+    /**
+     * <code>repeated uint64 balances = 3;</code>
+     */
+    public int getBalancesCount() {
+      return balances_.size();
+    }
+    /**
+     * <code>repeated uint64 balances = 3;</code>
+     */
+    public long getBalances(int index) {
+      return balances_.get(index);
+    }
+
+    public static final int REWARDS_FIELD_NUMBER = 4;
+    private java.util.List<java.lang.Long> rewards_;
+    /**
+     * <code>repeated uint64 rewards = 4;</code>
+     */
+    public java.util.List<java.lang.Long>
+        getRewardsList() {
+      return rewards_;
+    }
+    /**
+     * <code>repeated uint64 rewards = 4;</code>
+     */
+    public int getRewardsCount() {
+      return rewards_.size();
+    }
+    /**
+     * <code>repeated uint64 rewards = 4;</code>
+     */
+    public long getRewards(int index) {
+      return rewards_.get(index);
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -11283,6 +11403,12 @@ public final class Personhood {
       }
       for (int i = 0; i < ids_.size(); i++) {
         output.writeBytes(2, ids_.get(i));
+      }
+      for (int i = 0; i < balances_.size(); i++) {
+        output.writeUInt64(3, balances_.get(i));
+      }
+      for (int i = 0; i < rewards_.size(); i++) {
+        output.writeUInt64(4, rewards_.get(i));
       }
       unknownFields.writeTo(output);
     }
@@ -11309,6 +11435,24 @@ public final class Personhood {
         size += dataSize;
         size += 1 * getIdsList().size();
       }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < balances_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeUInt64SizeNoTag(balances_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getBalancesList().size();
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < rewards_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeUInt64SizeNoTag(rewards_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getRewardsList().size();
+      }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
       return size;
@@ -11329,6 +11473,10 @@ public final class Personhood {
           .equals(other.getSubjectsList());
       result = result && getIdsList()
           .equals(other.getIdsList());
+      result = result && getBalancesList()
+          .equals(other.getBalancesList());
+      result = result && getRewardsList()
+          .equals(other.getRewardsList());
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -11347,6 +11495,14 @@ public final class Personhood {
       if (getIdsCount() > 0) {
         hash = (37 * hash) + IDS_FIELD_NUMBER;
         hash = (53 * hash) + getIdsList().hashCode();
+      }
+      if (getBalancesCount() > 0) {
+        hash = (37 * hash) + BALANCES_FIELD_NUMBER;
+        hash = (53 * hash) + getBalancesList().hashCode();
+      }
+      if (getRewardsCount() > 0) {
+        hash = (37 * hash) + REWARDS_FIELD_NUMBER;
+        hash = (53 * hash) + getRewardsList().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -11481,6 +11637,10 @@ public final class Personhood {
         bitField0_ = (bitField0_ & ~0x00000001);
         ids_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000002);
+        balances_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000004);
+        rewards_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000008);
         return this;
       }
 
@@ -11514,6 +11674,16 @@ public final class Personhood {
           bitField0_ = (bitField0_ & ~0x00000002);
         }
         result.ids_ = ids_;
+        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+          balances_ = java.util.Collections.unmodifiableList(balances_);
+          bitField0_ = (bitField0_ & ~0x00000004);
+        }
+        result.balances_ = balances_;
+        if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          rewards_ = java.util.Collections.unmodifiableList(rewards_);
+          bitField0_ = (bitField0_ & ~0x00000008);
+        }
+        result.rewards_ = rewards_;
         onBuilt();
         return result;
       }
@@ -11572,6 +11742,26 @@ public final class Personhood {
           } else {
             ensureIdsIsMutable();
             ids_.addAll(other.ids_);
+          }
+          onChanged();
+        }
+        if (!other.balances_.isEmpty()) {
+          if (balances_.isEmpty()) {
+            balances_ = other.balances_;
+            bitField0_ = (bitField0_ & ~0x00000004);
+          } else {
+            ensureBalancesIsMutable();
+            balances_.addAll(other.balances_);
+          }
+          onChanged();
+        }
+        if (!other.rewards_.isEmpty()) {
+          if (rewards_.isEmpty()) {
+            rewards_ = other.rewards_;
+            bitField0_ = (bitField0_ & ~0x00000008);
+          } else {
+            ensureRewardsIsMutable();
+            rewards_.addAll(other.rewards_);
           }
           onChanged();
         }
@@ -11764,6 +11954,138 @@ public final class Personhood {
       public Builder clearIds() {
         ids_ = java.util.Collections.emptyList();
         bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<java.lang.Long> balances_ = java.util.Collections.emptyList();
+      private void ensureBalancesIsMutable() {
+        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+          balances_ = new java.util.ArrayList<java.lang.Long>(balances_);
+          bitField0_ |= 0x00000004;
+         }
+      }
+      /**
+       * <code>repeated uint64 balances = 3;</code>
+       */
+      public java.util.List<java.lang.Long>
+          getBalancesList() {
+        return java.util.Collections.unmodifiableList(balances_);
+      }
+      /**
+       * <code>repeated uint64 balances = 3;</code>
+       */
+      public int getBalancesCount() {
+        return balances_.size();
+      }
+      /**
+       * <code>repeated uint64 balances = 3;</code>
+       */
+      public long getBalances(int index) {
+        return balances_.get(index);
+      }
+      /**
+       * <code>repeated uint64 balances = 3;</code>
+       */
+      public Builder setBalances(
+          int index, long value) {
+        ensureBalancesIsMutable();
+        balances_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint64 balances = 3;</code>
+       */
+      public Builder addBalances(long value) {
+        ensureBalancesIsMutable();
+        balances_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint64 balances = 3;</code>
+       */
+      public Builder addAllBalances(
+          java.lang.Iterable<? extends java.lang.Long> values) {
+        ensureBalancesIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, balances_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint64 balances = 3;</code>
+       */
+      public Builder clearBalances() {
+        balances_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000004);
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<java.lang.Long> rewards_ = java.util.Collections.emptyList();
+      private void ensureRewardsIsMutable() {
+        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+          rewards_ = new java.util.ArrayList<java.lang.Long>(rewards_);
+          bitField0_ |= 0x00000008;
+         }
+      }
+      /**
+       * <code>repeated uint64 rewards = 4;</code>
+       */
+      public java.util.List<java.lang.Long>
+          getRewardsList() {
+        return java.util.Collections.unmodifiableList(rewards_);
+      }
+      /**
+       * <code>repeated uint64 rewards = 4;</code>
+       */
+      public int getRewardsCount() {
+        return rewards_.size();
+      }
+      /**
+       * <code>repeated uint64 rewards = 4;</code>
+       */
+      public long getRewards(int index) {
+        return rewards_.get(index);
+      }
+      /**
+       * <code>repeated uint64 rewards = 4;</code>
+       */
+      public Builder setRewards(
+          int index, long value) {
+        ensureRewardsIsMutable();
+        rewards_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint64 rewards = 4;</code>
+       */
+      public Builder addRewards(long value) {
+        ensureRewardsIsMutable();
+        rewards_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint64 rewards = 4;</code>
+       */
+      public Builder addAllRewards(
+          java.lang.Iterable<? extends java.lang.Long> values) {
+        ensureRewardsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, rewards_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated uint64 rewards = 4;</code>
+       */
+      public Builder clearRewards() {
+        rewards_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000008);
         onChanged();
         return this;
       }
@@ -13812,13 +14134,14 @@ public final class Personhood {
       "balance\030\005 \002(\004\022\016\n\006reward\030\006 \002(\004\022\n\n\002id\030\007 \002(" +
       "\014\"3\n\013SendMessage\022$\n\007message\030\001 \002(\0132\023.pers" +
       "onhood.Message\"-\n\014ListMessages\022\r\n\005start\030" +
-      "\001 \002(\021\022\016\n\006number\030\002 \002(\021\"2\n\021ListMessagesRep" +
-      "ly\022\020\n\010subjects\030\001 \003(\t\022\013\n\003ids\030\002 \003(\014\"8\n\013Rea" +
-      "dMessage\022\n\n\002id\030\001 \002(\014\022\r\n\005party\030\002 \002(\014\022\016\n\006r" +
-      "eader\030\003 \002(\014\"8\n\020ReadMessageReply\022$\n\007messa",
-      "ge\030\001 \002(\0132\023.personhood.Message\"*\n\014TopupMe" +
-      "ssage\022\n\n\002id\030\001 \002(\014\022\016\n\006amount\030\002 \002(\004B!\n\023ch." +
-      "epfl.dedis.protoB\nPersonhood"
+      "\001 \002(\021\022\016\n\006number\030\002 \002(\021\"U\n\021ListMessagesRep" +
+      "ly\022\020\n\010subjects\030\001 \003(\t\022\013\n\003ids\030\002 \003(\014\022\020\n\010bal" +
+      "ances\030\003 \003(\004\022\017\n\007rewards\030\004 \003(\004\"8\n\013ReadMess" +
+      "age\022\n\n\002id\030\001 \002(\014\022\r\n\005party\030\002 \002(\014\022\016\n\006reader",
+      "\030\003 \002(\014\"8\n\020ReadMessageReply\022$\n\007message\030\001 " +
+      "\002(\0132\023.personhood.Message\"*\n\014TopupMessage" +
+      "\022\n\n\002id\030\001 \002(\014\022\016\n\006amount\030\002 \002(\004B!\n\023ch.epfl." +
+      "dedis.protoB\nPersonhood"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -13929,7 +14252,7 @@ public final class Personhood {
     internal_static_personhood_ListMessagesReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_ListMessagesReply_descriptor,
-        new java.lang.String[] { "Subjects", "Ids", });
+        new java.lang.String[] { "Subjects", "Ids", "Balances", "Rewards", });
     internal_static_personhood_ReadMessage_descriptor =
       getDescriptor().getMessageTypes().get(16);
     internal_static_personhood_ReadMessage_fieldAccessorTable = new

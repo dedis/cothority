@@ -12,7 +12,6 @@ import (
 	"sync"
 
 	ol "github.com/dedis/cothority/omniledger/service"
-	template "github.com/dedis/cothority_template"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -21,9 +20,11 @@ import (
 // Used for tests
 var templateID onet.ServiceID
 
+var ServiceName = "Personhood"
+
 func init() {
 	var err error
-	templateID, err = onet.RegisterNewService(template.ServiceName, newService)
+	templateID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
 	network.RegisterMessage(&storage{})
 }
@@ -61,7 +62,7 @@ type readMsg struct {
 func (s *Service) LinkPoP(lp *LinkPoP) (*StringReply, error) {
 	s.storage.Parties[string(lp.PopInstance.Slice())] = &lp.Party
 	s.save()
-	return nil, nil
+	return &StringReply{}, nil
 }
 
 func (s *Service) GetAccount(ga *GetAccount) (*GetAccountReply, error) {
@@ -78,7 +79,7 @@ func (s *Service) RegisterQuestionnaire(rq *RegisterQuestionnaire) (*StringReply
 	idStr := string(rq.Questionnaire.ID)
 	s.storage.Questionnaires[idStr] = &rq.Questionnaire
 	s.storage.Replies[idStr] = &Reply{}
-	return nil, nil
+	return &StringReply{}, nil
 }
 
 func (s *Service) ListQuestionnaires(lq *ListQuestionnaires) (*ListQuestionnairesReply, error) {
@@ -136,7 +137,7 @@ func (s *Service) AnswerQuestionnaire(aq *AnswerQuestionnaire) (*StringReply, er
 	r.Users = append(r.Users, aq.Account)
 	// TODO: send reard to account
 
-	return nil, nil
+	return &StringReply{}, nil
 }
 
 func (s *Service) TopupQuestionnaire(tq *TopupQuestionnaire) (*StringReply, error) {
@@ -145,20 +146,22 @@ func (s *Service) TopupQuestionnaire(tq *TopupQuestionnaire) (*StringReply, erro
 		return nil, errors.New("this questionnaire doesn't exist")
 	}
 	quest.Balance += tq.Topup
-	return nil, nil
+	return &StringReply{}, nil
 }
 
 func (s *Service) SendMessage(sm *SendMessage) (*StringReply, error) {
+	log.LLvl2(s.ServerIdentity(), sm.Message)
 	idStr := string(sm.Message.ID)
 	if msg := s.storage.Messages[idStr]; msg != nil {
 		return nil, errors.New("this message-ID already exists")
 	}
 	s.storage.Messages[idStr] = &sm.Message
 	s.storage.Read[idStr] = &readMsg{}
-	return nil, nil
+	return &StringReply{}, nil
 }
 
 func (s *Service) ListMessages(lm *ListMessages) (*ListMessagesReply, error) {
+	log.LLvl2(s.ServerIdentity(), lm)
 	var mreply []Message
 	for _, q := range s.storage.Messages {
 		mreply = append(mreply, *q)
@@ -183,6 +186,8 @@ func (s *Service) ListMessages(lm *ListMessages) (*ListMessagesReply, error) {
 	for _, msg := range mreply {
 		lmr.IDs = append(lmr.IDs, msg.ID)
 		lmr.Subjects = append(lmr.Subjects, msg.Subject)
+		lmr.Balances = append(lmr.Balances, msg.Balance)
+		lmr.Rewards = append(lmr.Rewards, msg.Reward)
 	}
 	return lmr, nil
 }
@@ -249,7 +254,7 @@ func (s *Service) TopupMessage(tm *TopupMessage) (*StringReply, error) {
 		return nil, errors.New("this message doesn't exist")
 	}
 	msg.Balance += tm.Amount
-	return nil, nil
+	return &StringReply{}, nil
 }
 
 func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {

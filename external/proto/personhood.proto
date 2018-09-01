@@ -108,6 +108,8 @@ message ListMessages {
 message ListMessagesReply {
   repeated string subjects = 1;
   repeated bytes ids = 2;
+  repeated uint64 balances = 3;
+  repeated uint64 rewards = 4;
 }
 
 message ReadMessage {

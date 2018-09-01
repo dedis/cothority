@@ -121,6 +121,8 @@ type ListMessages struct {
 type ListMessagesReply struct {
 	Subjects []string
 	IDs      [][]byte
+	Balances []uint64
+	Rewards  []uint64
 }
 
 type ReadMessage struct {
