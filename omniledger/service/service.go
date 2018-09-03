@@ -904,6 +904,8 @@ func (s *Service) TestClose() {
 		s.closedMutex.Unlock()
 		s.cleanupGoroutines()
 		s.working.Wait()
+	} else {
+		s.closedMutex.Unlock()
 	}
 }
 
