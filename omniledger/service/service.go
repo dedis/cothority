@@ -92,6 +92,10 @@ type Service struct {
 	darcToScMut sync.Mutex
 
 	stateChangeCache stateChangeCache
+
+	closed      bool
+	closedMutex sync.Mutex
+	working     sync.WaitGroup
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -500,6 +504,14 @@ func (s *Service) EnableViewChange() {
 func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duration) chan bool {
 	closeSignal := make(chan bool)
 	go func() {
+		s.closedMutex.Lock()
+		if s.closed {
+			s.closedMutex.Unlock()
+			return
+		}
+		s.working.Add(1)
+		s.closedMutex.Unlock()
+		defer s.working.Done()
 		defer s.pollChanWG.Done()
 		var txs []ClientTransaction
 		for {
@@ -837,6 +849,14 @@ func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity
 // back additional functionalities that need to be executed at every interval,
 // such as updating the heartbeat monitor and synchronising the state.
 func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, scID skipchain.SkipBlockID, latestID skipchain.SkipBlockID) []ClientTransaction {
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
+		return nil
+	}
+	s.working.Add(1)
+	s.closedMutex.Unlock()
+	defer s.working.Done()
 	actualLeader, err := s.getLeader(scID)
 	if err != nil {
 		log.Lvlf1("could not find a leader on %x with error %s", scID, err)
@@ -878,6 +898,16 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 // exported because we need it in tests, it should not be used in non-test code
 // outside of this package.
 func (s *Service) TestClose() {
+	s.closedMutex.Lock()
+	if !s.closed {
+		s.closed = true
+		s.closedMutex.Unlock()
+		s.cleanupGoroutines()
+		s.working.Wait()
+	}
+}
+
+func (s *Service) cleanupGoroutines() {
 	s.pollChanMut.Lock()
 	for k, c := range s.pollChan {
 		close(c)
@@ -894,6 +924,14 @@ func (s *Service) TestClose() {
 
 func (s *Service) monitorLeaderFailure() {
 	go func() {
+		s.closedMutex.Lock()
+		if s.closed {
+			s.closedMutex.Unlock()
+			return
+		}
+		s.working.Add(1)
+		s.closedMutex.Unlock()
+		defer s.working.Done()
 		// Here we empty the messages in heartbeatsClose. This is
 		// needed because tests may try to close the heartbeat monitor
 		// multiple times. Further, if there's already something in the
@@ -1081,7 +1119,7 @@ func (s *Service) tryLoad() error {
 	// NOTE: Usually tryLoad is only called when services start up. but for
 	// testing, we might re-initialise the service. So we need to clean up
 	// the go-routines.
-	s.TestClose()
+	s.cleanupGoroutines()
 
 	// Recreate the polling channles.
 	s.pollChanMut.Lock()

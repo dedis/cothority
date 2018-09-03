@@ -149,11 +149,18 @@ func (p *Propagate) Start() error {
 // Dispatch can handle timeouts
 func (p *Propagate) Dispatch() error {
 	process := true
+	var received int
 	log.Lvl4(p.ServerIdentity(), "Start dispatch")
 	defer p.Done()
+	defer func() {
+		if p.IsRoot() {
+			if p.onDoneCb != nil {
+				p.onDoneCb(received + 1)
+			}
+		}
+	}()
 
 	var gotSendData bool
-	var received int
 	var errs []error
 	subtreeCount := p.TreeNode().SubtreeCount()
 
@@ -226,11 +233,6 @@ func (p *Propagate) Dispatch() error {
 		}
 	}
 	log.Lvl3(p.ServerIdentity(), "done, isroot:", p.IsRoot())
-	if p.IsRoot() {
-		if p.onDoneCb != nil {
-			p.onDoneCb(received + 1)
-		}
-	}
 	return nil
 }
 
