@@ -21,6 +21,10 @@ install:
 
 script: cd external/js/$TEST_DIR && npm install && npm run test && npm run build
 
+cache:
+  directories:
+    - $HOME/.cache/go-build
+    - $HOME/.m2
 
 after_success:
   - npm run coveralls
@@ -40,7 +44,6 @@ matrix:
         - cd $TRAVIS_BUILD_DIR
 
       script:
-        - (cd conode/; make docker)
         - make test
 
     - language: java

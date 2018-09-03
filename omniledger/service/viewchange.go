@@ -49,21 +49,28 @@ func (m *viewChangeManager) addReq(req viewchange.InitReq) {
 	m.Lock()
 	defer m.Unlock()
 	c := m.controllers[string(req.View.Gen)]
-	c.AddReq(req)
+	// In theory c will never be nil, but if addReq happens after closeAll...
+	if c != nil {
+		c.AddReq(req)
+	}
 }
 
 func (m *viewChangeManager) addAnomaly(req viewchange.InitReq) {
 	m.Lock()
 	defer m.Unlock()
 	c := m.controllers[string(req.View.Gen)]
-	c.AddAnomaly(req)
+	if c != nil {
+		c.AddAnomaly(req)
+	}
 }
 
 func (m *viewChangeManager) done(view viewchange.View) {
 	m.Lock()
 	defer m.Unlock()
 	c := m.controllers[string(view.Gen)]
-	c.Done(view)
+	if c != nil {
+		c.Done(view)
+	}
 	log.Lvl3("view-change done for " + view.String())
 }
 
@@ -219,20 +226,20 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 	sb := s.db().GetByID(req.GetView().ID)
 	newRoster := rotateRoster(sb.Roster, req.GetView().LeaderIndex)
 	if !newRoster.List[0].Equal(s.ServerIdentity()) {
-		panic("startViewChangeCosi should not be called by non-leader")
+		return nil, errors.New("startViewChangeCosi should not be called by non-leader")
 	}
 	proto, err := s.CreateProtocol(viewChangeFtCosi, newRoster.GenerateBinaryTree())
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	payload, err := protobuf.Encode(&req)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	interval, err := s.LoadBlockInterval(req.GetView().ID)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	n := len(sb.Roster.List)

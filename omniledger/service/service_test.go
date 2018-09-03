@@ -354,24 +354,7 @@ func TestService_BadDataHeader(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestService_CloseAllDeadlock(t *testing.T) {
-	t.Skip("This is not a useful test; it is just here to document something Jeff struggled with for hours and doesn't want to forget for later.")
-
-	s := newSer(t, 1, testInterval)
-	defer s.local.CloseAll()
-	pr, err, err2 := sendTransaction(t, s, 0, dummyContract, 10)
-	require.NoError(t, err)
-	require.NoError(t, err2)
-	require.True(t, pr.InclusionProof.Match())
-
-	// TODO: Why is this required? Without it, CloseAll gets deadlocked instead
-	// of finishing correctly. It has something to do with startPolling being
-	// busy in createNewBlock instead of sleeping on select, so that it does not
-	// exit as fast as omniledger.Service.TestClose wants it to.
-	time.Sleep(s.interval)
-}
-
-func txResultsFromBlock(sb skipchain.SkipBlock) (TxResults, error) {
+func txResultsFromBlock(sb *skipchain.SkipBlock) (TxResults, error) {
 	var body DataBody
 	err := protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
@@ -405,7 +388,7 @@ func waitInclusion(t *testing.T, client int) {
 	require.True(t, pr.InclusionProof.Match())
 
 	// We expect to see both transactions in the block in pr.
-	txr, err := txResultsFromBlock(pr.Latest)
+	txr, err := txResultsFromBlock(&pr.Latest)
 	require.NoError(t, err)
 	require.Equal(t, len(txr), 2)
 
@@ -416,7 +399,7 @@ func waitInclusion(t *testing.T, client int) {
 
 	// We expect to see only the refused transaction in the block in pr.
 	require.True(t, len(pr.Latest.Payload) > 0)
-	txr, err = txResultsFromBlock(pr.Latest)
+	txr, err = txResultsFromBlock(&pr.Latest)
 	require.NoError(t, err)
 	require.Equal(t, len(txr), 1)
 	require.False(t, txr[0].Accepted)
@@ -430,15 +413,26 @@ func waitInclusion(t *testing.T, client int) {
 	require.True(t, pr.InclusionProof.Match())
 
 	// We expect to see the refused transaction and the good one in the block in pr.
-	txr, err = txResultsFromBlock(pr.Latest)
+	txr, err = txResultsFromBlock(&pr.Latest)
 	require.NoError(t, err)
-	require.Equal(t, len(txr), 2)
 
-	log.Lvl1("done with test")
+	if len(txr) == 1 {
+		// The good tx ended up in it's own block.
+		require.True(t, txr[0].Accepted)
 
-	// TODO: This sleep is required for the same reason as the problem
-	// documented in TestService_CloseAllDeadlock. How to fix it correctly?
-	time.Sleep(s.interval)
+		// Look in the previous block for the failed one.
+		prev := s.service().db().GetByID(pr.Latest.BackLinkIDs[0])
+		require.NotNil(t, prev)
+		txr, err = txResultsFromBlock(prev)
+		require.NoError(t, err)
+		require.Equal(t, len(txr), 1)
+		require.False(t, txr[0].Accepted)
+	} else {
+		// They are both in this block
+		require.Equal(t, len(txr), 2)
+		require.False(t, txr[0].Accepted)
+		require.True(t, txr[1].Accepted)
+	}
 }
 
 // Sends too many transactions to the ledger and waits for all blocks to be done.

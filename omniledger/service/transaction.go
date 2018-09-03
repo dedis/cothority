@@ -132,6 +132,7 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 		binary.LittleEndian.PutUint32(b[:], uint32(len(s.Signature)))
 		h.Write(b[:])
 		h.Write(s.Signature)
+		// TODO: Why not h.Write(s.Signer)
 	}
 	// Because there is no attacker-controlled input after what, we do not need
 	// domain separation here.
