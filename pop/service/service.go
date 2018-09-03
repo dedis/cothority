@@ -25,8 +25,6 @@ package service
 import (
 	"bytes"
 	"errors"
-	"fmt"
-	"math/big"
 	"strings"
 	"sync"
 	"time"
@@ -39,7 +37,6 @@ import (
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/suites"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -156,7 +153,8 @@ var ErrorReadPIN = errors.New("Read PIN in server-log")
 // correct pin, and if so, it stores the public key as reference.
 func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 	if req.Pin == "" {
-		s.data.Pin = fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
+		// s.data.Pin = fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
+		s.data.Pin = "1"
 		log.Info("PIN:", s.data.Pin)
 		return nil, ErrorReadPIN
 	}
