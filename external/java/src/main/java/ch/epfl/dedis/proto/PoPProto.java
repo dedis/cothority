@@ -19880,6 +19880,23 @@ public final class PoPProto {
      * <code>required bytes next = 4;</code>
      */
     com.google.protobuf.ByteString getNext();
+
+    /**
+     * <pre>
+     * Public key of service - can be nil.
+     * </pre>
+     *
+     * <code>required bytes service = 5;</code>
+     */
+    boolean hasService();
+    /**
+     * <pre>
+     * Public key of service - can be nil.
+     * </pre>
+     *
+     * <code>required bytes service = 5;</code>
+     */
+    com.google.protobuf.ByteString getService();
   }
   /**
    * <pre>
@@ -19901,6 +19918,7 @@ public final class PoPProto {
       state_ = 0;
       previous_ = com.google.protobuf.ByteString.EMPTY;
       next_ = com.google.protobuf.ByteString.EMPTY;
+      service_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -19957,6 +19975,11 @@ public final class PoPProto {
             case 34: {
               bitField0_ |= 0x00000008;
               next_ = input.readBytes();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              service_ = input.readBytes();
               break;
             }
           }
@@ -20097,6 +20120,29 @@ public final class PoPProto {
       return next_;
     }
 
+    public static final int SERVICE_FIELD_NUMBER = 5;
+    private com.google.protobuf.ByteString service_;
+    /**
+     * <pre>
+     * Public key of service - can be nil.
+     * </pre>
+     *
+     * <code>required bytes service = 5;</code>
+     */
+    public boolean hasService() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <pre>
+     * Public key of service - can be nil.
+     * </pre>
+     *
+     * <code>required bytes service = 5;</code>
+     */
+    public com.google.protobuf.ByteString getService() {
+      return service_;
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -20112,6 +20158,10 @@ public final class PoPProto {
         return false;
       }
       if (!hasNext()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasService()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -20139,6 +20189,9 @@ public final class PoPProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         output.writeBytes(4, next_);
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, service_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -20162,6 +20215,10 @@ public final class PoPProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(4, next_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, service_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -20199,6 +20256,11 @@ public final class PoPProto {
         result = result && getNext()
             .equals(other.getNext());
       }
+      result = result && (hasService() == other.hasService());
+      if (hasService()) {
+        result = result && getService()
+            .equals(other.getService());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -20225,6 +20287,10 @@ public final class PoPProto {
       if (hasNext()) {
         hash = (37 * hash) + NEXT_FIELD_NUMBER;
         hash = (53 * hash) + getNext().hashCode();
+      }
+      if (hasService()) {
+        hash = (37 * hash) + SERVICE_FIELD_NUMBER;
+        hash = (53 * hash) + getService().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -20372,6 +20438,8 @@ public final class PoPProto {
         bitField0_ = (bitField0_ & ~0x00000004);
         next_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000008);
+        service_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -20416,6 +20484,10 @@ public final class PoPProto {
           to_bitField0_ |= 0x00000008;
         }
         result.next_ = next_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.service_ = service_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -20470,6 +20542,9 @@ public final class PoPProto {
         if (other.hasNext()) {
           setNext(other.getNext());
         }
+        if (other.hasService()) {
+          setService(other.getService());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -20483,6 +20558,9 @@ public final class PoPProto {
           return false;
         }
         if (!hasNext()) {
+          return false;
+        }
+        if (!hasService()) {
           return false;
         }
         if (hasFinalstatement()) {
@@ -20840,6 +20918,57 @@ public final class PoPProto {
         onChanged();
         return this;
       }
+
+      private com.google.protobuf.ByteString service_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * Public key of service - can be nil.
+       * </pre>
+       *
+       * <code>required bytes service = 5;</code>
+       */
+      public boolean hasService() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <pre>
+       * Public key of service - can be nil.
+       * </pre>
+       *
+       * <code>required bytes service = 5;</code>
+       */
+      public com.google.protobuf.ByteString getService() {
+        return service_;
+      }
+      /**
+       * <pre>
+       * Public key of service - can be nil.
+       * </pre>
+       *
+       * <code>required bytes service = 5;</code>
+       */
+      public Builder setService(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        service_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Public key of service - can be nil.
+       * </pre>
+       *
+       * <code>required bytes service = 5;</code>
+       */
+      public Builder clearService() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        service_ = getDefaultInstance().getService();
+        onChanged();
+        return this;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
@@ -21099,10 +21228,11 @@ public final class PoPProto {
       "\002(\014\022\014\n\004keys\030\002 \003(\014\022\021\n\tsignature\030\003 \002(\014\"\020\n\016" +
       "StoreKeysReply\"\025\n\007GetKeys\022\n\n\002id\030\001 \002(\014\"(\n",
       "\014GetKeysReply\022\n\n\002id\030\001 \002(\014\022\014\n\004keys\030\002 \003(\014\"" +
-      "n\n\020PopPartyInstance\022\r\n\005state\030\001 \002(\021\022+\n\016fi" +
+      "\177\n\020PopPartyInstance\022\r\n\005state\030\001 \002(\021\022+\n\016fi" +
       "nalstatement\030\002 \001(\0132\023.pop.FinalStatement\022" +
-      "\020\n\010previous\030\003 \002(\014\022\014\n\004next\030\004 \002(\014B\037\n\023ch.ep" +
-      "fl.dedis.protoB\010PoPProto"
+      "\020\n\010previous\030\003 \002(\014\022\014\n\004next\030\004 \002(\014\022\017\n\007servi" +
+      "ce\030\005 \002(\014B\037\n\023ch.epfl.dedis.protoB\010PoPProt" +
+      "o"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -21308,7 +21438,7 @@ public final class PoPProto {
     internal_static_pop_PopPartyInstance_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_PopPartyInstance_descriptor,
-        new java.lang.String[] { "State", "Finalstatement", "Previous", "Next", });
+        new java.lang.String[] { "State", "Finalstatement", "Previous", "Next", "Service", });
     ch.epfl.dedis.proto.OnetProto.getDescriptor();
   }
 

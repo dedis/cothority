@@ -90,19 +90,9 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 			}
 
 			// TODO: check for aggregate signature of all organizers
-
 			ppi := PopPartyInstance{
 				State:          2,
 				FinalStatement: &fs,
-			}
-			ppiBuf, err := protobuf.Encode(&ppi)
-			if err != nil {
-				return nil, nil, errors.New("couldn't marshal PopPartyInstance: " + err.Error())
-			}
-
-			// Update existing final statement
-			scs = ol.StateChanges{
-				ol.NewStateChange(ol.Update, inst.InstanceID, ContractPopParty, ppiBuf, darcID),
 			}
 
 			for i, pub := range fs.Attendees {
@@ -124,23 +114,34 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 			// And add a service if the argument is given
 			sBuf := inst.Invoke.Args.Search("Service")
 			if sBuf != nil {
-				log.Lvl3("Appending service-darc and account")
-				pub := cothority.Suite.Point()
-				err = pub.UnmarshalBinary(sBuf)
+				log.LLvl3("Appending service-darc and account")
+				ppi.Service := cothority.Suite.Point()
+				err = ppi.Service.UnmarshalBinary(sBuf)
 				if err != nil {
 					return nil, nil, errors.New("couldn't unmarshal point: " + err.Error())
 				}
-				d, sc, err := createDarc(darcID, pub)
+				d, sc, err := createDarc(darcID, ppi.Service)
 				if err != nil {
 					return nil, nil, err
 				}
 				scs = append(scs, sc)
-				sc, err = createCoin(inst, d, pub, 0)
+				sc, err = createCoin(inst, d, ppi.Service, 0)
 				if err != nil {
 					return nil, nil, err
 				}
 				scs = append(scs, sc)
 			}
+
+			ppiBuf, err := protobuf.Encode(&ppi)
+			if err != nil {
+				return nil, nil, errors.New("couldn't marshal PopPartyInstance: " + err.Error())
+			}
+
+			// Update existing final statement
+			scs = ol.StateChanges{
+				ol.NewStateChange(ol.Update, inst.InstanceID, ContractPopParty, ppiBuf, darcID),
+			}
+
 			return scs, coins, nil
 		case "AddParty":
 			return nil, nil, errors.New("not yet implemented")

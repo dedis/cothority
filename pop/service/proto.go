@@ -246,4 +246,6 @@ type PopPartyInstance struct {
 	// Next is a link to the omniledger instanceID of the next party. It can be
 	// nil if there is no next party.
 	Next omniledger.InstanceID
+	// Public key of service - can be nil.
+	Service kyber.Point
 }

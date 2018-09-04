@@ -219,4 +219,6 @@ message PopPartyInstance {
   // Next is a link to the omniledger instanceID of the next party. It can be
   // nil if there is no next party.
   required bytes next = 4;
+  // Public key of service - can be nil.
+  required bytes service = 5;
 }
