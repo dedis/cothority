@@ -1,4 +1,4 @@
-package scarab
+package calypso
 
 import (
 	"testing"
@@ -20,27 +20,34 @@ func TestMain(m *testing.M) {
 func TestService_CreateLTS(t *testing.T) {
 	for _, nodes := range []int{3, 7, 10} {
 		func(nodes int) {
+			if nodes > 9 && testing.Short() {
+				log.Info("skipping, dkg might take too long")
+				return
+			}
 			s := newTS(t, nodes)
 			require.NotNil(t, s.ltsReply.LTSID)
 			require.NotNil(t, s.ltsReply.X)
-			defer s.Close()
+			defer s.closeAll(t)
 		}(nodes)
 	}
 }
 
 func TestContract_Write(t *testing.T) {
 	s := newTS(t, 5)
-	defer s.Close()
+	defer s.closeAll(t)
 
-	s.CreateGenesis(t)
 	pr := s.AddWriteAndWait(t, []byte("secret key"))
 	require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
 }
 
 func TestContract_Write_Benchmark(t *testing.T) {
+	if testing.Short() {
+		t.Skip("benchmark test might be too long for travis")
+	}
+
 	s := newTS(t, 5)
-	defer s.Close()
-	s.CreateGenesis(t)
+	defer s.closeAll(t)
+
 	totalTrans := 10
 	var times []time.Duration
 
@@ -74,19 +81,16 @@ func TestContract_Write_Benchmark(t *testing.T) {
 
 func TestContract_Read(t *testing.T) {
 	s := newTS(t, 5)
-	defer s.Close()
-	s.CreateGenesis(t)
+	defer s.closeAll(t)
 
 	prWrite := s.AddWriteAndWait(t, []byte("secret key"))
-	// s.AddRead(t, prWrite, &Read{})
 	pr := s.AddRead(t, prWrite, nil)
 	require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
 }
 
 func TestService_DecryptKey(t *testing.T) {
 	s := newTS(t, 5)
-	defer s.Close()
-	s.CreateGenesis(t)
+	defer s.closeAll(t)
 
 	key1 := []byte("secret key 1")
 	prWr1 := s.AddWriteAndWait(t, key1)
@@ -102,12 +106,14 @@ func TestService_DecryptKey(t *testing.T) {
 
 	dk1, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr1})
 	require.Nil(t, err)
+	require.True(t, dk1.X.Equal(s.ltsReply.X))
 	keyCopy1, err := DecodeKey(cothority.Suite, s.ltsReply.X, dk1.Cs, dk1.XhatEnc, s.signer.Ed25519.Secret)
 	require.Nil(t, err)
 	require.Equal(t, key1, keyCopy1)
 
 	dk2, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe2, Write: *prWr2})
 	require.Nil(t, err)
+	require.True(t, dk2.X.Equal(s.ltsReply.X))
 	keyCopy2, err := DecodeKey(cothority.Suite, s.ltsReply.X, dk2.Cs, dk2.XhatEnc, s.signer.Ed25519.Secret)
 	require.Nil(t, err)
 	require.Equal(t, key2, keyCopy2)
@@ -167,7 +173,7 @@ func newTS(t *testing.T, nodes int) ts {
 	s.local = onet.NewLocalTestT(cothority.Suite, t)
 
 	s.servers, s.roster, _ = s.local.GenTree(nodes, true)
-	services := s.local.GetServices(s.servers, scarabID)
+	services := s.local.GetServices(s.servers, calypsoID)
 	for _, ser := range services {
 		s.services = append(s.services, ser.(*Service))
 	}
@@ -177,31 +183,23 @@ func newTS(t *testing.T, nodes int) ts {
 	require.Nil(t, err)
 	log.Lvl2("Done setting up dkg")
 	s.signer = darc.NewSignerEd25519(nil, nil)
+
+	s.createGenesis(t)
 	return s
 }
 
-func (s *ts) Close() {
-	for _, service := range s.local.GetServices(s.servers, ol.OmniledgerID) {
-		service.(*ol.Service).TestClose()
-	}
-	s.local.WaitDone(time.Second)
-	s.local.CloseAll()
-}
-
-func (s *ts) CreateGenesis(t *testing.T) {
+func (s *ts) createGenesis(t *testing.T) {
 	s.cl = ol.NewClient()
 
 	var err error
 	s.genesisMsg, err = ol.DefaultGenesisMsg(ol.CurrentVersion, s.roster,
-		[]string{"spawn:scarabWrite", "spawn:scarabRead"}, s.signer.Identity())
+		[]string{"spawn:" + ContractWriteID, "spawn:" + ContractReadID}, s.signer.Identity())
 	require.Nil(t, err)
 	s.gDarc = &s.genesisMsg.GenesisDarc
-
-	s.genesisMsg.BlockInterval = time.Second / 2
+	s.genesisMsg.BlockInterval = time.Second
 
 	s.gbReply, err = s.cl.CreateGenesisBlock(s.genesisMsg)
 	require.Nil(t, err)
-
 }
 
 func (s *ts) AddWriteAndWait(t *testing.T, key []byte) *ol.Proof {
@@ -232,4 +230,9 @@ func (s *ts) AddWrite(t *testing.T, key []byte) ol.InstanceID {
 	_, err = s.cl.AddTransaction(ctx)
 	require.Nil(t, err)
 	return ctx.Instructions[0].DeriveID("")
+}
+
+func (s *ts) closeAll(t *testing.T) {
+	require.Nil(t, s.cl.Close())
+	s.local.CloseAll()
 }

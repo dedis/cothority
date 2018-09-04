@@ -1,15 +1,12 @@
-package scarab
+package calypso
 
 import (
 	"crypto/sha256"
 	"errors"
 
 	"github.com/dedis/cothority/omniledger/darc"
-	ol "github.com/dedis/cothority/omniledger/service"
-	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/suites"
-	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 )
@@ -24,11 +21,10 @@ type suite interface {
 	kyber.XOFFactory
 }
 
-// NewWrite is used by the writer to an onchain-secret skipchain
-// to encode his symmetric key under the collective public key created
-// by the DKG.
-// As this method uses `Embed` to encode the key, depending on the key-length
-// more than one point is needed to encode the data.
+// NewWrite is used by the writer to OmniLedger to encode his symmetric key
+// under the collective public key created by the DKG. As this method uses
+// `Embed` to encode the key, depending on the key-length more than one point
+// is needed to encode the data.
 //
 // Input:
 //   - suite - the cryptographic suite to use
@@ -109,9 +105,8 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 	return errors.New("recreated proof is not equal to stored proof")
 }
 
-// EncodeKey can be used by the writer to an onchain-secret skipchain
-// to encode his symmetric key under the collective public key created
-// by the DKG.
+// EncodeKey can be used by the writer to OmniLedger to encode his symmetric
+// key under the collective public key created by the DKG.
 // As this method uses `Pick` to encode the key, depending on the key-length
 // more than one point is needed to encode the data.
 //
@@ -126,25 +121,25 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs []kyber.Point) {
 	r := suite.Scalar().Pick(suite.RandomStream())
 	C := suite.Point().Mul(r, X)
-	log.Lvl3("C:", C.String())
+	log.Lvl4("C:", C.String())
 	U = suite.Point().Mul(r, nil)
-	log.Lvl3("U is:", U.String())
+	log.Lvl4("U is:", U.String())
 
 	for len(key) > 0 {
 		var kp kyber.Point
 		kp = suite.Point().Embed(key, suite.RandomStream())
-		log.Lvl3("Keypoint:", kp.String())
-		log.Lvl3("X:", X.String())
+		log.Lvl4("Keypoint:", kp.String())
+		log.Lvl4("X:", X.String())
 		Cs = append(Cs, suite.Point().Add(C, kp))
-		log.Lvl3("Cs:", C.String())
+		log.Lvl4("Cs:", C.String())
 		key = key[min(len(key), kp.EmbedLen()):]
 	}
 	return
 }
 
-// DecodeKey can be used by the reader of an onchain-secret to convert the
-// re-encrypted secret back to a symmetric key that can be used later to
-// decode the document.
+// DecodeKey can be used by the reader of OmniLedger to convert the
+// re-encrypted secret back to a symmetric key that can be used later to decode
+// the document.
 //
 // Input:
 //   - suite - the cryptographic suite to use
@@ -158,131 +153,31 @@ func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs
 //   - err - an eventual error when trying to recover the data from the points
 func DecodeKey(suite kyber.Group, X kyber.Point, Cs []kyber.Point, XhatEnc kyber.Point,
 	xc kyber.Scalar) (key []byte, err error) {
-	log.Lvl3("xc:", xc)
+	log.Lvl4("xc:", xc)
 	xcInv := suite.Scalar().Neg(xc)
-	log.Lvl3("xcInv:", xcInv)
+	log.Lvl4("xcInv:", xcInv)
 	sum := suite.Scalar().Add(xc, xcInv)
-	log.Lvl3("xc + xcInv:", sum, "::", xc)
-	log.Lvl3("X:", X)
+	log.Lvl4("xc + xcInv:", sum, "::", xc)
+	log.Lvl4("X:", X)
 	XhatDec := suite.Point().Mul(xcInv, X)
-	log.Lvl3("XhatDec:", XhatDec)
-	log.Lvl3("XhatEnc:", XhatEnc)
+	log.Lvl4("XhatDec:", XhatDec)
+	log.Lvl4("XhatEnc:", XhatEnc)
 	Xhat := suite.Point().Add(XhatEnc, XhatDec)
-	log.Lvl3("Xhat:", Xhat)
+	log.Lvl4("Xhat:", Xhat)
 	XhatInv := suite.Point().Neg(Xhat)
-	log.Lvl3("XhatInv:", XhatInv)
+	log.Lvl4("XhatInv:", XhatInv)
 
 	// Decrypt Cs to keyPointHat
 	for _, C := range Cs {
-		log.Lvl3("C:", C)
+		log.Lvl4("C:", C)
 		keyPointHat := suite.Point().Add(C, XhatInv)
-		log.Lvl3("keyPointHat:", keyPointHat)
+		log.Lvl4("keyPointHat:", keyPointHat)
 		keyPart, err := keyPointHat.Data()
-		log.Lvl3("keyPart:", keyPart)
+		log.Lvl4("keyPart:", keyPart)
 		if err != nil {
 			return nil, err
 		}
 		key = append(key, keyPart...)
 	}
 	return
-}
-
-// PROTOSTART
-// import "skipblock.proto";
-// import "darc.proto";
-// import "roster.proto";
-//
-// option java_package = "ch.epfl.dedis.proto";
-// option java_outer_classname = "Scarab";
-
-// ***
-// Common structures
-// ***
-
-// Write is the data stored in a write instance. It stores a reference to the LTS
-// used and the encrypted secret.
-type Write struct {
-	// Data should be encrypted by the application under the symmetric key in U and Cs
-	Data []byte
-	// U is the encrypted random value for the ElGamal encryption
-	U kyber.Point
-	// Ubar, E and f will be used by the server to verify the writer did
-	// correctly encrypt the key. It binds the policy (the darc) with the
-	// cyphertext.
-	// Ubar is used for the log-equality proof
-	Ubar kyber.Point
-	// E is the non-interactive challenge as scalar
-	E kyber.Scalar
-	// f is the proof - written in uppercase here so it is an exported field,
-	// but in the OCS-paper it's lowercase.
-	F kyber.Scalar
-	// Cs are the ElGamal parts for the symmetric key material (might
-	// also contain an IV)
-	Cs []kyber.Point
-	// ExtraData is clear text and application-specific
-	ExtraData *[]byte
-	// LTSID points to the identity of the lts group
-	LTSID []byte
-}
-
-// Read is the data stored in a read instance. It has a pointer to the write
-// instance and the public key used to create the read instance.
-type Read struct {
-	Write ol.InstanceID
-	Xc    kyber.Point
-}
-
-// ***
-// These are the messages used in the API-calls
-// ***
-
-// CreateLTS is used to start a DKG and store the private keys in each node.
-type CreateLTS struct {
-	// Roster is the list of nodes that should participate in the DKG.
-	Roster onet.Roster
-	// OLID is the ID of the OmniLedger that can use this LTS.
-	OLID skipchain.SkipBlockID
-}
-
-// CreateLTSReply is returned upon successfully setting up the distributed
-// key.
-type CreateLTSReply struct {
-	// LTSID is a random 32-byte slice that represents the LTS.
-	LTSID []byte
-	// X is the public key of the LTS.
-	X kyber.Point
-	// TODO: can we remove the LTSID and only use the public key to identify
-	// an LTS?
-}
-
-// DecryptKey is sent by a reader after he successfully stored a 'Read' request
-// in omniledger.
-type DecryptKey struct {
-	// Read is the proof that he has been accepted to read the secret.
-	Read ol.Proof
-	// Write is the proof containing the write request.
-	Write ol.Proof
-}
-
-// DecryptKeyReply is returned if the service verified successfully that the
-// decryption request is valid.
-type DecryptKeyReply struct {
-	// Cs are the secrets re-encrypted under the reader's public key.
-	Cs []kyber.Point
-	// XhatEnc is the random part of the encryption.
-	XhatEnc kyber.Point
-	// X is the aggregate public key of the LTS used.
-	X kyber.Point
-}
-
-// SharedPublic asks for the shared public key of the corresponding LTSID
-type SharedPublic struct {
-	// LTSID is the id of the LTS instance created.
-	LTSID []byte
-}
-
-// SharedPublicReply sends back the shared public key.
-type SharedPublicReply struct {
-	// X is the distributed public key.
-	X kyber.Point
 }

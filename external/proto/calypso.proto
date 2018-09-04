@@ -1,0 +1,99 @@
+syntax = "proto2";
+package calypso;
+import "omniledger.proto";
+import "onet.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "Calypso";
+
+// ***
+// Common structures
+// ***
+
+// Write is the data stored in a write instance. It stores a reference to the LTS
+// used and the encrypted secret.
+message Write {
+  // Data should be encrypted by the application under the symmetric key in U and Cs
+  required bytes data = 1;
+  // U is the encrypted random value for the ElGamal encryption
+  required bytes u = 2;
+  // Ubar, E and f will be used by the server to verify the writer did
+  // correctly encrypt the key. It binds the policy (the darc) with the
+  // cyphertext.
+  // Ubar is used for the log-equality proof
+  required bytes ubar = 3;
+  // E is the non-interactive challenge as scalar
+  required bytes e = 4;
+  // f is the proof - written in uppercase here so it is an exported field,
+  // but in the OCS-paper it's lowercase.
+  required bytes f = 5;
+  // Cs are the ElGamal parts for the symmetric key material (might
+  // also contain an IV)
+  repeated bytes cs = 6;
+  // ExtraData is clear text and application-specific
+  optional bytes extradata = 7;
+  // LTSID points to the identity of the lts group
+  required bytes ltsid = 8;
+}
+
+// Read is the data stored in a read instance. It has a pointer to the write
+// instance and the public key used to create the read instance.
+message Read {
+  required bytes write = 1;
+  required bytes xc = 2;
+}
+
+// ***
+// These are the messages used in the API-calls
+// ***
+
+// CreateLTS is used to start a DKG and store the private keys in each node.
+message CreateLTS {
+  // Roster is the list of nodes that should participate in the DKG.
+  required onet.Roster roster = 1;
+  // OLID is the ID of the OmniLedger that can use this LTS.
+  required bytes olid = 2;
+}
+
+// CreateLTSReply is returned upon successfully setting up the distributed
+// key.
+message CreateLTSReply {
+  // LTSID is a random 32-byte slice that represents the LTS.
+  required bytes ltsid = 1;
+  // X is the public key of the LTS.
+  required bytes x = 2;
+  // TODO: can we remove the LTSID and only use the public key to identify
+  // an LTS?
+}
+
+// DecryptKey is sent by a reader after he successfully stored a 'Read' request
+// in omniledger.
+message DecryptKey {
+  // Read is the proof that he has been accepted to read the secret.
+  required omniledger.Proof read = 1;
+  // Write is the proof containing the write request.
+  required omniledger.Proof write = 2;
+}
+
+// DecryptKeyReply is returned if the service verified successfully that the
+// decryption request is valid.
+message DecryptKeyReply {
+  // Cs are the secrets re-encrypted under the reader's public key.
+  repeated bytes cs = 1;
+  // XhatEnc is the random part of the encryption.
+  required bytes xhatenc = 2;
+  // X is the aggregate public key of the LTS used.
+  required bytes x = 3;
+}
+
+// SharedPublic asks for the shared public key of the corresponding LTSID
+message SharedPublic {
+  // LTSID is the id of the LTS instance created.
+  required bytes ltsid = 1;
+}
+
+// SharedPublicReply sends back the shared public key.
+message SharedPublicReply {
+  // X is the distributed public key.
+  required bytes x = 1;
+}

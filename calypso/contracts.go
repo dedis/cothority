@@ -1,4 +1,4 @@
-package scarab
+package calypso
 
 import (
 	"errors"
@@ -12,14 +12,14 @@ import (
 )
 
 // ContractWriteID references a write contract system-wide.
-var ContractWriteID = "scarabWrite"
+var ContractWriteID = "calypsoWrite"
 
 // ContractWrite is used to store a secret in OmniLedger, so that an
 // authorized reader can retrieve it by creating a Read-instance.
 //
 // Accepted Instructions:
-//  - spawn:scarabWrite creates a new write-request. TODO: verify the LTS exists
-//  - spawn:scarabRead creates a new read-request for this write-request.
+//  - spawn:calypsoWrite creates a new write-request. TODO: verify the LTS exists
+//  - spawn:calypsoRead creates a new read-request for this write-request.
 func (s *Service) ContractWrite(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) ([]ol.StateChange, []ol.Coin, error) {
 	err := inst.VerifyDarcSignature(cdb)
 	if err != nil {
@@ -71,12 +71,12 @@ func (s *Service) ContractWrite(cdb ol.CollectionView, inst ol.Instruction, c []
 }
 
 // ContractReadID references a read contract system-wide.
-var ContractReadID = "scarabRead"
+var ContractReadID = "calypsoRead"
 
 // ContractRead is used to create read instances that prove a reader has access
 // to a given write instance. The following instructions are accepted:
 //
-//  - spawn:scarabRead which does some health-checks to make sure that the read
+//  - spawn:calypsoRead which does some health-checks to make sure that the read
 //  request is valid.
 //
 // TODO: correctly handle multi signatures for read requests: to whom should the

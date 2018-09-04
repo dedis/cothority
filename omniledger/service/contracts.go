@@ -268,7 +268,7 @@ func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coi
 
 		c, found := s.contracts[inst.Spawn.ContractID]
 		if !found {
-			return nil, nil, errors.New("couldn't find this contract type")
+			return nil, nil, errors.New("couldn't find this contract type: " + inst.Spawn.ContractID)
 		}
 		return c(cdb, inst, coins)
 

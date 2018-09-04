@@ -11,6 +11,4 @@ cosi/simulation/build/
 cosi/simulation/test_data/
 *~
 .tags*
-*/build
-simulation/build
-.travis.yml.*
+*/build/

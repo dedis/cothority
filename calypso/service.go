@@ -1,11 +1,13 @@
-// Package scarab implements the LTS functionality of the Scarab paper.
-// It implements both the Access Control (AC) and the Secret Caring (SC):
-//  - AC is implemented using OmniLedger with two contracts, `Write` and `Read`
-//  - SC uses an onet service with methods to set up a Long Term Secret (LTS)
-//   distributed key and to request a re-encryption
+// Package calypso implements the LTS functionality of the Calypso paper. It
+// implements both the access-control cothority and the secret management
+// cothority. (1) The access-control cothority is implemented using OmniLedger
+// with two contracts, `Write` and `Read` (2) The secret-management cothority
+// uses an onet service with methods to set up a Long Term Secret (LTS)
+// distributed key and to request a re-encryption
 //
-// For more details, see https://github.com/dedis/cothority/tree/master/scarab/README.md
-package scarab
+// For more details, see
+// https://github.com/dedis/cothority/tree/master/calypso/README.md
+package calypso
 
 import (
 	"bytes"
@@ -29,22 +31,22 @@ import (
 )
 
 // Used for tests
-var scarabID onet.ServiceID
+var calypsoID onet.ServiceID
 
-// ServiceName of the SC part of Scarab.
-var ServiceName = "scarab"
+// ServiceName of the secret-management part of Calypso.
+var ServiceName = "calypso"
 
 // dkgTimeout is how long the system waits for the DKG to finish
 const propagationTimeout = 10 * time.Second
 
 func init() {
 	var err error
-	scarabID, err = onet.RegisterNewService(ServiceName, newService)
+	calypsoID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
 	network.RegisterMessages(&storage{}, &vData{})
 }
 
-// Service is our scarab-service. It stores all created LTSs.
+// Service is our calypso-service. It stores all created LTSs.
 type Service struct {
 	*onet.ServiceProcessor
 	saveMutex sync.Mutex
@@ -173,6 +175,7 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	}
 	ocsProto.Xc = read.Xc
 	log.Lvlf2("Public key is: %s", ocsProto.Xc)
+	// TODO change to protobuf.Encode/Decode
 	ocsProto.VerificationData, err = network.Marshal(verificationData)
 	if err != nil {
 		return nil, errors.New("couldn't marshal verificationdata: " + err.Error())
@@ -342,7 +345,7 @@ func (s *Service) tryLoad() error {
 	var ok bool
 	s.storage, ok = msg.(*storage)
 	if !ok {
-		return errors.New("Data of wrong type")
+		return errors.New("data of wrong type")
 	}
 	return nil
 }
@@ -355,7 +358,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
 	if err := s.RegisterHandlers(s.CreateLTS, s.DecryptKey); err != nil {
-		return nil, errors.New("Couldn't register messages")
+		return nil, errors.New("couldn't register messages")
 	}
 	ol.RegisterContract(c, ContractWriteID, s.ContractWrite)
 	ol.RegisterContract(c, ContractReadID, s.ContractRead)

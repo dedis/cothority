@@ -104,15 +104,9 @@ func (bft *ByzCoinX) Start() error {
 
 func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.FtCosi, error) {
 	var name string
-	var timeout time.Duration
 	if phase == phasePrep {
-		// give 3/4 of the total timeout for the prepare phase,
-		// as we suppose that the verification method is longer
-		// than the network transmission time.
-		timeout = bft.Timeout * 3 / 4
 		name = bft.prepCosiProtoName
 	} else if phase == phaseCommit {
-		timeout = bft.Timeout / 4
 		name = bft.commitCosiProtoName
 	} else {
 		return nil, fmt.Errorf("invalid phase %v", phase)
@@ -129,7 +123,7 @@ func (bft *ByzCoinX) initCosiProtocol(phase phase) (*protocol.FtCosi, error) {
 	cosiProto.Data = bft.Data
 	cosiProto.Threshold = bft.Threshold
 	// For each of the prepare and commit phase we get half of the time.
-	cosiProto.Timeout = timeout
+	cosiProto.Timeout = bft.Timeout / 2
 
 	return cosiProto, nil
 }
