@@ -211,7 +211,13 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		return nil, errors.New("skipchain ID is does not exist")
 	}
 
-	s.txBuffer.add(string(req.SkipchainID), req.Transaction)
+	// Note to my future self: s.txBuffer.add used to be out here. It used to work
+	// even. But while investigating other race conditions, we realized that
+	// IF there will be a wait channel, THEN it must exist before the call to add().
+	// If add() comes first, there's a race condition where the block could theoretically
+	// be created and (not) notified before the wait channel is created. Moving
+	// add() after createWaitChannel() solves this, but then we need a second add() for the
+	// no inclusion wait case.
 
 	if req.InclusionWait > 0 {
 		// Wait for InclusionWait new blocks and look if our transaction is in it.
@@ -219,18 +225,44 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		if err != nil {
 			return nil, errors.New("couldn't get collectionView: " + err.Error())
 		}
+
 		ctxHash := req.Transaction.Instructions.Hash()
 		ch := s.state.createWaitChannel(ctxHash)
 		defer s.state.deleteWaitChannel(ctxHash)
-		select {
-		case success := <-ch:
-			if !success {
-				return nil, errors.New("transaction is in block, but got refused")
+
+		blockCh := make(chan skipchain.SkipBlockID, 10)
+		z := s.state.registerForBlocks(blockCh)
+		defer s.state.unregisterForBlocks(z)
+
+		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
+
+		tooLongDur := time.Duration(req.InclusionWait) * interval * 10
+		tooLong := time.After(tooLongDur)
+
+		blocksLeft := req.InclusionWait
+
+		for found := false; !found; {
+			select {
+			case success := <-ch:
+				if !success {
+					return nil, errors.New("transaction is in block, but got refused")
+				}
+				found = true
+			case id := <-blockCh:
+				if id.Equal(req.SkipchainID) {
+					blocksLeft--
+				}
+				if blocksLeft == 0 {
+					return nil, fmt.Errorf("did not find transaction after %v blocks", req.InclusionWait)
+				}
+			case <-tooLong:
+				return nil, fmt.Errorf("did not observe %v blocks after %v", req.InclusionWait, tooLongDur)
 			}
-		case <-time.After(time.Duration(req.InclusionWait) * interval):
-			return nil, fmt.Errorf("didn't find transaction in %v blocks", req.InclusionWait)
 		}
+	} else {
+		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 	}
+
 	return &AddTxResponse{
 		Version: CurrentVersion,
 	}, nil
@@ -406,6 +438,7 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 	for _, t := range body.TxResults {
 		s.state.informWaitChannel(t.ClientTransaction.Instructions.Hash(), t.Accepted)
 	}
+	s.state.informBlock(sb.SkipChainID())
 
 	// check whether the heartbeat monitor exists, if it doesn't we start a
 	// new one
@@ -535,8 +568,11 @@ func (s *Service) skService() *skipchain.Service {
 
 func (s *Service) isLeader(view viewchange.View) bool {
 	sb := s.db().GetByID(view.ID)
-	sid := sb.Roster.List[view.LeaderIndex]
-	return sid.ID.Equal(s.ServerIdentity().ID)
+	if view.LeaderIndex < len(sb.Roster.List) {
+		sid := sb.Roster.List[view.LeaderIndex]
+		return sid.ID.Equal(s.ServerIdentity().ID)
+	}
+	return false
 }
 
 // gives us access to the skipchain's database, so we can get blocks by ID
