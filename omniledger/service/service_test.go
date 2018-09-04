@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"math"
 	"testing"
 	"time"
 
@@ -93,10 +94,7 @@ func TestService_AddTransaction_WithFailure(t *testing.T) {
 }
 
 func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
-	// for {
-	// 	log.Print("Starting test")
 	testAddTransaction(t, 1, true)
-	// }
 }
 
 func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
@@ -132,11 +130,13 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 
 	if failure {
 		// kill a child conode and adding tx should still succeed
+		s.services[len(s.hosts)-1].TestClose()
 		s.hosts[len(s.hosts)-1].Pause()
 	}
 
 	// the operations below should succeed
 	// add the first tx
+	log.Lvl1("adding the first tx")
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
 	require.Nil(t, err)
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
@@ -149,6 +149,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
 	// add the second tx
+	log.Lvl1("adding the second tx")
 	value2 := []byte("value2")
 	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, value2, s.signer)
 	require.Nil(t, err)
@@ -162,12 +163,13 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	require.Equal(t, CurrentVersion, akvresp.Version)
 
 	// try to read the transaction back again
+	log.Lvl1("reading the transactions back")
 	txs := []ClientTransaction{tx1, tx2}
 	for i := 0; i < 2; i++ {
 		if i == 1 {
 			// Now read the key/values from a new service
 			log.Lvl1("Recreate services and fetch keys again")
-			require.NoError(t, s.service().tryLoad())
+			require.NoError(t, s.service().startAllChains())
 		}
 		for _, tx := range txs {
 			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), 0)
@@ -183,7 +185,11 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 
 	// Bring the failed node back up and it should also see the transactions.
 	if failure {
+		log.Lvl1("bringing the failed node back up")
+		s.services[len(s.hosts)-1].closed = false
 		s.hosts[len(s.hosts)-1].Unpause()
+		require.NoError(t, s.services[len(s.hosts)-1].startAllChains())
+
 		time.Sleep(s.interval)
 		for _, tx := range txs {
 			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), len(s.hosts)-1)
@@ -888,24 +894,30 @@ func TestService_SetBadConfig(t *testing.T) {
 // nFailures) should poll for new transactions and eventually make a new block
 // containing that transaction. The new transaction should be stored on all
 // followers. Finally, we bring the failed nodes back up and they should
-// contain the transactions that they missed (TODO this does not work yet
-// because the config contract fails).
+// contain the transactions that they missed.
 func TestService_ViewChange(t *testing.T) {
-	testViewChange(t, 4, 1)
+	testViewChange(t, 4, 1, 2*time.Second)
 }
 
-func testViewChange(t *testing.T, nHosts, nFailures int) {
-	interval := 2 * time.Second
+func TestService_ViewChange2(t *testing.T) {
+	if testing.Short() {
+		t.Skip("doesn't work on travis correctly due to byzcoinx timeout issue, see #1428")
+	}
+	testViewChange(t, 7, 2, 2*time.Second)
+}
+
+func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration) {
 	s := newSerN(t, 1, interval, nHosts, true)
 	defer s.local.CloseAll()
 
 	for _, service := range s.services {
-		service.SetPropagationTimeout(interval / 2)
+		service.SetPropagationTimeout(2 * interval)
 	}
 
 	// Stop the first nFailures hosts then the node at index nFailures
 	// should take over.
 	for i := 0; i < nFailures; i++ {
+		log.Lvl1("stopping node at index", i)
 		s.services[i].TestClose()
 		s.hosts[i].Pause()
 	}
@@ -914,7 +926,9 @@ func testViewChange(t *testing.T, nHosts, nFailures int) {
 	// has taken over. First, we sleep for the duration that an honest node
 	// will wait before starting a view-change. Then, we sleep a little
 	// longer for the view-change transaction to be stored in the block.
-	time.Sleep(time.Duration(nFailures) * s.interval * rotationWindow)
+	for i := 1; i <= nFailures; i++ {
+		time.Sleep(time.Duration(math.Pow(2, float64(i))) * s.interval * rotationWindow)
+	}
 	time.Sleep(interval)
 	config, err := s.services[nFailures].LoadConfig(s.sb.SkipChainID())
 	require.NoError(t, err)
@@ -946,8 +960,18 @@ func testViewChange(t *testing.T, nHosts, nFailures int) {
 		require.True(t, pr.InclusionProof.Match())
 	}
 
-	// TODO we need to bring the failed (the first nFailures) nodes back up
-	// and check that they can synchronise to the latest state.
+	// We need to bring the failed (the first nFailures) nodes back up and
+	// check that they can synchronise to the latest state.
+	for i := 0; i < nFailures; i++ {
+		log.Lvl1("starting node at index", i)
+		s.services[i].closed = false
+		s.hosts[i].Unpause()
+		require.NoError(t, s.services[i].startAllChains())
+	}
+	for i := 0; i < nFailures; i++ {
+		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
+		require.True(t, pr.InclusionProof.Match())
+	}
 }
 
 func TestService_DarcToSc(t *testing.T) {
@@ -965,7 +989,7 @@ func TestService_DarcToSc(t *testing.T) {
 	// remove the mapping and then load it again
 	for _, service := range s.services {
 		service.darcToSc = make(map[string]skipchain.SkipBlockID)
-		require.NoError(t, service.tryLoad())
+		require.NoError(t, service.startAllChains())
 	}
 
 	// check that the mapping is still correct
@@ -1189,12 +1213,6 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 		s.services = append(s.services, service)
 	}
 	registerDummy(s.hosts)
-
-	if viewchange {
-		for _, service := range s.services {
-			service.EnableViewChange()
-		}
-	}
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
 		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config", "spawn:slow", "spawn:stateShangeCacheTest"}, s.signer.Identity())

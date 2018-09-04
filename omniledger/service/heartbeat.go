@@ -60,15 +60,7 @@ func (r *heartbeats) closeAll() {
 		c.closeChan <- true
 	}
 	r.wg.Wait()
-}
-
-func (r *heartbeats) enabled() bool {
-	r.Lock()
-	defer r.Unlock()
-	if r.heartbeatMap == nil {
-		return false
-	}
-	return true
+	r.heartbeatMap = make(map[string]heartbeat)
 }
 
 func (r *heartbeats) exists(key string) bool {

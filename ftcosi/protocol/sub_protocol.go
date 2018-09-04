@@ -176,11 +176,13 @@ func (p *SubFtCosi) Dispatch() error {
 	var challengeMask *cosi.Mask                                   // the mask received in the challenge, set only if not root.
 	var childrenCanResponse = make([]*onet.TreeNode, 0)            // the list of children that can send a response. That is the list of children present in the challenge mask.
 
-	var NRefusal = 0                  // number of refusal received. Will be used only for the subleader
-	var firstCommitmentSent = false   // to avoid sending the quick commitment multiple times
-	var verificationDone = false      // to send the aggregate commitment only once this node has done its verification
-	var timedOut = false              // to refuse new commitments once it times out
-	var t = time.After(p.Timeout / 2) // the timeout
+	var refusalCount = 0            // number of refusal received. Will be used only for the subleader
+	var firstCommitmentSent = false // to avoid sending the quick commitment multiple times
+	var verificationDone = false    // to send the aggregate commitment only once this node has done its verification
+	var timedOut = false            // to refuse new commitments once it times out
+	commitTimeout := p.Timeout / 2
+	responseTimeout := p.Timeout / 2
+	var t = time.After(commitTimeout) // the timeout for the commitment phase
 
 	copy(nodesCanCommit, p.Children())
 	if p.IsRoot() {
@@ -238,7 +240,7 @@ loop:
 
 				// checks if commitment is a refusal or acceptance
 				if commitment.CoSiCommitment.Equal(p.suite.Point().Null()) { // refusal
-					NRefusal++
+					refusalCount++
 					if p.IsLeaf() {
 						log.Warn(p.ServerIdentity(), "leaf refused Commitment, marking as not signed")
 						return p.sendAggregatedCommitments([]StructCommitment{}, 1)
@@ -254,14 +256,14 @@ loop:
 				// checks if threshold is reached or unreachable
 				quickAnswer := !firstCommitmentSent &&
 					(len(commitments) >= p.Threshold || // quick valid answer
-						NRefusal >= thresholdRefusal) // quick refusal answer
+						refusalCount >= thresholdRefusal) // quick refusal answer
 
 				// checks if every child and himself committed
-				finalAnswer := len(commitments)+NRefusal == len(p.Children())+1
+				finalAnswer := len(commitments)+refusalCount == len(p.Children())+1
 
 				if (quickAnswer || finalAnswer) && verificationDone {
 
-					err = p.sendAggregatedCommitments(commitments, NRefusal)
+					err = p.sendAggregatedCommitments(commitments, refusalCount)
 					if err != nil {
 						return err
 					}
@@ -275,9 +277,9 @@ loop:
 				}
 
 				// security check
-				if len(commitments)+NRefusal > maxThreshold {
+				if len(commitments)+refusalCount > maxThreshold {
 					log.Error(p.ServerIdentity(), "more commitments (", len(commitments),
-						") and refusals (", NRefusal, ") than possible in subleader (", maxThreshold, ")")
+						") and refusals (", refusalCount, ") than possible in subleader (", maxThreshold, ")")
 				}
 			}
 		case challenge, channelOpen = <-p.ChannelChallenge:
@@ -334,10 +336,11 @@ loop:
 				p.subleaderNotResponding <- true
 				return nil
 			}
-			log.Warn(p.ServerIdentity(), "timed out while waiting for commits, got", len(commitments), "commitments and", NRefusal, "refusals")
+			log.Warnf("%s timed out after %s while waiting for commits, got %d commitments and %d refusals",
+				p.ServerIdentity(), commitTimeout, len(commitments), refusalCount)
 
 			// sending commits received
-			err = p.sendAggregatedCommitments(commitments, NRefusal)
+			err = p.sendAggregatedCommitments(commitments, refusalCount)
 			if err != nil {
 				return err
 			}
@@ -349,7 +352,7 @@ loop:
 	responses := make([]StructResponse, 0)
 
 	// Second half of our time budget for the responses.
-	timeout := time.After(p.Timeout / 2)
+	timeout := time.After(responseTimeout)
 	for len(childrenCanResponse) > 0 {
 		select {
 		case response, channelOpen := <-p.ChannelResponse:
