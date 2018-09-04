@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	dkgprotocol "github.com/dedis/cothority/dkg"
 	"github.com/dedis/cothority/ocs/protocol"
 	"github.com/dedis/cothority/omniledger/darc"
 	ol "github.com/dedis/cothority/omniledger/service"
@@ -62,7 +63,7 @@ type pubPoly struct {
 
 // storage is used to save all elements of the DKG.
 type storage struct {
-	Shared  map[string]*protocol.SharedSecret
+	Shared  map[string]*dkgprotocol.SharedSecret
 	Polys   map[string]*pubPoly
 	Rosters map[string]*onet.Roster
 	OLIDs   map[string]skipchain.SkipBlockID
@@ -84,8 +85,8 @@ type vData struct {
 // the LTS group created.
 func (s *Service) CreateLTS(cl *CreateLTS) (reply *CreateLTSReply, err error) {
 	tree := cl.Roster.GenerateNaryTreeWithRoot(len(cl.Roster.List), s.ServerIdentity())
-	pi, err := s.CreateProtocol(protocol.NameDKG, tree)
-	setupDKG := pi.(*protocol.SetupDKG)
+	pi, err := s.CreateProtocol(dkgprotocol.Name, tree)
+	setupDKG := pi.(*dkgprotocol.Setup)
 	setupDKG.Wait = true
 	reply = &CreateLTSReply{LTSID: make([]byte, 32)}
 	random.New().XORKeyStream(reply.LTSID, reply.LTSID)
@@ -96,7 +97,7 @@ func (s *Service) CreateLTS(cl *CreateLTS) (reply *CreateLTSReply, err error) {
 	}
 	log.Lvl3("Started DKG-protocol - waiting for done", len(cl.Roster.List))
 	select {
-	case <-setupDKG.SetupDone:
+	case <-setupDKG.Finished:
 		shared, err := setupDKG.SharedSecret()
 		if err != nil {
 			return nil, err
@@ -226,14 +227,14 @@ func (s *Service) SharedPublic(req *SharedPublic) (reply *SharedPublicReply, err
 func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
 	log.Lvl3(s.ServerIdentity(), tn.ProtocolName(), conf)
 	switch tn.ProtocolName() {
-	case protocol.NameDKG:
-		pi, err := protocol.NewSetupDKG(tn)
+	case dkgprotocol.Name:
+		pi, err := dkgprotocol.NewSetup(tn)
 		if err != nil {
 			return nil, err
 		}
-		setupDKG := pi.(*protocol.SetupDKG)
+		setupDKG := pi.(*dkgprotocol.Setup)
 		go func(conf *onet.GenericConfig) {
-			<-setupDKG.SetupDone
+			<-setupDKG.Finished
 			shared, err := setupDKG.SharedSecret()
 			if err != nil {
 				log.Error(err)
@@ -290,10 +291,9 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 		}
 		if verificationData.Ephemeral != nil {
 			return errors.New("ephemeral keys not supported yet")
-		} else {
-			if !r.Xc.Equal(rc.Xc) {
-				return errors.New("wrong reader")
-			}
+		}
+		if !r.Xc.Equal(rc.Xc) {
+			return errors.New("wrong reader")
 		}
 		return nil
 	}()
@@ -323,7 +323,7 @@ func (s *Service) tryLoad() error {
 			s.storage.Polys = make(map[string]*pubPoly)
 		}
 		if len(s.storage.Shared) == 0 {
-			s.storage.Shared = make(map[string]*protocol.SharedSecret)
+			s.storage.Shared = make(map[string]*dkgprotocol.SharedSecret)
 		}
 		if len(s.storage.Rosters) == 0 {
 			s.storage.Rosters = make(map[string]*onet.Roster)

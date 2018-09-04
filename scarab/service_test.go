@@ -31,6 +31,7 @@ func TestService_CreateLTS(t *testing.T) {
 func TestContract_Write(t *testing.T) {
 	s := newTS(t, 5)
 	defer s.Close()
+
 	s.CreateGenesis(t)
 	pr := s.AddWriteAndWait(t, []byte("secret key"))
 	require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
@@ -74,9 +75,10 @@ func TestContract_Write_Benchmark(t *testing.T) {
 func TestContract_Read(t *testing.T) {
 	s := newTS(t, 5)
 	defer s.Close()
-	prWrite := s.AddWriteAndWait(t, []byte("secret key"))
+	s.CreateGenesis(t)
 
-	s.AddRead(t, prWrite, &Read{})
+	prWrite := s.AddWriteAndWait(t, []byte("secret key"))
+	// s.AddRead(t, prWrite, &Read{})
 	pr := s.AddRead(t, prWrite, nil)
 	require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
 }
@@ -147,10 +149,10 @@ func (s *ts) AddRead(t *testing.T, write *ol.Proof, read *Read) *ol.Proof {
 			},
 		}},
 	}
-	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
+	require.Nil(t, ctx.Instructions[0].SignBy(s.gDarc.GetID(), s.signer))
 	_, err = s.cl.AddTransaction(ctx)
 	require.Nil(t, err)
-	instID := ctx.Instructions[0].DeriveID("read")
+	instID := ctx.Instructions[0].DeriveID("")
 	pr, err := s.cl.WaitProof(instID, s.genesisMsg.BlockInterval, nil)
 	if read != nil {
 		require.Nil(t, err)
@@ -180,7 +182,7 @@ func newTS(t *testing.T, nodes int) ts {
 
 func (s *ts) Close() {
 	for _, service := range s.local.GetServices(s.servers, ol.OmniledgerID) {
-		service.(*ol.Service).ClosePolling()
+		service.(*ol.Service).TestClose()
 	}
 	s.local.WaitDone(time.Second)
 	s.local.CloseAll()
@@ -216,7 +218,7 @@ func (s *ts) AddWrite(t *testing.T, key []byte) ol.InstanceID {
 
 	ctx := ol.ClientTransaction{
 		Instructions: ol.Instructions{{
-			InstanceID: ol.InstanceID{DarcID: s.gDarc.GetBaseID(), SubID: ol.SubID{}},
+			InstanceID: ol.NewInstanceID(s.gDarc.GetBaseID()),
 			Nonce:      ol.Nonce{},
 			Index:      0,
 			Length:     1,
@@ -226,8 +228,8 @@ func (s *ts) AddWrite(t *testing.T, key []byte) ol.InstanceID {
 			},
 		}},
 	}
-	require.Nil(t, ctx.Instructions[0].SignBy(s.signer))
+	require.Nil(t, ctx.Instructions[0].SignBy(s.gDarc.GetID(), s.signer))
 	_, err = s.cl.AddTransaction(ctx)
 	require.Nil(t, err)
-	return ctx.Instructions[0].DeriveID("write")
+	return ctx.Instructions[0].DeriveID("")
 }

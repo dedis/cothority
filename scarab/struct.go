@@ -275,8 +275,7 @@ type DecryptKeyReply struct {
 	X kyber.Point
 }
 
-// SharedPublicRequest asks for the shared public key of the corresponding
-// LTSID
+// SharedPublic asks for the shared public key of the corresponding LTSID
 type SharedPublic struct {
 	// LTSID is the id of the LTS instance created.
 	LTSID []byte
