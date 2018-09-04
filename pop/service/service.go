@@ -33,6 +33,7 @@ import (
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/messaging"
+	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -127,6 +128,8 @@ type saveData struct {
 	Finals map[string]*FinalStatement
 	// InstanceIDs stores a map of partyID to InstanceID
 	InstanceIDs map[string]*service.InstanceID
+	// Signers stores a map of partyID to Signer
+	Signers map[string]*darc.Signer
 	// The info used in merge process
 	// key is ID of party
 	merges map[string]*merge
@@ -434,6 +437,13 @@ func (s *Service) StoreKeys(req *StoreKeys) (*StoreKeysReply, error) {
 	return &StoreKeysReply{}, nil
 }
 
+func (s *Service) GetKeys(req *GetKeys) (*GetKeysReply, error) {
+	return &GetKeysReply{
+		ID:   req.ID,
+		Keys: s.storedKeys[string(req.ID)].Keys,
+	}, nil
+}
+
 // StoreInstanceID will store the instanceID in a given final statement
 func (s *Service) StoreInstanceID(req *StoreInstanceID) (*StoreInstanceIDReply, error) {
 	s.data.InstanceIDs[string(req.PartyID)] = &req.InstanceID
@@ -450,11 +460,20 @@ func (s *Service) GetInstanceID(req *GetInstanceID) (*GetInstanceIDReply, error)
 	return &GetInstanceIDReply{*iid}, nil
 }
 
-func (s *Service) GetKeys(req *GetKeys) (*GetKeysReply, error) {
-	return &GetKeysReply{
-		ID:   req.ID,
-		Keys: s.storedKeys[string(req.ID)].Keys,
-	}, nil
+// StoreSigner will store the Signer in a given final statement
+func (s *Service) StoreSigner(req *StoreSigner) (*StoreSignerReply, error) {
+	s.data.Signers[string(req.PartyID)] = &req.Signer
+	s.save()
+	return &StoreSignerReply{}, nil
+}
+
+// GetSigner will return the Signer of a final statement
+func (s *Service) GetSigner(req *GetSigner) (*GetSignerReply, error) {
+	sig, ok := s.data.Signers[string(req.PartyID)]
+	if !ok {
+		return nil, errors.New("no such Signer stored")
+	}
+	return &GetSignerReply{*sig}, nil
 }
 
 // MergeConfig receives a final statement of requesting party,
@@ -1117,7 +1136,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	err := s.RegisterHandlers(s.PinRequest, s.VerifyLink, s.StoreConfig, s.FinalizeRequest,
 		s.FetchFinal, s.MergeRequest, s.GetProposals, s.GetLink, s.GetFinalStatements,
-		s.StoreKeys, s.StoreInstanceID, s.GetInstanceID)
+		s.StoreKeys, s.StoreInstanceID, s.GetInstanceID,
+		s.StoreSigner, s.GetSigner)
 	if err != nil {
 		return nil, err
 	}
@@ -1132,6 +1152,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	if len(s.data.InstanceIDs) == 0 {
 		s.data.InstanceIDs = map[string]*service.InstanceID{}
+	}
+	if len(s.data.Signers) == 0 {
+		s.data.Signers = map[string]*darc.Signer{}
 	}
 	s.syncs = make(map[string]*syncChans)
 	s.propagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal, 0)

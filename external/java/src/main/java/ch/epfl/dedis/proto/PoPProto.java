@@ -17406,6 +17406,2212 @@ public final class PoPProto {
 
   }
 
+  public interface StoreSignerOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.StoreSigner)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    boolean hasPartyid();
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    com.google.protobuf.ByteString getPartyid();
+
+    /**
+     * <code>required .darc.Signer signer = 2;</code>
+     */
+    boolean hasSigner();
+    /**
+     * <code>required .darc.Signer signer = 2;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.Signer getSigner();
+    /**
+     * <code>required .darc.Signer signer = 2;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.SignerOrBuilder getSignerOrBuilder();
+  }
+  /**
+   * <pre>
+   * StoreSigner writes an Signer from OmniLedger to a FinalStatement.
+   * </pre>
+   *
+   * Protobuf type {@code pop.StoreSigner}
+   */
+  public  static final class StoreSigner extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.StoreSigner)
+      StoreSignerOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use StoreSigner.newBuilder() to construct.
+    private StoreSigner(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private StoreSigner() {
+      partyid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StoreSigner(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              partyid_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.proto.DarcProto.Signer.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = signer_.toBuilder();
+              }
+              signer_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.Signer.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(signer_);
+                signer_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSigner_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSigner_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.StoreSigner.class, ch.epfl.dedis.proto.PoPProto.StoreSigner.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PARTYID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString partyid_;
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public boolean hasPartyid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPartyid() {
+      return partyid_;
+    }
+
+    public static final int SIGNER_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.proto.DarcProto.Signer signer_;
+    /**
+     * <code>required .darc.Signer signer = 2;</code>
+     */
+    public boolean hasSigner() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required .darc.Signer signer = 2;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.Signer getSigner() {
+      return signer_ == null ? ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+    }
+    /**
+     * <code>required .darc.Signer signer = 2;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.SignerOrBuilder getSignerOrBuilder() {
+      return signer_ == null ? ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPartyid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSigner()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getSigner().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, partyid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getSigner());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, partyid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getSigner());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.StoreSigner)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.StoreSigner other = (ch.epfl.dedis.proto.PoPProto.StoreSigner) obj;
+
+      boolean result = true;
+      result = result && (hasPartyid() == other.hasPartyid());
+      if (hasPartyid()) {
+        result = result && getPartyid()
+            .equals(other.getPartyid());
+      }
+      result = result && (hasSigner() == other.hasSigner());
+      if (hasSigner()) {
+        result = result && getSigner()
+            .equals(other.getSigner());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPartyid()) {
+        hash = (37 * hash) + PARTYID_FIELD_NUMBER;
+        hash = (53 * hash) + getPartyid().hashCode();
+      }
+      if (hasSigner()) {
+        hash = (37 * hash) + SIGNER_FIELD_NUMBER;
+        hash = (53 * hash) + getSigner().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreSigner prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * StoreSigner writes an Signer from OmniLedger to a FinalStatement.
+     * </pre>
+     *
+     * Protobuf type {@code pop.StoreSigner}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.StoreSigner)
+        ch.epfl.dedis.proto.PoPProto.StoreSignerOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSigner_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSigner_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.StoreSigner.class, ch.epfl.dedis.proto.PoPProto.StoreSigner.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.StoreSigner.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getSignerFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        partyid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (signerBuilder_ == null) {
+          signer_ = null;
+        } else {
+          signerBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSigner_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreSigner getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.StoreSigner.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreSigner build() {
+        ch.epfl.dedis.proto.PoPProto.StoreSigner result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreSigner buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.StoreSigner result = new ch.epfl.dedis.proto.PoPProto.StoreSigner(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.partyid_ = partyid_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (signerBuilder_ == null) {
+          result.signer_ = signer_;
+        } else {
+          result.signer_ = signerBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreSigner) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreSigner)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.StoreSigner other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.StoreSigner.getDefaultInstance()) return this;
+        if (other.hasPartyid()) {
+          setPartyid(other.getPartyid());
+        }
+        if (other.hasSigner()) {
+          mergeSigner(other.getSigner());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPartyid()) {
+          return false;
+        }
+        if (!hasSigner()) {
+          return false;
+        }
+        if (!getSigner().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.StoreSigner parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.StoreSigner) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString partyid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public boolean hasPartyid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPartyid() {
+        return partyid_;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder setPartyid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        partyid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder clearPartyid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        partyid_ = getDefaultInstance().getPartyid();
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.proto.DarcProto.Signer signer_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.Signer, ch.epfl.dedis.proto.DarcProto.Signer.Builder, ch.epfl.dedis.proto.DarcProto.SignerOrBuilder> signerBuilder_;
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public boolean hasSigner() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.Signer getSigner() {
+        if (signerBuilder_ == null) {
+          return signer_ == null ? ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+        } else {
+          return signerBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public Builder setSigner(ch.epfl.dedis.proto.DarcProto.Signer value) {
+        if (signerBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          signer_ = value;
+          onChanged();
+        } else {
+          signerBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public Builder setSigner(
+          ch.epfl.dedis.proto.DarcProto.Signer.Builder builderForValue) {
+        if (signerBuilder_ == null) {
+          signer_ = builderForValue.build();
+          onChanged();
+        } else {
+          signerBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public Builder mergeSigner(ch.epfl.dedis.proto.DarcProto.Signer value) {
+        if (signerBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              signer_ != null &&
+              signer_ != ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance()) {
+            signer_ =
+              ch.epfl.dedis.proto.DarcProto.Signer.newBuilder(signer_).mergeFrom(value).buildPartial();
+          } else {
+            signer_ = value;
+          }
+          onChanged();
+        } else {
+          signerBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public Builder clearSigner() {
+        if (signerBuilder_ == null) {
+          signer_ = null;
+          onChanged();
+        } else {
+          signerBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.Signer.Builder getSignerBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getSignerFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.SignerOrBuilder getSignerOrBuilder() {
+        if (signerBuilder_ != null) {
+          return signerBuilder_.getMessageOrBuilder();
+        } else {
+          return signer_ == null ?
+              ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+        }
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.Signer, ch.epfl.dedis.proto.DarcProto.Signer.Builder, ch.epfl.dedis.proto.DarcProto.SignerOrBuilder> 
+          getSignerFieldBuilder() {
+        if (signerBuilder_ == null) {
+          signerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.DarcProto.Signer, ch.epfl.dedis.proto.DarcProto.Signer.Builder, ch.epfl.dedis.proto.DarcProto.SignerOrBuilder>(
+                  getSigner(),
+                  getParentForChildren(),
+                  isClean());
+          signer_ = null;
+        }
+        return signerBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.StoreSigner)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.StoreSigner)
+    private static final ch.epfl.dedis.proto.PoPProto.StoreSigner DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.StoreSigner();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreSigner>
+        PARSER = new com.google.protobuf.AbstractParser<StoreSigner>() {
+      public StoreSigner parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new StoreSigner(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StoreSigner> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StoreSigner> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.StoreSigner getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface StoreSignerReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.StoreSignerReply)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * StoreSignerReply is an empty reply
+   * </pre>
+   *
+   * Protobuf type {@code pop.StoreSignerReply}
+   */
+  public  static final class StoreSignerReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.StoreSignerReply)
+      StoreSignerReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use StoreSignerReply.newBuilder() to construct.
+    private StoreSignerReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private StoreSignerReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StoreSignerReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSignerReply_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSignerReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.StoreSignerReply.class, ch.epfl.dedis.proto.PoPProto.StoreSignerReply.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.StoreSignerReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.StoreSignerReply other = (ch.epfl.dedis.proto.PoPProto.StoreSignerReply) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreSignerReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * StoreSignerReply is an empty reply
+     * </pre>
+     *
+     * Protobuf type {@code pop.StoreSignerReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.StoreSignerReply)
+        ch.epfl.dedis.proto.PoPProto.StoreSignerReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSignerReply_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSignerReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.StoreSignerReply.class, ch.epfl.dedis.proto.PoPProto.StoreSignerReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.StoreSignerReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSignerReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreSignerReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.StoreSignerReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreSignerReply build() {
+        ch.epfl.dedis.proto.PoPProto.StoreSignerReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreSignerReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.StoreSignerReply result = new ch.epfl.dedis.proto.PoPProto.StoreSignerReply(this);
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreSignerReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreSignerReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.StoreSignerReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.StoreSignerReply.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.StoreSignerReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.StoreSignerReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.StoreSignerReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.StoreSignerReply)
+    private static final ch.epfl.dedis.proto.PoPProto.StoreSignerReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.StoreSignerReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreSignerReply>
+        PARSER = new com.google.protobuf.AbstractParser<StoreSignerReply>() {
+      public StoreSignerReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new StoreSignerReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StoreSignerReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StoreSignerReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.StoreSignerReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetSignerOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetSigner)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    boolean hasPartyid();
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    com.google.protobuf.ByteString getPartyid();
+  }
+  /**
+   * <pre>
+   * GetSigner requests an Signer from OmniLedger to a FinalStatement.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetSigner}
+   */
+  public  static final class GetSigner extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetSigner)
+      GetSignerOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetSigner.newBuilder() to construct.
+    private GetSigner(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetSigner() {
+      partyid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetSigner(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              partyid_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSigner_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSigner_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetSigner.class, ch.epfl.dedis.proto.PoPProto.GetSigner.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PARTYID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString partyid_;
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public boolean hasPartyid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPartyid() {
+      return partyid_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPartyid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, partyid_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, partyid_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetSigner)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetSigner other = (ch.epfl.dedis.proto.PoPProto.GetSigner) obj;
+
+      boolean result = true;
+      result = result && (hasPartyid() == other.hasPartyid());
+      if (hasPartyid()) {
+        result = result && getPartyid()
+            .equals(other.getPartyid());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPartyid()) {
+        hash = (37 * hash) + PARTYID_FIELD_NUMBER;
+        hash = (53 * hash) + getPartyid().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetSigner prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetSigner requests an Signer from OmniLedger to a FinalStatement.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetSigner}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetSigner)
+        ch.epfl.dedis.proto.PoPProto.GetSignerOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSigner_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSigner_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetSigner.class, ch.epfl.dedis.proto.PoPProto.GetSigner.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetSigner.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        partyid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSigner_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetSigner getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetSigner.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetSigner build() {
+        ch.epfl.dedis.proto.PoPProto.GetSigner result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetSigner buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetSigner result = new ch.epfl.dedis.proto.PoPProto.GetSigner(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.partyid_ = partyid_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetSigner) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetSigner)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetSigner other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetSigner.getDefaultInstance()) return this;
+        if (other.hasPartyid()) {
+          setPartyid(other.getPartyid());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPartyid()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetSigner parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetSigner) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString partyid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public boolean hasPartyid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPartyid() {
+        return partyid_;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder setPartyid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        partyid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder clearPartyid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        partyid_ = getDefaultInstance().getPartyid();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetSigner)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetSigner)
+    private static final ch.epfl.dedis.proto.PoPProto.GetSigner DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetSigner();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetSigner>
+        PARSER = new com.google.protobuf.AbstractParser<GetSigner>() {
+      public GetSigner parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetSigner(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetSigner> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetSigner> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetSigner getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetSignerReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetSignerReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required .darc.Signer signer = 1;</code>
+     */
+    boolean hasSigner();
+    /**
+     * <code>required .darc.Signer signer = 1;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.Signer getSigner();
+    /**
+     * <code>required .darc.Signer signer = 1;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.SignerOrBuilder getSignerOrBuilder();
+  }
+  /**
+   * <pre>
+   * GetSignerReply is the Signer for the party
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetSignerReply}
+   */
+  public  static final class GetSignerReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetSignerReply)
+      GetSignerReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetSignerReply.newBuilder() to construct.
+    private GetSignerReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetSignerReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetSignerReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              ch.epfl.dedis.proto.DarcProto.Signer.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = signer_.toBuilder();
+              }
+              signer_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.Signer.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(signer_);
+                signer_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSignerReply_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSignerReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetSignerReply.class, ch.epfl.dedis.proto.PoPProto.GetSignerReply.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int SIGNER_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.proto.DarcProto.Signer signer_;
+    /**
+     * <code>required .darc.Signer signer = 1;</code>
+     */
+    public boolean hasSigner() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required .darc.Signer signer = 1;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.Signer getSigner() {
+      return signer_ == null ? ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+    }
+    /**
+     * <code>required .darc.Signer signer = 1;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.SignerOrBuilder getSignerOrBuilder() {
+      return signer_ == null ? ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasSigner()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getSigner().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, getSigner());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getSigner());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetSignerReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetSignerReply other = (ch.epfl.dedis.proto.PoPProto.GetSignerReply) obj;
+
+      boolean result = true;
+      result = result && (hasSigner() == other.hasSigner());
+      if (hasSigner()) {
+        result = result && getSigner()
+            .equals(other.getSigner());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasSigner()) {
+        hash = (37 * hash) + SIGNER_FIELD_NUMBER;
+        hash = (53 * hash) + getSigner().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetSignerReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetSignerReply is the Signer for the party
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetSignerReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetSignerReply)
+        ch.epfl.dedis.proto.PoPProto.GetSignerReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSignerReply_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSignerReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetSignerReply.class, ch.epfl.dedis.proto.PoPProto.GetSignerReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetSignerReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getSignerFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        if (signerBuilder_ == null) {
+          signer_ = null;
+        } else {
+          signerBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSignerReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetSignerReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetSignerReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetSignerReply build() {
+        ch.epfl.dedis.proto.PoPProto.GetSignerReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetSignerReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetSignerReply result = new ch.epfl.dedis.proto.PoPProto.GetSignerReply(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (signerBuilder_ == null) {
+          result.signer_ = signer_;
+        } else {
+          result.signer_ = signerBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetSignerReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetSignerReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetSignerReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetSignerReply.getDefaultInstance()) return this;
+        if (other.hasSigner()) {
+          mergeSigner(other.getSigner());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasSigner()) {
+          return false;
+        }
+        if (!getSigner().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetSignerReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetSignerReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.proto.DarcProto.Signer signer_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.Signer, ch.epfl.dedis.proto.DarcProto.Signer.Builder, ch.epfl.dedis.proto.DarcProto.SignerOrBuilder> signerBuilder_;
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public boolean hasSigner() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.Signer getSigner() {
+        if (signerBuilder_ == null) {
+          return signer_ == null ? ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+        } else {
+          return signerBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public Builder setSigner(ch.epfl.dedis.proto.DarcProto.Signer value) {
+        if (signerBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          signer_ = value;
+          onChanged();
+        } else {
+          signerBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public Builder setSigner(
+          ch.epfl.dedis.proto.DarcProto.Signer.Builder builderForValue) {
+        if (signerBuilder_ == null) {
+          signer_ = builderForValue.build();
+          onChanged();
+        } else {
+          signerBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public Builder mergeSigner(ch.epfl.dedis.proto.DarcProto.Signer value) {
+        if (signerBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              signer_ != null &&
+              signer_ != ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance()) {
+            signer_ =
+              ch.epfl.dedis.proto.DarcProto.Signer.newBuilder(signer_).mergeFrom(value).buildPartial();
+          } else {
+            signer_ = value;
+          }
+          onChanged();
+        } else {
+          signerBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public Builder clearSigner() {
+        if (signerBuilder_ == null) {
+          signer_ = null;
+          onChanged();
+        } else {
+          signerBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.Signer.Builder getSignerBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getSignerFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.SignerOrBuilder getSignerOrBuilder() {
+        if (signerBuilder_ != null) {
+          return signerBuilder_.getMessageOrBuilder();
+        } else {
+          return signer_ == null ?
+              ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+        }
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.Signer, ch.epfl.dedis.proto.DarcProto.Signer.Builder, ch.epfl.dedis.proto.DarcProto.SignerOrBuilder> 
+          getSignerFieldBuilder() {
+        if (signerBuilder_ == null) {
+          signerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.DarcProto.Signer, ch.epfl.dedis.proto.DarcProto.Signer.Builder, ch.epfl.dedis.proto.DarcProto.SignerOrBuilder>(
+                  getSigner(),
+                  getParentForChildren(),
+                  isClean());
+          signer_ = null;
+        }
+        return signerBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetSignerReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetSignerReply)
+    private static final ch.epfl.dedis.proto.PoPProto.GetSignerReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetSignerReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetSignerReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetSignerReply>() {
+      public GetSignerReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetSignerReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetSignerReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetSignerReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetSignerReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface StoreKeysOrBuilder extends
       // @@protoc_insertion_point(interface_extends:pop.StoreKeys)
       com.google.protobuf.MessageOrBuilder {
@@ -19886,7 +22092,7 @@ public final class PoPProto {
      * Public key of service - can be nil.
      * </pre>
      *
-     * <code>required bytes service = 5;</code>
+     * <code>optional bytes service = 5;</code>
      */
     boolean hasService();
     /**
@@ -19894,7 +22100,7 @@ public final class PoPProto {
      * Public key of service - can be nil.
      * </pre>
      *
-     * <code>required bytes service = 5;</code>
+     * <code>optional bytes service = 5;</code>
      */
     com.google.protobuf.ByteString getService();
   }
@@ -20127,7 +22333,7 @@ public final class PoPProto {
      * Public key of service - can be nil.
      * </pre>
      *
-     * <code>required bytes service = 5;</code>
+     * <code>optional bytes service = 5;</code>
      */
     public boolean hasService() {
       return ((bitField0_ & 0x00000010) == 0x00000010);
@@ -20137,7 +22343,7 @@ public final class PoPProto {
      * Public key of service - can be nil.
      * </pre>
      *
-     * <code>required bytes service = 5;</code>
+     * <code>optional bytes service = 5;</code>
      */
     public com.google.protobuf.ByteString getService() {
       return service_;
@@ -20158,10 +22364,6 @@ public final class PoPProto {
         return false;
       }
       if (!hasNext()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasService()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -20560,9 +22762,6 @@ public final class PoPProto {
         if (!hasNext()) {
           return false;
         }
-        if (!hasService()) {
-          return false;
-        }
         if (hasFinalstatement()) {
           if (!getFinalstatement().isInitialized()) {
             return false;
@@ -20925,7 +23124,7 @@ public final class PoPProto {
        * Public key of service - can be nil.
        * </pre>
        *
-       * <code>required bytes service = 5;</code>
+       * <code>optional bytes service = 5;</code>
        */
       public boolean hasService() {
         return ((bitField0_ & 0x00000010) == 0x00000010);
@@ -20935,7 +23134,7 @@ public final class PoPProto {
        * Public key of service - can be nil.
        * </pre>
        *
-       * <code>required bytes service = 5;</code>
+       * <code>optional bytes service = 5;</code>
        */
       public com.google.protobuf.ByteString getService() {
         return service_;
@@ -20945,7 +23144,7 @@ public final class PoPProto {
        * Public key of service - can be nil.
        * </pre>
        *
-       * <code>required bytes service = 5;</code>
+       * <code>optional bytes service = 5;</code>
        */
       public Builder setService(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -20961,7 +23160,7 @@ public final class PoPProto {
        * Public key of service - can be nil.
        * </pre>
        *
-       * <code>required bytes service = 5;</code>
+       * <code>optional bytes service = 5;</code>
        */
       public Builder clearService() {
         bitField0_ = (bitField0_ & ~0x00000010);
@@ -21154,6 +23353,26 @@ public final class PoPProto {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_GetInstanceIDReply_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_StoreSigner_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_StoreSigner_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_StoreSignerReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_StoreSignerReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetSigner_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetSigner_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetSignerReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetSignerReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_pop_StoreKeys_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -21187,52 +23406,56 @@ public final class PoPProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\tpop.proto\022\003pop\032\nonet.proto\";\n\tShortDes" +
-      "c\022\020\n\010location\030\001 \002(\t\022\034\n\006roster\030\002 \001(\0132\014.on" +
-      "et.Roster\"z\n\007PopDesc\022\014\n\004name\030\001 \002(\t\022\020\n\010da" +
-      "tetime\030\002 \002(\t\022\020\n\010location\030\003 \002(\t\022\034\n\006roster" +
-      "\030\004 \001(\0132\014.onet.Roster\022\037\n\007parties\030\005 \003(\0132\016." +
-      "pop.ShortDesc\"b\n\016FinalStatement\022\032\n\004desc\030" +
-      "\001 \001(\0132\014.pop.PopDesc\022\021\n\tattendees\030\002 \003(\014\022\021" +
-      "\n\tsignature\030\003 \002(\014\022\016\n\006merged\030\004 \002(\010\"1\n\013Che" +
-      "ckConfig\022\017\n\007pophash\030\001 \002(\014\022\021\n\tattendees\030\002" +
-      " \003(\014\"I\n\020CheckConfigReply\022\021\n\tpopstatus\030\001 ",
-      "\002(\021\022\017\n\007pophash\030\002 \002(\014\022\021\n\tattendees\030\003 \003(\014\"" +
-      "=\n\013MergeConfig\022\"\n\005final\030\001 \001(\0132\023.pop.Fina" +
-      "lStatement\022\n\n\002id\030\002 \002(\014\"Z\n\020MergeConfigRep" +
-      "ly\022\021\n\tpopstatus\030\001 \002(\021\022\017\n\007pophash\030\002 \002(\014\022\"" +
-      "\n\005final\030\003 \001(\0132\023.pop.FinalStatement\")\n\nPi" +
-      "nRequest\022\013\n\003pin\030\001 \002(\t\022\016\n\006public\030\002 \002(\014\"<\n" +
-      "\013StoreConfig\022\032\n\004desc\030\001 \001(\0132\014.pop.PopDesc" +
-      "\022\021\n\tsignature\030\002 \002(\014\"\036\n\020StoreConfigReply\022" +
-      "\n\n\002id\030\001 \002(\014\"G\n\017FinalizeRequest\022\016\n\006descid" +
-      "\030\001 \002(\014\022\021\n\tattendees\030\002 \003(\014\022\021\n\tsignature\030\003",
-      " \002(\014\"6\n\020FinalizeResponse\022\"\n\005final\030\001 \001(\0132" +
-      "\023.pop.FinalStatement\"4\n\014FetchRequest\022\n\n\002" +
-      "id\030\001 \002(\014\022\030\n\020returnuncomplete\030\002 \001(\010\"-\n\014Me" +
-      "rgeRequest\022\n\n\002id\030\001 \002(\014\022\021\n\tsignature\030\002 \002(" +
-      "\014\"\016\n\014GetProposals\"4\n\021GetProposalsReply\022\037" +
-      "\n\tproposals\030\001 \003(\0132\014.pop.PopDesc\"\034\n\nVerif" +
-      "yLink\022\016\n\006public\030\001 \002(\014\"!\n\017VerifyLinkReply" +
-      "\022\016\n\006exists\030\001 \002(\010\"\t\n\007GetLink\"\036\n\014GetLinkRe" +
-      "ply\022\016\n\006public\030\001 \002(\014\"\024\n\022GetFinalStatement" +
-      "s\"\262\001\n\027GetFinalStatementsReply\022J\n\017finalst",
-      "atements\030\001 \003(\01321.pop.GetFinalStatementsR" +
-      "eply.FinalstatementsEntry\032K\n\024Finalstatem" +
-      "entsEntry\022\013\n\003key\030\001 \001(\t\022\"\n\005value\030\002 \001(\0132\023." +
-      "pop.FinalStatement:\0028\001\"6\n\017StoreInstanceI" +
-      "D\022\017\n\007partyid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"\026" +
-      "\n\024StoreInstanceIDReply\" \n\rGetInstanceID\022" +
-      "\017\n\007partyid\030\001 \002(\014\"(\n\022GetInstanceIDReply\022\022" +
-      "\n\ninstanceid\030\001 \002(\014\"8\n\tStoreKeys\022\n\n\002id\030\001 " +
-      "\002(\014\022\014\n\004keys\030\002 \003(\014\022\021\n\tsignature\030\003 \002(\014\"\020\n\016" +
-      "StoreKeysReply\"\025\n\007GetKeys\022\n\n\002id\030\001 \002(\014\"(\n",
-      "\014GetKeysReply\022\n\n\002id\030\001 \002(\014\022\014\n\004keys\030\002 \003(\014\"" +
-      "\177\n\020PopPartyInstance\022\r\n\005state\030\001 \002(\021\022+\n\016fi" +
-      "nalstatement\030\002 \001(\0132\023.pop.FinalStatement\022" +
-      "\020\n\010previous\030\003 \002(\014\022\014\n\004next\030\004 \002(\014\022\017\n\007servi" +
-      "ce\030\005 \002(\014B\037\n\023ch.epfl.dedis.protoB\010PoPProt" +
-      "o"
+      "\n\tpop.proto\022\003pop\032\nonet.proto\032\ndarc.proto" +
+      "\";\n\tShortDesc\022\020\n\010location\030\001 \002(\t\022\034\n\006roste" +
+      "r\030\002 \001(\0132\014.onet.Roster\"z\n\007PopDesc\022\014\n\004name" +
+      "\030\001 \002(\t\022\020\n\010datetime\030\002 \002(\t\022\020\n\010location\030\003 \002" +
+      "(\t\022\034\n\006roster\030\004 \001(\0132\014.onet.Roster\022\037\n\007part" +
+      "ies\030\005 \003(\0132\016.pop.ShortDesc\"b\n\016FinalStatem" +
+      "ent\022\032\n\004desc\030\001 \001(\0132\014.pop.PopDesc\022\021\n\tatten" +
+      "dees\030\002 \003(\014\022\021\n\tsignature\030\003 \002(\014\022\016\n\006merged\030" +
+      "\004 \002(\010\"1\n\013CheckConfig\022\017\n\007pophash\030\001 \002(\014\022\021\n" +
+      "\tattendees\030\002 \003(\014\"I\n\020CheckConfigReply\022\021\n\t",
+      "popstatus\030\001 \002(\021\022\017\n\007pophash\030\002 \002(\014\022\021\n\tatte" +
+      "ndees\030\003 \003(\014\"=\n\013MergeConfig\022\"\n\005final\030\001 \001(" +
+      "\0132\023.pop.FinalStatement\022\n\n\002id\030\002 \002(\014\"Z\n\020Me" +
+      "rgeConfigReply\022\021\n\tpopstatus\030\001 \002(\021\022\017\n\007pop" +
+      "hash\030\002 \002(\014\022\"\n\005final\030\003 \001(\0132\023.pop.FinalSta" +
+      "tement\")\n\nPinRequest\022\013\n\003pin\030\001 \002(\t\022\016\n\006pub" +
+      "lic\030\002 \002(\014\"<\n\013StoreConfig\022\032\n\004desc\030\001 \001(\0132\014" +
+      ".pop.PopDesc\022\021\n\tsignature\030\002 \002(\014\"\036\n\020Store" +
+      "ConfigReply\022\n\n\002id\030\001 \002(\014\"G\n\017FinalizeReque" +
+      "st\022\016\n\006descid\030\001 \002(\014\022\021\n\tattendees\030\002 \003(\014\022\021\n",
+      "\tsignature\030\003 \002(\014\"6\n\020FinalizeResponse\022\"\n\005" +
+      "final\030\001 \001(\0132\023.pop.FinalStatement\"4\n\014Fetc" +
+      "hRequest\022\n\n\002id\030\001 \002(\014\022\030\n\020returnuncomplete" +
+      "\030\002 \001(\010\"-\n\014MergeRequest\022\n\n\002id\030\001 \002(\014\022\021\n\tsi" +
+      "gnature\030\002 \002(\014\"\016\n\014GetProposals\"4\n\021GetProp" +
+      "osalsReply\022\037\n\tproposals\030\001 \003(\0132\014.pop.PopD" +
+      "esc\"\034\n\nVerifyLink\022\016\n\006public\030\001 \002(\014\"!\n\017Ver" +
+      "ifyLinkReply\022\016\n\006exists\030\001 \002(\010\"\t\n\007GetLink\"" +
+      "\036\n\014GetLinkReply\022\016\n\006public\030\001 \002(\014\"\024\n\022GetFi" +
+      "nalStatements\"\262\001\n\027GetFinalStatementsRepl",
+      "y\022J\n\017finalstatements\030\001 \003(\01321.pop.GetFina" +
+      "lStatementsReply.FinalstatementsEntry\032K\n" +
+      "\024FinalstatementsEntry\022\013\n\003key\030\001 \001(\t\022\"\n\005va" +
+      "lue\030\002 \001(\0132\023.pop.FinalStatement:\0028\001\"6\n\017St" +
+      "oreInstanceID\022\017\n\007partyid\030\001 \002(\014\022\022\n\ninstan" +
+      "ceid\030\002 \002(\014\"\026\n\024StoreInstanceIDReply\" \n\rGe" +
+      "tInstanceID\022\017\n\007partyid\030\001 \002(\014\"(\n\022GetInsta" +
+      "nceIDReply\022\022\n\ninstanceid\030\001 \002(\014\"<\n\013StoreS" +
+      "igner\022\017\n\007partyid\030\001 \002(\014\022\034\n\006signer\030\002 \002(\0132\014" +
+      ".darc.Signer\"\022\n\020StoreSignerReply\"\034\n\tGetS",
+      "igner\022\017\n\007partyid\030\001 \002(\014\".\n\016GetSignerReply" +
+      "\022\034\n\006signer\030\001 \002(\0132\014.darc.Signer\"8\n\tStoreK" +
+      "eys\022\n\n\002id\030\001 \002(\014\022\014\n\004keys\030\002 \003(\014\022\021\n\tsignatu" +
+      "re\030\003 \002(\014\"\020\n\016StoreKeysReply\"\025\n\007GetKeys\022\n\n" +
+      "\002id\030\001 \002(\014\"(\n\014GetKeysReply\022\n\n\002id\030\001 \002(\014\022\014\n" +
+      "\004keys\030\002 \003(\014\"\177\n\020PopPartyInstance\022\r\n\005state" +
+      "\030\001 \002(\021\022+\n\016finalstatement\030\002 \001(\0132\023.pop.Fin" +
+      "alStatement\022\020\n\010previous\030\003 \002(\014\022\014\n\004next\030\004 " +
+      "\002(\014\022\017\n\007service\030\005 \001(\014B\037\n\023ch.epfl.dedis.pr" +
+      "otoB\010PoPProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -21246,6 +23469,7 @@ public final class PoPProto {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           ch.epfl.dedis.proto.OnetProto.getDescriptor(),
+          ch.epfl.dedis.proto.DarcProto.getDescriptor(),
         }, assigner);
     internal_static_pop_ShortDesc_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -21409,37 +23633,62 @@ public final class PoPProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_GetInstanceIDReply_descriptor,
         new java.lang.String[] { "Instanceid", });
-    internal_static_pop_StoreKeys_descriptor =
+    internal_static_pop_StoreSigner_descriptor =
       getDescriptor().getMessageTypes().get(26);
+    internal_static_pop_StoreSigner_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_StoreSigner_descriptor,
+        new java.lang.String[] { "Partyid", "Signer", });
+    internal_static_pop_StoreSignerReply_descriptor =
+      getDescriptor().getMessageTypes().get(27);
+    internal_static_pop_StoreSignerReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_StoreSignerReply_descriptor,
+        new java.lang.String[] { });
+    internal_static_pop_GetSigner_descriptor =
+      getDescriptor().getMessageTypes().get(28);
+    internal_static_pop_GetSigner_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetSigner_descriptor,
+        new java.lang.String[] { "Partyid", });
+    internal_static_pop_GetSignerReply_descriptor =
+      getDescriptor().getMessageTypes().get(29);
+    internal_static_pop_GetSignerReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetSignerReply_descriptor,
+        new java.lang.String[] { "Signer", });
+    internal_static_pop_StoreKeys_descriptor =
+      getDescriptor().getMessageTypes().get(30);
     internal_static_pop_StoreKeys_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_StoreKeys_descriptor,
         new java.lang.String[] { "Id", "Keys", "Signature", });
     internal_static_pop_StoreKeysReply_descriptor =
-      getDescriptor().getMessageTypes().get(27);
+      getDescriptor().getMessageTypes().get(31);
     internal_static_pop_StoreKeysReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_StoreKeysReply_descriptor,
         new java.lang.String[] { });
     internal_static_pop_GetKeys_descriptor =
-      getDescriptor().getMessageTypes().get(28);
+      getDescriptor().getMessageTypes().get(32);
     internal_static_pop_GetKeys_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_GetKeys_descriptor,
         new java.lang.String[] { "Id", });
     internal_static_pop_GetKeysReply_descriptor =
-      getDescriptor().getMessageTypes().get(29);
+      getDescriptor().getMessageTypes().get(33);
     internal_static_pop_GetKeysReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_GetKeysReply_descriptor,
         new java.lang.String[] { "Id", "Keys", });
     internal_static_pop_PopPartyInstance_descriptor =
-      getDescriptor().getMessageTypes().get(30);
+      getDescriptor().getMessageTypes().get(34);
     internal_static_pop_PopPartyInstance_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_PopPartyInstance_descriptor,
         new java.lang.String[] { "State", "Finalstatement", "Previous", "Next", "Service", });
     ch.epfl.dedis.proto.OnetProto.getDescriptor();
+    ch.epfl.dedis.proto.DarcProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)

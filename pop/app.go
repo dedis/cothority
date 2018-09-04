@@ -27,6 +27,7 @@ import (
 	"github.com/dedis/cothority/omniledger/darc"
 	"github.com/dedis/cothority/omniledger/darc/expression"
 	ol "github.com/dedis/cothority/omniledger/service"
+	ph "github.com/dedis/cothority/personhood/service"
 	"github.com/dedis/protobuf"
 	cli "gopkg.in/urfave/cli.v1"
 
@@ -884,6 +885,11 @@ func omniFinalize(c *cli.Context) error {
 		return errors.New("No instanceID stored!")
 	}
 
+	sigBuf, err := signer.Ed25519.Point.MarshalBinary()
+	if err != nil {
+		return errors.New("Couldn't get point: " + err.Error())
+	}
+
 	log.Info("Sending finalize-instruction to omniledger")
 	ctx := ol.ClientTransaction{
 		Instructions: ol.Instructions{ol.Instruction{
@@ -892,10 +898,15 @@ func omniFinalize(c *cli.Context) error {
 			Length:     1,
 			Invoke: &ol.Invoke{
 				Command: "Finalize",
-				Args: ol.Arguments{ol.Argument{
-					Name:  "FinalStatement",
-					Value: fsBuf,
-				}},
+				Args: ol.Arguments{
+					ol.Argument{
+						Name:  "FinalStatement",
+						Value: fsBuf,
+					},
+					{
+						Name:  "Service",
+						Value: sigBuf,
+					}},
 			},
 		}},
 	}
@@ -909,6 +920,15 @@ func omniFinalize(c *cli.Context) error {
 	if err != nil {
 		return errors.New("error while sending transaction: " + err.Error())
 	}
+
+	ph.NewClient().LinkPoP(cfg.Roster.List[0], partyInstance, ph.Party{
+		OmniLedgerID:   cfg.ID,
+		FinalStatement: *fs,
+		Account:        partyInstance,
+		Darc:           cfg.GenesisDarc,
+		Signer:         *signer,
+	})
+
 	return nil
 }
 

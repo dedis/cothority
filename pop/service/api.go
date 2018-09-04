@@ -7,6 +7,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/omniledger/darc"
 	ol "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/eddsa"
@@ -184,6 +185,23 @@ func (c *Client) GetInstanceID(dst network.Address, partyID []byte) (ol.Instance
 
 	err := c.SendProtobuf(si, &GetInstanceID{partyID}, ret)
 	return ret.InstanceID, err
+}
+
+// StoreSigner asks the service to store an Signer for a given party.
+func (c *Client) StoreSigner(dst network.Address, partyID []byte, Signer darc.Signer) error {
+	si := &network.ServerIdentity{Address: dst}
+	ret := &StoreSignerReply{}
+
+	return c.SendProtobuf(si, &StoreSigner{partyID, Signer}, ret)
+}
+
+// GetSigner asks the service for an Signer for a given party.
+func (c *Client) GetSigner(dst network.Address, partyID []byte) (darc.Signer, error) {
+	si := &network.ServerIdentity{Address: dst}
+	ret := &GetSignerReply{}
+
+	err := c.SendProtobuf(si, &GetSigner{partyID}, ret)
+	return ret.Signer, err
 }
 
 // The toml-structure for (un)marshaling with toml

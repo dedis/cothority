@@ -115,7 +115,7 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 			sBuf := inst.Invoke.Args.Search("Service")
 			if sBuf != nil {
 				log.LLvl3("Appending service-darc and account")
-				ppi.Service := cothority.Suite.Point()
+				ppi.Service = cothority.Suite.Point()
 				err = ppi.Service.UnmarshalBinary(sBuf)
 				if err != nil {
 					return nil, nil, errors.New("couldn't unmarshal point: " + err.Error())

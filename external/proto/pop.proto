@@ -1,6 +1,7 @@
 syntax = "proto2";
 package pop;
 import "onet.proto";
+import "darc.proto";
 
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "PoPProto";
@@ -180,6 +181,26 @@ message GetInstanceIDReply {
   required bytes instanceid = 1;
 }
 
+// StoreSigner writes an Signer from OmniLedger to a FinalStatement.
+message StoreSigner {
+  required bytes partyid = 1;
+  required darc.Signer signer = 2;
+}
+
+// StoreSignerReply is an empty reply
+message StoreSignerReply {
+}
+
+// GetSigner requests an Signer from OmniLedger to a FinalStatement.
+message GetSigner {
+  required bytes partyid = 1;
+}
+
+// GetSignerReply is the Signer for the party
+message GetSignerReply {
+  required darc.Signer signer = 1;
+}
+
 // StoreKeys stores a list of keys for attendees to retrieve
 // later.
 message StoreKeys {
@@ -220,5 +241,5 @@ message PopPartyInstance {
   // nil if there is no next party.
   required bytes next = 4;
   // Public key of service - can be nil.
-  required bytes service = 5;
+  optional bytes service = 5;
 }

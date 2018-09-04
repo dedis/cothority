@@ -5,6 +5,7 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
+	"github.com/dedis/cothority/omniledger/darc"
 	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
@@ -28,6 +29,7 @@ func init() {
 // type :map\[string\]FinalStatement:map<string, FinalStatement>
 // type :omniledger.InstanceID:bytes
 // import "onet.proto";
+// import "darc.proto";
 //
 // option java_package = "ch.epfl.dedis.proto";
 // option java_outer_classname = "PoPProto";
@@ -207,6 +209,26 @@ type GetInstanceIDReply struct {
 	InstanceID omniledger.InstanceID
 }
 
+// StoreSigner writes an Signer from OmniLedger to a FinalStatement.
+type StoreSigner struct {
+	PartyID []byte
+	Signer  darc.Signer
+}
+
+// StoreSignerReply is an empty reply
+type StoreSignerReply struct {
+}
+
+// GetSigner requests an Signer from OmniLedger to a FinalStatement.
+type GetSigner struct {
+	PartyID []byte
+}
+
+// GetSignerReply is the Signer for the party
+type GetSignerReply struct {
+	Signer darc.Signer
+}
+
 // StoreKeys stores a list of keys for attendees to retrieve
 // later.
 type StoreKeys struct {
@@ -247,5 +269,5 @@ type PopPartyInstance struct {
 	// nil if there is no next party.
 	Next omniledger.InstanceID
 	// Public key of service - can be nil.
-	Service kyber.Point
+	Service kyber.Point `protobuf:"opt"`
 }

@@ -17,8 +17,9 @@ class PopPartyInstance {
    * @param {Object} [finalStatement] - the complete final statement
    * @param {Uint8Array} [previous] - a link to the previous pop-party, if available
    * @param {Uint8Array} [next] - a link to the next pop-party, if available
+   * @param {Uint8Array} [service] - the public key of the service, if available
    */
-  constructor(ol, instanceId, instance, state, finalStatement, previous, next) {
+  constructor(ol, instanceId, instance, state, finalStatement, previous, next, service) {
     this._ol = ol;
     this._instanceId = instanceId;
     this._instance = instance;
@@ -26,6 +27,7 @@ class PopPartyInstance {
     this._finalStatement = finalStatement;
     this._previous = previous;
     this._next = next;
+    this._service = service;
   }
 
   /**
@@ -102,6 +104,7 @@ class PopPartyInstance {
       this._finalStatement = protoObject.finalstatement;
       this._previous = protoObject.previous;
       this._next = protoObject.next;
+      this._service = protoObject.service;
 
       return Promise.resolve(this);
     });
@@ -122,6 +125,10 @@ class PopPartyInstance {
 
     let b = hash.digest();
     return new Uint8Array(b.buffer, b.byteOffset, b.byteLength / Uint8Array.BYTES_PER_ELEMENT);
+  }
+
+  getServiceCoinInstanceId(){
+    return getAccountInstanceId(this._service);
   }
 }
 
