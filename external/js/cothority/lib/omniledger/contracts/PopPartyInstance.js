@@ -115,13 +115,13 @@ class PopPartyInstance {
    * amount of coin on a personnal account. This method compute the instance
    * id of this account, depending on the public key of the attendee
    *
-   * @param {Identity} identity - the attendee whose account id has to be computed
+   * @param {Point} Pub - the public key of the attendee
    * @return {Uint8Array} - the coin instance id of the attendee
    */
-  getAccountInstanceId(identity) {
+  getAccountInstanceId(pub) {
     const hash = crypto.createHash("sha256");
     hash.update(this._instanceId);
-    hash.update(identity.public);
+    hash.update(pub);
 
     let b = hash.digest();
     return new Uint8Array(b.buffer, b.byteOffset, b.byteLength / Uint8Array.BYTES_PER_ELEMENT);

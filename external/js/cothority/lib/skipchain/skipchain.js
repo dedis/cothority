@@ -60,7 +60,7 @@ class Client {
    * all checks pass.
    */
   getLatestBlock() {
-    var fn = co.wrap(function* (client) {
+    var fn = co.wrap(function*(client) {
       const requestStr = "GetUpdateChain";
       const responseStr = "GetUpdateChainReply";
       const request = {
@@ -82,7 +82,6 @@ class Client {
         var lastBlock;
         try {
           lastBlock = client.verifyUpdateChainReply(data);
-          console.log("Verifying update 5...");
         } catch (err) {
           console.log("error in the process : " + err);
           // tries again with random conodes
@@ -112,30 +111,32 @@ class Client {
    * @throws {Error} throw an error if the chain is invalid
    */
   verifyUpdateChainReply(updateChainReply) {
-    console.log("Verifying update...");
     const blocks = updateChainReply.update;
-    if (blocks.length == 0) throw new Error("no block returned in the chain");
-    console.log("Verifying update 2...");
+    if (blocks.length == 0) {
+      throw new Error("no block returned in the chain");
+    }
 
     // first verify the first block is the one we know
     const first = blocks[0];
     const id = new Uint8Array(first.hash);
-    if (!misc.uint8ArrayCompare(id, this.lastID))
+    if (!misc.uint8ArrayCompare(id, this.lastID)) {
       throw new Error("the first ID is not the one we have");
-    console.log("Verifying update 3...");
+    }
 
-    if (blocks.length == 1) return first;
+    if (blocks.length == 1) {
+      return first;
+    }
     // then check the block links consecutively
     var currBlock = first;
-    console.log("Verifying update 4...");
     for (var i = 1; i < blocks.length; i++) {
       console.log(i + "/" + blocks.length);
       const nextBlock = blocks[i];
 
       const forwardLinks = currBlock.forward;
-      if (forwardLinks.length == 0)
-      //throw new Error("No forward links included in the skipblocks");
+      if (forwardLinks.length == 0) {
+        //throw new Error("No forward links included in the skipblocks");
         return currBlock;
+      }
 
       // only take the highest link since we move "as fast as possible" on
       // the skipchain, i.e. we skip the biggest number of blocks
@@ -143,12 +144,13 @@ class Client {
       const roster = identity.Roster.fromProtobuf(currBlock.roster);
       var err = this.verifyForwardLink(roster, lastLink);
       //if (err) console.log("error verifying: " + err);
-      if (err) throw err;
+      if (err) {
+        throw err;
+      }
 
       // move to the next block
       currBlock = nextBlock;
     }
-    console.log("Verifying is over :)");
     return currBlock;
   }
 
