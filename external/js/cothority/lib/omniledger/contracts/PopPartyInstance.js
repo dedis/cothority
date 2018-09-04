@@ -128,7 +128,7 @@ class PopPartyInstance {
   }
 
   getServiceCoinInstanceId(){
-    return getAccountInstanceId(this._service);
+    return this.getAccountInstanceId(this._service);
   }
 }
 
