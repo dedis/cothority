@@ -54,6 +54,17 @@ func TestService_LinkPoP(t *testing.T) {
 	require.True(t, gar.Account.Equal(s.serCoin))
 }
 
+// Stores and loads a personhood data.
+func TestService_SaveLoad(t *testing.T) {
+	// Creates a party and links it, then verifies the account exists.
+	s := newS(t)
+	defer s.Close()
+	s.createParty(t, len(s.servers), 3)
+
+	s.phs[0].save()
+	require.Nil(t, s.phs[0].tryLoad())
+}
+
 // Post a couple of questionnaires, get the list, and reply to some.
 func TestService_Questionnaire(t *testing.T) {
 	s := newS(t)

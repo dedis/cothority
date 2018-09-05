@@ -26,7 +26,7 @@ func init() {
 	var err error
 	templateID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
-	network.RegisterMessage(&storage{})
+	network.RegisterMessage(&Storage{})
 }
 
 // Service is our template-service
@@ -35,15 +35,15 @@ type Service struct {
 	// are correctly handled.
 	*onet.ServiceProcessor
 
-	storage *storage
+	storage *Storage
 }
 
 // storageID reflects the data we're storing - we could store more
 // than one structure.
-var storageID = []byte("main")
+var storageID = []byte("personhood")
 
-// storage is used to save our data.
-type storage struct {
+// Storage is used to save our data.
+type Storage struct {
 	Messages       map[string]*Message
 	Read           map[string]*readMsg
 	Questionnaires map[string]*Questionnaire
@@ -275,7 +275,7 @@ func (s *Service) save() {
 // Tries to load the configuration and updates the data in the service
 // if it finds a valid config-file.
 func (s *Service) tryLoad() error {
-	s.storage = &storage{}
+	s.storage = &Storage{}
 	msg, err := s.Load(storageID)
 	if err != nil {
 		return err
@@ -284,8 +284,9 @@ func (s *Service) tryLoad() error {
 		return nil
 	}
 	var ok bool
-	s.storage, ok = msg.(*storage)
+	s.storage, ok = msg.(*Storage)
 	if !ok {
+		log.Errorf("%T - %+v", msg, msg)
 		return errors.New("Data of wrong type")
 	}
 	return nil

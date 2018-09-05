@@ -96,14 +96,13 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 			}
 
 			for i, pub := range fs.Attendees {
-				log.Lvl3("Creating darc for attendee", i)
+				log.Lvlf3("Creating darc for attendee %d %s", i, pub)
 				d, sc, err := createDarc(darcID, pub)
 				if err != nil {
 					return nil, nil, err
 				}
 				scs = append(scs, sc)
 
-				log.Lvl3("Creating account for attendee", i)
 				sc, err = createCoin(inst, d, pub, 1000000)
 				if err != nil {
 					return nil, nil, err
@@ -114,12 +113,12 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 			// And add a service if the argument is given
 			sBuf := inst.Invoke.Args.Search("Service")
 			if sBuf != nil {
-				log.LLvl3("Appending service-darc and account")
 				ppi.Service = cothority.Suite.Point()
 				err = ppi.Service.UnmarshalBinary(sBuf)
 				if err != nil {
 					return nil, nil, errors.New("couldn't unmarshal point: " + err.Error())
 				}
+				log.Lvlf3("Appending service-darc and account for %s", ppi.Service)
 				d, sc, err := createDarc(darcID, ppi.Service)
 				if err != nil {
 					return nil, nil, err
@@ -138,9 +137,7 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 			}
 
 			// Update existing final statement
-			scs = ol.StateChanges{
-				ol.NewStateChange(ol.Update, inst.InstanceID, ContractPopParty, ppiBuf, darcID),
-			}
+			scs = append(scs, ol.NewStateChange(ol.Update, inst.InstanceID, ContractPopParty, ppiBuf, darcID))
 
 			return scs, coins, nil
 		case "AddParty":
@@ -188,7 +185,9 @@ func createCoin(inst ol.Instruction, d *darc.Darc, pub kyber.Point, balance uint
 		err = errors.New("couldn't encode CoinInstance: " + err.Error())
 		return
 	}
-	return ol.NewStateChange(ol.Create, ol.NewInstanceID(iid.Sum(nil)),
+	coinID := iid.Sum(nil)
+	log.Lvlf3("Creating account %x", coinID)
+	return ol.NewStateChange(ol.Create, ol.NewInstanceID(coinID),
 		contracts.ContractCoinID, cciBuf, d.GetBaseID()), nil
 }
 

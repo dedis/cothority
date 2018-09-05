@@ -713,7 +713,6 @@ func omniStore(c *cli.Context) error {
 
 	var finalStatement *service.FinalStatement
 	for k, v := range finalStatements {
-		log.Printf("Keeping proposed configuration %x", k)
 		finalId = []byte(k)
 		finalStatement = v
 	}
@@ -863,13 +862,13 @@ func omniFinalize(c *cli.Context) error {
 	}
 	fs, ok := fsMap[string(partyID)]
 	if !ok {
-		for k := range fsMap {
-			log.Printf("%x", k)
+		for k, fs := range fsMap {
+			log.Infof("partyID: %x - %v", k, fs.Desc)
 		}
 		return errors.New("didn't find final statement")
 	}
 	if fs.Signature == nil || len(fs.Attendees) == 0 {
-		log.Printf("%+v", fs)
+		log.Infof("%+v", fs)
 		return errors.New("proposed configuration not finalized")
 	}
 	fsBuf, err := protobuf.Encode(fs)
@@ -921,13 +920,16 @@ func omniFinalize(c *cli.Context) error {
 		return errors.New("error while sending transaction: " + err.Error())
 	}
 
-	ph.NewClient().LinkPoP(cfg.Roster.List[0], partyInstance, ph.Party{
+	err = ph.NewClient().LinkPoP(cfg.Roster.List[0], partyInstance, ph.Party{
 		OmniLedgerID:   cfg.ID,
 		FinalStatement: *fs,
 		Account:        partyInstance,
 		Darc:           cfg.GenesisDarc,
 		Signer:         *signer,
 	})
+	if err != nil {
+		return errors.New("couldn't store in personhood service: " + err.Error())
+	}
 
 	return nil
 }
@@ -969,7 +971,7 @@ func omniCoinShow(c *cli.Context) error {
 	if !accountProof.Proof.InclusionProof.Match() {
 		// This account doesn't exist - try with the account, supposing we got a
 		// public key.
-		log.Info("Interpreting argument as public key")
+		log.Info("Interpreting argument as public key.")
 		h := sha256.New()
 		h.Write(partyInstanceID)
 		h.Write(accountID)
