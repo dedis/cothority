@@ -73,7 +73,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	if s.Keep {
 		c = ol.NewClientKeep()
 	} else {
-		c = ol.NewClient()
+		c = ol.NewClientDeprecated()
 	}
 	signer := darc.NewSignerEd25519(nil, nil)
 

@@ -17,7 +17,7 @@ func TestValue_Spawn(t *testing.T) {
 
 	signer := darc.NewSignerEd25519(nil, nil)
 	_, roster, _ := local.GenTree(2, true)
-	cl := ol.NewClient()
+	cl := ol.NewClientDeprecated()
 
 	genesisMsg, err := ol.DefaultGenesisMsg(ol.CurrentVersion, roster,
 		[]string{"spawn:value", "spawn:darc"}, signer.Identity())

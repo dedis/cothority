@@ -584,8 +584,8 @@ func TestService_StateChange(t *testing.T) {
 
 		zeroBuf := make([]byte, 8)
 		switch inst.GetType() {
-		// create the object if it doesn't exist
 		case SpawnType:
+			// create the object if it doesn't exist
 			if inst.Spawn.ContractID != "add" {
 				return nil, nil, errors.New("can only spawn add contracts")
 			}
@@ -598,8 +598,8 @@ func TestService_StateChange(t *testing.T) {
 					Value:       zeroBuf,
 				},
 			}, nil, nil
-		case InvokeType:
 
+		case InvokeType:
 			// increment the object value
 			vals, err := rec.Values()
 			if err != nil {

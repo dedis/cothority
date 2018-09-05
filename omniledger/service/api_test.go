@@ -26,11 +26,9 @@ func TestClient_GetProof(t *testing.T) {
 	d := msg.GenesisDarc
 	require.Nil(t, d.Verify(true))
 
-	c := NewClient()
+	c := NewClient(Config{})
 	csr, err := c.CreateGenesisBlock(msg)
 	require.Nil(t, err)
-	c.Roster = roster
-	c.ID = csr.Skipblock.SkipChainID()
 
 	// Create a new transaction.
 	value := []byte{5, 6, 7, 8}

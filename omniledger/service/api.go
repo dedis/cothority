@@ -21,23 +21,42 @@ import (
 // ServiceName is used for registration on the onet.
 const ServiceName = "OmniLedger"
 
+func init() { network.RegisterMessages(&Config{}) }
+
 // Client is a structure to communicate with the OmniLedger service.
 type Client struct {
 	*onet.Client
-	ID      skipchain.SkipBlockID
-	Roster  *onet.Roster
-	OwnerID darc.Identity
+	ID     skipchain.SkipBlockID
+	Roster onet.Roster
+}
+
+// A Config gathers all the information a client needs to know to talk to
+// an OmniLedger instance.
+type Config struct {
+	ID     skipchain.SkipBlockID
+	Roster onet.Roster
+	// GenesisDarc is the first darc stored in omniledger. However, the
+	// actual genesisdarc in omniledger might be different from this one.
+	GenesisDarc darc.Darc
 }
 
 // NewClient instantiates a new Omniledger client.
-// TODO: this needs to be changed to avoid having an invalid Client.
-func NewClient() *Client {
-	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
+func NewClient(cfg Config) *Client {
+	return &Client{
+		Client: onet.NewClient(cothority.Suite, ServiceName),
+		ID:     cfg.ID,
+		Roster: cfg.Roster,
+	}
 }
 
-// NewClientKeep is like NewClient, but does not close the connection.
-func NewClientKeep() *Client {
-	return &Client{Client: onet.NewClientKeep(cothority.Suite, ServiceName)}
+// NewClientKeep is like NewClient, but does not close the connection when
+// sending requests to the same conode.
+func NewClientKeep(cfg Config) *Client {
+	return &Client{
+		Client: onet.NewClientKeep(cothority.Suite, ServiceName),
+		ID:     cfg.ID,
+		Roster: cfg.Roster,
+	}
 }
 
 // NewClientFromConfig instantiates a new Omniledger client.
@@ -47,10 +66,7 @@ func NewClientFromConfig(fn string) (*Client, error) {
 		return nil, err
 	}
 
-	c := NewClient()
-	c.Roster = &cfg.Roster
-	c.ID = cfg.ID
-	c.OwnerID = cfg.OwnerID
+	c := NewClient(*cfg)
 	return c, nil
 }
 
@@ -60,7 +76,7 @@ func (c *Client) CreateGenesisBlock(msg *CreateGenesisBlock) (*CreateGenesisBloc
 	if err := c.SendProtobuf(msg.Roster.List[0], msg, reply); err != nil {
 		return nil, err
 	}
-	c.Roster = &msg.Roster
+	c.Roster = msg.Roster
 	c.ID = reply.Skipblock.CalculateHash()
 	return reply, nil
 }
@@ -219,17 +235,6 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 
 	return nil, errors.New("timeout reached and inclusion not found")
 }
-
-// A Config gathers all the information a client needs to know to talk to
-// an OmniLedger instance.
-type Config struct {
-	ID     skipchain.SkipBlockID
-	Roster onet.Roster
-	// OwnerID is the identity that can sign evolutions of the genesis Darc.
-	OwnerID darc.Identity
-}
-
-func init() { network.RegisterMessages(&Config{}) }
 
 func loadConfig(fn string) (*Config, error) {
 	buf, err := ioutil.ReadFile(fn)

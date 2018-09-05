@@ -166,7 +166,7 @@ func show(c *cli.Context) error {
 
 	cfg := &ol.Config{
 		ID:     cl.ID,
-		Roster: *cl.Roster,
+		Roster: cl.Roster,
 	}
 
 	fmt.Fprintln(c.App.Writer, cfg)
