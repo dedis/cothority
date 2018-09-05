@@ -1,13 +1,5 @@
 package darc
 
-import (
-	"github.com/dedis/onet/network"
-)
-
-func init() {
-	network.RegisterMessages(&Darc{}, &Identity{}, &Signer{})
-}
-
 // ID is the identity of a Darc - which is the sha256 of its protobuf representation
 // over invariant fields [Owners, Users, Version, Description]. Signature is excluded.
 // An evolving Darc will change its identity.

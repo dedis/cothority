@@ -20,6 +20,10 @@ import (
 	cli "gopkg.in/urfave/cli.v1"
 )
 
+func init() {
+	network.RegisterMessages(&darc.Darc{}, &darc.Identity{}, &darc.Signer{})
+}
+
 var cmds = cli.Commands{
 	{
 		Name:    "create",
