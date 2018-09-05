@@ -26,8 +26,7 @@ func TestClient_GetProof(t *testing.T) {
 	d := msg.GenesisDarc
 	require.Nil(t, d.Verify(true))
 
-	c := NewClient(Config{})
-	csr, err := c.CreateGenesisBlock(msg)
+	c, csr, err := NewOmniledger(msg, false)
 	require.Nil(t, err)
 
 	// Create a new transaction.

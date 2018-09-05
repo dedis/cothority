@@ -128,9 +128,8 @@ func create(c *cli.Context) error {
 	}
 
 	cfg := &ol.Config{
-		ID:      resp.Skipblock.SkipChainID(),
-		Roster:  *r,
-		OwnerID: owner.Identity(),
+		ID:     resp.Skipblock.SkipChainID(),
+		Roster: *r,
 	}
 	fn, err = save(cfg)
 	if err != nil {

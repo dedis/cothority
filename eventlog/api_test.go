@@ -363,9 +363,7 @@ func newSer(t *testing.T) (*ser, *Client) {
 	}
 	s.id = resp.Skipblock.Hash
 
-	ol := omniledger.NewClientDeprecated()
-	ol.Roster = *s.roster
-	ol.ID = s.id
+	ol := omniledger.NewClient(omniledger.Config{Roster: *s.roster, ID: s.id})
 
 	c := NewClient(ol)
 	c.DarcID = s.gen.GetBaseID()

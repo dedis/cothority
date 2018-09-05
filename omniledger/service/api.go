@@ -21,8 +21,6 @@ import (
 // ServiceName is used for registration on the onet.
 const ServiceName = "OmniLedger"
 
-func init() { network.RegisterMessages(&Config{}) }
-
 // Client is a structure to communicate with the OmniLedger service.
 type Client struct {
 	*onet.Client
@@ -41,44 +39,38 @@ type Config struct {
 }
 
 // NewClient instantiates a new Omniledger client.
-func NewClient(cfg Config) *Client {
+func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 	return &Client{
 		Client: onet.NewClient(cothority.Suite, ServiceName),
-		ID:     cfg.ID,
-		Roster: cfg.Roster,
+		ID:     ID,
+		Roster: Roster,
 	}
 }
 
 // NewClientKeep is like NewClient, but does not close the connection when
 // sending requests to the same conode.
-func NewClientKeep(cfg Config) *Client {
+func NewClientKeep(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 	return &Client{
 		Client: onet.NewClientKeep(cothority.Suite, ServiceName),
-		ID:     cfg.ID,
-		Roster: cfg.Roster,
+		ID:     ID,
+		Roster: Roster,
 	}
 }
 
-// NewClientFromConfig instantiates a new Omniledger client.
-func NewClientFromConfig(fn string) (*Client, error) {
-	cfg, err := loadConfig(fn)
-	if err != nil {
-		return nil, err
+// NewOmniledger sets up a new OmniLedger instance.
+func NewOmniledger(msg *CreateGenesisBlock, keep bool) (*Client, *CreateGenesisBlockResponse, error) {
+	var c *Client
+	if keep {
+		c = NewClientKeep(nil, msg.Roster)
+	} else {
+		c = NewClient(nil, msg.Roster)
 	}
-
-	c := NewClient(*cfg)
-	return c, nil
-}
-
-// CreateGenesisBlock sets up a new OmniLedger instance.
-func (c *Client) CreateGenesisBlock(msg *CreateGenesisBlock) (*CreateGenesisBlockResponse, error) {
 	reply := &CreateGenesisBlockResponse{}
 	if err := c.SendProtobuf(msg.Roster.List[0], msg, reply); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	c.Roster = msg.Roster
 	c.ID = reply.Skipblock.CalculateHash()
-	return reply, nil
+	return c, reply, nil
 }
 
 // AddTransaction adds a transaction. It does not return any feedback
