@@ -132,6 +132,7 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 		binary.LittleEndian.PutUint32(b[:], uint32(len(s.Signature)))
 		h.Write(b[:])
 		h.Write(s.Signature)
+		// TODO: Why not h.Write(s.Signer)
 	}
 	// Because there is no attacker-controlled input after what, we do not need
 	// domain separation here.
@@ -200,7 +201,7 @@ func (instr Instruction) Action() string {
 	case InvokeType:
 		a = "invoke:" + instr.Invoke.Command
 	case DeleteType:
-		a = "Delete"
+		a = "delete"
 	}
 	return a
 }
@@ -273,9 +274,9 @@ func (instr Instruction) ToDarcRequest(baseID darc.ID) (*darc.Request, error) {
 		if err != nil {
 			return nil, err
 		}
-		req = darc.InitRequest(baseID, darc.Action(action), d.GetID(), ids, sigs)
+		req = darc.NewRequest(baseID, darc.Action(action), d.GetID(), ids, sigs)
 	} else {
-		req = darc.InitRequest(baseID, darc.Action(action), instr.Hash(), ids, sigs)
+		req = darc.NewRequest(baseID, darc.Action(action), instr.Hash(), ids, sigs)
 	}
 	return &req, nil
 }

@@ -30,7 +30,6 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
-	"github.com/tevino/abool"
 	"gopkg.in/satori/go.uuid.v1"
 )
 
@@ -73,7 +72,8 @@ type Service struct {
 	chains                  chainLocker
 	verifyNewBlockBuffer    sync.Map
 	verifyFollowBlockBuffer sync.Map
-	closed                  *abool.AtomicBool
+	closed                  bool
+	closedMutex             sync.Mutex
 	working                 sync.WaitGroup
 }
 
@@ -167,11 +167,14 @@ type Storage struct {
 // If TargetSkipChainID is an empty slice, the service will create a new
 // skipchain and store the given block as genesis-block.
 func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, error) {
-	s.working.Add(1)
-	defer s.working.Done()
-	if s.closed.IsSet() {
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
 		return nil, errors.New("closing down")
 	}
+	s.working.Add(1)
+	s.closedMutex.Unlock()
+	defer s.working.Done()
 	// Initial checks on the proposed block.
 	prop := psbd.NewBlock
 	if !s.ServerIdentity().Equal(prop.Roster.Get(0)) {
@@ -861,8 +864,12 @@ func (s *Service) EnableViewChange() {
 // makes sure that skipchain is not processing requests and will avoid
 // further requests that might be queued up.
 func (s *Service) TestClose() {
-	s.closed.Set()
-	s.working.Wait()
+	s.closedMutex.Lock()
+	if !s.closed {
+		s.closed = true
+		s.closedMutex.Unlock()
+		s.working.Wait()
+	}
 }
 
 func (s *Service) verifySigs(msg, sig []byte) bool {
@@ -888,11 +895,14 @@ func (s *Service) verifySigs(msg, sig []byte) bool {
 // from the latest to the new block. For higher level links, less
 // verifications need to be done using forwardLink.
 func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
-	s.working.Add(1)
-	defer s.working.Done()
-	if s.closed.IsSet() {
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
 		return nil
 	}
+	s.working.Add(1)
+	s.closedMutex.Unlock()
+	defer s.working.Done()
 	if src.GetForwardLen() > 0 {
 		return errors.New("already have forward-link at this height")
 	}
@@ -1058,11 +1068,14 @@ func (s *Service) bftForwardLinkLevel0Ack(msg []byte, data []byte) bool {
 // forwardLink receives a signature request of a newly accepted block.
 // It only needs the 2nd-newest block and the forward-link.
 func (s *Service) forwardLink(req *network.Envelope) {
-	s.working.Add(1)
-	defer s.working.Done()
-	if s.closed.IsSet() {
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
 		return
 	}
+	s.working.Add(1)
+	s.closedMutex.Unlock()
+	defer s.working.Done()
 	err := func() error {
 		fsOrig, ok := req.Msg.(*ForwardSignature)
 		if !ok {
@@ -1314,11 +1327,14 @@ func (s *Service) verifyBlock(sb *SkipBlock) error {
 
 // notify other services about new/updated skipblock
 func (s *Service) startPropagation(blocks []*SkipBlock) error {
-	s.working.Add(1)
-	defer s.working.Done()
-	if s.closed.IsSet() {
-		return nil
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
+		return errors.New("closing down")
 	}
+	s.working.Add(1)
+	s.closedMutex.Unlock()
+	defer s.working.Done()
 	log.Lvl3("Starting to propagate for service", s.ServerIdentity())
 	siMap := map[string]*network.ServerIdentity{}
 	// Add all rosters of all blocks - everybody needs to be contacted
@@ -1478,7 +1494,6 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 		Storage:          &Storage{},
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 		propTimeout:      defaultPropagateTimeout,
-		closed:           abool.New(),
 	}
 
 	if err := s.tryLoad(); err != nil {

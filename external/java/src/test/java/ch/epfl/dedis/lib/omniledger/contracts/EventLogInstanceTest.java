@@ -45,7 +45,7 @@ class EventLogInstanceTest {
         rules.addRule("invoke:eventlog", admin.getIdentity().toString().getBytes());
         Darc genesisDarc = new Darc(rules, "genesis".getBytes());
 
-        ol = new OmniledgerRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(100, MILLIS));
+        ol = new OmniledgerRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
         if (!ol.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
@@ -57,7 +57,7 @@ class EventLogInstanceTest {
     void log() throws Exception {
         Event e = new Event("hello", "goodbye");
         InstanceId key = el.log(e, ol.getGenesisDarc().getBaseId(), Arrays.asList(admin));
-        Thread.sleep(2 * ol.getConfig().getBlockInterval().toMillis());
+        Thread.sleep(5 * ol.getConfig().getBlockInterval().toMillis());
         Event loggedEvent = el.get(key);
         assertEquals(loggedEvent, e);
     }
@@ -75,7 +75,7 @@ class EventLogInstanceTest {
         boolean allOK = true;
         for (int i = 0; i < 4; i++) {
             allOK = true;
-            Thread.sleep(2 * ol.getConfig().getBlockInterval().toMillis());
+            Thread.sleep(5 * ol.getConfig().getBlockInterval().toMillis());
             for (InstanceId key : keys) {
                 try {
                     logger.info("ok");
@@ -100,7 +100,7 @@ class EventLogInstanceTest {
         Event event = new Event(now, "login", "alice");
         el.log(event, ol.getGenesisDarc().getBaseId(), Arrays.asList(admin));
 
-        Thread.sleep(2 * ol.getConfig().getBlockInterval().toMillis());
+        Thread.sleep(5 * ol.getConfig().getBlockInterval().toMillis());
 
         // finds the event under any topic
         SearchResponse resp = el.search("", now - 1000, now + 1000);

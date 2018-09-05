@@ -7,6 +7,8 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/viewchange"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -101,15 +103,15 @@ func (s *Service) ContractConfig(cdb CollectionView, inst Instruction, coins []C
 	}
 	switch inst.GetType() {
 	case SpawnType:
-		return s.spawnContractConfig(cdb, inst, coins)
+		return spawnContractConfig(cdb, inst, coins)
 	case InvokeType:
-		return s.invokeContractConfig(cdb, inst, coins)
+		return invokeContractConfig(cdb, inst, coins)
 	default:
 		return nil, coins, errors.New("unsupported instruction type")
 	}
 }
 
-func (s *Service) invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
+func invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
 	cOut = coins
 
 	// Find the darcID for this instance.
@@ -141,24 +143,21 @@ func (s *Service) invokeContractConfig(cdb CollectionView, inst Instruction, coi
 		}
 		return
 	} else if inst.Invoke.Command == "view_change" {
-		config := &ChainConfig{}
-		config, err = LoadConfigFromColl(cdb)
+		var req viewchange.NewViewReq
+		err = protobuf.DecodeWithConstructors(inst.Invoke.Args.Search("newview"), &req, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
 			return
 		}
-		newRosterBuf := inst.Invoke.Args.Search("roster")
-		newRoster := onet.Roster{}
-		err = protobuf.DecodeWithConstructors(newRosterBuf, &newRoster, network.DefaultConstructors(cothority.Suite))
+		// If everything is correctly signed, then we trust it, no need
+		// to do additional verification.
+		sigBuf := inst.Invoke.Args.Search("multisig")
+		err = cosi.Verify(cothority.Suite, req.Roster.Publics(),
+			req.Hash(), sigBuf, cosi.NewThresholdPolicy(len(req.Roster.List)-len(req.Roster.List)/3))
 		if err != nil {
 			return
 		}
-		if err = validRotation(config.Roster, newRoster); err != nil {
-			return
-		}
-		if err = s.withinInterval(darcID, inst.Signatures[0].Signer.Ed25519.Point); err != nil {
-			return
-		}
-		sc, err = updateRosterScs(cdb, darcID, newRoster)
+
+		sc, err = updateRosterScs(cdb, darcID, req.Roster)
 		return
 	}
 	err = errors.New("invalid invoke command: " + inst.Invoke.Command)
@@ -195,7 +194,7 @@ func validRotation(oldRoster, newRoster onet.Roster) error {
 	return nil
 }
 
-func (s *Service) spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+func spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	c = coins
 	darcBuf := inst.Spawn.Args.Search("darc")
 	d, err := darc.NewFromProtobuf(darcBuf)
@@ -300,8 +299,9 @@ func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coi
 		default:
 			return nil, nil, errors.New("invalid command: " + inst.Invoke.Command)
 		}
-
+	case DeleteType:
+		return nil, nil, errors.New("delete on a Darc instance is not supported")
 	default:
-		return nil, nil, errors.New("Only invoke and spawn are defined yet")
+		return nil, nil, errors.New("unknown instruction type")
 	}
 }

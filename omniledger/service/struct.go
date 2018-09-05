@@ -354,6 +354,10 @@ type olState struct {
 	// send true for a valid ClientTransaction and false for an invalid
 	// ClientTransaction.
 	waitChannels map[string]chan bool
+	// blockListeners will be notified every time a block is created.
+	// It is up to them to filter out block creations on chains they are not
+	// interested in.
+	blockListeners []chan skipchain.SkipBlockID
 }
 
 func (ol *olState) createWaitChannel(ctxHash []byte) chan bool {
@@ -377,4 +381,37 @@ func (ol *olState) deleteWaitChannel(ctxHash []byte) {
 	ol.Lock()
 	defer ol.Unlock()
 	delete(ol.waitChannels, string(ctxHash))
+}
+
+func (ol *olState) informBlock(id skipchain.SkipBlockID) {
+	ol.Lock()
+	defer ol.Unlock()
+	for _, x := range ol.blockListeners {
+		if x != nil {
+			x <- id
+		}
+	}
+}
+
+func (ol *olState) registerForBlocks(ch chan skipchain.SkipBlockID) int {
+	ol.Lock()
+	defer ol.Unlock()
+
+	for i := 0; i < len(ol.blockListeners); i++ {
+		if ol.blockListeners[i] == nil {
+			ol.blockListeners[i] = ch
+			return i
+		}
+	}
+
+	// If we got here, no empty spots left, append and return the position of the
+	// new element (on startup: after append(nil, ch), len == 1, so len-1 = index 0.
+	ol.blockListeners = append(ol.blockListeners, ch)
+	return len(ol.blockListeners) - 1
+}
+
+func (ol *olState) unregisterForBlocks(i int) {
+	ol.Lock()
+	defer ol.Unlock()
+	ol.blockListeners[i] = nil
 }
