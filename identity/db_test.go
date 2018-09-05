@@ -39,7 +39,7 @@ func TestLoadVersion(t *testing.T) {
 	require.Nil(t, err)
 	ml.data[string(storageKey)] = s0aBuf
 
-	storage, err := loadVersion(ml)
+	storage, err := updateFrom0(ml, 1)
 	require.Nil(t, err)
 	require.True(t, s0a.SkipchainKeyPair.Public.Equal(storage.SkipchainKeyPair.Public))
 	require.Equal(t, s0a.Identities["abc"].Latest.Threshold,
@@ -68,7 +68,7 @@ func TestLoadVersion(t *testing.T) {
 	ml.data[string(storageKey)] = s0bBuf
 	ml.SaveVersion(0)
 
-	storage, err = loadVersion(ml)
+	storage, err = updateFrom0(ml, 1)
 	require.Nil(t, err)
 	require.True(t, s0b.SkipchainKeyPair.Public.Equal(storage.SkipchainKeyPair.Public))
 	require.Equal(t, s0b.Identities["abc"].Latest.Threshold,

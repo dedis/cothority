@@ -152,7 +152,6 @@ func TestIdentity_DataNewCheck(t *testing.T) {
 	defer l.CloseAll()
 
 	c1 := createIdentity(l, services, roster, "one")
-
 	data2 := c1.Data.Copy()
 	kp2 := key.NewKeyPair(tSuite)
 	data2.Device["two"] = &Device{kp2.Public}

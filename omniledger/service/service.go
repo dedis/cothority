@@ -26,6 +26,12 @@ import (
 	"gopkg.in/satori/go.uuid.v1"
 )
 
+// This is to boost the acceptable timestamp window when dealing with
+// very short block intervals, like in testing. If a production OmniLedger
+// had a block interval of 30 seconds, for example, this minimum will
+// not trigger, and the acceptable window would be ± 30 sec.
+var minTimestampWindow = 10 * time.Second
+
 const invokeEvolve darc.Action = darc.Action("invoke:evolve")
 
 const rotationWindow time.Duration = 10
@@ -851,12 +857,6 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		}
 	}
 
-	// This is to boost the acceptable timestamp window when dealing with
-	// very short block intervals, like in testing. If a production OmniLedger
-	// had a block interval of 5 seconds, for example, this minimum
-	// not trigger, and the acceptable window would be ± 10 sec.
-	const minTimestampWindow = 1 * time.Second
-
 	window := 4 * config.BlockInterval
 	if window < minTimestampWindow {
 		window = minTimestampWindow
@@ -1318,6 +1318,14 @@ func (s *Service) save() {
 }
 
 func (s *Service) trySyncAll() {
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
+		return
+	}
+	s.working.Add(1)
+	defer s.working.Done()
+	s.closedMutex.Unlock()
 	gas := &skipchain.GetAllSkipChainIDs{}
 	gasr, err := s.skService().GetAllSkipChainIDs(gas)
 	if err != nil {

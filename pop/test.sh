@@ -46,6 +46,39 @@ main(){
 	stopTest
 }
 
+testOlStore(){
+  att=2
+  mkConfig 3 1 1 $att
+  testOK runOl 1 create -roster public.toml -interval 2s
+  OL=cl1/ol*
+  KEY=cl1/key*
+  runGrepSed "New party" "s/.* //" runCl 1 ol store $OL $KEY
+  PARTYINSTID=$SED
+  testOK test -n "$PARTYINSTID"
+  testFail runCl 1 ol coin show $OL $PARTYINSTID ${pub[1]}
+  testFail runCl 1 ol finalize $OL $KEY ${pop_hash[1]}
+
+  for (( o=1; o<=3; o++ )); do
+    for (( cl=1; cl<=$att; cl++ )); do
+      runCl $o org public ${pub[cl]} ${pop_hash[1]} || fail "couldn't store public key"
+    done
+  done
+       runCl 1 org final ${pop_hash[1]}
+       runCl 2 org final ${pop_hash[1]}
+       runCl 3 org final ${pop_hash[1]}
+
+       testOK runCl 1 ol finalize $OL $KEY ${pop_hash[1]}
+
+  runGrepSed "Coin balance" "s/.* //" runCl 1 ol coin show $OL $PARTYINSTID ${pub[1]}
+  testGrep 100000 echo $SED
+
+       testOK runCl 1 ol coin transfer $OL $PARTYINSTID ${priv[1]} ${pub[2]} 100000
+       runGrepSed "Coin balance" "s/.* //" runCl 1 ol coin show $OL $PARTYINSTID ${pub[1]}
+  testGrep 90000 echo $SED
+       runGrepSed "Coin balance" "s/.* //" runCl 1 ol coin show $OL $PARTYINSTID ${pub[2]}
+  testGrep 110000 echo $SED
+}
+
 testPropagateConfig(){
 	mkPopConfig 1 2
 	mkLink 2

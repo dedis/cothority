@@ -29,11 +29,13 @@ class CalypsoTest {
     class Pair<A, B> {
         A a;
         B b;
+
         Pair(A a, B b) {
             this.a = a;
             this.b = b;
         }
     }
+
     private OmniledgerRPC ol;
     private CreateLTSReply ltsReply;
     private Darc testDarc;
@@ -103,9 +105,9 @@ class CalypsoTest {
     }
 
     Pair<WriteRequest, WriterInstance> createWriterInstance(String secret) throws Exception {
-        WriteRequest wr = new WriteRequest(secret, 16, genesisDarc.getId());
-        WriterInstance w = new WriterInstance(ol, Arrays.asList(admin), genesisDarc.getId(), ltsReply, wr);
-      
+        WriteRequest wr = new WriteRequest(secret, 16, testDarc.getId());
+        WriterInstance w = new WriterInstance(ol, Arrays.asList(testSigner), testDarc.getId(), ltsReply, wr);
+
         Proof p = ol.getProof(w.getInstance().getId());
         assertTrue(p.matches());
 
