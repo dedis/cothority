@@ -5,6 +5,8 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
+	"github.com/dedis/cothority/omniledger/darc"
+	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
@@ -16,12 +18,18 @@ func init() {
 		PinRequest{}, FetchRequest{}, MergeRequest{},
 		StoreConfig{}, StoreConfigReply{},
 		GetProposals{}, GetProposalsReply{},
-		VerifyLink{}, VerifyLinkReply{})
+		VerifyLink{}, VerifyLinkReply{},
+		PopPartyInstance{}, StoreInstanceID{},
+		StoreInstanceIDReply{},
+		GetInstanceID{}, GetInstanceIDReply{})
 }
 
 // PROTOSTART
 // package pop;
+// type :map\[string\]FinalStatement:map<string, FinalStatement>
+// type :omniledger.InstanceID:bytes
 // import "onet.proto";
+// import "darc.proto";
 //
 // option java_package = "ch.epfl.dedis.proto";
 // option java_outer_classname = "PoPProto";
@@ -57,7 +65,7 @@ type FinalStatement struct {
 	Attendees []kyber.Point
 	// Signature is created by all conodes responsible for that pop-party
 	Signature []byte
-	// Flag indicates, that party was merged
+	// Flag indicates that party was merged
 	Merged bool
 }
 
@@ -161,4 +169,108 @@ type VerifyLink struct {
 // VerifyLinkReply returns true if the public key is in the admin-list.
 type VerifyLinkReply struct {
 	Exists bool
+}
+
+// GetLink returns the public key of the linked organizer.
+type GetLink struct {
+}
+
+// GetLinkReply holds the public key of the linked organizer.
+type GetLinkReply struct {
+	Public kyber.Point
+}
+
+// GetFinalStatements returns all stored final statements.
+type GetFinalStatements struct {
+}
+
+// GetFinalStatementsReply returns all stored final statements.
+type GetFinalStatementsReply struct {
+	FinalStatements map[string]*FinalStatement
+}
+
+// StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
+type StoreInstanceID struct {
+	PartyID    []byte
+	InstanceID omniledger.InstanceID
+}
+
+// StoreInstanceIDReply is an empty reply
+type StoreInstanceIDReply struct {
+}
+
+// GetInstanceID requests an InstanceID from OmniLedger to a FinalStatement.
+type GetInstanceID struct {
+	PartyID []byte
+}
+
+// GetInstanceIDReply is the InstanceID for the party
+type GetInstanceIDReply struct {
+	InstanceID omniledger.InstanceID
+}
+
+// StoreSigner writes an Signer from OmniLedger to a FinalStatement.
+type StoreSigner struct {
+	PartyID []byte
+	Signer  darc.Signer
+}
+
+// StoreSignerReply is an empty reply
+type StoreSignerReply struct {
+}
+
+// GetSigner requests an Signer from OmniLedger to a FinalStatement.
+type GetSigner struct {
+	PartyID []byte
+}
+
+// GetSignerReply is the Signer for the party
+type GetSignerReply struct {
+	Signer darc.Signer
+}
+
+// StoreKeys stores a list of keys for attendees to retrieve
+// later.
+type StoreKeys struct {
+	// ID is the ID of the party where we want to store intermediate keys
+	ID []byte
+	// Keys is a list of public keys to store
+	Keys []kyber.Point
+	// Signature proves that the organizer updated the keys
+	Signature []byte
+}
+
+// StoreKeysReply is an empty message.
+type StoreKeysReply struct {
+}
+
+// GetKeys can be used to retrieve the keyset for a given party - useful
+// for an attendee to know if his key has been scanned.
+type GetKeys struct {
+	ID []byte
+}
+
+// GetKeysReply returns the keys stored for a given Party-ID.
+type GetKeysReply struct {
+	ID   []byte
+	Keys []kyber.Point
+}
+
+// PopPartyInstance is the data that is stored in a pop-party instance.
+type PopPartyInstance struct {
+	// State has one of the following values:
+	// 1: it is a configuration only
+	// 2: it is a finalized pop-party
+	State int
+	// FinalStatement has either only the Desc inside if State == 1, or all fields
+	// set if State == 2.
+	FinalStatement *FinalStatement
+	// Previous is the link to the instanceID of the previous party, it can be
+	// nil for the first party.
+	Previous omniledger.InstanceID
+	// Next is a link to the omniledger instanceID of the next party. It can be
+	// nil if there is no next party.
+	Next omniledger.InstanceID
+	// Public key of service - can be nil.
+	Service kyber.Point `protobuf:"opt"`
 }
