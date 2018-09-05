@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -13,14 +14,23 @@ import (
 	"github.com/dedis/cothority/eventlog"
 	"github.com/dedis/cothority/omniledger/darc"
 	omniledger "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/util/encoding"
+	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
 	"gopkg.in/urfave/cli.v1"
 )
 
 type config struct {
 	Name       string
 	EventLogID omniledger.InstanceID
+}
+
+type olConfig struct {
+	Roster       onet.Roster
+	OmniledgerID skipchain.SkipBlockID
 }
 
 var cmds = cli.Commands{
@@ -151,11 +161,19 @@ func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
 	if fn == "" {
 		return nil, errors.New("--ol is required")
 	}
-	ol, err := omniledger.NewClientFromConfig(fn)
+
+	cfgBuf, err := ioutil.ReadFile(fn)
 	if err != nil {
 		return nil, err
 	}
-	cl := eventlog.NewClient(ol)
+	var cfg olConfig
+	err = protobuf.DecodeWithConstructors(cfgBuf, &cfg,
+		network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, err
+	}
+
+	cl := eventlog.NewClient(omniledger.NewClient(cfg.OmniledgerID, cfg.Roster))
 
 	d, err := cl.OmniLedger.GetGenDarc()
 	if err != nil {
