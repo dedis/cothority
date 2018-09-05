@@ -6,7 +6,7 @@ import "gopkg.in/urfave/cli.v1"
 This holds the cli-commands so the main-file is less cluttered.
 */
 
-var commandOrg, commandAttendee, commandAuth cli.Command
+var commandOrg, commandAttendee, commandAuth, commandOmniledger cli.Command
 
 func init() {
 
@@ -123,6 +123,48 @@ func init() {
 				Usage:     "verifies a tag and a signature",
 				ArgsUsage: "message context signature tag party_hash",
 				Action:    attVerify,
+			},
+		},
+	}
+	commandOmniledger = cli.Command{
+		Name:    "omniledger",
+		Aliases: []string{"ol"},
+		Usage:   "communicate with Omniledger",
+		Subcommands: []cli.Command{
+			{
+				Name:      "store",
+				Aliases:   []string{"s"},
+				Usage:     "store the proposition of a pop-party in omniledger",
+				ArgsUsage: "omniledger.cfg key-xxx.cfg final-id",
+				Action:    omniStore,
+			},
+			{
+				Name:      "finalize",
+				Aliases:   []string{"f"},
+				Usage:     "store a finalized pop-party in omniledger",
+				ArgsUsage: "omniledger.cfg key-xxx.cfg partyId",
+				Action:    omniFinalize,
+			},
+			{
+				Name:    "coin",
+				Aliases: []string{"c"},
+				Usage:   "show and move coins",
+				Subcommands: cli.Commands{
+					{
+						Name:      "show",
+						Aliases:   []string{"s"},
+						Usage:     "show how many coins are left in the account",
+						ArgsUsage: "omniledger.cfg partyInstID (public-key|accountID)",
+						Action:    omniCoinShow,
+					},
+					{
+						Name:      "transfer",
+						Aliases:   []string{"t"},
+						Usage:     "transfer money from one account to another",
+						ArgsUsage: "omniledger.cfg partyInstID source_private_key dst_public_key amount",
+						Action:    omniCoinTransfer,
+					},
+				},
 			},
 		},
 	}

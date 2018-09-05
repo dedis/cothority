@@ -364,7 +364,7 @@ func newSer(t *testing.T) (*ser, *Client) {
 	s.id = resp.Skipblock.Hash
 
 	ol := omniledger.NewClient()
-	ol.Roster = s.roster
+	ol.Roster = *s.roster
 	ol.ID = s.id
 
 	c := NewClient(ol)

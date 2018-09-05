@@ -46,18 +46,20 @@ func loadVersion(l onet.ContextDB) (*storage1, error) {
 		// TODO: this is really ugly...
 		if c, ok := l.(*onet.Context); ok {
 			err = c.Save(storageKey, storage)
+			err = l.SaveVersion(dbVersion)
 		}
-		err = l.SaveVersion(dbVersion)
 		return storage, err
 	}
-	sInt, err := l.Load(storageKey)
+	sBuf, err := l.LoadRaw(storageKey)
 	if err != nil {
 		return nil, err
 	}
-	if sInt == nil {
-		return &storage1{}, nil
+	s := &storage1{}
+	err = protobuf.Decode(sBuf[16:], s)
+	if err != nil {
+		return nil, err
 	}
-	return sInt.(*storage1), err
+	return s, err
 }
 
 // storage1 holds the map to the storages so it can be marshaled.

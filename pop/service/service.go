@@ -25,8 +25,6 @@ package service
 import (
 	"bytes"
 	"errors"
-	"fmt"
-	"math/big"
 	"strings"
 	"sync"
 	"time"
@@ -35,10 +33,11 @@ import (
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/messaging"
+	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/suites"
-	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -110,6 +109,13 @@ type Service struct {
 	// all proposed configurations - they don't need to be saved. Every time they
 	// are retrived, they will be deleted.
 	proposedDescription []PopDesc
+	// storedKeys is a temporary storage for saving keys of attendees while
+	// scanning.
+	storedKeys map[string]*keyList
+}
+
+type keyList struct {
+	Keys []kyber.Point
 }
 
 type saveData struct {
@@ -120,6 +126,10 @@ type saveData struct {
 	// The final statements
 	// key of map is ID of party
 	Finals map[string]*FinalStatement
+	// InstanceIDs stores a map of partyID to InstanceID
+	InstanceIDs map[string]*service.InstanceID
+	// Signers stores a map of partyID to Signer
+	Signers map[string]*darc.Signer
 	// The info used in merge process
 	// key is ID of party
 	merges map[string]*merge
@@ -146,7 +156,8 @@ var ErrorReadPIN = errors.New("Read PIN in server-log")
 // correct pin, and if so, it stores the public key as reference.
 func (s *Service) PinRequest(req *PinRequest) (network.Message, error) {
 	if req.Pin == "" {
-		s.data.Pin = fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
+		// s.data.Pin = fmt.Sprintf("%06d", random.Int(big.NewInt(1000000), s.Suite().RandomStream()))
+		s.data.Pin = "1"
 		log.Info("PIN:", s.data.Pin)
 		return nil, ErrorReadPIN
 	}
@@ -240,12 +251,12 @@ func (s *Service) GetProposals(req *GetProposals) (*GetProposalsReply, error) {
 // FinalizeRequest returns the FinalStatement if all conodes already received
 // a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
 // pruned attendees-public-key-list and the collective signature.
-func (s *Service) FinalizeRequest(req *FinalizeRequest) (network.Message, error) {
+func (s *Service) FinalizeRequest(req *FinalizeRequest) (*FinalizeResponse, error) {
 	log.Lvlf2("Finalize: %s %+v", s.Context.ServerIdentity(), req)
 	if s.data.Public == nil {
 		return nil, errors.New("Not linked yet")
 	}
-	hash, err := req.hash()
+	hash, err := req.Hash()
 	if err != nil {
 		return nil, err
 	}
@@ -401,6 +412,68 @@ func (s *Service) MergeRequest(req *MergeRequest) (network.Message,
 
 	s.save()
 	return &FinalizeResponse{newFinal}, nil
+}
+
+// GetLink returns the public key of the linked organizer.
+func (s *Service) GetLink(req *GetLink) (*GetLinkReply, error) {
+	return &GetLinkReply{s.data.Public}, nil
+}
+
+// GetFinalStatements returns all final statements stored in this service.
+func (s *Service) GetFinalStatements(req *GetFinalStatements) (*GetFinalStatementsReply, error) {
+	rep := &GetFinalStatementsReply{
+		FinalStatements: make(map[string]*FinalStatement),
+	}
+	for k, v := range s.data.Finals {
+		rep.FinalStatements[k] = v
+	}
+	return rep, nil
+}
+
+// GetFinalStatements returns all final statements stored in this service.
+func (s *Service) StoreKeys(req *StoreKeys) (*StoreKeysReply, error) {
+	// TODO: verify signature
+	s.storedKeys[string(req.ID)] = &keyList{req.Keys}
+	return &StoreKeysReply{}, nil
+}
+
+func (s *Service) GetKeys(req *GetKeys) (*GetKeysReply, error) {
+	return &GetKeysReply{
+		ID:   req.ID,
+		Keys: s.storedKeys[string(req.ID)].Keys,
+	}, nil
+}
+
+// StoreInstanceID will store the instanceID in a given final statement
+func (s *Service) StoreInstanceID(req *StoreInstanceID) (*StoreInstanceIDReply, error) {
+	s.data.InstanceIDs[string(req.PartyID)] = &req.InstanceID
+	s.save()
+	return &StoreInstanceIDReply{}, nil
+}
+
+// GetInstanceID will return the instanceID of a final statement
+func (s *Service) GetInstanceID(req *GetInstanceID) (*GetInstanceIDReply, error) {
+	iid, ok := s.data.InstanceIDs[string(req.PartyID)]
+	if !ok {
+		return nil, errors.New("no such instanceID stored")
+	}
+	return &GetInstanceIDReply{*iid}, nil
+}
+
+// StoreSigner will store the Signer in a given final statement
+func (s *Service) StoreSigner(req *StoreSigner) (*StoreSignerReply, error) {
+	s.data.Signers[string(req.PartyID)] = &req.Signer
+	s.save()
+	return &StoreSignerReply{}, nil
+}
+
+// GetSigner will return the Signer of a final statement
+func (s *Service) GetSigner(req *GetSigner) (*GetSignerReply, error) {
+	sig, ok := s.data.Signers[string(req.PartyID)]
+	if !ok {
+		return nil, errors.New("no such Signer stored")
+	}
+	return &GetSignerReply{*sig}, nil
 }
 
 // MergeConfig receives a final statement of requesting party,
@@ -599,6 +672,11 @@ func (final *FinalStatement) VerifyMergeStatement(mergeFinal *FinalStatement) in
 	}
 
 	return PopStatusOK
+}
+
+// StoreLink can be used by tests to directly store a pin.
+func (s *Service) StoreLink(pub kyber.Point) {
+	s.data.Public = pub
 }
 
 // Verification function for signing during Finalization
@@ -1054,9 +1132,12 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		data:             &saveData{},
+		storedKeys:       map[string]*keyList{},
 	}
 	err := s.RegisterHandlers(s.PinRequest, s.VerifyLink, s.StoreConfig, s.FinalizeRequest,
-		s.FetchFinal, s.MergeRequest, s.GetProposals)
+		s.FetchFinal, s.MergeRequest, s.GetProposals, s.GetLink, s.GetFinalStatements,
+		s.StoreKeys, s.StoreInstanceID, s.GetInstanceID,
+		s.StoreSigner, s.GetSigner)
 	if err != nil {
 		return nil, err
 	}
@@ -1068,6 +1149,12 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	if s.data.merges == nil {
 		s.data.merges = make(map[string]*merge)
+	}
+	if len(s.data.InstanceIDs) == 0 {
+		s.data.InstanceIDs = map[string]*service.InstanceID{}
+	}
+	if len(s.data.Signers) == 0 {
+		s.data.Signers = map[string]*darc.Signer{}
 	}
 	s.syncs = make(map[string]*syncChans)
 	s.propagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal, 0)
@@ -1091,5 +1178,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.bftVerifyMerge, s.bftVerifyMergeAck, bftSignMerge); err != nil {
 		return nil, err
 	}
+
+	service.RegisterContract(c, ContractPopParty, s.ContractPopParty)
+
 	return s, nil
 }

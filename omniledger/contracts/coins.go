@@ -9,6 +9,7 @@ import (
 	"github.com/dedis/cothority/omniledger/darc"
 	ol "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/protobuf"
 )
 
 // ContractCoinID denotes a contract that can store and transfer coins.
@@ -23,25 +24,6 @@ type safeUint64 uint64
 
 var errOverflow = errors.New("integer overflow")
 var errUnderflow = errors.New("integer underflow")
-
-func newSafeUint64(value []byte) safeUint64 {
-	return safeUint64(binary.LittleEndian.Uint64(value))
-}
-
-func (s safeUint64) add(a uint64) (safeUint64, error) {
-	s1 := uint64(s) + a
-	if s1 < uint64(s) {
-		return s, errOverflow
-	}
-	return safeUint64(s1), nil
-}
-
-func (s safeUint64) sub(a uint64) (safeUint64, error) {
-	if a <= uint64(s) {
-		return safeUint64(uint64(s) - a), nil
-	}
-	return s, errUnderflow
-}
 
 // ContractCoin is a coin implementation that holds one instance per coin.
 // If you spawn a new ContractCoin, it will create an account with a value
@@ -71,19 +53,38 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 	if err != nil {
 		return
 	}
+	var ci CoinInstance
+	if inst.Spawn == nil {
+		// Only if its NOT a spawn instruction is ther data in the instance
+		if value != nil {
+			err = protobuf.Decode(value, &ci)
+			if err != nil {
+				return nil, nil, errors.New("couldn't unmarshal instance data: " + err.Error())
+			}
+		}
+	}
 
 	switch inst.GetType() {
 	case ol.SpawnType:
 		// Spawn creates a new coin account as a separate instance.
 		ca := inst.DeriveID("")
 		log.Lvlf3("Spawning coin to %x", ca.Slice())
+		if t := inst.Spawn.Args.Search("type"); t != nil {
+			ci.Type = t
+		} else {
+			ci.Type = CoinName.Slice()
+		}
+		var ciBuf []byte
+		ciBuf, err = protobuf.Encode(&ci)
+		if err != nil {
+			return nil, nil, errors.New("couldn't encode CoinInstance: " + err.Error())
+		}
 		sc = []ol.StateChange{
-			ol.NewStateChange(ol.Create, ca, ContractCoinID, make([]byte, 8), darcID),
+			ol.NewStateChange(ol.Create, ca, ContractCoinID, ciBuf, darcID),
 		}
 		return
 	case ol.InvokeType:
 		// Invoke is one of "mint", "transfer", "fetch", or "store".
-		coinsCurrent := newSafeUint64(value)
 		var coinsArg uint64
 
 		if inst.Invoke.Command != "store" {
@@ -98,13 +99,13 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 		case "mint":
 			// mint simply adds this amount of coins to the account.
 			log.Lvl2("minting", coinsArg)
-			coinsCurrent, err = coinsCurrent.add(coinsArg)
+			ci.Balance, err = safeAdd(ci.Balance, coinsArg)
 			if err != nil {
 				return
 			}
 		case "transfer":
 			// transfer sends a given amount of coins to another account.
-			coinsCurrent, err = coinsCurrent.sub(coinsArg)
+			ci.Balance, err = safeSub(ci.Balance, coinsArg)
 			if err != nil {
 				return
 			}
@@ -123,35 +124,37 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 				return
 			}
 
-			targetCoin := newSafeUint64(v)
-			targetCoin, err = targetCoin.add(coinsArg)
+			var targetCI CoinInstance
+			err = protobuf.Decode(v, &targetCI)
+			if err != nil {
+				return nil, nil, errors.New("couldn't unmarshal target account: " + err.Error())
+			}
+			targetCI.Balance, err = safeAdd(targetCI.Balance, coinsArg)
 			if err != nil {
 				return
 			}
-			var w bytes.Buffer
-			binary.Write(&w, binary.LittleEndian, targetCoin)
+			targetBuf, err := protobuf.Encode(&targetCI)
+			if err != nil {
+				return nil, nil, errors.New("couldn't marshal target account: " + err.Error())
+			}
 
 			log.Lvlf3("transferring %d to %x", coinsArg, target)
 			sc = append(sc, ol.NewStateChange(ol.Update, ol.NewInstanceID(target),
-				ContractCoinID, w.Bytes(), did))
+				ContractCoinID, targetBuf, did))
 		case "fetch":
 			// fetch removes coins from the account and passes it on to the next
 			// instruction.
-			if coinsArg > uint64(coinsCurrent) {
-				err = errors.New("not enough coins in instance")
-				return
-			}
-			coinsCurrent, err = coinsCurrent.sub(coinsArg)
+			ci.Balance, err = safeSub(ci.Balance, coinsArg)
 			if err != nil {
 				return
 			}
-			cOut = append(cOut, ol.Coin{Name: CoinName, Value: coinsArg})
+			cOut = append(cOut, ol.Coin{Name: ol.NewInstanceID(ci.Type), Value: coinsArg})
 		case "store":
 			// store moves all coins from this instruction into the account.
 			cOut = []ol.Coin{}
 			for _, co := range c {
 				if bytes.Equal(co.Name.Slice(), CoinName.Slice()) {
-					coinsCurrent, err = coinsCurrent.add(co.Value)
+					ci.Balance, err = safeAdd(ci.Balance, co.Value)
 					if err != nil {
 						return
 					}
@@ -164,20 +167,14 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 			return
 		}
 		// Finally update the coin value.
-		var w bytes.Buffer
-		binary.Write(&w, binary.LittleEndian, coinsCurrent)
+		var ciBuf []byte
+		ciBuf, err = protobuf.Encode(&ci)
 		sc = append(sc, ol.NewStateChange(ol.Update, inst.InstanceID,
-			ContractCoinID, w.Bytes(), darcID))
+			ContractCoinID, ciBuf, darcID))
 		return
 	case ol.DeleteType:
 		// Delete our coin address, but only if the current coin is empty.
-		var value []byte
-		value, _, _, err = cdb.GetValues(inst.InstanceID.Slice())
-		if err != nil {
-			return
-		}
-		coinsCurrent := binary.LittleEndian.Uint64(value)
-		if coinsCurrent > 0 {
+		if ci.Balance > 0 {
 			err = errors.New("cannot destroy a coinInstance that still has coins in it")
 			return
 		}
@@ -198,4 +195,19 @@ func iid(in string) ol.InstanceID {
 	h := sha256.New()
 	h.Write([]byte(in))
 	return ol.NewInstanceID(h.Sum(nil))
+}
+
+func safeAdd(a, b uint64) (uint64, error) {
+	s1 := a + b
+	if s1 < a || s1 < b {
+		return a, errOverflow
+	}
+	return s1, nil
+}
+
+func safeSub(a, b uint64) (uint64, error) {
+	if b <= a {
+		return a - b, nil
+	}
+	return a, errUnderflow
 }
