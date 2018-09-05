@@ -12,11 +12,13 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/omniledger/darc"
 	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
 	cli "gopkg.in/urfave/cli.v1"
 )
 
@@ -79,6 +81,13 @@ var configPath = ""
 
 // getDataPath is a function pointer so that tests can hook and modify this.
 var getDataPath = cfgpath.GetDataPath
+
+type olConfig struct {
+	Roster        onet.Roster
+	OmniledgerID  skipchain.SkipBlockID
+	GenesisDarc   darc.Darc
+	AdminIdentity darc.Identity
+}
 
 func init() {
 	cliApp.Name = "ol"
@@ -144,11 +153,11 @@ func create(c *cli.Context) error {
 		return err
 	}
 
-	cfg := &ol.Config{
-		ID:          resp.Skipblock.SkipChainID(),
-		Roster:      *r,
-		OwnerID:     owner.Identity(),
-		GenesisDarc: req.GenesisDarc,
+	cfg := olConfig{
+		OmniledgerID:  resp.Skipblock.SkipChainID(),
+		Roster:        *r,
+		GenesisDarc:   req.GenesisDarc,
+		AdminIdentity: owner.Identity(),
 	}
 	fn, err = save(cfg)
 	if err != nil {
@@ -160,7 +169,7 @@ func create(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Fprintf(c.App.Writer, "Created OmniLedger with ID %x.\n", cfg.ID)
+	fmt.Fprintf(c.App.Writer, "Created OmniLedger with ID %x.\n", cfg.OmniledgerID)
 	fmt.Fprintf(c.App.Writer, "export OL=\"%v\"\n", fn)
 
 	// For the tests to use.
@@ -174,14 +183,10 @@ func show(c *cli.Context) error {
 	if olArg == "" {
 		return errors.New("--ol flag is required")
 	}
-	cl, err := ol.NewClientFromConfig(olArg)
+
+	cfg, cl, err := loadConfig(olArg)
 	if err != nil {
 		return err
-	}
-
-	cfg := &ol.Config{
-		ID:     cl.ID,
-		Roster: cl.Roster,
 	}
 
 	fmt.Fprintln(c.App.Writer, cfg)
@@ -205,12 +210,12 @@ func add(c *cli.Context) error {
 		return errors.New("--ol flag is required")
 	}
 
-	cl, err := ol.NewClientFromConfig(olArg)
+	cfg, cl, err := loadConfig(olArg)
 	if err != nil {
 		return err
 	}
 
-	signer, err := loadKey(cl.OwnerID)
+	signer, err := loadKey(cfg.AdminIdentity)
 	if err != nil {
 		return err
 	}
@@ -305,20 +310,19 @@ func loadSigner(fn string) (*darc.Signer, error) {
 		return nil, err
 	}
 
-	_, msg, err := network.Unmarshal(buf, cothority.Suite)
-	if err != nil {
-		return nil, err
-	}
-	return msg.(*darc.Signer), nil
+	var signer darc.Signer
+	err = protobuf.DecodeWithConstructors(buf, &signer,
+		network.DefaultConstructors(cothority.Suite))
+	return &signer, err
 }
 
-func save(cfg *ol.Config) (string, error) {
+func save(cfg olConfig) (string, error) {
 	os.MkdirAll(configPath, 0755)
 
-	fn := fmt.Sprintf("ol-%x.cfg", cfg.ID)
+	fn := fmt.Sprintf("ol-%x.cfg", cfg.OmniledgerID)
 	fn = filepath.Join(configPath, fn)
 
-	buf, err := network.Marshal(cfg)
+	buf, err := protobuf.Encode(&cfg)
 	if err != nil {
 		return fn, err
 	}
@@ -342,7 +346,7 @@ func saveKey(signer darc.Signer) error {
 		return fmt.Errorf("could not write %v: %v", fn, err)
 	}
 
-	buf, err := network.Marshal(&signer)
+	buf, err := protobuf.Encode(&signer)
 	if err != nil {
 		return err
 	}
@@ -359,4 +363,19 @@ func rosterToServers(r *onet.Roster) []network.Address {
 		out[i] = r.List[i].Address
 	}
 	return out
+}
+
+func loadConfig(file string) (cfg olConfig, cl *ol.Client, err error) {
+	var cfgBuf []byte
+	cfgBuf, err = ioutil.ReadFile(file)
+	if err != nil {
+		return
+	}
+	err = protobuf.DecodeWithConstructors(cfgBuf, &cfg,
+		network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return
+	}
+	cl = ol.NewClient(cfg.OmniledgerID, cfg.Roster)
+	return
 }

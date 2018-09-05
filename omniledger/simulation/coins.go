@@ -69,12 +69,6 @@ func (s *SimulationService) Node(config *onet.SimulationConfig) error {
 func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	size := config.Tree.Size()
 	log.Lvl2("Size is:", size, "rounds:", s.Rounds, "transactions:", s.Transactions)
-	var c *ol.Client
-	if s.Keep {
-		c = ol.NewClientKeep()
-	} else {
-		c = ol.NewClient()
-	}
 	signer := darc.NewSignerEd25519(nil, nil)
 
 	// Create omniledger
@@ -92,7 +86,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	gm.BlockInterval = blockInterval
 
 	// Create the OmniLedger instance.
-	_, err = c.CreateGenesisBlock(gm)
+	c, _, err := ol.NewOmniledger(gm, s.Keep)
 	if err != nil {
 		return errors.New("couldn't create genesis block: " + err.Error())
 	}

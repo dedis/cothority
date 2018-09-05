@@ -3,12 +3,8 @@ package service
 import (
 	"bytes"
 	"errors"
-	"fmt"
-	"io/ioutil"
-	"strings"
 	"time"
 
-	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 
@@ -25,56 +21,43 @@ const ServiceName = "OmniLedger"
 // Client is a structure to communicate with the OmniLedger service.
 type Client struct {
 	*onet.Client
-	ID      skipchain.SkipBlockID
-	Roster  onet.Roster
-	OwnerID darc.Identity
+	ID     skipchain.SkipBlockID
+	Roster onet.Roster
 }
 
-// NewClientConfig instantiates a new Omniledger client.
-func NewClientConfig(cfg Config) *Client {
+// NewClient instantiates a new Omniledger client.
+func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 	return &Client{
-		Client:  onet.NewClient(cothority.Suite, ServiceName),
-		ID:      cfg.ID,
-		Roster:  cfg.Roster,
-		OwnerID: cfg.OwnerID,
+		Client: onet.NewClient(cothority.Suite, ServiceName),
+		ID:     ID,
+		Roster: Roster,
 	}
 }
 
-// NewClient is like NewClient, but does not close the connection.
-func NewClient() *Client {
-	log.Warn("Deprecated - should use NewClientConfig")
-	return &Client{Client: onet.NewClientKeep(cothority.Suite, ServiceName)}
-}
-
-// NewClientKeep is like NewClient, but does not close the connection.
-func NewClientKeep() *Client {
-	log.Warn("Deprecated - should use NewClientConfig")
-	return &Client{Client: onet.NewClientKeep(cothority.Suite, ServiceName)}
-}
-
-// NewClientFromConfig instantiates a new Omniledger client.
-func NewClientFromConfig(fn string) (*Client, error) {
-	cfg, err := loadConfig(fn)
-	if err != nil {
-		return nil, err
+// NewClientKeep is like NewClient, but does not close the connection when
+// sending requests to the same conode.
+func NewClientKeep(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
+	return &Client{
+		Client: onet.NewClientKeep(cothority.Suite, ServiceName),
+		ID:     ID,
+		Roster: Roster,
 	}
-
-	c := NewClient()
-	c.Roster = cfg.Roster
-	c.ID = cfg.ID
-	c.OwnerID = cfg.OwnerID
-	return c, nil
 }
 
-// CreateGenesisBlock sets up a new OmniLedger instance.
-func (c *Client) CreateGenesisBlock(msg *CreateGenesisBlock) (*CreateGenesisBlockResponse, error) {
+// NewOmniledger sets up a new OmniLedger instance.
+func NewOmniledger(msg *CreateGenesisBlock, keep bool) (*Client, *CreateGenesisBlockResponse, error) {
+	var c *Client
+	if keep {
+		c = NewClientKeep(nil, msg.Roster)
+	} else {
+		c = NewClient(nil, msg.Roster)
+	}
 	reply := &CreateGenesisBlockResponse{}
 	if err := c.SendProtobuf(msg.Roster.List[0], msg, reply); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	c.Roster = msg.Roster
 	c.ID = reply.Skipblock.CalculateHash()
-	return reply, nil
+	return c, reply, nil
 }
 
 // AddTransaction adds a transaction. It does not return any feedback
@@ -230,45 +213,6 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 	}
 
 	return nil, errors.New("timeout reached and inclusion not found")
-}
-
-// A Config gathers all the information a client needs to know to talk to
-// an OmniLedger instance.
-type Config struct {
-	ID     skipchain.SkipBlockID
-	Roster onet.Roster
-	// OwnerID is the identity that can sign evolutions of the genesis Darc.
-	OwnerID darc.Identity
-	// GenesisDarc is the first darc stored in omniledger.
-	GenesisDarc darc.Darc
-}
-
-func init() { network.RegisterMessages(&Config{}) }
-
-func loadConfig(fn string) (*Config, error) {
-	buf, err := ioutil.ReadFile(fn)
-	if err != nil {
-		return nil, err
-	}
-
-	_, val, err := network.Unmarshal(buf, cothority.Suite)
-	if err != nil {
-		return nil, err
-	}
-	if cfg, ok := val.(*Config); ok {
-		return cfg, nil
-	}
-
-	return nil, fmt.Errorf("unexpected config format: %T", val)
-}
-
-func (c *Config) String() string {
-	var r []string
-	for _, x := range c.Roster.List {
-		r = append(r, x.Address.NetworkAddress())
-	}
-
-	return fmt.Sprintf("Skipchain ID: %x\nRoster: %v", c.ID, strings.Join(r, ", "))
 }
 
 // DefaultGenesisMsg creates the message that is used to for creating the

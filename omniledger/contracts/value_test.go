@@ -17,7 +17,6 @@ func TestValue_Spawn(t *testing.T) {
 
 	signer := darc.NewSignerEd25519(nil, nil)
 	_, roster, _ := local.GenTree(2, true)
-	cl := ol.NewClient()
 
 	genesisMsg, err := ol.DefaultGenesisMsg(ol.CurrentVersion, roster,
 		[]string{"spawn:value", "spawn:darc"}, signer.Identity())
@@ -26,7 +25,7 @@ func TestValue_Spawn(t *testing.T) {
 
 	genesisMsg.BlockInterval = time.Second
 
-	_, err = cl.CreateGenesisBlock(genesisMsg)
+	cl, _, err := ol.NewOmniledger(genesisMsg, false)
 	require.Nil(t, err)
 
 	myvalue := []byte("1234")
