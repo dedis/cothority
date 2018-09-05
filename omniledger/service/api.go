@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 
@@ -25,18 +26,29 @@ const ServiceName = "OmniLedger"
 type Client struct {
 	*onet.Client
 	ID      skipchain.SkipBlockID
-	Roster  *onet.Roster
+	Roster  onet.Roster
 	OwnerID darc.Identity
 }
 
-// NewClient instantiates a new Omniledger client.
-// TODO: this needs to be changed to avoid having an invalid Client.
+// NewClientConfig instantiates a new Omniledger client.
+func NewClientConfig(cfg Config) *Client {
+	return &Client{
+		Client:  onet.NewClient(cothority.Suite, ServiceName),
+		ID:      cfg.ID,
+		Roster:  cfg.Roster,
+		OwnerID: cfg.OwnerID,
+	}
+}
+
+// NewClient is like NewClient, but does not close the connection.
 func NewClient() *Client {
-	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
+	log.Warn("Deprecated - should use NewClientConfig")
+	return &Client{Client: onet.NewClientKeep(cothority.Suite, ServiceName)}
 }
 
 // NewClientKeep is like NewClient, but does not close the connection.
 func NewClientKeep() *Client {
+	log.Warn("Deprecated - should use NewClientConfig")
 	return &Client{Client: onet.NewClientKeep(cothority.Suite, ServiceName)}
 }
 
@@ -48,7 +60,7 @@ func NewClientFromConfig(fn string) (*Client, error) {
 	}
 
 	c := NewClient()
-	c.Roster = &cfg.Roster
+	c.Roster = cfg.Roster
 	c.ID = cfg.ID
 	c.OwnerID = cfg.OwnerID
 	return c, nil
@@ -60,7 +72,7 @@ func (c *Client) CreateGenesisBlock(msg *CreateGenesisBlock) (*CreateGenesisBloc
 	if err := c.SendProtobuf(msg.Roster.List[0], msg, reply); err != nil {
 		return nil, err
 	}
-	c.Roster = &msg.Roster
+	c.Roster = msg.Roster
 	c.ID = reply.Skipblock.CalculateHash()
 	return reply, nil
 }
@@ -227,6 +239,8 @@ type Config struct {
 	Roster onet.Roster
 	// OwnerID is the identity that can sign evolutions of the genesis Darc.
 	OwnerID darc.Identity
+	// GenesisDarc is the first darc stored in omniledger.
+	GenesisDarc darc.Darc
 }
 
 func init() { network.RegisterMessages(&Config{}) }
