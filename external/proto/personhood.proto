@@ -1,0 +1,179 @@
+syntax = "proto2";
+package personhood;
+
+import "darc.proto";
+import "pop.proto";
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "Personhood";
+
+// LinkPoP stores a link to a pop-party to accept this configuration. It will
+// try to create an account to receive payments from clients.
+message LinkPoP {
+  required Party party = 1;
+}
+
+// Party represents everything necessary to find a party on omniledger.
+message Party {
+  // OmniLedgerID represents the omniledger where the pop-party is stored.
+  required bytes omniledgerid = 1;
+  // InstanceID is where to find the party on OmniLedger
+  required bytes instanceid = 2;
+  // FinalStatement describes the party and the signature of the organizers.
+  required pop.FinalStatement finalstatement = 3;
+  // Darc being responsible for the PartyInstance.
+  required darc.Darc darc = 4;
+  // Signer can call Invoke on the PartyInstance.
+  required darc.Signer signer = 5;
+}
+
+// StringReply can be used by all calls that need a string to be returned
+// to the caller.
+message StringReply {
+  required string reply = 1;
+}
+
+//
+// * Questionnaires
+//
+
+// Questionnaire represents one poll that will be sent to candidates.
+message Questionnaire {
+  // Title of the poll
+  required string title = 1;
+  // Questions is a slice of texts that will be presented
+  repeated string questions = 2;
+  // Replies indicates how many answers the player can chose.
+  required sint32 replies = 3;
+  // Balance left for that questionnaire
+  required uint64 balance = 4;
+  // Reward for replying to one questionnaire
+  required uint64 reward = 5;
+  // ID is a random identifier of that questionnaire
+  required bytes id = 6;
+}
+
+// Reply holds the results of the questionnaire together with a slice of users
+// that participated in it.
+message Reply {
+  // Sum is the sum of all replies for a given index of the questions.
+  repeated sint32 sum = 1;
+  // TODO: replace this with a linkable ring signature
+  repeated bytes users = 2;
+}
+
+// RegisterQuestionnaire creates a questionnaire with a number of questions to
+// chose from and how much each replier gets rewarded.
+message RegisterQuestionnaire {
+  // Questionnaire is the questionnaire to be stored.
+  required Questionnaire questionnaire = 1;
+}
+
+// ListQuestionnaires requests all questionnaires from Start, but not more than
+// Number.
+message ListQuestionnaires {
+  // Start of the answer.
+  required sint32 start = 1;
+  // Number is the maximum of questionnaires that will be returned.
+  required sint32 number = 2;
+}
+
+// ListQuestionnairesReply is a slice of all questionnaires, starting with the
+// one having the highest balance left.
+message ListQuestionnairesReply {
+  // Questionnaires is a slice of questionnaires, with the highest balance first.
+  repeated Questionnaire questionnaires = 1;
+}
+
+// AnswerQuestionnaire sends the answer from one client.
+message AnswerQuestionnaire {
+  // QuestID is the ID of the questionnaire to be replied.
+  required bytes questid = 1;
+  // Replies is a slice of answers, up to Questionnaire.Replies
+  repeated sint32 replies = 2;
+  // Account where to put the reward to.
+  required bytes account = 3;
+}
+
+// TopupQuestionnaire can be used to add new balance to a questionnaire.
+message TopupQuestionnaire {
+  // QuestID indicates which questionnaire
+  required bytes questid = 1;
+  // Topup is the amount of coins to put there.
+  required uint64 topup = 2;
+}
+
+//
+// * Popper
+//
+
+// Message represents a message that will be sent to the system.
+message Message {
+  // Subject is one of the fields always visible, even if the client did not
+  // chose to read the message.
+  required string subject = 1;
+  // Date, as unix-encoded seconds since 1970.
+  required uint64 date = 2;
+  // Text, can be any length of text of the message.
+  required string text = 3;
+  // Author's coin account for eventual rewards/tips to the author.
+  required bytes author = 4;
+  // Balance the message has currently left.
+  required uint64 balance = 5;
+  // Reward for reading this messgae.
+  required uint64 reward = 6;
+  // ID of the messgae - should be random.
+  required bytes id = 7;
+}
+
+// SendMessage stores the message in the system.
+message SendMessage {
+  // Message to store.
+  required Message message = 1;
+}
+
+// ListMessages sorts all messages by balance and sends back the messages from
+// Start, but not more than Number.
+message ListMessages {
+  // Start of the messages returned
+  required sint32 start = 1;
+  // Number of maximum messages returned
+  required sint32 number = 2;
+}
+
+// ListMessagesReply returns the subjects, IDs, balances and rewards of the top
+// messages, as chosen in ListMessages.
+message ListMessagesReply {
+  // Subjects of the messages
+  repeated string subjects = 1;
+  // MsgIDs of the messages
+  repeated bytes msgids = 2;
+  // Balances
+  repeated uint64 balances = 3;
+  // Rewards
+  repeated uint64 rewards = 4;
+}
+
+// ReadMessage requests the full message and the reward for that message.
+message ReadMessage {
+  // MsgID to request.
+  required bytes msgid = 1;
+  // PartyIID to calculate the party coin account
+  required bytes partyiid = 2;
+  // Reader that will receive the reward
+  required bytes reader = 3;
+}
+
+// ReadMessageReply if the message is still active (balance >= reward)
+message ReadMessageReply {
+  // Messsage to read.
+  required Message message = 1;
+}
+
+// TopupMessage to fill up the balance of a message
+message TopupMessage {
+  // MsgID of the message to top up
+  required bytes msgid = 1;
+  // Amount to coins to put in the message
+  required uint64 amount = 2;
+}
