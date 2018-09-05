@@ -1,0 +1,32 @@
+package service
+
+// api for personhood - very minimalistic for the moment, as most of the
+// calls are made from javascript.
+
+import (
+	"github.com/dedis/cothority"
+	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/network"
+)
+
+// Client is a structure to communicate with the personhood
+// service
+type Client struct {
+	*onet.Client
+}
+
+// NewClient instantiates a new personhood.Client
+func NewClient() *Client {
+	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
+}
+
+// LinkPoP sends a party description to the message server for further
+// reference in messages.
+func (c *Client) LinkPoP(si *network.ServerIdentity, pi ol.InstanceID, p Party) error {
+	err := c.SendProtobuf(si, &LinkPoP{pi, p}, nil)
+	if err != nil {
+		return err
+	}
+	return nil
+}
