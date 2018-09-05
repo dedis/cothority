@@ -175,7 +175,7 @@ func create(c *cli.Context) error {
 	// For the tests to use.
 	c.App.Metadata["OL"] = fn
 
-	return err
+	return nil
 }
 
 func show(c *cli.Context) error {
