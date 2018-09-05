@@ -113,7 +113,10 @@ var storageID = []byte("OmniLedger")
 
 // defaultInterval is used if the BlockInterval field in the genesis
 // transaction is not set.
-var defaultInterval = 5 * time.Second
+const defaultInterval = 5 * time.Second
+
+// defaultMaxBlockSize is used when the config cannot be loaded.
+const defaultMaxBlockSize = 4 * 1e6
 
 // omniStorage is used to save our data locally.
 type omniStorage struct {
@@ -159,6 +162,12 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 	intervalBuf := make([]byte, 8)
 	binary.PutVarint(intervalBuf, int64(req.BlockInterval))
 
+	if req.MaxBlockSize == 0 {
+		req.MaxBlockSize = defaultMaxBlockSize
+	}
+	bsBuf := make([]byte, 8)
+	binary.PutVarint(bsBuf, int64(req.MaxBlockSize))
+
 	rosterBuf, err := protobuf.Encode(&req.Roster)
 	if err != nil {
 		return nil, err
@@ -169,6 +178,7 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		Args: Arguments{
 			{Name: "darc", Value: darcBuf},
 			{Name: "block_interval", Value: intervalBuf},
+			{Name: "max_block_size", Value: bsBuf},
 			{Name: "roster", Value: rosterBuf},
 		},
 	}
@@ -221,7 +231,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 
 	if req.InclusionWait > 0 {
 		// Wait for InclusionWait new blocks and look if our transaction is in it.
-		interval, err := LoadBlockIntervalFromColl(s.GetCollectionView(req.SkipchainID))
+		interval, _, err := s.LoadBlockInfo(req.SkipchainID)
 		if err != nil {
 			return nil, errors.New("couldn't get collectionView: " + err.Error())
 		}
@@ -455,7 +465,7 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 
 	// check whether the heartbeat monitor exists, if it doesn't we start a
 	// new one
-	interval, err := s.LoadBlockInterval(sb.SkipChainID())
+	interval, _, err := s.LoadBlockInfo(sb.SkipChainID())
 	if err != nil {
 		return err
 	}
@@ -602,7 +612,7 @@ func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
 	if coll == nil {
 		return nil, errors.New("nil collection DB")
 	}
-	return LoadConfigFromColl(coll)
+	return loadConfigFromColl(coll)
 }
 
 // LoadGenesisDarc loads the genesis darc of the given skipchain ID.
@@ -611,13 +621,20 @@ func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error
 	return getInstanceDarc(coll, ConfigInstanceID)
 }
 
-// LoadBlockInterval loads the block interval from the skipchain ID.
-func (s *Service) LoadBlockInterval(scID skipchain.SkipBlockID) (time.Duration, error) {
-	collDb := s.getCollection(scID)
-	if collDb == nil {
-		return defaultInterval, errors.New("nil collection DB")
+// LoadBlockInfo loads the block interval and the maximum size from the skipchain ID.
+func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int, error) {
+	coll := s.getCollection(scID)
+	if coll == nil {
+		return defaultInterval, defaultMaxBlockSize, nil
 	}
-	return LoadBlockIntervalFromColl(&roCollection{collDb.coll})
+	config, err := loadConfigFromColl(coll)
+	if err != nil {
+		if err == errKeyNotSet {
+			err = nil
+		}
+		return defaultInterval, defaultMaxBlockSize, err
+	}
+	return config.BlockInterval, config.MaxBlockSize, nil
 }
 
 func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duration) chan bool {
@@ -704,12 +721,13 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 				// slot. Perhaps we can run this in parallel during the wait-phase?
 				log.Lvl3("Counting how many transactions fit in", interval/2)
 				cdb := s.getCollection(scID)
-				_, txOut, _ := s.createStateChanges(cdb.coll, scID, txIn, interval/2)
+				then := time.Now()
+				_, txOut, sc := s.createStateChanges(cdb.coll, scID, txIn, interval/2)
 
 				txs = txs[len(txOut):]
 				if len(txs) > 0 {
-					log.Warnf("Got more transactions than can be done in half the blockInterval. "+
-						"%d transactions left", len(txs))
+					sz := stateSize(sc)
+					log.Warnf("%d transactions (%v bytes) included in block in %v, %d transactions left for the next block", len(txOut), sz, time.Now().Sub(then), len(txs))
 				}
 
 				_, err = s.createNewBlock(scID, sb.Roster, txOut)
@@ -810,7 +828,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			return false
 		}
 	}
-	config, err := LoadConfigFromColl(&roCollection{collClone})
+	config, err := loadConfigFromColl(&roCollection{collClone})
 	if err != nil {
 		log.Error(s.ServerIdentity(), err)
 		return false
@@ -850,6 +868,13 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	return true
 }
 
+func stateSize(scs []StateChange) (out int) {
+	for _, x := range scs {
+		out += len(x.InstanceID) + len(x.ContractID) + len(x.Value) + len(x.DarcID)
+	}
+	return
+}
+
 // createStateChanges goes through all the proposed transactions one by one,
 // creating the appropriate StateChanges, by sorting out which transactions can
 // be run, which fail, and which cannot be attempted yet (due to timeout).
@@ -873,6 +898,13 @@ func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain
 	log.Lvl3(s.ServerIdentity(), "state changes from cache: MISS")
 	err = nil
 
+	var maxsz, blocksz int
+	_, maxsz, err = s.LoadBlockInfo(scID)
+
+	// no error or expected noCollection err, so keep going with the
+	// maxsz we got.
+	err = nil
+
 	deadline := time.Now().Add(timeout)
 
 	// TODO: Because we depend on making at least one clone per transaction
@@ -887,6 +919,7 @@ clientTransactions:
 		// implemented and changes applied, then keep it (via cdbTemp = cdbI.c),
 		// otherwise dump it.
 		cdbI := &roCollection{cdbTemp.Clone()}
+		txsz := 0
 		for _, instr := range tx.ClientTransaction.Instructions {
 			scs, cout, err := s.executeInstruction(cdbI, cin, instr)
 			if err != nil {
@@ -905,18 +938,36 @@ clientTransactions:
 			}
 			states = append(states, scs...)
 			cin = cout
-
+			txsz += stateSize(scs)
 		}
+
+		if txsz > maxsz {
+			log.Errorf("%s Contract created state changes of size %v, rejected.", s.ServerIdentity(), txsz)
+			tx.Accepted = false
+			txOut = append(txOut, tx)
+			continue clientTransactions
+		}
+
 		// timeout is ONLY used when the leader calls createStateChanges as
-		// part of planning which ClientTransactions fit into one block.
+		// part of planning which transactions fit into one block.
 		if timeout != noTimeout {
 			if time.Now().After(deadline) {
 				return
 			}
+
+			// We are in planning mode, so if the last txn would have made the state changes
+			// too big, return just like we do for a timeout. The caller will make a block with
+			// what's in txOut.
+			if blocksz+txsz > maxsz {
+				log.Lvlf3("stopping block creation when %v > %v, with len(txOut) of %v", blocksz+txsz, maxsz, len(txOut))
+				return
+			}
 		}
+
 		cdbTemp = cdbI.c
 		tx.Accepted = true
 		txOut = append(txOut, tx)
+		blocksz += txsz
 	}
 
 	// Store the result in the cache before returning.
@@ -1110,7 +1161,7 @@ func (s *Service) withinInterval(genesisDarcID darc.ID, targetPk kyber.Point) er
 		return err
 	}
 
-	interval, err := s.LoadBlockInterval(scID)
+	interval, _, err := s.LoadBlockInfo(scID)
 	if err != nil {
 		return err
 	}
@@ -1208,7 +1259,7 @@ func (s *Service) startAllChains() error {
 			continue
 		}
 
-		interval, err := s.LoadBlockInterval(gen)
+		interval, _, err := s.LoadBlockInfo(gen)
 		if err != nil {
 			log.Errorf("%s Ignoring chain %x because we can't load blockInterval: %s", s.ServerIdentity(), gen, err)
 			continue

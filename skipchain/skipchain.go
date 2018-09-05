@@ -51,6 +51,7 @@ var dbVersion = 1
 // flag should ideally be the service configuration, but other structs depend
 // on it too, e.g., SkipBlock, so we keep it in a global.
 var enableViewChange bool
+var enableViewChangeOnce sync.Once
 
 var sid onet.ServiceID
 
@@ -859,7 +860,9 @@ func (s *Service) SetPropTimeout(t time.Duration) {
 
 // EnableViewChange enables view-change, it cannot be turned off afterwards.
 func (s *Service) EnableViewChange() {
-	enableViewChange = true
+	enableViewChangeOnce.Do(func() {
+		enableViewChange = true
+	})
 }
 
 // TestClose is called by Server.Close in case we're in testing. It

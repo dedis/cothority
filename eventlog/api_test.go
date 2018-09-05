@@ -449,3 +449,13 @@ func (s *Service) checkBuckets(inst omniledger.InstanceID, id skipchain.SkipBloc
 	}
 	return nil
 }
+
+// waitForBlock is for use in tests; it will sleep long enough to be sure that
+// a block has been created.
+func (s *Service) waitForBlock(scID skipchain.SkipBlockID) {
+	dur, _, err := s.omni.LoadBlockInfo(scID)
+	if err != nil {
+		panic(err.Error())
+	}
+	time.Sleep(5 * dur)
+}

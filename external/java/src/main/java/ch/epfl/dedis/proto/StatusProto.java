@@ -84,7 +84,6 @@ public final class StatusProto {
       return ch.epfl.dedis.proto.StatusProto.internal_static_status_Request_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.StatusProto.internal_static_status_Request_fieldAccessorTable
@@ -93,7 +92,6 @@ public final class StatusProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -103,13 +101,11 @@ public final class StatusProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -217,7 +213,6 @@ public final class StatusProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -225,7 +220,6 @@ public final class StatusProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.StatusProto.Request prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -253,7 +247,6 @@ public final class StatusProto {
         return ch.epfl.dedis.proto.StatusProto.internal_static_status_Request_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.StatusProto.internal_static_status_Request_fieldAccessorTable
@@ -276,24 +269,20 @@ public final class StatusProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.StatusProto.internal_static_status_Request_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.StatusProto.Request getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.StatusProto.Request.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.StatusProto.Request build() {
         ch.epfl.dedis.proto.StatusProto.Request result = buildPartial();
         if (!result.isInitialized()) {
@@ -302,46 +291,38 @@ public final class StatusProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.StatusProto.Request buildPartial() {
         ch.epfl.dedis.proto.StatusProto.Request result = new ch.epfl.dedis.proto.StatusProto.Request(this);
         onBuilt();
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.StatusProto.Request) {
           return mergeFrom((ch.epfl.dedis.proto.StatusProto.Request)other);
@@ -358,12 +339,10 @@ public final class StatusProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -381,13 +360,11 @@ public final class StatusProto {
         }
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -409,7 +386,6 @@ public final class StatusProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Request>
         PARSER = new com.google.protobuf.AbstractParser<Request>() {
-      @java.lang.Override
       public Request parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -427,7 +403,6 @@ public final class StatusProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.StatusProto.Request getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -528,6 +503,13 @@ public final class StatusProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 status_ = com.google.protobuf.MapField.newMapField(
@@ -554,13 +536,6 @@ public final class StatusProto {
               bitField0_ |= 0x00000001;
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -579,7 +554,6 @@ public final class StatusProto {
     }
 
     @SuppressWarnings({"rawtypes"})
-    @java.lang.Override
     protected com.google.protobuf.MapField internalGetMapField(
         int number) {
       switch (number) {
@@ -590,7 +564,6 @@ public final class StatusProto {
               "Invalid map field number: " + number);
       }
     }
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.StatusProto.internal_static_status_Response_fieldAccessorTable
@@ -697,7 +670,6 @@ public final class StatusProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -713,7 +685,6 @@ public final class StatusProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       com.google.protobuf.GeneratedMessageV3
@@ -728,7 +699,6 @@ public final class StatusProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -865,7 +835,6 @@ public final class StatusProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -873,7 +842,6 @@ public final class StatusProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.StatusProto.Response prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -923,7 +891,6 @@ public final class StatusProto {
                 "Invalid map field number: " + number);
         }
       }
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.StatusProto.internal_static_status_Response_fieldAccessorTable
@@ -947,7 +914,6 @@ public final class StatusProto {
           getServeridentityFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         internalGetMutableStatus().clear();
@@ -960,18 +926,15 @@ public final class StatusProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.StatusProto.internal_static_status_Response_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.StatusProto.Response getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.StatusProto.Response.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.StatusProto.Response build() {
         ch.epfl.dedis.proto.StatusProto.Response result = buildPartial();
         if (!result.isInitialized()) {
@@ -980,7 +943,6 @@ public final class StatusProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.StatusProto.Response buildPartial() {
         ch.epfl.dedis.proto.StatusProto.Response result = new ch.epfl.dedis.proto.StatusProto.Response(this);
         int from_bitField0_ = bitField0_;
@@ -1000,39 +962,32 @@ public final class StatusProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.StatusProto.Response) {
           return mergeFrom((ch.epfl.dedis.proto.StatusProto.Response)other);
@@ -1054,7 +1009,6 @@ public final class StatusProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (hasServeridentity()) {
           if (!getServeridentity().isInitialized()) {
@@ -1064,7 +1018,6 @@ public final class StatusProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1324,13 +1277,11 @@ public final class StatusProto {
         }
         return serveridentityBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1352,7 +1303,6 @@ public final class StatusProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Response>
         PARSER = new com.google.protobuf.AbstractParser<Response>() {
-      @java.lang.Override
       public Response parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1370,7 +1320,6 @@ public final class StatusProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.StatusProto.Response getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }

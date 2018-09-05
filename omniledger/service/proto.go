@@ -60,6 +60,9 @@ type CreateGenesisBlock struct {
 	GenesisDarc darc.Darc
 	// BlockInterval in int64.
 	BlockInterval time.Duration
+	// Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
+	// optional
+	MaxBlockSize int
 }
 
 // CreateGenesisBlockResponse holds the genesis-block of the new skipchain.
@@ -116,6 +119,7 @@ type GetProofResponse struct {
 type ChainConfig struct {
 	BlockInterval time.Duration
 	Roster        onet.Roster
+	MaxBlockSize  int
 }
 
 // Proof represents everything necessary to verify a given

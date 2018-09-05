@@ -181,5 +181,13 @@ public class OmniledgerRPCTest {
         assertEquals(ol.getConfig(), ol2.getConfig());
         assertEquals(ol.getLatestOmniBlock().getTimestampNano(), ol2.getLatestOmniBlock().getTimestampNano());
         assertEquals(ol.getGenesisDarc().getBaseId(), ol2.getGenesisDarc().getBaseId());
+
+    }
+
+    @Test
+    void defaultBlockSize() throws Exception {
+        OmniledgerRPC ol2 = new OmniledgerRPC(ol.getRoster(), ol.getGenesis().getSkipchainId());
+        // check that getMaxBlockSize returned what we expect (from defaultMaxBlockSize in Go).
+        assertEquals(4000000, ol2.getConfig().getMaxBlockSize());
     }
 }

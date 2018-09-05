@@ -182,6 +182,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.proto.OCSProto.Write.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -231,13 +238,6 @@ public final class OCSProto {
               timestamp_ = input.readSInt64();
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -255,7 +255,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Transaction_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Transaction_fieldAccessorTable
@@ -413,7 +412,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -445,7 +443,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -466,7 +463,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -640,7 +636,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -648,7 +643,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.Transaction prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -683,7 +677,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Transaction_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Transaction_fieldAccessorTable
@@ -709,7 +702,6 @@ public final class OCSProto {
           getDarcFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (writeBuilder_ == null) {
@@ -737,18 +729,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Transaction_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.Transaction getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.Transaction.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.Transaction build() {
         ch.epfl.dedis.proto.OCSProto.Transaction result = buildPartial();
         if (!result.isInitialized()) {
@@ -757,7 +746,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.Transaction buildPartial() {
         ch.epfl.dedis.proto.OCSProto.Transaction result = new ch.epfl.dedis.proto.OCSProto.Transaction(this);
         int from_bitField0_ = bitField0_;
@@ -799,39 +787,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.Transaction) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.Transaction)other);
@@ -863,7 +844,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasTimestamp()) {
           return false;
@@ -886,7 +866,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1475,13 +1454,11 @@ public final class OCSProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1503,7 +1480,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Transaction>
         PARSER = new com.google.protobuf.AbstractParser<Transaction>() {
-      @java.lang.Override
       public Transaction parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1521,7 +1497,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.Transaction getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1776,6 +1751,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               data_ = input.readBytes();
@@ -1840,13 +1822,6 @@ public final class OCSProto {
               bitField0_ |= 0x00000080;
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1867,7 +1842,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Write_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Write_fieldAccessorTable
@@ -2132,7 +2106,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -2176,7 +2149,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2209,7 +2181,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -2436,7 +2407,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -2444,7 +2414,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.Write prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -2472,7 +2441,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Write_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Write_fieldAccessorTable
@@ -2497,7 +2465,6 @@ public final class OCSProto {
           getSignatureFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         data_ = com.google.protobuf.ByteString.EMPTY;
@@ -2529,18 +2496,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Write_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.Write getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.Write.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.Write build() {
         ch.epfl.dedis.proto.OCSProto.Write result = buildPartial();
         if (!result.isInitialized()) {
@@ -2549,7 +2513,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.Write buildPartial() {
         ch.epfl.dedis.proto.OCSProto.Write result = new ch.epfl.dedis.proto.OCSProto.Write(this);
         int from_bitField0_ = bitField0_;
@@ -2604,39 +2567,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.Write) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.Write)other);
@@ -2687,7 +2643,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasData()) {
           return false;
@@ -2718,7 +2673,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3492,13 +3446,11 @@ public final class OCSProto {
         }
         return signatureBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -3520,7 +3472,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Write>
         PARSER = new com.google.protobuf.AbstractParser<Write>() {
-      @java.lang.Override
       public Write parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3538,7 +3489,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.Write getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -3640,6 +3590,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               dataid_ = input.readBytes();
@@ -3656,13 +3613,6 @@ public final class OCSProto {
                 signature_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -3682,7 +3632,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Read_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Read_fieldAccessorTable
@@ -3751,7 +3700,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -3773,7 +3721,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3785,7 +3732,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -3919,7 +3865,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -3927,7 +3872,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.Read prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -3957,7 +3901,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Read_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Read_fieldAccessorTable
@@ -3981,7 +3924,6 @@ public final class OCSProto {
           getSignatureFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         dataid_ = com.google.protobuf.ByteString.EMPTY;
@@ -3995,18 +3937,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_Read_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.Read getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.Read.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.Read build() {
         ch.epfl.dedis.proto.OCSProto.Read result = buildPartial();
         if (!result.isInitialized()) {
@@ -4015,7 +3954,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.Read buildPartial() {
         ch.epfl.dedis.proto.OCSProto.Read result = new ch.epfl.dedis.proto.OCSProto.Read(this);
         int from_bitField0_ = bitField0_;
@@ -4037,39 +3975,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.Read) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.Read)other);
@@ -4092,7 +4023,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasDataid()) {
           return false;
@@ -4106,7 +4036,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4339,13 +4268,11 @@ public final class OCSProto {
         }
         return signatureBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4367,7 +4294,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Read>
         PARSER = new com.google.protobuf.AbstractParser<Read>() {
-      @java.lang.Override
       public Read parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4385,7 +4311,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.Read getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -4472,6 +4397,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.proto.DarcOCSProto.Identity.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4495,13 +4427,6 @@ public final class OCSProto {
               dataid_ = input.readBytes();
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -4519,7 +4444,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadDoc_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadDoc_fieldAccessorTable
@@ -4580,7 +4504,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4606,7 +4529,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4621,7 +4543,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4768,7 +4689,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4776,7 +4696,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.ReadDoc prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4804,7 +4723,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadDoc_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadDoc_fieldAccessorTable
@@ -4828,7 +4746,6 @@ public final class OCSProto {
           getReaderFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (readerBuilder_ == null) {
@@ -4844,18 +4761,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadDoc_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.ReadDoc getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.ReadDoc.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.ReadDoc build() {
         ch.epfl.dedis.proto.OCSProto.ReadDoc result = buildPartial();
         if (!result.isInitialized()) {
@@ -4864,7 +4778,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.ReadDoc buildPartial() {
         ch.epfl.dedis.proto.OCSProto.ReadDoc result = new ch.epfl.dedis.proto.OCSProto.ReadDoc(this);
         int from_bitField0_ = bitField0_;
@@ -4890,39 +4803,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.ReadDoc) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.ReadDoc)other);
@@ -4948,7 +4854,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasReader()) {
           return false;
@@ -4965,7 +4870,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5172,13 +5076,11 @@ public final class OCSProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5200,7 +5102,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ReadDoc>
         PARSER = new com.google.protobuf.AbstractParser<ReadDoc>() {
-      @java.lang.Override
       public ReadDoc parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5218,7 +5119,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.ReadDoc getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -5298,6 +5198,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.proto.OnetProto.Roster.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5324,13 +5231,6 @@ public final class OCSProto {
               bitField0_ |= 0x00000002;
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -5348,7 +5248,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsRequest_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsRequest_fieldAccessorTable
@@ -5400,7 +5299,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5426,7 +5324,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5438,7 +5335,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5572,7 +5468,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5580,7 +5475,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5608,7 +5502,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsRequest_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsRequest_fieldAccessorTable
@@ -5633,7 +5526,6 @@ public final class OCSProto {
           getWritersFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (rosterBuilder_ == null) {
@@ -5651,18 +5543,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsRequest_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest build() {
         ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -5671,7 +5560,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest buildPartial() {
         ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest result = new ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest(this);
         int from_bitField0_ = bitField0_;
@@ -5697,39 +5585,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest)other);
@@ -5752,7 +5633,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasRoster()) {
           return false;
@@ -5769,7 +5649,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6024,13 +5903,11 @@ public final class OCSProto {
         }
         return writersBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6052,7 +5929,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CreateSkipchainsRequest>
         PARSER = new com.google.protobuf.AbstractParser<CreateSkipchainsRequest>() {
-      @java.lang.Override
       public CreateSkipchainsRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6070,7 +5946,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.CreateSkipchainsRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6147,6 +6022,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6163,13 +6045,6 @@ public final class OCSProto {
             case 18: {
               bitField0_ |= 0x00000002;
               x_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -6189,7 +6064,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsReply_fieldAccessorTable
@@ -6235,7 +6109,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -6255,7 +6128,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6267,7 +6139,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -6401,7 +6272,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6409,7 +6279,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6437,7 +6306,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsReply_fieldAccessorTable
@@ -6461,7 +6329,6 @@ public final class OCSProto {
           getOcsFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (ocsBuilder_ == null) {
@@ -6475,18 +6342,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_CreateSkipchainsReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply build() {
         ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -6495,7 +6359,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply buildPartial() {
         ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply result = new ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply(this);
         int from_bitField0_ = bitField0_;
@@ -6517,39 +6380,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply)other);
@@ -6572,7 +6428,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasX()) {
           return false;
@@ -6585,7 +6440,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6757,13 +6611,11 @@ public final class OCSProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6785,7 +6637,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CreateSkipchainsReply>
         PARSER = new com.google.protobuf.AbstractParser<CreateSkipchainsReply>() {
-      @java.lang.Override
       public CreateSkipchainsReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6803,7 +6654,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.CreateSkipchainsReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6901,6 +6751,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               ocs_ = input.readBytes();
@@ -6929,13 +6786,6 @@ public final class OCSProto {
               role_ = input.readSInt32();
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -6953,7 +6803,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPath_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPath_fieldAccessorTable
@@ -7029,7 +6878,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7059,7 +6907,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7077,7 +6924,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -7237,7 +7083,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -7245,7 +7090,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.GetDarcPath prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -7274,7 +7118,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPath_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPath_fieldAccessorTable
@@ -7298,7 +7141,6 @@ public final class OCSProto {
           getIdentityFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         ocs_ = com.google.protobuf.ByteString.EMPTY;
@@ -7316,18 +7158,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPath_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetDarcPath getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.GetDarcPath.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetDarcPath build() {
         ch.epfl.dedis.proto.OCSProto.GetDarcPath result = buildPartial();
         if (!result.isInitialized()) {
@@ -7336,7 +7175,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetDarcPath buildPartial() {
         ch.epfl.dedis.proto.OCSProto.GetDarcPath result = new ch.epfl.dedis.proto.OCSProto.GetDarcPath(this);
         int from_bitField0_ = bitField0_;
@@ -7366,39 +7204,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.GetDarcPath) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.GetDarcPath)other);
@@ -7427,7 +7258,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasOcs()) {
           return false;
@@ -7447,7 +7277,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7686,13 +7515,11 @@ public final class OCSProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -7714,7 +7541,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetDarcPath>
         PARSER = new com.google.protobuf.AbstractParser<GetDarcPath>() {
-      @java.lang.Override
       public GetDarcPath parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7732,7 +7558,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.GetDarcPath getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -7812,6 +7637,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 path_ = new java.util.ArrayList<ch.epfl.dedis.proto.DarcOCSProto.Darc>();
@@ -7819,13 +7651,6 @@ public final class OCSProto {
               }
               path_.add(
                   input.readMessage(ch.epfl.dedis.proto.DarcOCSProto.Darc.PARSER, extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -7848,7 +7673,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPathReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPathReply_fieldAccessorTable
@@ -7892,7 +7716,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7908,7 +7731,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < path_.size(); i++) {
@@ -7917,7 +7739,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -8035,7 +7856,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -8043,7 +7863,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.GetDarcPathReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -8072,7 +7891,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPathReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPathReply_fieldAccessorTable
@@ -8096,7 +7914,6 @@ public final class OCSProto {
           getPathFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (pathBuilder_ == null) {
@@ -8108,18 +7925,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetDarcPathReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetDarcPathReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.GetDarcPathReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetDarcPathReply build() {
         ch.epfl.dedis.proto.OCSProto.GetDarcPathReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -8128,7 +7942,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetDarcPathReply buildPartial() {
         ch.epfl.dedis.proto.OCSProto.GetDarcPathReply result = new ch.epfl.dedis.proto.OCSProto.GetDarcPathReply(this);
         int from_bitField0_ = bitField0_;
@@ -8145,39 +7958,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.GetDarcPathReply) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.GetDarcPathReply)other);
@@ -8220,7 +8026,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getPathCount(); i++) {
           if (!getPath(i).isInitialized()) {
@@ -8230,7 +8035,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8489,13 +8293,11 @@ public final class OCSProto {
         }
         return pathBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -8517,7 +8319,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetDarcPathReply>
         PARSER = new com.google.protobuf.AbstractParser<GetDarcPathReply>() {
-      @java.lang.Override
       public GetDarcPathReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8535,7 +8336,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.GetDarcPathReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -8613,6 +8413,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               ocs_ = input.readBytes();
@@ -8629,13 +8436,6 @@ public final class OCSProto {
                 darc_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -8655,7 +8455,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarc_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarc_fieldAccessorTable
@@ -8701,7 +8500,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -8723,7 +8521,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -8735,7 +8532,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -8869,7 +8665,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -8877,7 +8672,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.UpdateDarc prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -8906,7 +8700,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarc_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarc_fieldAccessorTable
@@ -8930,7 +8723,6 @@ public final class OCSProto {
           getDarcFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         ocs_ = com.google.protobuf.ByteString.EMPTY;
@@ -8944,18 +8736,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarc_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.UpdateDarc getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.UpdateDarc.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.UpdateDarc build() {
         ch.epfl.dedis.proto.OCSProto.UpdateDarc result = buildPartial();
         if (!result.isInitialized()) {
@@ -8964,7 +8753,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.UpdateDarc buildPartial() {
         ch.epfl.dedis.proto.OCSProto.UpdateDarc result = new ch.epfl.dedis.proto.OCSProto.UpdateDarc(this);
         int from_bitField0_ = bitField0_;
@@ -8986,39 +8774,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.UpdateDarc) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.UpdateDarc)other);
@@ -9041,7 +8822,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasOcs()) {
           return false;
@@ -9055,7 +8835,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9227,13 +9006,11 @@ public final class OCSProto {
         }
         return darcBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -9255,7 +9032,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<UpdateDarc>
         PARSER = new com.google.protobuf.AbstractParser<UpdateDarc>() {
-      @java.lang.Override
       public UpdateDarc parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9273,7 +9049,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.UpdateDarc getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -9342,6 +9117,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9353,13 +9135,6 @@ public final class OCSProto {
                 sb_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -9379,7 +9154,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarcReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarcReply_fieldAccessorTable
@@ -9410,7 +9184,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -9426,7 +9199,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9435,7 +9207,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -9556,7 +9327,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -9564,7 +9334,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.UpdateDarcReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -9594,7 +9363,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarcReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarcReply_fieldAccessorTable
@@ -9618,7 +9386,6 @@ public final class OCSProto {
           getSbFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (sbBuilder_ == null) {
@@ -9630,18 +9397,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_UpdateDarcReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.UpdateDarcReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.UpdateDarcReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.UpdateDarcReply build() {
         ch.epfl.dedis.proto.OCSProto.UpdateDarcReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -9650,7 +9414,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.UpdateDarcReply buildPartial() {
         ch.epfl.dedis.proto.OCSProto.UpdateDarcReply result = new ch.epfl.dedis.proto.OCSProto.UpdateDarcReply(this);
         int from_bitField0_ = bitField0_;
@@ -9668,39 +9431,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.UpdateDarcReply) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.UpdateDarcReply)other);
@@ -9720,7 +9476,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (hasSb()) {
           if (!getSb().isInitialized()) {
@@ -9730,7 +9485,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9867,13 +9621,11 @@ public final class OCSProto {
         }
         return sbBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -9895,7 +9647,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<UpdateDarcReply>
         PARSER = new com.google.protobuf.AbstractParser<UpdateDarcReply>() {
-      @java.lang.Override
       public UpdateDarcReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9913,7 +9664,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.UpdateDarcReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -10020,6 +9770,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               ocs_ = input.readBytes();
@@ -10064,13 +9821,6 @@ public final class OCSProto {
               bitField0_ |= 0x00000008;
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -10088,7 +9838,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteRequest_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteRequest_fieldAccessorTable
@@ -10176,7 +9925,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -10212,7 +9960,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -10230,7 +9977,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -10390,7 +10136,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -10398,7 +10143,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.WriteRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -10430,7 +10174,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteRequest_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteRequest_fieldAccessorTable
@@ -10456,7 +10199,6 @@ public final class OCSProto {
           getReadersFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         ocs_ = com.google.protobuf.ByteString.EMPTY;
@@ -10482,18 +10224,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteRequest_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.WriteRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.WriteRequest.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.WriteRequest build() {
         ch.epfl.dedis.proto.OCSProto.WriteRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -10502,7 +10241,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.WriteRequest buildPartial() {
         ch.epfl.dedis.proto.OCSProto.WriteRequest result = new ch.epfl.dedis.proto.OCSProto.WriteRequest(this);
         int from_bitField0_ = bitField0_;
@@ -10540,39 +10278,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.WriteRequest) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.WriteRequest)other);
@@ -10601,7 +10332,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasOcs()) {
           return false;
@@ -10626,7 +10356,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11034,13 +10763,11 @@ public final class OCSProto {
         }
         return readersBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -11062,7 +10789,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<WriteRequest>
         PARSER = new com.google.protobuf.AbstractParser<WriteRequest>() {
-      @java.lang.Override
       public WriteRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11080,7 +10806,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.WriteRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -11147,6 +10872,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -11158,13 +10890,6 @@ public final class OCSProto {
                 sb_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -11184,7 +10909,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteReply_fieldAccessorTable
@@ -11215,7 +10939,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -11231,7 +10954,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -11240,7 +10962,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -11361,7 +11082,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -11369,7 +11089,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.WriteReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -11397,7 +11116,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteReply_fieldAccessorTable
@@ -11421,7 +11139,6 @@ public final class OCSProto {
           getSbFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (sbBuilder_ == null) {
@@ -11433,18 +11150,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_WriteReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.WriteReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.WriteReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.WriteReply build() {
         ch.epfl.dedis.proto.OCSProto.WriteReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -11453,7 +11167,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.WriteReply buildPartial() {
         ch.epfl.dedis.proto.OCSProto.WriteReply result = new ch.epfl.dedis.proto.OCSProto.WriteReply(this);
         int from_bitField0_ = bitField0_;
@@ -11471,39 +11184,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.WriteReply) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.WriteReply)other);
@@ -11523,7 +11229,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (hasSb()) {
           if (!getSb().isInitialized()) {
@@ -11533,7 +11238,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11670,13 +11374,11 @@ public final class OCSProto {
         }
         return sbBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -11698,7 +11400,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<WriteReply>
         PARSER = new com.google.protobuf.AbstractParser<WriteReply>() {
-      @java.lang.Override
       public WriteReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11716,7 +11417,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.WriteReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -11793,6 +11493,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               ocs_ = input.readBytes();
@@ -11809,13 +11516,6 @@ public final class OCSProto {
                 read_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -11835,7 +11535,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadRequest_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadRequest_fieldAccessorTable
@@ -11881,7 +11580,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -11903,7 +11601,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -11915,7 +11612,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -12049,7 +11745,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -12057,7 +11752,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.ReadRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -12085,7 +11779,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadRequest_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadRequest_fieldAccessorTable
@@ -12109,7 +11802,6 @@ public final class OCSProto {
           getReadFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         ocs_ = com.google.protobuf.ByteString.EMPTY;
@@ -12123,18 +11815,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadRequest_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.ReadRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.ReadRequest.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.ReadRequest build() {
         ch.epfl.dedis.proto.OCSProto.ReadRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -12143,7 +11832,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.ReadRequest buildPartial() {
         ch.epfl.dedis.proto.OCSProto.ReadRequest result = new ch.epfl.dedis.proto.OCSProto.ReadRequest(this);
         int from_bitField0_ = bitField0_;
@@ -12165,39 +11853,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.ReadRequest) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.ReadRequest)other);
@@ -12220,7 +11901,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasOcs()) {
           return false;
@@ -12234,7 +11914,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12406,13 +12085,11 @@ public final class OCSProto {
         }
         return readBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -12434,7 +12111,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ReadRequest>
         PARSER = new com.google.protobuf.AbstractParser<ReadRequest>() {
-      @java.lang.Override
       public ReadRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12452,7 +12128,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.ReadRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -12519,6 +12194,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -12530,13 +12212,6 @@ public final class OCSProto {
                 sb_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -12556,7 +12231,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadReply_fieldAccessorTable
@@ -12587,7 +12261,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -12603,7 +12276,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -12612,7 +12284,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -12733,7 +12404,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -12741,7 +12411,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.ReadReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -12769,7 +12438,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadReply_fieldAccessorTable
@@ -12793,7 +12461,6 @@ public final class OCSProto {
           getSbFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (sbBuilder_ == null) {
@@ -12805,18 +12472,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_ReadReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.ReadReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.ReadReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.ReadReply build() {
         ch.epfl.dedis.proto.OCSProto.ReadReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -12825,7 +12489,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.ReadReply buildPartial() {
         ch.epfl.dedis.proto.OCSProto.ReadReply result = new ch.epfl.dedis.proto.OCSProto.ReadReply(this);
         int from_bitField0_ = bitField0_;
@@ -12843,39 +12506,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.ReadReply) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.ReadReply)other);
@@ -12895,7 +12551,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (hasSb()) {
           if (!getSb().isInitialized()) {
@@ -12905,7 +12560,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13042,13 +12696,11 @@ public final class OCSProto {
         }
         return sbBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -13070,7 +12722,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ReadReply>
         PARSER = new com.google.protobuf.AbstractParser<ReadReply>() {
-      @java.lang.Override
       public ReadReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13088,7 +12739,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.ReadReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -13153,16 +12803,16 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
-            case 10: {
-              bitField0_ |= 0x00000001;
-              genesis_ = input.readBytes();
-              break;
-            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              genesis_ = input.readBytes();
               break;
             }
           }
@@ -13182,7 +12832,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicRequest_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicRequest_fieldAccessorTable
@@ -13207,7 +12856,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -13221,7 +12869,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -13230,7 +12877,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -13351,7 +12997,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -13359,7 +13004,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.SharedPublicRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -13388,7 +13032,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicRequest_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicRequest_fieldAccessorTable
@@ -13411,7 +13054,6 @@ public final class OCSProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         genesis_ = com.google.protobuf.ByteString.EMPTY;
@@ -13419,18 +13061,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicRequest_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.SharedPublicRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.SharedPublicRequest.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.SharedPublicRequest build() {
         ch.epfl.dedis.proto.OCSProto.SharedPublicRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -13439,7 +13078,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.SharedPublicRequest buildPartial() {
         ch.epfl.dedis.proto.OCSProto.SharedPublicRequest result = new ch.epfl.dedis.proto.OCSProto.SharedPublicRequest(this);
         int from_bitField0_ = bitField0_;
@@ -13453,39 +13091,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.SharedPublicRequest) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.SharedPublicRequest)other);
@@ -13505,7 +13136,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasGenesis()) {
           return false;
@@ -13513,7 +13143,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13567,13 +13196,11 @@ public final class OCSProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -13595,7 +13222,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SharedPublicRequest>
         PARSER = new com.google.protobuf.AbstractParser<SharedPublicRequest>() {
-      @java.lang.Override
       public SharedPublicRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13613,7 +13239,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.SharedPublicRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -13677,16 +13302,16 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
-            case 10: {
-              bitField0_ |= 0x00000001;
-              x_ = input.readBytes();
-              break;
-            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              x_ = input.readBytes();
               break;
             }
           }
@@ -13706,7 +13331,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicReply_fieldAccessorTable
@@ -13731,7 +13355,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -13745,7 +13368,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -13754,7 +13376,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -13875,7 +13496,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -13883,7 +13503,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.SharedPublicReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -13911,7 +13530,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicReply_fieldAccessorTable
@@ -13934,7 +13552,6 @@ public final class OCSProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         x_ = com.google.protobuf.ByteString.EMPTY;
@@ -13942,18 +13559,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_SharedPublicReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.SharedPublicReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.SharedPublicReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.SharedPublicReply build() {
         ch.epfl.dedis.proto.OCSProto.SharedPublicReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -13962,7 +13576,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.SharedPublicReply buildPartial() {
         ch.epfl.dedis.proto.OCSProto.SharedPublicReply result = new ch.epfl.dedis.proto.OCSProto.SharedPublicReply(this);
         int from_bitField0_ = bitField0_;
@@ -13976,39 +13589,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.SharedPublicReply) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.SharedPublicReply)other);
@@ -14028,7 +13634,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasX()) {
           return false;
@@ -14036,7 +13641,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -14090,13 +13694,11 @@ public final class OCSProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -14118,7 +13720,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SharedPublicReply>
         PARSER = new com.google.protobuf.AbstractParser<SharedPublicReply>() {
-      @java.lang.Override
       public SharedPublicReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -14136,7 +13737,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.SharedPublicReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -14225,6 +13825,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               read_ = input.readBytes();
@@ -14248,13 +13855,6 @@ public final class OCSProto {
               bitField0_ |= 0x00000004;
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -14272,7 +13872,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyRequest_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyRequest_fieldAccessorTable
@@ -14333,7 +13932,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -14353,7 +13951,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -14368,7 +13965,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -14515,7 +14111,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -14523,7 +14118,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -14553,7 +14147,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyRequest_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyRequest_fieldAccessorTable
@@ -14577,7 +14170,6 @@ public final class OCSProto {
           getSignatureFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         read_ = com.google.protobuf.ByteString.EMPTY;
@@ -14593,18 +14185,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyRequest_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest build() {
         ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -14613,7 +14202,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest buildPartial() {
         ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest result = new ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest(this);
         int from_bitField0_ = bitField0_;
@@ -14639,39 +14227,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest)other);
@@ -14697,7 +14278,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasRead()) {
           return false;
@@ -14710,7 +14290,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -14917,13 +14496,11 @@ public final class OCSProto {
         }
         return signatureBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -14945,7 +14522,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<DecryptKeyRequest>
         PARSER = new com.google.protobuf.AbstractParser<DecryptKeyRequest>() {
-      @java.lang.Override
       public DecryptKeyRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -14963,7 +14539,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.DecryptKeyRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -15052,6 +14627,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 cs_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
@@ -15068,13 +14650,6 @@ public final class OCSProto {
             case 26: {
               bitField0_ |= 0x00000002;
               x_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -15097,7 +14672,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyReply_fieldAccessorTable
@@ -15159,7 +14733,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -15177,7 +14750,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < cs_.size(); i++) {
@@ -15192,7 +14764,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -15341,7 +14912,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -15349,7 +14919,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.DecryptKeyReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -15378,7 +14947,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyReply_fieldAccessorTable
@@ -15401,7 +14969,6 @@ public final class OCSProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         cs_ = java.util.Collections.emptyList();
@@ -15413,18 +14980,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_DecryptKeyReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.DecryptKeyReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.DecryptKeyReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.DecryptKeyReply build() {
         ch.epfl.dedis.proto.OCSProto.DecryptKeyReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -15433,7 +14997,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.DecryptKeyReply buildPartial() {
         ch.epfl.dedis.proto.OCSProto.DecryptKeyReply result = new ch.epfl.dedis.proto.OCSProto.DecryptKeyReply(this);
         int from_bitField0_ = bitField0_;
@@ -15456,39 +15019,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.DecryptKeyReply) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.DecryptKeyReply)other);
@@ -15521,7 +15077,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasXhatenc()) {
           return false;
@@ -15532,7 +15087,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -15693,13 +15247,11 @@ public final class OCSProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -15721,7 +15273,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<DecryptKeyReply>
         PARSER = new com.google.protobuf.AbstractParser<DecryptKeyReply>() {
-      @java.lang.Override
       public DecryptKeyReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -15739,7 +15290,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.DecryptKeyReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -15813,6 +15363,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               start_ = input.readBytes();
@@ -15821,13 +15378,6 @@ public final class OCSProto {
             case 16: {
               bitField0_ |= 0x00000002;
               count_ = input.readSInt32();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -15847,7 +15397,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequests_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequests_fieldAccessorTable
@@ -15887,7 +15436,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -15905,7 +15453,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -15917,7 +15464,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -16051,7 +15597,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -16059,7 +15604,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.GetReadRequests prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -16087,7 +15631,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequests_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequests_fieldAccessorTable
@@ -16110,7 +15653,6 @@ public final class OCSProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         start_ = com.google.protobuf.ByteString.EMPTY;
@@ -16120,18 +15662,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequests_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetReadRequests getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.GetReadRequests.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetReadRequests build() {
         ch.epfl.dedis.proto.OCSProto.GetReadRequests result = buildPartial();
         if (!result.isInitialized()) {
@@ -16140,7 +15679,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetReadRequests buildPartial() {
         ch.epfl.dedis.proto.OCSProto.GetReadRequests result = new ch.epfl.dedis.proto.OCSProto.GetReadRequests(this);
         int from_bitField0_ = bitField0_;
@@ -16158,39 +15696,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.GetReadRequests) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.GetReadRequests)other);
@@ -16213,7 +15744,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasStart()) {
           return false;
@@ -16224,7 +15754,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -16310,13 +15839,11 @@ public final class OCSProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -16338,7 +15865,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetReadRequests>
         PARSER = new com.google.protobuf.AbstractParser<GetReadRequests>() {
-      @java.lang.Override
       public GetReadRequests parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -16356,7 +15882,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.GetReadRequests getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -16435,6 +15960,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 documents_ = new java.util.ArrayList<ch.epfl.dedis.proto.OCSProto.ReadDoc>();
@@ -16442,13 +15974,6 @@ public final class OCSProto {
               }
               documents_.add(
                   input.readMessage(ch.epfl.dedis.proto.OCSProto.ReadDoc.PARSER, extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -16471,7 +15996,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequestsReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequestsReply_fieldAccessorTable
@@ -16515,7 +16039,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -16531,7 +16054,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < documents_.size(); i++) {
@@ -16540,7 +16062,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -16658,7 +16179,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -16666,7 +16186,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -16694,7 +16213,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequestsReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequestsReply_fieldAccessorTable
@@ -16718,7 +16236,6 @@ public final class OCSProto {
           getDocumentsFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (documentsBuilder_ == null) {
@@ -16730,18 +16247,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetReadRequestsReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply build() {
         ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -16750,7 +16264,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply buildPartial() {
         ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply result = new ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply(this);
         int from_bitField0_ = bitField0_;
@@ -16767,39 +16280,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply)other);
@@ -16842,7 +16348,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getDocumentsCount(); i++) {
           if (!getDocuments(i).isInitialized()) {
@@ -16852,7 +16357,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -17111,13 +16615,11 @@ public final class OCSProto {
         }
         return documentsBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -17139,7 +16641,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetReadRequestsReply>
         PARSER = new com.google.protobuf.AbstractParser<GetReadRequestsReply>() {
-      @java.lang.Override
       public GetReadRequestsReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -17157,7 +16658,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.GetReadRequestsReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -17234,7 +16734,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchRequest_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchRequest_fieldAccessorTable
@@ -17243,7 +16742,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -17253,13 +16751,11 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -17367,7 +16863,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -17375,7 +16870,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.GetBunchRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -17403,7 +16897,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchRequest_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchRequest_fieldAccessorTable
@@ -17426,24 +16919,20 @@ public final class OCSProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchRequest_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetBunchRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.GetBunchRequest.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetBunchRequest build() {
         ch.epfl.dedis.proto.OCSProto.GetBunchRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -17452,46 +16941,38 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetBunchRequest buildPartial() {
         ch.epfl.dedis.proto.OCSProto.GetBunchRequest result = new ch.epfl.dedis.proto.OCSProto.GetBunchRequest(this);
         onBuilt();
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.GetBunchRequest) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.GetBunchRequest)other);
@@ -17508,12 +16989,10 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -17531,13 +17010,11 @@ public final class OCSProto {
         }
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -17559,7 +17036,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetBunchRequest>
         PARSER = new com.google.protobuf.AbstractParser<GetBunchRequest>() {
-      @java.lang.Override
       public GetBunchRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -17577,7 +17053,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.GetBunchRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -17656,6 +17131,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 bunches_ = new java.util.ArrayList<ch.epfl.dedis.proto.SkipchainProto.SkipBlock>();
@@ -17663,13 +17145,6 @@ public final class OCSProto {
               }
               bunches_.add(
                   input.readMessage(ch.epfl.dedis.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -17692,7 +17167,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchReply_fieldAccessorTable
@@ -17736,7 +17210,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -17752,7 +17225,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < bunches_.size(); i++) {
@@ -17761,7 +17233,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -17879,7 +17350,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -17887,7 +17357,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.GetBunchReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -17915,7 +17384,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchReply_fieldAccessorTable
@@ -17939,7 +17407,6 @@ public final class OCSProto {
           getBunchesFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (bunchesBuilder_ == null) {
@@ -17951,18 +17418,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetBunchReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetBunchReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.GetBunchReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetBunchReply build() {
         ch.epfl.dedis.proto.OCSProto.GetBunchReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -17971,7 +17435,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetBunchReply buildPartial() {
         ch.epfl.dedis.proto.OCSProto.GetBunchReply result = new ch.epfl.dedis.proto.OCSProto.GetBunchReply(this);
         int from_bitField0_ = bitField0_;
@@ -17988,39 +17451,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.GetBunchReply) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.GetBunchReply)other);
@@ -18063,7 +17519,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getBunchesCount(); i++) {
           if (!getBunches(i).isInitialized()) {
@@ -18073,7 +17528,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -18332,13 +17786,11 @@ public final class OCSProto {
         }
         return bunchesBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -18360,7 +17812,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetBunchReply>
         PARSER = new com.google.protobuf.AbstractParser<GetBunchReply>() {
-      @java.lang.Override
       public GetBunchReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -18378,7 +17829,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.GetBunchReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -18453,6 +17903,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               ocs_ = input.readBytes();
@@ -18461,13 +17918,6 @@ public final class OCSProto {
             case 18: {
               bitField0_ |= 0x00000002;
               darcid_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -18487,7 +17937,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarc_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarc_fieldAccessorTable
@@ -18527,7 +17976,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -18545,7 +17993,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -18557,7 +18004,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -18691,7 +18137,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -18699,7 +18144,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.GetLatestDarc prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -18728,7 +18172,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarc_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarc_fieldAccessorTable
@@ -18751,7 +18194,6 @@ public final class OCSProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         ocs_ = com.google.protobuf.ByteString.EMPTY;
@@ -18761,18 +18203,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarc_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetLatestDarc getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.GetLatestDarc.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetLatestDarc build() {
         ch.epfl.dedis.proto.OCSProto.GetLatestDarc result = buildPartial();
         if (!result.isInitialized()) {
@@ -18781,7 +18220,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetLatestDarc buildPartial() {
         ch.epfl.dedis.proto.OCSProto.GetLatestDarc result = new ch.epfl.dedis.proto.OCSProto.GetLatestDarc(this);
         int from_bitField0_ = bitField0_;
@@ -18799,39 +18237,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.GetLatestDarc) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.GetLatestDarc)other);
@@ -18854,7 +18285,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasOcs()) {
           return false;
@@ -18865,7 +18295,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -18954,13 +18383,11 @@ public final class OCSProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -18982,7 +18409,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetLatestDarc>
         PARSER = new com.google.protobuf.AbstractParser<GetLatestDarc>() {
-      @java.lang.Override
       public GetLatestDarc parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -19000,7 +18426,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.GetLatestDarc getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -19081,6 +18506,13 @@ public final class OCSProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 darcs_ = new java.util.ArrayList<ch.epfl.dedis.proto.DarcOCSProto.Darc>();
@@ -19088,13 +18520,6 @@ public final class OCSProto {
               }
               darcs_.add(
                   input.readMessage(ch.epfl.dedis.proto.DarcOCSProto.Darc.PARSER, extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -19117,7 +18542,6 @@ public final class OCSProto {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarcReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarcReply_fieldAccessorTable
@@ -19161,7 +18585,6 @@ public final class OCSProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -19177,7 +18600,6 @@ public final class OCSProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < darcs_.size(); i++) {
@@ -19186,7 +18608,6 @@ public final class OCSProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -19304,7 +18725,6 @@ public final class OCSProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -19312,7 +18732,6 @@ public final class OCSProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -19342,7 +18761,6 @@ public final class OCSProto {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarcReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarcReply_fieldAccessorTable
@@ -19366,7 +18784,6 @@ public final class OCSProto {
           getDarcsFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (darcsBuilder_ == null) {
@@ -19378,18 +18795,15 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.OCSProto.internal_static_ocs_GetLatestDarcReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply build() {
         ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -19398,7 +18812,6 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply buildPartial() {
         ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply result = new ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply(this);
         int from_bitField0_ = bitField0_;
@@ -19415,39 +18828,32 @@ public final class OCSProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply) {
           return mergeFrom((ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply)other);
@@ -19490,7 +18896,6 @@ public final class OCSProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getDarcsCount(); i++) {
           if (!getDarcs(i).isInitialized()) {
@@ -19500,7 +18905,6 @@ public final class OCSProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -19759,13 +19163,11 @@ public final class OCSProto {
         }
         return darcsBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -19787,7 +19189,6 @@ public final class OCSProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetLatestDarcReply>
         PARSER = new com.google.protobuf.AbstractParser<GetLatestDarcReply>() {
-      @java.lang.Override
       public GetLatestDarcReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -19805,7 +19206,6 @@ public final class OCSProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.OCSProto.GetLatestDarcReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }

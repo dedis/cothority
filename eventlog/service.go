@@ -6,7 +6,6 @@ import (
 	"time"
 
 	omniledger "github.com/dedis/cothority/omniledger/service"
-	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
@@ -33,16 +32,6 @@ type Service struct {
 }
 
 const defaultBlockInterval = 5 * time.Second
-
-// waitForBlock is for use in tests; it will sleep long enough to be sure that
-// a block has been created.
-func (s *Service) waitForBlock(scID skipchain.SkipBlockID) {
-	dur, err := s.omni.LoadBlockInterval(scID)
-	if err != nil {
-		panic(err.Error())
-	}
-	time.Sleep(5 * dur)
-}
 
 // This should be a const, but we want to be able to hack it from tests.
 var searchMax = 10000
