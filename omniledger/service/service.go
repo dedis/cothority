@@ -1239,7 +1239,11 @@ func (s *Service) startAllChains() error {
 		// TODO fault threshold might change
 	}
 
-	s.trySyncAll()
+	// Running trySyncAll in background so it doesn't stop the other
+	// services from starting.
+	// TODO: do this on a per-needed basis, or only a couple of seconds
+	// after startup.
+	go s.trySyncAll()
 	s.monitorLeaderFailure()
 
 	return nil
