@@ -5,7 +5,6 @@ import (
 
 	"github.com/dedis/cothority"
 	ol "github.com/dedis/cothority/omniledger/service"
-	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
@@ -22,11 +21,7 @@ func init() {
 func (s *Service) save() error {
 	s.storage.Lock()
 	defer s.storage.Unlock()
-	err := s.Save(storageKey, s.storage)
-	if err != nil {
-		log.Error("Couldn't save data:", err)
-	}
-	return nil
+	return s.Save(storageKey, s.storage)
 }
 
 // Tries to load the configuration and updates the data in the service
