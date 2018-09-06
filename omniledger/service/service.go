@@ -241,7 +241,8 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 
 		blocksLeft := req.InclusionWait
 
-		for found := false; !found; {
+		var found bool
+		for !found && blocksLeft > 0 {
 			select {
 			case success := <-ch:
 				if !success {
@@ -252,12 +253,16 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 				if id.Equal(req.SkipchainID) {
 					blocksLeft--
 				}
-				if blocksLeft == 0 {
-					return nil, fmt.Errorf("did not find transaction after %v blocks", req.InclusionWait)
-				}
+			case <-time.After(interval):
+				// TODO: remove this timer once we have a correct block-creation algorithm that can
+				// trigger waiting here.
+				blocksLeft--
 			case <-tooLong:
 				return nil, fmt.Errorf("did not observe %v blocks after %v", req.InclusionWait, tooLongDur)
 			}
+		}
+		if !found {
+			return nil, fmt.Errorf("did not find transaction after %v blocks", req.InclusionWait)
 		}
 	} else {
 		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
