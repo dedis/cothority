@@ -35,18 +35,31 @@ notifications:
 matrix:
   include:
     - language: go
-
       install:
         - go get -t ./...
         - go get github.com/dedis/Coding || true
-
       before_install:
         - cd $TRAVIS_BUILD_DIR
-
       script:
         - cd omniledger/service
         - go test -v -count=50 -failfast -race -timeout 1h -run TestService_ViewChange$
+
+    - language: go
+      install:
+        - go get -t ./...
+        - go get github.com/dedis/Coding || true
+      before_install:
+        - cd $TRAVIS_BUILD_DIR
+      script:
+        - cd omniledger/service
         - go test -v -count=50 -failfast -race -timeout 1h -run TestService_Depending
         - go test -v -count=50 -failfast -race -timeout 1h -run TestService_WaitInclusion
-        - cd ../../
+
+    - language: go
+      install:
+        - go get -t ./...
+        - go get github.com/dedis/Coding || true
+      before_install:
+        - cd $TRAVIS_BUILD_DIR
+      script:
         - make test

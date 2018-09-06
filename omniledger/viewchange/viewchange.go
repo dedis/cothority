@@ -141,7 +141,7 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 			// the timer and move the state if there are 2f+1 valid
 			// requests.
 			meta.addOther(req)
-			log.Lvl4("adding req:", req.View)
+			log.LLvl4("adding req:", req.View.LeaderIndex, req.SignerID.String())
 			if meta.highest() > ctr && meta.countOf(meta.highest()) > f {
 				// To avoid starting view-change too late, if
 				// another honest node detects an anomaly,
@@ -179,7 +179,7 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				panic("only accept our own ID")
 			}
 			meta.addMyself(req)
-			log.LLvl4("adding anomaly:", req.View)
+			log.LLvl4("adding anomaly:", req.View.LeaderIndex, req.SignerID.String())
 			if req.View.LeaderIndex > ctr {
 				// We detected a new anomaly, so send a new
 				// view-change message.
