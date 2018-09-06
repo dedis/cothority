@@ -28,7 +28,7 @@ import (
 
 const invokeEvolve darc.Action = darc.Action("invoke:evolve")
 
-const rotationWindow time.Duration = 5
+const rotationWindow time.Duration = 10
 
 const noTimeout time.Duration = 0
 
@@ -43,6 +43,8 @@ var viewChangeMsgID network.MessageTypeID
 var OmniledgerID onet.ServiceID
 
 var verifyOmniLedger = skipchain.VerifierID(uuid.NewV5(uuid.NamespaceURL, "OmniLedger"))
+
+var useViewChange = false
 
 func init() {
 	var err error
@@ -449,7 +451,7 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 	if err != nil {
 		return err
 	}
-	if sb.Index == 0 {
+	if sb.Index == 0 && useViewChange {
 		if s.heartbeats.exists(string(sb.SkipChainID())) {
 			panic("This is a new genesis block, but we're already running " +
 				"the heartbeat monitor, it should never happen.")
@@ -474,8 +476,11 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 		if err != nil {
 			return err
 		}
-		s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(sb.Hash))
-		s.viewChangeMan.start(s.ServerIdentity().ID, sb.SkipChainID(), initialDur, s.getFaultThreshold(sb.Hash), string(sb.Hash))
+
+		if useViewChange {
+			s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(sb.Hash))
+			s.viewChangeMan.start(s.ServerIdentity().ID, sb.SkipChainID(), initialDur, s.getFaultThreshold(sb.Hash), string(sb.Hash))
+		}
 		// TODO fault threshold might change
 
 		s.pollChanMut.Lock()
@@ -522,6 +527,9 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 }
 
 func isViewChangeTx(txs TxResults) *viewchange.View {
+	if !useViewChange {
+		return nil
+	}
 	if len(txs) != 1 {
 		// view-change block must only have one transaction
 		return nil
@@ -751,9 +759,11 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		return false
 	}
 
-	if s.viewChangeMan.waiting(string(newSB.SkipChainID())) && isViewChangeTx(body.TxResults) == nil {
-		log.Error(s.ServerIdentity(), "we are not accepting blocks when a view-change is in progress")
-		return false
+	if useViewChange {
+		if s.viewChangeMan.waiting(string(newSB.SkipChainID())) && isViewChangeTx(body.TxResults) == nil {
+			log.Error(s.ServerIdentity(), "we are not accepting blocks when a view-change is in progress")
+			return false
+		}
 	}
 
 	cdb := s.getCollection(newSB.SkipChainID())
@@ -819,7 +829,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	// not trigger, and the acceptable window would be ± 10 sec.
 	const minTimestampWindow = 1 * time.Second
 
-	window := 2 * config.BlockInterval
+	window := 4 * config.BlockInterval
 	if window < minTimestampWindow {
 		window = minTimestampWindow
 	}
@@ -970,7 +980,9 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 		log.Warn(s.ServerIdentity(), "getTxs came from a wrong leader")
 		return []ClientTransaction{}
 	}
-	s.heartbeats.beat(string(scID))
+	if useViewChange {
+		s.heartbeats.beat(string(scID))
+	}
 
 	// If the leader's latestID is something we do not know about, then we
 	// need to synchronise.
@@ -1021,9 +1033,11 @@ func (s *Service) cleanupGoroutines() {
 	s.pollChanMut.Unlock()
 	s.pollChanWG.Wait()
 
-	s.heartbeats.closeAll()
-	s.closeLeaderMonitorChan <- true
-	s.viewChangeMan.closeAll()
+	if useViewChange {
+		s.heartbeats.closeAll()
+		s.closeLeaderMonitorChan <- true
+		s.viewChangeMan.closeAll()
+	}
 }
 
 func (s *Service) monitorLeaderFailure() {
@@ -1222,20 +1236,21 @@ func (s *Service) startAllChains() error {
 		s.darcToSc[string(d.GetBaseID())] = gen
 		s.darcToScMut.Unlock()
 
-		// start the heartbeat
-		if s.heartbeats.exists(string(gen)) {
-			return errors.New("we are just starting the service, there should be no existing heartbeat monitors")
-		}
-		log.Lvlf2("%s started heartbeat monitor for %x", s.ServerIdentity(), gen)
-		s.heartbeats.start(string(gen), interval*rotationWindow, s.heartbeatsTimeout)
-
 		// initiate the view-change manager
 		initialDur, err := s.computeInitialDuration(gen)
 		if err != nil {
 			return err
 		}
-		s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(gen))
-		s.viewChangeMan.start(s.ServerIdentity().ID, gen, initialDur, s.getFaultThreshold(gen), string(gen))
+		if useViewChange {
+			// start the heartbeat
+			if s.heartbeats.exists(string(gen)) {
+				return errors.New("we are just starting the service, there should be no existing heartbeat monitors")
+			}
+			log.Lvlf2("%s started heartbeat monitor for %x", s.ServerIdentity(), gen)
+			s.heartbeats.start(string(gen), interval*rotationWindow, s.heartbeatsTimeout)
+			s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(gen))
+			s.viewChangeMan.start(s.ServerIdentity().ID, gen, initialDur, s.getFaultThreshold(gen), string(gen))
+		}
 		// TODO fault threshold might change
 	}
 
@@ -1243,8 +1258,11 @@ func (s *Service) startAllChains() error {
 	// services from starting.
 	// TODO: do this on a per-needed basis, or only a couple of seconds
 	// after startup.
-	go s.trySyncAll()
-	s.monitorLeaderFailure()
+	go func() {
+		s.working.Add(1)
+		s.trySyncAll()
+		s.working.Done()
+	}()
 
 	return nil
 }
@@ -1309,8 +1327,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 		stateChangeCache:       newStateChangeCache(),
 		heartbeatsTimeout:      make(chan string, 1),
 		closeLeaderMonitorChan: make(chan bool, 1),
-		heartbeats:             newHeartbeats(),
-		viewChangeMan:          newViewChangeManager(),
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
 		s.GetProof); err != nil {
@@ -1325,7 +1341,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 	s.skService().RegisterStoreSkipblockCallback(s.updateCollectionCallback)
-	s.skService().EnableViewChange()
 
 	// Register the view-change cosi protocols.
 	var err error
@@ -1345,5 +1360,13 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err := s.startAllChains(); err != nil {
 		return nil, err
 	}
+
+	if useViewChange {
+		s.viewChangeMan = newViewChangeManager()
+		s.heartbeats = newHeartbeats()
+		s.skService().EnableViewChange()
+		s.monitorLeaderFailure()
+	}
+
 	return s, nil
 }
