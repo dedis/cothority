@@ -26,7 +26,7 @@ var tSuite = suites.MustFind("Ed25519")
 var dummyContract = "dummy"
 var slowContract = "slow"
 var invalidContract = "invalid"
-var testInterval = 200 * time.Millisecond
+var testInterval = 400 * time.Millisecond
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
