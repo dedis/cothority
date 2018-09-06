@@ -44,9 +44,9 @@ matrix:
         - cd $TRAVIS_BUILD_DIR
 
       script:
+        - cd omniledger/service
+        - go test -v -count=50 -failfast -race -timeout 1h -run TestService_ViewChange$
+        - go test -v -count=50 -failfast -race -timeout 1h -run TestService_Depending
+        - go test -v -count=50 -failfast -race -timeout 1h -run TestService_WaitInclusion
+        - cd ../../
         - make test
-
-    - language: java
-
-      script:
-        - make test_java

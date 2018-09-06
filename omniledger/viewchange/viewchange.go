@@ -179,7 +179,7 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				panic("only accept our own ID")
 			}
 			meta.addMyself(req)
-			log.Lvl4("adding anomaly:", req.View)
+			log.LLvl4("adding anomaly:", req.View)
 			if req.View.LeaderIndex > ctr {
 				// We detected a new anomaly, so send a new
 				// view-change message.

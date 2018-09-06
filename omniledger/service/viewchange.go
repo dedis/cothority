@@ -110,12 +110,15 @@ func (s *Service) sendViewChangeReq(view viewchange.View) error {
 		if sid.Equal(s.ServerIdentity()) {
 			continue
 		}
-		if err := s.SendRaw(sid, &req); err != nil {
-			// Having an error here is fine because not all the
-			// nodes are guaranteed to be online. So we log a
-			// warning instead of returning an error.
-			log.Warn(s.ServerIdentity(), err)
-		}
+		go func(id *network.ServerIdentity) {
+			// TODO how long does SendRaw block?
+			if err := s.SendRaw(id, &req); err != nil {
+				// Having an error here is fine because not all the
+				// nodes are guaranteed to be online. So we log a
+				// warning instead of returning an error.
+				log.Warn(s.ServerIdentity(), err)
+			}
+		}(sid)
 	}
 	return nil
 }

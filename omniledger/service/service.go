@@ -388,7 +388,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 // Hence, we need to figure out when a new block is added. This can be done by
 // looking at the latest skipblock cache from Service.state.
 func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
-	log.Lvlf4("%s callback on %x", s.ServerIdentity(), sbID)
+	defer log.Lvlf4("%s updated collection for %x", s.ServerIdentity(), sbID)
 	if !s.isOurChain(sbID) {
 		log.Lvl4("Not our chain...")
 		return nil
@@ -1009,7 +1009,11 @@ func (s *Service) TestClose() {
 }
 
 func (s *Service) cleanupGoroutines() {
-	log.Lvl4(s.ServerIdentity(), "closing go-routines")
+	log.Lvl1(s.ServerIdentity(), "closing go-routines")
+	s.heartbeats.closeAll()
+	s.closeLeaderMonitorChan <- true
+	s.viewChangeMan.closeAll()
+
 	s.pollChanMut.Lock()
 	for k, c := range s.pollChan {
 		close(c)
@@ -1017,10 +1021,6 @@ func (s *Service) cleanupGoroutines() {
 	}
 	s.pollChanMut.Unlock()
 	s.pollChanWG.Wait()
-
-	s.heartbeats.closeAll()
-	s.closeLeaderMonitorChan <- true
-	s.viewChangeMan.closeAll()
 }
 
 func (s *Service) monitorLeaderFailure() {
