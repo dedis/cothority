@@ -7,8 +7,6 @@ package main
 import (
 	"bufio"
 	"bytes"
-	"crypto/sha256"
-	"encoding/binary"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -16,20 +14,12 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/ftcosi/check"
 	_ "github.com/dedis/cothority/ftcosi/protocol"
 	_ "github.com/dedis/cothority/ftcosi/service"
-	"github.com/dedis/cothority/omniledger/contracts"
-	"github.com/dedis/cothority/omniledger/darc"
-	"github.com/dedis/cothority/omniledger/darc/expression"
-	ol "github.com/dedis/cothority/omniledger/service"
-	ph "github.com/dedis/cothority/personhood"
-	"github.com/dedis/protobuf"
-	cli "gopkg.in/urfave/cli.v1"
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority/pop/service"
@@ -42,10 +32,11 @@ import (
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"gopkg.in/urfave/cli.v1"
 )
 
 func init() {
-	network.RegisterMessages(Config{}, darc.Signer{})
+	network.RegisterMessage(Config{})
 }
 
 // Config represents either a manager or an attendee configuration.
@@ -57,7 +48,7 @@ type Config struct {
 	OrgPrivate kyber.Scalar
 	// Address of the linked conode.
 	Address network.Address
-	// Map of Final statements or configutations of the parties.
+	// Map of Final statements of the parties.
 	// indexed by hash of party desciption
 	Parties map[string]*PartyConfig
 	// config-file name
@@ -86,7 +77,6 @@ func main() {
 	appCli.Version = "0.1"
 	appCli.Commands = []cli.Command{}
 	appCli.Commands = []cli.Command{
-		commandOmniledger,
 		commandOrg,
 		commandAttendee,
 		commandAuth,
@@ -141,10 +131,7 @@ func orgLink(c *cli.Context) error {
 	}
 	cfg.Address = addr
 	log.Info("Successfully linked with", addr)
-	err := cfg.write()
-	if err != nil {
-		return errors.New("couldn't write configuration file: " + err.Error())
-	}
+	cfg.write()
 	return nil
 }
 
@@ -213,7 +200,8 @@ func orgConfig(c *cli.Context) error {
 		val.Final.Desc = desc
 	}
 	log.Infof("Stored new config with hash %x", desc.Hash())
-	return cfg.write()
+	cfg.write()
+	return nil
 }
 
 // read all newly proposed configs
@@ -297,7 +285,8 @@ func orgPublic(c *cli.Context) error {
 		}
 		party.Final.Attendees = append(party.Final.Attendees, pub)
 	}
-	return cfg.write()
+	cfg.write()
+	return nil
 }
 
 // finalizes the statement
@@ -333,10 +322,7 @@ func orgFinal(c *cli.Context) error {
 		return err
 	}
 	party.Final = fs
-	err = cfg.write()
-	if err != nil {
-		return errors.New("couldn't write configuration file: " + err.Error())
-	}
+	cfg.write()
 	finst, err := fs.ToToml()
 	if err != nil {
 		return err
@@ -370,10 +356,7 @@ func orgMerge(c *cli.Context) error {
 			log.Fatal("Fetched final statement is invalid")
 		}
 		party.Final = fs
-		err = cfg.write()
-		if err != nil {
-			return errors.New("couldn't write configuration file: " + err.Error())
-		}
+		cfg.write()
 	}
 	if party.Final.Merged {
 		var finst []byte
@@ -393,10 +376,7 @@ func orgMerge(c *cli.Context) error {
 		return err
 	}
 	party.Final = fs
-	err = cfg.write()
-	if err != nil {
-		return errors.New("couldn't write configuration file: " + err.Error())
-	}
+	cfg.write()
 	finst, err := fs.ToToml()
 	if err != nil {
 		return err
@@ -514,10 +494,7 @@ func attJoin(c *cli.Context) error {
 		}
 	}
 	cfg.Parties[hash] = party
-	err = cfg.write()
-	if err != nil {
-		return errors.New("couldn't write configuration file: " + err.Error())
-	}
+	cfg.write()
 	log.Lvl3("Stored final statement")
 	return nil
 }
@@ -622,502 +599,8 @@ func authStore(c *cli.Context) error {
 	party.Final = final
 	hash := hex.EncodeToString(final.Desc.Hash())
 	cfg.Parties[hash] = party
-	err = cfg.write()
-	if err != nil {
-		return errors.New("couldn't write configuration file: " + err.Error())
-	}
+	cfg.write()
 	log.Lvlf1("Stored final statement, hash: %s", hash)
-	return nil
-}
-
-// omniStore creates a new PopParty instance together with a darc that is
-// allowed to invoke methods on it.
-func omniStore(c *cli.Context) error {
-	if c.NArg() < 2 || c.NArg() > 3 {
-		return errors.New("please give: omniledger.cfg key-xxx.cfg [final-id]")
-	}
-
-	// Load the omniledger configuration
-	buf, err := ioutil.ReadFile(c.Args().First())
-	if err != nil {
-		return err
-	}
-	_, msgCfg, err := network.Unmarshal(buf, cothority.Suite)
-	if err != nil {
-		return err
-	}
-	cfg := msgCfg.(*ol.Config)
-
-	// Load the signer
-	buf, err = ioutil.ReadFile(c.Args().Get(1))
-	if err != nil {
-		return err
-	}
-	_, msgSigner, err := network.Unmarshal(buf, cothority.Suite)
-	if err != nil {
-		return err
-	}
-	signer := msgSigner.(*darc.Signer)
-
-	log.Info("Finished loading configuration and signer.")
-
-	// And get the final statement - either we get a hint of the first bytes of
-	// the final statement on the command line, or we will display all final
-	// statements to the user.
-	var finalID []byte
-	if c.NArg() == 3 {
-		finalID, err = hex.DecodeString(c.Args().Get(2))
-		if err != nil {
-			return err
-		}
-	}
-
-	// Fetch all final statements from all nodes in the roster of omniledger.
-	// This supposes that there is at least an overlap of the servers who were
-	// involved in the pop-party and the servers holding omniledger.
-	finalStatements := map[string]*service.FinalStatement{}
-	for _, s := range cfg.Roster.List {
-		log.Info("Looking up final statements on host", s)
-		fs, err := service.NewClient().GetFinalStatements(s.Address)
-		if err != nil {
-			log.Error("Error while fetching final statement:", err, "going on")
-			continue
-		}
-		for k, v := range fs {
-			finalStatements[k] = v
-		}
-	}
-
-	if len(finalID) > 0 {
-		// Filter using finalId
-		for k := range finalStatements {
-			if bytes.Compare([]byte(k[0:len(finalID)]), finalID) != 0 {
-				delete(finalStatements, k)
-			}
-		}
-	}
-
-	if len(finalStatements) == 0 {
-		if len(finalID) > 0 {
-			return errors.New("didn't find a final statement starting with the bytes given. Try no search")
-		}
-		return errors.New("none of the conodes of omniledger has any party stored")
-	}
-
-	if len(finalStatements) > 1 {
-		for k, v := range finalStatements {
-			log.Infof("%x: '%s' in '%s' at '%s'", k, v.Desc.Name, v.Desc.Location, v.Desc.DateTime)
-		}
-		return errors.New("found more than one proposed configuration - please chose by giving the first (or more) bytes")
-	}
-
-	var finalStatement *service.FinalStatement
-	for k, v := range finalStatements {
-		finalID = []byte(k)
-		finalStatement = v
-	}
-	if err != nil {
-		return errors.New("error while creating hash of proposed configuration: " + err.Error())
-	}
-	fsString := fmt.Sprintf("'%s' in '%s' at '%s'", finalStatement.Desc.Name,
-		finalStatement.Desc.Location, finalStatement.Desc.DateTime)
-
-	log.Info("Contacting nodes to get the public keys of the organizers")
-	var identities []darc.Identity
-	for _, s := range cfg.Roster.List {
-		log.Info("Contacting", s)
-		link, err := service.NewClient().GetLink(s.Address)
-		if err != nil {
-			return errors.New("need all public keys of all organizers: " + err.Error())
-		}
-		identities = append(identities, darc.NewIdentityEd25519(link))
-	}
-	identities = append(identities, signer.Identity())
-
-	log.Info("Creating darc for the organizers")
-	rules := darc.InitRules(identities, identities)
-	var exprSlice []string
-	for _, id := range identities {
-		exprSlice = append(exprSlice, id.String())
-	}
-	// The master signer has the right to create a new party.
-	rules.AddRule("spawn:popParty", expression.Expr(signer.Identity().String()))
-	// We allow any of the organizers to update the proposed configuration. The contract
-	// will make sure that it is correctly signed.
-	rules.AddRule("invoke:Finalize", expression.Expr(strings.Join(exprSlice, " | ")))
-	orgDarc := darc.NewDarc(rules, []byte("For party "+fsString))
-	orgDarcBuf, err := orgDarc.ToProto()
-	if err != nil {
-		return err
-	}
-	inst := ol.Instruction{
-		InstanceID: ol.NewInstanceID(cfg.GenesisDarc.GetBaseID()),
-		Nonce:      ol.Nonce{},
-		Index:      0,
-		Length:     1,
-		Spawn: &ol.Spawn{
-			ContractID: ol.ContractDarcID,
-			Args: ol.Arguments{{
-				Name:  "darc",
-				Value: orgDarcBuf,
-			}},
-		},
-	}
-	err = inst.SignBy(cfg.GenesisDarc.GetBaseID(), *signer)
-	if err != nil {
-		return err
-	}
-	ct := ol.ClientTransaction{
-		Instructions: ol.Instructions{inst},
-	}
-	log.Info("Contacting omniledger to store the new darc")
-	olc := ol.NewClientConfig(*cfg)
-	_, err = olc.AddTransactionAndWait(ct, 10)
-	if err != nil {
-		return err
-	}
-
-	partyConfigBuf, err := protobuf.Encode(finalStatement)
-	if err != nil {
-		return err
-	}
-	inst = ol.Instruction{
-		InstanceID: ol.NewInstanceID(orgDarc.GetBaseID()),
-		Nonce:      ol.Nonce{},
-		Index:      0,
-		Length:     1,
-		Spawn: &ol.Spawn{
-			ContractID: service.ContractPopParty,
-			Args: ol.Arguments{{
-				Name:  "FinalStatement",
-				Value: partyConfigBuf,
-			}},
-		},
-	}
-	err = inst.SignBy(orgDarc.GetBaseID(), *signer)
-	if err != nil {
-		return err
-	}
-	ct = ol.ClientTransaction{
-		Instructions: ol.Instructions{inst},
-	}
-	log.Info("Contacting omniledger to spawn the new party")
-	_, err = olc.AddTransactionAndWait(ct, 10)
-	if err != nil {
-		return err
-	}
-
-	log.Info("Storing InstanceID in pop-service")
-	iid := inst.DeriveID("")
-	for _, c := range cfg.Roster.List {
-		err = service.NewClient().StoreInstanceID(c.Address, finalID, iid)
-		if err != nil {
-			log.Error("couldn't store instanceID: " + err.Error())
-		}
-	}
-
-	log.Info("New party spawned with instance-id:", iid)
-	return nil
-}
-
-// omniFinalize stores a final statement of a party in Omniledger
-func omniFinalize(c *cli.Context) error {
-	if c.NArg() != 3 {
-		return errors.New("please give: omniledger.cfg key-xxx.cfg partyID")
-	}
-
-	// Load the omniledger configuration
-	buf, err := ioutil.ReadFile(c.Args().First())
-	if err != nil {
-		return err
-	}
-	_, msgCfg, err := network.Unmarshal(buf, cothority.Suite)
-	if err != nil {
-		return err
-	}
-	cfg := msgCfg.(*ol.Config)
-
-	// Load the signer
-	buf, err = ioutil.ReadFile(c.Args().Get(1))
-	if err != nil {
-		return err
-	}
-	_, msgSigner, err := network.Unmarshal(buf, cothority.Suite)
-	if err != nil {
-		return err
-	}
-	signer := msgSigner.(*darc.Signer)
-
-	// Get the party-id
-	partyID, err := hex.DecodeString(c.Args().Get(2))
-	if err != nil {
-		return errors.New("couldn't parse partyID: " + err.Error())
-	}
-
-	log.Info("Fetching final statement from conode", cfg.Roster.List[0])
-	cl := service.NewClient()
-	fsMap, err := cl.GetFinalStatements(cfg.Roster.List[0].Address)
-	if err != nil {
-		return errors.New("error while fetching final statement: " + err.Error())
-	}
-	fs, ok := fsMap[string(partyID)]
-	if !ok {
-		for k, fs := range fsMap {
-			log.Infof("partyID: %x - %v", k, fs.Desc)
-		}
-		return errors.New("didn't find final statement")
-	}
-	if fs.Signature == nil || len(fs.Attendees) == 0 {
-		log.Infof("%+v", fs)
-		return errors.New("proposed configuration not finalized")
-	}
-	fsBuf, err := protobuf.Encode(fs)
-	if err != nil {
-		return errors.New("couldn't encode final statement: " + err.Error())
-	}
-
-	partyInstance, err := cl.GetInstanceID(cfg.Roster.List[0].Address, partyID)
-	if err != nil {
-		return errors.New("couldn't get instanceID: " + err.Error())
-	}
-	if partyInstance.Equal(ol.InstanceID{}) {
-		return errors.New("no instanceID stored")
-	}
-
-	sigBuf, err := signer.Ed25519.Point.MarshalBinary()
-	if err != nil {
-		return errors.New("Couldn't get point: " + err.Error())
-	}
-
-	log.Info("Sending finalize-instruction to omniledger")
-	ctx := ol.ClientTransaction{
-		Instructions: ol.Instructions{ol.Instruction{
-			InstanceID: partyInstance,
-			Index:      0,
-			Length:     1,
-			Invoke: &ol.Invoke{
-				Command: "Finalize",
-				Args: ol.Arguments{
-					ol.Argument{
-						Name:  "FinalStatement",
-						Value: fsBuf,
-					},
-					{
-						Name:  "Service",
-						Value: sigBuf,
-					}},
-			},
-		}},
-	}
-	err = ctx.Instructions[0].SignBy(cfg.GenesisDarc.GetBaseID(), *signer)
-	if err != nil {
-		return errors.New("couldn't sign instruction: " + err.Error())
-	}
-
-	olc := ol.NewClientConfig(*cfg)
-	_, err = olc.AddTransactionAndWait(ctx, 10)
-	if err != nil {
-		return errors.New("error while sending transaction: " + err.Error())
-	}
-
-	err = ph.NewClient().LinkPoP(cfg.Roster.List[0], ph.Party{
-		OmniLedgerID:   cfg.ID,
-		InstanceID:     partyInstance,
-		FinalStatement: *fs,
-		Darc:           cfg.GenesisDarc,
-		Signer:         *signer,
-	})
-	if err != nil {
-		return errors.New("couldn't store in personhood service: " + err.Error())
-	}
-
-	return nil
-}
-
-// omniCoinShow returns the number of coins in the account of the user.
-func omniCoinShow(c *cli.Context) error {
-	if c.NArg() != 3 {
-		return errors.New("please give: omniledger.cfg partyID (public-key | accountID)")
-	}
-
-	// Load the omniledger configuration
-	buf, err := ioutil.ReadFile(c.Args().First())
-	if err != nil {
-		return err
-	}
-	_, msgCfg, err := network.Unmarshal(buf, cothority.Suite)
-	if err != nil {
-		return err
-	}
-	cfg := msgCfg.(*ol.Config)
-
-	partyInstanceID, err := hex.DecodeString(c.Args().Get(1))
-	if err != nil {
-		return errors.New("couldn't parse partyID: " + err.Error())
-	}
-
-	// Check if we got the public-key or the accountID. First suppose it's the accountID
-	// and verify if that instance exists.
-	accountID, err := hex.DecodeString(c.Args().Get(2))
-	if err != nil {
-		return errors.New("couldn't parse public-key or accountID: " + err.Error())
-	}
-
-	olc := ol.NewClientConfig(*cfg)
-	accountProof, err := olc.GetProof(accountID)
-	if err != nil {
-		return errors.New("couldn't get proof for account: " + err.Error())
-	}
-	if !accountProof.Proof.InclusionProof.Match() {
-		// This account doesn't exist - try with the account, supposing we got a
-		// public key.
-		log.Info("Interpreting argument as public key.")
-		h := sha256.New()
-		h.Write(partyInstanceID)
-		h.Write(accountID)
-		accountID = h.Sum(nil)
-		accountProof, err = olc.GetProof(accountID)
-		if err != nil {
-			return errors.New("couldn't get proof for account: " + err.Error())
-		}
-		if !accountProof.Proof.InclusionProof.Match() {
-			return errors.New("didn't find this account - neither as accountID, nor as public key")
-		}
-	} else {
-		log.Info("Interpreting argument as account ID")
-	}
-
-	_, v, err := accountProof.Proof.KeyValue()
-	if err != nil {
-		return errors.New("couldn't get value from proof: " + err.Error())
-	}
-	ci := contracts.CoinInstance{}
-	err = protobuf.Decode(v[0], &ci)
-	if err != nil {
-		return errors.New("couldn't unmarshal coin balance: " + err.Error())
-	}
-	log.Info("Coin balance is: ", ci.Balance)
-	return nil
-}
-
-func omniCoinTransfer(c *cli.Context) error {
-	if c.NArg() != 5 {
-		return errors.New("please give: omniledger.cfg partyID source_private_key dst_public_key amount")
-	}
-
-	// Load the omniledger configuration
-	buf, err := ioutil.ReadFile(c.Args().First())
-	if err != nil {
-		return err
-	}
-	_, msgCfg, err := network.Unmarshal(buf, cothority.Suite)
-	if err != nil {
-		return err
-	}
-	cfg := msgCfg.(*ol.Config)
-
-	partyID, err := hex.DecodeString(c.Args().Get(1))
-	if err != nil {
-		return errors.New("couldn't parse partyID: " + err.Error())
-	}
-
-	// Get the private key for the source
-	srcPriv, err := encoding.StringHexToScalar(cothority.Suite, c.Args().Get(2))
-	if err != nil {
-		return errors.New("couldn't parse private key: " + err.Error())
-	}
-	srcPub := cothority.Suite.Point().Mul(srcPriv, nil)
-	srcSigner := darc.NewSignerEd25519(srcPub, srcPriv)
-	srcAddrHash := sha256.New()
-	srcAddrHash.Write(partyID)
-	srcPubBuf, err := srcPub.MarshalBinary()
-	if err != nil {
-		return errors.New("couldn't marshal public key: " + err.Error())
-	}
-	srcAddrHash.Write(srcPubBuf)
-	srcAddr := srcAddrHash.Sum(nil)
-
-	dstPub, err := encoding.StringHexToPoint(cothority.Suite, c.Args().Get(3))
-	if err != nil {
-		return errors.New("couldn't parse public key: " + err.Error())
-	}
-	dstAddrHash := sha256.New()
-	dstAddrHash.Write(partyID)
-	dstPubBuf, err := dstPub.MarshalBinary()
-	if err != nil {
-		return errors.New("couldn't marshal public key: " + err.Error())
-	}
-	dstAddrHash.Write(dstPubBuf)
-	dstAddr := dstAddrHash.Sum(nil)
-
-	amount, err := strconv.ParseUint(c.Args().Get(4), 10, 64)
-	if err != nil {
-		return errors.New("couldn't get amount")
-	}
-
-	log.Info("Getting account of source")
-	olc := ol.NewClientConfig(*cfg)
-	srcInstanceProof, err := olc.GetProof(srcAddr)
-	if err != nil {
-		return errors.New("couldn't get source instance: " + err.Error())
-	}
-	if !srcInstanceProof.Proof.InclusionProof.Match() {
-		return errors.New("source instance doesn't exist")
-	}
-	_, srcInstanceValues, err := srcInstanceProof.Proof.KeyValue()
-	if err != nil {
-		return errors.New("cannot get proof for source instance: " + err.Error())
-	}
-
-	log.Info("Getting darc for source account")
-	dID := srcInstanceValues[2]
-	// dProof, err := olc.GetProof(dID)
-	// if err != nil {
-	// 	return errors.New("couldn't get source darc instance: " + err.Error())
-	// }
-	// if !dProof.Proof.InclusionProof.Match() {
-	// 	return errors.New("source instance darc doesn't exist")
-	// }
-	// _, dValues, err := dProof.Proof.KeyValue()
-	// if err != nil {
-	// 	return errors.New("cannot get proof for source instance darc: " + err.Error())
-	// }
-	// d, err := darc.NewFromProtobuf(dValues[1])
-	// if err != nil {
-	// 	return errors.New("cannot unmarshal source darc: " + err.Error())
-	// }
-
-	log.Info("Transferring coins")
-	amountBuf := make([]byte, 8)
-	binary.LittleEndian.PutUint64(amountBuf, amount)
-	ctx := ol.ClientTransaction{
-		Instructions: ol.Instructions{ol.Instruction{
-			InstanceID: ol.NewInstanceID(srcAddr),
-			Index:      0,
-			Length:     1,
-			Invoke: &ol.Invoke{
-				Command: "transfer",
-				Args: ol.Arguments{{
-					Name:  "coins",
-					Value: amountBuf,
-				},
-					{
-						Name:  "destination",
-						Value: dstAddr,
-					}},
-			},
-		}},
-	}
-	err = ctx.Instructions[0].SignBy(dID, srcSigner)
-	if err != nil {
-		return errors.New("couldn't sign transaction: " + err.Error())
-	}
-
-	_, err = olc.AddTransactionAndWait(ctx, 10)
-	if err != nil {
-		return errors.New("couldn't add transaction: " + err.Error())
-	}
-
 	return nil
 }
 
@@ -1163,20 +646,15 @@ func newConfig(fileConfig string) (*Config, error) {
 }
 
 // write saves the config to the given file.
-func (cfg *Config) write() error {
+func (cfg *Config) write() {
+	dir := filepath.Dir(cfg.name)
+	err := os.MkdirAll(dir, 0770)
+	if err != nil {
+		log.ErrFatal(err)
+	}
 	buf, err := network.Marshal(cfg)
-	if err != nil {
-		return err
-	}
-	err = os.MkdirAll(filepath.Dir(cfg.name), os.ModePerm)
-	if err != nil {
-		return err
-	}
-	err = ioutil.WriteFile(cfg.name, buf, 0660)
-	if err != nil {
-		return err
-	}
-	return nil
+	log.ErrFatal(err)
+	log.ErrFatal(ioutil.WriteFile(cfg.name, buf, 0660))
 }
 
 func (cfg *Config) getPartybyHash(hash string) (*PartyConfig, error) {
