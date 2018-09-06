@@ -28,6 +28,15 @@ var ContractPopParty = "popParty"
 // ContractPopCoinAccount holds popcoins of an attendee or a service.
 var ContractPopCoinAccount = "popCoinAccount"
 
+// PoPCoinName is the identifier of the popcoins.
+var PoPCoinName ol.InstanceID
+
+func init() {
+	h := sha256.New()
+	h.Write([]byte("popcoin"))
+	PoPCoinName = ol.NewInstanceID(h.Sum(nil))
+}
+
 // ContractPopParty represents a pop-party on OmniLedger. It has the following
 // functionalities:
 //   * Spawn - takes a "FinalStatement" argument with the binary representation
@@ -190,9 +199,9 @@ func createCoin(inst ol.Instruction, d *darc.Darc, pub kyber.Point, balance uint
 		return
 	}
 	iid.Write(pubBuf)
-	cci := contracts.CoinInstance{
-		Type:    []byte("popcoins"),
-		Balance: balance,
+	cci := ol.Coin{
+		Name:  PoPCoinName,
+		Value: balance,
 	}
 	cciBuf, err := protobuf.Encode(&cci)
 	if err != nil {
