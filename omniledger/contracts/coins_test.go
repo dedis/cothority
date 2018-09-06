@@ -8,17 +8,32 @@ import (
 	"github.com/dedis/cothority/omniledger/darc/expression"
 	ol "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
 )
 
+var ciZero, ciOne, ciTwo []byte
 var coinZero, coinOne, coinTwo []byte
 
 func init() {
+	ci := ol.Coin{
+		Name: CoinName,
+	}
+	var err error
+	ciZero, err = protobuf.Encode(&ci)
+	log.ErrFatal(err)
+	ci.Value = 1
+	ciOne, err = protobuf.Encode(&ci)
+	log.ErrFatal(err)
+	ci.Value = 2
+	ciTwo, err = protobuf.Encode(&ci)
+	log.ErrFatal(err)
+
 	coinZero = make([]byte, 8)
 	coinOne = make([]byte, 8)
-	coinOne[0] = 1
+	coinOne[0] = byte(1)
 	coinTwo = make([]byte, 8)
-	coinTwo[0] = 2
+	coinTwo[0] = byte(2)
 }
 
 func TestCoin_Spawn(t *testing.T) {
@@ -39,7 +54,7 @@ func TestCoin_Spawn(t *testing.T) {
 	require.Equal(t, 1, len(sc))
 	ca := inst.DeriveID("")
 	require.Equal(t, ol.NewStateChange(ol.Create, ca,
-		ContractCoinID, coinZero, gdarc.GetBaseID()), sc[0])
+		ContractCoinID, ciZero, gdarc.GetBaseID()), sc[0])
 	require.Equal(t, 0, len(co))
 }
 
@@ -47,7 +62,7 @@ func TestCoin_InvokeMint(t *testing.T) {
 	// Test that a coin can be minted
 	ct := newCT("invoke:mint")
 	coAddr := ol.InstanceID{}
-	ct.Store(coAddr, coinZero, ContractCoinID, gdarc.GetBaseID())
+	ct.Store(coAddr, ciZero, ContractCoinID, gdarc.GetBaseID())
 
 	inst := ol.Instruction{
 		InstanceID: coAddr,
@@ -63,15 +78,19 @@ func TestCoin_InvokeMint(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 1, len(sc))
-	require.Equal(t, ol.NewStateChange(ol.Update, coAddr, ContractCoinID, coinOne, gdarc.GetBaseID()),
+	require.Equal(t, ol.NewStateChange(ol.Update, coAddr, ContractCoinID, ciOne, gdarc.GetBaseID()),
 		sc[0])
 }
 
 func TestCoin_InvokeOverflow(t *testing.T) {
-	uint64max := []byte{0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff}
+	ci := ol.Coin{
+		Value: ^uint64(0),
+	}
+	ciBuf, err := protobuf.Encode(&ci)
+	require.Nil(t, err)
 	ct := newCT("invoke:mint")
 	coAddr := ol.InstanceID{}
-	ct.Store(coAddr, uint64max, ContractCoinID, gdarc.GetBaseID())
+	ct.Store(coAddr, ciBuf, ContractCoinID, gdarc.GetBaseID())
 
 	inst := ol.Instruction{
 		InstanceID: coAddr,
@@ -92,7 +111,7 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 func TestCoin_InvokeStoreFetch(t *testing.T) {
 	ct := newCT("invoke:store", "invoke:fetch")
 	coAddr := ol.InstanceID{}
-	ct.Store(coAddr, coinZero, ContractCoinID, gdarc.GetBaseID())
+	ct.Store(coAddr, ciZero, ContractCoinID, gdarc.GetBaseID())
 
 	inst := ol.Instruction{
 		InstanceID: coAddr,
@@ -112,7 +131,7 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 	require.Equal(t, 1, len(co))
 	require.Equal(t, co[0].Name, notOlCoin)
 	require.Equal(t, 1, len(sc))
-	require.Equal(t, ol.NewStateChange(ol.Update, coAddr, ContractCoinID, coinOne, gdarc.GetBaseID()),
+	require.Equal(t, ol.NewStateChange(ol.Update, coAddr, ContractCoinID, ciOne, gdarc.GetBaseID()),
 		sc[0])
 
 	inst = ol.Instruction{
@@ -129,7 +148,7 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 	require.Error(t, err)
 
 	// Apply the changes to the mock collection.
-	ct.Store(coAddr, coinOne, ContractCoinID, gdarc.GetBaseID())
+	ct.Store(coAddr, ciOne, ContractCoinID, gdarc.GetBaseID())
 
 	sc, co, err = ContractCoin(ct, inst, nil)
 	require.Nil(t, err)
@@ -137,7 +156,7 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 	require.Equal(t, co[0].Name, CoinName)
 	require.Equal(t, uint64(1), co[0].Value)
 	require.Equal(t, 1, len(sc))
-	require.Equal(t, ol.NewStateChange(ol.Update, coAddr, ContractCoinID, coinZero, gdarc.GetBaseID()),
+	require.Equal(t, ol.NewStateChange(ol.Update, coAddr, ContractCoinID, ciZero, gdarc.GetBaseID()),
 		sc[0])
 }
 
@@ -149,8 +168,8 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 	one[31] = 1
 	coAddr2 := ol.NewInstanceID(one)
 
-	ct.Store(coAddr1, coinOne, ContractCoinID, gdarc.GetBaseID())
-	ct.Store(coAddr2, coinZero, ContractCoinID, gdarc.GetBaseID())
+	ct.Store(coAddr1, ciOne, ContractCoinID, gdarc.GetBaseID())
+	ct.Store(coAddr2, ciZero, ContractCoinID, gdarc.GetBaseID())
 
 	// First create an instruction where the transfer should fail
 	inst := ol.Instruction{
@@ -182,8 +201,8 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 2, len(sc))
-	require.Equal(t, ol.NewStateChange(ol.Update, coAddr2, ContractCoinID, coinOne, gdarc.GetBaseID()), sc[0])
-	require.Equal(t, ol.NewStateChange(ol.Update, coAddr1, ContractCoinID, coinZero, gdarc.GetBaseID()), sc[1])
+	require.Equal(t, ol.NewStateChange(ol.Update, coAddr2, ContractCoinID, ciOne, gdarc.GetBaseID()), sc[0])
+	require.Equal(t, ol.NewStateChange(ol.Update, coAddr1, ContractCoinID, ciZero, gdarc.GetBaseID()), sc[1])
 }
 
 type cvTest struct {
