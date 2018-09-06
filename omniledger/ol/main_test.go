@@ -75,7 +75,7 @@ func TestCli(t *testing.T) {
 	args = []string{"ol", "show"}
 	err = cliApp.Run(args)
 	require.NoError(t, err)
-	require.Contains(t, string(b.Bytes()), "Roster: 127.0.0.1")
+	require.Contains(t, string(b.Bytes()), "Roster: tcp://127.0.0.1")
 	require.Contains(t, string(b.Bytes()), "spawn:darc")
 
 	log.Lvl1("add: ")
@@ -95,6 +95,6 @@ func TestCli(t *testing.T) {
 	args = []string{"ol", "show"}
 	err = cliApp.Run(args)
 	require.NoError(t, err)
-	require.Contains(t, string(b.Bytes()), "Roster: 127.0.0.1")
+	require.Contains(t, string(b.Bytes()), "Roster: tcp://127.0.0.1")
 	require.Contains(t, string(b.Bytes()), "spawn:xxx - \"ed25519:XXX\"")
 }

@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/dedis/cothority"
@@ -193,6 +194,11 @@ func show(c *cli.Context) error {
 
 	fmt.Fprintln(c.App.Writer)
 	fmt.Fprintln(c.App.Writer, "Genesis Darc:")
+	var roster []string
+	for _, s := range cfg.Roster.List {
+		roster = append(roster, string(s.Address))
+	}
+	fmt.Fprintln(c.App.Writer, "Roster:", strings.Join(roster, ", "))
 
 	gd, err := cl.GetGenDarc()
 	if err == nil {
