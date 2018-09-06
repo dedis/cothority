@@ -236,7 +236,10 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 
 		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 
-		tooLongDur := time.Duration(req.InclusionWait) * interval * 10
+		// In case we don't have any blocks, because there are no transactions,
+		// have a hard timeout in twice the minimal expected time to create the
+		// blocks.
+		tooLongDur := time.Duration(req.InclusionWait) * interval * 2
 		tooLong := time.After(tooLongDur)
 
 		blocksLeft := req.InclusionWait
