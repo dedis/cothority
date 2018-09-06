@@ -3,6 +3,8 @@ package ch.epfl.dedis.integration;
 import ch.epfl.dedis.byzgen.OcsFactory;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.status.StatusRPC;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -17,7 +19,21 @@ public abstract class TestServerController {
     protected static final String CONODE_PUB_3 = "7f47f33084c3ecc233f8b05b8f408bbd1c2e4a129aae126f92becacc73576bc7";
     protected static final String CONODE_PUB_4 = "8b25f8ac70b85b2e9aa7faf65507d4f7555af1c872240305117b7659b1e58a1e";
 
-    public abstract int countRunningConodes() throws IOException, InterruptedException;
+    /**
+     * Counts the number of conodes that are running by making a status request to all nodes in the roster. Note that it
+     * will not include nodes that are not in the roster.
+     */
+    public int countRunningConodes() {
+        int failures = 0;
+        for (ServerIdentity sid : this.getRoster().getNodes()) {
+            try {
+                StatusRPC.getStatus(sid);
+            } catch (CothorityCommunicationException e) {
+                failures++;
+            }
+        }
+        return getRoster().getNodes().size() - failures;
+    }
 
     public abstract void startConode(int nodeNumber) throws InterruptedException, IOException;
 

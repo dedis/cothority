@@ -63,15 +63,11 @@ public class DockerTestServerController extends TestServerController {
     }
 
     @Override
-    public int countRunningConodes() throws IOException, InterruptedException {
-        Container.ExecResult psResults = blockchainContainer.execInContainer("ps", "-o", "pid=", "-C", "conode");
-        return psResults.getStdout().split("\\n").length;
-    }
-
-    @Override
     public void startConode(int nodeNumber) throws InterruptedException {
         logger.info("Starting container {}", nodeNumber);
         runCmdInBackground(blockchainContainer, "conode", "-d", "2", "-c", "co" + nodeNumber + "/private.toml", "server");
+        // Wait a bit for the server to actually start.
+        Thread.sleep(1000);
     }
 
     @Override
