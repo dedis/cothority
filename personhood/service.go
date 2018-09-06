@@ -246,9 +246,7 @@ func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 	if err != nil {
 		return nil, errors.New("couldn't sign: " + err.Error())
 	}
-	cl := ol.NewClient()
-	cl.Roster = *party.FinalStatement.Desc.Roster
-	cl.ID = party.OmniLedgerID
+	cl := ol.NewClient(party.OmniLedgerID, *party.FinalStatement.Desc.Roster)
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
 		return nil, errors.New("couldn't send reward: " + err.Error())

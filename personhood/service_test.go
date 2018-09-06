@@ -241,7 +241,7 @@ func TestService_Messages(t *testing.T) {
 	// Check reward on account.
 	log.Lvl1("Check reward")
 	ciAfter := s.coinGet(t, s.attCoin[1])
-	require.Equal(t, msgs[1].Reward, ciAfter.Balance-ciBefore.Balance)
+	require.Equal(t, msgs[1].Reward, ciAfter.Value-ciBefore.Value)
 
 	// Have other reader get message and put its balance to 0, thus
 	// making it disappear from the list of messages.
@@ -535,7 +535,7 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 	}
 }
 
-func (s *sStruct) coinGet(t *testing.T, inst ol.InstanceID) (ci contracts.CoinInstance) {
+func (s *sStruct) coinGet(t *testing.T, inst ol.InstanceID) (ci ol.Coin) {
 	gpr, err := s.ols.GetProof(&ol.GetProof{
 		Version: ol.CurrentVersion,
 		Key:     inst.Slice(),
