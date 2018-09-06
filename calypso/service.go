@@ -12,7 +12,6 @@ package calypso
 import (
 	"bytes"
 	"errors"
-	"sync"
 	"time"
 
 	"github.com/dedis/cothority"
@@ -20,7 +19,6 @@ import (
 	"github.com/dedis/cothority/ocs/protocol"
 	"github.com/dedis/cothority/omniledger/darc"
 	ol "github.com/dedis/cothority/omniledger/service"
-	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
 	"github.com/dedis/kyber/util/random"
@@ -43,32 +41,19 @@ func init() {
 	var err error
 	calypsoID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
-	network.RegisterMessages(&storage{}, &vData{})
+	network.RegisterMessages(&storage1{}, &vData{})
 }
 
 // Service is our calypso-service. It stores all created LTSs.
 type Service struct {
 	*onet.ServiceProcessor
-	saveMutex sync.Mutex
-	storage   *storage
+	storage *storage1
 }
-
-// storageID reflects the data we're storing - we could store more
-// than one structure.
-var storageID = []byte("main")
 
 // pubPoly is a serializable version of share.PubPoly
 type pubPoly struct {
 	B       kyber.Point
 	Commits []kyber.Point
-}
-
-// storage is used to save all elements of the DKG.
-type storage struct {
-	Shared  map[string]*dkgprotocol.SharedSecret
-	Polys   map[string]*pubPoly
-	Rosters map[string]*onet.Roster
-	OLIDs   map[string]skipchain.SkipBlockID
 }
 
 // vData is sent to all nodes when re-encryption takes place. If Ephemeral
@@ -104,17 +89,17 @@ func (s *Service) CreateLTS(cl *CreateLTS) (reply *CreateLTSReply, err error) {
 		if err != nil {
 			return nil, err
 		}
-		s.saveMutex.Lock()
+		s.storage.Lock()
 		s.storage.Shared[string(reply.LTSID)] = shared
 		dks, err := setupDKG.DKG.DistKeyShare()
 		if err != nil {
-			s.saveMutex.Unlock()
+			s.storage.Unlock()
 			return nil, err
 		}
 		s.storage.Polys[string(reply.LTSID)] = &pubPoly{s.Suite().Point().Base(), dks.Commits}
 		s.storage.Rosters[string(reply.LTSID)] = &cl.Roster
 		s.storage.OLIDs[string(reply.LTSID)] = cl.OLID
-		s.saveMutex.Unlock()
+		s.storage.Unlock()
 		reply.X = shared.X
 	case <-time.After(propagationTimeout):
 		return nil, errors.New("dkg didn't finish in time")
@@ -144,14 +129,14 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	if !read.Write.Equal(ol.NewInstanceID(dkr.Write.InclusionProof.Key)) {
 		return nil, errors.New("read doesn't point to passed write")
 	}
-	s.saveMutex.Lock()
+	s.storage.Lock()
 	roster := s.storage.Rosters[string(write.LTSID)]
 	if roster == nil {
-		s.saveMutex.Unlock()
+		s.storage.Unlock()
 		return nil, errors.New("don't know the LTSID stored in write")
 	}
 	scID := s.storage.OLIDs[string(write.LTSID)]
-	s.saveMutex.Unlock()
+	s.storage.Unlock()
 	if err = dkr.Read.Verify(scID); err != nil {
 		return nil, errors.New("read proof cannot be verified to come from scID: " + err.Error())
 	}
@@ -175,15 +160,14 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	}
 	ocsProto.Xc = read.Xc
 	log.Lvlf2("Public key is: %s", ocsProto.Xc)
-	// TODO change to protobuf.Encode/Decode
-	ocsProto.VerificationData, err = network.Marshal(verificationData)
+	ocsProto.VerificationData, err = protobuf.Encode(verificationData)
 	if err != nil {
 		return nil, errors.New("couldn't marshal verificationdata: " + err.Error())
 	}
 
 	// Make sure everything used from the s.Storage structure is copied, so
 	// there will be no races.
-	s.saveMutex.Lock()
+	s.storage.Lock()
 	ocsProto.Shared = s.storage.Shared[string(write.LTSID)]
 	pp := s.storage.Polys[string(write.LTSID)]
 	reply.X = s.storage.Shared[string(write.LTSID)].X.Clone()
@@ -192,7 +176,7 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 		commits = append(commits, c.Clone())
 	}
 	ocsProto.Poly = share.NewPubPoly(s.Suite(), pp.B.Clone(), commits)
-	s.saveMutex.Unlock()
+	s.storage.Unlock()
 
 	log.Lvl3("Starting reencryption protocol")
 	ocsProto.SetConfig(&onet.GenericConfig{Data: write.LTSID})
@@ -217,9 +201,9 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 // SharedPublic returns the shared public key of an LTSID group.
 func (s *Service) SharedPublic(req *SharedPublic) (reply *SharedPublicReply, err error) {
 	log.Lvl2("Getting shared public key")
-	s.saveMutex.Lock()
+	s.storage.Lock()
 	shared, ok := s.storage.Shared[string(req.LTSID)]
-	s.saveMutex.Unlock()
+	s.storage.Unlock()
 	if !ok {
 		return nil, errors.New("didn't find this skipchain")
 	}
@@ -244,16 +228,16 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 				return
 			}
 			log.Lvl3(s.ServerIdentity(), "Got shared", shared)
-			s.saveMutex.Lock()
+			s.storage.Lock()
 			s.storage.Shared[string(conf.Data)] = shared
-			s.saveMutex.Unlock()
+			s.storage.Unlock()
 			s.save()
 		}(conf)
 		return pi, nil
 	case protocol.NameOCS:
-		s.saveMutex.Lock()
+		s.storage.Lock()
 		shared, ok := s.storage.Shared[string(conf.Data)]
-		s.saveMutex.Unlock()
+		s.storage.Unlock()
 		if !ok {
 			return nil, errors.New("didn't find skipchain")
 		}
@@ -272,13 +256,10 @@ func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfi
 // verifyReencryption checks that the read and the write instances match.
 func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 	err := func() error {
-		_, vdInt, err := network.Unmarshal(*rc.VerificationData, cothority.Suite)
+		var verificationData vData
+		err := protobuf.DecodeWithConstructors(*rc.VerificationData, &verificationData, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
 			return err
-		}
-		verificationData, ok := vdInt.(*vData)
-		if !ok {
-			return errors.New("verificationData was not of type vData")
 		}
 		_, vs, err := verificationData.Proof.KeyValue()
 		if err != nil {
@@ -305,49 +286,6 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 		return false
 	}
 	return true
-}
-
-// saves all data.
-func (s *Service) save() {
-	s.saveMutex.Lock()
-	defer s.saveMutex.Unlock()
-	err := s.Save(storageID, s.storage)
-	if err != nil {
-		log.Error("Couldn't save data:", err)
-	}
-}
-
-// Tries to load the configuration and updates the data in the service
-// if it finds a valid config-file.
-func (s *Service) tryLoad() error {
-	s.storage = &storage{}
-	defer func() {
-		if len(s.storage.Polys) == 0 {
-			s.storage.Polys = make(map[string]*pubPoly)
-		}
-		if len(s.storage.Shared) == 0 {
-			s.storage.Shared = make(map[string]*dkgprotocol.SharedSecret)
-		}
-		if len(s.storage.Rosters) == 0 {
-			s.storage.Rosters = make(map[string]*onet.Roster)
-		}
-		if len(s.storage.OLIDs) == 0 {
-			s.storage.OLIDs = make(map[string]skipchain.SkipBlockID)
-		}
-	}()
-	msg, err := s.Load(storageID)
-	if err != nil {
-		return err
-	}
-	if msg == nil {
-		return nil
-	}
-	var ok bool
-	s.storage, ok = msg.(*storage)
-	if !ok {
-		return errors.New("data of wrong type")
-	}
-	return nil
 }
 
 // newService receives the context that holds information about the node it's

@@ -28,7 +28,8 @@ public class DecryptKeyReply {
     }
 
     /**
-     * Join the decryption shares locally and compute the final decryption key.
+     * Recover the key material by decrypting each slice and merging all the slices. This has to be done because we use
+     * ElGamal encryption that can only encrypt 30 bytes when using Ed25519.
      *
      * @param reader The secret key of the reader.
      */

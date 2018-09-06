@@ -43,7 +43,7 @@ type Write struct {
 	// also contain an IV)
 	Cs []kyber.Point
 	// ExtraData is clear text and application-specific
-	ExtraData *[]byte
+	ExtraData []byte `protobuf:"opt"`
 	// LTSID points to the identity of the lts group
 	LTSID []byte
 }

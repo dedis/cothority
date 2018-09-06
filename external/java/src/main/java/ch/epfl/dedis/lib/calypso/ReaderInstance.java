@@ -12,7 +12,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * ReadInstance represents a Read instance (i.e., created by the calypsoRead contract).
+ * ReaderInstance represents an instance created by the calypsoRead contract.
  */
 public class ReaderInstance {
     private static String ContractId = "calypsoRead";
@@ -47,6 +47,16 @@ public class ReaderInstance {
         this.setInstance(id);
     }
 
+    /**
+     * Get the instance object.
+     */
+    public Instance getInstance() {
+        return instance;
+    }
+
+    /**
+     * Create a spawn instruction with a read request and send it to OmniLedger.
+     */
     private InstanceId read(ReadRequest rr, DarcId darcID, List<Signer> signers) throws CothorityException {
         Argument arg = new Argument("read", rr.toProto().toByteArray());
 
@@ -58,10 +68,6 @@ public class ReaderInstance {
         ol.sendTransactionAndWait(tx, 5);
 
         return instr.deriveId("");
-    }
-
-    public Instance getInstance() {
-        return instance;
     }
 
     // TODO same as what's in EventLogInstance, make a super class?

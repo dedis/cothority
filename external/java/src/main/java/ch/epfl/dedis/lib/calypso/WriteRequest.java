@@ -146,7 +146,7 @@ public class WriteRequest {
             return write.build();
 
         } catch (NoSuchAlgorithmException e) {
-            throw new CothorityCryptoException("Hashing-error: " + e.getMessage());
+            throw new RuntimeException("Hashing-error: " + e.getMessage());
         }
     }
 

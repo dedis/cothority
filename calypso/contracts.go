@@ -115,10 +115,6 @@ func (s *Service) ContractRead(cdb ol.CollectionView, inst ol.Instruction, c []o
 		if cid != ContractWriteID {
 			return nil, nil, errors.New("referenced write-id is not a write instance, got " + cid)
 		}
-		re.Xc = cothority.Suite.Point()
-		for _, s := range inst.Signatures {
-			re.Xc.Add(re.Xc, s.Signer.Ed25519.Point)
-		}
 		return ol.StateChanges{ol.NewStateChange(ol.Create, inst.DeriveID(""), ContractReadID, r, darcID)}, c, nil
 	default:
 		return nil, nil, errors.New("not a spawn instruction")

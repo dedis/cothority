@@ -17,6 +17,8 @@ func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
+// TestService_CreateLTS runs the DKG protocol on the service and check that we
+// get back valid results.
 func TestService_CreateLTS(t *testing.T) {
 	for _, nodes := range []int{3, 7, 10} {
 		func(nodes int) {
@@ -32,6 +34,7 @@ func TestService_CreateLTS(t *testing.T) {
 	}
 }
 
+// TestContract_Write creates a write request and check that it gets stored.
 func TestContract_Write(t *testing.T) {
 	s := newTS(t, 5)
 	defer s.closeAll(t)
@@ -40,6 +43,8 @@ func TestContract_Write(t *testing.T) {
 	require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
 }
 
+// TestContract_Write_Benchmark makes many write requests transactions and logs
+// the transaction per second.
 func TestContract_Write_Benchmark(t *testing.T) {
 	if testing.Short() {
 		t.Skip("benchmark test might be too long for travis")
@@ -79,6 +84,8 @@ func TestContract_Write_Benchmark(t *testing.T) {
 	}
 }
 
+// TestContract_Read makes a write requests and a corresponding read request
+// which should be created from the write instance.
 func TestContract_Read(t *testing.T) {
 	s := newTS(t, 5)
 	defer s.closeAll(t)
@@ -88,6 +95,8 @@ func TestContract_Read(t *testing.T) {
 	require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
 }
 
+// TestService_DecryptKey is an end-to-end test that logs two write and read
+// requests and make sure that we can decrypt the secret afterwards.
 func TestService_DecryptKey(t *testing.T) {
 	s := newTS(t, 5)
 	defer s.closeAll(t)

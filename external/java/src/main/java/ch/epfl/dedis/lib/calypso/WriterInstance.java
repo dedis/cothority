@@ -68,6 +68,9 @@ public class WriterInstance {
         return instance;
     }
 
+    /**
+     * Create a spawn instruction with a write request and send it to OmniLedger.
+     */
     private InstanceId write(WriteRequest req, DarcId darcID, List<Signer> signers) throws CothorityException {
         Argument arg = new Argument("write", req.toProto(this.ltsData.getX(), this.ltsData.getLtsID()).toByteArray());
 
