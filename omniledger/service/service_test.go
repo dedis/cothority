@@ -90,6 +90,9 @@ func TestService_AddTransaction_ToFollower(t *testing.T) {
 }
 
 func TestService_AddTransaction_WithFailure(t *testing.T) {
+	if testing.Short() {
+		t.Skip("test takes too long for Travis")
+	}
 	testAddTransaction(t, 0, true)
 }
 
@@ -100,9 +103,9 @@ func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
 func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	var s *ser
 	if failure {
-		s = newSerN(t, 1, time.Second, 4, false)
+		s = newSerN(t, 1, 500*time.Millisecond, 4, false)
 		for _, service := range s.services {
-			service.SetPropagationTimeout(2 * time.Second)
+			service.SetPropagationTimeout(time.Second)
 		}
 	} else {
 		s = newSer(t, 1, testInterval)
