@@ -406,6 +406,11 @@ func TestProtocolRefusalAll(t *testing.T) {
 func TestProtocolRefuseOne(t *testing.T) {
 	nodes := []int{4, 5, 13}
 	subtrees := []int{1, 2, 5, 9}
+	if testing.Short() {
+		// Make it faster on travis and just check that there is not an obvious bug.
+		nodes = []int{4}
+		subtrees = []int{1, 2}
+	}
 	proposal := []byte{0xFF}
 
 	for _, nNodes := range nodes {
