@@ -1,4 +1,4 @@
-package service
+package personhood
 
 // api for personhood - very minimalistic for the moment, as most of the
 // calls are made from javascript.
