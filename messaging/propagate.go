@@ -39,6 +39,7 @@ type Propagate struct {
 
 	allowedFailures int
 	sync.Mutex
+	closing chan bool
 }
 
 // PropagateSendData is the message to pass the data to the children
@@ -88,6 +89,7 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 			TreeNodeInstance: n,
 			onData:           f,
 			allowedFailures:  t,
+			closing:          make(chan bool),
 		}
 		for _, h := range []interface{}{&p.ChannelSD, &p.ChannelReply} {
 			if err := p.RegisterChannel(h); err != nil {
@@ -110,7 +112,7 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 		log.Lvl3(el.List[0].Address, "Starting to propagate", reflect.TypeOf(msg))
 		pi, err := c.CreateProtocol(name, tree)
 		if err != nil {
-			return -1, err
+			return 0, err
 		}
 		return propagateStartAndWait(pi, msg, to, f)
 	}, err
@@ -120,7 +122,7 @@ func NewPropagationFunc(c propagationContext, name string, f PropagationStore, t
 func propagateStartAndWait(pi onet.ProtocolInstance, msg network.Message, to time.Duration, f PropagationStore) (int, error) {
 	d, err := network.Marshal(msg)
 	if err != nil {
-		return -1, err
+		return 0, err
 	}
 	protocol := pi.(*Propagate)
 	protocol.Lock()
@@ -132,11 +134,14 @@ func propagateStartAndWait(pi onet.ProtocolInstance, msg network.Message, to tim
 	protocol.onDoneCb = func(i int) { done <- i }
 	protocol.Unlock()
 	if err = protocol.Start(); err != nil {
-		return -1, err
+		return 0, err
 	}
-	ret := <-done
-	log.Lvl3("Finished propagation with", ret, "replies")
-	return ret, nil
+	select {
+	case replies := <-done:
+		return replies, nil
+	case <-protocol.closing:
+		return 0, nil
+	}
 }
 
 // Start will contact everyone and make the connections
@@ -230,6 +235,9 @@ func (p *Propagate) Dispatch() error {
 					timeout, received, subtreeCount-p.allowedFailures, err)
 			}
 			process = false
+		case <-p.closing:
+			process = false
+			p.onDoneCb = nil
 		}
 	}
 	log.Lvl3(p.ServerIdentity(), "done, isroot:", p.IsRoot())
@@ -253,4 +261,11 @@ func (p *Propagate) RegisterOnData(fn PropagationStore) {
 func (p *Propagate) Config(d []byte, timeout time.Duration) {
 	p.sd.Data = d
 	p.sd.Timeout = timeout
+}
+
+// Shutdown informs the Dispatch method to stop
+// waiting.
+func (p *Propagate) Shutdown() error {
+	close(p.closing)
+	return nil
 }

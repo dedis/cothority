@@ -19,7 +19,7 @@ func TestGenTreesRoot(t *testing.T) {
 	subtrees := []int{1, 5, 12}
 	if testing.Short() {
 		// Make it faster on travis and just check that there is not an obvious bug.
-		nodes = []int{1, 2, 5}
+		nodes = []int{1, 5}
 		subtrees = []int{1, 2}
 	}
 	for _, nbrNodes := range nodes {
@@ -53,7 +53,7 @@ func TestGenTreesCount(t *testing.T) {
 	subtrees := []int{1, 5, 12}
 	if testing.Short() {
 		// Make it faster on travis and just check that there is not an obvious bug.
-		nodes = []int{1, 2, 5}
+		nodes = []int{1, 5}
 		subtrees = []int{1, 2}
 	}
 	for _, nNodes := range nodes {
@@ -89,7 +89,7 @@ func TestGenTreesSubtrees(t *testing.T) {
 	subtrees := []int{1, 5, 12}
 	if testing.Short() {
 		// Make it faster on travis and just check that there is not an obvious bug.
-		nodes = []int{1, 2, 5}
+		nodes = []int{1, 5}
 		subtrees = []int{1, 2}
 	}
 	for _, nNodes := range nodes {
@@ -126,7 +126,7 @@ func TestGenTreesComplete(t *testing.T) {
 	subtrees := []int{1, 5, 12}
 	if testing.Short() {
 		// Make it faster on travis and just check that there is not an obvious bug.
-		nodes = []int{1, 2, 5}
+		nodes = []int{1, 5}
 		subtrees = []int{1, 2}
 	}
 	for _, nNodes := range nodes {
