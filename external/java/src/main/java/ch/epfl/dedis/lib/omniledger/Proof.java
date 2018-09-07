@@ -47,6 +47,13 @@ public class Proof {
     }
 
     /**
+     * Get the protobuf representation of the proof.
+     */
+    public OmniLedgerProto.Proof toProto() {
+        return this.proof;
+    }
+
+    /**
      * accessor for the skipblock assocaited with this proof.
      * @return SkipBlock
      */

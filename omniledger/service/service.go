@@ -571,6 +571,8 @@ func (s *Service) GetCollectionView(scID skipchain.SkipBlockID) CollectionView {
 }
 
 func (s *Service) getCollection(id skipchain.SkipBlockID) *collectionDB {
+	s.storage.Mutex.Lock()
+	defer s.storage.Mutex.Unlock()
 	idStr := fmt.Sprintf("%x", id)
 	col := s.collectionDB[idStr]
 	if col == nil {
