@@ -1156,6 +1156,9 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if len(s.data.Signers) == 0 {
 		s.data.Signers = map[string]*darc.Signer{}
 	}
+	if len(s.storedKeys) == 0 {
+		s.storedKeys = map[string]*keyList{}
+	}
 	s.syncs = make(map[string]*syncChans)
 	s.propagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal, 0)
 	if err != nil {
