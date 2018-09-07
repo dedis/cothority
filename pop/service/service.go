@@ -433,6 +433,7 @@ func (s *Service) GetFinalStatements(req *GetFinalStatements) (*GetFinalStatemen
 // GetFinalStatements returns all final statements stored in this service.
 func (s *Service) StoreKeys(req *StoreKeys) (*StoreKeysReply, error) {
 	// TODO: verify signature
+	log.Printf("Storing keys: %+v", req.Keys)
 	s.storedKeys[string(req.ID)] = &keyList{req.Keys}
 	return &StoreKeysReply{}, nil
 }
