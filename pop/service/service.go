@@ -1137,7 +1137,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	err := s.RegisterHandlers(s.PinRequest, s.VerifyLink, s.StoreConfig, s.FinalizeRequest,
 		s.FetchFinal, s.MergeRequest, s.GetProposals, s.GetLink, s.GetFinalStatements,
 		s.StoreKeys, s.StoreInstanceID, s.GetInstanceID,
-		s.StoreSigner, s.GetSigner)
+		s.StoreSigner, s.GetSigner, s.GetKeys, s.StoreKeys)
 	if err != nil {
 		return nil, err
 	}

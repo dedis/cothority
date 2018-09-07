@@ -21,7 +21,8 @@ func init() {
 		VerifyLink{}, VerifyLinkReply{},
 		PopPartyInstance{}, StoreInstanceID{},
 		StoreInstanceIDReply{},
-		GetInstanceID{}, GetInstanceIDReply{})
+		GetInstanceID{}, GetInstanceIDReply{},
+	)
 }
 
 // PROTOSTART
