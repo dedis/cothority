@@ -218,7 +218,6 @@ type GetBlocks struct {
 	GetBlocksReply chan []*SkipBlock
 	DB             *SkipBlockDB
 	replies        int
-	closing        chan bool
 }
 
 // NewProtocolGetBlocks prepares for a protocol that fetches blocks.
@@ -226,7 +225,6 @@ func NewProtocolGetBlocks(n *onet.TreeNodeInstance) (onet.ProtocolInstance, erro
 	t := &GetBlocks{
 		TreeNodeInstance: n,
 		GetBlocksReply:   make(chan []*SkipBlock),
-		closing:          make(chan bool),
 	}
 	return t, t.RegisterHandlers(t.HandleGetBlocks, t.HandleGetBlocksReply)
 }
@@ -291,11 +289,5 @@ func (p *GetBlocks) HandleGetBlocksReply(msg ProtoStructGetBlocksReply) error {
 		p.GetBlocksReply <- blocksReply
 		p.Done()
 	}
-	return nil
-}
-
-// Shutdown closes the channel to indicate that the protocol should stop.
-func (p *GetBlocks) Shutdown() error {
-	close(p.closing)
 	return nil
 }
