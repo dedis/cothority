@@ -673,6 +673,7 @@ func TestService_AddFollow(t *testing.T) {
 	services[1].Storage.Follow = []FollowChainType{{
 		Block:    master0.Latest,
 		NewChain: NewChainAnyNode,
+		closing:  make(chan bool),
 	}}
 	sig, err = schnorr.Sign(cothority.Suite, priv0, ssb.NewBlock.CalculateHash())
 	log.ErrFatal(err)
@@ -685,6 +686,7 @@ func TestService_AddFollow(t *testing.T) {
 	services[2].Storage.Follow = []FollowChainType{{
 		Block:    master0.Latest,
 		NewChain: NewChainAnyNode,
+		closing:  make(chan bool),
 	}}
 	sb = sb.Copy()
 	sb.Roster = onet.NewRoster([]*network.ServerIdentity{ro.List[1], ro.List[0], ro.List[2]})
@@ -935,8 +937,14 @@ func setupFollow(s *Service) kyber.Scalar {
 	s.Storage.Clients = []kyber.Point{kp.Public}
 	s.Storage.FollowIDs = []SkipBlockID{{0}, {1}}
 	s.Storage.Follow = []FollowChainType{
-		{Block: &SkipBlock{SkipBlockFix: &SkipBlockFix{Index: 0, Data: []byte{}}, Hash: []byte{2}}},
-		{Block: &SkipBlock{SkipBlockFix: &SkipBlockFix{Index: 0, Data: []byte{}}, Hash: []byte{3}}},
+		{
+			Block:   &SkipBlock{SkipBlockFix: &SkipBlockFix{Index: 0, Data: []byte{}}, Hash: []byte{2}},
+			closing: make(chan bool),
+		},
+		{
+			Block:   &SkipBlock{SkipBlockFix: &SkipBlockFix{Index: 0, Data: []byte{}}, Hash: []byte{3}},
+			closing: make(chan bool),
+		},
 	}
 	return kp.Private
 }
