@@ -869,6 +869,8 @@ func (s *Service) TestClose() {
 		s.closed = true
 		s.closedMutex.Unlock()
 		s.working.Wait()
+	} else {
+		s.closedMutex.Unlock()
 	}
 }
 

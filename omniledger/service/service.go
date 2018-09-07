@@ -393,6 +393,15 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 // Hence, we need to figure out when a new block is added. This can be done by
 // looking at the latest skipblock cache from Service.state.
 func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
+		return nil
+	}
+	s.working.Add(1)
+	defer s.working.Done()
+	s.closedMutex.Unlock()
+
 	log.Lvlf4("%s callback on %x", s.ServerIdentity(), sbID)
 	if !s.isOurChain(sbID) {
 		log.Lvl4("Not our chain...")
