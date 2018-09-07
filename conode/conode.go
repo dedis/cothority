@@ -27,8 +27,6 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/ftcosi/check"
 	_ "github.com/dedis/cothority/ftcosi/service"
-	_ "github.com/dedis/cothority/identity"
-	_ "github.com/dedis/cothority/personhood"
 	_ "github.com/dedis/cothority/skipchain"
 	_ "github.com/dedis/cothority/status/service"
 	"github.com/dedis/kyber/util/encoding"
