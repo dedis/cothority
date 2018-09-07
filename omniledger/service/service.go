@@ -1057,7 +1057,7 @@ func (s *Service) monitorLeaderFailure() {
 						LeaderIndex: 1,
 					},
 				}
-				s.viewChangeMan.addAnomaly(req)
+				s.viewChangeMan.addReq(req)
 			case <-s.closeLeaderMonitorChan:
 				log.Lvl2(s.ServerIdentity(), "closing heartbeat timeout monitor")
 				return

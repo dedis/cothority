@@ -55,15 +55,6 @@ func (m *viewChangeManager) addReq(req viewchange.InitReq) {
 	}
 }
 
-func (m *viewChangeManager) addAnomaly(req viewchange.InitReq) {
-	m.Lock()
-	defer m.Unlock()
-	c := m.controllers[string(req.View.Gen)]
-	if c != nil {
-		c.AddAnomaly(req)
-	}
-}
-
 func (m *viewChangeManager) done(view viewchange.View) {
 	m.Lock()
 	defer m.Unlock()
