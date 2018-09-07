@@ -198,8 +198,6 @@ func newTS(t *testing.T, nodes int) ts {
 }
 
 func (s *ts) createGenesis(t *testing.T) {
-	s.cl = ol.NewClient()
-
 	var err error
 	s.genesisMsg, err = ol.DefaultGenesisMsg(ol.CurrentVersion, s.roster,
 		[]string{"spawn:" + ContractWriteID, "spawn:" + ContractReadID}, s.signer.Identity())
@@ -207,7 +205,7 @@ func (s *ts) createGenesis(t *testing.T) {
 	s.gDarc = &s.genesisMsg.GenesisDarc
 	s.genesisMsg.BlockInterval = time.Second
 
-	s.gbReply, err = s.cl.CreateGenesisBlock(s.genesisMsg)
+	s.cl, s.gbReply, err = ol.NewOmniledger(s.genesisMsg, false)
 	require.Nil(t, err)
 }
 
