@@ -8778,11 +8778,11 @@ public final class PoPProto {
     com.google.protobuf.ByteString getAttendees(int index);
 
     /**
-     * <code>required bytes signature = 3;</code>
+     * <code>optional bytes signature = 3;</code>
      */
     boolean hasSignature();
     /**
-     * <code>required bytes signature = 3;</code>
+     * <code>optional bytes signature = 3;</code>
      */
     com.google.protobuf.ByteString getSignature();
   }
@@ -8922,13 +8922,13 @@ public final class PoPProto {
     public static final int SIGNATURE_FIELD_NUMBER = 3;
     private com.google.protobuf.ByteString signature_;
     /**
-     * <code>required bytes signature = 3;</code>
+     * <code>optional bytes signature = 3;</code>
      */
     public boolean hasSignature() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required bytes signature = 3;</code>
+     * <code>optional bytes signature = 3;</code>
      */
     public com.google.protobuf.ByteString getSignature() {
       return signature_;
@@ -8941,10 +8941,6 @@ public final class PoPProto {
       if (isInitialized == 0) return false;
 
       if (!hasDescid()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasSignature()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -9282,9 +9278,6 @@ public final class PoPProto {
         if (!hasDescid()) {
           return false;
         }
-        if (!hasSignature()) {
-          return false;
-        }
         return true;
       }
 
@@ -9416,19 +9409,19 @@ public final class PoPProto {
 
       private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required bytes signature = 3;</code>
+       * <code>optional bytes signature = 3;</code>
        */
       public boolean hasSignature() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>required bytes signature = 3;</code>
+       * <code>optional bytes signature = 3;</code>
        */
       public com.google.protobuf.ByteString getSignature() {
         return signature_;
       }
       /**
-       * <code>required bytes signature = 3;</code>
+       * <code>optional bytes signature = 3;</code>
        */
       public Builder setSignature(com.google.protobuf.ByteString value) {
         if (value == null) {
@@ -9440,7 +9433,7 @@ public final class PoPProto {
         return this;
       }
       /**
-       * <code>required bytes signature = 3;</code>
+       * <code>optional bytes signature = 3;</code>
        */
       public Builder clearSignature() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -23426,7 +23419,7 @@ public final class PoPProto {
       ".pop.PopDesc\022\021\n\tsignature\030\002 \002(\014\"\036\n\020Store" +
       "ConfigReply\022\n\n\002id\030\001 \002(\014\"G\n\017FinalizeReque" +
       "st\022\016\n\006descid\030\001 \002(\014\022\021\n\tattendees\030\002 \003(\014\022\021\n",
-      "\tsignature\030\003 \002(\014\"6\n\020FinalizeResponse\022\"\n\005" +
+      "\tsignature\030\003 \001(\014\"6\n\020FinalizeResponse\022\"\n\005" +
       "final\030\001 \001(\0132\023.pop.FinalStatement\"4\n\014Fetc" +
       "hRequest\022\n\n\002id\030\001 \002(\014\022\030\n\020returnuncomplete" +
       "\030\002 \001(\010\"-\n\014MergeRequest\022\n\n\002id\030\001 \002(\014\022\021\n\tsi" +

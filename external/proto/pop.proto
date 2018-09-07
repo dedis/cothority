@@ -100,7 +100,7 @@ message StoreConfigReply {
 message FinalizeRequest {
   required bytes descid = 1;
   repeated bytes attendees = 2;
-  required bytes signature = 3;
+  optional bytes signature = 3;
 }
 
 // FinalizeResponse returns the FinalStatement if all conodes already received

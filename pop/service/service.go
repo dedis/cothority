@@ -439,9 +439,13 @@ func (s *Service) StoreKeys(req *StoreKeys) (*StoreKeysReply, error) {
 }
 
 func (s *Service) GetKeys(req *GetKeys) (*GetKeysReply, error) {
+	var ret []kyber.Point
+	if keys := s.storedKeys[string(req.ID)]; keys != nil {
+		ret = keys.Keys
+	}
 	return &GetKeysReply{
 		ID:   req.ID,
-		Keys: s.storedKeys[string(req.ID)].Keys,
+		Keys: ret,
 	}, nil
 }
 

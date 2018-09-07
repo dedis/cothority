@@ -129,7 +129,7 @@ type StoreConfigReply struct {
 type FinalizeRequest struct {
 	DescID    []byte
 	Attendees []kyber.Point
-	Signature []byte
+	Signature []byte `protobuf:"opt"`
 }
 
 // FinalizeResponse returns the FinalStatement if all conodes already received
