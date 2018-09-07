@@ -110,12 +110,14 @@ func (s *Service) sendViewChangeReq(view viewchange.View) error {
 		if sid.Equal(s.ServerIdentity()) {
 			continue
 		}
-		if err := s.SendRaw(sid, &req); err != nil {
-			// Having an error here is fine because not all the
-			// nodes are guaranteed to be online. So we log a
-			// warning instead of returning an error.
-			log.Warn(s.ServerIdentity(), err)
-		}
+		go func(si *network.ServerIdentity) {
+			if err := s.SendRaw(si, &req); err != nil {
+				// Having an error here is fine because not all the
+				// nodes are guaranteed to be online. So we log a
+				// warning instead of returning an error.
+				log.Warn(s.ServerIdentity(), "Couldn't send view-change request to", si.Address, err)
+			}
+		}(sid)
 	}
 	return nil
 }
@@ -141,11 +143,13 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) {
 	}
 
 	go func() {
+		s.working.Add(1)
+		defer s.working.Done()
 		// This go-routine eventually exists because both cosi and
 		// block creation have a timeout.
 		sig, err := s.startViewChangeCosi(req)
 		if err != nil {
-			log.Error(s.ServerIdentity(), err)
+			log.Error(s.ServerIdentity(), "Error while starting view-change:", err)
 			return
 		}
 		if len(sig) == 0 {
