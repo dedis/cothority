@@ -43,7 +43,6 @@ function Socket(addr, service) {
       if (requestModel === undefined){
         reject(new Error("Model " + request + " not found"));
       }
-      console.dir("request model is:", requestModel);
 
       const responseModel = this.protobuf.lookup(response);
       if (responseModel === undefined){
@@ -70,7 +69,6 @@ function Socket(addr, service) {
           reject(new Error(errMsg));
         }
         const message = requestModel.create(data);
-        console.dir("message to send is:", message);
         const marshal = requestModel.encode(message).finish();
         ws.send(marshal);
       };
