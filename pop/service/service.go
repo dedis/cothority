@@ -441,9 +441,13 @@ func (s *Service) StoreKeys(req *StoreKeys) (*StoreKeysReply, error) {
 
 // GetKeys will return the keys stored for that party.
 func (s *Service) GetKeys(req *GetKeys) (*GetKeysReply, error) {
+	ks := s.storedKeys[string(req.ID)]
+	if ks == nil {
+		return nil, errors.New("no keys stored for this party")
+	}
 	return &GetKeysReply{
 		ID:   req.ID,
-		Keys: s.storedKeys[string(req.ID)].Keys,
+		Keys: ks.Keys,
 	}, nil
 }
 
@@ -1140,7 +1144,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	err := s.RegisterHandlers(s.PinRequest, s.VerifyLink, s.StoreConfig, s.FinalizeRequest,
 		s.FetchFinal, s.MergeRequest, s.GetProposals, s.GetLink, s.GetFinalStatements,
 		s.StoreKeys, s.StoreInstanceID, s.GetInstanceID,
-		s.StoreSigner, s.GetSigner)
+		s.StoreSigner, s.GetSigner, s.GetKeys, s.StoreKeys)
 	if err != nil {
 		return nil, err
 	}

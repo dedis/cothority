@@ -170,6 +170,23 @@ func (c *Client) GetFinalStatements(dst network.Address) (map[string]*FinalState
 	return res.FinalStatements, nil
 }
 
+// StoreKeys asks the service to store public keys for a party.
+func (c *Client) StoreKeys(dst network.Address, partyID []byte, keys []kyber.Point) error {
+	si := &network.ServerIdentity{Address: dst}
+	ret := &StoreKeysReply{}
+
+	return c.SendProtobuf(si, &StoreKeys{partyID, keys, nil}, ret)
+}
+
+// GetKeys asks the service for the public keys for a party.
+func (c *Client) GetKeys(dst network.Address, partyID []byte) ([]kyber.Point, error) {
+	si := &network.ServerIdentity{Address: dst}
+	ret := &GetKeysReply{}
+
+	err := c.SendProtobuf(si, &GetKeys{partyID}, ret)
+	return ret.Keys, err
+}
+
 // StoreInstanceID asks the service to store an instanceID for a given party.
 func (c *Client) StoreInstanceID(dst network.Address, partyID []byte, instanceID ol.InstanceID) error {
 	si := &network.ServerIdentity{Address: dst}
