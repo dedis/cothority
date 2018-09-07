@@ -153,7 +153,7 @@ func (d *Decrypt) HandlePrompt(prompt MessagePromptDecrypt) error {
 		return nil
 	}
 	// report to root
-	d.Done()
+	defer d.Done()
 	return d.SendTo(d.Root(), &TerminateDecrypt{})
 }
 
