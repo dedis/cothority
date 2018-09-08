@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"errors"
 	"time"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/simul/monitor"
-	"github.com/dedis/protobuf"
 )
 
 func init() {
@@ -233,13 +233,9 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		if err != nil {
 			return errors.New("proof doesn't hold transaction: " + err.Error())
 		}
-		var account ol.Coin
-		err = protobuf.Decode(v[0], &account)
-		if err != nil {
-			return errors.New("couldn't decode account: " + err.Error())
-		}
-		log.Lvlf1("Account has %d", account.Value)
-		if account.Value != uint64(s.Transactions*(round+1)) {
+		account := int(binary.LittleEndian.Uint64(v[0]))
+		log.Lvlf1("Account has %d", account)
+		if account != s.Transactions*(round+1) {
 			return errors.New("account has wrong amount")
 		}
 		confirm.Record()

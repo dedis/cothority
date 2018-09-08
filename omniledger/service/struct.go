@@ -347,27 +347,6 @@ func RegisterContract(s skipchain.GetService, kind string, f OmniLedgerContract)
 	return scs.(*Service).registerContract(kind, f)
 }
 
-// SafeAdd will add a to the value of the coin if there will be no
-// overflow.
-func (c *Coin) SafeAdd(a uint64) error {
-	s1 := c.Value + a
-	if s1 < c.Value || s1 < a {
-		return errors.New("uint64 overflow")
-	}
-	c.Value = s1
-	return nil
-}
-
-// SafeSub subtracts a from the value of the coin if there
-// will be no underflow.
-func (c *Coin) SafeSub(a uint64) error {
-	if a <= c.Value {
-		c.Value -= a
-		return nil
-	}
-	return errors.New("uint64 underflow")
-}
-
 type olState struct {
 	sync.Mutex
 	// waitChannels will be informed by Service.updateCollection that a

@@ -1,6 +1,7 @@
 package contracts
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
@@ -17,6 +18,12 @@ var ContractCoinID = "coin"
 // CoinName is a well-known InstanceID that identifies coins as belonging
 // to this contract.
 var CoinName = iid("olCoin")
+
+// safeUint64 is a uin64 that guards against overflow/underflow.
+type safeUint64 uint64
+
+var errOverflow = errors.New("integer overflow")
+var errUnderflow = errors.New("integer underflow")
 
 // ContractCoin is a coin implementation that holds one instance per coin.
 // If you spawn a new ContractCoin, it will create an account with a value
@@ -46,9 +53,9 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 	if err != nil {
 		return
 	}
-	var ci ol.Coin
+	var ci CoinInstance
 	if inst.Spawn == nil {
-		// Only if its NOT a spawn instruction is there data in the instance
+		// Only if its NOT a spawn instruction is ther data in the instance
 		if value != nil {
 			err = protobuf.Decode(value, &ci)
 			if err != nil {
@@ -63,12 +70,9 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 		ca := inst.DeriveID("")
 		log.Lvlf3("Spawning coin to %x", ca.Slice())
 		if t := inst.Spawn.Args.Search("type"); t != nil {
-			if len(t) != len(ol.InstanceID{}) {
-				return nil, nil, errors.New("type needs to be an InstanceID")
-			}
-			ci.Name = ol.NewInstanceID(t)
+			ci.Type = t
 		} else {
-			ci.Name = CoinName
+			ci.Type = CoinName.Slice()
 		}
 		var ciBuf []byte
 		ciBuf, err = protobuf.Encode(&ci)
@@ -95,13 +99,13 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 		case "mint":
 			// mint simply adds this amount of coins to the account.
 			log.Lvl2("minting", coinsArg)
-			err = ci.SafeAdd(coinsArg)
+			ci.Balance, err = safeAdd(ci.Balance, coinsArg)
 			if err != nil {
 				return
 			}
 		case "transfer":
 			// transfer sends a given amount of coins to another account.
-			err = ci.SafeSub(coinsArg)
+			ci.Balance, err = safeSub(ci.Balance, coinsArg)
 			if err != nil {
 				return
 			}
@@ -120,12 +124,12 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 				return
 			}
 
-			var targetCI ol.Coin
+			var targetCI CoinInstance
 			err = protobuf.Decode(v, &targetCI)
 			if err != nil {
 				return nil, nil, errors.New("couldn't unmarshal target account: " + err.Error())
 			}
-			err = targetCI.SafeAdd(coinsArg)
+			targetCI.Balance, err = safeAdd(targetCI.Balance, coinsArg)
 			if err != nil {
 				return
 			}
@@ -140,17 +144,17 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 		case "fetch":
 			// fetch removes coins from the account and passes it on to the next
 			// instruction.
-			err = ci.SafeSub(coinsArg)
+			ci.Balance, err = safeSub(ci.Balance, coinsArg)
 			if err != nil {
 				return
 			}
-			cOut = append(cOut, ol.Coin{Name: ci.Name, Value: coinsArg})
+			cOut = append(cOut, ol.Coin{Name: ol.NewInstanceID(ci.Type), Value: coinsArg})
 		case "store":
 			// store moves all coins from this instruction into the account.
 			cOut = []ol.Coin{}
 			for _, co := range c {
-				if ci.Name.Equal(co.Name) {
-					err = ci.SafeAdd(co.Value)
+				if bytes.Equal(co.Name.Slice(), CoinName.Slice()) {
+					ci.Balance, err = safeAdd(ci.Balance, co.Value)
 					if err != nil {
 						return
 					}
@@ -170,7 +174,7 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 		return
 	case ol.DeleteType:
 		// Delete our coin address, but only if the current coin is empty.
-		if ci.Value > 0 {
+		if ci.Balance > 0 {
 			err = errors.New("cannot destroy a coinInstance that still has coins in it")
 			return
 		}
@@ -191,4 +195,19 @@ func iid(in string) ol.InstanceID {
 	h := sha256.New()
 	h.Write([]byte(in))
 	return ol.NewInstanceID(h.Sum(nil))
+}
+
+func safeAdd(a, b uint64) (uint64, error) {
+	s1 := a + b
+	if s1 < a || s1 < b {
+		return a, errOverflow
+	}
+	return s1, nil
+}
+
+func safeSub(a, b uint64) (uint64, error) {
+	if b <= a {
+		return a - b, nil
+	}
+	return a, errUnderflow
 }

@@ -16,16 +16,16 @@ var ciZero, ciOne, ciTwo []byte
 var coinZero, coinOne, coinTwo []byte
 
 func init() {
-	ci := ol.Coin{
-		Name: CoinName,
+	ci := CoinInstance{
+		Type: CoinName.Slice(),
 	}
 	var err error
 	ciZero, err = protobuf.Encode(&ci)
 	log.ErrFatal(err)
-	ci.Value = 1
+	ci.Balance = 1
 	ciOne, err = protobuf.Encode(&ci)
 	log.ErrFatal(err)
-	ci.Value = 2
+	ci.Balance = 2
 	ciTwo, err = protobuf.Encode(&ci)
 	log.ErrFatal(err)
 
@@ -83,8 +83,8 @@ func TestCoin_InvokeMint(t *testing.T) {
 }
 
 func TestCoin_InvokeOverflow(t *testing.T) {
-	ci := ol.Coin{
-		Value: ^uint64(0),
+	ci := CoinInstance{
+		Balance: ^uint64(0),
 	}
 	ciBuf, err := protobuf.Encode(&ci)
 	require.Nil(t, err)
