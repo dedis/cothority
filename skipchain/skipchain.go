@@ -724,6 +724,7 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, error) {
 						FollowChainType{
 							Block:    last,
 							NewChain: add.NewChain,
+							closing:  make(chan bool),
 						})
 					found = true
 					break
@@ -744,6 +745,7 @@ func (s *Service) AddFollow(add *AddFollow) (*EmptyReply, error) {
 			FollowChainType{
 				Block:    last,
 				NewChain: add.NewChain,
+				closing:  make(chan bool),
 			})
 		log.Lvlf2("%s FollowLookup %x", s.ServerIdentity(), add.SkipchainID)
 	default:
@@ -867,8 +869,13 @@ func (s *Service) TestClose() {
 	s.closedMutex.Lock()
 	if !s.closed {
 		s.closed = true
+		for _, fct := range s.Storage.Follow {
+			fct.Shutdown()
+		}
 		s.closedMutex.Unlock()
 		s.working.Wait()
+	} else {
+		s.closedMutex.Unlock()
 	}
 }
 
@@ -1474,6 +1481,9 @@ func (s *Service) tryLoad() error {
 	s.Storage, ok = msg.(*Storage)
 	if !ok {
 		return errors.New("data of wrong type")
+	}
+	for i := range s.Storage.Follow {
+		s.Storage.Follow[i].closing = make(chan bool)
 	}
 	return nil
 }

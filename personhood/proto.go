@@ -1,4 +1,4 @@
-package service
+package personhood
 
 import (
 	"github.com/dedis/cothority/omniledger/darc"

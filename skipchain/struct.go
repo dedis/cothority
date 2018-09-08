@@ -108,6 +108,7 @@ const (
 type FollowChainType struct {
 	Block    *SkipBlock
 	NewChain PolicyNewChain
+	closing  chan bool
 }
 
 type cp interface {
@@ -136,6 +137,8 @@ func (fct *FollowChainType) GetLatest(us *network.ServerIdentity, p cp) error {
 		}
 	case <-time.After(time.Second):
 		return errors.New("timeout while fetching latest block")
+	case <-fct.closing:
+		return errors.New("closing down")
 	}
 	return nil
 }
@@ -182,6 +185,11 @@ func (fct *FollowChainType) AcceptNew(sb *SkipBlock, us *network.ServerIdentity)
 		log.Error("unknown policy")
 	}
 	return false
+}
+
+// Shutdown imitates the protocol-shutdown to make sure we can stop it.
+func (fct *FollowChainType) Shutdown() {
+	close(fct.closing)
 }
 
 // GetService makes it possible to give either an `onet.Context` or

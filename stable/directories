@@ -1,7 +1,6 @@
 .
 bftcosi
 byzcoinx
-cisc
 conode
 cosi
 cosi/check
@@ -14,13 +13,9 @@ ftcosi/check
 ftcosi/protocol
 ftcosi/service
 ftcosi/simulation
-identity
 messaging
-pop
-pop/service
 randhound
 randhound/simulation
-scmgr
 skipchain
 status
 status/service
