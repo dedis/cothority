@@ -13,16 +13,6 @@ import java.util.stream.Collectors;
 
 public class ManualTestServerController extends TestServerController {
     @Override
-    public int countRunningConodes() throws IOException, InterruptedException {
-        Process p = Runtime.getRuntime().exec("pgrep conode");
-        int returnCode = p.waitFor();
-        if (returnCode != 0) {
-            throw new IllegalStateException("unable to count running conodes");
-        }
-        return countLines(inputStreamToString(p.getInputStream()));
-    }
-
-    @Override
     public void startConode(int nodeNumber) throws InterruptedException, IOException {
         Runtime.getRuntime().exec("../scripts/start_4th_conode.sh");
         Thread.sleep(1000);

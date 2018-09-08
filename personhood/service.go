@@ -1,4 +1,4 @@
-package service
+package personhood
 
 /*
 The service.go defines what to do for each API-call. This part of the service
@@ -10,12 +10,10 @@ import (
 	"encoding/binary"
 	"errors"
 	"sort"
-	"sync"
 
 	ol "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
-	"github.com/dedis/onet/network"
 )
 
 // Used for tests
@@ -28,7 +26,6 @@ func init() {
 	var err error
 	templateID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
-	network.RegisterMessage(&Storage{})
 }
 
 // Service is our template-service
@@ -37,26 +34,7 @@ type Service struct {
 	// are correctly handled.
 	*onet.ServiceProcessor
 
-	storage *Storage
-}
-
-// storageID reflects the data we're storing - we could store more
-// than one structure.
-var storageID = []byte("personhood")
-
-// Storage is used to save our data.
-type Storage struct {
-	Messages       map[string]*Message
-	Read           map[string]*readMsg
-	Questionnaires map[string]*Questionnaire
-	Replies        map[string]*Reply
-	Parties        map[string]*Party
-
-	sync.Mutex
-}
-
-type readMsg struct {
-	Readers []ol.InstanceID
+	storage *storage1
 }
 
 // LinkPoP stores a link to a pop-party to accept this configuration. It will
@@ -263,36 +241,6 @@ func (s *Service) TopupMessage(tm *TopupMessage) (*StringReply, error) {
 	}
 	msg.Balance += tm.Amount
 	return &StringReply{}, nil
-}
-
-// saves all data.
-func (s *Service) save() {
-	s.storage.Lock()
-	defer s.storage.Unlock()
-	err := s.Save(storageID, s.storage)
-	if err != nil {
-		log.Error("Couldn't save data:", err)
-	}
-}
-
-// Tries to load the configuration and updates the data in the service
-// if it finds a valid config-file.
-func (s *Service) tryLoad() error {
-	s.storage = &Storage{}
-	msg, err := s.Load(storageID)
-	if err != nil {
-		return err
-	}
-	if msg == nil {
-		return nil
-	}
-	var ok bool
-	s.storage, ok = msg.(*Storage)
-	if !ok {
-		log.Errorf("%T - %+v", msg, msg)
-		return errors.New("Data of wrong type")
-	}
-	return nil
 }
 
 func newService(c *onet.Context) (onet.Service, error) {

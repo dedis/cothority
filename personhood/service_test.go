@@ -1,4 +1,4 @@
-package service
+package personhood
 
 import (
 	"crypto/sha256"
@@ -298,7 +298,7 @@ type sStruct struct {
 
 func newS(t *testing.T) (s *sStruct) {
 	s = &sStruct{}
-	s.local = onet.NewLocalTestT(tSuite, t)
+	s.local = onet.NewTCPTest(tSuite)
 	s.servers, s.roster, _ = s.local.GenTree(5, true)
 
 	s.services = s.local.GetServices(s.servers, templateID)

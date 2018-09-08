@@ -17,6 +17,11 @@ import (
 func TestGenTreesRoot(t *testing.T) {
 	nodes := []int{1, 2, 5, 20}
 	subtrees := []int{1, 5, 12}
+	if testing.Short() {
+		// Make it faster on travis and just check that there is not an obvious bug.
+		nodes = []int{1, 5}
+		subtrees = []int{1, 2}
+	}
 	for _, nbrNodes := range nodes {
 		for _, nSubtrees := range subtrees {
 			local := onet.NewLocalTest(testSuite)
@@ -46,6 +51,11 @@ func TestGenTreesRoot(t *testing.T) {
 func TestGenTreesCount(t *testing.T) {
 	nodes := []int{1, 2, 5, 20}
 	subtrees := []int{1, 5, 12}
+	if testing.Short() {
+		// Make it faster on travis and just check that there is not an obvious bug.
+		nodes = []int{1, 5}
+		subtrees = []int{1, 2}
+	}
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
 			local := onet.NewLocalTest(testSuite)
@@ -77,6 +87,11 @@ func TestGenTreesSubtrees(t *testing.T) {
 
 	nodes := []int{1, 2, 5, 20}
 	subtrees := []int{1, 5, 12}
+	if testing.Short() {
+		// Make it faster on travis and just check that there is not an obvious bug.
+		nodes = []int{1, 5}
+		subtrees = []int{1, 2}
+	}
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
 
@@ -109,6 +124,11 @@ func TestGenTreesSubtrees(t *testing.T) {
 func TestGenTreesComplete(t *testing.T) {
 	nodes := []int{1, 2, 5, 20}
 	subtrees := []int{1, 5, 12}
+	if testing.Short() {
+		// Make it faster on travis and just check that there is not an obvious bug.
+		nodes = []int{1, 5}
+		subtrees = []int{1, 2}
+	}
 	for _, nNodes := range nodes {
 		for _, nSubtrees := range subtrees {
 			local := onet.NewLocalTest(testSuite)
@@ -160,6 +180,10 @@ func testNode(t *testing.T, node, parent *onet.TreeNode, tree *onet.Tree) {
 func TestGenTreesErrors(t *testing.T) {
 	negativeNumbers := []int{0, -1, -2, -12, -34}
 	positiveNumber := 12
+	if testing.Short() {
+		// Make it faster on travis and just check that there is not an obvious bug.
+		positiveNumber = 4
+	}
 	for _, negativeNumber := range negativeNumbers {
 		local := onet.NewLocalTest(testSuite)
 		servers := local.GenServers(positiveNumber)

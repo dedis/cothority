@@ -51,16 +51,10 @@ type ExtendRoster struct {
 	// previous roster in one block back
 	allowedFailures int
 	doneChan        chan int
-}
 
-// GetBlocks is used for conodes to get blocks from each other.
-type GetBlocks struct {
-	*onet.TreeNodeInstance
-
-	GetBlocks      *ProtoGetBlocks
-	GetBlocksReply chan []*SkipBlock
-	DB             *SkipBlockDB
-	replies        int
+	closingMutex sync.Mutex
+	closed       bool
+	closing      chan bool
 }
 
 // NewProtocolExtendRoster prepares for a protocol that checks if a roster can
@@ -71,18 +65,10 @@ func NewProtocolExtendRoster(n *onet.TreeNodeInstance) (onet.ProtocolInstance, e
 		ExtendRosterReply: make(chan []ProtoExtendSignature),
 		// it's hardcoded at the moment, maybe the caller can specify
 		allowedFailures: (len(n.Roster().List) - 1) / 3,
-		doneChan:        make(chan int, 0),
+		closing:         make(chan bool),
+		doneChan:        make(chan int, 1),
 	}
 	return t, t.RegisterHandlers(t.HandleExtendRoster, t.HandleExtendRosterReply)
-}
-
-// NewProtocolGetBlocks prepares for a protocol that fetches blocks.
-func NewProtocolGetBlocks(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
-	t := &GetBlocks{
-		TreeNodeInstance: n,
-		GetBlocksReply:   make(chan []*SkipBlock),
-	}
-	return t, t.RegisterHandlers(t.HandleGetBlocks, t.HandleGetBlocksReply)
 }
 
 // Start sends the extend roster request to all of the children.
@@ -92,18 +78,6 @@ func (p *ExtendRoster) Start() error {
 		errs := p.SendToChildrenInParallel(p.ExtendRoster)
 		if len(errs) > p.allowedFailures {
 			log.Errorf("Send to children failed: %v", errs)
-		}
-	}()
-	return nil
-}
-
-// Start sends the block request to all of the children.
-func (p *GetBlocks) Start() error {
-	log.Lvl3("Starting Protocol GetBlocks")
-	go func() {
-		errs := p.SendToChildrenInParallel(p.GetBlocks)
-		if len(errs) > 0 {
-			log.Lvlf1("Error while sending to children: %+v", errs)
 		}
 	}()
 	return nil
@@ -194,6 +168,8 @@ func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) e
 				} else {
 					p.ExtendRosterReply <- []ProtoExtendSignature{}
 				}
+			case <-p.closing:
+				return
 			}
 		}()
 	}
@@ -224,6 +200,44 @@ func (p *ExtendRoster) HandleExtendRosterReply(r ProtoStructExtendRosterReply) e
 			p.doneChan <- 1
 		}
 	}
+	return nil
+}
+
+// Shutdown makes sure the protocol stops if the server goes down. This is
+// mostly in testing.
+func (p *ExtendRoster) Shutdown() error {
+	close(p.closing)
+	return nil
+}
+
+// GetBlocks is used for conodes to get blocks from each other.
+type GetBlocks struct {
+	*onet.TreeNodeInstance
+
+	GetBlocks      *ProtoGetBlocks
+	GetBlocksReply chan []*SkipBlock
+	DB             *SkipBlockDB
+	replies        int
+}
+
+// NewProtocolGetBlocks prepares for a protocol that fetches blocks.
+func NewProtocolGetBlocks(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
+	t := &GetBlocks{
+		TreeNodeInstance: n,
+		GetBlocksReply:   make(chan []*SkipBlock),
+	}
+	return t, t.RegisterHandlers(t.HandleGetBlocks, t.HandleGetBlocksReply)
+}
+
+// Start sends the block request to all of the children.
+func (p *GetBlocks) Start() error {
+	log.Lvl3("Starting Protocol GetBlocks")
+	go func() {
+		errs := p.SendToChildrenInParallel(p.GetBlocks)
+		if len(errs) > 0 {
+			log.Lvlf1("Error while sending to children: %+v", errs)
+		}
+	}()
 	return nil
 }
 

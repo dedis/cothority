@@ -125,13 +125,5 @@ func newCoSiService(c *onet.Context) (onet.Service, error) {
 		log.Error("couldn't register message:", err)
 		return nil, err
 	}
-	if _, err := c.ProtocolRegister(protocol.DefaultProtocolName, protocol.NewDefaultProtocol); err != nil {
-		log.Error("couldn't register main protocol:", err)
-		return nil, err
-	}
-	if _, err := c.ProtocolRegister(protocol.DefaultSubProtocolName, protocol.NewDefaultSubProtocol); err != nil {
-		log.Error("couldn't register sub protocol:", err)
-		return nil, err
-	}
 	return s, nil
 }
