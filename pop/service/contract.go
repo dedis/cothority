@@ -53,6 +53,12 @@ func init() {
 //         the service to use.
 func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, coins []ol.Coin) (scs []ol.StateChange, cOut []ol.Coin, err error) {
 	cOut = coins
+
+	err = inst.VerifyDarcSignature(cdb)
+	if err != nil {
+		return
+	}
+
 	var darcID darc.ID
 	var ppi PopPartyInstance
 	if inst.Spawn == nil {
