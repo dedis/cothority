@@ -1183,7 +1183,6 @@ func (s *Service) registerContract(contractID string, c OmniLedgerContract) erro
 // other nodes.
 func (s *Service) startAllChains() error {
 	s.SetPropagationTimeout(120 * time.Second)
-
 	msg, err := s.Load(storageID)
 	if err != nil {
 		return err

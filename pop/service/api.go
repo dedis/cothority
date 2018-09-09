@@ -7,6 +7,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/omniledger/darc"
+	ol "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/eddsa"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -107,7 +109,7 @@ func (c *Client) Finalize(dst network.Address, p *PopDesc, attendees []kyber.Poi
 	req := &FinalizeRequest{}
 	req.DescID = p.Hash()
 	req.Attendees = attendees
-	hash, err := req.hash()
+	hash, err := req.Hash()
 	if err != nil {
 		return nil, err
 	}
@@ -142,6 +144,81 @@ func (c *Client) Merge(dst network.Address, p *PopDesc, priv kyber.Scalar) (
 		return nil, e
 	}
 	return res.Final, nil
+}
+
+// GetLink returns the link of the organizer, if available.
+func (c *Client) GetLink(dst network.Address) (kyber.Point, error) {
+	si := &network.ServerIdentity{Address: dst}
+	res := &GetLinkReply{}
+
+	e := c.SendProtobuf(si, &GetLink{}, res)
+	if e != nil {
+		return nil, e
+	}
+	return res.Public, nil
+}
+
+// GetFinalStatements returns a map of all final statements.
+func (c *Client) GetFinalStatements(dst network.Address) (map[string]*FinalStatement, error) {
+	si := &network.ServerIdentity{Address: dst}
+	res := &GetFinalStatementsReply{}
+
+	e := c.SendProtobuf(si, &GetFinalStatements{}, res)
+	if e != nil {
+		return nil, e
+	}
+	return res.FinalStatements, nil
+}
+
+// StoreKeys asks the service to store public keys for a party.
+func (c *Client) StoreKeys(dst network.Address, partyID []byte, keys []kyber.Point) error {
+	si := &network.ServerIdentity{Address: dst}
+	ret := &StoreKeysReply{}
+
+	return c.SendProtobuf(si, &StoreKeys{partyID, keys, nil}, ret)
+}
+
+// GetKeys asks the service for the public keys for a party.
+func (c *Client) GetKeys(dst network.Address, partyID []byte) ([]kyber.Point, error) {
+	si := &network.ServerIdentity{Address: dst}
+	ret := &GetKeysReply{}
+
+	err := c.SendProtobuf(si, &GetKeys{partyID}, ret)
+	return ret.Keys, err
+}
+
+// StoreInstanceID asks the service to store an instanceID for a given party.
+func (c *Client) StoreInstanceID(dst network.Address, partyID []byte, instanceID ol.InstanceID) error {
+	si := &network.ServerIdentity{Address: dst}
+	ret := &StoreInstanceIDReply{}
+
+	return c.SendProtobuf(si, &StoreInstanceID{partyID, instanceID}, ret)
+}
+
+// GetInstanceID asks the service for an instanceID for a given party.
+func (c *Client) GetInstanceID(dst network.Address, partyID []byte) (ol.InstanceID, error) {
+	si := &network.ServerIdentity{Address: dst}
+	ret := &GetInstanceIDReply{}
+
+	err := c.SendProtobuf(si, &GetInstanceID{partyID}, ret)
+	return ret.InstanceID, err
+}
+
+// StoreSigner asks the service to store an Signer for a given party.
+func (c *Client) StoreSigner(dst network.Address, partyID []byte, Signer darc.Signer) error {
+	si := &network.ServerIdentity{Address: dst}
+	ret := &StoreSignerReply{}
+
+	return c.SendProtobuf(si, &StoreSigner{partyID, Signer}, ret)
+}
+
+// GetSigner asks the service for an Signer for a given party.
+func (c *Client) GetSigner(dst network.Address, partyID []byte) (darc.Signer, error) {
+	si := &network.ServerIdentity{Address: dst}
+	ret := &GetSignerReply{}
+
+	err := c.SendProtobuf(si, &GetSigner{partyID}, ret)
+	return ret.Signer, err
 }
 
 // The toml-structure for (un)marshaling with toml

@@ -18,7 +18,9 @@ func init() {
 		PinRequest{}, FetchRequest{}, MergeRequest{},
 		StoreConfig{}, StoreConfigReply{},
 		GetProposals{}, GetProposalsReply{},
-		VerifyLink{}, VerifyLinkReply{})
+		VerifyLink{}, VerifyLinkReply{},
+		GetLink{}, GetLinkReply{},
+		GetFinalStatements{}, GetFinalStatementsReply{})
 }
 
 func newMerge() *merge {
@@ -71,7 +73,8 @@ const (
 	PopStatusOK
 )
 
-func (fr *FinalizeRequest) hash() ([]byte, error) {
+// Hash calculates the hash for the FinalizeRequest.
+func (fr *FinalizeRequest) Hash() ([]byte, error) {
 	h := cothority.Suite.Hash()
 	_, err := h.Write(fr.DescID)
 	if err != nil {
