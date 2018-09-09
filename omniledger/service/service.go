@@ -284,7 +284,12 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 	if err != nil && latest == nil {
 		return
 	}
-	proof, err := NewProof(s.getCollection(req.ID), s.db(), latest.Hash, req.Key)
+	cdb := s.getCollection(req.ID)
+	if cdb.getIndex() != latest.Index {
+		err = errors.New("index mismatch while getting proof")
+		return
+	}
+	proof, err := NewProof(cdb, s.db(), latest.Hash, req.Key)
 	if err != nil {
 		return
 	}
