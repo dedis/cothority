@@ -81,7 +81,6 @@ type IsLeaderFunc func(view View) bool
 // skipchain) to the controller.
 type Controller struct {
 	reqChan          chan InitReq
-	anomalyChan      chan InitReq
 	doneChan         chan View
 	waiting          chan chan bool
 	closeMonitorChan chan bool
@@ -100,7 +99,6 @@ type Controller struct {
 func NewController(sendInitReq SendInitReqFunc, sendNewView SendNewViewReqFunc, isLeader IsLeaderFunc) Controller {
 	return Controller{
 		reqChan:          make(chan InitReq, 1),
-		anomalyChan:      make(chan InitReq, 1),
 		doneChan:         make(chan View, 1),
 		waiting:          make(chan chan bool, 1),
 		closeMonitorChan: make(chan bool),
@@ -140,18 +138,24 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 			// Transition: received a view-change request, start
 			// the timer and move the state if there are 2f+1 valid
 			// requests.
-			meta.addOther(req)
-			log.Lvl4("adding req:", req.View)
-			if meta.highest() > ctr && meta.countOf(meta.highest()) > f {
-				// To avoid starting view-change too late, if
-				// another honest node detects an anomaly,
-				// we'll report it too.
-				stopTimer(timer, c.stopTimerChan, ctr)
-				reqNew := InitReq{
-					View:     req.View,
-					SignerID: myID,
+			if myID.Equal(req.SignerID) {
+				log.Lvl4("adding anomaly:", req.View.LeaderIndex, req.SignerID.String())
+				meta.add(req)
+				ctr = c.processAnomaly(req, &meta, ctr)
+			} else {
+				log.Lvl4("adding req:", req.View.LeaderIndex, req.SignerID.String())
+				meta.add(req)
+				if meta.highest() > ctr && meta.countOf(meta.highest()) > f {
+					// To avoid starting view-change too late, if
+					// another honest node detects an anomaly,
+					// we'll report it too.
+					stopTimer(timer, c.stopTimerChan, ctr)
+					reqNew := InitReq{
+						View:     req.View,
+						SignerID: myID,
+					}
+					ctr = c.processAnomaly(reqNew, &meta, ctr)
 				}
-				c.anomalyChan <- reqNew
 			}
 			if meta.countOf(ctr) > 2*f && meta.stateOf(ctr) < startedTimerState && meta.acceptOf(ctr) {
 				// To avoid starting the next view-change too
@@ -168,38 +172,6 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				if c.isLeader(meta.currOf(ctr)) {
 					c.sendNewViewReq(meta.getProof(ctr))
 				}
-			}
-		case req := <-c.anomalyChan:
-			// Transition: anomaly detected, this should be the
-			// only way to increment ctr and it should move the
-			// state forward.
-			if !myID.Equal(req.SignerID) {
-				// The anomaly is only triggered by myself.
-				// The caller should make sure of it.
-				panic("only accept our own ID")
-			}
-			meta.addMyself(req)
-			log.Lvl4("adding anomaly:", req.View)
-			if req.View.LeaderIndex > ctr {
-				// We detected a new anomaly, so send a new
-				// view-change message.
-				ctr = req.View.LeaderIndex
-				if meta.stateOf(ctr) < sentReqState {
-					if err := c.sendInitReq(meta.currOf(ctr)); err != nil {
-						log.Error("failed to send request", err)
-					} else {
-						meta.nextStateFor(ctr)
-					}
-				}
-			} else {
-				// We blackhole the anomaly if the leader index
-				// is less or equal to the counter. This
-				// situation only happens if we detect an
-				// anomaly for an earlier view. But the
-				// controller has already moved on and it will
-				// only wait for relevant messages for its
-				// current or later view.
-				log.Warn("Controller is not accepting anomalies for earlier views")
 			}
 		case view := <-c.doneChan:
 			// Transition: view-change completed successfully, go
@@ -239,7 +211,8 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 				View:     view,
 				SignerID: myID,
 			}
-			c.anomalyChan <- req
+			meta.add(req)
+			ctr = c.processAnomaly(req, &meta, ctr)
 			meta.clean(ctr)
 		case ch := <-c.waiting:
 			if meta.stateOf(ctr) == startedTimerState {
@@ -254,18 +227,38 @@ func (c *Controller) Start(myID network.ServerIdentityID, genesis skipchain.Skip
 	}
 }
 
+func (c *Controller) processAnomaly(req InitReq, meta *stateLogs, ctr int) int {
+	if req.View.LeaderIndex > ctr {
+		// We detected a new anomaly, so send a new
+		// view-change message.
+		ctr = req.View.LeaderIndex
+		if meta.stateOf(ctr) < sentReqState {
+			if err := c.sendInitReq(meta.currOf(ctr)); err != nil {
+				log.Error("failed to send request", err)
+			} else {
+				meta.nextStateFor(ctr)
+				meta.accept(ctr)
+			}
+		}
+	} else {
+		// We blackhole the anomaly if the leader index
+		// is less or equal to the counter. This
+		// situation only happens if we detect an
+		// anomaly for an earlier view. But the
+		// controller has already moved on and it will
+		// only wait for relevant messages for its
+		// current or later view.
+		log.Warn("Controller is not accepting anomalies for earlier views")
+	}
+	return ctr
+}
+
 // AddReq adds the request to the log. It assumes the caller is correct and
 // does not add bogus requests. We first check that the current view is the
 // same as the one in our request. If it is, then we need to update the current
 // view in the receiver. Finally, we add the request.
 func (c *Controller) AddReq(req InitReq) {
 	c.reqChan <- req
-}
-
-// AddAnomaly should be called when an anomaly is detected, e.g., then the
-// current leader is offline or is sending erroneous messages.
-func (c *Controller) AddAnomaly(req InitReq) {
-	c.anomalyChan <- req
 }
 
 // Done should be called when a view-change is completed.
@@ -435,7 +428,7 @@ func newStateLogs() stateLogs {
 	}
 }
 
-func (m *stateLogs) addOther(req InitReq) {
+func (m *stateLogs) add(req InitReq) {
 	if _, ok := m.m[req.View.LeaderIndex]; !ok {
 		m.m[req.View.LeaderIndex] = newStateLog()
 	}
@@ -444,11 +437,10 @@ func (m *stateLogs) addOther(req InitReq) {
 	m.m[req.View.LeaderIndex] = tmp
 }
 
-func (m *stateLogs) addMyself(req InitReq) {
-	m.addOther(req)
-	tmp := m.m[req.View.LeaderIndex]
+func (m *stateLogs) accept(i int) {
+	tmp := m.m[i]
 	tmp.accept = true
-	m.m[req.View.LeaderIndex] = tmp
+	m.m[i] = tmp
 }
 
 func (m stateLogs) highest() int {

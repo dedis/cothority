@@ -23,7 +23,7 @@ import java.time.Duration;
 import java.util.Arrays;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CalypsoTest {
     class Pair<A, B> {
@@ -103,9 +103,9 @@ class CalypsoTest {
     }
 
     Pair<WriteRequest, WriterInstance> createWriterInstance(String secret) throws Exception {
-        WriteRequest wr = new WriteRequest(secret, 32, testDarc.getId());
-        WriterInstance w = new WriterInstance(ol, Arrays.asList(testSigner), testDarc.getId(), ltsReply, wr);
-
+        WriteRequest wr = new WriteRequest(secret, 16, genesisDarc.getId());
+        WriterInstance w = new WriterInstance(ol, Arrays.asList(admin), genesisDarc.getId(), ltsReply, wr);
+      
         Proof p = ol.getProof(w.getInstance().getId());
         assertTrue(p.matches());
 

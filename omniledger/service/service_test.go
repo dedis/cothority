@@ -26,7 +26,7 @@ var tSuite = suites.MustFind("Ed25519")
 var dummyContract = "dummy"
 var slowContract = "slow"
 var invalidContract = "invalid"
-var testInterval = 400 * time.Millisecond
+var testInterval = 500 * time.Millisecond
 
 func TestMain(m *testing.M) {
 	log.MainTest(m)
@@ -301,6 +301,12 @@ func TestService_Depending(t *testing.T) {
 	_, _, _, err = cdb.GetValues(in1.Hash())
 	require.NotNil(t, err)
 	require.Equal(t, "no match found", err.Error())
+
+	// We need to wait a bit for the propagation to finish because the
+	// skipchain service might decide to update forward links by adding
+	// additional blocks. How do we make sure that the test closes only
+	// after the forward links are all updated?
+	time.Sleep(time.Second)
 }
 
 func TestService_LateBlock(t *testing.T) {
@@ -368,9 +374,7 @@ func txResultsFromBlock(sb *skipchain.SkipBlock) (TxResults, error) {
 }
 
 func TestService_WaitInclusion(t *testing.T) {
-	// TODO: move back to 3
-	// for i := 0; i < 3; i++ {
-	for i := 0; i < 1; i++ {
+	for i := 0; i < 3; i++ {
 		log.Lvl1("Testing inclusion when sending to service", i)
 		waitInclusion(t, i)
 	}
@@ -423,7 +427,7 @@ func waitInclusion(t *testing.T, client int) {
 	require.NoError(t, err)
 
 	if len(txr) == 1 {
-		// The good tx ended up in it's own block.
+		log.Lvl1("the good tx ended up in it's own block")
 		require.True(t, txr[0].Accepted)
 
 		// Look in the previous block for the failed one.
@@ -434,11 +438,16 @@ func waitInclusion(t *testing.T, client int) {
 		require.Equal(t, len(txr), 1)
 		require.False(t, txr[0].Accepted)
 	} else {
-		// They are both in this block
-		require.Equal(t, len(txr), 2)
+		log.Lvl1("they are both in this block")
 		require.False(t, txr[0].Accepted)
 		require.True(t, txr[1].Accepted)
 	}
+
+	// We need to wait a bit for the propagation to finish because the
+	// skipchain service might decide to update forward links by adding
+	// additional blocks. How do we make sure that the test closes only
+	// after the forward links are all updated?
+	time.Sleep(time.Second)
 }
 
 // Sends too many transactions to the ledger and waits for all blocks to be done.
@@ -896,9 +905,6 @@ func TestService_SetBadConfig(t *testing.T) {
 // followers. Finally, we bring the failed nodes back up and they should
 // contain the transactions that they missed.
 func TestService_ViewChange(t *testing.T) {
-	if testing.Short() {
-		t.Skip("Viewchange testing currently disabled")
-	}
 	testViewChange(t, 4, 1, 2*time.Second)
 }
 
@@ -915,6 +921,12 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 
 	for _, service := range s.services {
 		service.SetPropagationTimeout(2 * interval)
+	}
+
+	// Wait for all the genesis config to be written on all nodes.
+	genesisInstanceID := InstanceID{}
+	for i := range s.services {
+		s.waitProofWithIdx(t, genesisInstanceID.Slice(), i)
 	}
 
 	// Stop the first nFailures hosts then the node at index nFailures

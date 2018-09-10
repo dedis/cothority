@@ -2,9 +2,9 @@ package ch.epfl.dedis.ocs;
 
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
+import ch.epfl.dedis.lib.crypto.Encryption;
 import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.crypto.Point;
-import ch.epfl.dedis.lib.crypto.Encryption;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;

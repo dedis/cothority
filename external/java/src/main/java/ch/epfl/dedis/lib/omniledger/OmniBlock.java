@@ -7,7 +7,6 @@ import ch.epfl.dedis.proto.OmniLedgerProto;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
