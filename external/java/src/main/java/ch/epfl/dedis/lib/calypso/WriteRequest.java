@@ -50,7 +50,7 @@ public class WriteRequest {
     public WriteRequest(byte[] data, int keylen, DarcId writerID) throws CothorityCryptoException {
         Encryption.keyIv key = new Encryption.keyIv(keylen);
         this.keyMaterial = key.getKeyMaterial();
-        this.dataEnc = encryptData(data, key.getKeyMaterial());
+        this.dataEnc = encryptData(data, keyMaterial);
         this.darcId = writerID;
         this.extraData = "".getBytes();
     }

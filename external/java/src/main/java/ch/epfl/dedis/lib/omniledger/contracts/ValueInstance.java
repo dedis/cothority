@@ -6,7 +6,9 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.omniledger.*;
-import ch.epfl.dedis.lib.omniledger.darc.*;
+import ch.epfl.dedis.lib.omniledger.darc.Request;
+import ch.epfl.dedis.lib.omniledger.darc.Signature;
+import ch.epfl.dedis.lib.omniledger.darc.Signer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

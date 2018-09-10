@@ -1,14 +1,13 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
-import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

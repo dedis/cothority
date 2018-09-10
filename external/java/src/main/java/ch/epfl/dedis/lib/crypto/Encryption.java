@@ -9,7 +9,10 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.security.*;
+import java.security.InvalidAlgorithmParameterException;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 
 public class Encryption {
     public static String algo = "AES/CBC/PKCS5Padding";
@@ -68,17 +71,8 @@ public class Encryption {
             SecretKeySpec secKey = new SecretKeySpec(key.symmetricKey, Encryption.algoKey);
             cipher.init(Cipher.ENCRYPT_MODE, secKey, key.ivSpec);
             return cipher.doFinal(data);
-        } catch (NoSuchAlgorithmException e){
-            throw new CothorityCryptoException(e.getMessage());
-        } catch (NoSuchPaddingException e){
-            throw new CothorityCryptoException(e.getMessage());
-        } catch (InvalidKeyException e){
-            throw new CothorityCryptoException(e.getMessage());
-        } catch (InvalidAlgorithmParameterException e){
-            throw new CothorityCryptoException(e.getMessage());
-        } catch (IllegalBlockSizeException e){
-            throw new CothorityCryptoException(e.getMessage());
-        } catch (BadPaddingException e){
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException |
+                InvalidKeyException | BadPaddingException | IllegalBlockSizeException e){
             throw new CothorityCryptoException(e.getMessage());
         }
     }
@@ -98,17 +92,8 @@ public class Encryption {
             Cipher cipher = Cipher.getInstance(algo);
             cipher.init(Cipher.DECRYPT_MODE, key.keySpec, key.ivSpec);
             return cipher.doFinal(dataEnc);
-        } catch (NoSuchAlgorithmException e){
-            throw new CothorityCryptoException(e.getMessage());
-        } catch (NoSuchPaddingException e){
-            throw new CothorityCryptoException(e.getMessage());
-        } catch (InvalidKeyException e){
-            throw new CothorityCryptoException(e.getMessage());
-        } catch (InvalidAlgorithmParameterException e){
-            throw new CothorityCryptoException(e.getMessage());
-        } catch (IllegalBlockSizeException e){
-            throw new CothorityCryptoException(e.getMessage());
-        } catch (BadPaddingException e){
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException |
+                InvalidAlgorithmParameterException | BadPaddingException e){
             throw new CothorityCryptoException(e.getMessage());
         }
     }

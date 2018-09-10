@@ -4,12 +4,7 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcOCSProto;
 import com.google.protobuf.ByteString;
 
-import java.security.InvalidKeyException;
-import java.security.KeyFactory;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
-import java.security.Signature;
-import java.security.SignatureException;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;

@@ -17,7 +17,7 @@ import java.time.Duration;
 import java.util.Arrays;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReaderInstanceTest {
     private OmniledgerRPC ol;

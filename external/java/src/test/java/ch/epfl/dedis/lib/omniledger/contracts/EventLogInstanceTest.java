@@ -1,20 +1,19 @@
 package ch.epfl.dedis.lib.omniledger.contracts;
 
-import ch.epfl.dedis.lib.eventlog.Event;
-import ch.epfl.dedis.lib.eventlog.SearchResponse;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.omniledger.InstanceId;
-import ch.epfl.dedis.lib.omniledger.darc.Rules;
-import org.junit.jupiter.api.Test;
-
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
+import ch.epfl.dedis.lib.eventlog.Event;
+import ch.epfl.dedis.lib.eventlog.SearchResponse;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.omniledger.InstanceId;
 import ch.epfl.dedis.lib.omniledger.OmniledgerRPC;
 import ch.epfl.dedis.lib.omniledger.darc.Darc;
+import ch.epfl.dedis.lib.omniledger.darc.Rules;
 import ch.epfl.dedis.lib.omniledger.darc.Signer;
 import ch.epfl.dedis.lib.omniledger.darc.SignerEd25519;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +23,8 @@ import java.util.Arrays;
 import java.util.List;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EventLogInstanceTest {
     private static OmniledgerRPC ol;
