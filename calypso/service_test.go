@@ -20,16 +20,16 @@ func TestMain(m *testing.M) {
 // TestService_CreateLTS runs the DKG protocol on the service and check that we
 // get back valid results.
 func TestService_CreateLTS(t *testing.T) {
-	for _, nodes := range []int{3, 7, 10} {
+	for _, nodes := range []int{4, 7} {
 		func(nodes int) {
-			if nodes > 9 && testing.Short() {
-				log.Info("skipping, dkg might take too long")
+			if nodes > 5 && testing.Short() {
+				log.Info("skipping, dkg might take too long for", nodes)
 				return
 			}
 			s := newTS(t, nodes)
+			defer s.closeAll(t)
 			require.NotNil(t, s.ltsReply.LTSID)
 			require.NotNil(t, s.ltsReply.X)
-			defer s.closeAll(t)
 		}(nodes)
 	}
 }
@@ -39,7 +39,7 @@ func TestContract_Write(t *testing.T) {
 	s := newTS(t, 5)
 	defer s.closeAll(t)
 
-	pr := s.AddWriteAndWait(t, []byte("secret key"))
+	pr := s.addWriteAndWait(t, []byte("secret key"))
 	require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
 }
 
@@ -47,7 +47,7 @@ func TestContract_Write(t *testing.T) {
 // the transaction per second.
 func TestContract_Write_Benchmark(t *testing.T) {
 	if testing.Short() {
-		t.Skip("benchmark test might be too long for travis")
+		t.Skip("running benchmark takes too long and it's extremely CPU intensive (100% CPU usage)")
 	}
 
 	s := newTS(t, 5)
@@ -57,22 +57,16 @@ func TestContract_Write_Benchmark(t *testing.T) {
 	var times []time.Duration
 
 	for i := 0; i < 50; i++ {
-		var iids []ol.InstanceID
+		iids := make([]ol.InstanceID, totalTrans)
 		start := time.Now()
 		for i := 0; i < totalTrans; i++ {
-			iids = append(iids, s.AddWrite(t, []byte("secret key")))
+			iids[i] = s.addWrite(t, []byte("secret key"))
 		}
 		timeSend := time.Now().Sub(start)
 		log.Lvlf1("Time to send %d writes to OmniLedger: %s", totalTrans, timeSend)
 		start = time.Now()
 		for i := 0; i < totalTrans; i++ {
-			for {
-				pr, err := s.cl.WaitProof(iids[i], s.genesisMsg.BlockInterval, nil)
-				if err == nil {
-					require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
-					break
-				}
-			}
+			s.waitInstID(t, iids[i])
 		}
 		timeWait := time.Now().Sub(start)
 		log.Lvlf1("Time to wait for %d writes in OmniLedger: %s", totalTrans, timeWait)
@@ -90,8 +84,8 @@ func TestContract_Read(t *testing.T) {
 	s := newTS(t, 5)
 	defer s.closeAll(t)
 
-	prWrite := s.AddWriteAndWait(t, []byte("secret key"))
-	pr := s.AddRead(t, prWrite, nil)
+	prWrite := s.addWriteAndWait(t, []byte("secret key"))
+	pr := s.addReadAndWait(t, prWrite)
 	require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
 }
 
@@ -102,11 +96,11 @@ func TestService_DecryptKey(t *testing.T) {
 	defer s.closeAll(t)
 
 	key1 := []byte("secret key 1")
-	prWr1 := s.AddWriteAndWait(t, key1)
-	prRe1 := s.AddRead(t, prWr1, nil)
+	prWr1 := s.addWriteAndWait(t, key1)
+	prRe1 := s.addReadAndWait(t, prWr1)
 	key2 := []byte("secret key 2")
-	prWr2 := s.AddWriteAndWait(t, key2)
-	prRe2 := s.AddRead(t, prWr2, nil)
+	prWr2 := s.addWriteAndWait(t, key2)
+	prRe2 := s.addReadAndWait(t, prWr2)
 
 	_, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr2})
 	require.NotNil(t, err)
@@ -141,13 +135,11 @@ type ts struct {
 	gDarc      *darc.Darc
 }
 
-func (s *ts) AddRead(t *testing.T, write *ol.Proof, read *Read) *ol.Proof {
+func (s *ts) addRead(t *testing.T, write *ol.Proof) ol.InstanceID {
 	var readBuf []byte
-	if read == nil {
-		read = &Read{
-			Write: ol.NewInstanceID(write.InclusionProof.Key),
-			Xc:    s.signer.Ed25519.Point,
-		}
+	read := &Read{
+		Write: ol.NewInstanceID(write.InclusionProof.Key),
+		Xc:    s.signer.Ed25519.Point,
 	}
 	var err error
 	readBuf, err = protobuf.Encode(read)
@@ -167,14 +159,12 @@ func (s *ts) AddRead(t *testing.T, write *ol.Proof, read *Read) *ol.Proof {
 	require.Nil(t, ctx.Instructions[0].SignBy(s.gDarc.GetID(), s.signer))
 	_, err = s.cl.AddTransaction(ctx)
 	require.Nil(t, err)
-	instID := ctx.Instructions[0].DeriveID("")
-	pr, err := s.cl.WaitProof(instID, s.genesisMsg.BlockInterval, nil)
-	if read != nil {
-		require.Nil(t, err)
-	} else {
-		require.NotNil(t, err)
-	}
-	return pr
+	return ctx.Instructions[0].DeriveID("")
+}
+
+func (s *ts) addReadAndWait(t *testing.T, write *ol.Proof) *ol.Proof {
+	instID := s.addRead(t, write)
+	return s.waitInstID(t, instID)
 }
 
 func newTS(t *testing.T, nodes int) ts {
@@ -209,14 +199,28 @@ func (s *ts) createGenesis(t *testing.T) {
 	require.Nil(t, err)
 }
 
-func (s *ts) AddWriteAndWait(t *testing.T, key []byte) *ol.Proof {
-	instID := s.AddWrite(t, key)
-	pr, err := s.cl.WaitProof(instID, s.genesisMsg.BlockInterval, nil)
-	require.Nil(t, err)
+func (s *ts) waitInstID(t *testing.T, instID ol.InstanceID) *ol.Proof {
+	var err error
+	var pr *ol.Proof
+	for i := 0; i < 10; i++ {
+		pr, err = s.cl.WaitProof(instID, s.genesisMsg.BlockInterval, nil)
+		if err == nil {
+			require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
+			break
+		}
+	}
+	if err != nil {
+		require.Fail(t, "didn't find proof")
+	}
 	return pr
 }
 
-func (s *ts) AddWrite(t *testing.T, key []byte) ol.InstanceID {
+func (s *ts) addWriteAndWait(t *testing.T, key []byte) *ol.Proof {
+	instID := s.addWrite(t, key)
+	return s.waitInstID(t, instID)
+}
+
+func (s *ts) addWrite(t *testing.T, key []byte) ol.InstanceID {
 	write := NewWrite(cothority.Suite, s.ltsReply.LTSID, s.gDarc.GetBaseID(), s.ltsReply.X, key)
 	writeBuf, err := protobuf.Encode(write)
 	require.Nil(t, err)

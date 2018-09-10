@@ -86,10 +86,11 @@ func (c *Client) AddTransactionAndWait(tx ClientTransaction, wait int) (*AddTxRe
 	return reply, nil
 }
 
-// GetProof returns a proof for the key stored in the skipchain.  The proof can
-// be verified with the genesis skipblock and can prove the existence or the
-// absence of the key. The Client's Roster and ID should be initialized before
-// calling this method (see NewClientFromConfig).
+// GetProof returns a proof for the key stored in the skipchain by sending a
+// message to the node on index 0 of the roster. The proof can be verified with
+// the genesis skipblock and can prove the existence or the absence of the key.
+// The Client's Roster and ID should be initialized before calling this method
+// (see NewClientFromConfig).
 func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 	reply := &GetProofResponse{}
 	err := c.SendProtobuf(c.Roster.List[0], &GetProof{
