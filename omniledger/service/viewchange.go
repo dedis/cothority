@@ -55,15 +55,6 @@ func (m *viewChangeManager) addReq(req viewchange.InitReq) {
 	}
 }
 
-func (m *viewChangeManager) addAnomaly(req viewchange.InitReq) {
-	m.Lock()
-	defer m.Unlock()
-	c := m.controllers[string(req.View.Gen)]
-	if c != nil {
-		c.AddAnomaly(req)
-	}
-}
-
 func (m *viewChangeManager) done(view viewchange.View) {
 	m.Lock()
 	defer m.Unlock()
@@ -110,12 +101,12 @@ func (s *Service) sendViewChangeReq(view viewchange.View) error {
 		if sid.Equal(s.ServerIdentity()) {
 			continue
 		}
-		go func(si *network.ServerIdentity) {
-			if err := s.SendRaw(si, &req); err != nil {
+		go func(id *network.ServerIdentity) {
+			if err := s.SendRaw(id, &req); err != nil {
 				// Having an error here is fine because not all the
 				// nodes are guaranteed to be online. So we log a
 				// warning instead of returning an error.
-				log.Warn(s.ServerIdentity(), "Couldn't send view-change request to", si.Address, err)
+				log.Warn(s.ServerIdentity(), "Couldn't send view-change request to", id.Address, err)
 			}
 		}(sid)
 	}
