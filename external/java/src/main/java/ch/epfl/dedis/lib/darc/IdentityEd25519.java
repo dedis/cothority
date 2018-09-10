@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.darc;
 
-import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
+import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.SchnorrSig;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.DarcOCSProto;

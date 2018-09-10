@@ -1,7 +1,6 @@
 package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.omniledger.darc.Signature;
 import ch.epfl.dedis.proto.OmniLedgerProto;
 
 import java.security.MessageDigest;

@@ -10,7 +10,6 @@ import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.omniledger.contracts.DarcInstance;
 import ch.epfl.dedis.lib.omniledger.darc.Darc;
-import ch.epfl.dedis.lib.omniledger.darc.DarcId;
 import ch.epfl.dedis.lib.skipchain.SkipchainRPC;
 import ch.epfl.dedis.proto.OmniLedgerProto;
 import com.google.protobuf.ByteString;

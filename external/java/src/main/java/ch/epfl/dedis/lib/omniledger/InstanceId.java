@@ -2,14 +2,8 @@ package ch.epfl.dedis.lib.omniledger;
 
 import ch.epfl.dedis.lib.HashId;
 import ch.epfl.dedis.lib.crypto.Hex;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.omniledger.darc.DarcId;
-import ch.epfl.dedis.lib.omniledger.darc.Signature;
-import ch.epfl.dedis.proto.OmniLedgerProto;
 import com.google.protobuf.ByteString;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 /**

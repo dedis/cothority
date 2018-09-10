@@ -1,6 +1,5 @@
 package ch.epfl.dedis.ocs;
 
-import ch.epfl.dedis.lib.crypto.Ed25519;
 import ch.epfl.dedis.lib.crypto.*;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.Test;
@@ -10,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
 import java.security.SecureRandom;
 
 import static org.junit.jupiter.api.Assertions.*;

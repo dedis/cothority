@@ -1,14 +1,14 @@
 package ch.epfl.dedis.lib.omniledger.contracts;
 
+import ch.epfl.dedis.lib.eventlog.Event;
 import ch.epfl.dedis.lib.eventlog.SearchResponse;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.omniledger.darc.DarcId;
-import ch.epfl.dedis.lib.omniledger.darc.Signer;
-import ch.epfl.dedis.lib.eventlog.Event;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.omniledger.*;
+import ch.epfl.dedis.lib.omniledger.darc.DarcId;
+import ch.epfl.dedis.lib.omniledger.darc.Signer;
 import ch.epfl.dedis.proto.EventLogProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
