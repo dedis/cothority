@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.omniledger.darc;
 
-import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.crypto.Point;
+import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -5,7 +5,6 @@ import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.darc.*;
-import ch.epfl.dedis.lib.darc.IdentityDarc;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.ocs.Document;
 import ch.epfl.dedis.ocs.WriteRequest;
@@ -18,9 +17,7 @@ import org.junit.jupiter.api.TestInstance;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class GetPathTest {

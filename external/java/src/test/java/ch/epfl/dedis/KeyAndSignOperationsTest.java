@@ -4,15 +4,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
-import java.security.Signature;
+import java.security.*;
 import java.security.spec.ECGenParameterSpec;
-import java.util.Random;
 
 import static ch.epfl.dedis.lib.darc.TestSignerX509EC.readPrivateKey;
 import static ch.epfl.dedis.lib.darc.TestSignerX509EC.readPublicKey;
@@ -70,9 +63,10 @@ public class KeyAndSignOperationsTest {
             "secp256k1-pkcs8.der, secp256k1-pub.der",
             "secp384r1-pkcs8.der, secp384r1-pub.der",
             "secp521r1-pkcs8.der, secp521r1-pub.der" })
-    public void exampleReadOpenSSLKeyAndSginAndVerify(String priv, String pub) throws Exception {
+    public void exampleReadOpenSSLKeyAndSignAndVerify(String priv, String pub) throws Exception {
         byte[] text = new byte[666];
-        new Random().nextBytes(text);
+        // secure random is not strictly needed here, but better to avoid ever using Random().
+        new SecureRandom().nextBytes(text);
 
         PublicKey publicKey = readPublicKey(getClass().getClassLoader().getResourceAsStream(pub));
         PrivateKey privateKey = readPrivateKey(getClass().getClassLoader().getResourceAsStream(priv));

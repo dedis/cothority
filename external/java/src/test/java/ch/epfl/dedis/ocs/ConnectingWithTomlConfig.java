@@ -1,11 +1,11 @@
 package ch.epfl.dedis.ocs;
 
+import ch.epfl.dedis.byzgen.OcsFactory;
+import ch.epfl.dedis.lib.Roster;
+import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.Roster;
-import ch.epfl.dedis.lib.ServerIdentity;
-import ch.epfl.dedis.byzgen.OcsFactory;
 import com.moandjiezana.toml.Toml;
 
 import java.net.URI;
