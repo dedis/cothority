@@ -46,7 +46,7 @@ class ReaderInstanceTest {
 
         CreateLTSReply ltsReply = CalypsoRPC.createLTS(ol.getRoster(), ol.getGenesis().getId());
         String secret = "this is a secret";
-        WriteRequest wr = new WriteRequest(secret, 32, genesisDarc.getId());
+        WriteRequest wr = new WriteRequest(secret, 16, genesisDarc.getId());
         w = new WriterInstance(ol, Arrays.asList(admin), genesisDarc.getId(), ltsReply, wr);
         assertTrue(ol.getProof(w.getInstance().getId()).matches());
 

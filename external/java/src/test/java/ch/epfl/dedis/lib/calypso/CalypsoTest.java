@@ -94,7 +94,7 @@ class CalypsoTest {
     }
 
     Pair<WriteRequest, WriterInstance> createWriterInstance(String secret) throws Exception {
-        WriteRequest wr = new WriteRequest(secret, 32, genesisDarc.getId());
+        WriteRequest wr = new WriteRequest(secret, 16, genesisDarc.getId());
         WriterInstance w = new WriterInstance(ol, Arrays.asList(admin), genesisDarc.getId(), ltsReply, wr);
 
         Proof p = ol.getProof(w.getInstance().getId());
