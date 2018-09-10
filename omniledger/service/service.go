@@ -280,16 +280,36 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		return nil, errors.New("version mismatch")
 	}
 	log.Lvlf2("%s Getting proof for key %x on sc %x", s.ServerIdentity(), req.Key, req.ID)
-	latest, err := s.db().GetLatestByID(req.ID)
-	if err != nil && latest == nil {
+
+	// Get the collection database and the latest skipblock, if the latest
+	// skipblock does not have the same index as the one in the collection
+	// then we look back for one that does.
+	sb, err := s.db().GetLatestByID(req.ID)
+	if err != nil && sb == nil {
 		return
 	}
 	cdb := s.getCollection(req.ID)
-	if cdb.getIndex() != latest.Index {
-		err = errors.New("index mismatch while getting proof")
+	if cdb.getIndex() > sb.Index {
+		err = errors.New("invalid index while getting proof")
 		return
 	}
-	proof, err := NewProof(cdb, s.db(), latest.Hash, req.Key)
+	// TODO can cdb.getIndex change in this loop?
+	for cdb.getIndex() != -1 && sb.Index > cdb.getIndex() {
+		if len(sb.BackLinkIDs) < 1 || sb.BackLinkIDs[0] == nil {
+			break
+		}
+		sb = s.db().GetByID(sb.BackLinkIDs[0])
+		if sb == nil {
+			err = errors.New("invalid back link")
+			return
+		}
+	}
+	if sb.Index != cdb.getIndex() {
+		err = errors.New("couldn't find block with matching index")
+		return
+	}
+
+	proof, err := NewProof(cdb, s.db(), sb.Hash, req.Key)
 	if err != nil {
 		return
 	}

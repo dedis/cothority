@@ -212,6 +212,9 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		require.NoError(t, err)
 		require.NoError(t, err2)
 		require.True(t, pr.InclusionProof.Match())
+
+		// Wait for tasks to finish.
+		time.Sleep(time.Second)
 	}
 }
 
