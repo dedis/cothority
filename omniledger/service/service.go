@@ -7,6 +7,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -654,11 +655,11 @@ func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error
 
 // LoadBlockInfo loads the block interval and the maximum size from the skipchain ID.
 func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int, error) {
-	coll := s.getCollection(scID)
-	if coll == nil {
+	cv := s.GetCollectionView(scID)
+	if cv == nil {
 		return defaultInterval, defaultMaxBlockSize, nil
 	}
-	config, err := loadConfigFromColl(coll)
+	config, err := loadConfigFromColl(cv)
 	if err != nil {
 		if err == errKeyNotSet {
 			err = nil
@@ -753,11 +754,11 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 				log.Lvl3("Counting how many transactions fit in", interval/2)
 				cdb := s.getCollection(scID)
 				then := time.Now()
-				_, txOut, sc := s.createStateChanges(cdb.coll, scID, txIn, interval/2)
+				_, txOut, _ := s.createStateChanges(cdb.coll, scID, txIn, interval/2)
 
 				txs = txs[len(txOut):]
 				if len(txs) > 0 {
-					sz := stateSize(sc)
+					sz := txrSize(txOut)
 					log.Warnf("%d transactions (%v bytes) included in block in %v, %d transactions left for the next block", len(txOut), sz, time.Now().Sub(then), len(txs))
 				}
 
@@ -893,9 +894,30 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	return true
 }
 
-func stateSize(scs []StateChange) (out int) {
-	for _, x := range scs {
-		out += len(x.InstanceID) + len(x.ContractID) + len(x.Value) + len(x.DarcID)
+func txSize(tx ClientTransaction) int {
+	// It's too bad to have to marshal this and throw it away just to know
+	// how big it would be. Protobuf should support finding the length without
+	// copying the data.
+	buf, err := protobuf.Encode(tx)
+	if err != nil {
+		// It's fairly inconceivable that we're going to be getting
+		// error from this Encode() but return a big number in case,
+		// so that the caller will reject whatever this bad input is.
+		return math.MaxInt32
+	}
+	return len(buf)
+}
+
+func txrSize(txr TxResults) (out int) {
+	for _, x := range txr {
+		buf, err := protobuf.Encode(&x)
+		if err != nil {
+			// It's fairly inconceivable that we're going to be getting
+			// error from this Encode() but return a big number in case,
+			// so that the caller will reject whatever this bad input is.
+			return math.MaxInt32
+		}
+		out += len(buf)
 	}
 	return
 }
@@ -963,25 +985,27 @@ clientTransactions:
 			}
 			states = append(states, scs...)
 			cin = cout
-			txsz += stateSize(scs)
 		}
+		txsz += txrSize([]TxResult{tx})
 
+		// If the size of this one transaction alone is bigger than one block, it has to be rejected so it
+		// cannot sit on the front of the queue blocking all others.
 		if txsz > maxsz {
-			log.Errorf("%s Contract created state changes of size %v, rejected.", s.ServerIdentity(), txsz)
-			tx.Accepted = false
-			txOut = append(txOut, tx)
+			log.Errorf("%s transaction size %v is bigger than one block (%v), dropping it.", s.ServerIdentity(), txsz, maxsz)
 			continue clientTransactions
 		}
 
-		// timeout is ONLY used when the leader calls createStateChanges as
+		// Planning mode:
+		//
+		// Timeout is used when the leader calls createStateChanges as
 		// part of planning which transactions fit into one block.
 		if timeout != noTimeout {
 			if time.Now().After(deadline) {
 				return
 			}
 
-			// We are in planning mode, so if the last txn would have made the state changes
-			// too big, return just like we do for a timeout. The caller will make a block with
+			// If the last txn would have made the state changes too big, return
+			// just like we do for a timeout. The caller will make a block with
 			// what's in txOut.
 			if blocksz+txsz > maxsz {
 				log.Lvlf3("stopping block creation when %v > %v, with len(txOut) of %v", blocksz+txsz, maxsz, len(txOut))

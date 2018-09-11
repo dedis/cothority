@@ -25,7 +25,6 @@ import (
 var tSuite = suites.MustFind("Ed25519")
 var dummyContract = "dummy"
 var slowContract = "slow"
-var giantContract = "giant"
 var invalidContract = "invalid"
 var testInterval = 500 * time.Millisecond
 
@@ -504,10 +503,10 @@ func TestService_FloodLedger(t *testing.T) {
 }
 
 func TestService_BigTx(t *testing.T) {
-	// Use 1 second block interval for this test, as sending around these big blocks
-	// gets to be too close to the edge with the normal 100ms testing interval, and
+	// Use longer block interval for this test, as sending around these big blocks
+	// gets to be too close to the edge with the normal short testing interval, and
 	// starts generating errors-that-might-not-be-errors.
-	s := newSer(t, 1, 1*time.Second)
+	s := newSer(t, 1, 200*time.Millisecond)
 	defer s.local.CloseAll()
 
 	// Check block number before.
@@ -516,14 +515,21 @@ func TestService_BigTx(t *testing.T) {
 	latest := reply.Update[len(reply.Update)-1]
 	require.Equal(t, 0, latest.Index)
 
+	// During this test, send values that are 3/4 as big as one block.
+	save := s.value
+	s.value = make([]byte, defaultMaxBlockSize/4*3)
+
 	log.Lvl1("Create 2 giant transactions and 1 little one, wait for the 3rd one")
-	_, e1, e2 := sendTransaction(t, s, 0, giantContract, 0)
+	_, e1, e2 := sendTransaction(t, s, 0, dummyContract, 0)
 	require.NoError(t, e1)
 	require.NoError(t, e2)
-	_, e1, e2 = sendTransaction(t, s, 0, giantContract, 0)
+	_, e1, e2 = sendTransaction(t, s, 0, dummyContract, 0)
 	require.NoError(t, e1)
 	require.NoError(t, e2)
-	p, e1, e2 := sendTransaction(t, s, 0, dummyContract, 2)
+
+	// Back to little values again for the last tx.
+	s.value = save
+	p, e1, e2 := sendTransaction(t, s, 0, dummyContract, 10)
 	require.NoError(t, e1)
 	require.NoError(t, e2)
 	require.True(t, p.InclusionProof.Match())
@@ -1318,7 +1324,7 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 	registerDummy(s.hosts)
 
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster,
-		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "spawn:giant", "invoke:update_config", "spawn:slow", "spawn:stateShangeCacheTest", "delete"}, s.signer.Identity())
+		[]string{"spawn:dummy", "spawn:invalid", "spawn:panic", "spawn:darc", "invoke:update_config", "spawn:slow", "spawn:stateShangeCacheTest", "delete"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.darc = &genesisMsg.GenesisDarc
 
@@ -1329,7 +1335,6 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 		switch i {
 		case 0:
 			resp, err := s.service().CreateGenesisBlock(genesisMsg)
-			// The problem here is that the config is being created with MaxBloclSize == 0. Why? Where?
 			require.Nil(t, err)
 			s.sb = resp.Skipblock
 		case 1:
@@ -1390,40 +1395,12 @@ func slowContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateCh
 	return dummyContractFunc(cdb, inst, c)
 }
 
-func giantContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
-	err := inst.VerifyDarcSignature(cdb)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	_, _, darcID, err := cdb.GetValues(inst.InstanceID.Slice())
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// stuff itself fills up 1/4 of a block.
-	stuff := make([]byte, defaultMaxBlockSize/4)
-
-	switch inst.GetType() {
-	case SpawnType:
-		return []StateChange{
-			// Send stuff 3 times, so that this txn fills up 3/4 of a block.
-			NewStateChange(Create, NewInstanceID(inst.Hash()), inst.Spawn.ContractID, stuff, darcID),
-			NewStateChange(Create, inst.DeriveID("one"), inst.Spawn.ContractID, stuff, darcID),
-			NewStateChange(Create, inst.DeriveID("two"), inst.Spawn.ContractID, stuff, darcID),
-		}, nil, nil
-	default:
-		panic("should not get here")
-	}
-}
-
 func registerDummy(servers []*onet.Server) {
 	// For testing - there must be a better way to do that. But putting
 	// services []skipchain.GetService in the method signature doesn't work :(
 	for _, s := range servers {
 		RegisterContract(s, dummyContract, dummyContractFunc)
 		RegisterContract(s, slowContract, slowContractFunc)
-		RegisterContract(s, giantContract, giantContractFunc)
 		RegisterContract(s, invalidContract, invalidContractFunc)
 	}
 }
