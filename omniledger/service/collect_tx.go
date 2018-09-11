@@ -26,6 +26,7 @@ type CollectTxProtocol struct {
 	responseChan chan structCollectTxResponse
 	getTxs       getTxsCallback
 	Finish       chan bool
+	closing      chan bool
 }
 
 // CollectTxRequest is the request message that asks the receiver to send their
@@ -62,6 +63,7 @@ func NewCollectTxProtocol(getTxs getTxsCallback) func(*onet.TreeNodeInstance) (o
 			TxsChan: make(chan []ClientTransaction, len(node.List())),
 			getTxs:  getTxs,
 			Finish:  make(chan bool),
+			closing: make(chan bool),
 		}
 		if err := node.RegisterChannels(&c.requestChan, &c.responseChan); err != nil {
 			return c, err
@@ -111,6 +113,8 @@ func (p *CollectTxProtocol) Dispatch() error {
 		// This timeout checks whether the root started the protocol,
 		// it is not like our usual timeout that detect failures.
 		return errors.New("did not receive request")
+	case <-p.closing:
+		return errors.New("closing down system")
 	}
 
 	// send the result of the callback to the root
@@ -136,8 +140,16 @@ func (p *CollectTxProtocol) Dispatch() error {
 				p.TxsChan <- resp.Txs
 			case <-p.Finish:
 				return nil
+			case <-p.closing:
+				return nil
 			}
 		}
 	}
+	return nil
+}
+
+// Shutdown closes the closing channel to abort any waiting on messages.
+func (p *CollectTxProtocol) Shutdown() error {
+	close(p.closing)
 	return nil
 }

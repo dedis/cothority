@@ -9,58 +9,81 @@ import (
 	"github.com/dedis/kyber/sign/anon"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
 
-// DB-versioning, allows propoer passage from one version to another. This example
-// shows how to handle the case where there was no previous versioning in the
-// database, and we already have two possible incompatible versions out there,
-// version 0a and 0b. Version 1 will be the correct one.
-//
-// loadVersion starts trying to get version 1, but only if the database returns
-// the correct version. If the version is 0 (or nonexistant), then it calls first
-// updateFrom0a, if that fails it tries updateFrom0b and if all fails it returns an error.
-//
-// In case of a future incompatible change, one would have to add `updateFrom1` which
-// would call `updateFrom0` if the version < 1. `updateFrom1` would return `storage2`.
-// And the `Service` structure would use `storage2` for the up-to-date storage
-// version.
-
 const dbVersion = 1
 
 var storageKey = []byte("storage")
-var versionKey = []byte("version")
 
-func loadVersion(l onet.ContextDB) (*storage1, error) {
-	vers, err := l.LoadVersion()
-	if err != nil {
-		return nil, err
-	}
-	if vers < dbVersion {
-		storage, err := updateFrom0(l, vers)
-		if err != nil {
-			return nil, err
-		}
-
-		// TODO: this is really ugly...
-		if c, ok := l.(*onet.Context); ok {
-			err = c.Save(storageKey, storage)
-		}
-		err = l.SaveVersion(dbVersion)
-		return storage, err
-	}
-	sInt, err := l.Load(storageKey)
-	if err != nil {
-		return nil, err
-	}
-	if sInt == nil {
-		return &storage1{}, nil
-	}
-	return sInt.(*storage1), err
+func init() {
+	network.RegisterMessage(&storage1{})
 }
 
-// storage1 holds the map to the storages so it can be marshaled.
+// saves all data.
+func (s *Service) save() error {
+	s.storageMutex.Lock()
+	defer s.storageMutex.Unlock()
+	err := s.Save(storageKey, s.Storage)
+	if err != nil {
+		log.Error("Couldn't save data:", err)
+	}
+	return nil
+}
+
+// Tries to load the configuration and updates the data in the service
+// if it finds a valid config-file.
+func (s *Service) tryLoad() error {
+	s.Storage = &storage1{}
+	defer func() {
+		if s.Storage.Identities == nil {
+			s.Storage.Identities = make(map[string]*IDBlock)
+		}
+		if s.Storage.Auth == nil {
+			s.Storage.Auth = &authData1{}
+		}
+		if len(s.Storage.Auth.Pins) == 0 {
+			s.Storage.Auth.Pins = map[string]bool{}
+		}
+		if len(s.Storage.Auth.Nonces) == 0 {
+			s.Storage.Auth.Nonces = map[string]bool{}
+		}
+		if s.Storage.Auth.Sets == nil {
+			s.Storage.Auth.Sets = []anonSet1{}
+		}
+		if s.Storage.Auth.AdminKeys == nil {
+			s.Storage.Auth.AdminKeys = []kyber.Point{}
+		}
+	}()
+	ver, err := s.LoadVersion()
+	if err != nil {
+		return err
+	}
+	if ver < dbVersion {
+		// There are two version 0s...
+		s.Storage, err = updateFrom0(s, ver)
+		if err != nil {
+			return err
+		}
+		if err = s.save(); err != nil {
+			return err
+		}
+		return s.SaveVersion(dbVersion)
+	}
+	buf, err := s.LoadRaw(storageKey)
+	if err != nil {
+		return err
+	}
+	if len(buf) <= 16 {
+		return nil
+	}
+	return protobuf.DecodeWithConstructors(buf[16:], s.Storage,
+		network.DefaultConstructors(cothority.Suite))
+}
+
+// storage2 holds the map to the storages so it can be marshaled.
 type storage1 struct {
 	Identities map[string]*IDBlock
 	// The key that is stored in the skipchain service to authenticate

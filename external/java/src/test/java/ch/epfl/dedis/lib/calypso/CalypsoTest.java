@@ -5,9 +5,11 @@ import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.crypto.Encryption;
 import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.omniledger.Argument;
 import ch.epfl.dedis.lib.omniledger.InstanceId;
 import ch.epfl.dedis.lib.omniledger.OmniledgerRPC;
 import ch.epfl.dedis.lib.omniledger.Proof;
+import ch.epfl.dedis.lib.omniledger.contracts.DarcInstance;
 import ch.epfl.dedis.lib.omniledger.darc.Darc;
 import ch.epfl.dedis.lib.omniledger.darc.Rules;
 import ch.epfl.dedis.lib.omniledger.darc.Signer;
@@ -27,15 +29,17 @@ class CalypsoTest {
     class Pair<A, B> {
         A a;
         B b;
+
         Pair(A a, B b) {
             this.a = a;
             this.b = b;
         }
     }
+
     private OmniledgerRPC ol;
-    private Signer admin;
-    private Darc genesisDarc;
     private CreateLTSReply ltsReply;
+    private Darc testDarc;
+    private Signer testSigner;
 
     private final static Logger logger = LoggerFactory.getLogger(WriterInstanceTest.class);
     private TestServerController testInstanceController;
@@ -43,18 +47,25 @@ class CalypsoTest {
     @BeforeEach
     void initAll() throws Exception {
         testInstanceController = TestServerInit.getInstance();
-        admin = new SignerEd25519();
+        Signer admin = new SignerEd25519();
         Rules rules = Darc.initRules(Arrays.asList(admin.getIdentity()),
                 Arrays.asList(admin.getIdentity()));
-        rules.addRule("spawn:calypsoWrite", admin.getIdentity().toString().getBytes());
-        rules.addRule("spawn:calypsoRead", admin.getIdentity().toString().getBytes());
-        genesisDarc = new Darc(rules, "genesis".getBytes());
-
+        rules.addRule("spawn:darc", admin.getIdentity().toString().getBytes());
+        Darc genesisDarc = new Darc(rules, "genesis".getBytes());
         ol = new OmniledgerRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
         if (!ol.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
 
+        // Spawn a new darc with the calypso read/write rules for a new signer.
+        DarcInstance dc = new DarcInstance(ol, genesisDarc);
+        testSigner = new SignerEd25519();
+        testDarc = new Darc(Arrays.asList(testSigner.getIdentity()), Arrays.asList(testSigner.getIdentity()), "calypso darc".getBytes());
+        testDarc.setRule("spawn:calypsoWrite", testSigner.getIdentity().toString().getBytes());
+        testDarc.setRule("spawn:calypsoRead", testSigner.getIdentity().toString().getBytes());
+        dc.spawnContractAndWait("darc", admin, Argument.NewList("darc", testDarc.toProto().toByteArray()), 10);
+
+        // Run the DKG.
         ltsReply = CalypsoRPC.createLTS(ol.getRoster(), ol.getGenesis().getId());
     }
 
@@ -84,18 +95,18 @@ class CalypsoTest {
             assertTrue(e.getMessage().contains("read doesn't point to passed write"));
         }
 
-        logger.info("trying decrypt 1, pk: " + admin.getPublic().toString());
-        byte[] key1 = getKeyMaterial(pr1, pw1, admin.getPrivate());
+        logger.info("trying decrypt 1, pk: " + testSigner.getPublic().toString());
+        byte[] key1 = getKeyMaterial(pr1, pw1, testSigner.getPrivate());
         assertTrue(Arrays.equals(secret1.getBytes(), Encryption.decryptData(w1.a.getDataEnc(), key1)));
 
-        logger.info("trying decrypt 2, pk: " + admin.getPublic().toString());
-        byte[] key2 = getKeyMaterial(pr2, pw2, admin.getPrivate());
+        logger.info("trying decrypt 2, pk: " + testSigner.getPublic().toString());
+        byte[] key2 = getKeyMaterial(pr2, pw2, testSigner.getPrivate());
         assertTrue(Arrays.equals(secret2.getBytes(), Encryption.decryptData(w2.a.getDataEnc(), key2)));
     }
 
     Pair<WriteRequest, WriterInstance> createWriterInstance(String secret) throws Exception {
-        WriteRequest wr = new WriteRequest(secret, 16, genesisDarc.getId());
-        WriterInstance w = new WriterInstance(ol, Arrays.asList(admin), genesisDarc.getId(), ltsReply, wr);
+        WriteRequest wr = new WriteRequest(secret, 16, testDarc.getId());
+        WriterInstance w = new WriterInstance(ol, Arrays.asList(testSigner), testDarc.getId(), ltsReply, wr);
 
         Proof p = ol.getProof(w.getInstance().getId());
         assertTrue(p.matches());
@@ -104,8 +115,8 @@ class CalypsoTest {
     }
 
     Pair<ReadRequest, ReaderInstance> createReaderInstance(InstanceId writerId) throws Exception {
-        ReadRequest rr = new ReadRequest(writerId, admin.getPublic());
-        ReaderInstance r = new ReaderInstance(ol, Arrays.asList(admin), genesisDarc.getId(), rr);
+        ReadRequest rr = new ReadRequest(writerId, testSigner.getPublic());
+        ReaderInstance r = new ReaderInstance(ol, Arrays.asList(testSigner), testDarc.getId(), rr);
         assertTrue(ol.getProof(r.getInstance().getId()).matches());
         return new Pair(rr, r);
     }

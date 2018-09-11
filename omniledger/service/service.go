@@ -26,6 +26,12 @@ import (
 	"gopkg.in/satori/go.uuid.v1"
 )
 
+// This is to boost the acceptable timestamp window when dealing with
+// very short block intervals, like in testing. If a production OmniLedger
+// had a block interval of 30 seconds, for example, this minimum will
+// not trigger, and the acceptable window would be ± 30 sec.
+var minTimestampWindow = 10 * time.Second
+
 const invokeEvolve darc.Action = darc.Action("invoke:evolve")
 
 const rotationWindow time.Duration = 10
@@ -288,11 +294,36 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		return nil, errors.New("version mismatch")
 	}
 	log.Lvlf2("%s Getting proof for key %x on sc %x", s.ServerIdentity(), req.Key, req.ID)
-	latest, err := s.db().GetLatestByID(req.ID)
-	if err != nil && latest == nil {
+
+	// Get the collection database and the latest skipblock, if the latest
+	// skipblock does not have the same index as the one in the collection
+	// then we look back for one that does.
+	sb, err := s.db().GetLatestByID(req.ID)
+	if err != nil && sb == nil {
 		return
 	}
-	proof, err := NewProof(s.getCollection(req.ID), s.db(), latest.Hash, req.Key)
+	cdb := s.getCollection(req.ID)
+	if cdb.getIndex() > sb.Index {
+		err = errors.New("invalid index while getting proof")
+		return
+	}
+	// TODO can cdb.getIndex change in this loop?
+	for cdb.getIndex() != -1 && sb.Index > cdb.getIndex() {
+		if len(sb.BackLinkIDs) < 1 || sb.BackLinkIDs[0] == nil {
+			break
+		}
+		sb = s.db().GetByID(sb.BackLinkIDs[0])
+		if sb == nil {
+			err = errors.New("invalid back link")
+			return
+		}
+	}
+	if sb.Index != cdb.getIndex() {
+		err = errors.New("couldn't find block with matching index")
+		return
+	}
+
+	proof, err := NewProof(cdb, s.db(), sb.Hash, req.Key)
 	if err != nil {
 		return
 	}
@@ -844,12 +875,6 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		}
 	}
 
-	// This is to boost the acceptable timestamp window when dealing with
-	// very short block intervals, like in testing. If a production OmniLedger
-	// had a block interval of 5 seconds, for example, this minimum
-	// not trigger, and the acceptable window would be ± 10 sec.
-	const minTimestampWindow = 1 * time.Second
-
 	window := 4 * config.BlockInterval
 	if window < minTimestampWindow {
 		window = minTimestampWindow
@@ -1344,6 +1369,14 @@ func (s *Service) save() {
 }
 
 func (s *Service) trySyncAll() {
+	s.closedMutex.Lock()
+	if s.closed {
+		s.closedMutex.Unlock()
+		return
+	}
+	s.working.Add(1)
+	defer s.working.Done()
+	s.closedMutex.Unlock()
 	gas := &skipchain.GetAllSkipChainIDs{}
 	gasr, err := s.skService().GetAllSkipChainIDs(gas)
 	if err != nil {

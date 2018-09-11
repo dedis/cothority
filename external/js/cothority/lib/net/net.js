@@ -4,7 +4,7 @@ const topl = require("topl");
 const UUID = require("pure-uuid");
 const protobuf = require("protobufjs");
 const co = require("co");
-const shuffle = require("crypto-shuffle");
+const shuffle = require("shuffle-array");
 const WS = require("ws");
 
 const root = require("../protobuf/index.js").root;
@@ -51,6 +51,7 @@ function Socket(addr, service) {
       }
 
       // This makes the API consistent with nativescript-websockets
+
       if (typeof ws.open === "function") {
         ws._notify = ws._notifyBrowser;
         Object.defineProperty(WS.prototype, "_notify", {

@@ -135,7 +135,8 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 		s.storage.Unlock()
 		return nil, errors.New("don't know the LTSID stored in write")
 	}
-	scID := s.storage.OLIDs[string(write.LTSID)]
+	scID := make([]byte, 32)
+	copy(scID, s.storage.OLIDs[string(write.LTSID)])
 	s.storage.Unlock()
 	if err = dkr.Read.Verify(scID); err != nil {
 		return nil, errors.New("read proof cannot be verified to come from scID: " + err.Error())
