@@ -14,10 +14,10 @@ import (
 // NewProof creates a proof for key in the skipchain with the given id. It uses
 // the collectionDB to look up the key and the skipblockdb to create the correct
 // proof for the forward links.
-func NewProof(c *collectionDB, s *skipchain.SkipBlockDB, id skipchain.SkipBlockID,
+func NewProof(c CollectionView, s *skipchain.SkipBlockDB, id skipchain.SkipBlockID,
 	key []byte) (p *Proof, err error) {
 	p = &Proof{}
-	p.InclusionProof, err = c.coll.Get(key).Proof()
+	p.InclusionProof, err = c.Get(key).Proof()
 	if err != nil {
 		return
 	}
