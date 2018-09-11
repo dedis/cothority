@@ -13,4 +13,5 @@ import (
 	_ "github.com/dedis/cothority/ocs/service"
 	_ "github.com/dedis/cothority/omniledger/contracts"
 	_ "github.com/dedis/cothority/omniledger/service"
+	_ "github.com/dedis/cothority/personhood"
 )

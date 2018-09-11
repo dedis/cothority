@@ -1,6 +1,6 @@
 {
   "name": "@dedis/cothority",
-  "version": "1.1.16",
+  "version": "1.1.17",
   "description": "module for interacting with cothority nodes",
   "main": "dist/bundle.node.min.js",
   "browser": "dist/bundle.min.js",
@@ -24,7 +24,7 @@
   "dependencies": {
     "@dedis/kyber-js": "^0.0.10",
     "co": "^4.6.0",
-    "crypto-shuffle": "^1.0.1",
+    "shuffle-array": "^1.0.1",
     "protobufjs": "^6.8.6",
     "pure-uuid": "^1.5.0",
     "topl": "^0.3.1",

@@ -6,7 +6,8 @@ This holds the messages used to communicate with the service over the network.
 
 import (
 	"github.com/dedis/cothority/omniledger/darc"
-	ol "github.com/dedis/cothority/omniledger/service"
+	// Use omniledger here so that the correct package will be included in protobuf.
+	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
@@ -192,7 +193,7 @@ type GetFinalStatementsReply struct {
 // StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
 type StoreInstanceID struct {
 	PartyID    []byte
-	InstanceID ol.InstanceID
+	InstanceID omniledger.InstanceID
 }
 
 // StoreInstanceIDReply is an empty reply
@@ -206,7 +207,7 @@ type GetInstanceID struct {
 
 // GetInstanceIDReply is the InstanceID for the party
 type GetInstanceIDReply struct {
-	InstanceID ol.InstanceID
+	InstanceID omniledger.InstanceID
 }
 
 // StoreSigner writes an Signer from OmniLedger to a FinalStatement.
@@ -267,10 +268,10 @@ type PopPartyInstance struct {
 	FinalStatement *FinalStatement
 	// Previous is the link to the instanceID of the previous party, it can be
 	// nil for the first party.
-	Previous ol.InstanceID
+	Previous omniledger.InstanceID
 	// Next is a link to the omniledger instanceID of the next party. It can be
 	// nil if there is no next party.
-	Next ol.InstanceID
+	Next omniledger.InstanceID
 	// Public key of service - can be nil.
 	Service kyber.Point `protobuf:"opt"`
 }

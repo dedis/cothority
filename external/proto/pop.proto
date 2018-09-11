@@ -1,6 +1,7 @@
 syntax = "proto2";
 package pop;
 import "onet.proto";
+import "darc.proto";
 
 option java_package = "ch.epfl.dedis.proto";
 option java_outer_classname = "PoPProto";
@@ -36,7 +37,7 @@ message FinalStatement {
   repeated bytes attendees = 2;
   // Signature is created by all conodes responsible for that pop-party
   required bytes signature = 3;
-  // Flag indicates, that party was merged
+  // Flag indicates that party was merged
   required bool merged = 4;
 }
 
@@ -140,4 +141,108 @@ message VerifyLink {
 // VerifyLinkReply returns true if the public key is in the admin-list.
 message VerifyLinkReply {
   required bool exists = 1;
+}
+
+// GetLink returns the public key of the linked organizer.
+message GetLink {
+}
+
+// GetLinkReply holds the public key of the linked organizer.
+message GetLinkReply {
+  required bytes public = 1;
+}
+
+// GetFinalStatements returns all stored final statements.
+message GetFinalStatements {
+}
+
+// GetFinalStatementsReply returns all stored final statements.
+message GetFinalStatementsReply {
+   map<string, FinalStatement> finalstatements = 1;
+}
+
+// StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
+message StoreInstanceID {
+  required bytes partyid = 1;
+  required bytes instanceid = 2;
+}
+
+// StoreInstanceIDReply is an empty reply
+message StoreInstanceIDReply {
+}
+
+// GetInstanceID requests an InstanceID from OmniLedger to a FinalStatement.
+message GetInstanceID {
+  required bytes partyid = 1;
+}
+
+// GetInstanceIDReply is the InstanceID for the party
+message GetInstanceIDReply {
+  required bytes instanceid = 1;
+}
+
+// StoreSigner writes an Signer from OmniLedger to a FinalStatement.
+message StoreSigner {
+  required bytes partyid = 1;
+  required darc.Signer signer = 2;
+}
+
+// StoreSignerReply is an empty reply
+message StoreSignerReply {
+}
+
+// GetSigner requests an Signer from OmniLedger to a FinalStatement.
+message GetSigner {
+  required bytes partyid = 1;
+}
+
+// GetSignerReply is the Signer for the party
+message GetSignerReply {
+  required darc.Signer signer = 1;
+}
+
+// StoreKeys stores a list of keys for attendees to retrieve
+// later.
+message StoreKeys {
+  // ID is the ID of the party where we want to store intermediate keys
+  required bytes id = 1;
+  // Keys is a list of public keys to store
+  repeated bytes keys = 2;
+  // Signature proves that the organizer updated the keys
+  required bytes signature = 3;
+}
+
+// StoreKeysReply is an empty message.
+message StoreKeysReply {
+}
+
+// GetKeys can be used to retrieve the keyset for a given party - useful
+// for an attendee to know if his key has been scanned.
+message GetKeys {
+  required bytes id = 1;
+}
+
+// GetKeysReply returns the keys stored for a given Party-ID.
+message GetKeysReply {
+  required bytes id = 1;
+  repeated bytes keys = 2;
+}
+
+// PopPartyInstance is the data that is stored in a pop-party instance.
+message PopPartyInstance {
+  // State has one of the following values:
+  // 1: it is a configuration only
+  // 2: it is a finalized pop-party
+  required sint32 state = 1;
+  // FinalStatement has either only the Desc inside if State == 1, or all fields
+  // set if State == 2.
+  optional FinalStatement finalstatement = 2;
+  // Previous is the link to the instanceID of the previous party, it can be
+  // nil for the first party.
+  required bytes previous = 3;
+  // Next is a link to the omniledger instanceID of the next party. It can be
+  // nil if there is no next party.
+  required bytes next = 4;
+  // Public key of service - can be nil.
+  optional bytes service = 5;
 }
