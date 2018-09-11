@@ -75,6 +75,7 @@ type Service struct {
 	closed                  bool
 	closedMutex             sync.Mutex
 	working                 sync.WaitGroup
+	closing                 chan bool
 }
 
 type chainLocker struct {
@@ -500,6 +501,8 @@ func (s *Service) getBlocks(roster *onet.Roster, id SkipBlockID, n int) ([]*Skip
 		return result, nil
 	case <-time.After(s.propTimeout):
 		return nil, errors.New("timeout waiting for GetBlocks reply")
+	case <-s.closing:
+		return nil, errors.New("closing")
 	}
 }
 
@@ -872,6 +875,7 @@ func (s *Service) TestClose() {
 		for _, fct := range s.Storage.Follow {
 			fct.Shutdown()
 		}
+		close(s.closing)
 		s.closedMutex.Unlock()
 		s.working.Wait()
 	} else {
@@ -1276,6 +1280,8 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 		return &sig, nil
 	case <-time.After(root.Timeout * 2):
 		return nil, errors.New("timed out while waiting for signature")
+	case <-s.closing:
+		return nil, errors.New("closing down")
 	}
 }
 
@@ -1504,6 +1510,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 		Storage:          &Storage{},
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 		propTimeout:      defaultPropagateTimeout,
+		closing:          make(chan bool),
 	}
 
 	if err := s.tryLoad(); err != nil {

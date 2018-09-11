@@ -101,11 +101,6 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 			}
 		case "transfer":
 			// transfer sends a given amount of coins to another account.
-			err = ci.SafeSub(coinsArg)
-			if err != nil {
-				return
-			}
-
 			target := inst.Invoke.Args.Search("destination")
 			var (
 				v   []byte
@@ -125,6 +120,10 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 			if err != nil {
 				return nil, nil, errors.New("couldn't unmarshal target account: " + err.Error())
 			}
+			err = ci.SafeSub(coinsArg)
+			if err != nil {
+				return
+			}
 			err = targetCI.SafeAdd(coinsArg)
 			if err != nil {
 				return
@@ -134,7 +133,7 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 				return nil, nil, errors.New("couldn't marshal target account: " + err.Error())
 			}
 
-			log.Lvlf3("transferring %d to %x", coinsArg, target)
+			log.Lvlf1("transferring %d to %x", coinsArg, target)
 			sc = append(sc, ol.NewStateChange(ol.Update, ol.NewInstanceID(target),
 				ContractCoinID, targetBuf, did))
 		case "fetch":

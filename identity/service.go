@@ -686,9 +686,9 @@ func (s *Service) getIdentityStorage(id ID) *IDBlock {
 // setIdentityStorage saves an IdentityStorage
 func (s *Service) setIdentityStorage(id ID, is *IDBlock) {
 	s.storageMutex.Lock()
-	defer s.storageMutex.Unlock()
 	log.Lvlf3("%s %x %v", s.Context.ServerIdentity(), id[0:8], is.Latest.Device)
 	s.Storage.Identities[string(id)] = is
+	s.storageMutex.Unlock()
 	s.save()
 }
 
@@ -709,50 +709,8 @@ func (s *Service) verifySkipchainAuth() kyber.Scalar {
 	return nil
 }
 
-// saves the actual identity
-func (s *Service) save() {
-	log.Lvl3("Saving service")
-	err := s.Save(storageKey, s.Storage)
-	if err != nil {
-		log.Error("Couldn't save file:", err)
-	}
-}
-
 func (s *Service) clearIdentities() {
 	s.Storage.Identities = make(map[string]*IDBlock)
-}
-
-// Tries to load the configuration and updates if a configuration
-// is found, else it returns an error.
-func (s *Service) tryLoad() error {
-	var err error
-	s.Storage, err = loadVersion(s)
-	if err != nil {
-		return err
-	}
-	if s.Storage == nil {
-		s.Storage = &storage1{}
-	}
-	if s.Storage.Identities == nil {
-		s.Storage.Identities = make(map[string]*IDBlock)
-	}
-	if s.Storage.Auth == nil {
-		s.Storage.Auth = &authData1{}
-	}
-	if len(s.Storage.Auth.Pins) == 0 {
-		s.Storage.Auth.Pins = map[string]bool{}
-	}
-	if len(s.Storage.Auth.Nonces) == 0 {
-		s.Storage.Auth.Nonces = map[string]bool{}
-	}
-	if s.Storage.Auth.Sets == nil {
-		s.Storage.Auth.Sets = []anonSet1{}
-	}
-	if s.Storage.Auth.AdminKeys == nil {
-		s.Storage.Auth.AdminKeys = []kyber.Point{}
-	}
-	log.Lvl3("Successfully loaded")
-	return nil
 }
 
 func newIdentityService(c *onet.Context) (onet.Service, error) {
