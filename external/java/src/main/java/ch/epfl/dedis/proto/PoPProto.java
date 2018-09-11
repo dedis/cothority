@@ -76,9 +76,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -90,6 +87,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -109,13 +113,6 @@ public final class PoPProto {
               bitField0_ |= 0x00000002;
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -133,7 +130,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_ShortDesc_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_ShortDesc_fieldAccessorTable
@@ -206,7 +202,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -226,7 +221,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -238,7 +232,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -371,7 +364,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -379,7 +371,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.ShortDesc prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -408,7 +399,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_ShortDesc_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_ShortDesc_fieldAccessorTable
@@ -432,7 +422,6 @@ public final class PoPProto {
           getRosterFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         location_ = "";
@@ -446,18 +435,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_ShortDesc_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.ShortDesc getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.ShortDesc.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.ShortDesc build() {
         ch.epfl.dedis.proto.PoPProto.ShortDesc result = buildPartial();
         if (!result.isInitialized()) {
@@ -466,7 +452,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.ShortDesc buildPartial() {
         ch.epfl.dedis.proto.PoPProto.ShortDesc result = new ch.epfl.dedis.proto.PoPProto.ShortDesc(this);
         int from_bitField0_ = bitField0_;
@@ -488,39 +473,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.ShortDesc) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.ShortDesc)other);
@@ -545,7 +523,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasLocation()) {
           return false;
@@ -558,7 +535,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -771,13 +747,11 @@ public final class PoPProto {
         }
         return rosterBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -799,12 +773,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ShortDesc>
         PARSER = new com.google.protobuf.AbstractParser<ShortDesc>() {
-      @java.lang.Override
       public ShortDesc parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ShortDesc(input, extensionRegistry);
+          return new ShortDesc(input, extensionRegistry);
       }
     };
 
@@ -817,7 +790,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.ShortDesc getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1011,9 +983,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1025,6 +994,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -1065,13 +1041,6 @@ public final class PoPProto {
                   input.readMessage(ch.epfl.dedis.proto.PoPProto.ShortDesc.PARSER, extensionRegistry));
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1092,7 +1061,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopDesc_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopDesc_fieldAccessorTable
@@ -1355,7 +1323,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1389,7 +1356,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1410,7 +1376,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -1577,7 +1542,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -1585,7 +1549,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.PopDesc prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -1613,7 +1576,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopDesc_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopDesc_fieldAccessorTable
@@ -1638,7 +1600,6 @@ public final class PoPProto {
           getPartiesFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         name_ = "";
@@ -1662,18 +1623,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopDesc_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.PopDesc getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.PopDesc.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.PopDesc build() {
         ch.epfl.dedis.proto.PoPProto.PopDesc result = buildPartial();
         if (!result.isInitialized()) {
@@ -1682,7 +1640,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.PopDesc buildPartial() {
         ch.epfl.dedis.proto.PoPProto.PopDesc result = new ch.epfl.dedis.proto.PoPProto.PopDesc(this);
         int from_bitField0_ = bitField0_;
@@ -1721,39 +1678,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.PopDesc) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.PopDesc)other);
@@ -1814,7 +1764,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasName()) {
           return false;
@@ -1838,7 +1787,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2629,13 +2577,11 @@ public final class PoPProto {
         }
         return partiesBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -2657,12 +2603,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<PopDesc>
         PARSER = new com.google.protobuf.AbstractParser<PopDesc>() {
-      @java.lang.Override
       public PopDesc parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new PopDesc(input, extensionRegistry);
+          return new PopDesc(input, extensionRegistry);
       }
     };
 
@@ -2675,7 +2620,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.PopDesc getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -2755,7 +2699,7 @@ public final class PoPProto {
 
     /**
      * <pre>
-     * Flag indicates, that party was merged
+     * Flag indicates that party was merged
      * </pre>
      *
      * <code>required bool merged = 4;</code>
@@ -2763,7 +2707,7 @@ public final class PoPProto {
     boolean hasMerged();
     /**
      * <pre>
-     * Flag indicates, that party was merged
+     * Flag indicates that party was merged
      * </pre>
      *
      * <code>required bool merged = 4;</code>
@@ -2803,9 +2747,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2817,6 +2758,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.proto.PoPProto.PopDesc.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2848,13 +2796,6 @@ public final class PoPProto {
               merged_ = input.readBool();
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -2875,7 +2816,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalStatement_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalStatement_fieldAccessorTable
@@ -2978,7 +2918,7 @@ public final class PoPProto {
     private boolean merged_;
     /**
      * <pre>
-     * Flag indicates, that party was merged
+     * Flag indicates that party was merged
      * </pre>
      *
      * <code>required bool merged = 4;</code>
@@ -2988,7 +2928,7 @@ public final class PoPProto {
     }
     /**
      * <pre>
-     * Flag indicates, that party was merged
+     * Flag indicates that party was merged
      * </pre>
      *
      * <code>required bool merged = 4;</code>
@@ -2998,7 +2938,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -3022,7 +2961,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3040,7 +2978,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -3203,7 +3140,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -3211,7 +3147,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.FinalStatement prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -3240,7 +3175,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalStatement_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalStatement_fieldAccessorTable
@@ -3264,7 +3198,6 @@ public final class PoPProto {
           getDescFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (descBuilder_ == null) {
@@ -3282,18 +3215,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalStatement_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalStatement getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalStatement build() {
         ch.epfl.dedis.proto.PoPProto.FinalStatement result = buildPartial();
         if (!result.isInitialized()) {
@@ -3302,7 +3232,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalStatement buildPartial() {
         ch.epfl.dedis.proto.PoPProto.FinalStatement result = new ch.epfl.dedis.proto.PoPProto.FinalStatement(this);
         int from_bitField0_ = bitField0_;
@@ -3333,39 +3262,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.FinalStatement) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.FinalStatement)other);
@@ -3401,7 +3323,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasSignature()) {
           return false;
@@ -3417,7 +3338,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3745,7 +3665,7 @@ public final class PoPProto {
       private boolean merged_ ;
       /**
        * <pre>
-       * Flag indicates, that party was merged
+       * Flag indicates that party was merged
        * </pre>
        *
        * <code>required bool merged = 4;</code>
@@ -3755,7 +3675,7 @@ public final class PoPProto {
       }
       /**
        * <pre>
-       * Flag indicates, that party was merged
+       * Flag indicates that party was merged
        * </pre>
        *
        * <code>required bool merged = 4;</code>
@@ -3765,7 +3685,7 @@ public final class PoPProto {
       }
       /**
        * <pre>
-       * Flag indicates, that party was merged
+       * Flag indicates that party was merged
        * </pre>
        *
        * <code>required bool merged = 4;</code>
@@ -3778,7 +3698,7 @@ public final class PoPProto {
       }
       /**
        * <pre>
-       * Flag indicates, that party was merged
+       * Flag indicates that party was merged
        * </pre>
        *
        * <code>required bool merged = 4;</code>
@@ -3789,13 +3709,11 @@ public final class PoPProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -3817,12 +3735,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<FinalStatement>
         PARSER = new com.google.protobuf.AbstractParser<FinalStatement>() {
-      @java.lang.Override
       public FinalStatement parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FinalStatement(input, extensionRegistry);
+          return new FinalStatement(input, extensionRegistry);
       }
     };
 
@@ -3835,7 +3752,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.FinalStatement getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -3899,9 +3815,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3913,6 +3826,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               pophash_ = input.readBytes();
@@ -3924,13 +3844,6 @@ public final class PoPProto {
                 mutable_bitField0_ |= 0x00000002;
               }
               attendees_.add(input.readBytes());
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -3953,7 +3866,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfig_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfig_fieldAccessorTable
@@ -4000,7 +3912,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4014,7 +3925,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4026,7 +3936,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4162,7 +4071,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4170,7 +4078,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.CheckConfig prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4198,7 +4105,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfig_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfig_fieldAccessorTable
@@ -4221,7 +4127,6 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         pophash_ = com.google.protobuf.ByteString.EMPTY;
@@ -4231,18 +4136,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfig_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.CheckConfig getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.CheckConfig.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.CheckConfig build() {
         ch.epfl.dedis.proto.PoPProto.CheckConfig result = buildPartial();
         if (!result.isInitialized()) {
@@ -4251,7 +4153,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.CheckConfig buildPartial() {
         ch.epfl.dedis.proto.PoPProto.CheckConfig result = new ch.epfl.dedis.proto.PoPProto.CheckConfig(this);
         int from_bitField0_ = bitField0_;
@@ -4270,39 +4171,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.CheckConfig) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.CheckConfig)other);
@@ -4332,7 +4226,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPophash()) {
           return false;
@@ -4340,7 +4233,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4466,13 +4358,11 @@ public final class PoPProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4494,12 +4384,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CheckConfig>
         PARSER = new com.google.protobuf.AbstractParser<CheckConfig>() {
-      @java.lang.Override
       public CheckConfig parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CheckConfig(input, extensionRegistry);
+          return new CheckConfig(input, extensionRegistry);
       }
     };
 
@@ -4512,7 +4401,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.CheckConfig getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -4589,9 +4477,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4603,6 +4488,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 8: {
               bitField0_ |= 0x00000001;
               popstatus_ = input.readSInt32();
@@ -4619,13 +4511,6 @@ public final class PoPProto {
                 mutable_bitField0_ |= 0x00000004;
               }
               attendees_.add(input.readBytes());
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -4648,7 +4533,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfigReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfigReply_fieldAccessorTable
@@ -4710,7 +4594,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4728,7 +4611,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4743,7 +4625,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4892,7 +4773,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4900,7 +4780,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.CheckConfigReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4931,7 +4810,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfigReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfigReply_fieldAccessorTable
@@ -4954,7 +4832,6 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         popstatus_ = 0;
@@ -4966,18 +4843,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_CheckConfigReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.CheckConfigReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.CheckConfigReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.CheckConfigReply build() {
         ch.epfl.dedis.proto.PoPProto.CheckConfigReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -4986,7 +4860,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.CheckConfigReply buildPartial() {
         ch.epfl.dedis.proto.PoPProto.CheckConfigReply result = new ch.epfl.dedis.proto.PoPProto.CheckConfigReply(this);
         int from_bitField0_ = bitField0_;
@@ -5009,39 +4882,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.CheckConfigReply) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.CheckConfigReply)other);
@@ -5074,7 +4940,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPopstatus()) {
           return false;
@@ -5085,7 +4950,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5243,13 +5107,11 @@ public final class PoPProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5271,12 +5133,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CheckConfigReply>
         PARSER = new com.google.protobuf.AbstractParser<CheckConfigReply>() {
-      @java.lang.Override
       public CheckConfigReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CheckConfigReply(input, extensionRegistry);
+          return new CheckConfigReply(input, extensionRegistry);
       }
     };
 
@@ -5289,7 +5150,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.CheckConfigReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -5372,9 +5232,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5386,6 +5243,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5402,13 +5266,6 @@ public final class PoPProto {
             case 18: {
               bitField0_ |= 0x00000002;
               id_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -5428,7 +5285,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfig_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfig_fieldAccessorTable
@@ -5494,7 +5350,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5514,7 +5369,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5526,7 +5380,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5660,7 +5513,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5668,7 +5520,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.MergeConfig prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5696,7 +5547,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfig_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfig_fieldAccessorTable
@@ -5720,7 +5570,6 @@ public final class PoPProto {
           getFinalFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (finalBuilder_ == null) {
@@ -5734,18 +5583,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfig_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeConfig getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.MergeConfig.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeConfig build() {
         ch.epfl.dedis.proto.PoPProto.MergeConfig result = buildPartial();
         if (!result.isInitialized()) {
@@ -5754,7 +5600,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeConfig buildPartial() {
         ch.epfl.dedis.proto.PoPProto.MergeConfig result = new ch.epfl.dedis.proto.PoPProto.MergeConfig(this);
         int from_bitField0_ = bitField0_;
@@ -5776,39 +5621,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.MergeConfig) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.MergeConfig)other);
@@ -5831,7 +5669,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -5844,7 +5681,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6068,13 +5904,11 @@ public final class PoPProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6096,12 +5930,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<MergeConfig>
         PARSER = new com.google.protobuf.AbstractParser<MergeConfig>() {
-      @java.lang.Override
       public MergeConfig parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new MergeConfig(input, extensionRegistry);
+          return new MergeConfig(input, extensionRegistry);
       }
     };
 
@@ -6114,7 +5947,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.MergeConfig getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6215,9 +6047,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6229,6 +6058,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 8: {
               bitField0_ |= 0x00000001;
               popstatus_ = input.readSInt32();
@@ -6252,13 +6088,6 @@ public final class PoPProto {
               bitField0_ |= 0x00000004;
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -6276,7 +6105,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfigReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfigReply_fieldAccessorTable
@@ -6365,7 +6193,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -6389,7 +6216,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6404,7 +6230,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -6551,7 +6376,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6559,7 +6383,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.MergeConfigReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6587,7 +6410,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfigReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfigReply_fieldAccessorTable
@@ -6611,7 +6433,6 @@ public final class PoPProto {
           getFinalFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         popstatus_ = 0;
@@ -6627,18 +6448,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeConfigReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeConfigReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.MergeConfigReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeConfigReply build() {
         ch.epfl.dedis.proto.PoPProto.MergeConfigReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -6647,7 +6465,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeConfigReply buildPartial() {
         ch.epfl.dedis.proto.PoPProto.MergeConfigReply result = new ch.epfl.dedis.proto.PoPProto.MergeConfigReply(this);
         int from_bitField0_ = bitField0_;
@@ -6673,39 +6490,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.MergeConfigReply) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.MergeConfigReply)other);
@@ -6731,7 +6541,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPopstatus()) {
           return false;
@@ -6747,7 +6556,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7019,13 +6827,11 @@ public final class PoPProto {
         }
         return finalBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -7047,12 +6853,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<MergeConfigReply>
         PARSER = new com.google.protobuf.AbstractParser<MergeConfigReply>() {
-      @java.lang.Override
       public MergeConfigReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new MergeConfigReply(input, extensionRegistry);
+          return new MergeConfigReply(input, extensionRegistry);
       }
     };
 
@@ -7065,7 +6870,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.MergeConfigReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -7132,9 +6936,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7146,6 +6947,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -7155,13 +6963,6 @@ public final class PoPProto {
             case 18: {
               bitField0_ |= 0x00000002;
               public_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -7181,7 +6982,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PinRequest_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PinRequest_fieldAccessorTable
@@ -7248,7 +7048,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7266,7 +7065,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7278,7 +7076,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -7411,7 +7208,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -7419,7 +7215,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.PinRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -7449,7 +7244,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PinRequest_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PinRequest_fieldAccessorTable
@@ -7472,7 +7266,6 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         pin_ = "";
@@ -7482,18 +7275,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PinRequest_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.PinRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.PinRequest.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.PinRequest build() {
         ch.epfl.dedis.proto.PoPProto.PinRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -7502,7 +7292,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.PinRequest buildPartial() {
         ch.epfl.dedis.proto.PoPProto.PinRequest result = new ch.epfl.dedis.proto.PoPProto.PinRequest(this);
         int from_bitField0_ = bitField0_;
@@ -7520,39 +7309,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.PinRequest) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.PinRequest)other);
@@ -7577,7 +7359,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPin()) {
           return false;
@@ -7588,7 +7369,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7718,13 +7498,11 @@ public final class PoPProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -7746,12 +7524,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<PinRequest>
         PARSER = new com.google.protobuf.AbstractParser<PinRequest>() {
-      @java.lang.Override
       public PinRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new PinRequest(input, extensionRegistry);
+          return new PinRequest(input, extensionRegistry);
       }
     };
 
@@ -7764,7 +7541,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.PinRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -7827,9 +7603,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7841,6 +7614,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.proto.PoPProto.PopDesc.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7857,13 +7637,6 @@ public final class PoPProto {
             case 18: {
               bitField0_ |= 0x00000002;
               signature_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -7883,7 +7656,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfig_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfig_fieldAccessorTable
@@ -7929,7 +7701,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7949,7 +7720,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7961,7 +7731,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -8095,7 +7864,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -8103,7 +7871,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreConfig prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -8131,7 +7898,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfig_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfig_fieldAccessorTable
@@ -8155,7 +7921,6 @@ public final class PoPProto {
           getDescFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (descBuilder_ == null) {
@@ -8169,18 +7934,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfig_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.StoreConfig getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.StoreConfig.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.StoreConfig build() {
         ch.epfl.dedis.proto.PoPProto.StoreConfig result = buildPartial();
         if (!result.isInitialized()) {
@@ -8189,7 +7951,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.StoreConfig buildPartial() {
         ch.epfl.dedis.proto.PoPProto.StoreConfig result = new ch.epfl.dedis.proto.PoPProto.StoreConfig(this);
         int from_bitField0_ = bitField0_;
@@ -8211,39 +7972,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreConfig) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreConfig)other);
@@ -8266,7 +8020,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasSignature()) {
           return false;
@@ -8279,7 +8032,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8451,13 +8203,11 @@ public final class PoPProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -8479,12 +8229,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreConfig>
         PARSER = new com.google.protobuf.AbstractParser<StoreConfig>() {
-      @java.lang.Override
       public StoreConfig parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreConfig(input, extensionRegistry);
+          return new StoreConfig(input, extensionRegistry);
       }
     };
 
@@ -8497,7 +8246,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.StoreConfig getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -8549,9 +8297,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8563,16 +8308,16 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            case 10: {
-              bitField0_ |= 0x00000001;
-              id_ = input.readBytes();
-              break;
-            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              id_ = input.readBytes();
               break;
             }
           }
@@ -8592,7 +8337,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfigReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfigReply_fieldAccessorTable
@@ -8617,7 +8361,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -8631,7 +8374,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -8640,7 +8382,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -8761,7 +8502,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -8769,7 +8509,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreConfigReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -8799,7 +8538,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfigReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfigReply_fieldAccessorTable
@@ -8822,7 +8560,6 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -8830,18 +8567,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreConfigReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.StoreConfigReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.StoreConfigReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.StoreConfigReply build() {
         ch.epfl.dedis.proto.PoPProto.StoreConfigReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -8850,7 +8584,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.StoreConfigReply buildPartial() {
         ch.epfl.dedis.proto.PoPProto.StoreConfigReply result = new ch.epfl.dedis.proto.PoPProto.StoreConfigReply(this);
         int from_bitField0_ = bitField0_;
@@ -8864,39 +8597,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreConfigReply) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreConfigReply)other);
@@ -8916,7 +8642,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -8924,7 +8649,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8978,13 +8702,11 @@ public final class PoPProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -9006,12 +8728,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreConfigReply>
         PARSER = new com.google.protobuf.AbstractParser<StoreConfigReply>() {
-      @java.lang.Override
       public StoreConfigReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreConfigReply(input, extensionRegistry);
+          return new StoreConfigReply(input, extensionRegistry);
       }
     };
 
@@ -9024,7 +8745,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.StoreConfigReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -9098,9 +8818,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9112,6 +8829,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               descid_ = input.readBytes();
@@ -9128,13 +8852,6 @@ public final class PoPProto {
             case 26: {
               bitField0_ |= 0x00000002;
               signature_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -9157,7 +8874,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeRequest_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeRequest_fieldAccessorTable
@@ -9219,7 +8935,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -9237,7 +8952,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9252,7 +8966,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -9401,7 +9114,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -9409,7 +9121,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.FinalizeRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -9437,7 +9148,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeRequest_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeRequest_fieldAccessorTable
@@ -9460,7 +9170,6 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         descid_ = com.google.protobuf.ByteString.EMPTY;
@@ -9472,18 +9181,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeRequest_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalizeRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.FinalizeRequest.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalizeRequest build() {
         ch.epfl.dedis.proto.PoPProto.FinalizeRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -9492,7 +9198,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalizeRequest buildPartial() {
         ch.epfl.dedis.proto.PoPProto.FinalizeRequest result = new ch.epfl.dedis.proto.PoPProto.FinalizeRequest(this);
         int from_bitField0_ = bitField0_;
@@ -9515,39 +9220,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.FinalizeRequest) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.FinalizeRequest)other);
@@ -9580,7 +9278,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasDescid()) {
           return false;
@@ -9591,7 +9288,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9752,13 +9448,11 @@ public final class PoPProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -9780,12 +9474,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<FinalizeRequest>
         PARSER = new com.google.protobuf.AbstractParser<FinalizeRequest>() {
-      @java.lang.Override
       public FinalizeRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FinalizeRequest(input, extensionRegistry);
+          return new FinalizeRequest(input, extensionRegistry);
       }
     };
 
@@ -9798,7 +9491,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.FinalizeRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -9853,9 +9545,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9867,6 +9556,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9878,13 +9574,6 @@ public final class PoPProto {
                 final_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -9904,7 +9593,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeResponse_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeResponse_fieldAccessorTable
@@ -9935,7 +9623,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -9951,7 +9638,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9960,7 +9646,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -10081,7 +9766,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -10089,7 +9773,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.FinalizeResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -10119,7 +9802,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeResponse_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeResponse_fieldAccessorTable
@@ -10143,7 +9825,6 @@ public final class PoPProto {
           getFinalFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (finalBuilder_ == null) {
@@ -10155,18 +9836,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FinalizeResponse_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalizeResponse getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.FinalizeResponse.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalizeResponse build() {
         ch.epfl.dedis.proto.PoPProto.FinalizeResponse result = buildPartial();
         if (!result.isInitialized()) {
@@ -10175,7 +9853,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FinalizeResponse buildPartial() {
         ch.epfl.dedis.proto.PoPProto.FinalizeResponse result = new ch.epfl.dedis.proto.PoPProto.FinalizeResponse(this);
         int from_bitField0_ = bitField0_;
@@ -10193,39 +9870,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.FinalizeResponse) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.FinalizeResponse)other);
@@ -10245,7 +9915,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (hasFinal()) {
           if (!getFinal().isInitialized()) {
@@ -10255,7 +9924,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10392,13 +10060,11 @@ public final class PoPProto {
         }
         return finalBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -10420,12 +10086,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<FinalizeResponse>
         PARSER = new com.google.protobuf.AbstractParser<FinalizeResponse>() {
-      @java.lang.Override
       public FinalizeResponse parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FinalizeResponse(input, extensionRegistry);
+          return new FinalizeResponse(input, extensionRegistry);
       }
     };
 
@@ -10438,7 +10103,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.FinalizeResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -10498,9 +10162,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -10512,6 +10173,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               id_ = input.readBytes();
@@ -10520,13 +10188,6 @@ public final class PoPProto {
             case 16: {
               bitField0_ |= 0x00000002;
               returnuncomplete_ = input.readBool();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -10546,7 +10207,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FetchRequest_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FetchRequest_fieldAccessorTable
@@ -10586,7 +10246,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -10600,7 +10259,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -10612,7 +10270,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -10747,7 +10404,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -10755,7 +10411,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.FetchRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -10783,7 +10438,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FetchRequest_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FetchRequest_fieldAccessorTable
@@ -10806,7 +10460,6 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -10816,18 +10469,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_FetchRequest_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FetchRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.FetchRequest.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FetchRequest build() {
         ch.epfl.dedis.proto.PoPProto.FetchRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -10836,7 +10486,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.FetchRequest buildPartial() {
         ch.epfl.dedis.proto.PoPProto.FetchRequest result = new ch.epfl.dedis.proto.PoPProto.FetchRequest(this);
         int from_bitField0_ = bitField0_;
@@ -10854,39 +10503,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.FetchRequest) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.FetchRequest)other);
@@ -10909,7 +10551,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -10917,7 +10558,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11003,13 +10643,11 @@ public final class PoPProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -11031,12 +10669,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<FetchRequest>
         PARSER = new com.google.protobuf.AbstractParser<FetchRequest>() {
-      @java.lang.Override
       public FetchRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FetchRequest(input, extensionRegistry);
+          return new FetchRequest(input, extensionRegistry);
       }
     };
 
@@ -11049,7 +10686,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.FetchRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -11109,9 +10745,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -11123,6 +10756,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               id_ = input.readBytes();
@@ -11131,13 +10771,6 @@ public final class PoPProto {
             case 18: {
               bitField0_ |= 0x00000002;
               signature_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -11157,7 +10790,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeRequest_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeRequest_fieldAccessorTable
@@ -11197,7 +10829,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -11215,7 +10846,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -11227,7 +10857,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -11361,7 +10990,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -11369,7 +10997,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.MergeRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -11397,7 +11024,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeRequest_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeRequest_fieldAccessorTable
@@ -11420,7 +11046,6 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -11430,18 +11055,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_MergeRequest_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.MergeRequest.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeRequest build() {
         ch.epfl.dedis.proto.PoPProto.MergeRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -11450,7 +11072,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.MergeRequest buildPartial() {
         ch.epfl.dedis.proto.PoPProto.MergeRequest result = new ch.epfl.dedis.proto.PoPProto.MergeRequest(this);
         int from_bitField0_ = bitField0_;
@@ -11468,39 +11089,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.MergeRequest) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.MergeRequest)other);
@@ -11523,7 +11137,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -11534,7 +11147,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11623,13 +11235,11 @@ public final class PoPProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -11651,12 +11261,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<MergeRequest>
         PARSER = new com.google.protobuf.AbstractParser<MergeRequest>() {
-      @java.lang.Override
       public MergeRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new MergeRequest(input, extensionRegistry);
+          return new MergeRequest(input, extensionRegistry);
       }
     };
 
@@ -11669,7 +11278,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.MergeRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -11711,9 +11319,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -11748,7 +11353,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposals_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposals_fieldAccessorTable
@@ -11757,7 +11361,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -11767,13 +11370,11 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -11881,7 +11482,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -11889,7 +11489,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetProposals prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -11919,7 +11518,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposals_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposals_fieldAccessorTable
@@ -11942,24 +11540,20 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposals_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.GetProposals getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.GetProposals.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.GetProposals build() {
         ch.epfl.dedis.proto.PoPProto.GetProposals result = buildPartial();
         if (!result.isInitialized()) {
@@ -11968,46 +11562,38 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.GetProposals buildPartial() {
         ch.epfl.dedis.proto.PoPProto.GetProposals result = new ch.epfl.dedis.proto.PoPProto.GetProposals(this);
         onBuilt();
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.GetProposals) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetProposals)other);
@@ -12024,12 +11610,10 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12047,13 +11631,11 @@ public final class PoPProto {
         }
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -12075,12 +11657,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetProposals>
         PARSER = new com.google.protobuf.AbstractParser<GetProposals>() {
-      @java.lang.Override
       public GetProposals parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetProposals(input, extensionRegistry);
+          return new GetProposals(input, extensionRegistry);
       }
     };
 
@@ -12093,7 +11674,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.GetProposals getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -12158,9 +11738,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12172,6 +11749,13 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 proposals_ = new java.util.ArrayList<ch.epfl.dedis.proto.PoPProto.PopDesc>();
@@ -12179,13 +11763,6 @@ public final class PoPProto {
               }
               proposals_.add(
                   input.readMessage(ch.epfl.dedis.proto.PoPProto.PopDesc.PARSER, extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -12208,7 +11785,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposalsReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposalsReply_fieldAccessorTable
@@ -12252,7 +11828,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -12268,7 +11843,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < proposals_.size(); i++) {
@@ -12277,7 +11851,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -12395,7 +11968,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -12403,7 +11975,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetProposalsReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -12431,7 +12002,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposalsReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposalsReply_fieldAccessorTable
@@ -12455,7 +12025,6 @@ public final class PoPProto {
           getProposalsFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (proposalsBuilder_ == null) {
@@ -12467,18 +12036,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetProposalsReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.GetProposalsReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.GetProposalsReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.GetProposalsReply build() {
         ch.epfl.dedis.proto.PoPProto.GetProposalsReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -12487,7 +12053,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.GetProposalsReply buildPartial() {
         ch.epfl.dedis.proto.PoPProto.GetProposalsReply result = new ch.epfl.dedis.proto.PoPProto.GetProposalsReply(this);
         int from_bitField0_ = bitField0_;
@@ -12504,39 +12069,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.GetProposalsReply) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetProposalsReply)other);
@@ -12579,7 +12137,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getProposalsCount(); i++) {
           if (!getProposals(i).isInitialized()) {
@@ -12589,7 +12146,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12848,13 +12404,11 @@ public final class PoPProto {
         }
         return proposalsBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -12876,12 +12430,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetProposalsReply>
         PARSER = new com.google.protobuf.AbstractParser<GetProposalsReply>() {
-      @java.lang.Override
       public GetProposalsReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetProposalsReply(input, extensionRegistry);
+          return new GetProposalsReply(input, extensionRegistry);
       }
     };
 
@@ -12894,7 +12447,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.GetProposalsReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -12944,9 +12496,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12958,16 +12507,16 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            case 10: {
-              bitField0_ |= 0x00000001;
-              public_ = input.readBytes();
-              break;
-            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              public_ = input.readBytes();
               break;
             }
           }
@@ -12987,7 +12536,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLink_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLink_fieldAccessorTable
@@ -13012,7 +12560,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -13026,7 +12573,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -13035,7 +12581,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -13156,7 +12701,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -13164,7 +12708,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.VerifyLink prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -13192,7 +12735,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLink_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLink_fieldAccessorTable
@@ -13215,7 +12757,6 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         public_ = com.google.protobuf.ByteString.EMPTY;
@@ -13223,18 +12764,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLink_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.VerifyLink getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.VerifyLink.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.VerifyLink build() {
         ch.epfl.dedis.proto.PoPProto.VerifyLink result = buildPartial();
         if (!result.isInitialized()) {
@@ -13243,7 +12781,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.VerifyLink buildPartial() {
         ch.epfl.dedis.proto.PoPProto.VerifyLink result = new ch.epfl.dedis.proto.PoPProto.VerifyLink(this);
         int from_bitField0_ = bitField0_;
@@ -13257,39 +12794,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.VerifyLink) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.VerifyLink)other);
@@ -13309,7 +12839,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPublic()) {
           return false;
@@ -13317,7 +12846,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13371,13 +12899,11 @@ public final class PoPProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -13399,12 +12925,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<VerifyLink>
         PARSER = new com.google.protobuf.AbstractParser<VerifyLink>() {
-      @java.lang.Override
       public VerifyLink parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new VerifyLink(input, extensionRegistry);
+          return new VerifyLink(input, extensionRegistry);
       }
     };
 
@@ -13417,7 +12942,6 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.VerifyLink getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -13467,9 +12991,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -13481,16 +13002,16 @@ public final class PoPProto {
             case 0:
               done = true;
               break;
-            case 8: {
-              bitField0_ |= 0x00000001;
-              exists_ = input.readBool();
-              break;
-            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              exists_ = input.readBool();
               break;
             }
           }
@@ -13510,7 +13031,6 @@ public final class PoPProto {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLinkReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLinkReply_fieldAccessorTable
@@ -13535,7 +13055,6 @@ public final class PoPProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -13549,7 +13068,6 @@ public final class PoPProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -13558,7 +13076,6 @@ public final class PoPProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -13680,7 +13197,6 @@ public final class PoPProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -13688,7 +13204,6 @@ public final class PoPProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.VerifyLinkReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -13716,7 +13231,6 @@ public final class PoPProto {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLinkReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLinkReply_fieldAccessorTable
@@ -13739,7 +13253,6 @@ public final class PoPProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         exists_ = false;
@@ -13747,18 +13260,15 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.PoPProto.internal_static_pop_VerifyLinkReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.VerifyLinkReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.PoPProto.VerifyLinkReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.VerifyLinkReply build() {
         ch.epfl.dedis.proto.PoPProto.VerifyLinkReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -13767,7 +13277,6 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.proto.PoPProto.VerifyLinkReply buildPartial() {
         ch.epfl.dedis.proto.PoPProto.VerifyLinkReply result = new ch.epfl.dedis.proto.PoPProto.VerifyLinkReply(this);
         int from_bitField0_ = bitField0_;
@@ -13781,39 +13290,32 @@ public final class PoPProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.PoPProto.VerifyLinkReply) {
           return mergeFrom((ch.epfl.dedis.proto.PoPProto.VerifyLinkReply)other);
@@ -13833,7 +13335,6 @@ public final class PoPProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasExists()) {
           return false;
@@ -13841,7 +13342,6 @@ public final class PoPProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13892,13 +13392,11 @@ public final class PoPProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -13920,12 +13418,11 @@ public final class PoPProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<VerifyLinkReply>
         PARSER = new com.google.protobuf.AbstractParser<VerifyLinkReply>() {
-      @java.lang.Override
       public VerifyLinkReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new VerifyLinkReply(input, extensionRegistry);
+          return new VerifyLinkReply(input, extensionRegistry);
       }
     };
 
@@ -13938,8 +13435,9801 @@ public final class PoPProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.proto.PoPProto.VerifyLinkReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetLinkOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetLink)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * GetLink returns the public key of the linked organizer.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetLink}
+   */
+  public  static final class GetLink extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetLink)
+      GetLinkOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetLink.newBuilder() to construct.
+    private GetLink(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetLink() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetLink(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLink_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLink_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetLink.class, ch.epfl.dedis.proto.PoPProto.GetLink.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetLink)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetLink other = (ch.epfl.dedis.proto.PoPProto.GetLink) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLink parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetLink prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetLink returns the public key of the linked organizer.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetLink}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetLink)
+        ch.epfl.dedis.proto.PoPProto.GetLinkOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLink_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLink_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetLink.class, ch.epfl.dedis.proto.PoPProto.GetLink.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetLink.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLink_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetLink getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetLink.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetLink build() {
+        ch.epfl.dedis.proto.PoPProto.GetLink result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetLink buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetLink result = new ch.epfl.dedis.proto.PoPProto.GetLink(this);
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetLink) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetLink)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetLink other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetLink.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetLink parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetLink) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetLink)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetLink)
+    private static final ch.epfl.dedis.proto.PoPProto.GetLink DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetLink();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetLink getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetLink>
+        PARSER = new com.google.protobuf.AbstractParser<GetLink>() {
+      public GetLink parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetLink(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetLink> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetLink> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetLink getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetLinkReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetLinkReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    boolean hasPublic();
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    com.google.protobuf.ByteString getPublic();
+  }
+  /**
+   * <pre>
+   * GetLinkReply holds the public key of the linked organizer.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetLinkReply}
+   */
+  public  static final class GetLinkReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetLinkReply)
+      GetLinkReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetLinkReply.newBuilder() to construct.
+    private GetLinkReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetLinkReply() {
+      public_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetLinkReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              public_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLinkReply_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLinkReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetLinkReply.class, ch.epfl.dedis.proto.PoPProto.GetLinkReply.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PUBLIC_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString public_;
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    public boolean hasPublic() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes public = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPublic() {
+      return public_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPublic()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, public_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, public_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetLinkReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetLinkReply other = (ch.epfl.dedis.proto.PoPProto.GetLinkReply) obj;
+
+      boolean result = true;
+      result = result && (hasPublic() == other.hasPublic());
+      if (hasPublic()) {
+        result = result && getPublic()
+            .equals(other.getPublic());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPublic()) {
+        hash = (37 * hash) + PUBLIC_FIELD_NUMBER;
+        hash = (53 * hash) + getPublic().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetLinkReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetLinkReply holds the public key of the linked organizer.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetLinkReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetLinkReply)
+        ch.epfl.dedis.proto.PoPProto.GetLinkReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLinkReply_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLinkReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetLinkReply.class, ch.epfl.dedis.proto.PoPProto.GetLinkReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetLinkReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        public_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetLinkReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetLinkReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetLinkReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetLinkReply build() {
+        ch.epfl.dedis.proto.PoPProto.GetLinkReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetLinkReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetLinkReply result = new ch.epfl.dedis.proto.PoPProto.GetLinkReply(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.public_ = public_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetLinkReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetLinkReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetLinkReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetLinkReply.getDefaultInstance()) return this;
+        if (other.hasPublic()) {
+          setPublic(other.getPublic());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPublic()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetLinkReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetLinkReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString public_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public boolean hasPublic() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPublic() {
+        return public_;
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public Builder setPublic(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        public_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes public = 1;</code>
+       */
+      public Builder clearPublic() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        public_ = getDefaultInstance().getPublic();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetLinkReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetLinkReply)
+    private static final ch.epfl.dedis.proto.PoPProto.GetLinkReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetLinkReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetLinkReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetLinkReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetLinkReply>() {
+      public GetLinkReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetLinkReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetLinkReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetLinkReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetLinkReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetFinalStatementsOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetFinalStatements)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * GetFinalStatements returns all stored final statements.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetFinalStatements}
+   */
+  public  static final class GetFinalStatements extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetFinalStatements)
+      GetFinalStatementsOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetFinalStatements.newBuilder() to construct.
+    private GetFinalStatements(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetFinalStatements() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetFinalStatements(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatements_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatements_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetFinalStatements.class, ch.epfl.dedis.proto.PoPProto.GetFinalStatements.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetFinalStatements)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetFinalStatements other = (ch.epfl.dedis.proto.PoPProto.GetFinalStatements) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetFinalStatements prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetFinalStatements returns all stored final statements.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetFinalStatements}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetFinalStatements)
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatementsOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatements_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatements_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetFinalStatements.class, ch.epfl.dedis.proto.PoPProto.GetFinalStatements.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetFinalStatements.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatements_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetFinalStatements getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetFinalStatements.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetFinalStatements build() {
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatements result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetFinalStatements buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatements result = new ch.epfl.dedis.proto.PoPProto.GetFinalStatements(this);
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetFinalStatements) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetFinalStatements)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetFinalStatements other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetFinalStatements.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatements parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetFinalStatements) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetFinalStatements)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetFinalStatements)
+    private static final ch.epfl.dedis.proto.PoPProto.GetFinalStatements DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetFinalStatements();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatements getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetFinalStatements>
+        PARSER = new com.google.protobuf.AbstractParser<GetFinalStatements>() {
+      public GetFinalStatements parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetFinalStatements(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetFinalStatements> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetFinalStatements> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetFinalStatements getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetFinalStatementsReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetFinalStatementsReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+    int getFinalstatementsCount();
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+    boolean containsFinalstatements(
+        java.lang.String key);
+    /**
+     * Use {@link #getFinalstatementsMap()} instead.
+     */
+    @java.lang.Deprecated
+    java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+    getFinalstatements();
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+    java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+    getFinalstatementsMap();
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+
+    ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatementsOrDefault(
+        java.lang.String key,
+        ch.epfl.dedis.proto.PoPProto.FinalStatement defaultValue);
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+
+    ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatementsOrThrow(
+        java.lang.String key);
+  }
+  /**
+   * <pre>
+   * GetFinalStatementsReply returns all stored final statements.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetFinalStatementsReply}
+   */
+  public  static final class GetFinalStatementsReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetFinalStatementsReply)
+      GetFinalStatementsReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetFinalStatementsReply.newBuilder() to construct.
+    private GetFinalStatementsReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetFinalStatementsReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetFinalStatementsReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                finalstatements_ = com.google.protobuf.MapField.newMapField(
+                    FinalstatementsDefaultEntryHolder.defaultEntry);
+                mutable_bitField0_ |= 0x00000001;
+              }
+              com.google.protobuf.MapEntry<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+              finalstatements__ = input.readMessage(
+                  FinalstatementsDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
+              finalstatements_.getMutableMap().put(
+                  finalstatements__.getKey(), finalstatements__.getValue());
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_descriptor;
+    }
+
+    @SuppressWarnings({"rawtypes"})
+    protected com.google.protobuf.MapField internalGetMapField(
+        int number) {
+      switch (number) {
+        case 1:
+          return internalGetFinalstatements();
+        default:
+          throw new RuntimeException(
+              "Invalid map field number: " + number);
+      }
+    }
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.class, ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.Builder.class);
+    }
+
+    public static final int FINALSTATEMENTS_FIELD_NUMBER = 1;
+    private static final class FinalstatementsDefaultEntryHolder {
+      static final com.google.protobuf.MapEntry<
+          java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> defaultEntry =
+              com.google.protobuf.MapEntry
+              .<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>newDefaultInstance(
+                  ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_descriptor, 
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "",
+                  com.google.protobuf.WireFormat.FieldType.MESSAGE,
+                  ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance());
+    }
+    private com.google.protobuf.MapField<
+        java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> finalstatements_;
+    private com.google.protobuf.MapField<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+    internalGetFinalstatements() {
+      if (finalstatements_ == null) {
+        return com.google.protobuf.MapField.emptyMapField(
+            FinalstatementsDefaultEntryHolder.defaultEntry);
+      }
+      return finalstatements_;
+    }
+
+    public int getFinalstatementsCount() {
+      return internalGetFinalstatements().getMap().size();
+    }
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+
+    public boolean containsFinalstatements(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      return internalGetFinalstatements().getMap().containsKey(key);
+    }
+    /**
+     * Use {@link #getFinalstatementsMap()} instead.
+     */
+    @java.lang.Deprecated
+    public java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> getFinalstatements() {
+      return getFinalstatementsMap();
+    }
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+
+    public java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> getFinalstatementsMap() {
+      return internalGetFinalstatements().getMap();
+    }
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+
+    public ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatementsOrDefault(
+        java.lang.String key,
+        ch.epfl.dedis.proto.PoPProto.FinalStatement defaultValue) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> map =
+          internalGetFinalstatements().getMap();
+      return map.containsKey(key) ? map.get(key) : defaultValue;
+    }
+    /**
+     * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+     */
+
+    public ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatementsOrThrow(
+        java.lang.String key) {
+      if (key == null) { throw new java.lang.NullPointerException(); }
+      java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> map =
+          internalGetFinalstatements().getMap();
+      if (!map.containsKey(key)) {
+        throw new java.lang.IllegalArgumentException();
+      }
+      return map.get(key);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      for (ch.epfl.dedis.proto.PoPProto.FinalStatement item : getFinalstatementsMap().values()) {
+        if (!item.isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      com.google.protobuf.GeneratedMessageV3
+        .serializeStringMapTo(
+          output,
+          internalGetFinalstatements(),
+          FinalstatementsDefaultEntryHolder.defaultEntry,
+          1);
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      for (java.util.Map.Entry<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> entry
+           : internalGetFinalstatements().getMap().entrySet()) {
+        com.google.protobuf.MapEntry<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+        finalstatements__ = FinalstatementsDefaultEntryHolder.defaultEntry.newBuilderForType()
+            .setKey(entry.getKey())
+            .setValue(entry.getValue())
+            .build();
+        size += com.google.protobuf.CodedOutputStream
+            .computeMessageSize(1, finalstatements__);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply other = (ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply) obj;
+
+      boolean result = true;
+      result = result && internalGetFinalstatements().equals(
+          other.internalGetFinalstatements());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (!internalGetFinalstatements().getMap().isEmpty()) {
+        hash = (37 * hash) + FINALSTATEMENTS_FIELD_NUMBER;
+        hash = (53 * hash) + internalGetFinalstatements().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetFinalStatementsReply returns all stored final statements.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetFinalStatementsReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetFinalStatementsReply)
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_descriptor;
+      }
+
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMapField(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetFinalstatements();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      @SuppressWarnings({"rawtypes"})
+      protected com.google.protobuf.MapField internalGetMutableMapField(
+          int number) {
+        switch (number) {
+          case 1:
+            return internalGetMutableFinalstatements();
+          default:
+            throw new RuntimeException(
+                "Invalid map field number: " + number);
+        }
+      }
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.class, ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        internalGetMutableFinalstatements().clear();
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetFinalStatementsReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply build() {
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply result = new ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply(this);
+        int from_bitField0_ = bitField0_;
+        result.finalstatements_ = internalGetFinalstatements();
+        result.finalstatements_.makeImmutable();
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply.getDefaultInstance()) return this;
+        internalGetMutableFinalstatements().mergeFrom(
+            other.internalGetFinalstatements());
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        for (ch.epfl.dedis.proto.PoPProto.FinalStatement item : getFinalstatementsMap().values()) {
+          if (!item.isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.MapField<
+          java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> finalstatements_;
+      private com.google.protobuf.MapField<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+      internalGetFinalstatements() {
+        if (finalstatements_ == null) {
+          return com.google.protobuf.MapField.emptyMapField(
+              FinalstatementsDefaultEntryHolder.defaultEntry);
+        }
+        return finalstatements_;
+      }
+      private com.google.protobuf.MapField<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+      internalGetMutableFinalstatements() {
+        onChanged();;
+        if (finalstatements_ == null) {
+          finalstatements_ = com.google.protobuf.MapField.newMapField(
+              FinalstatementsDefaultEntryHolder.defaultEntry);
+        }
+        if (!finalstatements_.isMutable()) {
+          finalstatements_ = finalstatements_.copy();
+        }
+        return finalstatements_;
+      }
+
+      public int getFinalstatementsCount() {
+        return internalGetFinalstatements().getMap().size();
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+
+      public boolean containsFinalstatements(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        return internalGetFinalstatements().getMap().containsKey(key);
+      }
+      /**
+       * Use {@link #getFinalstatementsMap()} instead.
+       */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> getFinalstatements() {
+        return getFinalstatementsMap();
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+
+      public java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> getFinalstatementsMap() {
+        return internalGetFinalstatements().getMap();
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+
+      public ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatementsOrDefault(
+          java.lang.String key,
+          ch.epfl.dedis.proto.PoPProto.FinalStatement defaultValue) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> map =
+            internalGetFinalstatements().getMap();
+        return map.containsKey(key) ? map.get(key) : defaultValue;
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+
+      public ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatementsOrThrow(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> map =
+            internalGetFinalstatements().getMap();
+        if (!map.containsKey(key)) {
+          throw new java.lang.IllegalArgumentException();
+        }
+        return map.get(key);
+      }
+
+      public Builder clearFinalstatements() {
+        internalGetMutableFinalstatements().getMutableMap()
+            .clear();
+        return this;
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+
+      public Builder removeFinalstatements(
+          java.lang.String key) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableFinalstatements().getMutableMap()
+            .remove(key);
+        return this;
+      }
+      /**
+       * Use alternate mutation accessors instead.
+       */
+      @java.lang.Deprecated
+      public java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement>
+      getMutableFinalstatements() {
+        return internalGetMutableFinalstatements().getMutableMap();
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+      public Builder putFinalstatements(
+          java.lang.String key,
+          ch.epfl.dedis.proto.PoPProto.FinalStatement value) {
+        if (key == null) { throw new java.lang.NullPointerException(); }
+        if (value == null) { throw new java.lang.NullPointerException(); }
+        internalGetMutableFinalstatements().getMutableMap()
+            .put(key, value);
+        return this;
+      }
+      /**
+       * <code>map&lt;string, .pop.FinalStatement&gt; finalstatements = 1;</code>
+       */
+
+      public Builder putAllFinalstatements(
+          java.util.Map<java.lang.String, ch.epfl.dedis.proto.PoPProto.FinalStatement> values) {
+        internalGetMutableFinalstatements().getMutableMap()
+            .putAll(values);
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetFinalStatementsReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetFinalStatementsReply)
+    private static final ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetFinalStatementsReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetFinalStatementsReply>() {
+      public GetFinalStatementsReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetFinalStatementsReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetFinalStatementsReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetFinalStatementsReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetFinalStatementsReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface StoreInstanceIDOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.StoreInstanceID)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    boolean hasPartyid();
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    com.google.protobuf.ByteString getPartyid();
+
+    /**
+     * <code>required bytes instanceid = 2;</code>
+     */
+    boolean hasInstanceid();
+    /**
+     * <code>required bytes instanceid = 2;</code>
+     */
+    com.google.protobuf.ByteString getInstanceid();
+  }
+  /**
+   * <pre>
+   * StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
+   * </pre>
+   *
+   * Protobuf type {@code pop.StoreInstanceID}
+   */
+  public  static final class StoreInstanceID extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.StoreInstanceID)
+      StoreInstanceIDOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use StoreInstanceID.newBuilder() to construct.
+    private StoreInstanceID(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private StoreInstanceID() {
+      partyid_ = com.google.protobuf.ByteString.EMPTY;
+      instanceid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StoreInstanceID(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              partyid_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              instanceid_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceID_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceID_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.StoreInstanceID.class, ch.epfl.dedis.proto.PoPProto.StoreInstanceID.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PARTYID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString partyid_;
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public boolean hasPartyid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPartyid() {
+      return partyid_;
+    }
+
+    public static final int INSTANCEID_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString instanceid_;
+    /**
+     * <code>required bytes instanceid = 2;</code>
+     */
+    public boolean hasInstanceid() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes instanceid = 2;</code>
+     */
+    public com.google.protobuf.ByteString getInstanceid() {
+      return instanceid_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPartyid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasInstanceid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, partyid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, instanceid_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, partyid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, instanceid_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.StoreInstanceID)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.StoreInstanceID other = (ch.epfl.dedis.proto.PoPProto.StoreInstanceID) obj;
+
+      boolean result = true;
+      result = result && (hasPartyid() == other.hasPartyid());
+      if (hasPartyid()) {
+        result = result && getPartyid()
+            .equals(other.getPartyid());
+      }
+      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid()) {
+        result = result && getInstanceid()
+            .equals(other.getInstanceid());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPartyid()) {
+        hash = (37 * hash) + PARTYID_FIELD_NUMBER;
+        hash = (53 * hash) + getPartyid().hashCode();
+      }
+      if (hasInstanceid()) {
+        hash = (37 * hash) + INSTANCEID_FIELD_NUMBER;
+        hash = (53 * hash) + getInstanceid().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreInstanceID prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
+     * </pre>
+     *
+     * Protobuf type {@code pop.StoreInstanceID}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.StoreInstanceID)
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceIDOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceID_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceID_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.StoreInstanceID.class, ch.epfl.dedis.proto.PoPProto.StoreInstanceID.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.StoreInstanceID.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        partyid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        instanceid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceID_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreInstanceID getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.StoreInstanceID.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreInstanceID build() {
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceID result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreInstanceID buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceID result = new ch.epfl.dedis.proto.PoPProto.StoreInstanceID(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.partyid_ = partyid_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.instanceid_ = instanceid_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreInstanceID) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreInstanceID)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.StoreInstanceID other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.StoreInstanceID.getDefaultInstance()) return this;
+        if (other.hasPartyid()) {
+          setPartyid(other.getPartyid());
+        }
+        if (other.hasInstanceid()) {
+          setInstanceid(other.getInstanceid());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPartyid()) {
+          return false;
+        }
+        if (!hasInstanceid()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceID parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.StoreInstanceID) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString partyid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public boolean hasPartyid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPartyid() {
+        return partyid_;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder setPartyid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        partyid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder clearPartyid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        partyid_ = getDefaultInstance().getPartyid();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes instanceid = 2;</code>
+       */
+      public boolean hasInstanceid() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes instanceid = 2;</code>
+       */
+      public com.google.protobuf.ByteString getInstanceid() {
+        return instanceid_;
+      }
+      /**
+       * <code>required bytes instanceid = 2;</code>
+       */
+      public Builder setInstanceid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        instanceid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes instanceid = 2;</code>
+       */
+      public Builder clearInstanceid() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        instanceid_ = getDefaultInstance().getInstanceid();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.StoreInstanceID)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.StoreInstanceID)
+    private static final ch.epfl.dedis.proto.PoPProto.StoreInstanceID DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.StoreInstanceID();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceID getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreInstanceID>
+        PARSER = new com.google.protobuf.AbstractParser<StoreInstanceID>() {
+      public StoreInstanceID parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new StoreInstanceID(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StoreInstanceID> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StoreInstanceID> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.StoreInstanceID getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface StoreInstanceIDReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.StoreInstanceIDReply)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * StoreInstanceIDReply is an empty reply
+   * </pre>
+   *
+   * Protobuf type {@code pop.StoreInstanceIDReply}
+   */
+  public  static final class StoreInstanceIDReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.StoreInstanceIDReply)
+      StoreInstanceIDReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use StoreInstanceIDReply.newBuilder() to construct.
+    private StoreInstanceIDReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private StoreInstanceIDReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StoreInstanceIDReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceIDReply_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceIDReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.class, ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply other = (ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * StoreInstanceIDReply is an empty reply
+     * </pre>
+     *
+     * Protobuf type {@code pop.StoreInstanceIDReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.StoreInstanceIDReply)
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceIDReply_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceIDReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.class, ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreInstanceIDReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply build() {
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply result = new ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply(this);
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.StoreInstanceIDReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.StoreInstanceIDReply)
+    private static final ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreInstanceIDReply>
+        PARSER = new com.google.protobuf.AbstractParser<StoreInstanceIDReply>() {
+      public StoreInstanceIDReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new StoreInstanceIDReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StoreInstanceIDReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StoreInstanceIDReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.StoreInstanceIDReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetInstanceIDOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetInstanceID)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    boolean hasPartyid();
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    com.google.protobuf.ByteString getPartyid();
+  }
+  /**
+   * <pre>
+   * GetInstanceID requests an InstanceID from OmniLedger to a FinalStatement.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetInstanceID}
+   */
+  public  static final class GetInstanceID extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetInstanceID)
+      GetInstanceIDOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetInstanceID.newBuilder() to construct.
+    private GetInstanceID(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetInstanceID() {
+      partyid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetInstanceID(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              partyid_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceID_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceID_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetInstanceID.class, ch.epfl.dedis.proto.PoPProto.GetInstanceID.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PARTYID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString partyid_;
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public boolean hasPartyid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPartyid() {
+      return partyid_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPartyid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, partyid_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, partyid_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetInstanceID)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetInstanceID other = (ch.epfl.dedis.proto.PoPProto.GetInstanceID) obj;
+
+      boolean result = true;
+      result = result && (hasPartyid() == other.hasPartyid());
+      if (hasPartyid()) {
+        result = result && getPartyid()
+            .equals(other.getPartyid());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPartyid()) {
+        hash = (37 * hash) + PARTYID_FIELD_NUMBER;
+        hash = (53 * hash) + getPartyid().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetInstanceID prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetInstanceID requests an InstanceID from OmniLedger to a FinalStatement.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetInstanceID}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetInstanceID)
+        ch.epfl.dedis.proto.PoPProto.GetInstanceIDOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceID_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceID_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetInstanceID.class, ch.epfl.dedis.proto.PoPProto.GetInstanceID.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetInstanceID.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        partyid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceID_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetInstanceID getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetInstanceID.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetInstanceID build() {
+        ch.epfl.dedis.proto.PoPProto.GetInstanceID result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetInstanceID buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetInstanceID result = new ch.epfl.dedis.proto.PoPProto.GetInstanceID(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.partyid_ = partyid_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetInstanceID) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetInstanceID)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetInstanceID other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetInstanceID.getDefaultInstance()) return this;
+        if (other.hasPartyid()) {
+          setPartyid(other.getPartyid());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPartyid()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetInstanceID parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetInstanceID) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString partyid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public boolean hasPartyid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPartyid() {
+        return partyid_;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder setPartyid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        partyid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder clearPartyid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        partyid_ = getDefaultInstance().getPartyid();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetInstanceID)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetInstanceID)
+    private static final ch.epfl.dedis.proto.PoPProto.GetInstanceID DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetInstanceID();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceID getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetInstanceID>
+        PARSER = new com.google.protobuf.AbstractParser<GetInstanceID>() {
+      public GetInstanceID parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetInstanceID(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetInstanceID> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetInstanceID> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetInstanceID getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetInstanceIDReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetInstanceIDReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes instanceid = 1;</code>
+     */
+    boolean hasInstanceid();
+    /**
+     * <code>required bytes instanceid = 1;</code>
+     */
+    com.google.protobuf.ByteString getInstanceid();
+  }
+  /**
+   * <pre>
+   * GetInstanceIDReply is the InstanceID for the party
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetInstanceIDReply}
+   */
+  public  static final class GetInstanceIDReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetInstanceIDReply)
+      GetInstanceIDReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetInstanceIDReply.newBuilder() to construct.
+    private GetInstanceIDReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetInstanceIDReply() {
+      instanceid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetInstanceIDReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              instanceid_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceIDReply_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceIDReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.class, ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int INSTANCEID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString instanceid_;
+    /**
+     * <code>required bytes instanceid = 1;</code>
+     */
+    public boolean hasInstanceid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes instanceid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getInstanceid() {
+      return instanceid_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasInstanceid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, instanceid_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, instanceid_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply other = (ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply) obj;
+
+      boolean result = true;
+      result = result && (hasInstanceid() == other.hasInstanceid());
+      if (hasInstanceid()) {
+        result = result && getInstanceid()
+            .equals(other.getInstanceid());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasInstanceid()) {
+        hash = (37 * hash) + INSTANCEID_FIELD_NUMBER;
+        hash = (53 * hash) + getInstanceid().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetInstanceIDReply is the InstanceID for the party
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetInstanceIDReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetInstanceIDReply)
+        ch.epfl.dedis.proto.PoPProto.GetInstanceIDReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceIDReply_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceIDReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.class, ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        instanceid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetInstanceIDReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply build() {
+        ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply result = new ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.instanceid_ = instanceid_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply.getDefaultInstance()) return this;
+        if (other.hasInstanceid()) {
+          setInstanceid(other.getInstanceid());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasInstanceid()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes instanceid = 1;</code>
+       */
+      public boolean hasInstanceid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes instanceid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getInstanceid() {
+        return instanceid_;
+      }
+      /**
+       * <code>required bytes instanceid = 1;</code>
+       */
+      public Builder setInstanceid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        instanceid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes instanceid = 1;</code>
+       */
+      public Builder clearInstanceid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        instanceid_ = getDefaultInstance().getInstanceid();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetInstanceIDReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetInstanceIDReply)
+    private static final ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetInstanceIDReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetInstanceIDReply>() {
+      public GetInstanceIDReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetInstanceIDReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetInstanceIDReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetInstanceIDReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetInstanceIDReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface StoreSignerOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.StoreSigner)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    boolean hasPartyid();
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    com.google.protobuf.ByteString getPartyid();
+
+    /**
+     * <code>required .darc.Signer signer = 2;</code>
+     */
+    boolean hasSigner();
+    /**
+     * <code>required .darc.Signer signer = 2;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.Signer getSigner();
+    /**
+     * <code>required .darc.Signer signer = 2;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.SignerOrBuilder getSignerOrBuilder();
+  }
+  /**
+   * <pre>
+   * StoreSigner writes an Signer from OmniLedger to a FinalStatement.
+   * </pre>
+   *
+   * Protobuf type {@code pop.StoreSigner}
+   */
+  public  static final class StoreSigner extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.StoreSigner)
+      StoreSignerOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use StoreSigner.newBuilder() to construct.
+    private StoreSigner(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private StoreSigner() {
+      partyid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StoreSigner(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              partyid_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.proto.DarcProto.Signer.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = signer_.toBuilder();
+              }
+              signer_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.Signer.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(signer_);
+                signer_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSigner_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSigner_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.StoreSigner.class, ch.epfl.dedis.proto.PoPProto.StoreSigner.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PARTYID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString partyid_;
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public boolean hasPartyid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPartyid() {
+      return partyid_;
+    }
+
+    public static final int SIGNER_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.proto.DarcProto.Signer signer_;
+    /**
+     * <code>required .darc.Signer signer = 2;</code>
+     */
+    public boolean hasSigner() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required .darc.Signer signer = 2;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.Signer getSigner() {
+      return signer_ == null ? ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+    }
+    /**
+     * <code>required .darc.Signer signer = 2;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.SignerOrBuilder getSignerOrBuilder() {
+      return signer_ == null ? ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPartyid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSigner()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getSigner().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, partyid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getSigner());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, partyid_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getSigner());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.StoreSigner)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.StoreSigner other = (ch.epfl.dedis.proto.PoPProto.StoreSigner) obj;
+
+      boolean result = true;
+      result = result && (hasPartyid() == other.hasPartyid());
+      if (hasPartyid()) {
+        result = result && getPartyid()
+            .equals(other.getPartyid());
+      }
+      result = result && (hasSigner() == other.hasSigner());
+      if (hasSigner()) {
+        result = result && getSigner()
+            .equals(other.getSigner());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPartyid()) {
+        hash = (37 * hash) + PARTYID_FIELD_NUMBER;
+        hash = (53 * hash) + getPartyid().hashCode();
+      }
+      if (hasSigner()) {
+        hash = (37 * hash) + SIGNER_FIELD_NUMBER;
+        hash = (53 * hash) + getSigner().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreSigner prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * StoreSigner writes an Signer from OmniLedger to a FinalStatement.
+     * </pre>
+     *
+     * Protobuf type {@code pop.StoreSigner}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.StoreSigner)
+        ch.epfl.dedis.proto.PoPProto.StoreSignerOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSigner_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSigner_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.StoreSigner.class, ch.epfl.dedis.proto.PoPProto.StoreSigner.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.StoreSigner.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getSignerFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        partyid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (signerBuilder_ == null) {
+          signer_ = null;
+        } else {
+          signerBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSigner_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreSigner getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.StoreSigner.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreSigner build() {
+        ch.epfl.dedis.proto.PoPProto.StoreSigner result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreSigner buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.StoreSigner result = new ch.epfl.dedis.proto.PoPProto.StoreSigner(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.partyid_ = partyid_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (signerBuilder_ == null) {
+          result.signer_ = signer_;
+        } else {
+          result.signer_ = signerBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreSigner) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreSigner)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.StoreSigner other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.StoreSigner.getDefaultInstance()) return this;
+        if (other.hasPartyid()) {
+          setPartyid(other.getPartyid());
+        }
+        if (other.hasSigner()) {
+          mergeSigner(other.getSigner());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPartyid()) {
+          return false;
+        }
+        if (!hasSigner()) {
+          return false;
+        }
+        if (!getSigner().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.StoreSigner parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.StoreSigner) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString partyid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public boolean hasPartyid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPartyid() {
+        return partyid_;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder setPartyid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        partyid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder clearPartyid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        partyid_ = getDefaultInstance().getPartyid();
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.proto.DarcProto.Signer signer_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.Signer, ch.epfl.dedis.proto.DarcProto.Signer.Builder, ch.epfl.dedis.proto.DarcProto.SignerOrBuilder> signerBuilder_;
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public boolean hasSigner() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.Signer getSigner() {
+        if (signerBuilder_ == null) {
+          return signer_ == null ? ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+        } else {
+          return signerBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public Builder setSigner(ch.epfl.dedis.proto.DarcProto.Signer value) {
+        if (signerBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          signer_ = value;
+          onChanged();
+        } else {
+          signerBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public Builder setSigner(
+          ch.epfl.dedis.proto.DarcProto.Signer.Builder builderForValue) {
+        if (signerBuilder_ == null) {
+          signer_ = builderForValue.build();
+          onChanged();
+        } else {
+          signerBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public Builder mergeSigner(ch.epfl.dedis.proto.DarcProto.Signer value) {
+        if (signerBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              signer_ != null &&
+              signer_ != ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance()) {
+            signer_ =
+              ch.epfl.dedis.proto.DarcProto.Signer.newBuilder(signer_).mergeFrom(value).buildPartial();
+          } else {
+            signer_ = value;
+          }
+          onChanged();
+        } else {
+          signerBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public Builder clearSigner() {
+        if (signerBuilder_ == null) {
+          signer_ = null;
+          onChanged();
+        } else {
+          signerBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.Signer.Builder getSignerBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getSignerFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.SignerOrBuilder getSignerOrBuilder() {
+        if (signerBuilder_ != null) {
+          return signerBuilder_.getMessageOrBuilder();
+        } else {
+          return signer_ == null ?
+              ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+        }
+      }
+      /**
+       * <code>required .darc.Signer signer = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.Signer, ch.epfl.dedis.proto.DarcProto.Signer.Builder, ch.epfl.dedis.proto.DarcProto.SignerOrBuilder> 
+          getSignerFieldBuilder() {
+        if (signerBuilder_ == null) {
+          signerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.DarcProto.Signer, ch.epfl.dedis.proto.DarcProto.Signer.Builder, ch.epfl.dedis.proto.DarcProto.SignerOrBuilder>(
+                  getSigner(),
+                  getParentForChildren(),
+                  isClean());
+          signer_ = null;
+        }
+        return signerBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.StoreSigner)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.StoreSigner)
+    private static final ch.epfl.dedis.proto.PoPProto.StoreSigner DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.StoreSigner();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreSigner getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreSigner>
+        PARSER = new com.google.protobuf.AbstractParser<StoreSigner>() {
+      public StoreSigner parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new StoreSigner(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StoreSigner> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StoreSigner> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.StoreSigner getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface StoreSignerReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.StoreSignerReply)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * StoreSignerReply is an empty reply
+   * </pre>
+   *
+   * Protobuf type {@code pop.StoreSignerReply}
+   */
+  public  static final class StoreSignerReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.StoreSignerReply)
+      StoreSignerReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use StoreSignerReply.newBuilder() to construct.
+    private StoreSignerReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private StoreSignerReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StoreSignerReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSignerReply_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSignerReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.StoreSignerReply.class, ch.epfl.dedis.proto.PoPProto.StoreSignerReply.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.StoreSignerReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.StoreSignerReply other = (ch.epfl.dedis.proto.PoPProto.StoreSignerReply) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreSignerReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * StoreSignerReply is an empty reply
+     * </pre>
+     *
+     * Protobuf type {@code pop.StoreSignerReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.StoreSignerReply)
+        ch.epfl.dedis.proto.PoPProto.StoreSignerReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSignerReply_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSignerReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.StoreSignerReply.class, ch.epfl.dedis.proto.PoPProto.StoreSignerReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.StoreSignerReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreSignerReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreSignerReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.StoreSignerReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreSignerReply build() {
+        ch.epfl.dedis.proto.PoPProto.StoreSignerReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreSignerReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.StoreSignerReply result = new ch.epfl.dedis.proto.PoPProto.StoreSignerReply(this);
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreSignerReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreSignerReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.StoreSignerReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.StoreSignerReply.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.StoreSignerReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.StoreSignerReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.StoreSignerReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.StoreSignerReply)
+    private static final ch.epfl.dedis.proto.PoPProto.StoreSignerReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.StoreSignerReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreSignerReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreSignerReply>
+        PARSER = new com.google.protobuf.AbstractParser<StoreSignerReply>() {
+      public StoreSignerReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new StoreSignerReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StoreSignerReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StoreSignerReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.StoreSignerReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetSignerOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetSigner)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    boolean hasPartyid();
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    com.google.protobuf.ByteString getPartyid();
+  }
+  /**
+   * <pre>
+   * GetSigner requests an Signer from OmniLedger to a FinalStatement.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetSigner}
+   */
+  public  static final class GetSigner extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetSigner)
+      GetSignerOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetSigner.newBuilder() to construct.
+    private GetSigner(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetSigner() {
+      partyid_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetSigner(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              partyid_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSigner_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSigner_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetSigner.class, ch.epfl.dedis.proto.PoPProto.GetSigner.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PARTYID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString partyid_;
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public boolean hasPartyid() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes partyid = 1;</code>
+     */
+    public com.google.protobuf.ByteString getPartyid() {
+      return partyid_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasPartyid()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, partyid_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, partyid_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetSigner)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetSigner other = (ch.epfl.dedis.proto.PoPProto.GetSigner) obj;
+
+      boolean result = true;
+      result = result && (hasPartyid() == other.hasPartyid());
+      if (hasPartyid()) {
+        result = result && getPartyid()
+            .equals(other.getPartyid());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasPartyid()) {
+        hash = (37 * hash) + PARTYID_FIELD_NUMBER;
+        hash = (53 * hash) + getPartyid().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetSigner prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetSigner requests an Signer from OmniLedger to a FinalStatement.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetSigner}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetSigner)
+        ch.epfl.dedis.proto.PoPProto.GetSignerOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSigner_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSigner_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetSigner.class, ch.epfl.dedis.proto.PoPProto.GetSigner.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetSigner.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        partyid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSigner_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetSigner getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetSigner.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetSigner build() {
+        ch.epfl.dedis.proto.PoPProto.GetSigner result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetSigner buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetSigner result = new ch.epfl.dedis.proto.PoPProto.GetSigner(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.partyid_ = partyid_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetSigner) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetSigner)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetSigner other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetSigner.getDefaultInstance()) return this;
+        if (other.hasPartyid()) {
+          setPartyid(other.getPartyid());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasPartyid()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetSigner parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetSigner) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString partyid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public boolean hasPartyid() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public com.google.protobuf.ByteString getPartyid() {
+        return partyid_;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder setPartyid(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        partyid_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes partyid = 1;</code>
+       */
+      public Builder clearPartyid() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        partyid_ = getDefaultInstance().getPartyid();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetSigner)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetSigner)
+    private static final ch.epfl.dedis.proto.PoPProto.GetSigner DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetSigner();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetSigner getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetSigner>
+        PARSER = new com.google.protobuf.AbstractParser<GetSigner>() {
+      public GetSigner parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetSigner(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetSigner> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetSigner> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetSigner getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetSignerReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetSignerReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required .darc.Signer signer = 1;</code>
+     */
+    boolean hasSigner();
+    /**
+     * <code>required .darc.Signer signer = 1;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.Signer getSigner();
+    /**
+     * <code>required .darc.Signer signer = 1;</code>
+     */
+    ch.epfl.dedis.proto.DarcProto.SignerOrBuilder getSignerOrBuilder();
+  }
+  /**
+   * <pre>
+   * GetSignerReply is the Signer for the party
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetSignerReply}
+   */
+  public  static final class GetSignerReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetSignerReply)
+      GetSignerReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetSignerReply.newBuilder() to construct.
+    private GetSignerReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetSignerReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetSignerReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              ch.epfl.dedis.proto.DarcProto.Signer.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = signer_.toBuilder();
+              }
+              signer_ = input.readMessage(ch.epfl.dedis.proto.DarcProto.Signer.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(signer_);
+                signer_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSignerReply_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSignerReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetSignerReply.class, ch.epfl.dedis.proto.PoPProto.GetSignerReply.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int SIGNER_FIELD_NUMBER = 1;
+    private ch.epfl.dedis.proto.DarcProto.Signer signer_;
+    /**
+     * <code>required .darc.Signer signer = 1;</code>
+     */
+    public boolean hasSigner() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required .darc.Signer signer = 1;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.Signer getSigner() {
+      return signer_ == null ? ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+    }
+    /**
+     * <code>required .darc.Signer signer = 1;</code>
+     */
+    public ch.epfl.dedis.proto.DarcProto.SignerOrBuilder getSignerOrBuilder() {
+      return signer_ == null ? ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasSigner()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!getSigner().isInitialized()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeMessage(1, getSigner());
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(1, getSigner());
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetSignerReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetSignerReply other = (ch.epfl.dedis.proto.PoPProto.GetSignerReply) obj;
+
+      boolean result = true;
+      result = result && (hasSigner() == other.hasSigner());
+      if (hasSigner()) {
+        result = result && getSigner()
+            .equals(other.getSigner());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasSigner()) {
+        hash = (37 * hash) + SIGNER_FIELD_NUMBER;
+        hash = (53 * hash) + getSigner().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetSignerReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetSignerReply is the Signer for the party
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetSignerReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetSignerReply)
+        ch.epfl.dedis.proto.PoPProto.GetSignerReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSignerReply_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSignerReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetSignerReply.class, ch.epfl.dedis.proto.PoPProto.GetSignerReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetSignerReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getSignerFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        if (signerBuilder_ == null) {
+          signer_ = null;
+        } else {
+          signerBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetSignerReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetSignerReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetSignerReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetSignerReply build() {
+        ch.epfl.dedis.proto.PoPProto.GetSignerReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetSignerReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetSignerReply result = new ch.epfl.dedis.proto.PoPProto.GetSignerReply(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        if (signerBuilder_ == null) {
+          result.signer_ = signer_;
+        } else {
+          result.signer_ = signerBuilder_.build();
+        }
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetSignerReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetSignerReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetSignerReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetSignerReply.getDefaultInstance()) return this;
+        if (other.hasSigner()) {
+          mergeSigner(other.getSigner());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasSigner()) {
+          return false;
+        }
+        if (!getSigner().isInitialized()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetSignerReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetSignerReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private ch.epfl.dedis.proto.DarcProto.Signer signer_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.Signer, ch.epfl.dedis.proto.DarcProto.Signer.Builder, ch.epfl.dedis.proto.DarcProto.SignerOrBuilder> signerBuilder_;
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public boolean hasSigner() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.Signer getSigner() {
+        if (signerBuilder_ == null) {
+          return signer_ == null ? ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+        } else {
+          return signerBuilder_.getMessage();
+        }
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public Builder setSigner(ch.epfl.dedis.proto.DarcProto.Signer value) {
+        if (signerBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          signer_ = value;
+          onChanged();
+        } else {
+          signerBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public Builder setSigner(
+          ch.epfl.dedis.proto.DarcProto.Signer.Builder builderForValue) {
+        if (signerBuilder_ == null) {
+          signer_ = builderForValue.build();
+          onChanged();
+        } else {
+          signerBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public Builder mergeSigner(ch.epfl.dedis.proto.DarcProto.Signer value) {
+        if (signerBuilder_ == null) {
+          if (((bitField0_ & 0x00000001) == 0x00000001) &&
+              signer_ != null &&
+              signer_ != ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance()) {
+            signer_ =
+              ch.epfl.dedis.proto.DarcProto.Signer.newBuilder(signer_).mergeFrom(value).buildPartial();
+          } else {
+            signer_ = value;
+          }
+          onChanged();
+        } else {
+          signerBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000001;
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public Builder clearSigner() {
+        if (signerBuilder_ == null) {
+          signer_ = null;
+          onChanged();
+        } else {
+          signerBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.Signer.Builder getSignerBuilder() {
+        bitField0_ |= 0x00000001;
+        onChanged();
+        return getSignerFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      public ch.epfl.dedis.proto.DarcProto.SignerOrBuilder getSignerOrBuilder() {
+        if (signerBuilder_ != null) {
+          return signerBuilder_.getMessageOrBuilder();
+        } else {
+          return signer_ == null ?
+              ch.epfl.dedis.proto.DarcProto.Signer.getDefaultInstance() : signer_;
+        }
+      }
+      /**
+       * <code>required .darc.Signer signer = 1;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.DarcProto.Signer, ch.epfl.dedis.proto.DarcProto.Signer.Builder, ch.epfl.dedis.proto.DarcProto.SignerOrBuilder> 
+          getSignerFieldBuilder() {
+        if (signerBuilder_ == null) {
+          signerBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.DarcProto.Signer, ch.epfl.dedis.proto.DarcProto.Signer.Builder, ch.epfl.dedis.proto.DarcProto.SignerOrBuilder>(
+                  getSigner(),
+                  getParentForChildren(),
+                  isClean());
+          signer_ = null;
+        }
+        return signerBuilder_;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetSignerReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetSignerReply)
+    private static final ch.epfl.dedis.proto.PoPProto.GetSignerReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetSignerReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetSignerReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetSignerReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetSignerReply>() {
+      public GetSignerReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetSignerReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetSignerReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetSignerReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetSignerReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface StoreKeysOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.StoreKeys)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * ID is the ID of the party where we want to store intermediate keys
+     * </pre>
+     *
+     * <code>required bytes id = 1;</code>
+     */
+    boolean hasId();
+    /**
+     * <pre>
+     * ID is the ID of the party where we want to store intermediate keys
+     * </pre>
+     *
+     * <code>required bytes id = 1;</code>
+     */
+    com.google.protobuf.ByteString getId();
+
+    /**
+     * <pre>
+     * Keys is a list of public keys to store
+     * </pre>
+     *
+     * <code>repeated bytes keys = 2;</code>
+     */
+    java.util.List<com.google.protobuf.ByteString> getKeysList();
+    /**
+     * <pre>
+     * Keys is a list of public keys to store
+     * </pre>
+     *
+     * <code>repeated bytes keys = 2;</code>
+     */
+    int getKeysCount();
+    /**
+     * <pre>
+     * Keys is a list of public keys to store
+     * </pre>
+     *
+     * <code>repeated bytes keys = 2;</code>
+     */
+    com.google.protobuf.ByteString getKeys(int index);
+
+    /**
+     * <pre>
+     * Signature proves that the organizer updated the keys
+     * </pre>
+     *
+     * <code>required bytes signature = 3;</code>
+     */
+    boolean hasSignature();
+    /**
+     * <pre>
+     * Signature proves that the organizer updated the keys
+     * </pre>
+     *
+     * <code>required bytes signature = 3;</code>
+     */
+    com.google.protobuf.ByteString getSignature();
+  }
+  /**
+   * <pre>
+   * StoreKeys stores a list of keys for attendees to retrieve
+   * later.
+   * </pre>
+   *
+   * Protobuf type {@code pop.StoreKeys}
+   */
+  public  static final class StoreKeys extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.StoreKeys)
+      StoreKeysOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use StoreKeys.newBuilder() to construct.
+    private StoreKeys(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private StoreKeys() {
+      id_ = com.google.protobuf.ByteString.EMPTY;
+      keys_ = java.util.Collections.emptyList();
+      signature_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StoreKeys(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              id_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                keys_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              keys_.add(input.readBytes());
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000002;
+              signature_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          keys_ = java.util.Collections.unmodifiableList(keys_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreKeys_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreKeys_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.StoreKeys.class, ch.epfl.dedis.proto.PoPProto.StoreKeys.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int ID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString id_;
+    /**
+     * <pre>
+     * ID is the ID of the party where we want to store intermediate keys
+     * </pre>
+     *
+     * <code>required bytes id = 1;</code>
+     */
+    public boolean hasId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * ID is the ID of the party where we want to store intermediate keys
+     * </pre>
+     *
+     * <code>required bytes id = 1;</code>
+     */
+    public com.google.protobuf.ByteString getId() {
+      return id_;
+    }
+
+    public static final int KEYS_FIELD_NUMBER = 2;
+    private java.util.List<com.google.protobuf.ByteString> keys_;
+    /**
+     * <pre>
+     * Keys is a list of public keys to store
+     * </pre>
+     *
+     * <code>repeated bytes keys = 2;</code>
+     */
+    public java.util.List<com.google.protobuf.ByteString>
+        getKeysList() {
+      return keys_;
+    }
+    /**
+     * <pre>
+     * Keys is a list of public keys to store
+     * </pre>
+     *
+     * <code>repeated bytes keys = 2;</code>
+     */
+    public int getKeysCount() {
+      return keys_.size();
+    }
+    /**
+     * <pre>
+     * Keys is a list of public keys to store
+     * </pre>
+     *
+     * <code>repeated bytes keys = 2;</code>
+     */
+    public com.google.protobuf.ByteString getKeys(int index) {
+      return keys_.get(index);
+    }
+
+    public static final int SIGNATURE_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString signature_;
+    /**
+     * <pre>
+     * Signature proves that the organizer updated the keys
+     * </pre>
+     *
+     * <code>required bytes signature = 3;</code>
+     */
+    public boolean hasSignature() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * Signature proves that the organizer updated the keys
+     * </pre>
+     *
+     * <code>required bytes signature = 3;</code>
+     */
+    public com.google.protobuf.ByteString getSignature() {
+      return signature_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasSignature()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, id_);
+      }
+      for (int i = 0; i < keys_.size(); i++) {
+        output.writeBytes(2, keys_.get(i));
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(3, signature_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, id_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < keys_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(keys_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getKeysList().size();
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, signature_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.StoreKeys)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.StoreKeys other = (ch.epfl.dedis.proto.PoPProto.StoreKeys) obj;
+
+      boolean result = true;
+      result = result && (hasId() == other.hasId());
+      if (hasId()) {
+        result = result && getId()
+            .equals(other.getId());
+      }
+      result = result && getKeysList()
+          .equals(other.getKeysList());
+      result = result && (hasSignature() == other.hasSignature());
+      if (hasSignature()) {
+        result = result && getSignature()
+            .equals(other.getSignature());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasId()) {
+        hash = (37 * hash) + ID_FIELD_NUMBER;
+        hash = (53 * hash) + getId().hashCode();
+      }
+      if (getKeysCount() > 0) {
+        hash = (37 * hash) + KEYS_FIELD_NUMBER;
+        hash = (53 * hash) + getKeysList().hashCode();
+      }
+      if (hasSignature()) {
+        hash = (37 * hash) + SIGNATURE_FIELD_NUMBER;
+        hash = (53 * hash) + getSignature().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreKeys prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * StoreKeys stores a list of keys for attendees to retrieve
+     * later.
+     * </pre>
+     *
+     * Protobuf type {@code pop.StoreKeys}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.StoreKeys)
+        ch.epfl.dedis.proto.PoPProto.StoreKeysOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreKeys_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreKeys_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.StoreKeys.class, ch.epfl.dedis.proto.PoPProto.StoreKeys.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.StoreKeys.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        id_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        keys_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        signature_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreKeys_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreKeys getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.StoreKeys.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreKeys build() {
+        ch.epfl.dedis.proto.PoPProto.StoreKeys result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreKeys buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.StoreKeys result = new ch.epfl.dedis.proto.PoPProto.StoreKeys(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.id_ = id_;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          keys_ = java.util.Collections.unmodifiableList(keys_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.keys_ = keys_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.signature_ = signature_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreKeys) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreKeys)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.StoreKeys other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.StoreKeys.getDefaultInstance()) return this;
+        if (other.hasId()) {
+          setId(other.getId());
+        }
+        if (!other.keys_.isEmpty()) {
+          if (keys_.isEmpty()) {
+            keys_ = other.keys_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureKeysIsMutable();
+            keys_.addAll(other.keys_);
+          }
+          onChanged();
+        }
+        if (other.hasSignature()) {
+          setSignature(other.getSignature());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasId()) {
+          return false;
+        }
+        if (!hasSignature()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.StoreKeys parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.StoreKeys) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * ID is the ID of the party where we want to store intermediate keys
+       * </pre>
+       *
+       * <code>required bytes id = 1;</code>
+       */
+      public boolean hasId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * ID is the ID of the party where we want to store intermediate keys
+       * </pre>
+       *
+       * <code>required bytes id = 1;</code>
+       */
+      public com.google.protobuf.ByteString getId() {
+        return id_;
+      }
+      /**
+       * <pre>
+       * ID is the ID of the party where we want to store intermediate keys
+       * </pre>
+       *
+       * <code>required bytes id = 1;</code>
+       */
+      public Builder setId(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        id_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * ID is the ID of the party where we want to store intermediate keys
+       * </pre>
+       *
+       * <code>required bytes id = 1;</code>
+       */
+      public Builder clearId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        id_ = getDefaultInstance().getId();
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<com.google.protobuf.ByteString> keys_ = java.util.Collections.emptyList();
+      private void ensureKeysIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          keys_ = new java.util.ArrayList<com.google.protobuf.ByteString>(keys_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+      /**
+       * <pre>
+       * Keys is a list of public keys to store
+       * </pre>
+       *
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getKeysList() {
+        return java.util.Collections.unmodifiableList(keys_);
+      }
+      /**
+       * <pre>
+       * Keys is a list of public keys to store
+       * </pre>
+       *
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public int getKeysCount() {
+        return keys_.size();
+      }
+      /**
+       * <pre>
+       * Keys is a list of public keys to store
+       * </pre>
+       *
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public com.google.protobuf.ByteString getKeys(int index) {
+        return keys_.get(index);
+      }
+      /**
+       * <pre>
+       * Keys is a list of public keys to store
+       * </pre>
+       *
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public Builder setKeys(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureKeysIsMutable();
+        keys_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Keys is a list of public keys to store
+       * </pre>
+       *
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public Builder addKeys(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureKeysIsMutable();
+        keys_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Keys is a list of public keys to store
+       * </pre>
+       *
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public Builder addAllKeys(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureKeysIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, keys_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Keys is a list of public keys to store
+       * </pre>
+       *
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public Builder clearKeys() {
+        keys_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString signature_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * Signature proves that the organizer updated the keys
+       * </pre>
+       *
+       * <code>required bytes signature = 3;</code>
+       */
+      public boolean hasSignature() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * Signature proves that the organizer updated the keys
+       * </pre>
+       *
+       * <code>required bytes signature = 3;</code>
+       */
+      public com.google.protobuf.ByteString getSignature() {
+        return signature_;
+      }
+      /**
+       * <pre>
+       * Signature proves that the organizer updated the keys
+       * </pre>
+       *
+       * <code>required bytes signature = 3;</code>
+       */
+      public Builder setSignature(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        signature_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Signature proves that the organizer updated the keys
+       * </pre>
+       *
+       * <code>required bytes signature = 3;</code>
+       */
+      public Builder clearSignature() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        signature_ = getDefaultInstance().getSignature();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.StoreKeys)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.StoreKeys)
+    private static final ch.epfl.dedis.proto.PoPProto.StoreKeys DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.StoreKeys();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeys getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreKeys>
+        PARSER = new com.google.protobuf.AbstractParser<StoreKeys>() {
+      public StoreKeys parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new StoreKeys(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StoreKeys> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StoreKeys> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.StoreKeys getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface StoreKeysReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.StoreKeysReply)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * StoreKeysReply is an empty message.
+   * </pre>
+   *
+   * Protobuf type {@code pop.StoreKeysReply}
+   */
+  public  static final class StoreKeysReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.StoreKeysReply)
+      StoreKeysReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use StoreKeysReply.newBuilder() to construct.
+    private StoreKeysReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private StoreKeysReply() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StoreKeysReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreKeysReply_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreKeysReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.StoreKeysReply.class, ch.epfl.dedis.proto.PoPProto.StoreKeysReply.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.StoreKeysReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.StoreKeysReply other = (ch.epfl.dedis.proto.PoPProto.StoreKeysReply) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.StoreKeysReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * StoreKeysReply is an empty message.
+     * </pre>
+     *
+     * Protobuf type {@code pop.StoreKeysReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.StoreKeysReply)
+        ch.epfl.dedis.proto.PoPProto.StoreKeysReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreKeysReply_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreKeysReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.StoreKeysReply.class, ch.epfl.dedis.proto.PoPProto.StoreKeysReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.StoreKeysReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_StoreKeysReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreKeysReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.StoreKeysReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreKeysReply build() {
+        ch.epfl.dedis.proto.PoPProto.StoreKeysReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.StoreKeysReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.StoreKeysReply result = new ch.epfl.dedis.proto.PoPProto.StoreKeysReply(this);
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.StoreKeysReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.StoreKeysReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.StoreKeysReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.StoreKeysReply.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.StoreKeysReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.StoreKeysReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.StoreKeysReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.StoreKeysReply)
+    private static final ch.epfl.dedis.proto.PoPProto.StoreKeysReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.StoreKeysReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.StoreKeysReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreKeysReply>
+        PARSER = new com.google.protobuf.AbstractParser<StoreKeysReply>() {
+      public StoreKeysReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new StoreKeysReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StoreKeysReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StoreKeysReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.StoreKeysReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetKeysOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetKeys)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    boolean hasId();
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    com.google.protobuf.ByteString getId();
+  }
+  /**
+   * <pre>
+   * GetKeys can be used to retrieve the keyset for a given party - useful
+   * for an attendee to know if his key has been scanned.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetKeys}
+   */
+  public  static final class GetKeys extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetKeys)
+      GetKeysOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetKeys.newBuilder() to construct.
+    private GetKeys(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetKeys() {
+      id_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetKeys(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              id_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetKeys_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetKeys_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetKeys.class, ch.epfl.dedis.proto.PoPProto.GetKeys.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int ID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString id_;
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    public boolean hasId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    public com.google.protobuf.ByteString getId() {
+      return id_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, id_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, id_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetKeys)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetKeys other = (ch.epfl.dedis.proto.PoPProto.GetKeys) obj;
+
+      boolean result = true;
+      result = result && (hasId() == other.hasId());
+      if (hasId()) {
+        result = result && getId()
+            .equals(other.getId());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasId()) {
+        hash = (37 * hash) + ID_FIELD_NUMBER;
+        hash = (53 * hash) + getId().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetKeys prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetKeys can be used to retrieve the keyset for a given party - useful
+     * for an attendee to know if his key has been scanned.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetKeys}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetKeys)
+        ch.epfl.dedis.proto.PoPProto.GetKeysOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetKeys_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetKeys_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetKeys.class, ch.epfl.dedis.proto.PoPProto.GetKeys.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetKeys.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        id_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetKeys_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetKeys getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetKeys.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetKeys build() {
+        ch.epfl.dedis.proto.PoPProto.GetKeys result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetKeys buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetKeys result = new ch.epfl.dedis.proto.PoPProto.GetKeys(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.id_ = id_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetKeys) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetKeys)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetKeys other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetKeys.getDefaultInstance()) return this;
+        if (other.hasId()) {
+          setId(other.getId());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasId()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetKeys parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetKeys) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public boolean hasId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public com.google.protobuf.ByteString getId() {
+        return id_;
+      }
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public Builder setId(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        id_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public Builder clearId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        id_ = getDefaultInstance().getId();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetKeys)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetKeys)
+    private static final ch.epfl.dedis.proto.PoPProto.GetKeys DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetKeys();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetKeys getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetKeys>
+        PARSER = new com.google.protobuf.AbstractParser<GetKeys>() {
+      public GetKeys parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetKeys(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetKeys> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetKeys> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetKeys getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetKeysReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.GetKeysReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    boolean hasId();
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    com.google.protobuf.ByteString getId();
+
+    /**
+     * <code>repeated bytes keys = 2;</code>
+     */
+    java.util.List<com.google.protobuf.ByteString> getKeysList();
+    /**
+     * <code>repeated bytes keys = 2;</code>
+     */
+    int getKeysCount();
+    /**
+     * <code>repeated bytes keys = 2;</code>
+     */
+    com.google.protobuf.ByteString getKeys(int index);
+  }
+  /**
+   * <pre>
+   * GetKeysReply returns the keys stored for a given Party-ID.
+   * </pre>
+   *
+   * Protobuf type {@code pop.GetKeysReply}
+   */
+  public  static final class GetKeysReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.GetKeysReply)
+      GetKeysReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetKeysReply.newBuilder() to construct.
+    private GetKeysReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetKeysReply() {
+      id_ = com.google.protobuf.ByteString.EMPTY;
+      keys_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetKeysReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 10: {
+              bitField0_ |= 0x00000001;
+              id_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+                keys_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000002;
+              }
+              keys_.add(input.readBytes());
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
+          keys_ = java.util.Collections.unmodifiableList(keys_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetKeysReply_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetKeysReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.GetKeysReply.class, ch.epfl.dedis.proto.PoPProto.GetKeysReply.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int ID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString id_;
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    public boolean hasId() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes id = 1;</code>
+     */
+    public com.google.protobuf.ByteString getId() {
+      return id_;
+    }
+
+    public static final int KEYS_FIELD_NUMBER = 2;
+    private java.util.List<com.google.protobuf.ByteString> keys_;
+    /**
+     * <code>repeated bytes keys = 2;</code>
+     */
+    public java.util.List<com.google.protobuf.ByteString>
+        getKeysList() {
+      return keys_;
+    }
+    /**
+     * <code>repeated bytes keys = 2;</code>
+     */
+    public int getKeysCount() {
+      return keys_.size();
+    }
+    /**
+     * <code>repeated bytes keys = 2;</code>
+     */
+    public com.google.protobuf.ByteString getKeys(int index) {
+      return keys_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasId()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, id_);
+      }
+      for (int i = 0; i < keys_.size(); i++) {
+        output.writeBytes(2, keys_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, id_);
+      }
+      {
+        int dataSize = 0;
+        for (int i = 0; i < keys_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(keys_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getKeysList().size();
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.GetKeysReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.GetKeysReply other = (ch.epfl.dedis.proto.PoPProto.GetKeysReply) obj;
+
+      boolean result = true;
+      result = result && (hasId() == other.hasId());
+      if (hasId()) {
+        result = result && getId()
+            .equals(other.getId());
+      }
+      result = result && getKeysList()
+          .equals(other.getKeysList());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasId()) {
+        hash = (37 * hash) + ID_FIELD_NUMBER;
+        hash = (53 * hash) + getId().hashCode();
+      }
+      if (getKeysCount() > 0) {
+        hash = (37 * hash) + KEYS_FIELD_NUMBER;
+        hash = (53 * hash) + getKeysList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.GetKeysReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetKeysReply returns the keys stored for a given Party-ID.
+     * </pre>
+     *
+     * Protobuf type {@code pop.GetKeysReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.GetKeysReply)
+        ch.epfl.dedis.proto.PoPProto.GetKeysReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetKeysReply_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetKeysReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.GetKeysReply.class, ch.epfl.dedis.proto.PoPProto.GetKeysReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.GetKeysReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        id_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        keys_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_GetKeysReply_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetKeysReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.GetKeysReply.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetKeysReply build() {
+        ch.epfl.dedis.proto.PoPProto.GetKeysReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.GetKeysReply buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.GetKeysReply result = new ch.epfl.dedis.proto.PoPProto.GetKeysReply(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.id_ = id_;
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          keys_ = java.util.Collections.unmodifiableList(keys_);
+          bitField0_ = (bitField0_ & ~0x00000002);
+        }
+        result.keys_ = keys_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.GetKeysReply) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.GetKeysReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.GetKeysReply other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.GetKeysReply.getDefaultInstance()) return this;
+        if (other.hasId()) {
+          setId(other.getId());
+        }
+        if (!other.keys_.isEmpty()) {
+          if (keys_.isEmpty()) {
+            keys_ = other.keys_;
+            bitField0_ = (bitField0_ & ~0x00000002);
+          } else {
+            ensureKeysIsMutable();
+            keys_.addAll(other.keys_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasId()) {
+          return false;
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.GetKeysReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.GetKeysReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString id_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public boolean hasId() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public com.google.protobuf.ByteString getId() {
+        return id_;
+      }
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public Builder setId(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        id_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes id = 1;</code>
+       */
+      public Builder clearId() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        id_ = getDefaultInstance().getId();
+        onChanged();
+        return this;
+      }
+
+      private java.util.List<com.google.protobuf.ByteString> keys_ = java.util.Collections.emptyList();
+      private void ensureKeysIsMutable() {
+        if (!((bitField0_ & 0x00000002) == 0x00000002)) {
+          keys_ = new java.util.ArrayList<com.google.protobuf.ByteString>(keys_);
+          bitField0_ |= 0x00000002;
+         }
+      }
+      /**
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getKeysList() {
+        return java.util.Collections.unmodifiableList(keys_);
+      }
+      /**
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public int getKeysCount() {
+        return keys_.size();
+      }
+      /**
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public com.google.protobuf.ByteString getKeys(int index) {
+        return keys_.get(index);
+      }
+      /**
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public Builder setKeys(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureKeysIsMutable();
+        keys_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public Builder addKeys(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureKeysIsMutable();
+        keys_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public Builder addAllKeys(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureKeysIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, keys_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes keys = 2;</code>
+       */
+      public Builder clearKeys() {
+        keys_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000002);
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.GetKeysReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.GetKeysReply)
+    private static final ch.epfl.dedis.proto.PoPProto.GetKeysReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.GetKeysReply();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.GetKeysReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetKeysReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetKeysReply>() {
+      public GetKeysReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new GetKeysReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetKeysReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetKeysReply> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.GetKeysReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface PopPartyInstanceOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:pop.PopPartyInstance)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <pre>
+     * State has one of the following values:
+     * 1: it is a configuration only
+     * 2: it is a finalized pop-party
+     * </pre>
+     *
+     * <code>required sint32 state = 1;</code>
+     */
+    boolean hasState();
+    /**
+     * <pre>
+     * State has one of the following values:
+     * 1: it is a configuration only
+     * 2: it is a finalized pop-party
+     * </pre>
+     *
+     * <code>required sint32 state = 1;</code>
+     */
+    int getState();
+
+    /**
+     * <pre>
+     * FinalStatement has either only the Desc inside if State == 1, or all fields
+     * set if State == 2.
+     * </pre>
+     *
+     * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+     */
+    boolean hasFinalstatement();
+    /**
+     * <pre>
+     * FinalStatement has either only the Desc inside if State == 1, or all fields
+     * set if State == 2.
+     * </pre>
+     *
+     * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+     */
+    ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatement();
+    /**
+     * <pre>
+     * FinalStatement has either only the Desc inside if State == 1, or all fields
+     * set if State == 2.
+     * </pre>
+     *
+     * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+     */
+    ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder getFinalstatementOrBuilder();
+
+    /**
+     * <pre>
+     * Previous is the link to the instanceID of the previous party, it can be
+     * nil for the first party.
+     * </pre>
+     *
+     * <code>required bytes previous = 3;</code>
+     */
+    boolean hasPrevious();
+    /**
+     * <pre>
+     * Previous is the link to the instanceID of the previous party, it can be
+     * nil for the first party.
+     * </pre>
+     *
+     * <code>required bytes previous = 3;</code>
+     */
+    com.google.protobuf.ByteString getPrevious();
+
+    /**
+     * <pre>
+     * Next is a link to the omniledger instanceID of the next party. It can be
+     * nil if there is no next party.
+     * </pre>
+     *
+     * <code>required bytes next = 4;</code>
+     */
+    boolean hasNext();
+    /**
+     * <pre>
+     * Next is a link to the omniledger instanceID of the next party. It can be
+     * nil if there is no next party.
+     * </pre>
+     *
+     * <code>required bytes next = 4;</code>
+     */
+    com.google.protobuf.ByteString getNext();
+
+    /**
+     * <pre>
+     * Public key of service - can be nil.
+     * </pre>
+     *
+     * <code>optional bytes service = 5;</code>
+     */
+    boolean hasService();
+    /**
+     * <pre>
+     * Public key of service - can be nil.
+     * </pre>
+     *
+     * <code>optional bytes service = 5;</code>
+     */
+    com.google.protobuf.ByteString getService();
+  }
+  /**
+   * <pre>
+   * PopPartyInstance is the data that is stored in a pop-party instance.
+   * </pre>
+   *
+   * Protobuf type {@code pop.PopPartyInstance}
+   */
+  public  static final class PopPartyInstance extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:pop.PopPartyInstance)
+      PopPartyInstanceOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use PopPartyInstance.newBuilder() to construct.
+    private PopPartyInstance(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private PopPartyInstance() {
+      state_ = 0;
+      previous_ = com.google.protobuf.ByteString.EMPTY;
+      next_ = com.google.protobuf.ByteString.EMPTY;
+      service_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private PopPartyInstance(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+            case 8: {
+              bitField0_ |= 0x00000001;
+              state_ = input.readSInt32();
+              break;
+            }
+            case 18: {
+              ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                subBuilder = finalstatement_.toBuilder();
+              }
+              finalstatement_ = input.readMessage(ch.epfl.dedis.proto.PoPProto.FinalStatement.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(finalstatement_);
+                finalstatement_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000002;
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000004;
+              previous_ = input.readBytes();
+              break;
+            }
+            case 34: {
+              bitField0_ |= 0x00000008;
+              next_ = input.readBytes();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
+              service_ = input.readBytes();
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopPartyInstance_descriptor;
+    }
+
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopPartyInstance_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.proto.PoPProto.PopPartyInstance.class, ch.epfl.dedis.proto.PoPProto.PopPartyInstance.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int STATE_FIELD_NUMBER = 1;
+    private int state_;
+    /**
+     * <pre>
+     * State has one of the following values:
+     * 1: it is a configuration only
+     * 2: it is a finalized pop-party
+     * </pre>
+     *
+     * <code>required sint32 state = 1;</code>
+     */
+    public boolean hasState() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <pre>
+     * State has one of the following values:
+     * 1: it is a configuration only
+     * 2: it is a finalized pop-party
+     * </pre>
+     *
+     * <code>required sint32 state = 1;</code>
+     */
+    public int getState() {
+      return state_;
+    }
+
+    public static final int FINALSTATEMENT_FIELD_NUMBER = 2;
+    private ch.epfl.dedis.proto.PoPProto.FinalStatement finalstatement_;
+    /**
+     * <pre>
+     * FinalStatement has either only the Desc inside if State == 1, or all fields
+     * set if State == 2.
+     * </pre>
+     *
+     * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+     */
+    public boolean hasFinalstatement() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <pre>
+     * FinalStatement has either only the Desc inside if State == 1, or all fields
+     * set if State == 2.
+     * </pre>
+     *
+     * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+     */
+    public ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatement() {
+      return finalstatement_ == null ? ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance() : finalstatement_;
+    }
+    /**
+     * <pre>
+     * FinalStatement has either only the Desc inside if State == 1, or all fields
+     * set if State == 2.
+     * </pre>
+     *
+     * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+     */
+    public ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder getFinalstatementOrBuilder() {
+      return finalstatement_ == null ? ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance() : finalstatement_;
+    }
+
+    public static final int PREVIOUS_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString previous_;
+    /**
+     * <pre>
+     * Previous is the link to the instanceID of the previous party, it can be
+     * nil for the first party.
+     * </pre>
+     *
+     * <code>required bytes previous = 3;</code>
+     */
+    public boolean hasPrevious() {
+      return ((bitField0_ & 0x00000004) == 0x00000004);
+    }
+    /**
+     * <pre>
+     * Previous is the link to the instanceID of the previous party, it can be
+     * nil for the first party.
+     * </pre>
+     *
+     * <code>required bytes previous = 3;</code>
+     */
+    public com.google.protobuf.ByteString getPrevious() {
+      return previous_;
+    }
+
+    public static final int NEXT_FIELD_NUMBER = 4;
+    private com.google.protobuf.ByteString next_;
+    /**
+     * <pre>
+     * Next is a link to the omniledger instanceID of the next party. It can be
+     * nil if there is no next party.
+     * </pre>
+     *
+     * <code>required bytes next = 4;</code>
+     */
+    public boolean hasNext() {
+      return ((bitField0_ & 0x00000008) == 0x00000008);
+    }
+    /**
+     * <pre>
+     * Next is a link to the omniledger instanceID of the next party. It can be
+     * nil if there is no next party.
+     * </pre>
+     *
+     * <code>required bytes next = 4;</code>
+     */
+    public com.google.protobuf.ByteString getNext() {
+      return next_;
+    }
+
+    public static final int SERVICE_FIELD_NUMBER = 5;
+    private com.google.protobuf.ByteString service_;
+    /**
+     * <pre>
+     * Public key of service - can be nil.
+     * </pre>
+     *
+     * <code>optional bytes service = 5;</code>
+     */
+    public boolean hasService() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <pre>
+     * Public key of service - can be nil.
+     * </pre>
+     *
+     * <code>optional bytes service = 5;</code>
+     */
+    public com.google.protobuf.ByteString getService() {
+      return service_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasState()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasPrevious()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasNext()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (hasFinalstatement()) {
+        if (!getFinalstatement().isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeSInt32(1, state_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeMessage(2, getFinalstatement());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        output.writeBytes(3, previous_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        output.writeBytes(4, next_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, service_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeSInt32Size(1, state_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(2, getFinalstatement());
+      }
+      if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, previous_);
+      }
+      if (((bitField0_ & 0x00000008) == 0x00000008)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(4, next_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, service_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.proto.PoPProto.PopPartyInstance)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.proto.PoPProto.PopPartyInstance other = (ch.epfl.dedis.proto.PoPProto.PopPartyInstance) obj;
+
+      boolean result = true;
+      result = result && (hasState() == other.hasState());
+      if (hasState()) {
+        result = result && (getState()
+            == other.getState());
+      }
+      result = result && (hasFinalstatement() == other.hasFinalstatement());
+      if (hasFinalstatement()) {
+        result = result && getFinalstatement()
+            .equals(other.getFinalstatement());
+      }
+      result = result && (hasPrevious() == other.hasPrevious());
+      if (hasPrevious()) {
+        result = result && getPrevious()
+            .equals(other.getPrevious());
+      }
+      result = result && (hasNext() == other.hasNext());
+      if (hasNext()) {
+        result = result && getNext()
+            .equals(other.getNext());
+      }
+      result = result && (hasService() == other.hasService());
+      if (hasService()) {
+        result = result && getService()
+            .equals(other.getService());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasState()) {
+        hash = (37 * hash) + STATE_FIELD_NUMBER;
+        hash = (53 * hash) + getState();
+      }
+      if (hasFinalstatement()) {
+        hash = (37 * hash) + FINALSTATEMENT_FIELD_NUMBER;
+        hash = (53 * hash) + getFinalstatement().hashCode();
+      }
+      if (hasPrevious()) {
+        hash = (37 * hash) + PREVIOUS_FIELD_NUMBER;
+        hash = (53 * hash) + getPrevious().hashCode();
+      }
+      if (hasNext()) {
+        hash = (37 * hash) + NEXT_FIELD_NUMBER;
+        hash = (53 * hash) + getNext().hashCode();
+      }
+      if (hasService()) {
+        hash = (37 * hash) + SERVICE_FIELD_NUMBER;
+        hash = (53 * hash) + getService().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.proto.PoPProto.PopPartyInstance prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * PopPartyInstance is the data that is stored in a pop-party instance.
+     * </pre>
+     *
+     * Protobuf type {@code pop.PopPartyInstance}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:pop.PopPartyInstance)
+        ch.epfl.dedis.proto.PoPProto.PopPartyInstanceOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopPartyInstance_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopPartyInstance_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.proto.PoPProto.PopPartyInstance.class, ch.epfl.dedis.proto.PoPProto.PopPartyInstance.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.proto.PoPProto.PopPartyInstance.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+          getFinalstatementFieldBuilder();
+        }
+      }
+      public Builder clear() {
+        super.clear();
+        state_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        if (finalstatementBuilder_ == null) {
+          finalstatement_ = null;
+        } else {
+          finalstatementBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        previous_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        next_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000008);
+        service_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
+        return this;
+      }
+
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.proto.PoPProto.internal_static_pop_PopPartyInstance_descriptor;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.PopPartyInstance getDefaultInstanceForType() {
+        return ch.epfl.dedis.proto.PoPProto.PopPartyInstance.getDefaultInstance();
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.PopPartyInstance build() {
+        ch.epfl.dedis.proto.PoPProto.PopPartyInstance result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      public ch.epfl.dedis.proto.PoPProto.PopPartyInstance buildPartial() {
+        ch.epfl.dedis.proto.PoPProto.PopPartyInstance result = new ch.epfl.dedis.proto.PoPProto.PopPartyInstance(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.state_ = state_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        if (finalstatementBuilder_ == null) {
+          result.finalstatement_ = finalstatement_;
+        } else {
+          result.finalstatement_ = finalstatementBuilder_.build();
+        }
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000004;
+        }
+        result.previous_ = previous_;
+        if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+          to_bitField0_ |= 0x00000008;
+        }
+        result.next_ = next_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.service_ = service_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.proto.PoPProto.PopPartyInstance) {
+          return mergeFrom((ch.epfl.dedis.proto.PoPProto.PopPartyInstance)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.proto.PoPProto.PopPartyInstance other) {
+        if (other == ch.epfl.dedis.proto.PoPProto.PopPartyInstance.getDefaultInstance()) return this;
+        if (other.hasState()) {
+          setState(other.getState());
+        }
+        if (other.hasFinalstatement()) {
+          mergeFinalstatement(other.getFinalstatement());
+        }
+        if (other.hasPrevious()) {
+          setPrevious(other.getPrevious());
+        }
+        if (other.hasNext()) {
+          setNext(other.getNext());
+        }
+        if (other.hasService()) {
+          setService(other.getService());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      public final boolean isInitialized() {
+        if (!hasState()) {
+          return false;
+        }
+        if (!hasPrevious()) {
+          return false;
+        }
+        if (!hasNext()) {
+          return false;
+        }
+        if (hasFinalstatement()) {
+          if (!getFinalstatement().isInitialized()) {
+            return false;
+          }
+        }
+        return true;
+      }
+
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.proto.PoPProto.PopPartyInstance parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.proto.PoPProto.PopPartyInstance) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int state_ ;
+      /**
+       * <pre>
+       * State has one of the following values:
+       * 1: it is a configuration only
+       * 2: it is a finalized pop-party
+       * </pre>
+       *
+       * <code>required sint32 state = 1;</code>
+       */
+      public boolean hasState() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <pre>
+       * State has one of the following values:
+       * 1: it is a configuration only
+       * 2: it is a finalized pop-party
+       * </pre>
+       *
+       * <code>required sint32 state = 1;</code>
+       */
+      public int getState() {
+        return state_;
+      }
+      /**
+       * <pre>
+       * State has one of the following values:
+       * 1: it is a configuration only
+       * 2: it is a finalized pop-party
+       * </pre>
+       *
+       * <code>required sint32 state = 1;</code>
+       */
+      public Builder setState(int value) {
+        bitField0_ |= 0x00000001;
+        state_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * State has one of the following values:
+       * 1: it is a configuration only
+       * 2: it is a finalized pop-party
+       * </pre>
+       *
+       * <code>required sint32 state = 1;</code>
+       */
+      public Builder clearState() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        state_ = 0;
+        onChanged();
+        return this;
+      }
+
+      private ch.epfl.dedis.proto.PoPProto.FinalStatement finalstatement_ = null;
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.PoPProto.FinalStatement, ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder> finalstatementBuilder_;
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public boolean hasFinalstatement() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public ch.epfl.dedis.proto.PoPProto.FinalStatement getFinalstatement() {
+        if (finalstatementBuilder_ == null) {
+          return finalstatement_ == null ? ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance() : finalstatement_;
+        } else {
+          return finalstatementBuilder_.getMessage();
+        }
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public Builder setFinalstatement(ch.epfl.dedis.proto.PoPProto.FinalStatement value) {
+        if (finalstatementBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          finalstatement_ = value;
+          onChanged();
+        } else {
+          finalstatementBuilder_.setMessage(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public Builder setFinalstatement(
+          ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder builderForValue) {
+        if (finalstatementBuilder_ == null) {
+          finalstatement_ = builderForValue.build();
+          onChanged();
+        } else {
+          finalstatementBuilder_.setMessage(builderForValue.build());
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public Builder mergeFinalstatement(ch.epfl.dedis.proto.PoPProto.FinalStatement value) {
+        if (finalstatementBuilder_ == null) {
+          if (((bitField0_ & 0x00000002) == 0x00000002) &&
+              finalstatement_ != null &&
+              finalstatement_ != ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance()) {
+            finalstatement_ =
+              ch.epfl.dedis.proto.PoPProto.FinalStatement.newBuilder(finalstatement_).mergeFrom(value).buildPartial();
+          } else {
+            finalstatement_ = value;
+          }
+          onChanged();
+        } else {
+          finalstatementBuilder_.mergeFrom(value);
+        }
+        bitField0_ |= 0x00000002;
+        return this;
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public Builder clearFinalstatement() {
+        if (finalstatementBuilder_ == null) {
+          finalstatement_ = null;
+          onChanged();
+        } else {
+          finalstatementBuilder_.clear();
+        }
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder getFinalstatementBuilder() {
+        bitField0_ |= 0x00000002;
+        onChanged();
+        return getFinalstatementFieldBuilder().getBuilder();
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      public ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder getFinalstatementOrBuilder() {
+        if (finalstatementBuilder_ != null) {
+          return finalstatementBuilder_.getMessageOrBuilder();
+        } else {
+          return finalstatement_ == null ?
+              ch.epfl.dedis.proto.PoPProto.FinalStatement.getDefaultInstance() : finalstatement_;
+        }
+      }
+      /**
+       * <pre>
+       * FinalStatement has either only the Desc inside if State == 1, or all fields
+       * set if State == 2.
+       * </pre>
+       *
+       * <code>optional .pop.FinalStatement finalstatement = 2;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          ch.epfl.dedis.proto.PoPProto.FinalStatement, ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder> 
+          getFinalstatementFieldBuilder() {
+        if (finalstatementBuilder_ == null) {
+          finalstatementBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              ch.epfl.dedis.proto.PoPProto.FinalStatement, ch.epfl.dedis.proto.PoPProto.FinalStatement.Builder, ch.epfl.dedis.proto.PoPProto.FinalStatementOrBuilder>(
+                  getFinalstatement(),
+                  getParentForChildren(),
+                  isClean());
+          finalstatement_ = null;
+        }
+        return finalstatementBuilder_;
+      }
+
+      private com.google.protobuf.ByteString previous_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * Previous is the link to the instanceID of the previous party, it can be
+       * nil for the first party.
+       * </pre>
+       *
+       * <code>required bytes previous = 3;</code>
+       */
+      public boolean hasPrevious() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <pre>
+       * Previous is the link to the instanceID of the previous party, it can be
+       * nil for the first party.
+       * </pre>
+       *
+       * <code>required bytes previous = 3;</code>
+       */
+      public com.google.protobuf.ByteString getPrevious() {
+        return previous_;
+      }
+      /**
+       * <pre>
+       * Previous is the link to the instanceID of the previous party, it can be
+       * nil for the first party.
+       * </pre>
+       *
+       * <code>required bytes previous = 3;</code>
+       */
+      public Builder setPrevious(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        previous_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Previous is the link to the instanceID of the previous party, it can be
+       * nil for the first party.
+       * </pre>
+       *
+       * <code>required bytes previous = 3;</code>
+       */
+      public Builder clearPrevious() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        previous_ = getDefaultInstance().getPrevious();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString next_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * Next is a link to the omniledger instanceID of the next party. It can be
+       * nil if there is no next party.
+       * </pre>
+       *
+       * <code>required bytes next = 4;</code>
+       */
+      public boolean hasNext() {
+        return ((bitField0_ & 0x00000008) == 0x00000008);
+      }
+      /**
+       * <pre>
+       * Next is a link to the omniledger instanceID of the next party. It can be
+       * nil if there is no next party.
+       * </pre>
+       *
+       * <code>required bytes next = 4;</code>
+       */
+      public com.google.protobuf.ByteString getNext() {
+        return next_;
+      }
+      /**
+       * <pre>
+       * Next is a link to the omniledger instanceID of the next party. It can be
+       * nil if there is no next party.
+       * </pre>
+       *
+       * <code>required bytes next = 4;</code>
+       */
+      public Builder setNext(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000008;
+        next_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Next is a link to the omniledger instanceID of the next party. It can be
+       * nil if there is no next party.
+       * </pre>
+       *
+       * <code>required bytes next = 4;</code>
+       */
+      public Builder clearNext() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        next_ = getDefaultInstance().getNext();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString service_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <pre>
+       * Public key of service - can be nil.
+       * </pre>
+       *
+       * <code>optional bytes service = 5;</code>
+       */
+      public boolean hasService() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <pre>
+       * Public key of service - can be nil.
+       * </pre>
+       *
+       * <code>optional bytes service = 5;</code>
+       */
+      public com.google.protobuf.ByteString getService() {
+        return service_;
+      }
+      /**
+       * <pre>
+       * Public key of service - can be nil.
+       * </pre>
+       *
+       * <code>optional bytes service = 5;</code>
+       */
+      public Builder setService(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        service_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Public key of service - can be nil.
+       * </pre>
+       *
+       * <code>optional bytes service = 5;</code>
+       */
+      public Builder clearService() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        service_ = getDefaultInstance().getService();
+        onChanged();
+        return this;
+      }
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:pop.PopPartyInstance)
+    }
+
+    // @@protoc_insertion_point(class_scope:pop.PopPartyInstance)
+    private static final ch.epfl.dedis.proto.PoPProto.PopPartyInstance DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.proto.PoPProto.PopPartyInstance();
+    }
+
+    public static ch.epfl.dedis.proto.PoPProto.PopPartyInstance getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<PopPartyInstance>
+        PARSER = new com.google.protobuf.AbstractParser<PopPartyInstance>() {
+      public PopPartyInstance parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+          return new PopPartyInstance(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<PopPartyInstance> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<PopPartyInstance> getParserForType() {
+      return PARSER;
+    }
+
+    public ch.epfl.dedis.proto.PoPProto.PopPartyInstance getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -14035,6 +23325,96 @@ public final class PoPProto {
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_pop_VerifyLinkReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetLink_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetLink_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetLinkReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetLinkReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetFinalStatements_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetFinalStatements_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetFinalStatementsReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetFinalStatementsReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_StoreInstanceID_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_StoreInstanceID_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_StoreInstanceIDReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_StoreInstanceIDReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetInstanceID_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetInstanceID_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetInstanceIDReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetInstanceIDReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_StoreSigner_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_StoreSigner_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_StoreSignerReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_StoreSignerReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetSigner_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetSigner_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetSignerReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetSignerReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_StoreKeys_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_StoreKeys_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_StoreKeysReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_StoreKeysReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetKeys_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetKeys_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_GetKeysReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_GetKeysReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_pop_PopPartyInstance_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_pop_PopPartyInstance_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -14044,35 +23424,56 @@ public final class PoPProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\tpop.proto\022\003pop\032\nonet.proto\";\n\tShortDes" +
-      "c\022\020\n\010location\030\001 \002(\t\022\034\n\006roster\030\002 \001(\0132\014.on" +
-      "et.Roster\"z\n\007PopDesc\022\014\n\004name\030\001 \002(\t\022\020\n\010da" +
-      "tetime\030\002 \002(\t\022\020\n\010location\030\003 \002(\t\022\034\n\006roster" +
-      "\030\004 \001(\0132\014.onet.Roster\022\037\n\007parties\030\005 \003(\0132\016." +
-      "pop.ShortDesc\"b\n\016FinalStatement\022\032\n\004desc\030" +
-      "\001 \001(\0132\014.pop.PopDesc\022\021\n\tattendees\030\002 \003(\014\022\021" +
-      "\n\tsignature\030\003 \002(\014\022\016\n\006merged\030\004 \002(\010\"1\n\013Che" +
-      "ckConfig\022\017\n\007pophash\030\001 \002(\014\022\021\n\tattendees\030\002" +
-      " \003(\014\"I\n\020CheckConfigReply\022\021\n\tpopstatus\030\001 " +
-      "\002(\021\022\017\n\007pophash\030\002 \002(\014\022\021\n\tattendees\030\003 \003(\014\"" +
-      "=\n\013MergeConfig\022\"\n\005final\030\001 \001(\0132\023.pop.Fina" +
-      "lStatement\022\n\n\002id\030\002 \002(\014\"Z\n\020MergeConfigRep" +
-      "ly\022\021\n\tpopstatus\030\001 \002(\021\022\017\n\007pophash\030\002 \002(\014\022\"" +
-      "\n\005final\030\003 \001(\0132\023.pop.FinalStatement\")\n\nPi" +
-      "nRequest\022\013\n\003pin\030\001 \002(\t\022\016\n\006public\030\002 \002(\014\"<\n" +
-      "\013StoreConfig\022\032\n\004desc\030\001 \001(\0132\014.pop.PopDesc" +
-      "\022\021\n\tsignature\030\002 \002(\014\"\036\n\020StoreConfigReply\022" +
-      "\n\n\002id\030\001 \002(\014\"G\n\017FinalizeRequest\022\016\n\006descid" +
-      "\030\001 \002(\014\022\021\n\tattendees\030\002 \003(\014\022\021\n\tsignature\030\003" +
-      " \002(\014\"6\n\020FinalizeResponse\022\"\n\005final\030\001 \001(\0132" +
-      "\023.pop.FinalStatement\"4\n\014FetchRequest\022\n\n\002" +
-      "id\030\001 \002(\014\022\030\n\020returnuncomplete\030\002 \001(\010\"-\n\014Me" +
-      "rgeRequest\022\n\n\002id\030\001 \002(\014\022\021\n\tsignature\030\002 \002(" +
-      "\014\"\016\n\014GetProposals\"4\n\021GetProposalsReply\022\037" +
-      "\n\tproposals\030\001 \003(\0132\014.pop.PopDesc\"\034\n\nVerif" +
-      "yLink\022\016\n\006public\030\001 \002(\014\"!\n\017VerifyLinkReply" +
-      "\022\016\n\006exists\030\001 \002(\010B\037\n\023ch.epfl.dedis.protoB" +
-      "\010PoPProto"
+      "\n\tpop.proto\022\003pop\032\nonet.proto\032\ndarc.proto" +
+      "\";\n\tShortDesc\022\020\n\010location\030\001 \002(\t\022\034\n\006roste" +
+      "r\030\002 \001(\0132\014.onet.Roster\"z\n\007PopDesc\022\014\n\004name" +
+      "\030\001 \002(\t\022\020\n\010datetime\030\002 \002(\t\022\020\n\010location\030\003 \002" +
+      "(\t\022\034\n\006roster\030\004 \001(\0132\014.onet.Roster\022\037\n\007part" +
+      "ies\030\005 \003(\0132\016.pop.ShortDesc\"b\n\016FinalStatem" +
+      "ent\022\032\n\004desc\030\001 \001(\0132\014.pop.PopDesc\022\021\n\tatten" +
+      "dees\030\002 \003(\014\022\021\n\tsignature\030\003 \002(\014\022\016\n\006merged\030" +
+      "\004 \002(\010\"1\n\013CheckConfig\022\017\n\007pophash\030\001 \002(\014\022\021\n" +
+      "\tattendees\030\002 \003(\014\"I\n\020CheckConfigReply\022\021\n\t",
+      "popstatus\030\001 \002(\021\022\017\n\007pophash\030\002 \002(\014\022\021\n\tatte" +
+      "ndees\030\003 \003(\014\"=\n\013MergeConfig\022\"\n\005final\030\001 \001(" +
+      "\0132\023.pop.FinalStatement\022\n\n\002id\030\002 \002(\014\"Z\n\020Me" +
+      "rgeConfigReply\022\021\n\tpopstatus\030\001 \002(\021\022\017\n\007pop" +
+      "hash\030\002 \002(\014\022\"\n\005final\030\003 \001(\0132\023.pop.FinalSta" +
+      "tement\")\n\nPinRequest\022\013\n\003pin\030\001 \002(\t\022\016\n\006pub" +
+      "lic\030\002 \002(\014\"<\n\013StoreConfig\022\032\n\004desc\030\001 \001(\0132\014" +
+      ".pop.PopDesc\022\021\n\tsignature\030\002 \002(\014\"\036\n\020Store" +
+      "ConfigReply\022\n\n\002id\030\001 \002(\014\"G\n\017FinalizeReque" +
+      "st\022\016\n\006descid\030\001 \002(\014\022\021\n\tattendees\030\002 \003(\014\022\021\n",
+      "\tsignature\030\003 \002(\014\"6\n\020FinalizeResponse\022\"\n\005" +
+      "final\030\001 \001(\0132\023.pop.FinalStatement\"4\n\014Fetc" +
+      "hRequest\022\n\n\002id\030\001 \002(\014\022\030\n\020returnuncomplete" +
+      "\030\002 \001(\010\"-\n\014MergeRequest\022\n\n\002id\030\001 \002(\014\022\021\n\tsi" +
+      "gnature\030\002 \002(\014\"\016\n\014GetProposals\"4\n\021GetProp" +
+      "osalsReply\022\037\n\tproposals\030\001 \003(\0132\014.pop.PopD" +
+      "esc\"\034\n\nVerifyLink\022\016\n\006public\030\001 \002(\014\"!\n\017Ver" +
+      "ifyLinkReply\022\016\n\006exists\030\001 \002(\010\"\t\n\007GetLink\"" +
+      "\036\n\014GetLinkReply\022\016\n\006public\030\001 \002(\014\"\024\n\022GetFi" +
+      "nalStatements\"\262\001\n\027GetFinalStatementsRepl",
+      "y\022J\n\017finalstatements\030\001 \003(\01321.pop.GetFina" +
+      "lStatementsReply.FinalstatementsEntry\032K\n" +
+      "\024FinalstatementsEntry\022\013\n\003key\030\001 \001(\t\022\"\n\005va" +
+      "lue\030\002 \001(\0132\023.pop.FinalStatement:\0028\001\"6\n\017St" +
+      "oreInstanceID\022\017\n\007partyid\030\001 \002(\014\022\022\n\ninstan" +
+      "ceid\030\002 \002(\014\"\026\n\024StoreInstanceIDReply\" \n\rGe" +
+      "tInstanceID\022\017\n\007partyid\030\001 \002(\014\"(\n\022GetInsta" +
+      "nceIDReply\022\022\n\ninstanceid\030\001 \002(\014\"<\n\013StoreS" +
+      "igner\022\017\n\007partyid\030\001 \002(\014\022\034\n\006signer\030\002 \002(\0132\014" +
+      ".darc.Signer\"\022\n\020StoreSignerReply\"\034\n\tGetS",
+      "igner\022\017\n\007partyid\030\001 \002(\014\".\n\016GetSignerReply" +
+      "\022\034\n\006signer\030\001 \002(\0132\014.darc.Signer\"8\n\tStoreK" +
+      "eys\022\n\n\002id\030\001 \002(\014\022\014\n\004keys\030\002 \003(\014\022\021\n\tsignatu" +
+      "re\030\003 \002(\014\"\020\n\016StoreKeysReply\"\025\n\007GetKeys\022\n\n" +
+      "\002id\030\001 \002(\014\"(\n\014GetKeysReply\022\n\n\002id\030\001 \002(\014\022\014\n" +
+      "\004keys\030\002 \003(\014\"\177\n\020PopPartyInstance\022\r\n\005state" +
+      "\030\001 \002(\021\022+\n\016finalstatement\030\002 \001(\0132\023.pop.Fin" +
+      "alStatement\022\020\n\010previous\030\003 \002(\014\022\014\n\004next\030\004 " +
+      "\002(\014\022\017\n\007service\030\005 \001(\014B\037\n\023ch.epfl.dedis.pr" +
+      "otoB\010PoPProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -14086,6 +23487,7 @@ public final class PoPProto {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           ch.epfl.dedis.proto.OnetProto.getDescriptor(),
+          ch.epfl.dedis.proto.DarcProto.getDescriptor(),
         }, assigner);
     internal_static_pop_ShortDesc_descriptor =
       getDescriptor().getMessageTypes().get(0);
@@ -14195,7 +23597,116 @@ public final class PoPProto {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_pop_VerifyLinkReply_descriptor,
         new java.lang.String[] { "Exists", });
+    internal_static_pop_GetLink_descriptor =
+      getDescriptor().getMessageTypes().get(18);
+    internal_static_pop_GetLink_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetLink_descriptor,
+        new java.lang.String[] { });
+    internal_static_pop_GetLinkReply_descriptor =
+      getDescriptor().getMessageTypes().get(19);
+    internal_static_pop_GetLinkReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetLinkReply_descriptor,
+        new java.lang.String[] { "Public", });
+    internal_static_pop_GetFinalStatements_descriptor =
+      getDescriptor().getMessageTypes().get(20);
+    internal_static_pop_GetFinalStatements_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetFinalStatements_descriptor,
+        new java.lang.String[] { });
+    internal_static_pop_GetFinalStatementsReply_descriptor =
+      getDescriptor().getMessageTypes().get(21);
+    internal_static_pop_GetFinalStatementsReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetFinalStatementsReply_descriptor,
+        new java.lang.String[] { "Finalstatements", });
+    internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_descriptor =
+      internal_static_pop_GetFinalStatementsReply_descriptor.getNestedTypes().get(0);
+    internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetFinalStatementsReply_FinalstatementsEntry_descriptor,
+        new java.lang.String[] { "Key", "Value", });
+    internal_static_pop_StoreInstanceID_descriptor =
+      getDescriptor().getMessageTypes().get(22);
+    internal_static_pop_StoreInstanceID_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_StoreInstanceID_descriptor,
+        new java.lang.String[] { "Partyid", "Instanceid", });
+    internal_static_pop_StoreInstanceIDReply_descriptor =
+      getDescriptor().getMessageTypes().get(23);
+    internal_static_pop_StoreInstanceIDReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_StoreInstanceIDReply_descriptor,
+        new java.lang.String[] { });
+    internal_static_pop_GetInstanceID_descriptor =
+      getDescriptor().getMessageTypes().get(24);
+    internal_static_pop_GetInstanceID_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetInstanceID_descriptor,
+        new java.lang.String[] { "Partyid", });
+    internal_static_pop_GetInstanceIDReply_descriptor =
+      getDescriptor().getMessageTypes().get(25);
+    internal_static_pop_GetInstanceIDReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetInstanceIDReply_descriptor,
+        new java.lang.String[] { "Instanceid", });
+    internal_static_pop_StoreSigner_descriptor =
+      getDescriptor().getMessageTypes().get(26);
+    internal_static_pop_StoreSigner_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_StoreSigner_descriptor,
+        new java.lang.String[] { "Partyid", "Signer", });
+    internal_static_pop_StoreSignerReply_descriptor =
+      getDescriptor().getMessageTypes().get(27);
+    internal_static_pop_StoreSignerReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_StoreSignerReply_descriptor,
+        new java.lang.String[] { });
+    internal_static_pop_GetSigner_descriptor =
+      getDescriptor().getMessageTypes().get(28);
+    internal_static_pop_GetSigner_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetSigner_descriptor,
+        new java.lang.String[] { "Partyid", });
+    internal_static_pop_GetSignerReply_descriptor =
+      getDescriptor().getMessageTypes().get(29);
+    internal_static_pop_GetSignerReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetSignerReply_descriptor,
+        new java.lang.String[] { "Signer", });
+    internal_static_pop_StoreKeys_descriptor =
+      getDescriptor().getMessageTypes().get(30);
+    internal_static_pop_StoreKeys_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_StoreKeys_descriptor,
+        new java.lang.String[] { "Id", "Keys", "Signature", });
+    internal_static_pop_StoreKeysReply_descriptor =
+      getDescriptor().getMessageTypes().get(31);
+    internal_static_pop_StoreKeysReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_StoreKeysReply_descriptor,
+        new java.lang.String[] { });
+    internal_static_pop_GetKeys_descriptor =
+      getDescriptor().getMessageTypes().get(32);
+    internal_static_pop_GetKeys_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetKeys_descriptor,
+        new java.lang.String[] { "Id", });
+    internal_static_pop_GetKeysReply_descriptor =
+      getDescriptor().getMessageTypes().get(33);
+    internal_static_pop_GetKeysReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_GetKeysReply_descriptor,
+        new java.lang.String[] { "Id", "Keys", });
+    internal_static_pop_PopPartyInstance_descriptor =
+      getDescriptor().getMessageTypes().get(34);
+    internal_static_pop_PopPartyInstance_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_pop_PopPartyInstance_descriptor,
+        new java.lang.String[] { "State", "Finalstatement", "Previous", "Next", "Service", });
     ch.epfl.dedis.proto.OnetProto.getDescriptor();
+    ch.epfl.dedis.proto.DarcProto.getDescriptor();
   }
 
   // @@protoc_insertion_point(outer_class_scope)
