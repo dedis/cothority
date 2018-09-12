@@ -380,7 +380,12 @@ func txResultsFromBlock(sb *skipchain.SkipBlock) (TxResults, error) {
 }
 
 func TestService_WaitInclusion(t *testing.T) {
-	for i := 0; i < 3; i++ {
+	n := 3
+	if testing.Short() {
+		n = 1
+	}
+
+	for i := 0; i < n; i++ {
 		log.Lvl1("Testing inclusion when sending to service", i)
 		waitInclusion(t, i)
 	}
