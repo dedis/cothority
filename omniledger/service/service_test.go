@@ -506,7 +506,7 @@ func TestService_BigTx(t *testing.T) {
 	// Use longer block interval for this test, as sending around these big blocks
 	// gets to be too close to the edge with the normal short testing interval, and
 	// starts generating errors-that-might-not-be-errors.
-	s := newSer(t, 1, 200*time.Millisecond)
+	s := newSer(t, 1, 1*time.Second)
 	defer s.local.CloseAll()
 
 	// Check block number before.
