@@ -515,12 +515,20 @@ func TestService_BigTx(t *testing.T) {
 	latest := reply.Update[len(reply.Update)-1]
 	require.Equal(t, 0, latest.Index)
 
-	// During this test, send values that are 3/4 as big as one block.
 	save := s.value
+
+	// Try to send a value so big it will be refused.
+	s.value = make([]byte, defaultMaxBlockSize+1)
+	_, e1, e2 := sendTransaction(t, s, 0, dummyContract, 0)
+	require.Error(t, e1)
+	require.Contains(t, "transaction too large", e1.Error())
+	require.NoError(t, e2)
+
+	// Now send values that are 3/4 as big as one block.
 	s.value = make([]byte, defaultMaxBlockSize/4*3)
 
 	log.Lvl1("Create 2 giant transactions and 1 little one, wait for the 3rd one")
-	_, e1, e2 := sendTransaction(t, s, 0, dummyContract, 0)
+	_, e1, e2 = sendTransaction(t, s, 0, dummyContract, 0)
 	require.NoError(t, e1)
 	require.NoError(t, e2)
 	_, e1, e2 = sendTransaction(t, s, 0, dummyContract, 0)

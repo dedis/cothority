@@ -228,6 +228,15 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		return nil, errors.New("skipchain ID is does not exist")
 	}
 
+	_, maxsz, err := s.LoadBlockInfo(req.SkipchainID)
+	if err != nil {
+		return nil, err
+	}
+	txsz := txSize(TxResult{ClientTransaction: req.Transaction})
+	if txsz > maxsz {
+		return nil, errors.New("transaction too large")
+	}
+
 	// Note to my future self: s.txBuffer.add used to be out here. It used to work
 	// even. But while investigating other race conditions, we realized that
 	// IF there will be a wait channel, THEN it must exist before the call to add().
@@ -718,12 +727,21 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 				// When we poll, the child nodes must reply within half of the block interval,
 				// because we'll use the other half to process the transactions.
 				protocolTimeout := time.After(interval / 2)
+
+				_, maxsz, _ := s.LoadBlockInfo(scID)
 			collectTxLoop:
 				for {
 					select {
 					case newTxs, more := <-root.TxsChan:
 						if more {
-							txs = append(txs, newTxs...)
+							for _, ct := range newTxs {
+								txsz := txSize(TxResult{ClientTransaction: ct})
+								if txsz < maxsz {
+									txs = append(txs, ct)
+								} else {
+									log.Lvl2(s.ServerIdentity(), "dropping collected transaction with length", txsz)
+								}
+							}
 						} else {
 							break collectTxLoop
 						}
@@ -758,7 +776,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 
 				txs = txs[len(txOut):]
 				if len(txs) > 0 {
-					sz := txrSize(txOut)
+					sz := txSize(txOut...)
 					log.Warnf("%d transactions (%v bytes) included in block in %v, %d transactions left for the next block", len(txOut), sz, time.Now().Sub(then), len(txs))
 				}
 
@@ -894,21 +912,10 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	return true
 }
 
-func txSize(tx ClientTransaction) int {
+func txSize(txr ...TxResult) (out int) {
 	// It's too bad to have to marshal this and throw it away just to know
 	// how big it would be. Protobuf should support finding the length without
 	// copying the data.
-	buf, err := protobuf.Encode(tx)
-	if err != nil {
-		// It's fairly inconceivable that we're going to be getting
-		// error from this Encode() but return a big number in case,
-		// so that the caller will reject whatever this bad input is.
-		return math.MaxInt32
-	}
-	return len(buf)
-}
-
-func txrSize(txr TxResults) (out int) {
 	for _, x := range txr {
 		buf, err := protobuf.Encode(&x)
 		if err != nil {
@@ -962,11 +969,12 @@ func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain
 	var cin []Coin
 clientTransactions:
 	for _, tx := range txIn {
+		txsz := txSize(tx)
+
 		// Make a new collection for each instruction. If the instruction is sucessfully
 		// implemented and changes applied, then keep it (via cdbTemp = cdbI.c),
 		// otherwise dump it.
 		cdbI := &roCollection{cdbTemp.Clone()}
-		txsz := 0
 		for _, instr := range tx.ClientTransaction.Instructions {
 			scs, cout, err := s.executeInstruction(cdbI, cin, instr)
 			if err != nil {
@@ -986,14 +994,16 @@ clientTransactions:
 			states = append(states, scs...)
 			cin = cout
 		}
-		txsz += txrSize([]TxResult{tx})
 
-		// If the size of this one transaction alone is bigger than one block, it has to be rejected so it
-		// cannot sit on the front of the queue blocking all others.
-		if txsz > maxsz {
-			log.Errorf("%s transaction size %v is bigger than one block (%v), dropping it.", s.ServerIdentity(), txsz, maxsz)
-			continue clientTransactions
-		}
+		// We would like to be able to check if this txn is so big it could never fit into a block,
+		// and if so, drop it. But we can't with the current API of createStateChanges.
+		// For now, the only thing we can do is accept or refuse them, but they will go into a block
+		// one way or the other.
+		// TODO: In issue #1409, we will refactor things such that we can drop transactions in here.
+		//if txsz > maxsz {
+		//	log.Errorf("%s transaction size %v is bigger than one block (%v), dropping it.", s.ServerIdentity(), txsz, maxsz)
+		//	continue clientTransactions
+		//}
 
 		// Planning mode:
 		//
