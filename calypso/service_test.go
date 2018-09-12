@@ -171,19 +171,22 @@ func newTS(t *testing.T, nodes int) ts {
 	s := ts{}
 	s.local = onet.NewLocalTestT(cothority.Suite, t)
 
+	// Create the service
 	s.servers, s.roster, _ = s.local.GenTree(nodes, true)
 	services := s.local.GetServices(s.servers, calypsoID)
 	for _, ser := range services {
 		s.services = append(s.services, ser.(*Service))
 	}
-	log.Lvl2("Starting dkg for", nodes, "nodes")
-	var err error
-	s.ltsReply, err = s.services[0].CreateLTS(&CreateLTS{Roster: *s.roster})
-	require.Nil(t, err)
-	log.Lvl2("Done setting up dkg")
-	s.signer = darc.NewSignerEd25519(nil, nil)
 
+	// Create the skipchain
+	s.signer = darc.NewSignerEd25519(nil, nil)
 	s.createGenesis(t)
+
+	// Start DKG
+	var err error
+	s.ltsReply, err = s.services[0].CreateLTS(&CreateLTS{Roster: *s.roster, OLID: s.gbReply.Skipblock.Hash})
+	require.Nil(t, err)
+
 	return s
 }
 
