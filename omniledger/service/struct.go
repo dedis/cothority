@@ -253,9 +253,15 @@ func (c *collectionDB) RootHash() []byte {
 	return c.coll.GetRoot()
 }
 
+var errKeyNotSet = errors.New("key not set")
+
 func getValueContract(coll CollectionView, key []byte) (value []byte, contract string, darcID darc.ID, err error) {
 	record, err := coll.Get(key).Record()
 	if err != nil {
+		return
+	}
+	if !record.Match() {
+		err = errKeyNotSet
 		return
 	}
 	values, err := record.Values()
@@ -435,4 +441,20 @@ func (ol *olState) unregisterForBlocks(i int) {
 	ol.Lock()
 	defer ol.Unlock()
 	ol.blockListeners[i] = nil
+}
+
+func (c ChainConfig) sanityCheck() error {
+	if c.BlockInterval <= 0 {
+		return errors.New("block interval is less or equal to zero")
+	}
+	// too small would make it impossible to even send through a config update tx to fix it,
+	// so don't allow that.
+	if c.MaxBlockSize < 16000 {
+		return errors.New("max block size is less than 16000")
+	}
+	// onet/network.MaxPacketSize is 10 megs, leave some headroom anyway.
+	if c.MaxBlockSize > 8*1e6 {
+		return errors.New("max block size is greater than 8 megs")
+	}
+	return nil
 }

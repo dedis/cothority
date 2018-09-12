@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 	log.MainTest(m)
 }
 
-func TestService_CreateSkipchain(t *testing.T) {
+func TestService_CreateGenesisBlock(t *testing.T) {
 	s := newSer(t, 0, testInterval)
 	defer s.local.CloseAll()
 
@@ -40,6 +40,20 @@ func TestService_CreateSkipchain(t *testing.T) {
 	resp, err := s.service().CreateGenesisBlock(&CreateGenesisBlock{
 		Version: 0,
 		Roster:  *s.roster,
+	})
+	require.NotNil(t, err)
+
+	// invalid: max block too small, big
+	resp, err = s.service().CreateGenesisBlock(&CreateGenesisBlock{
+		Version:      0,
+		Roster:       *s.roster,
+		MaxBlockSize: 3000,
+	})
+	require.NotNil(t, err)
+	resp, err = s.service().CreateGenesisBlock(&CreateGenesisBlock{
+		Version:      0,
+		Roster:       *s.roster,
+		MaxBlockSize: 30 * 1e6,
 	})
 	require.NotNil(t, err)
 
@@ -54,8 +68,9 @@ func TestService_CreateSkipchain(t *testing.T) {
 	// create valid darc
 	signer := darc.NewSignerEd25519(nil, nil)
 	genesisMsg, err := DefaultGenesisMsg(CurrentVersion, s.roster, []string{"spawn:dummy"}, signer.Identity())
-	genesisMsg.BlockInterval = 100 * time.Millisecond
 	require.Nil(t, err)
+	genesisMsg.BlockInterval = 100 * time.Millisecond
+	genesisMsg.MaxBlockSize = 1 * 1e6
 
 	// finally passing
 	resp, err = s.service().CreateGenesisBlock(genesisMsg)
@@ -73,6 +88,11 @@ func TestService_CreateSkipchain(t *testing.T) {
 	k, _, err := proof.Proof.KeyValue()
 	require.Nil(t, err)
 	require.EqualValues(t, genesisMsg.GenesisDarc.GetID(), k)
+
+	interval, maxsz, err := s.service().LoadBlockInfo(resp.Skipblock.SkipChainID())
+	require.NoError(t, err)
+	require.Equal(t, interval, genesisMsg.BlockInterval)
+	require.Equal(t, maxsz, genesisMsg.MaxBlockSize)
 }
 
 func padDarc(key []byte) []byte {
@@ -300,7 +320,7 @@ func TestService_Depending(t *testing.T) {
 	cdb := s.service().getCollection(s.sb.SkipChainID())
 	_, _, _, err = cdb.GetValues(in1.Hash())
 	require.NotNil(t, err)
-	require.Equal(t, "no match found", err.Error())
+	require.Equal(t, errKeyNotSet, err)
 
 	// We need to wait a bit for the propagation to finish because the
 	// skipchain service might decide to update forward links by adding
@@ -487,6 +507,54 @@ func TestService_FloodLedger(t *testing.T) {
 	}
 }
 
+func TestService_BigTx(t *testing.T) {
+	// Use longer block interval for this test, as sending around these big blocks
+	// gets to be too close to the edge with the normal short testing interval, and
+	// starts generating errors-that-might-not-be-errors.
+	s := newSer(t, 1, 1*time.Second)
+	defer s.local.CloseAll()
+
+	// Check block number before.
+	reply, err := skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
+	require.Nil(t, err)
+	latest := reply.Update[len(reply.Update)-1]
+	require.Equal(t, 0, latest.Index)
+
+	save := s.value
+
+	// Try to send a value so big it will be refused.
+	s.value = make([]byte, defaultMaxBlockSize+1)
+	_, e1, e2 := sendTransaction(t, s, 0, dummyContract, 0)
+	require.Error(t, e1)
+	require.Contains(t, "transaction too large", e1.Error())
+	require.NoError(t, e2)
+
+	// Now send values that are 3/4 as big as one block.
+	s.value = make([]byte, defaultMaxBlockSize/4*3)
+
+	log.Lvl1("Create 2 giant transactions and 1 little one, wait for the 3rd one")
+	_, e1, e2 = sendTransaction(t, s, 0, dummyContract, 0)
+	require.NoError(t, e1)
+	require.NoError(t, e2)
+	_, e1, e2 = sendTransaction(t, s, 0, dummyContract, 0)
+	require.NoError(t, e1)
+	require.NoError(t, e2)
+
+	// Back to little values again for the last tx.
+	s.value = save
+	p, e1, e2 := sendTransaction(t, s, 0, dummyContract, 10)
+	require.NoError(t, e1)
+	require.NoError(t, e2)
+	require.True(t, p.InclusionProof.Match())
+
+	// expect that the 2 last txns went into block #2.
+	require.Equal(t, 2, p.Latest.Index)
+
+	txr, err := txResultsFromBlock(&p.Latest)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(txr))
+}
+
 func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (Proof, error, error) {
 	tx, err := createOneClientTx(s.darc.GetBaseID(), kind, s.value, s.signer)
 	require.Nil(t, err)
@@ -587,14 +655,15 @@ func findTx(tx ClientTransaction, res TxResults) TxResult {
 	panic("not found")
 }
 
-func TestService_LoadBlockInterval(t *testing.T) {
+func TestService_LoadBlockInfo(t *testing.T) {
 	interval := 200 * time.Millisecond
 	s := newSer(t, 1, interval)
 	defer s.local.CloseAll()
 
-	dur, err := s.service().LoadBlockInterval(s.sb.SkipChainID())
+	dur, sz, err := s.service().LoadBlockInfo(s.sb.SkipChainID())
 	require.Nil(t, err)
 	require.Equal(t, dur, interval)
+	require.True(t, sz == defaultMaxBlockSize)
 }
 
 func TestService_StateChange(t *testing.T) {
@@ -872,30 +941,54 @@ func TestService_SetConfig(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	ctx, newConfig := createConfigTx(t, s, true)
+	ctx, newConfig := createConfigTx(t, s, false, false)
 	s.sendTx(t, ctx)
 
 	// wait for a change
-	for i := 0; i < 5; i++ {
+	i := 0
+	for ; i < 5; i++ {
 		time.Sleep(s.interval)
 		config, err := s.service().LoadConfig(s.sb.SkipChainID())
 		require.NoError(t, err)
 
 		if config.BlockInterval == newConfig.BlockInterval {
-			return
+			break
 		}
 	}
-	require.Fail(t, "did not find new config in time")
+	if i == 5 {
+		require.Fail(t, "did not find new config in time")
+	}
+
+	interval, maxsz, err := s.service().LoadBlockInfo(s.sb.SkipChainID())
+	require.NoError(t, err)
+	require.Equal(t, interval, 420*time.Millisecond)
+	require.Equal(t, maxsz, 424242)
 }
 
 func TestService_SetBadConfig(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	ctx, badConfig := createConfigTx(t, s, false)
+	// send in a bad new block size
+	ctx, badConfig := createConfigTx(t, s, false, true)
 	s.sendTx(t, ctx)
 
-	// wait for a change, which should not happend
+	// wait for a change, which should not happen
+	for i := 0; i < 5; i++ {
+		time.Sleep(s.interval)
+		config, err := s.service().LoadConfig(s.sb.SkipChainID())
+		require.NoError(t, err)
+
+		if badConfig.Roster.List[0].Equal(config.Roster.List[0]) {
+			require.Fail(t, "found a bad config")
+		}
+	}
+
+	// send in a bad new interval
+	ctx, badConfig = createConfigTx(t, s, true, false)
+	s.sendTx(t, ctx)
+
+	// wait for a change, which should not happen
 	for i := 0; i < 5; i++ {
 		time.Sleep(s.interval)
 		config, err := s.service().LoadConfig(s.sb.SkipChainID())
@@ -1084,12 +1177,15 @@ func TestService_StateChangeCache(t *testing.T) {
 	require.Equal(t, 2, ctr)
 }
 
-func createConfigTx(t *testing.T, s *ser, isgood bool) (ClientTransaction, ChainConfig) {
+func createConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
 	var config ChainConfig
-	if isgood {
-		config = ChainConfig{420 * time.Millisecond, *s.roster}
-	} else {
-		config = ChainConfig{-1, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2)}
+	switch {
+	case intervalBad:
+		config = ChainConfig{-1, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), defaultMaxBlockSize}
+	case szBad:
+		config = ChainConfig{420 * time.Millisecond, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), 30 * 1e6}
+	default:
+		config = ChainConfig{420 * time.Millisecond, *s.roster, 424242}
 	}
 	configBuf, err := protobuf.Encode(&config)
 	require.NoError(t, err)
@@ -1224,7 +1320,7 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 }
 
 func newSer(t *testing.T, step int, interval time.Duration) *ser {
-	return newSerN(t, step, interval, 3, false)
+	return newSerN(t, step, interval, 4, false)
 }
 
 func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange bool) *ser {

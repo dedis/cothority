@@ -154,7 +154,7 @@ func (s *Service) sendNewView(proof []viewchange.InitReq) {
 }
 
 func (s *Service) computeInitialDuration(scID skipchain.SkipBlockID) (time.Duration, error) {
-	interval, err := s.LoadBlockInterval(scID)
+	interval, _, err := s.LoadBlockInfo(scID)
 	if err != nil {
 		return 0, err
 	}
@@ -197,7 +197,7 @@ func (s *Service) handleViewChangeReq(env *network.Envelope) {
 		return
 	}
 	if len(reqLatest.ForwardLink) != 0 {
-		log.Error(s.ServerIdentity(), "view-change should not happen blocks that are not the latest")
+		log.Error(s.ServerIdentity(), "view-change should not happen for blocks that are not the latest")
 		return
 	}
 
@@ -232,7 +232,7 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 		return nil, err
 	}
 
-	interval, err := s.LoadBlockInterval(req.GetView().ID)
+	interval, _, err := s.LoadBlockInfo(req.GetView().ID)
 	if err != nil {
 		return nil, err
 	}

@@ -41,7 +41,7 @@ func TestHeartbeat_Timeout(t *testing.T) {
 	select {
 	case k := <-timeoutChan:
 		require.Equal(t, k, k1)
-	case <-time.After(2 * time.Millisecond):
+	case <-time.After(200 * time.Millisecond):
 		require.Fail(t, "did not get message in timeoutChan")
 	}
 

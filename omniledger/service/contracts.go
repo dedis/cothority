@@ -27,8 +27,8 @@ var ConfigInstanceID = InstanceID{}
 // CmdDarcEvolve is needed to evolve a darc.
 var CmdDarcEvolve = "evolve"
 
-// LoadConfigFromColl loads the configuration data from the collections.
-func LoadConfigFromColl(coll CollectionView) (*ChainConfig, error) {
+// loadConfigFromColl loads the configuration data from the collections.
+func loadConfigFromColl(coll CollectionView) (*ChainConfig, error) {
 	// Find the genesis-darc ID.
 	val, contract, _, err := getValueContract(coll, NewInstanceID(nil).Slice())
 	if err != nil {
@@ -45,15 +45,6 @@ func LoadConfigFromColl(coll CollectionView) (*ChainConfig, error) {
 	}
 
 	return &config, nil
-}
-
-// LoadBlockIntervalFromColl loads the block interval from the collections.
-func LoadBlockIntervalFromColl(coll CollectionView) (time.Duration, error) {
-	config, err := LoadConfigFromColl(coll)
-	if err != nil {
-		return defaultInterval, err
-	}
-	return config.BlockInterval, nil
 }
 
 // LoadDarcFromColl loads a darc which should be stored in key.
@@ -134,8 +125,7 @@ func invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (s
 		if err != nil {
 			return
 		}
-		if newConfig.BlockInterval <= 0 {
-			err = errors.New("block interval is less than or equal to zero")
+		if err = newConfig.sanityCheck(); err != nil {
 			return
 		}
 		sc = []StateChange{
@@ -165,7 +155,7 @@ func invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (s
 }
 
 func updateRosterScs(cdb CollectionView, darcID darc.ID, newRoster onet.Roster) (StateChanges, error) {
-	config, err := LoadConfigFromColl(cdb)
+	config, err := loadConfigFromColl(cdb)
 	if err != nil {
 		return nil, err
 	}
@@ -210,13 +200,10 @@ func spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc
 		return
 	}
 
-	// sanity check the block interval
 	intervalBuf := inst.Spawn.Args.Search("block_interval")
 	interval, _ := binary.Varint(intervalBuf)
-	if interval <= 0 {
-		err = errors.New("block interval is less or equal to zero")
-		return
-	}
+	bsBuf := inst.Spawn.Args.Search("max_block_size")
+	maxsz, _ := binary.Varint(bsBuf)
 
 	rosterBuf := inst.Spawn.Args.Search("roster")
 	roster := onet.Roster{}
@@ -229,7 +216,12 @@ func spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc
 	config := ChainConfig{
 		BlockInterval: time.Duration(interval),
 		Roster:        roster,
+		MaxBlockSize:  int(maxsz),
 	}
+	if err = config.sanityCheck(); err != nil {
+		return
+	}
+
 	configBuf, err := protobuf.Encode(&config)
 	if err != nil {
 		return

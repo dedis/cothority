@@ -61,6 +61,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -608,7 +611,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new LinkPoP(input, extensionRegistry);
+        return new LinkPoP(input, extensionRegistry);
       }
     };
 
@@ -771,6 +774,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2083,7 +2089,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Party(input, extensionRegistry);
+        return new Party(input, extensionRegistry);
       }
     };
 
@@ -2151,6 +2157,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2655,7 +2664,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new StringReply(input, extensionRegistry);
+        return new StringReply(input, extensionRegistry);
       }
     };
 
@@ -2842,6 +2851,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4038,7 +4050,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Questionnaire(input, extensionRegistry);
+        return new Questionnaire(input, extensionRegistry);
       }
     };
 
@@ -4143,6 +4155,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4854,7 +4869,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Reply(input, extensionRegistry);
+        return new Reply(input, extensionRegistry);
       }
     };
 
@@ -4932,6 +4947,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5527,7 +5545,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new RegisterQuestionnaire(input, extensionRegistry);
+        return new RegisterQuestionnaire(input, extensionRegistry);
       }
     };
 
@@ -5616,6 +5634,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6179,7 +6200,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ListQuestionnaires(input, extensionRegistry);
+        return new ListQuestionnaires(input, extensionRegistry);
       }
     };
 
@@ -6277,6 +6298,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7066,7 +7090,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ListQuestionnairesReply(input, extensionRegistry);
+        return new ListQuestionnairesReply(input, extensionRegistry);
       }
     };
 
@@ -7180,6 +7204,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7935,7 +7962,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new AnswerQuestionnaire(input, extensionRegistry);
+        return new AnswerQuestionnaire(input, extensionRegistry);
       }
     };
 
@@ -8023,6 +8050,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8589,7 +8619,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new TopupQuestionnaire(input, extensionRegistry);
+        return new TopupQuestionnaire(input, extensionRegistry);
       }
     };
 
@@ -8788,6 +8818,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -10078,7 +10111,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Message(input, extensionRegistry);
+        return new Message(input, extensionRegistry);
       }
     };
 
@@ -10155,6 +10188,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -10749,7 +10785,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SendMessage(input, extensionRegistry);
+        return new SendMessage(input, extensionRegistry);
       }
     };
 
@@ -10838,6 +10874,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -11401,7 +11440,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ListMessages(input, extensionRegistry);
+        return new ListMessages(input, extensionRegistry);
       }
     };
 
@@ -11568,6 +11607,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12686,7 +12728,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ListMessagesReply(input, extensionRegistry);
+        return new ListMessagesReply(input, extensionRegistry);
       }
     };
 
@@ -12792,6 +12834,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -13471,7 +13516,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ReadMessage(input, extensionRegistry);
+        return new ReadMessage(input, extensionRegistry);
       }
     };
 
@@ -13548,6 +13593,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -14142,7 +14190,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ReadMessageReply(input, extensionRegistry);
+        return new ReadMessageReply(input, extensionRegistry);
       }
     };
 
@@ -14230,6 +14278,9 @@ public final class Personhood {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -14796,7 +14847,7 @@ public final class Personhood {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new TopupMessage(input, extensionRegistry);
+        return new TopupMessage(input, extensionRegistry);
       }
     };
 
@@ -14918,7 +14969,7 @@ public final class Personhood {
       "darc.Signer\"\034\n\013StringReply\022\r\n\005reply\030\001 \002(" +
       "\t\"o\n\rQuestionnaire\022\r\n\005title\030\001 \002(\t\022\021\n\tque" +
       "stions\030\002 \003(\t\022\017\n\007replies\030\003 \002(\021\022\017\n\007balance" +
-      "\030\004 \002(\004\022\016\n\006reward\030\005 \002(\004\022\n\n\002id\030\006 \002(\014\"#\n\005Re",
+      "\030\004 \002(\004\022\016\n\006reward\030\005 \002(\004\022\n\n\002id\030\006 \002(\014\"#\n\005Re" +
       "ply\022\013\n\003sum\030\001 \003(\021\022\r\n\005users\030\002 \003(\014\"I\n\025Regis" +
       "terQuestionnaire\0220\n\rquestionnaire\030\001 \002(\0132" +
       "\031.personhood.Questionnaire\"3\n\022ListQuesti" +
@@ -14928,7 +14979,7 @@ public final class Personhood {
       "\023AnswerQuestionnaire\022\017\n\007questid\030\001 \002(\014\022\017\n" +
       "\007replies\030\002 \003(\021\022\017\n\007account\030\003 \002(\014\"4\n\022Topup" +
       "Questionnaire\022\017\n\007questid\030\001 \002(\014\022\r\n\005topup\030" +
-      "\002 \002(\004\"s\n\007Message\022\017\n\007subject\030\001 \002(\t\022\014\n\004dat",
+      "\002 \002(\004\"s\n\007Message\022\017\n\007subject\030\001 \002(\t\022\014\n\004dat" +
       "e\030\002 \002(\004\022\014\n\004text\030\003 \002(\t\022\016\n\006author\030\004 \002(\014\022\017\n" +
       "\007balance\030\005 \002(\004\022\016\n\006reward\030\006 \002(\004\022\n\n\002id\030\007 \002" +
       "(\014\"3\n\013SendMessage\022$\n\007message\030\001 \002(\0132\023.per" +
@@ -14938,7 +14989,7 @@ public final class Personhood {
       "\010balances\030\003 \003(\004\022\017\n\007rewards\030\004 \003(\004\">\n\013Read" +
       "Message\022\r\n\005msgid\030\001 \002(\014\022\020\n\010partyiid\030\002 \002(\014" +
       "\022\016\n\006reader\030\003 \002(\014\"8\n\020ReadMessageReply\022$\n\007" +
-      "message\030\001 \002(\0132\023.personhood.Message\"-\n\014To",
+      "message\030\001 \002(\0132\023.personhood.Message\"-\n\014To" +
       "pupMessage\022\r\n\005msgid\030\001 \002(\014\022\016\n\006amount\030\002 \002(" +
       "\004B!\n\023ch.epfl.dedis.protoB\nPersonhood"
     };

@@ -42,6 +42,8 @@ message CreateGenesisBlock {
   required darc.Darc genesisdarc = 3;
   // BlockInterval in int64.
   required sint64 blockinterval = 4;
+  // Maximum block size. Zero (or not present in protobuf) means use the default, 4 megs.
+  optional sint32 maxblocksize = 5;
 }
 
 // CreateGenesisBlockResponse holds the genesis-block of the new skipchain.
@@ -98,6 +100,7 @@ message GetProofResponse {
 message ChainConfig {
   required sint64 blockinterval = 1;
   required onet.Roster roster = 2;
+  required sint32 maxblocksize = 3;
 }
 
 // Proof represents everything necessary to verify a given
