@@ -1,6 +1,6 @@
 syntax = "proto2";
 package calypso;
-import "omniledger.proto";
+import "byzcoin.proto";
 import "onet.proto";
 
 option java_package = "ch.epfl.dedis.proto";
@@ -51,8 +51,8 @@ message Read {
 message CreateLTS {
   // Roster is the list of nodes that should participate in the DKG.
   required onet.Roster roster = 1;
-  // OLID is the ID of the OmniLedger that can use this LTS.
-  required bytes olid = 2;
+  // BCID is the ID of the ByzCoin ledger that can use this LTS.
+  required bytes bcid = 2;
 }
 
 // CreateLTSReply is returned upon successfully setting up the distributed
@@ -67,12 +67,12 @@ message CreateLTSReply {
 }
 
 // DecryptKey is sent by a reader after he successfully stored a 'Read' request
-// in omniledger.
+// in byzcoin.
 message DecryptKey {
   // Read is the proof that he has been accepted to read the secret.
-  required omniledger.Proof read = 1;
+  required byzcoin.Proof read = 1;
   // Write is the proof containing the write request.
-  required omniledger.Proof write = 2;
+  required byzcoin.Proof write = 2;
 }
 
 // DecryptKeyReply is returned if the service verified successfully that the

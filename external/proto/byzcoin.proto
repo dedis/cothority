@@ -1,12 +1,12 @@
 syntax = "proto2";
-package omniledger;
+package byzcoin;
 import "skipchain.proto";
 import "onet.proto";
 import "darc.proto";
 import "collection.proto";
 
 option java_package = "ch.epfl.dedis.proto";
-option java_outer_classname = "OmniLedgerProto";
+option java_outer_classname = "ByzCoinProto";
 
 // DataHeader is the data passed to the Skipchain
 message DataHeader {

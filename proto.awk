@@ -5,7 +5,7 @@ BEGIN {
 	tr[ar"byte"]="bytes"
 	tr["abstract.Point"]="bytes"
 	tr["StateAction"]="int"
-	tr["omniledger.InstanceID"]="bytes"
+	tr["byzcoin.InstanceID"]="bytes"
 	tr["Nonce"]="bytes"
 	print "syntax = \"proto2\";"
 }

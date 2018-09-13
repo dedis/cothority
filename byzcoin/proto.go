@@ -10,6 +10,7 @@ import (
 )
 
 // PROTOSTART
+// package byzcoin;
 // type :skipchain.SkipBlockID:bytes
 // type :darc.ID:bytes
 // type :Arguments:[]Argument
