@@ -1,8 +1,8 @@
 package personhood
 
 import (
-	"github.com/dedis/cothority/omniledger/darc"
-	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin/darc"
+	ol "github.com/dedis/cothority/byzcoin/service"
 	pop "github.com/dedis/cothority/pop/service"
 	"github.com/dedis/cothority/skipchain"
 )

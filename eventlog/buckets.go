@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 
-	omniledger "github.com/dedis/cothority/omniledger/service"
+	omniledger "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/protobuf"
 )
 

@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/dedis/cothority"
-	ol "github.com/dedis/cothority/omniledger/service"
+	ol "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )

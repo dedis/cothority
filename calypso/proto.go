@@ -3,7 +3,7 @@ package calypso
 import (
 	// We need to use the omniledger import alias because it's the
 	// namespace used by protobuf is omniledger.
-	omniledger "github.com/dedis/cothority/omniledger/service"
+	omniledger "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"

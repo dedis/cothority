@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	omniledger "github.com/dedis/cothority/omniledger/service"
+	omniledger "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"

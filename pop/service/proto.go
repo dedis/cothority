@@ -5,9 +5,9 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
-	"github.com/dedis/cothority/omniledger/darc"
+	"github.com/dedis/cothority/byzcoin/darc"
 	// Use omniledger here so that the correct package will be included in protobuf.
-	omniledger "github.com/dedis/cothority/omniledger/service"
+	omniledger "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"

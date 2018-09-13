@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/omniledger/contracts"
-	"github.com/dedis/cothority/omniledger/darc"
-	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin/contracts"
+	"github.com/dedis/cothority/byzcoin/darc"
+	ol "github.com/dedis/cothority/byzcoin/service"
 	pop "github.com/dedis/cothority/pop/service"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"

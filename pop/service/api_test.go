@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/omniledger/darc"
-	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin/darc"
+	ol "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/eddsa"
 	"github.com/dedis/kyber/util/key"

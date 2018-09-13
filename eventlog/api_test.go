@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/omniledger/darc"
-	omniledger "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin/darc"
+	omniledger "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet"

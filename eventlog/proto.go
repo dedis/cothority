@@ -3,7 +3,7 @@ package eventlog
 import (
 	"time"
 
-	omniledger "github.com/dedis/cothority/omniledger/service"
+	omniledger "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet/network"
 )

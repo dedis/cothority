@@ -11,7 +11,7 @@ import (
 	"errors"
 	"sort"
 
-	ol "github.com/dedis/cothority/omniledger/service"
+	ol "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )

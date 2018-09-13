@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/omniledger/darc"
-	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin/darc"
+	ol "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
