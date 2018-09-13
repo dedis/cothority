@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	omniledger "github.com/dedis/cothority/byzcoin/service"
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
@@ -27,7 +27,7 @@ func init() {
 // Service is the EventLog service.
 type Service struct {
 	*onet.ServiceProcessor
-	omni         *omniledger.Service
+	omni         *byzcoin.Service
 	bucketMaxAge time.Duration
 }
 
@@ -128,7 +128,7 @@ filter:
 
 const contractName = "eventlog"
 
-func (s *Service) decodeAndCheckEvent(coll omniledger.CollectionView, eventBuf []byte) (*Event, error) {
+func (s *Service) decodeAndCheckEvent(coll byzcoin.CollectionView, eventBuf []byte) (*Event, error) {
 	// Check the timestamp of the event: it should never be in the future,
 	// and it should not be more than 30 seconds in the past. (Why 30 sec
 	// and not something more auto-scaling like blockInterval * 30?
@@ -154,7 +154,7 @@ func (s *Service) decodeAndCheckEvent(coll omniledger.CollectionView, eventBuf [
 }
 
 // invoke will add an event and update the corresponding indices.
-func (s *Service) invoke(v omniledger.CollectionView, inst omniledger.Instruction, c []omniledger.Coin) (sc []omniledger.StateChange, cOut []omniledger.Coin, err error) {
+func (s *Service) invoke(v byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
 	cOut = c
 
 	_, cid, darcID, err := v.GetValues(inst.InstanceID.Slice())
@@ -179,7 +179,7 @@ func (s *Service) invoke(v omniledger.CollectionView, inst omniledger.Instructio
 	// since the new event is essentially being spawned on this eventlog.
 	eventID := inst.DeriveID("")
 
-	sc = append(sc, omniledger.NewStateChange(omniledger.Create, eventID, cid, eventBuf, darcID))
+	sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, eventID, cid, eventBuf, darcID))
 
 	// Walk from latest bucket back towards beginning looking for the right bucket.
 	//
@@ -234,7 +234,7 @@ func (s *Service) invoke(v omniledger.CollectionView, inst omniledger.Instructio
 			if err != nil {
 				return nil, nil, err
 			}
-			sc = append(sc, omniledger.NewStateChange(omniledger.Create, catchID, cid, buf, darcID))
+			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, catchID, cid, buf, darcID))
 			bID = catchID.Slice()
 		}
 
@@ -250,10 +250,10 @@ func (s *Service) invoke(v omniledger.CollectionView, inst omniledger.Instructio
 		if err != nil {
 			return nil, nil, err
 		}
-		sc = append(sc, omniledger.NewStateChange(omniledger.Create, newBid, cid, buf, darcID))
+		sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, newBid, cid, buf, darcID))
 
 		// Update the pointer to the latest bucket.
-		sc = append(sc, omniledger.NewStateChange(omniledger.Update, inst.InstanceID, cid, newBid.Slice(), darcID))
+		sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, cid, newBid.Slice(), darcID))
 	} else {
 		// Otherwise just add into whatever bucket we found, no matter how
 		// many are already there. (Splitting buckets is hard and not important to us.)
@@ -263,8 +263,8 @@ func (s *Service) invoke(v omniledger.CollectionView, inst omniledger.Instructio
 			return nil, nil, err
 		}
 		sc = append(sc,
-			omniledger.StateChange{
-				StateAction: omniledger.Update,
+			byzcoin.StateChange{
+				StateAction: byzcoin.Update,
 				InstanceID:  bID,
 				ContractID:  []byte(contractName),
 				Value:       bucketBuf,
@@ -273,7 +273,7 @@ func (s *Service) invoke(v omniledger.CollectionView, inst omniledger.Instructio
 	return
 }
 
-func (s *Service) spawn(v omniledger.CollectionView, inst omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
+func (s *Service) spawn(v byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 	_, _, darcID, err := v.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
@@ -286,14 +286,14 @@ func (s *Service) spawn(v omniledger.CollectionView, inst omniledger.Instruction
 
 	// Store zeros as the pointer to the first bucket because there are not yet
 	// any events in this event log.
-	return []omniledger.StateChange{
-		omniledger.NewStateChange(omniledger.Create, inst.DeriveID(""), cid, make([]byte, 32), darcID),
+	return []byzcoin.StateChange{
+		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), cid, make([]byte, 32), darcID),
 	}, nil, nil
 }
 
 // contractFunction is the function that runs to process a transaction of
 // type "eventlog"
-func (s *Service) contractFunction(v omniledger.CollectionView, inst omniledger.Instruction, c []omniledger.Coin) ([]omniledger.StateChange, []omniledger.Coin, error) {
+func (s *Service) contractFunction(v byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 
 	err := inst.VerifyDarcSignature(v)
 	if err != nil {
@@ -301,9 +301,9 @@ func (s *Service) contractFunction(v omniledger.CollectionView, inst omniledger.
 	}
 
 	switch inst.GetType() {
-	case omniledger.InvokeType:
+	case byzcoin.InvokeType:
 		return s.invoke(v, inst, c)
-	case omniledger.SpawnType:
+	case byzcoin.SpawnType:
 		return s.spawn(v, inst, c)
 	default:
 		return nil, nil, errors.New("invalid type")
@@ -317,7 +317,7 @@ func (s *Service) contractFunction(v omniledger.CollectionView, inst omniledger.
 func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
-		omni:             c.Service(omniledger.ServiceName).(*omniledger.Service),
+		omni:             c.Service(byzcoin.ServiceName).(*byzcoin.Service),
 		// Set a relatively low time for bucketMaxAge: during peak message arrival
 		// this will pretect the buckets from getting too big. During low message
 		// arrival (< 1 per 5 sec) it does not create extra buckets, because time
@@ -328,11 +328,11 @@ func newService(c *onet.Context) (onet.Service, error) {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 
-	omniledger.RegisterContract(s, contractName, s.contractFunction)
+	byzcoin.RegisterContract(s, contractName, s.contractFunction)
 	return s, nil
 }
 
-func getEventByID(view omniledger.CollectionView, eid []byte) (*Event, error) {
+func getEventByID(view byzcoin.CollectionView, eid []byte) (*Event, error) {
 	r, err := view.Get(eid).Record()
 	if err != nil {
 		return nil, err

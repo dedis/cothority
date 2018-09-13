@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"errors"
 
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/darc"
-	omniledger "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/protobuf"
 
 	"github.com/dedis/cothority"
@@ -14,41 +14,41 @@ import (
 
 // Client is a structure to communicate with the eventlog service
 type Client struct {
-	OmniLedger *omniledger.Client
+	ByzCoin *byzcoin.Client
 	// The DarcID with "invoke:eventlog" permission on it.
 	DarcID darc.ID
 	// Signers are the Darc signers that will sign transactions sent with this client.
 	Signers  []darc.Signer
-	Instance omniledger.InstanceID
+	Instance byzcoin.InstanceID
 	c        *onet.Client
 }
 
 // NewClient creates a new client to talk to the eventlog service.
 // Fields DarcID, Instance, and Signers must be filled in before use.
-func NewClient(ol *omniledger.Client) *Client {
+func NewClient(ol *byzcoin.Client) *Client {
 	return &Client{
-		OmniLedger: ol,
-		c:          onet.NewClient(cothority.Suite, ServiceName),
+		ByzCoin: ol,
+		c:       onet.NewClient(cothority.Suite, ServiceName),
 	}
 }
 
 // Create creates a new event log. This method is synchronous: it will only
-// return once the new eventlog has been committed into the OmniLedger (or after
+// return once the new eventlog has been committed into the ledger (or after
 // a timeout). Upon non-error return, c.Instance will be correctly set.
 func (c *Client) Create() error {
-	instr := omniledger.Instruction{
-		InstanceID: omniledger.NewInstanceID(c.DarcID),
+	instr := byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(c.DarcID),
 		Index:      0,
 		Length:     1,
-		Spawn:      &omniledger.Spawn{ContractID: contractName},
+		Spawn:      &byzcoin.Spawn{ContractID: contractName},
 	}
 	if err := instr.SignBy(c.DarcID, c.Signers...); err != nil {
 		return err
 	}
-	tx := omniledger.ClientTransaction{
-		Instructions: []omniledger.Instruction{instr},
+	tx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{instr},
 	}
-	if _, err := c.OmniLedger.AddTransactionAndWait(tx, 2); err != nil {
+	if _, err := c.ByzCoin.AddTransactionAndWait(tx, 2); err != nil {
 		return err
 	}
 
@@ -66,7 +66,7 @@ func (c *Client) Log(ev ...Event) ([]LogID, error) {
 	if err != nil {
 		return nil, err
 	}
-	if _, err := c.OmniLedger.AddTransaction(*tx); err != nil {
+	if _, err := c.ByzCoin.AddTransaction(*tx); err != nil {
 		return nil, err
 	}
 	return keys, nil
@@ -74,7 +74,7 @@ func (c *Client) Log(ev ...Event) ([]LogID, error) {
 
 // GetEvent asks the service to retrieve an event.
 func (c *Client) GetEvent(key []byte) (*Event, error) {
-	reply, err := c.OmniLedger.GetProof(key)
+	reply, err := c.ByzCoin.GetProof(key)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (c *Client) GetEvent(key []byte) (*Event, error) {
 	return &e, nil
 }
 
-func makeTx(darcID darc.ID, id omniledger.InstanceID, msgs []Event, signers []darc.Signer) (*omniledger.ClientTransaction, []LogID, error) {
+func makeTx(darcID darc.ID, id byzcoin.InstanceID, msgs []Event, signers []darc.Signer) (*byzcoin.ClientTransaction, []LogID, error) {
 	// We need the identity part of the signatures before
 	// calling ToDarcRequest() below, because the identities
 	// go into the message digest.
@@ -110,27 +110,27 @@ func makeTx(darcID darc.ID, id omniledger.InstanceID, msgs []Event, signers []da
 
 	keys := make([]LogID, len(msgs))
 
-	instrNonce := omniledger.GenNonce()
-	tx := omniledger.ClientTransaction{
-		Instructions: make([]omniledger.Instruction, len(msgs)),
+	instrNonce := byzcoin.GenNonce()
+	tx := byzcoin.ClientTransaction{
+		Instructions: make([]byzcoin.Instruction, len(msgs)),
 	}
 	for i, msg := range msgs {
 		eventBuf, err := protobuf.Encode(&msg)
 		if err != nil {
 			return nil, nil, err
 		}
-		argEvent := omniledger.Argument{
+		argEvent := byzcoin.Argument{
 			Name:  "event",
 			Value: eventBuf,
 		}
-		tx.Instructions[i] = omniledger.Instruction{
+		tx.Instructions[i] = byzcoin.Instruction{
 			InstanceID: id,
 			Nonce:      instrNonce,
 			Index:      i,
 			Length:     len(msgs),
-			Invoke: &omniledger.Invoke{
+			Invoke: &byzcoin.Invoke{
 				Command: contractName,
-				Args:    []omniledger.Argument{argEvent},
+				Args:    []byzcoin.Argument{argEvent},
 			},
 			Signatures: append([]darc.Signature{}, sigs...),
 		}
@@ -162,11 +162,11 @@ func makeTx(darcID darc.ID, id omniledger.InstanceID, msgs []Event, signers []da
 // type SearchRequest for additional details about how the filter is interpreted.
 // The ID and Instance fields of the SearchRequest will be filled in from c.
 func (c *Client) Search(req *SearchRequest) (*SearchResponse, error) {
-	req.ID = c.OmniLedger.ID
+	req.ID = c.ByzCoin.ID
 	req.Instance = c.Instance
 
 	reply := &SearchResponse{}
-	if err := c.c.SendProtobuf(c.OmniLedger.Roster.List[0], req, reply); err != nil {
+	if err := c.c.SendProtobuf(c.ByzCoin.Roster.List[0], req, reply); err != nil {
 		return nil, err
 	}
 	return reply, nil

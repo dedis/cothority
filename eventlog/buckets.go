@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"errors"
 
-	omniledger "github.com/dedis/cothority/byzcoin/service"
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/protobuf"
 )
 
@@ -21,8 +21,8 @@ func (b bucket) isFirst() bool {
 }
 
 type eventLog struct {
-	Instance omniledger.InstanceID
-	v        omniledger.CollectionView
+	Instance byzcoin.InstanceID
+	v        byzcoin.CollectionView
 }
 
 func (e eventLog) getLatestBucket() ([]byte, *bucket, error) {
