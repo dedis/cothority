@@ -2,7 +2,7 @@ package ch.epfl.dedis.lib.calypso;
 
 import ch.epfl.dedis.lib.crypto.*;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.omniledger.darc.DarcId;
+import ch.epfl.dedis.lib.byzcoin.darc.DarcId;
 import ch.epfl.dedis.proto.Calypso;
 import com.google.protobuf.ByteString;
 

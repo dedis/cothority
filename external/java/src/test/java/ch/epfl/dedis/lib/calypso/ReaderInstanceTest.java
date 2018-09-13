@@ -3,11 +3,11 @@ package ch.epfl.dedis.lib.calypso;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.omniledger.OmniledgerRPC;
-import ch.epfl.dedis.lib.omniledger.darc.Darc;
-import ch.epfl.dedis.lib.omniledger.darc.Rules;
-import ch.epfl.dedis.lib.omniledger.darc.Signer;
-import ch.epfl.dedis.lib.omniledger.darc.SignerEd25519;
+import ch.epfl.dedis.lib.byzcoin.ByzCoinRPC;
+import ch.epfl.dedis.lib.byzcoin.darc.Darc;
+import ch.epfl.dedis.lib.byzcoin.darc.Rules;
+import ch.epfl.dedis.lib.byzcoin.darc.Signer;
+import ch.epfl.dedis.lib.byzcoin.darc.SignerEd25519;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReaderInstanceTest {
-    private OmniledgerRPC ol;
+    private ByzCoinRPC ol;
     private WriterInstance w;
     private ReaderInstance r;
     private Signer admin;
@@ -39,7 +39,7 @@ class ReaderInstanceTest {
         rules.addRule("spawn:calypsoRead", admin.getIdentity().toString().getBytes());
         genesisDarc = new Darc(rules, "genesis".getBytes());
 
-        ol = new OmniledgerRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
+        ol = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
         if (!ol.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }

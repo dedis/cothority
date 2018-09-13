@@ -2,9 +2,9 @@ package ch.epfl.dedis.lib.calypso;
 
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
-import ch.epfl.dedis.lib.omniledger.*;
-import ch.epfl.dedis.lib.omniledger.darc.DarcId;
-import ch.epfl.dedis.lib.omniledger.darc.Signer;
+import ch.epfl.dedis.lib.byzcoin.*;
+import ch.epfl.dedis.lib.byzcoin.darc.DarcId;
+import ch.epfl.dedis.lib.byzcoin.darc.Signer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +17,7 @@ import java.util.List;
 public class ReaderInstance {
     private static String ContractId = "calypsoRead";
     private Instance instance;
-    private OmniledgerRPC ol;
+    private ByzCoinRPC ol;
     private final static Logger logger = LoggerFactory.getLogger(ReaderInstance.class);
 
     /**
@@ -29,7 +29,7 @@ public class ReaderInstance {
      * @param rr      The ReadRequest that is sent to the contract.
      * @throws CothorityException
      */
-    public ReaderInstance(OmniledgerRPC ol, List<Signer> signers, DarcId darcId, ReadRequest rr) throws CothorityException {
+    public ReaderInstance(ByzCoinRPC ol, List<Signer> signers, DarcId darcId, ReadRequest rr) throws CothorityException {
         this.ol = ol;
         InstanceId id = this.read(rr, darcId, signers);
         this.setInstance(id);
@@ -42,7 +42,7 @@ public class ReaderInstance {
      * @param id The identity of the instance.
      * @throws CothorityException
      */
-    public ReaderInstance(OmniledgerRPC ol, InstanceId id) throws CothorityException {
+    public ReaderInstance(ByzCoinRPC ol, InstanceId id) throws CothorityException {
         this.ol = ol;
         this.setInstance(id);
     }

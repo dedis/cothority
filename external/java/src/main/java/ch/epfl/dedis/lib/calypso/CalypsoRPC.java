@@ -3,7 +3,7 @@ package ch.epfl.dedis.lib.calypso;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.omniledger.Proof;
+import ch.epfl.dedis.lib.byzcoin.Proof;
 import ch.epfl.dedis.proto.Calypso;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -23,7 +23,7 @@ public class CalypsoRPC {
     public static CreateLTSReply createLTS(Roster roster, SkipblockId genesis) throws CothorityCommunicationException {
         Calypso.CreateLTS.Builder b = Calypso.CreateLTS.newBuilder();
         b.setRoster(roster.toProto());
-        b.setOlid(ByteString.copyFrom(genesis.getId()));
+        b.setBcid(ByteString.copyFrom(genesis.getId()));
 
         ByteString msg = roster.sendMessage("calypso/CreateLTS", b.build());
 

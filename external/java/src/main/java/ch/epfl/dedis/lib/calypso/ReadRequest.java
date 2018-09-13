@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.calypso;
 
 import ch.epfl.dedis.lib.crypto.Point;
-import ch.epfl.dedis.lib.omniledger.InstanceId;
+import ch.epfl.dedis.lib.byzcoin.InstanceId;
 import ch.epfl.dedis.proto.Calypso;
 
 /**

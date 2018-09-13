@@ -2,9 +2,9 @@ package ch.epfl.dedis.lib.calypso;
 
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
-import ch.epfl.dedis.lib.omniledger.*;
-import ch.epfl.dedis.lib.omniledger.darc.DarcId;
-import ch.epfl.dedis.lib.omniledger.darc.Signer;
+import ch.epfl.dedis.lib.byzcoin.*;
+import ch.epfl.dedis.lib.byzcoin.darc.DarcId;
+import ch.epfl.dedis.lib.byzcoin.darc.Signer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +18,7 @@ import java.util.List;
 public class WriterInstance {
     private static String ContractId = "calypsoWrite";
     private Instance instance;
-    private OmniledgerRPC ol;
+    private ByzCoinRPC ol;
     private CreateLTSReply ltsData;
 
     private final static Logger logger = LoggerFactory.getLogger(WriterInstance.class);
@@ -33,7 +33,7 @@ public class WriterInstance {
      * @param wr      The WriteRequest object, to be stored in the instance.
      * @throws CothorityException
      */
-    public WriterInstance(OmniledgerRPC ol, List<Signer> signers, DarcId darcId, CreateLTSReply ltsData, WriteRequest wr) throws CothorityException {
+    public WriterInstance(ByzCoinRPC ol, List<Signer> signers, DarcId darcId, CreateLTSReply ltsData, WriteRequest wr) throws CothorityException {
         this.ol = ol;
         this.ltsData = ltsData;
         InstanceId id = this.write(wr, darcId, signers);
@@ -48,7 +48,7 @@ public class WriterInstance {
      * @param ltsData The LTS configuration.
      * @throws CothorityException
      */
-    public WriterInstance(OmniledgerRPC ol, InstanceId id, CreateLTSReply ltsData) throws CothorityException {
+    public WriterInstance(ByzCoinRPC ol, InstanceId id, CreateLTSReply ltsData) throws CothorityException {
         this.ol = ol;
         this.setInstance(id);
         this.ltsData = new CreateLTSReply(ltsData);
