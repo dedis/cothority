@@ -5,8 +5,8 @@ import (
 	"encoding/binary"
 	"errors"
 
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/darc"
-	ol "github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
 )
@@ -32,7 +32,7 @@ var CoinName = iid("olCoin")
 //    parameter for the next instruction to interpret.
 //  - store puts the coins given to the instance back into the account.
 // You can only delete a contractCoin instance if the account is empty.
-func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc []ol.StateChange, cOut []ol.Coin, err error) {
+func ContractCoin(cdb byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
 	cOut = c
 
 	err = inst.VerifyDarcSignature(cdb)
@@ -46,7 +46,7 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 	if err != nil {
 		return
 	}
-	var ci ol.Coin
+	var ci byzcoin.Coin
 	if inst.Spawn == nil {
 		// Only if its NOT a spawn instruction is there data in the instance
 		if value != nil {
@@ -58,15 +58,15 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 	}
 
 	switch inst.GetType() {
-	case ol.SpawnType:
+	case byzcoin.SpawnType:
 		// Spawn creates a new coin account as a separate instance.
 		ca := inst.DeriveID("")
 		log.Lvlf3("Spawning coin to %x", ca.Slice())
 		if t := inst.Spawn.Args.Search("type"); t != nil {
-			if len(t) != len(ol.InstanceID{}) {
+			if len(t) != len(byzcoin.InstanceID{}) {
 				return nil, nil, errors.New("type needs to be an InstanceID")
 			}
-			ci.Name = ol.NewInstanceID(t)
+			ci.Name = byzcoin.NewInstanceID(t)
 		} else {
 			ci.Name = CoinName
 		}
@@ -75,11 +75,11 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 		if err != nil {
 			return nil, nil, errors.New("couldn't encode CoinInstance: " + err.Error())
 		}
-		sc = []ol.StateChange{
-			ol.NewStateChange(ol.Create, ca, ContractCoinID, ciBuf, darcID),
+		sc = []byzcoin.StateChange{
+			byzcoin.NewStateChange(byzcoin.Create, ca, ContractCoinID, ciBuf, darcID),
 		}
 		return
-	case ol.InvokeType:
+	case byzcoin.InvokeType:
 		// Invoke is one of "mint", "transfer", "fetch", or "store".
 		var coinsArg uint64
 
@@ -115,7 +115,7 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 				return
 			}
 
-			var targetCI ol.Coin
+			var targetCI byzcoin.Coin
 			err = protobuf.Decode(v, &targetCI)
 			if err != nil {
 				return nil, nil, errors.New("couldn't unmarshal target account: " + err.Error())
@@ -134,7 +134,7 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 			}
 
 			log.Lvlf1("transferring %d to %x", coinsArg, target)
-			sc = append(sc, ol.NewStateChange(ol.Update, ol.NewInstanceID(target),
+			sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, byzcoin.NewInstanceID(target),
 				ContractCoinID, targetBuf, did))
 		case "fetch":
 			// fetch removes coins from the account and passes it on to the next
@@ -143,10 +143,10 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 			if err != nil {
 				return
 			}
-			cOut = append(cOut, ol.Coin{Name: ci.Name, Value: coinsArg})
+			cOut = append(cOut, byzcoin.Coin{Name: ci.Name, Value: coinsArg})
 		case "store":
 			// store moves all coins from this instruction into the account.
-			cOut = []ol.Coin{}
+			cOut = []byzcoin.Coin{}
 			for _, co := range c {
 				if ci.Name.Equal(co.Name) {
 					err = ci.SafeAdd(co.Value)
@@ -164,17 +164,17 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 		// Finally update the coin value.
 		var ciBuf []byte
 		ciBuf, err = protobuf.Encode(&ci)
-		sc = append(sc, ol.NewStateChange(ol.Update, inst.InstanceID,
+		sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
 			ContractCoinID, ciBuf, darcID))
 		return
-	case ol.DeleteType:
+	case byzcoin.DeleteType:
 		// Delete our coin address, but only if the current coin is empty.
 		if ci.Value > 0 {
 			err = errors.New("cannot destroy a coinInstance that still has coins in it")
 			return
 		}
-		sc = ol.StateChanges{
-			ol.NewStateChange(ol.Remove, inst.InstanceID, ContractCoinID, nil, darcID),
+		sc = byzcoin.StateChanges{
+			byzcoin.NewStateChange(byzcoin.Remove, inst.InstanceID, ContractCoinID, nil, darcID),
 		}
 		return
 	}
@@ -186,8 +186,8 @@ func ContractCoin(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc [
 // thereby handling the case where len(in) != 32.
 //
 // TODO: Find a nicer way to make well-known instance IDs.
-func iid(in string) ol.InstanceID {
+func iid(in string) byzcoin.InstanceID {
 	h := sha256.New()
 	h.Write([]byte(in))
-	return ol.NewInstanceID(h.Sum(nil))
+	return byzcoin.NewInstanceID(h.Sum(nil))
 }

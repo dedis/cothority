@@ -3,8 +3,8 @@ package contracts
 import (
 	"errors"
 
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/darc"
-	ol "github.com/dedis/cothority/byzcoin"
 )
 
 // The value contract can simply store a value in an instance and serves
@@ -20,7 +20,7 @@ var ContractValueID = "value"
 // It can spawn new value instances and will store the "value" argument in these
 // new instances.
 // Existing value instances can be "update"d and deleted.
-func ContractValue(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc []ol.StateChange, cOut []ol.Coin, err error) {
+func ContractValue(cdb byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
 	cOut = c
 
 	err = inst.VerifyDarcSignature(cdb)
@@ -35,22 +35,22 @@ func ContractValue(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) (sc 
 	}
 
 	switch inst.GetType() {
-	case ol.SpawnType:
-		return []ol.StateChange{
-			ol.NewStateChange(ol.Create, inst.DeriveID(""),
+	case byzcoin.SpawnType:
+		return []byzcoin.StateChange{
+			byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""),
 				ContractValueID, inst.Spawn.Args.Search("value"), darcID),
 		}, c, nil
-	case ol.InvokeType:
+	case byzcoin.InvokeType:
 		if inst.Invoke.Command != "update" {
 			return nil, nil, errors.New("Value contract can only update")
 		}
-		return []ol.StateChange{
-			ol.NewStateChange(ol.Update, inst.InstanceID,
+		return []byzcoin.StateChange{
+			byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
 				ContractValueID, inst.Invoke.Args.Search("value"), darcID),
 		}, c, nil
-	case ol.DeleteType:
-		return ol.StateChanges{
-			ol.NewStateChange(ol.Remove, inst.InstanceID, ContractValueID, nil, darcID),
+	case byzcoin.DeleteType:
+		return byzcoin.StateChanges{
+			byzcoin.NewStateChange(byzcoin.Remove, inst.InstanceID, ContractValueID, nil, darcID),
 		}, c, nil
 	}
 	return nil, nil, errors.New("didn't find any instruction")

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	ol "github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/contracts"
 	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/onet"
@@ -72,7 +72,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	signer := darc.NewSignerEd25519(nil, nil)
 
 	// Create the ledger
-	gm, err := ol.DefaultGenesisMsg(ol.CurrentVersion, config.Roster,
+	gm, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, config.Roster,
 		[]string{"spawn:coin", "invoke:mint", "invoke:transfer"}, signer.Identity())
 	if err != nil {
 		return errors.New("couldn't setup genesis message: " + err.Error())
@@ -85,7 +85,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	}
 	gm.BlockInterval = blockInterval
 
-	c, _, err := ol.NewLedger(gm, s.Keep)
+	c, _, err := byzcoin.NewLedger(gm, s.Keep)
 	if err != nil {
 		return errors.New("couldn't create genesis block: " + err.Error())
 	}
@@ -93,23 +93,23 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	// Create two accounts and mint 'Transaction' coins on first account.
 	coins := make([]byte, 8)
 	coins[7] = byte(1)
-	tx := ol.ClientTransaction{
-		Instructions: []ol.Instruction{
+	tx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
 			{
-				InstanceID: ol.NewInstanceID(gm.GenesisDarc.GetBaseID()),
-				Nonce:      ol.GenNonce(),
+				InstanceID: byzcoin.NewInstanceID(gm.GenesisDarc.GetBaseID()),
+				Nonce:      byzcoin.GenNonce(),
 				Index:      0,
 				Length:     2,
-				Spawn: &ol.Spawn{
+				Spawn: &byzcoin.Spawn{
 					ContractID: contracts.ContractCoinID,
 				},
 			},
 			{
-				InstanceID: ol.NewInstanceID(gm.GenesisDarc.GetBaseID()),
-				Nonce:      ol.GenNonce(),
+				InstanceID: byzcoin.NewInstanceID(gm.GenesisDarc.GetBaseID()),
+				Nonce:      byzcoin.GenNonce(),
 				Index:      1,
 				Length:     2,
-				Spawn: &ol.Spawn{
+				Spawn: &byzcoin.Spawn{
 					ContractID: contracts.ContractCoinID,
 				},
 			},
@@ -118,7 +118,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 
 	// Now sign all the instructions
 	for i := range tx.Instructions {
-		if err = ol.SignInstruction(&tx.Instructions[i], gm.GenesisDarc.GetBaseID(), signer); err != nil {
+		if err = byzcoin.SignInstruction(&tx.Instructions[i], gm.GenesisDarc.GetBaseID(), signer); err != nil {
 			return errors.New("signing of instruction failed: " + err.Error())
 		}
 	}
@@ -133,23 +133,23 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 
 	// Because of issue #1379, we need to do this in a separate tx, once we know
 	// the spawn is done.
-	tx = ol.ClientTransaction{
-		Instructions: []ol.Instruction{
+	tx = byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
 			{
 				InstanceID: coinAddr1,
-				Nonce:      ol.GenNonce(),
+				Nonce:      byzcoin.GenNonce(),
 				Index:      0,
 				Length:     1,
-				Invoke: &ol.Invoke{
+				Invoke: &byzcoin.Invoke{
 					Command: "mint",
-					Args: ol.Arguments{{
+					Args: byzcoin.Arguments{{
 						Name:  "coins",
 						Value: coins}},
 				},
 			},
 		},
 	}
-	if err = ol.SignInstruction(&tx.Instructions[0], gm.GenesisDarc.GetBaseID(), signer); err != nil {
+	if err = byzcoin.SignInstruction(&tx.Instructions[0], gm.GenesisDarc.GetBaseID(), signer); err != nil {
 		return errors.New("signing of instruction failed: " + err.Error())
 	}
 	_, err = c.AddTransactionAndWait(tx, 2)
@@ -172,7 +172,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		txs := s.Transactions / s.BatchSize
 		insts := s.BatchSize
 		log.Lvlf1("Sending %d transactions with %d instructions each", txs, insts)
-		tx := ol.ClientTransaction{}
+		tx := byzcoin.ClientTransaction{}
 		// Inverse the prepare/send loop, so that the last transaction is not sent,
 		// but can be sent in the 'confirm' phase using 'AddTransactionAndWait'.
 		for t := 0; t < txs; t++ {
@@ -184,19 +184,19 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 					return errors.New("couldn't add transfer transaction: " + err.Error())
 				}
 				send.Record()
-				tx.Instructions = ol.Instructions{}
+				tx.Instructions = byzcoin.Instructions{}
 			}
 
 			prepare := monitor.NewTimeMeasure("prepare")
 			for i := 0; i < insts; i++ {
-				tx.Instructions = append(tx.Instructions, ol.Instruction{
+				tx.Instructions = append(tx.Instructions, byzcoin.Instruction{
 					InstanceID: coinAddr1,
-					Nonce:      ol.GenNonce(),
+					Nonce:      byzcoin.GenNonce(),
 					Index:      i,
 					Length:     insts,
-					Invoke: &ol.Invoke{
+					Invoke: &byzcoin.Invoke{
 						Command: "transfer",
-						Args: ol.Arguments{
+						Args: byzcoin.Arguments{
 							{
 								Name:  "coins",
 								Value: coinOne,
@@ -207,7 +207,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 							}},
 					},
 				})
-				err = ol.SignInstruction(&tx.Instructions[i], gm.GenesisDarc.GetBaseID(), signer)
+				err = byzcoin.SignInstruction(&tx.Instructions[i], gm.GenesisDarc.GetBaseID(), signer)
 				if err != nil {
 					return errors.New("signature error: " + err.Error())
 				}
@@ -232,7 +232,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		if err != nil {
 			return errors.New("proof doesn't hold transaction: " + err.Error())
 		}
-		var account ol.Coin
+		var account byzcoin.Coin
 		err = protobuf.Decode(v[0], &account)
 		if err != nil {
 			return errors.New("couldn't decode account: " + err.Error())

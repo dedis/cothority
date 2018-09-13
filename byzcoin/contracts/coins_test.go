@@ -3,10 +3,10 @@ package contracts
 import (
 	"testing"
 
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/collection"
 	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/cothority/byzcoin/darc/expression"
-	ol "github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
@@ -16,7 +16,7 @@ var ciZero, ciOne, ciTwo []byte
 var coinZero, coinOne, coinTwo []byte
 
 func init() {
-	ci := ol.Coin{
+	ci := byzcoin.Coin{
 		Name: CoinName,
 	}
 	var err error
@@ -39,21 +39,21 @@ func init() {
 func TestCoin_Spawn(t *testing.T) {
 	// Testing spawning of a new coin and checking it has zero coins in it.
 	ct := newCT("spawn:coin")
-	inst := ol.Instruction{
-		InstanceID: ol.NewInstanceID(gdarc.GetBaseID()),
-		Spawn: &ol.Spawn{
+	inst := byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(gdarc.GetBaseID()),
+		Spawn: &byzcoin.Spawn{
 			ContractID: ContractCoinID,
 		},
 	}
 	err := inst.SignBy(gdarc.GetBaseID(), gsigner)
 	require.Nil(t, err)
 
-	c := []ol.Coin{}
+	c := []byzcoin.Coin{}
 	sc, co, err := ContractCoin(ct, inst, c)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(sc))
 	ca := inst.DeriveID("")
-	require.Equal(t, ol.NewStateChange(ol.Create, ca,
+	require.Equal(t, byzcoin.NewStateChange(byzcoin.Create, ca,
 		ContractCoinID, ciZero, gdarc.GetBaseID()), sc[0])
 	require.Equal(t, 0, len(co))
 }
@@ -61,47 +61,47 @@ func TestCoin_Spawn(t *testing.T) {
 func TestCoin_InvokeMint(t *testing.T) {
 	// Test that a coin can be minted
 	ct := newCT("invoke:mint")
-	coAddr := ol.InstanceID{}
+	coAddr := byzcoin.InstanceID{}
 	ct.Store(coAddr, ciZero, ContractCoinID, gdarc.GetBaseID())
 
-	inst := ol.Instruction{
+	inst := byzcoin.Instruction{
 		InstanceID: coAddr,
-		Invoke: &ol.Invoke{
+		Invoke: &byzcoin.Invoke{
 			Command: "mint",
-			Args:    ol.Arguments{{Name: "coins", Value: coinOne}},
+			Args:    byzcoin.Arguments{{Name: "coins", Value: coinOne}},
 		},
 	}
 	err := inst.SignBy(gdarc.GetBaseID(), gsigner)
 	require.Nil(t, err)
 
-	sc, co, err := ContractCoin(ct, inst, []ol.Coin{})
+	sc, co, err := ContractCoin(ct, inst, []byzcoin.Coin{})
 	require.Nil(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 1, len(sc))
-	require.Equal(t, ol.NewStateChange(ol.Update, coAddr, ContractCoinID, ciOne, gdarc.GetBaseID()),
+	require.Equal(t, byzcoin.NewStateChange(byzcoin.Update, coAddr, ContractCoinID, ciOne, gdarc.GetBaseID()),
 		sc[0])
 }
 
 func TestCoin_InvokeOverflow(t *testing.T) {
-	ci := ol.Coin{
+	ci := byzcoin.Coin{
 		Value: ^uint64(0),
 	}
 	ciBuf, err := protobuf.Encode(&ci)
 	require.Nil(t, err)
 	ct := newCT("invoke:mint")
-	coAddr := ol.InstanceID{}
+	coAddr := byzcoin.InstanceID{}
 	ct.Store(coAddr, ciBuf, ContractCoinID, gdarc.GetBaseID())
 
-	inst := ol.Instruction{
+	inst := byzcoin.Instruction{
 		InstanceID: coAddr,
-		Invoke: &ol.Invoke{
+		Invoke: &byzcoin.Invoke{
 			Command: "mint",
-			Args:    ol.Arguments{{Name: "coins", Value: coinOne}},
+			Args:    byzcoin.Arguments{{Name: "coins", Value: coinOne}},
 		},
 	}
 	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
 
-	sc, co, err := ContractCoin(ct, inst, []ol.Coin{})
+	sc, co, err := ContractCoin(ct, inst, []byzcoin.Coin{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "overflow")
 	require.Equal(t, 0, len(co))
@@ -110,35 +110,35 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 
 func TestCoin_InvokeStoreFetch(t *testing.T) {
 	ct := newCT("invoke:store", "invoke:fetch")
-	coAddr := ol.InstanceID{}
+	coAddr := byzcoin.InstanceID{}
 	ct.Store(coAddr, ciZero, ContractCoinID, gdarc.GetBaseID())
 
-	inst := ol.Instruction{
+	inst := byzcoin.Instruction{
 		InstanceID: coAddr,
-		Invoke: &ol.Invoke{
+		Invoke: &byzcoin.Invoke{
 			Command: "store",
 			Args:    nil,
 		},
 	}
 	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
 
-	c1 := ol.Coin{Name: CoinName, Value: 1}
+	c1 := byzcoin.Coin{Name: CoinName, Value: 1}
 	notOlCoin := iid("notOlCoin")
-	c2 := ol.Coin{Name: notOlCoin, Value: 1}
+	c2 := byzcoin.Coin{Name: notOlCoin, Value: 1}
 
-	sc, co, err := ContractCoin(ct, inst, []ol.Coin{c1, c2})
+	sc, co, err := ContractCoin(ct, inst, []byzcoin.Coin{c1, c2})
 	require.Nil(t, err)
 	require.Equal(t, 1, len(co))
 	require.Equal(t, co[0].Name, notOlCoin)
 	require.Equal(t, 1, len(sc))
-	require.Equal(t, ol.NewStateChange(ol.Update, coAddr, ContractCoinID, ciOne, gdarc.GetBaseID()),
+	require.Equal(t, byzcoin.NewStateChange(byzcoin.Update, coAddr, ContractCoinID, ciOne, gdarc.GetBaseID()),
 		sc[0])
 
-	inst = ol.Instruction{
+	inst = byzcoin.Instruction{
 		InstanceID: coAddr,
-		Invoke: &ol.Invoke{
+		Invoke: &byzcoin.Invoke{
 			Command: "fetch",
-			Args:    ol.Arguments{{Name: "coins", Value: coinOne}},
+			Args:    byzcoin.Arguments{{Name: "coins", Value: coinOne}},
 		},
 	}
 	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
@@ -156,53 +156,53 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 	require.Equal(t, co[0].Name, CoinName)
 	require.Equal(t, uint64(1), co[0].Value)
 	require.Equal(t, 1, len(sc))
-	require.Equal(t, ol.NewStateChange(ol.Update, coAddr, ContractCoinID, ciZero, gdarc.GetBaseID()),
+	require.Equal(t, byzcoin.NewStateChange(byzcoin.Update, coAddr, ContractCoinID, ciZero, gdarc.GetBaseID()),
 		sc[0])
 }
 
 func TestCoin_InvokeTransfer(t *testing.T) {
 	// Test that a coin can be transferred
 	ct := newCT("invoke:transfer")
-	coAddr1 := ol.InstanceID{}
+	coAddr1 := byzcoin.InstanceID{}
 	one := make([]byte, 32)
 	one[31] = 1
-	coAddr2 := ol.NewInstanceID(one)
+	coAddr2 := byzcoin.NewInstanceID(one)
 
 	ct.Store(coAddr1, ciOne, ContractCoinID, gdarc.GetBaseID())
 	ct.Store(coAddr2, ciZero, ContractCoinID, gdarc.GetBaseID())
 
 	// First create an instruction where the transfer should fail
-	inst := ol.Instruction{
+	inst := byzcoin.Instruction{
 		InstanceID: coAddr2,
-		Invoke: &ol.Invoke{
+		Invoke: &byzcoin.Invoke{
 			Command: "transfer",
-			Args: ol.Arguments{
+			Args: byzcoin.Arguments{
 				{Name: "coins", Value: coinOne},
 				{Name: "destination", Value: coAddr1.Slice()},
 			},
 		},
 	}
 	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
-	sc, co, err := ContractCoin(ct, inst, []ol.Coin{})
+	sc, co, err := ContractCoin(ct, inst, []byzcoin.Coin{})
 	require.Error(t, err)
 
-	inst = ol.Instruction{
+	inst = byzcoin.Instruction{
 		InstanceID: coAddr1,
-		Invoke: &ol.Invoke{
+		Invoke: &byzcoin.Invoke{
 			Command: "transfer",
-			Args: ol.Arguments{
+			Args: byzcoin.Arguments{
 				{Name: "coins", Value: coinOne},
 				{Name: "destination", Value: coAddr2.Slice()},
 			},
 		},
 	}
 	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
-	sc, co, err = ContractCoin(ct, inst, []ol.Coin{})
+	sc, co, err = ContractCoin(ct, inst, []byzcoin.Coin{})
 	require.Nil(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 2, len(sc))
-	require.Equal(t, ol.NewStateChange(ol.Update, coAddr2, ContractCoinID, ciOne, gdarc.GetBaseID()), sc[0])
-	require.Equal(t, ol.NewStateChange(ol.Update, coAddr1, ContractCoinID, ciZero, gdarc.GetBaseID()), sc[1])
+	require.Equal(t, byzcoin.NewStateChange(byzcoin.Update, coAddr2, ContractCoinID, ciOne, gdarc.GetBaseID()), sc[0])
+	require.Equal(t, byzcoin.NewStateChange(byzcoin.Update, coAddr1, ContractCoinID, ciZero, gdarc.GetBaseID()), sc[1])
 }
 
 type cvTest struct {
@@ -229,14 +229,14 @@ func newCT(rStr ...string) *cvTest {
 	gdarc = darc.NewDarc(rules, []byte{})
 	dBuf, err := gdarc.ToProto()
 	log.ErrFatal(err)
-	ct.Store(ol.NewInstanceID(gdarc.GetBaseID()), dBuf, "darc", gdarc.GetBaseID())
+	ct.Store(byzcoin.NewInstanceID(gdarc.GetBaseID()), dBuf, "darc", gdarc.GetBaseID())
 	return ct
 }
 
 func (ct cvTest) Get(key []byte) collection.Getter {
 	panic("not implemented")
 }
-func (ct *cvTest) Store(key ol.InstanceID, value []byte, contractID string, darcID darc.ID) {
+func (ct *cvTest) Store(key byzcoin.InstanceID, value []byte, contractID string, darcID darc.ID) {
 	k := string(key.Slice())
 	ct.values[k] = value
 	ct.contractIDs[k] = contractID

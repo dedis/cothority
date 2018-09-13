@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	cosiprotocol "github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/cothority/byzcoin/viewchange"
+	cosiprotocol "github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/onet"
