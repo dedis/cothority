@@ -21,7 +21,7 @@ type suite interface {
 	kyber.XOFFactory
 }
 
-// NewWrite is used by the writer to OmniLedger to encode his symmetric key
+// NewWrite is used by the writer to ByzCoin to encode his symmetric key
 // under the collective public key created by the DKG. As this method uses
 // `Embed` to encode the key, depending on the key-length more than one point
 // is needed to encode the data.
@@ -105,7 +105,7 @@ func (wr *Write) CheckProof(suite suite, writeID darc.ID) error {
 	return errors.New("recreated proof is not equal to stored proof")
 }
 
-// EncodeKey can be used by the writer to OmniLedger to encode his symmetric
+// EncodeKey can be used by the writer to ByzCoin to encode his symmetric
 // key under the collective public key created by the DKG.
 // As this method uses `Pick` to encode the key, depending on the key-length
 // more than one point is needed to encode the data.
@@ -137,7 +137,7 @@ func EncodeKey(suite suites.Suite, X kyber.Point, key []byte) (U kyber.Point, Cs
 	return
 }
 
-// DecodeKey can be used by the reader of OmniLedger to convert the
+// DecodeKey can be used by the reader of ByzCoin to convert the
 // re-encrypted secret back to a symmetric key that can be used later to decode
 // the document.
 //
