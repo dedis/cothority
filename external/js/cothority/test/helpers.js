@@ -71,7 +71,7 @@ function killGolang(conode) {
 
 /**
  * runGolang runs the main.go file that resides in the given directory with the
- * given arguments. It returns ta promise that resolves when the script outputs
+ * given arguments. It returns a promise that resolves when the script outputs
  * OK. It's meant as a signal saying the conodes are running and listening.
  * The process MUST be kill at the end of the test using `killGolang`.
  *

@@ -43,7 +43,6 @@
     "istanbul": "^0.4.5",
     "jsdoc-to-markdown": "^4.0.1",
     "mocha": "^5.0.1",
-    "mock-socket": "^7.1.0",
     "prettier": "1.10.2",
     "uglify-es": "3.3.9",
     "uglifyjs-webpack-plugin": "^1.2.0",

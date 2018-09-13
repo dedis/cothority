@@ -154,7 +154,7 @@ class LeaderSocket {
     this.roster = roster;
 
     if (this.roster.identities.length === 0) {
-      throw new Error("Roster should have atleast one node");
+      throw new Error("Roster should have at least one node");
     }
   }
 
