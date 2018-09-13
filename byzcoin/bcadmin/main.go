@@ -179,9 +179,7 @@ func show(c *cli.Context) error {
 		return err
 	}
 
-	fmt.Fprintln(c.App.Writer, cfg)
-
-	fmt.Fprintln(c.App.Writer)
+	fmt.Fprintln(c.App.Writer, "ByzCoinID:", fmt.Sprintf("%x", cfg.ByzCoinID))
 	fmt.Fprintln(c.App.Writer, "Genesis Darc:")
 	var roster []string
 	for _, s := range cfg.Roster.List {
