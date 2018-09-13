@@ -25,8 +25,6 @@ import (
 	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/cothority/byzcoin/darc/expression"
 	"github.com/dedis/cothority/ftcosi/check"
-	_ "github.com/dedis/cothority/ftcosi/protocol"
-	_ "github.com/dedis/cothority/ftcosi/service"
 	ph "github.com/dedis/cothority/personhood"
 	"github.com/dedis/protobuf"
 	cli "gopkg.in/urfave/cli.v1"
@@ -901,7 +899,7 @@ func omniFinalize(c *cli.Context) error {
 
 	log.Print("linkpop", fs.Desc.Roster)
 	err = ph.NewClient().LinkPoP(fs.Desc.Roster.List[0], ph.Party{
-		OmniLedgerID:   cfg.ByzCoinID,
+		ByzCoinID:      cfg.ByzCoinID,
 		FinalStatement: *fs,
 		InstanceID:     partyInstance,
 		Darc:           cfg.GenesisDarc,
