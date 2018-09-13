@@ -6,7 +6,7 @@ import "gopkg.in/urfave/cli.v1"
 This holds the cli-commands so the main-file is less cluttered.
 */
 
-var commandOrg, commandAttendee, commandAuth, commandOmniledger cli.Command
+var commandOrg, commandAttendee, commandAuth, commandBC cli.Command
 
 func init() {
 
@@ -126,24 +126,24 @@ func init() {
 			},
 		},
 	}
-	commandOmniledger = cli.Command{
-		Name:    "omniledger",
-		Aliases: []string{"ol"},
-		Usage:   "communicate with Omniledger",
+	commandBC = cli.Command{
+		Name:    "byzcoin",
+		Aliases: []string{"bc"},
+		Usage:   "communicate with ByzCoin",
 		Subcommands: []cli.Command{
 			{
 				Name:      "store",
 				Aliases:   []string{"s"},
-				Usage:     "store the proposition of a pop-party in omniledger",
-				ArgsUsage: "omniledger.cfg key-xxx.cfg final-id",
-				Action:    omniStore,
+				Usage:     "store the proposition of a pop-party on the ledger",
+				ArgsUsage: "bc.cfg key-xxx.cfg final-id",
+				Action:    bcStore,
 			},
 			{
 				Name:      "finalize",
 				Aliases:   []string{"f"},
-				Usage:     "store a finalized pop-party in omniledger",
-				ArgsUsage: "omniledger.cfg key-xxx.cfg partyId",
-				Action:    omniFinalize,
+				Usage:     "store a finalized pop-party in the ledger",
+				ArgsUsage: "bc.cfg key-xxx.cfg partyId",
+				Action:    bcFinalize,
 			},
 			{
 				Name:    "coin",
@@ -154,15 +154,15 @@ func init() {
 						Name:      "show",
 						Aliases:   []string{"s"},
 						Usage:     "show how many coins are left in the account",
-						ArgsUsage: "omniledger.cfg partyInstID (public-key|accountID)",
-						Action:    omniCoinShow,
+						ArgsUsage: "bc.cfg partyInstID (public-key|accountID)",
+						Action:    bcCoinShow,
 					},
 					{
 						Name:      "transfer",
 						Aliases:   []string{"t"},
 						Usage:     "transfer money from one account to another",
-						ArgsUsage: "omniledger.cfg partyInstID source_private_key dst_public_key amount",
-						Action:    omniCoinTransfer,
+						ArgsUsage: "bc.cfg partyInstID source_private_key dst_public_key amount",
+						Action:    bcCoinTransfer,
 					},
 				},
 			},

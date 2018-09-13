@@ -15522,7 +15522,7 @@ public final class PoPProto {
   }
   /**
    * <pre>
-   * StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
+   * StoreInstanceID writes an InstanceID from ByzCoin to a FinalStatement.
    * </pre>
    *
    * Protobuf type {@code pop.StoreInstanceID}
@@ -15819,7 +15819,7 @@ public final class PoPProto {
     }
     /**
      * <pre>
-     * StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
+     * StoreInstanceID writes an InstanceID from ByzCoin to a FinalStatement.
      * </pre>
      *
      * Protobuf type {@code pop.StoreInstanceID}
@@ -16503,7 +16503,7 @@ public final class PoPProto {
   }
   /**
    * <pre>
-   * GetInstanceID requests an InstanceID from OmniLedger to a FinalStatement.
+   * GetInstanceID requests an InstanceID from ByzCoin to a FinalStatement.
    * </pre>
    *
    * Protobuf type {@code pop.GetInstanceID}
@@ -16759,7 +16759,7 @@ public final class PoPProto {
     }
     /**
      * <pre>
-     * GetInstanceID requests an InstanceID from OmniLedger to a FinalStatement.
+     * GetInstanceID requests an InstanceID from ByzCoin to a FinalStatement.
      * </pre>
      *
      * Protobuf type {@code pop.GetInstanceID}
@@ -17512,7 +17512,7 @@ public final class PoPProto {
   }
   /**
    * <pre>
-   * StoreSigner writes an Signer from OmniLedger to a FinalStatement.
+   * StoreSigner writes an Signer from ByzCoin to a FinalStatement.
    * </pre>
    *
    * Protobuf type {@code pop.StoreSigner}
@@ -17826,7 +17826,7 @@ public final class PoPProto {
     }
     /**
      * <pre>
-     * StoreSigner writes an Signer from OmniLedger to a FinalStatement.
+     * StoreSigner writes an Signer from ByzCoin to a FinalStatement.
      * </pre>
      *
      * Protobuf type {@code pop.StoreSigner}
@@ -18605,7 +18605,7 @@ public final class PoPProto {
   }
   /**
    * <pre>
-   * GetSigner requests an Signer from OmniLedger to a FinalStatement.
+   * GetSigner requests an Signer from ByzCoin to a FinalStatement.
    * </pre>
    *
    * Protobuf type {@code pop.GetSigner}
@@ -18861,7 +18861,7 @@ public final class PoPProto {
     }
     /**
      * <pre>
-     * GetSigner requests an Signer from OmniLedger to a FinalStatement.
+     * GetSigner requests an Signer from ByzCoin to a FinalStatement.
      * </pre>
      *
      * Protobuf type {@code pop.GetSigner}
@@ -22190,7 +22190,7 @@ public final class PoPProto {
 
     /**
      * <pre>
-     * Next is a link to the omniledger instanceID of the next party. It can be
+     * Next is a link to the instanceID of the next party. It can be
      * nil if there is no next party.
      * </pre>
      *
@@ -22199,7 +22199,7 @@ public final class PoPProto {
     boolean hasNext();
     /**
      * <pre>
-     * Next is a link to the omniledger instanceID of the next party. It can be
+     * Next is a link to the instanceID of the next party. It can be
      * nil if there is no next party.
      * </pre>
      *
@@ -22428,7 +22428,7 @@ public final class PoPProto {
     private com.google.protobuf.ByteString next_;
     /**
      * <pre>
-     * Next is a link to the omniledger instanceID of the next party. It can be
+     * Next is a link to the instanceID of the next party. It can be
      * nil if there is no next party.
      * </pre>
      *
@@ -22439,7 +22439,7 @@ public final class PoPProto {
     }
     /**
      * <pre>
-     * Next is a link to the omniledger instanceID of the next party. It can be
+     * Next is a link to the instanceID of the next party. It can be
      * nil if there is no next party.
      * </pre>
      *
@@ -23189,7 +23189,7 @@ public final class PoPProto {
       private com.google.protobuf.ByteString next_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * Next is a link to the omniledger instanceID of the next party. It can be
+       * Next is a link to the instanceID of the next party. It can be
        * nil if there is no next party.
        * </pre>
        *
@@ -23200,7 +23200,7 @@ public final class PoPProto {
       }
       /**
        * <pre>
-       * Next is a link to the omniledger instanceID of the next party. It can be
+       * Next is a link to the instanceID of the next party. It can be
        * nil if there is no next party.
        * </pre>
        *
@@ -23211,7 +23211,7 @@ public final class PoPProto {
       }
       /**
        * <pre>
-       * Next is a link to the omniledger instanceID of the next party. It can be
+       * Next is a link to the instanceID of the next party. It can be
        * nil if there is no next party.
        * </pre>
        *
@@ -23228,7 +23228,7 @@ public final class PoPProto {
       }
       /**
        * <pre>
-       * Next is a link to the omniledger instanceID of the next party. It can be
+       * Next is a link to the instanceID of the next party. It can be
        * nil if there is no next party.
        * </pre>
        *

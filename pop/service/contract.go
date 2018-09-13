@@ -37,7 +37,7 @@ func init() {
 	PoPCoinName = byzcoin.NewInstanceID(h.Sum(nil))
 }
 
-// ContractPopParty represents a pop-party on OmniLedger. It has the following
+// ContractPopParty represents a pop-party in ByzCoin. It has the following
 // functionalities:
 //   * Spawn - takes a "FinalStatement" argument with the binary representation
 //     of the final statement to store.

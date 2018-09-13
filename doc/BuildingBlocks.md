@@ -23,7 +23,7 @@ a more fault tolerant version of the CoSi protocol with only a 3-level tree
 - [Byzantine Fault Tolerant CoSi](../bftcosi/README.md)
 is an implementation inspired by PBFT using two rounds of CoSi
 - [ByzCoinX](../byzcoinx/README.md)
-the implementation of the basic consensus protocol in the Omniledger paper
+the implementation of the basic consensus protocol in the OmniLedger paper
 
 ## Key Sharding
 

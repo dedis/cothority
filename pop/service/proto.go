@@ -189,7 +189,7 @@ type GetFinalStatementsReply struct {
 	FinalStatements map[string]*FinalStatement
 }
 
-// StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
+// StoreInstanceID writes an InstanceID from ByzCoin to a FinalStatement.
 type StoreInstanceID struct {
 	PartyID    []byte
 	InstanceID byzcoin.InstanceID
@@ -199,7 +199,7 @@ type StoreInstanceID struct {
 type StoreInstanceIDReply struct {
 }
 
-// GetInstanceID requests an InstanceID from OmniLedger to a FinalStatement.
+// GetInstanceID requests an InstanceID from ByzCoin to a FinalStatement.
 type GetInstanceID struct {
 	PartyID []byte
 }
@@ -209,7 +209,7 @@ type GetInstanceIDReply struct {
 	InstanceID byzcoin.InstanceID
 }
 
-// StoreSigner writes an Signer from OmniLedger to a FinalStatement.
+// StoreSigner writes an Signer from ByzCoin to a FinalStatement.
 type StoreSigner struct {
 	PartyID []byte
 	Signer  darc.Signer
@@ -219,7 +219,7 @@ type StoreSigner struct {
 type StoreSignerReply struct {
 }
 
-// GetSigner requests an Signer from OmniLedger to a FinalStatement.
+// GetSigner requests an Signer from ByzCoin to a FinalStatement.
 type GetSigner struct {
 	PartyID []byte
 }
@@ -268,7 +268,7 @@ type PopPartyInstance struct {
 	// Previous is the link to the instanceID of the previous party, it can be
 	// nil for the first party.
 	Previous byzcoin.InstanceID
-	// Next is a link to the omniledger instanceID of the next party. It can be
+	// Next is a link to the instanceID of the next party. It can be
 	// nil if there is no next party.
 	Next byzcoin.InstanceID
 	// Public key of service - can be nil.
