@@ -4,7 +4,7 @@ const Signer = require("./darc/Signer");
 const Signature = require("./darc/Signature");
 
 /**
- * An instruction is sent and executed by OmniLedger.
+ * An instruction is sent and executed by ByzCoin.
  */
 class Instruction {
   /**
@@ -197,7 +197,7 @@ class Instruction {
   }
 
   /**
-   * Have a list of signers sign the instruction. The instruction will *not* be accepted by omniledger if it is not
+   * Have a list of signers sign the instruction. The instruction will *not* be accepted by byzcoin if it is not
    * signed. The signature will not be valid if the instruction is modified after signing.
    *
    * @param {Uint8Array} darcId

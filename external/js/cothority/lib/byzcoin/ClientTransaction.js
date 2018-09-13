@@ -1,6 +1,6 @@
 /**
  * ClientTransaction is a set of instructions are will be executed atomically
- * by OmniLedger.
+ * by ByzCoin.
  */
 class ClientTransaction {
   /**

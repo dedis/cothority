@@ -1,4 +1,4 @@
-const OmniledgerRPC = require("./OmniledgerRPC");
+const ByzCoinRPC = require("./ByzCoinRPC");
 
 const contracts = require("./contracts");
 const darc = require("./darc");
@@ -8,4 +8,4 @@ module.exports = {
   darc: darc
 };
 
-module.exports.OmniledgerRPC = OmniledgerRPC;
+module.exports.ByzCoinRPC = ByzCoinRPC;

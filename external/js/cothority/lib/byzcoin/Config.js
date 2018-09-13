@@ -2,14 +2,14 @@ const root = require("../protobuf/index.js").root;
 const identity = require("../identity");
 
 /**
- * Config is the genesis configuration of an omniledger instance. It can be stored only once in omniledger
- * and defines the basic running parameters of omniledger.
+ * Config is the genesis configuration of an byzcoin instance. It can be stored only once in byzcoin
+ * and defines the basic running parameters of byzcoin.
  */
 class Config {
   /**
    * Creates a config from knwon informations
    * @param {number} blockInterval
-   * @param {Roster} roster that hosts the OMniLedger
+   * @param {Roster} roster that hosts the ByzCoin ledger
    */
   constructor(blockInterval, roster) {
     this._blockInterval = blockInterval;
@@ -24,7 +24,7 @@ class Config {
   }
 
   /**
-   * @return {Roster} - the roster of the omniledger
+   * @return {Roster} - the roster of the byzcoin
    */
   get roster() {
     return this._roster;

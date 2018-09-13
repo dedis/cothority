@@ -3,7 +3,7 @@ const root = require("../../protobuf/index.js").root;
 /**
  * Darc stands for distributed access right control. It provides a powerful access control policy that supports logical
  * expressions, delegation of rights, offline verification and so on. Please refer to
- * https://github.com/dedis/cothority/omniledger/README.md#darc for more information.
+ * https://github.com/dedis/cothority/byzgen/README.md#darc for more information.
  */
 class Darc {
   /**

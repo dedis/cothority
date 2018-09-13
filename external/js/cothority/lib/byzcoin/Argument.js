@@ -1,7 +1,7 @@
 class Argument {
   /**
    * Argument is used in an Instruction. It will end up as the input argument
-   * of the OmniLedger smart contract.
+   * of the smart contract.
    * @param {string} name - The name of the argument
    * @param {Uint8Array} value - The value of the argument
    */

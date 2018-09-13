@@ -9,15 +9,15 @@ const misc = require("../misc");
 const protobuf = require("protobufjs");
 
 /**
- * OmniledgerRPC interacts with the omniledger service of a conode.
- * It can link to an existing omniledger instance.
+ * ByzCoinRPC interacts with the byzcoin service of a conode.
+ * It can link to an existing byzcoin instance.
  */
-class OmniledgerRPC {
+class ByzCoinRPC {
   /**
-   * Constructs an OmniLedgerRPC when the complete configuration is known
+   * Constructs an ByzCoinRPC when the complete configuration is known
    *
-   * @param {Config} config - the configuration of the OmniLedger
-   * @param {Socket|LeaderSocket|RosterSocket} socket - the socket to communicate with the OmniLedger
+   * @param {Config} config - the configuration of the ByzCoin
+   * @param {Socket|LeaderSocket|RosterSocket} socket - the socket to communicate with the ByzCoin ledger
    * @param {Darc} genesisDarc - the genesis Darc
    * @param {Object} genesis - the first block of the skipchain, in Protobuf literral JS object
    * @param {Object} latest - the last block of the skipchain, in Protobuf literral JS object
@@ -44,7 +44,7 @@ class OmniledgerRPC {
   }
 
   /**
-   * Return the current config of the OmniLedger
+   * Return the current config of the ledger.
    * @return {Config}
    */
   get config() {
@@ -61,7 +61,7 @@ class OmniledgerRPC {
 
   /**
    *
-   * @return {Roster} roster - the roster that hosts the omniledger
+   * @return {Roster} roster - the roster that hosts the byzcoin
    */
   get roster() {
     return this.config.roster;
@@ -75,19 +75,19 @@ class OmniledgerRPC {
   }
 
   /**
-   * Sends a transaction to omniledger and waits for up to 'wait' blocks for the
+   * Sends a transaction to byzcoin and waits for up to 'wait' blocks for the
    * transaction to be included in the global state. If more than 'wait' blocks
    * are created and the transaction is not included, an exception will be raised.
    *
    * @param {ClientTransaction} transaction - is the client transaction holding
-   * one or more instructions to be sent to omniledger.
+   * one or more instructions to be sent to byzcoin.
    * @param {number} wait - indicates the number of blocks to wait for the
    * transaction to be included
    * @return {Promise} - a promise that gets resolved if the block has been included
    */
   sendTransactionAndWait(transaction, wait) {
     let addTxRequest = {
-      version: OmniledgerRPC.currentVersion,
+      version: ByzCoinRPC.currentVersion,
       skipchainid: this.skipchainID,
       transaction: transaction.toProtobufValidMessage(),
       inclusionwait: wait
@@ -109,28 +109,28 @@ class OmniledgerRPC {
   }
 
   /**
-   * Gets a proof from omniledger to show that a given instance is in the
+   * Gets a proof from byzcoin to show that a given instance is in the
    * global state.
 
    * @param {Uint8Array} id - the instance key
    * @return {Promise<Proof>}
    */
   getProof(id) {
-    return OmniledgerRPC.getProof(this._socket, this._skipchainID, id);
+    return ByzCoinRPC.getProof(this._socket, this._skipchainID, id);
   }
 
   /**
-   * Gets a proof from omniledger to show that a given instance is in the
+   * Gets a proof from byzcoin to show that a given instance is in the
    * global state.
    *
-   * @param {Socket|LeaderSocket|RosterSocket} socket - the socket to communicate with the OmniLedger
+   * @param {Socket|LeaderSocket|RosterSocket} socket - the socket to communicate with the conode
    * @param {Uint8Array} skipchainId - the skipchain ID (the ID of it's genesis block)
    * @param {Uint8Array} key - the instance key
    * @return {Promise<Proof>}
    */
   static getProof(socket, skipchainId, key) {
     const getProofMessage = {
-      version: OmniledgerRPC.currentVersion,
+      version: ByzCoinRPC.currentVersion,
       id: skipchainId,
       key: key
     };
@@ -169,13 +169,13 @@ class OmniledgerRPC {
   }
 
   /**
-   * Constructs an OmniLedgerRPC from known configuration. The constructor will communicate with the service to
+   * Constructs an ByzGenRPC from a known configuration. The constructor will communicate with the service to
    * populate other fields and perform verification.
    *
-   * @param {Socket|LeaderSocket|RosterSocket} socket - the socket to communicate with the OmniLedger
+   * @param {Socket|LeaderSocket|RosterSocket} socket - the socket to communicate with the conode
    * @param skipchainId - the ID of the skipchain (aka the
    * ID of the genesis skipblock)
-   * @return {Promise<OmniledgerRPC>} - a promise that gets resolved once the RPC
+   * @return {Promise<ByzCoinRPC>} - a promise that gets resolved once the RPC
    * has been created
    */
   static fromKnownConfiguration(socket, skipchainId) {
@@ -189,13 +189,13 @@ class OmniledgerRPC {
     let genesisDarc = undefined;
     return this.getProof(socket, skipchainId, new Uint8Array(32))
       .then(proof => {
-        OmniledgerRPC.checkProof(proof, "config");
+        ByzCoinRPC.checkProof(proof, "config");
         config = Config.fromByteBuffer(proof.values[0]);
 
-        return OmniledgerRPC.getProof(socket, skipchainId, proof.values[2]);
+        return ByzCoinRPC.getProof(socket, skipchainId, proof.values[2]);
       })
       .then(proof2 => {
-        OmniledgerRPC.checkProof(proof2, "darc");
+        ByzCoinRPC.checkProof(proof2, "darc");
         genesisDarc = Darc.fromByteBuffer(proof2.values[0]);
         let skipchain = new SkipchainClient(
           Kyber.curve.newCurve("edwards25519"),
@@ -212,7 +212,7 @@ class OmniledgerRPC {
           })
           .then(latest => {
             return Promise.resolve(
-              new OmniledgerRPC(
+              new ByzCoinRPC(
                 config,
                 socket,
                 genesisDarc,
@@ -227,4 +227,4 @@ class OmniledgerRPC {
   }
 }
 
-module.exports = OmniledgerRPC;
+module.exports = ByzCoinRPC;

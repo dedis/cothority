@@ -6,11 +6,11 @@ const ClientTransaction = require("../ClientTransaction");
 const crypto = require("crypto");
 
 /**
- * Represents a PoP Party stored on the OmniLedger
+ * Represents a PoP Party stored on the ledger.
  */
 class PopPartyInstance {
   /**
-   * @param {OmniledgerRPC} ol - the omniledger instance
+   * @param {ByzCoinRPC} bc - the byzcoin instance
    * @param {Uint8Array} instanceId - the contract instance id
    * @param {Instance} [instance] - the complete instance
    * @param {number} [state] - the state of the party (see the state getter for more information)
@@ -19,8 +19,8 @@ class PopPartyInstance {
    * @param {Uint8Array} [next] - a link to the next pop-party, if available
    * @param {Uint8Array} [service] - the public key of the service, if available
    */
-  constructor(ol, instanceId, instance, state, finalStatement, previous, next, service) {
-    this._ol = ol;
+  constructor(bc, instanceId, instance, state, finalStatement, previous, next, service) {
+    this._bc = bc;
     this._instanceId = instanceId;
     this._instance = instance;
     this._state = state;
@@ -50,17 +50,17 @@ class PopPartyInstance {
 
   /**
    * Creates a new PopPartyInstance from an instance ID and try to contact the
-   * omniledger to get the last data
+   * byzcoin to get the last data
    *
-   * @param {OmniledgerRPC} ol - the omniledger instance
+   * @param {ByzCoinRPC} bc - the byzcoin instance
    * @param {Uint8Array} instanceId - the contract instance id
    */
-  static fromInstanceId(ol, instanceId) {
-    return new PopPartyInstance(ol, instanceId).update();
+  static fromInstanceId(bc, instanceId) {
+    return new PopPartyInstance(bc, instanceId).update();
   }
 
   /**
-   * Store the final statement on the OmniLedger. This happens after the
+   * Store the final statement on the ledger. This happens after the
    * party description has been published an the party finalized
    *
    * @param {Object} finalStatement - the final statement
@@ -86,16 +86,16 @@ class PopPartyInstance {
     inst.signBy(this._instance.darcId, [signer]);
     const clientTransaction = new ClientTransaction([inst]);
 
-    return this._ol.sendTransactionAndWait(clientTransaction, 10);
+    return this._bc.sendTransactionAndWait(clientTransaction, 10);
   }
 
   /**
-   * Contact the OmniLedger to try getting the last data
+   * Contact the ledger to try getting the last data
    *
    * @return {Promise<PopPartyInstance>}
    */
   update() {
-    return this._ol.getProof(this._instanceId).then(proof => {
+    return this._bc.getProof(this._instanceId).then(proof => {
       this._instance = Instance.fromProof(proof);
       const model = root.lookup("PopPartyInstance");
       const protoObject = model.decode(this._instance.data);

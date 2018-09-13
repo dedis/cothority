@@ -8,14 +8,14 @@ const ClientTransaction = require("../ClientTransaction");
 class CoinsInstance {
   /**
    * Creates a new CoinsInstance
-   * @param {OmniledgerRPC} ol - the OmniLedger instance
+   * @param {ByzCoinRPC} bc - the ByzCoinRPC instance
    * @param {Uint8Array} instanceId - id of the instance
    * @param {Instance} [instance] - the complete instance
    * @param {string} [type] - the type of coin
    * @param {number} [balance] - the current balance of the account
    */
-  constructor(ol, instanceId, instance, type, balance) {
-    this._ol = ol;
+  constructor(bc, instanceId, instance, type, balance) {
+    this._bc = bc;
     this._instanceId = instanceId;
     this._instance = instance;
     this._type = type;
@@ -39,16 +39,16 @@ class CoinsInstance {
   }
 
   /**
-   * Creates a new instance of CoinsInstance and contact the  omniledger to try
+   * Creates a new instance of CoinsInstance and contact the  byzcoin to try
    * to update the data
    *
-   * @param {OmniledgerRPC} ol - the omniledger instance
+   * @param {ByzCoinRPC} bc - the byzcoin instance
    * @param {Uint8Array} instanceId - the instance ID of the contract instance
    * @return {Promise<CoinsInstance>} - a promise that complete when the data
    * have been updated
    */
-  static fromInstanceId(ol, instanceId) {
-    return new CoinsInstance(ol, instanceId).update();
+  static fromInstanceId(bc, instanceId) {
+    return new CoinsInstance(bc, instanceId).update();
   }
 
   /**
@@ -58,7 +58,7 @@ class CoinsInstance {
    * @param {Uint8Array} to - the destination account (must be a coin contract instace id)
    * @param {Signer} signer - the signer (of the giver account)
    * @return {Promise} - a promisse that completes once the transaction has been
-   * included in the OmniLedger.
+   * included in the ledger.
    */
   transfer(coins, to, signer) {
     let args = [];
@@ -80,7 +80,7 @@ class CoinsInstance {
     inst.signBy(this._instance.darcId, [signer]);
     const trans = new ClientTransaction([inst]);
 
-    return this._ol.sendTransactionAndWait(trans, 10);
+    return this._bc.sendTransactionAndWait(trans, 10);
   }
 
   /**
@@ -90,7 +90,7 @@ class CoinsInstance {
    * are up-to-date
    */
   update() {
-    return this._ol.getProof(this._instanceId).then(proof => {
+    return this._bc.getProof(this._instanceId).then(proof => {
       this._instance = Instance.fromProof(proof);
       const model = root.lookup("CoinInstance");
       const protoObject = model.decode(this._instance.data);
