@@ -11,7 +11,7 @@ import (
 	"errors"
 	"sort"
 
-	ol "github.com/dedis/cothority/byzcoin/service"
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 )
@@ -202,14 +202,14 @@ func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 		return nil, errors.New("couldn't marshal party public key: " + err.Error())
 	}
 	partyCoin.Write(pubBuf)
-	ctx := ol.ClientTransaction{
-		Instructions: []ol.Instruction{{
-			InstanceID: ol.NewInstanceID(partyCoin.Sum(nil)),
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: byzcoin.NewInstanceID(partyCoin.Sum(nil)),
 			Index:      0,
 			Length:     1,
-			Invoke: &ol.Invoke{
+			Invoke: &byzcoin.Invoke{
 				Command: "transfer",
-				Args: []ol.Argument{{
+				Args: []byzcoin.Argument{{
 					Name:  "coins",
 					Value: cBuf,
 				},
@@ -224,7 +224,7 @@ func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 	if err != nil {
 		return nil, errors.New("couldn't sign: " + err.Error())
 	}
-	cl := ol.NewClient(party.OmniLedgerID, *party.FinalStatement.Desc.Roster)
+	cl := byzcoin.NewClient(party.ByzCoinID, *party.FinalStatement.Desc.Roster)
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
 		return nil, errors.New("couldn't send reward: " + err.Error())

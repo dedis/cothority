@@ -6,10 +6,10 @@ import (
 	"fmt"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/contracts"
 	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/cothority/byzcoin/darc/expression"
-	ol "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -29,12 +29,12 @@ var ContractPopParty = "popParty"
 var ContractPopCoinAccount = "popCoinAccount"
 
 // PoPCoinName is the identifier of the popcoins.
-var PoPCoinName ol.InstanceID
+var PoPCoinName byzcoin.InstanceID
 
 func init() {
 	h := sha256.New()
 	h.Write([]byte("popcoin"))
-	PoPCoinName = ol.NewInstanceID(h.Sum(nil))
+	PoPCoinName = byzcoin.NewInstanceID(h.Sum(nil))
 }
 
 // ContractPopParty represents a pop-party on OmniLedger. It has the following
@@ -51,7 +51,7 @@ func init() {
 //         needs to be correctly finalized by the pop-service.
 //       * "Service" - when given, will create a darc and a coin-account for
 //         the service to use.
-func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, coins []ol.Coin) (scs []ol.StateChange, cOut []ol.Coin, err error) {
+func (s *Service) ContractPopParty(cdb byzcoin.CollectionView, inst byzcoin.Instruction, coins []byzcoin.Coin) (scs []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
 	cOut = coins
 
 	err = inst.VerifyDarcSignature(cdb)
@@ -98,8 +98,8 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 		// 	return nil, nil, errors.New("couldn't get party id: " + err.Error())
 		// }
 		// log.Printf("New party: %x", partyID)
-		return ol.StateChanges{
-			ol.NewStateChange(ol.Create, inst.DeriveID(""), inst.Spawn.ContractID, ppiBuf, darc.ID(inst.InstanceID[:])),
+		return byzcoin.StateChanges{
+			byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), inst.Spawn.ContractID, ppiBuf, darc.ID(inst.InstanceID[:])),
 		}, cOut, nil
 	case inst.Invoke != nil:
 		switch inst.Invoke.Command {
@@ -166,7 +166,7 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 			}
 
 			// Update existing final statement
-			scs = append(scs, ol.NewStateChange(ol.Update, inst.InstanceID, ContractPopParty, ppiBuf, darcID))
+			scs = append(scs, byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID, ContractPopParty, ppiBuf, darcID))
 
 			return scs, coins, nil
 		case "AddParty":
@@ -180,7 +180,7 @@ func (s *Service) ContractPopParty(cdb ol.CollectionView, inst ol.Instruction, c
 	}
 }
 
-func createDarc(darcID darc.ID, pub kyber.Point) (d *darc.Darc, sc ol.StateChange, err error) {
+func createDarc(darcID darc.ID, pub kyber.Point) (d *darc.Darc, sc byzcoin.StateChange, err error) {
 	id := darc.NewIdentityEd25519(pub)
 	rules := darc.InitRules([]darc.Identity{id}, []darc.Identity{id})
 	rules.AddRule(darc.Action("invoke:transfer"), expression.Expr(id.String()))
@@ -191,12 +191,12 @@ func createDarc(darcID darc.ID, pub kyber.Point) (d *darc.Darc, sc ol.StateChang
 		return
 	}
 	log.Lvlf3("Final %x/%x", d.GetBaseID(), sha256.Sum256(darcBuf))
-	sc = ol.NewStateChange(ol.Create, ol.NewInstanceID(d.GetBaseID()),
-		ol.ContractDarcID, darcBuf, darcID)
+	sc = byzcoin.NewStateChange(byzcoin.Create, byzcoin.NewInstanceID(d.GetBaseID()),
+		byzcoin.ContractDarcID, darcBuf, darcID)
 	return
 }
 
-func createCoin(inst ol.Instruction, d *darc.Darc, pub kyber.Point, balance uint64) (sc ol.StateChange, err error) {
+func createCoin(inst byzcoin.Instruction, d *darc.Darc, pub kyber.Point, balance uint64) (sc byzcoin.StateChange, err error) {
 	iid := sha256.New()
 	iid.Write(inst.InstanceID.Slice())
 	pubBuf, err := pub.MarshalBinary()
@@ -205,7 +205,7 @@ func createCoin(inst ol.Instruction, d *darc.Darc, pub kyber.Point, balance uint
 		return
 	}
 	iid.Write(pubBuf)
-	cci := ol.Coin{
+	cci := byzcoin.Coin{
 		Name:  PoPCoinName,
 		Value: balance,
 	}
@@ -216,6 +216,6 @@ func createCoin(inst ol.Instruction, d *darc.Darc, pub kyber.Point, balance uint
 	}
 	coinID := iid.Sum(nil)
 	log.Lvlf3("Creating account %x", coinID)
-	return ol.NewStateChange(ol.Create, ol.NewInstanceID(coinID),
+	return byzcoin.NewStateChange(byzcoin.Create, byzcoin.NewInstanceID(coinID),
 		contracts.ContractCoinID, cciBuf, d.GetBaseID()), nil
 }

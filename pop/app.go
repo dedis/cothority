@@ -20,13 +20,13 @@ import (
 	"strings"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
+	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/byzcoin/darc/expression"
 	"github.com/dedis/cothority/ftcosi/check"
 	_ "github.com/dedis/cothority/ftcosi/protocol"
 	_ "github.com/dedis/cothority/ftcosi/service"
-	"github.com/dedis/cothority/byzcoin/darc"
-	"github.com/dedis/cothority/byzcoin/darc/expression"
-	"github.com/dedis/cothority/byzcoin/ol/lib"
-	ol "github.com/dedis/cothority/byzcoin/service"
 	ph "github.com/dedis/cothority/personhood"
 	"github.com/dedis/protobuf"
 	cli "gopkg.in/urfave/cli.v1"
@@ -740,14 +740,14 @@ func omniStore(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	inst := ol.Instruction{
-		InstanceID: ol.NewInstanceID(cfg.GenesisDarc.GetBaseID()),
-		Nonce:      ol.Nonce{},
+	inst := byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(cfg.GenesisDarc.GetBaseID()),
+		Nonce:      byzcoin.Nonce{},
 		Index:      0,
 		Length:     1,
-		Spawn: &ol.Spawn{
-			ContractID: ol.ContractDarcID,
-			Args: ol.Arguments{{
+		Spawn: &byzcoin.Spawn{
+			ContractID: byzcoin.ContractDarcID,
+			Args: byzcoin.Arguments{{
 				Name:  "darc",
 				Value: orgDarcBuf,
 			}},
@@ -757,11 +757,11 @@ func omniStore(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	ct := ol.ClientTransaction{
-		Instructions: ol.Instructions{inst},
+	ct := byzcoin.ClientTransaction{
+		Instructions: byzcoin.Instructions{inst},
 	}
 	log.Info("Contacting omniledger to store the new darc")
-	olc := ol.NewClient(cfg.OmniledgerID, cfg.Roster)
+	olc := byzcoin.NewClient(cfg.ByzCoinID, cfg.Roster)
 	_, err = olc.AddTransactionAndWait(ct, 10)
 	if err != nil {
 		return err
@@ -771,14 +771,14 @@ func omniStore(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	inst = ol.Instruction{
-		InstanceID: ol.NewInstanceID(orgDarc.GetBaseID()),
-		Nonce:      ol.Nonce{},
+	inst = byzcoin.Instruction{
+		InstanceID: byzcoin.NewInstanceID(orgDarc.GetBaseID()),
+		Nonce:      byzcoin.Nonce{},
 		Index:      0,
 		Length:     1,
-		Spawn: &ol.Spawn{
+		Spawn: &byzcoin.Spawn{
 			ContractID: service.ContractPopParty,
-			Args: ol.Arguments{{
+			Args: byzcoin.Arguments{{
 				Name:  "FinalStatement",
 				Value: partyConfigBuf,
 			}},
@@ -788,8 +788,8 @@ func omniStore(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	ct = ol.ClientTransaction{
-		Instructions: ol.Instructions{inst},
+	ct = byzcoin.ClientTransaction{
+		Instructions: byzcoin.Instructions{inst},
 	}
 	log.Info("Contacting omniledger to spawn the new party")
 	_, err = olc.AddTransactionAndWait(ct, 10)
@@ -860,7 +860,7 @@ func omniFinalize(c *cli.Context) error {
 	if err != nil {
 		return errors.New("couldn't get instanceID: " + err.Error())
 	}
-	if partyInstance.Equal(ol.InstanceID{}) {
+	if partyInstance.Equal(byzcoin.InstanceID{}) {
 		return errors.New("no instanceID stored")
 	}
 
@@ -870,15 +870,15 @@ func omniFinalize(c *cli.Context) error {
 	}
 
 	log.Info("Sending finalize-instruction to omniledger")
-	ctx := ol.ClientTransaction{
-		Instructions: ol.Instructions{ol.Instruction{
+	ctx := byzcoin.ClientTransaction{
+		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: partyInstance,
 			Index:      0,
 			Length:     1,
-			Invoke: &ol.Invoke{
+			Invoke: &byzcoin.Invoke{
 				Command: "Finalize",
-				Args: ol.Arguments{
-					ol.Argument{
+				Args: byzcoin.Arguments{
+					byzcoin.Argument{
 						Name:  "FinalStatement",
 						Value: fsBuf,
 					},
@@ -901,7 +901,7 @@ func omniFinalize(c *cli.Context) error {
 
 	log.Print("linkpop", fs.Desc.Roster)
 	err = ph.NewClient().LinkPoP(fs.Desc.Roster.List[0], ph.Party{
-		OmniLedgerID:   cfg.OmniledgerID,
+		OmniLedgerID:   cfg.ByzCoinID,
 		FinalStatement: *fs,
 		InstanceID:     partyInstance,
 		Darc:           cfg.GenesisDarc,
@@ -965,7 +965,7 @@ func omniCoinShow(c *cli.Context) error {
 	if err != nil {
 		return errors.New("couldn't get value from proof: " + err.Error())
 	}
-	ci := ol.Coin{}
+	ci := byzcoin.Coin{}
 	err = protobuf.Decode(v[0], &ci)
 	if err != nil {
 		return errors.New("couldn't unmarshal coin balance: " + err.Error())
@@ -1058,14 +1058,14 @@ func omniCoinTransfer(c *cli.Context) error {
 	log.Info("Transferring coins")
 	amountBuf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(amountBuf, amount)
-	ctx := ol.ClientTransaction{
-		Instructions: ol.Instructions{ol.Instruction{
-			InstanceID: ol.NewInstanceID(srcAddr),
+	ctx := byzcoin.ClientTransaction{
+		Instructions: byzcoin.Instructions{byzcoin.Instruction{
+			InstanceID: byzcoin.NewInstanceID(srcAddr),
 			Index:      0,
 			Length:     1,
-			Invoke: &ol.Invoke{
+			Invoke: &byzcoin.Invoke{
 				Command: "transfer",
-				Args: ol.Arguments{{
+				Args: byzcoin.Arguments{{
 					Name:  "coins",
 					Value: amountBuf,
 				},

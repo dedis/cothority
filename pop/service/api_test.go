@@ -4,8 +4,8 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/darc"
-	ol "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/eddsa"
 	"github.com/dedis/kyber/util/key"
@@ -142,7 +142,7 @@ func TestClient_StoreGetInstanceID(t *testing.T) {
 	ts := newTSer(t)
 	defer ts.Close()
 
-	iid := ol.NewInstanceID(random.Bits(256, true, random.New()))
+	iid := byzcoin.NewInstanceID(random.Bits(256, true, random.New()))
 	err := NewClient().StoreInstanceID(ts.addr, ts.fsID, iid)
 	require.Nil(t, err)
 

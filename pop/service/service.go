@@ -32,11 +32,11 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/messaging"
-	"github.com/dedis/cothority/byzcoin/darc"
-	"github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/suites"
@@ -130,7 +130,7 @@ type saveData struct {
 	// key of map is ID of party
 	Finals map[string]*FinalStatement
 	// InstanceIDs stores a map of partyID to InstanceID
-	InstanceIDs map[string]*service.InstanceID
+	InstanceIDs map[string]*byzcoin.InstanceID
 	// Signers stores a map of partyID to Signer
 	Signers map[string]*darc.Signer
 	// The info used in merge process
@@ -1158,7 +1158,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		s.data.merges = make(map[string]*merge)
 	}
 	if len(s.data.InstanceIDs) == 0 {
-		s.data.InstanceIDs = map[string]*service.InstanceID{}
+		s.data.InstanceIDs = map[string]*byzcoin.InstanceID{}
 	}
 	if len(s.data.Signers) == 0 {
 		s.data.Signers = map[string]*darc.Signer{}
@@ -1186,7 +1186,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 
-	service.RegisterContract(c, ContractPopParty, s.ContractPopParty)
+	byzcoin.RegisterContract(c, ContractPopParty, s.ContractPopParty)
 
 	return s, nil
 }

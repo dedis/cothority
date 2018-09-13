@@ -5,9 +5,8 @@ This holds the messages used to communicate with the service over the network.
 */
 
 import (
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/darc"
-	// Use omniledger here so that the correct package will be included in protobuf.
-	omniledger "github.com/dedis/cothority/byzcoin/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
@@ -28,7 +27,7 @@ func init() {
 // PROTOSTART
 // package pop;
 // type :map\[string\]FinalStatement:map<string, FinalStatement>
-// type :omniledger.InstanceID:bytes
+// type :byzcoin.InstanceID:bytes
 // import "onet.proto";
 // import "darc.proto";
 //
@@ -193,7 +192,7 @@ type GetFinalStatementsReply struct {
 // StoreInstanceID writes an InstanceID from OmniLedger to a FinalStatement.
 type StoreInstanceID struct {
 	PartyID    []byte
-	InstanceID omniledger.InstanceID
+	InstanceID byzcoin.InstanceID
 }
 
 // StoreInstanceIDReply is an empty reply
@@ -207,7 +206,7 @@ type GetInstanceID struct {
 
 // GetInstanceIDReply is the InstanceID for the party
 type GetInstanceIDReply struct {
-	InstanceID omniledger.InstanceID
+	InstanceID byzcoin.InstanceID
 }
 
 // StoreSigner writes an Signer from OmniLedger to a FinalStatement.
@@ -268,10 +267,10 @@ type PopPartyInstance struct {
 	FinalStatement *FinalStatement
 	// Previous is the link to the instanceID of the previous party, it can be
 	// nil for the first party.
-	Previous omniledger.InstanceID
+	Previous byzcoin.InstanceID
 	// Next is a link to the omniledger instanceID of the next party. It can be
 	// nil if there is no next party.
-	Next omniledger.InstanceID
+	Next byzcoin.InstanceID
 	// Public key of service - can be nil.
 	Service kyber.Point `protobuf:"opt"`
 }

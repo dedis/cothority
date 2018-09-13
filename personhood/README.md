@@ -19,7 +19,7 @@ WORKING MOCKUP, WE'LL DO PROPER CONTRACTS AND ALL!
 
 ## Currency
 
-Either use this service or the current coin-services implemented in OmniLedger.
+Either use this service or the current coin-services implemented in ByzCoin.
 Probably the latter.
 
 ## Voting and Deliberation
