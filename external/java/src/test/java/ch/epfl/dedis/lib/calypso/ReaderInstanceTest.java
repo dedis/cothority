@@ -2,12 +2,12 @@ package ch.epfl.dedis.lib.calypso;
 
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
-import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.lib.byzcoin.darc.Darc;
 import ch.epfl.dedis.lib.byzcoin.darc.Rules;
 import ch.epfl.dedis.lib.byzcoin.darc.Signer;
 import ch.epfl.dedis.lib.byzcoin.darc.SignerEd25519;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;

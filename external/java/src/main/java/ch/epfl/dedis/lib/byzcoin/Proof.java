@@ -2,9 +2,9 @@ package ch.epfl.dedis.lib.byzcoin;
 
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
+import ch.epfl.dedis.lib.byzcoin.darc.DarcId;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
-import ch.epfl.dedis.lib.byzcoin.darc.DarcId;
 import ch.epfl.dedis.lib.skipchain.ForwardLink;
 import ch.epfl.dedis.proto.ByzCoinProto;
 import ch.epfl.dedis.proto.CollectionProto;

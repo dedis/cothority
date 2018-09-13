@@ -1,12 +1,12 @@
 package ch.epfl.dedis.lib.byzcoin.contracts;
 
+import ch.epfl.dedis.lib.byzcoin.*;
+import ch.epfl.dedis.lib.byzcoin.darc.*;
 import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
-import ch.epfl.dedis.lib.byzcoin.*;
-import ch.epfl.dedis.lib.byzcoin.darc.*;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

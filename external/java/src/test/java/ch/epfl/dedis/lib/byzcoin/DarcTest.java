@@ -1,8 +1,8 @@
 package ch.epfl.dedis.lib.byzcoin;
 
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.byzcoin.darc.Darc;
 import ch.epfl.dedis.lib.byzcoin.darc.SignerEd25519;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;

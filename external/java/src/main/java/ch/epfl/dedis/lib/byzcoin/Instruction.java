@@ -1,7 +1,7 @@
 package ch.epfl.dedis.lib.byzcoin;
 
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.byzcoin.darc.*;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.ByzCoinProto;
 import com.google.protobuf.ByteString;
 

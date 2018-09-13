@@ -1,14 +1,14 @@
 package ch.epfl.dedis.lib.byzcoin.contracts;
 
+import ch.epfl.dedis.lib.byzcoin.*;
+import ch.epfl.dedis.lib.byzcoin.darc.Request;
+import ch.epfl.dedis.lib.byzcoin.darc.Signature;
+import ch.epfl.dedis.lib.byzcoin.darc.Signer;
 import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
-import ch.epfl.dedis.lib.byzcoin.*;
-import ch.epfl.dedis.lib.byzcoin.darc.Request;
-import ch.epfl.dedis.lib.byzcoin.darc.Signature;
-import ch.epfl.dedis.lib.byzcoin.darc.Signer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

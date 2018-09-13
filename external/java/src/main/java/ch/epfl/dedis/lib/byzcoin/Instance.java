@@ -1,8 +1,8 @@
 package ch.epfl.dedis.lib.byzcoin;
 
+import ch.epfl.dedis.lib.byzcoin.darc.DarcId;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
-import ch.epfl.dedis.lib.byzcoin.darc.DarcId;
 
 import java.util.List;
 

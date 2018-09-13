@@ -2,8 +2,8 @@ package ch.epfl.dedis.lib.calypso;
 
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.byzcoin.Proof;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.proto.Calypso;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;

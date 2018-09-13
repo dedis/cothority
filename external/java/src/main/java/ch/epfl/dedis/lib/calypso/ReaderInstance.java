@@ -1,10 +1,10 @@
 package ch.epfl.dedis.lib.calypso;
 
-import ch.epfl.dedis.lib.exception.CothorityException;
-import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.byzcoin.*;
 import ch.epfl.dedis.lib.byzcoin.darc.DarcId;
 import ch.epfl.dedis.lib.byzcoin.darc.Signer;
+import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
