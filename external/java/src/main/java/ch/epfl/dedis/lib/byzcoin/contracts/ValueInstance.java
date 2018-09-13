@@ -18,10 +18,9 @@ import java.util.Arrays;
  * ValueInstance represents a simple value store on byzcoin.
  */
 public class ValueInstance {
-    // ContractId is how a valueInstance is represented in OmniLedger.
     public static String ContractId = "value";
     private Instance instance;
-    private ByzCoinRPC ol;
+    private ByzCoinRPC bc;
     private byte[] value;
 
     private final static Logger logger = LoggerFactory.getLogger(ValueInstance.class);
@@ -32,13 +31,13 @@ public class ValueInstance {
      * the current valueInstance. If the instance is not found, or is not of
      * contractId "Value", an exception will be thrown.
      *
-     * @param ol is a link to an byzcoin instance that is running
+     * @param bc is a link to an byzcoin instance that is running
      * @param id of the value-instance to connect to
      * @throws CothorityException
      */
-    public ValueInstance(ByzCoinRPC ol, InstanceId id) throws CothorityException {
-        this.ol = ol;
-        Proof p = ol.getProof(id);
+    public ValueInstance(ByzCoinRPC bc, InstanceId id) throws CothorityException {
+        this.bc = bc;
+        Proof p = bc.getProof(id);
         instance = new Instance(p);
         if (!instance.getContractId().equals(ContractId)) {
             logger.error("wrong instance: {}", instance.getContractId());
@@ -47,12 +46,12 @@ public class ValueInstance {
         value = instance.getData();
     }
 
-    public ValueInstance(ByzCoinRPC ol, Proof p) throws CothorityException {
-        this(ol, new InstanceId(p.getKey()));
+    public ValueInstance(ByzCoinRPC bc, Proof p) throws CothorityException {
+        this(bc, new InstanceId(p.getKey()));
     }
 
     public void update() throws CothorityException {
-        instance = new Instance(ol.getProof(instance.getId()));
+        instance = new Instance(bc.getProof(instance.getId()));
         value = instance.getData();
     }
 
@@ -87,7 +86,7 @@ public class ValueInstance {
     public void evolveValue(byte[] newValue, Signer owner) throws CothorityException {
         Instruction inst = evolveValueInstruction(newValue, owner, 0, 1);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
-        ol.sendTransaction(ct);
+        bc.sendTransaction(ct);
     }
 
     /**
@@ -102,7 +101,7 @@ public class ValueInstance {
     public void evolveValueAndWait(byte[] newValue, Signer owner) throws CothorityException {
         evolveValue(newValue, owner);
         for (int i = 0; i < 10; i++) {
-            Proof p = ol.getProof(instance.getId());
+            Proof p = bc.getProof(instance.getId());
             Instance inst = new Instance(p);
             logger.info("Values are: {} - {}", Hex.printHexBinary(inst.getData()),
                     Hex.printHexBinary(newValue));
@@ -111,7 +110,7 @@ public class ValueInstance {
                 return;
             }
             try{
-                Thread.sleep(ol.getConfig().getBlockInterval().toMillis());
+                Thread.sleep(bc.getConfig().getBlockInterval().toMillis());
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

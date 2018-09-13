@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * An instruction is sent and executed by OmniLedger.
+ * An instruction is sent and executed by ByzCoin.
  */
 public class Instruction {
     private InstanceId instId;

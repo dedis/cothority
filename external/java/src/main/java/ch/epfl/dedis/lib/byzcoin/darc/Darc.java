@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 /**
  * Darc stands for distributed access right control. It provides a powerful access control policy that supports logical
  * expressions, delegation of rights, offline verification and so on. Please refer to
- * https://github.com/dedis/cothority/omniledger/README.md#darc for more information.
+ * https://github.com/dedis/cothority/byzcoin/README.md#darc for more information.
  */
 public class Darc {
     private long version;

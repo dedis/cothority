@@ -5,7 +5,7 @@ The EventLog (EL) service is for logging events into
 Contrary to ordinary event logging services, we offer better security and
 auditability. Below are some of the main features that sets us apart.
 
-- Collective witness - a collection of nodes, or conodes, indepdently observe
+- Collective witness - a collection of nodes, or conodes, independently observe
   the logging of an event. The event will only be accepted if a 2/3-majority
   think it is valid, e.g., the timestamp is reasonable, the client is
   authorised and so on.

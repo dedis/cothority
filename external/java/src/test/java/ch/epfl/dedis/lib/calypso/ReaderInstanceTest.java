@@ -20,7 +20,7 @@ import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ReaderInstanceTest {
-    private ByzCoinRPC ol;
+    private ByzCoinRPC bc;
     private WriterInstance w;
     private ReaderInstance r;
     private Signer admin;
@@ -39,26 +39,26 @@ class ReaderInstanceTest {
         rules.addRule("spawn:calypsoRead", admin.getIdentity().toString().getBytes());
         genesisDarc = new Darc(rules, "genesis".getBytes());
 
-        ol = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
-        if (!ol.checkLiveness()) {
+        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
+        if (!bc.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
 
-        CreateLTSReply ltsReply = CalypsoRPC.createLTS(ol.getRoster(), ol.getGenesis().getId());
+        CreateLTSReply ltsReply = CalypsoRPC.createLTS(bc.getRoster(), bc.getGenesis().getId());
         String secret = "this is a secret";
         WriteRequest wr = new WriteRequest(secret, 16, genesisDarc.getId());
-        w = new WriterInstance(ol, Arrays.asList(admin), genesisDarc.getId(), ltsReply, wr);
-        assertTrue(ol.getProof(w.getInstance().getId()).matches());
+        w = new WriterInstance(bc, Arrays.asList(admin), genesisDarc.getId(), ltsReply, wr);
+        assertTrue(bc.getProof(w.getInstance().getId()).matches());
 
         ReadRequest rr = new ReadRequest(w.getInstance().getId(), admin.getPublic());
-        r = new ReaderInstance(ol, Arrays.asList(admin), genesisDarc.getId(), rr);
-        assertTrue(ol.getProof(r.getInstance().getId()).matches());
+        r = new ReaderInstance(bc, Arrays.asList(admin), genesisDarc.getId(), rr);
+        assertTrue(bc.getProof(r.getInstance().getId()).matches());
     }
 
     @Test
     void testCopyReader() throws Exception {
-        ReaderInstance r2 = new ReaderInstance(ol, r.getInstance().getId());
-        assertTrue(ol.getProof(r2.getInstance().getId()).matches());
+        ReaderInstance r2 = new ReaderInstance(bc, r.getInstance().getId());
+        assertTrue(bc.getProof(r2.getInstance().getId()).matches());
     }
 
 }

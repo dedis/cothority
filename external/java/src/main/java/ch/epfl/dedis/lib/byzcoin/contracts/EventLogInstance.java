@@ -20,14 +20,14 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * EventLogInstance is for interacting with the eventlog contract on OmniLedger.
+ * EventLogInstance is for interacting with the eventlog contract on ByzCoin.
  * <p>
  * Contrary to ordinary event logging services, we offer better security and auditability. Below are some of the main
  * features that sets us apart.
  * <p>
  * <ul>
  *  <li>
- *      Collective witness - a collection of nodes, or conodes, indepdently observe the logging of an event. The event
+ *      Collective witness - a collection of nodes, or conodes, independently observe the logging of an event. The event
  *      will only be accepted if a 2/3-majority think it is valid, e.g., the timestamp is reasonable, the client is
  *      authorised and so on.
  *  </li>
@@ -47,28 +47,27 @@ import java.util.List;
  * </ul>
  */
 public class EventLogInstance {
-    // ContractId is how this contract is represented in OmniLedger;
     public static String ContractId = "eventlog";
     private Instance instance;
-    private ByzCoinRPC ol;
+    private ByzCoinRPC bc;
 
     private final static Logger logger = LoggerFactory.getLogger(EventLogInstance.class);
 
     /**
      * Constructor for when do you not know the eventlog instance, use this constructor when constructing for the first
      * time. This constructor expects the byzcoin RPC to be initialised with a darc that contains "spawn:eventlog".
-     * @param ol the byzcoin RPC
+     * @param bc the byzcoin RPC
      * @param signers a list of signers that has the "spawn:eventlog" permission
      * @param darcId the darc ID that has the "spawn:eventlog" permission
      * @throws CothorityException
      */
-    public EventLogInstance(ByzCoinRPC ol, List<Signer> signers, DarcId darcId) throws CothorityException {
-        this.ol = ol;
+    public EventLogInstance(ByzCoinRPC bc, List<Signer> signers, DarcId darcId) throws CothorityException {
+        this.bc = bc;
         InstanceId id = this.initEventlogInstance(darcId, signers);
 
         // wait for byzcoin to commit the transaction in block
         try {
-            Thread.sleep(5 * ol.getConfig().getBlockInterval().toMillis());
+            Thread.sleep(5 * bc.getConfig().getBlockInterval().toMillis());
         } catch (InterruptedException e) {
             throw new CothorityException(e);
         }
@@ -77,12 +76,12 @@ public class EventLogInstance {
 
     /**
      * Constructor for when the caller already knows the eventlog instance.
-     * @param ol the byzcoin RPC
+     * @param bc the byzcoin RPC
      * @param id the instance ID, it must be already initialised and stored on byzcoin
      * @throws CothorityException
      */
-    public EventLogInstance(ByzCoinRPC ol, InstanceId id) throws CothorityException {
-        this.ol = ol;
+    public EventLogInstance(ByzCoinRPC bc, InstanceId id) throws CothorityException {
+        this.bc = bc;
         this.setInstance(id);
     }
 
@@ -97,7 +96,7 @@ public class EventLogInstance {
      */
     public List<InstanceId> log(List<Event> events, DarcId darcId, List<Signer> signers) throws CothorityException {
         Pair<ClientTransaction, List<InstanceId>> txAndKeys = makeTx(events, darcId, signers);
-        ol.sendTransaction(txAndKeys._1);
+        bc.sendTransaction(txAndKeys._1);
         return txAndKeys._2;
     }
 
@@ -121,7 +120,7 @@ public class EventLogInstance {
      * @throws CothorityException
      */
     public Event get(InstanceId key) throws CothorityException {
-        Proof p = ol.getProof(key);
+        Proof p = bc.getProof(key);
         if (!p.matches()) {
             throw new CothorityCryptoException("key does not exist");
         }
@@ -151,15 +150,15 @@ public class EventLogInstance {
      */
     public SearchResponse search(String topic, long from, long to) throws CothorityException {
         // Note: this method is a bit different from the others, we directly use the raw sendMessage instead of via
-        // OmniLedgerRPC.
+        // ByzCoinRPC.
         EventLogProto.SearchRequest.Builder b = EventLogProto.SearchRequest.newBuilder();
         b.setInstance(ByteString.copyFrom(this.instance.getId().getId()));
-        b.setId(this.ol.getGenesis().getId().toProto());
+        b.setId(this.bc.getGenesis().getId().toProto());
         b.setTopic(topic);
         b.setFrom(from);
         b.setTo(to);
 
-        ByteString msg =  this.ol.getRoster().sendMessage("EventLog/SearchRequest", b.build());
+        ByteString msg =  this.bc.getRoster().sendMessage("EventLog/SearchRequest", b.build());
 
         try {
             EventLogProto.SearchResponse resp = EventLogProto.SearchResponse.parseFrom(msg);
@@ -186,14 +185,14 @@ public class EventLogInstance {
         instr.signBy(darcId, signers);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
-        ol.sendTransaction(tx);
+        bc.sendTransaction(tx);
 
         return instr.deriveId("");
     }
 
 
     private void setInstance(InstanceId id) throws CothorityException {
-        Proof p = ol.getProof(id);
+        Proof p = bc.getProof(id);
         Instance inst = new Instance(p);
         if (!inst.getContractId().equals(ContractId)) {
             logger.error("wrong instance: {}", inst.getContractId());

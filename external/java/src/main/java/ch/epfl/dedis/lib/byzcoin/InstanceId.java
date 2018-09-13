@@ -52,7 +52,7 @@ public class InstanceId implements HashId {
     }
 
     /**
-     * Creates an instance ID of all zeros, which is the place where the OmniLedger
+     * Creates an instance ID of all zeros, which is the place where the ByzCoin
      * config is stored.
      *
      * @return the zero instance ID

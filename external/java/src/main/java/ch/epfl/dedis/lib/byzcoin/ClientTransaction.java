@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * ClientTransaction is a set of instructions are will be executed atomically by OmniLedger.
+ * ClientTransaction is a set of instructions are will be executed atomically by ByzCoin.
  */
 public class ClientTransaction {
     private List<Instruction> instructions;

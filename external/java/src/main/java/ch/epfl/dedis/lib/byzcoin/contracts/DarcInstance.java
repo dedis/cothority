@@ -15,7 +15,7 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * DarcInstance represents an instance of a darc on Omniledger. It is self-
+ * DarcInstance represents an instance of a darc on ByzCoin. It is self-
  * sufficient, meaning it has a link to the byzcoin instance it runs on.
  * If you evolve the DarcInstance, it will update its internal darc.
  */
@@ -25,7 +25,7 @@ public class DarcInstance {
 
     private Instance instance;
     private Darc darc;
-    private ByzCoinRPC ol;
+    private ByzCoinRPC bc;
 
     private final static Logger logger = LoggerFactory.getLogger(DarcInstance.class);
 
@@ -35,13 +35,13 @@ public class DarcInstance {
      * the current darcInstance. If the instance is not found, or is not of
      * contractId "darc", an exception will be thrown.
      *
-     * @param ol is a link to an byzcoin instance that is running
+     * @param bc is a link to an byzcoin instance that is running
      * @param id of the darc-instance to connect to
      * @throws CothorityException
      */
-    public DarcInstance(ByzCoinRPC ol, InstanceId id) throws CothorityException {
-        this.ol = ol;
-        Proof p = ol.getProof(id);
+    public DarcInstance(ByzCoinRPC bc, InstanceId id) throws CothorityException {
+        this.bc = bc;
+        Proof p = bc.getProof(id);
         instance = new Instance(p);
         if (!instance.getContractId().equals(ContractId)) {
             logger.error("wrong instance: {}", instance.getContractId());
@@ -54,12 +54,12 @@ public class DarcInstance {
         }
     }
 
-    public DarcInstance(ByzCoinRPC ol, Darc d) throws CothorityException {
-        this(ol, new InstanceId(d.getBaseId().getId()));
+    public DarcInstance(ByzCoinRPC bc, Darc d) throws CothorityException {
+        this(bc, new InstanceId(d.getBaseId().getId()));
     }
 
     public void update() throws CothorityException {
-        instance = new Instance(ol.getProof(instance.getId()));
+        instance = new Instance(bc.getProof(instance.getId()));
         try {
             darc = new Darc(instance.getData());
         } catch (InvalidProtocolBufferException e) {
@@ -106,7 +106,7 @@ public class DarcInstance {
     public void evolveDarc(Darc newDarc, Signer owner) throws CothorityException {
         Instruction inst = evolveDarcInstruction(newDarc, owner, 0, 1);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
-        ol.sendTransaction(ct);
+        bc.sendTransaction(ct);
     }
 
     /**
@@ -121,14 +121,14 @@ public class DarcInstance {
     public void evolveDarcAndWait(Darc newDarc, Signer owner) throws CothorityException {
         evolveDarc(newDarc, owner);
         for (int i = 0; i < 10; i++) {
-            Proof p = ol.getProof(instance.getId());
+            Proof p = bc.getProof(instance.getId());
             Instance inst = new Instance(p);
             try {
                 darc = new Darc(inst.getData());
                 if (darc.getVersion() == newDarc.getVersion()) {
                     return;
                 }
-                Thread.sleep(ol.getConfig().getBlockInterval().toMillis());
+                Thread.sleep(bc.getConfig().getBlockInterval().toMillis());
             } catch (InvalidProtocolBufferException e) {
                 continue;
             } catch (InterruptedException e) {
@@ -179,7 +179,7 @@ public class DarcInstance {
     public ClientTransactionId spawnContract(String contractID, Signer s, List<Argument> args) throws CothorityException {
         Instruction inst = spawnContractInstruction(contractID, s, args, 0, 1);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
-        return ol.sendTransaction(ct);
+        return bc.sendTransaction(ct);
     }
 
     /**
@@ -193,7 +193,7 @@ public class DarcInstance {
     public Proof spawnContractAndWait(String contractID, Signer s, List<Argument> args, int wait) throws CothorityException {
         Instruction inst = spawnContractInstruction(contractID, s, args, 0, 1);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
-        ol.sendTransactionAndWait(ct, wait);
+        bc.sendTransactionAndWait(ct, wait);
         InstanceId iid = inst.deriveId("");
         if (contractID.equals(ContractId)) {
             // Special case for a darc, then the resulting instanceId is based
@@ -206,7 +206,7 @@ public class DarcInstance {
             }
         }
         logger.info("waiting on iid {}", iid);
-        return ol.getProof(iid);
+        return bc.getProof(iid);
     }
 
     /**

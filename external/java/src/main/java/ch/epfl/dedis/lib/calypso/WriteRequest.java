@@ -3,6 +3,7 @@ package ch.epfl.dedis.lib.calypso;
 import ch.epfl.dedis.lib.byzcoin.darc.DarcId;
 import ch.epfl.dedis.lib.crypto.*;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.proto.Calypso;
 import com.google.protobuf.ByteString;
 
@@ -41,13 +42,16 @@ public class WriteRequest {
      * Creates a new document from data, creates a new Darc, a symmetric symmetricKey and encrypts the data using
      * CBC-RSA.
      *
-     * @param data     Plain text data that will be stored encrypted on OmniLedger. There is a 10MB-limit on how much
+     * @param data     Plain text data that will be stored encrypted on the ledger. There is a 8 MB limit on how much
      *                 data can be stored. If you need more, this must be a pointer to an off-chain storage.
      * @param keylen   The length of the symmetric key in bytes. We recommend using 32 bytes.
      * @param writerID The darc ID where this write request will be stored.
      * @throws CothorityCryptoException in the case the encryption doesn't work
      */
-    public WriteRequest(byte[] data, int keylen, DarcId writerID) throws CothorityCryptoException {
+    public WriteRequest(byte[] data, int keylen, DarcId writerID) throws CothorityException {
+        if (data.length > 8000000) {
+            throw new CothorityException("data length too long");
+        }
         Encryption.keyIv key = new Encryption.keyIv(keylen);
         this.keyMaterial = key.getKeyMaterial();
         this.dataEnc = encryptData(data, keyMaterial);
@@ -63,7 +67,7 @@ public class WriteRequest {
      * @param keylen   The key length - 32 bytes is recommended.
      * @param writerID The darc ID where this write request will be stored.
      */
-    public WriteRequest(String data, int keylen, DarcId writerID) throws CothorityCryptoException {
+    public WriteRequest(String data, int keylen, DarcId writerID) throws CothorityException {
         this(data.getBytes(), keylen, writerID);
     }
 
@@ -76,7 +80,7 @@ public class WriteRequest {
      * @param keyMaterial The symmetric key plus eventually an IV. This will be encrypted under the shared symmetricKey
      *                    of the cothority.
      * @param writerID    The darc ID where this write request will be stored.
-     * @param extraData   data that will _not be encrypted_ but will be visible in cleartext on OmniLedger.
+     * @param extraData   data that will _not be encrypted_ but will be visible in cleartext on ByzCoin.
      */
     public WriteRequest(byte[] dataEnc, byte[] keyMaterial, DarcId writerID,
                         byte[] extraData) {

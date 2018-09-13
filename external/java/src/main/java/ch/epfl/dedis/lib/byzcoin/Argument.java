@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Argument is used in an Instruction. It will end up as the input argument of the OmniLedger smart contract.
+ * Argument is used in an Instruction. It will end up as the input argument of the smart contract.
  */
 public class Argument {
     private String name;

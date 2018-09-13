@@ -66,7 +66,7 @@ public class ByzCoinRPC {
             throw new CothorityCommunicationException(e);
         }
         latest = genesis;
-        logger.info("Created new OmniLedger: {}", genesis.getId().toString());
+        logger.info("Created new ByzCoin ledger with ID: {}", genesis.getId().toString());
         skipchain = new SkipchainRPC(r, genesis.getId());
         config = new Config(blockInterval);
         roster = r;
@@ -74,7 +74,7 @@ public class ByzCoinRPC {
     }
 
     /**
-     * Constructs an OmniLedgerRPC from known configuration. The constructor will communicate with the service to
+     * Constructs an ByzCoinRPC from a known configuration. The constructor will communicate with the service to
      * populate other fields and perform verification.
      *
      * @param roster      the roster to talk to
@@ -229,46 +229,43 @@ public class ByzCoinRPC {
     }
 
     /**
-     * @return the genesis block of OmniLedger.
+     * @return the genesis block of the ledger.
      */
     public SkipBlock getGenesis() {
         return genesis;
     }
 
     /**
-     * @return the roster responsible for OmniLedger.
+     * @return the roster responsible for the ledger
      */
     public Roster getRoster() {
         return roster;
     }
 
     /**
-     * Fetches a given block from the skipchain and returns the corresponding OmniBlock that allows direct
-     * access to all relevant fields for OmniLedger.
+     * Fetches a given block from the skipchain and returns the corresponding Block.
      *
      * @param id hash of the skipblock to fetch
-     * @return an OmniBlock representation of the skipblock
+     * @return a Block representation of the skipblock
      * @throws CothorityCommunicationException if it couldn't contact the nodes
      * @throws CothorityCryptoException if the omniblock is invalid
      */
-    public OmniBlock getOmniBlock(SkipblockId id) throws CothorityCommunicationException, CothorityCryptoException{
+    public Block getBlock(SkipblockId id) throws CothorityCommunicationException, CothorityCryptoException{
         SkipBlock sb = skipchain.getSkipblock(id);
-        return new OmniBlock(sb);
+        return new Block(sb);
     }
 
     /**
-     * Fetches the latest block from the Skipchain and returns the corresponding OmniBlock that allows direct
-     * access to all relevant fields for OmniLedger.
+     * Fetches the latest block from the Skipchain and returns the corresponding Block.
      *
-     * @return an OmniBlock representation of the skipblock
+     * @return an Block representation of the skipblock
      * @throws CothorityCommunicationException if it couldn't contact the nodes
      * @throws CothorityCryptoException if the omniblock is invalid
      */
-    public OmniBlock getLatestOmniBlock() throws CothorityCommunicationException, CothorityException{
+    public Block getLatestBlock() throws CothorityCommunicationException, CothorityException{
         this.update();
-        return new OmniBlock(latest);
+        return new Block(latest);
     }
-
 
     /**
      * This should be used with caution. Every time you use this, please open an issue in github and tell us
@@ -282,7 +279,7 @@ public class ByzCoinRPC {
     }
 
    /**
-     * Static method to request a proof from OmniLedger. This is used in the instantiation method.
+     * Static method to request a proof from ByzCoin. This is used in the instantiation method.
      *
      * @param roster where to contact the cothority
      * @param skipchainId the id of the underlying skipchain

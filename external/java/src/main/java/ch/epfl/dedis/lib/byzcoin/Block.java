@@ -10,12 +10,12 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * OmniBlock represents the data stored in a skipblock that is relevant to OmniLedger. This data is split in
+ * OmniBlock represents the data stored in a skipblock that is relevant to ByzCoin. This data is split in
  * two parts:
  * - header, which contains hashes of the current state and which is hashed in the block
- * - body, which contains the actual data (currently ClientTransactions) and which is not directly hashed in the block
+ * - body, which contains the actual transactions and which is not directly hashed in the block
  */
-public class OmniBlock {
+public class Block {
     private ByzCoinProto.DataHeader dataHeader;
     private DataBody dataBody;
 
@@ -25,7 +25,7 @@ public class OmniBlock {
      * @param sb skipblock holding data for an OmniBLock.
      * @throws CothorityCryptoException
      */
-    public OmniBlock(SkipBlock sb) throws CothorityCryptoException {
+    public Block(SkipBlock sb) throws CothorityCryptoException {
         try {
             // TODO: check that it is actually an OmniBlock by looking at the verifiers
             dataHeader = ByzCoinProto.DataHeader.parseFrom(sb.getData());
@@ -40,7 +40,7 @@ public class OmniBlock {
      * @param p
      * @throws CothorityCryptoException
      */
-    public OmniBlock(Proof p) throws CothorityCryptoException {
+    public Block(Proof p) throws CothorityCryptoException {
         // TODO: How do we know that the block in the proof legitimately links back to the
         // skipchain we think it does?
         SkipBlock sb = p.getLatest();

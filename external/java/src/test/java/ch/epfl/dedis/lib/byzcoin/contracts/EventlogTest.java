@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EventlogTest {
-    private static ByzCoinRPC ol;
+    private static ByzCoinRPC bc;
     private static EventLogInstance el;
     private static Signer admin;
 
@@ -44,19 +44,19 @@ class EventlogTest {
         rules.addRule("invoke:eventlog", admin.getIdentity().toString().getBytes());
         Darc genesisDarc = new Darc(rules, "genesis".getBytes());
 
-        ol = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
-        if (!ol.checkLiveness()) {
+        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
+        if (!bc.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
 
-        el = new EventLogInstance(ol, Arrays.asList(admin), genesisDarc.getId());
+        el = new EventLogInstance(bc, Arrays.asList(admin), genesisDarc.getId());
     }
 
     @Test
     void log() throws Exception {
         Event e = new Event("hello", "goodbye");
-        InstanceId key = el.log(e, ol.getGenesisDarc().getBaseId(), Arrays.asList(admin));
-        Thread.sleep(5 * ol.getConfig().getBlockInterval().toMillis());
+        InstanceId key = el.log(e, bc.getGenesisDarc().getBaseId(), Arrays.asList(admin));
+        Thread.sleep(5 * bc.getConfig().getBlockInterval().toMillis());
         Event loggedEvent = el.get(key);
         assertEquals(loggedEvent, e);
     }
@@ -69,12 +69,12 @@ class EventlogTest {
         for (int i = 0; i < n; i++) {
             // The timestamps in these event are all the same, but doing el.log takes time and it may not be possible to
             // add all the events. So we have to limit the number of events that we add.
-            keys.add(el.log(event, ol.getGenesisDarc().getBaseId(), Arrays.asList(admin)));
+            keys.add(el.log(event, bc.getGenesisDarc().getBaseId(), Arrays.asList(admin)));
         }
         boolean allOK = true;
         for (int i = 0; i < 4; i++) {
             allOK = true;
-            Thread.sleep(5 * ol.getConfig().getBlockInterval().toMillis());
+            Thread.sleep(5 * bc.getConfig().getBlockInterval().toMillis());
             for (InstanceId key : keys) {
                 try {
                     logger.info("ok");
@@ -97,9 +97,9 @@ class EventlogTest {
     void testSearch() throws Exception {
         long now = System.currentTimeMillis() * 1000 * 1000;
         Event event = new Event(now, "login", "alice");
-        el.log(event, ol.getGenesisDarc().getBaseId(), Arrays.asList(admin));
+        el.log(event, bc.getGenesisDarc().getBaseId(), Arrays.asList(admin));
 
-        Thread.sleep(5 * ol.getConfig().getBlockInterval().toMillis());
+        Thread.sleep(5 * bc.getConfig().getBlockInterval().toMillis());
 
         // finds the event under any topic
         SearchResponse resp = el.search("", now - 1000, now + 1000);

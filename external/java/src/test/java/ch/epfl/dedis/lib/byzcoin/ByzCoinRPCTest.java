@@ -21,7 +21,7 @@ import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ByzCoinRPCTest {
-    static ByzCoinRPC ol;
+    static ByzCoinRPC bc;
 
     static Signer admin;
     static Darc genesisDarc;
@@ -37,27 +37,27 @@ public class ByzCoinRPCTest {
                 Arrays.asList(admin.getIdentity()));
         genesisDarc = new Darc(rules, "genesis".getBytes());
 
-        ol = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(100, MILLIS));
-        if (!ol.checkLiveness()){
+        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(100, MILLIS));
+        if (!bc.checkLiveness()){
             throw new CothorityCommunicationException("liveness check failed");
         }
     }
 
     @Test
     void ping() throws Exception{
-        assertTrue(ol.checkLiveness());
+        assertTrue(bc.checkLiveness());
     }
 
     @Test
     void updateDarc() throws Exception {
-        DarcInstance dc = new DarcInstance(ol, genesisDarc);
+        DarcInstance dc = new DarcInstance(bc, genesisDarc);
         logger.info("DC is: {}", dc.getId());
         logger.info("genesisDarc is: {}", genesisDarc.getId());
         Darc newDarc = genesisDarc.copy();
         newDarc.setRule("spawn:darc", "all".getBytes());
         Instruction instr = dc.evolveDarcInstruction(newDarc, admin, 0, 1);
         logger.info("DC is: {}", dc.getId());
-        ol.sendTransactionAndWait(new ClientTransaction(Arrays.asList(instr)), 10);
+        bc.sendTransactionAndWait(new ClientTransaction(Arrays.asList(instr)), 10);
 
         dc.update();
         logger.info("darc-version is: {}", dc.getDarc().getVersion());
@@ -66,7 +66,7 @@ public class ByzCoinRPCTest {
 
     @Test
     void spawnDarc() throws Exception{
-        DarcInstance dc = new DarcInstance(ol, genesisDarc);
+        DarcInstance dc = new DarcInstance(bc, genesisDarc);
         Darc darc2 = genesisDarc.copy();
         darc2.setRule("spawn:darc", admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin);
@@ -79,7 +79,7 @@ public class ByzCoinRPCTest {
         assertTrue(p.matches());
 
         logger.info("creating DarcInstance");
-        DarcInstance dc2 = new DarcInstance(ol, newDarc);
+        DarcInstance dc2 = new DarcInstance(bc, newDarc);
         logger.info("ids: {} - {}", dc2.getDarc().getId(), newDarc.getId());
         logger.info("ids: {} - {}", dc2.getDarc().getBaseId(), newDarc.getBaseId());
         logger.info("darcs:\n{}\n{}", dc2.getDarc(), newDarc);
@@ -88,7 +88,7 @@ public class ByzCoinRPCTest {
 
     @Test
     void spawnValue() throws Exception{
-        DarcInstance dc = new DarcInstance(ol, genesisDarc);
+        DarcInstance dc = new DarcInstance(bc, genesisDarc);
         Darc darc2 = genesisDarc.copy();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
         darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
@@ -98,7 +98,7 @@ public class ByzCoinRPCTest {
         Proof p = dc.spawnContractAndWait("value", admin, Argument.NewList("value", myvalue), 10);
         assertTrue(p.matches());
 
-        ValueInstance vi = new ValueInstance(ol, p);
+        ValueInstance vi = new ValueInstance(bc, p);
         assertArrayEquals(vi.getValue(), myvalue);
         myvalue = "27".getBytes();
         vi.evolveValueAndWait(myvalue, admin);
@@ -112,7 +112,7 @@ public class ByzCoinRPCTest {
         // list in the next block. We then use spawnContractAndWait on one we know is
         // going to succeed in order to sync the test to the creation of the new
         // block.
-        DarcInstance dc = new DarcInstance(ol, genesisDarc);
+        DarcInstance dc = new DarcInstance(bc, genesisDarc);
         Darc darc2 = genesisDarc.copy();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
         darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
@@ -130,7 +130,7 @@ public class ByzCoinRPCTest {
         // failed tx. If we don't find it, we walk backwards one and look. We need to check back because OL could
         // decide to try one block with our failed tx, commit it, and then try another block with the success tx.
 
-        OmniBlock ob = new OmniBlock(p);
+        Block ob = new Block(p);
         List<TxResult> txr = ob.getTxResults();
 
         // If there are extra tx's we were not expecting, then abort.
@@ -157,8 +157,8 @@ public class ByzCoinRPCTest {
         // Look back one block for the expected failed tx.
         assertEquals(1, p.getLatest().getProto().getBacklinksCount());
         SkipblockId back = new SkipblockId(p.getLatest().getProto().getBacklinks(0));
-        SkipBlock b = ol.getSkipchain().getSkipblock(back);
-        ob = new OmniBlock(b);
+        SkipBlock b = bc.getSkipchain().getSkipblock(back);
+        ob = new Block(b);
         txr = ob.getTxResults();
         assertEquals(1, txr.size());
         assertFalse(txr.get(0).isAccepted());
@@ -173,12 +173,12 @@ public class ByzCoinRPCTest {
      */
     @Test
     void reconnect() throws Exception {
-        ByzCoinRPC ol2 = new ByzCoinRPC(ol.getRoster(), ol.getGenesis().getSkipchainId());
-        assertEquals(ol.getConfig().getBlockInterval(), ol2.getConfig().getBlockInterval());
+        ByzCoinRPC bc = new ByzCoinRPC(ByzCoinRPCTest.bc.getRoster(), ByzCoinRPCTest.bc.getGenesis().getSkipchainId());
+        assertEquals(ByzCoinRPCTest.bc.getConfig().getBlockInterval(), bc.getConfig().getBlockInterval());
         // check that getMaxBlockSize returned what we expect (from defaultMaxBlockSize in Go).
-        assertEquals(4000000, ol2.getConfig().getMaxBlockSize());
-        assertEquals(ol.getLatestOmniBlock().getTimestampNano(), ol2.getLatestOmniBlock().getTimestampNano());
-        assertEquals(ol.getGenesisDarc().getBaseId(), ol2.getGenesisDarc().getBaseId());
+        assertEquals(4000000, bc.getConfig().getMaxBlockSize());
+        assertEquals(ByzCoinRPCTest.bc.getLatestBlock().getTimestampNano(), bc.getLatestBlock().getTimestampNano());
+        assertEquals(ByzCoinRPCTest.bc.getGenesisDarc().getBaseId(), bc.getGenesisDarc().getBaseId());
 
     }
 }
