@@ -6,7 +6,7 @@ ByzCoin
 # ByzCoin
 
 This implementation of ByzCoin has its goal to implement the protocol
-described in the [ByzCoin Paper](https://eprint.iacr.org/2017/406.pdf).
+described in the [OmniLedger Paper](https://eprint.iacr.org/2017/406.pdf).
 As the paper is only describing the network interaction and very few of the
 details of how the transactions themselves are handled, we will include
 them as seem fit.

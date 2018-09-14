@@ -14,8 +14,6 @@ ftcosi/protocol
 ftcosi/service
 ftcosi/simulation
 messaging
-randhound
-randhound/simulation
 skipchain
 status
 status/service
