@@ -16,11 +16,11 @@ private key the right to make new event logs.
 $ PRIVATE_KEY=$priv el create -ol $file
 ```
 
-The ByzCoin admin will give you an ByzCoin config file, which you will
-use with the -bc argument, or you can set the BC environment
-variable to the name of the ByzCoin config file. A new event log will be spawned,
-and the event log ID will be printed. Set the EL environment variable to
-communicate it to future calls to the `el` program.
+The ByzCoin admin will give you a ByzCoin config file, which you will
+use with the -bc argument, or you can set the BC environment variable to the
+name of the ByzCoin config file. A new event log will be spawned, and the
+event log ID will be printed. Set the EL environment variable to communicate
+it to future calls to the `el` program.
 
 You need to give the private key from above, using the PRIVATE_KEY environment
 variable or the `-priv` argument.

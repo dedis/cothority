@@ -2,8 +2,8 @@ const root = require("../protobuf/index.js").root;
 const identity = require("../identity");
 
 /**
- * Config is the genesis configuration of an byzcoin instance. It can be stored only once in byzcoin
- * and defines the basic running parameters of byzcoin.
+ * Config is the genesis configuration of a ByzCoin instance. It can be stored only once in ByzCoin
+ * and defines the basic running parameters of ByzCoin.
  */
 class Config {
   /**
