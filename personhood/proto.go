@@ -1,8 +1,8 @@
 package personhood
 
 import (
-	"github.com/dedis/cothority/omniledger/darc"
-	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/byzcoin/darc"
 	pop "github.com/dedis/cothority/pop/service"
 	"github.com/dedis/cothority/skipchain"
 )
@@ -11,7 +11,7 @@ import (
 // type :InstanceID:bytes
 // type :SkipBlockID:bytes
 // type :skipchain.SkipBlockID:bytes
-// type :ol.InstanceID:bytes
+// type :byzcoin.InstanceID:bytes
 // package personhood;
 //
 // import "darc.proto";
@@ -26,12 +26,12 @@ type LinkPoP struct {
 	Party Party
 }
 
-// Party represents everything necessary to find a party on omniledger.
+// Party represents everything necessary to find a party in the ledger.
 type Party struct {
-	// OmniLedgerID represents the omniledger where the pop-party is stored.
-	OmniLedgerID skipchain.SkipBlockID
-	// InstanceID is where to find the party on OmniLedger
-	InstanceID ol.InstanceID
+	// ByzCoinID represents the ledger where the pop-party is stored.
+	ByzCoinID skipchain.SkipBlockID
+	// InstanceID is where to find the party in the ledger.
+	InstanceID byzcoin.InstanceID
 	// FinalStatement describes the party and the signature of the organizers.
 	FinalStatement pop.FinalStatement
 	// Darc being responsible for the PartyInstance.
@@ -72,7 +72,7 @@ type Reply struct {
 	// Sum is the sum of all replies for a given index of the questions.
 	Sum []int
 	// TODO: replace this with a linkable ring signature
-	Users []ol.InstanceID
+	Users []byzcoin.InstanceID
 }
 
 // RegisterQuestionnaire creates a questionnaire with a number of questions to
@@ -105,7 +105,7 @@ type AnswerQuestionnaire struct {
 	// Replies is a slice of answers, up to Questionnaire.Replies
 	Replies []int
 	// Account where to put the reward to.
-	Account ol.InstanceID
+	Account byzcoin.InstanceID
 }
 
 // TopupQuestionnaire can be used to add new balance to a questionnaire.
@@ -130,7 +130,7 @@ type Message struct {
 	// Text, can be any length of text of the message.
 	Text string
 	// Author's coin account for eventual rewards/tips to the author.
-	Author ol.InstanceID
+	Author byzcoin.InstanceID
 	// Balance the message has currently left.
 	Balance uint64
 	// Reward for reading this messgae.
@@ -174,7 +174,7 @@ type ReadMessage struct {
 	// PartyIID to calculate the party coin account
 	PartyIID []byte
 	// Reader that will receive the reward
-	Reader ol.InstanceID
+	Reader byzcoin.InstanceID
 }
 
 // ReadMessageReply if the message is still active (balance >= reward)

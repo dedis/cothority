@@ -7,8 +7,8 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/omniledger/darc"
-	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/eddsa"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -188,7 +188,7 @@ func (c *Client) GetKeys(dst network.Address, partyID []byte) ([]kyber.Point, er
 }
 
 // StoreInstanceID asks the service to store an instanceID for a given party.
-func (c *Client) StoreInstanceID(dst network.Address, partyID []byte, instanceID ol.InstanceID) error {
+func (c *Client) StoreInstanceID(dst network.Address, partyID []byte, instanceID byzcoin.InstanceID) error {
 	si := &network.ServerIdentity{Address: dst}
 	ret := &StoreInstanceIDReply{}
 
@@ -196,7 +196,7 @@ func (c *Client) StoreInstanceID(dst network.Address, partyID []byte, instanceID
 }
 
 // GetInstanceID asks the service for an instanceID for a given party.
-func (c *Client) GetInstanceID(dst network.Address, partyID []byte) (ol.InstanceID, error) {
+func (c *Client) GetInstanceID(dst network.Address, partyID []byte) (byzcoin.InstanceID, error) {
 	si := &network.ServerIdentity{Address: dst}
 	ret := &GetInstanceIDReply{}
 

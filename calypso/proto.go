@@ -1,9 +1,7 @@
 package calypso
 
 import (
-	// We need to use the omniledger import alias because it's the
-	// namespace used by protobuf is omniledger.
-	omniledger "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
@@ -12,7 +10,7 @@ import (
 // PROTOSTART
 // type :skipchain.SkipBlockID:bytes
 // package calypso;
-// import "omniledger.proto";
+// import "byzcoin.proto";
 // import "onet.proto";
 //
 // option java_package = "ch.epfl.dedis.proto";
@@ -51,7 +49,7 @@ type Write struct {
 // Read is the data stored in a read instance. It has a pointer to the write
 // instance and the public key used to create the read instance.
 type Read struct {
-	Write omniledger.InstanceID
+	Write byzcoin.InstanceID
 	Xc    kyber.Point
 }
 
@@ -63,8 +61,8 @@ type Read struct {
 type CreateLTS struct {
 	// Roster is the list of nodes that should participate in the DKG.
 	Roster onet.Roster
-	// OLID is the ID of the OmniLedger that can use this LTS.
-	OLID skipchain.SkipBlockID
+	// BCID is the ID of the ByzCoin ledger that can use this LTS.
+	BCID skipchain.SkipBlockID
 }
 
 // CreateLTSReply is returned upon successfully setting up the distributed
@@ -79,12 +77,12 @@ type CreateLTSReply struct {
 }
 
 // DecryptKey is sent by a reader after he successfully stored a 'Read' request
-// in omniledger.
+// in byzcoin.
 type DecryptKey struct {
 	// Read is the proof that he has been accepted to read the secret.
-	Read omniledger.Proof
+	Read byzcoin.Proof
 	// Write is the proof containing the write request.
-	Write omniledger.Proof
+	Write byzcoin.Proof
 }
 
 // DecryptKeyReply is returned if the service verified successfully that the

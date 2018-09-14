@@ -636,24 +636,24 @@ public final class Personhood {
 
     /**
      * <pre>
-     * OmniLedgerID represents the omniledger where the pop-party is stored.
+     * ByzCoinID represents the ledger where the pop-party is stored.
      * </pre>
      *
-     * <code>required bytes omniledgerid = 1;</code>
+     * <code>required bytes byzcoinid = 1;</code>
      */
-    boolean hasOmniledgerid();
+    boolean hasByzcoinid();
     /**
      * <pre>
-     * OmniLedgerID represents the omniledger where the pop-party is stored.
+     * ByzCoinID represents the ledger where the pop-party is stored.
      * </pre>
      *
-     * <code>required bytes omniledgerid = 1;</code>
+     * <code>required bytes byzcoinid = 1;</code>
      */
-    com.google.protobuf.ByteString getOmniledgerid();
+    com.google.protobuf.ByteString getByzcoinid();
 
     /**
      * <pre>
-     * InstanceID is where to find the party on OmniLedger
+     * InstanceID is where to find the party in the ledger.
      * </pre>
      *
      * <code>required bytes instanceid = 2;</code>
@@ -661,7 +661,7 @@ public final class Personhood {
     boolean hasInstanceid();
     /**
      * <pre>
-     * InstanceID is where to find the party on OmniLedger
+     * InstanceID is where to find the party in the ledger.
      * </pre>
      *
      * <code>required bytes instanceid = 2;</code>
@@ -745,7 +745,7 @@ public final class Personhood {
   }
   /**
    * <pre>
-   * Party represents everything necessary to find a party on omniledger.
+   * Party represents everything necessary to find a party in the ledger.
    * </pre>
    *
    * Protobuf type {@code personhood.Party}
@@ -760,7 +760,7 @@ public final class Personhood {
       super(builder);
     }
     private Party() {
-      omniledgerid_ = com.google.protobuf.ByteString.EMPTY;
+      byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       instanceid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
@@ -797,7 +797,7 @@ public final class Personhood {
             }
             case 10: {
               bitField0_ |= 0x00000001;
-              omniledgerid_ = input.readBytes();
+              byzcoinid_ = input.readBytes();
               break;
             }
             case 18: {
@@ -869,34 +869,34 @@ public final class Personhood {
     }
 
     private int bitField0_;
-    public static final int OMNILEDGERID_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString omniledgerid_;
+    public static final int BYZCOINID_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString byzcoinid_;
     /**
      * <pre>
-     * OmniLedgerID represents the omniledger where the pop-party is stored.
+     * ByzCoinID represents the ledger where the pop-party is stored.
      * </pre>
      *
-     * <code>required bytes omniledgerid = 1;</code>
+     * <code>required bytes byzcoinid = 1;</code>
      */
-    public boolean hasOmniledgerid() {
+    public boolean hasByzcoinid() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
      * <pre>
-     * OmniLedgerID represents the omniledger where the pop-party is stored.
+     * ByzCoinID represents the ledger where the pop-party is stored.
      * </pre>
      *
-     * <code>required bytes omniledgerid = 1;</code>
+     * <code>required bytes byzcoinid = 1;</code>
      */
-    public com.google.protobuf.ByteString getOmniledgerid() {
-      return omniledgerid_;
+    public com.google.protobuf.ByteString getByzcoinid() {
+      return byzcoinid_;
     }
 
     public static final int INSTANCEID_FIELD_NUMBER = 2;
     private com.google.protobuf.ByteString instanceid_;
     /**
      * <pre>
-     * InstanceID is where to find the party on OmniLedger
+     * InstanceID is where to find the party in the ledger.
      * </pre>
      *
      * <code>required bytes instanceid = 2;</code>
@@ -906,7 +906,7 @@ public final class Personhood {
     }
     /**
      * <pre>
-     * InstanceID is where to find the party on OmniLedger
+     * InstanceID is where to find the party in the ledger.
      * </pre>
      *
      * <code>required bytes instanceid = 2;</code>
@@ -1020,7 +1020,7 @@ public final class Personhood {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasOmniledgerid()) {
+      if (!hasByzcoinid()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -1059,7 +1059,7 @@ public final class Personhood {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, omniledgerid_);
+        output.writeBytes(1, byzcoinid_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, instanceid_);
@@ -1083,7 +1083,7 @@ public final class Personhood {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, omniledgerid_);
+          .computeBytesSize(1, byzcoinid_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -1117,10 +1117,10 @@ public final class Personhood {
       ch.epfl.dedis.proto.Personhood.Party other = (ch.epfl.dedis.proto.Personhood.Party) obj;
 
       boolean result = true;
-      result = result && (hasOmniledgerid() == other.hasOmniledgerid());
-      if (hasOmniledgerid()) {
-        result = result && getOmniledgerid()
-            .equals(other.getOmniledgerid());
+      result = result && (hasByzcoinid() == other.hasByzcoinid());
+      if (hasByzcoinid()) {
+        result = result && getByzcoinid()
+            .equals(other.getByzcoinid());
       }
       result = result && (hasInstanceid() == other.hasInstanceid());
       if (hasInstanceid()) {
@@ -1153,9 +1153,9 @@ public final class Personhood {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasOmniledgerid()) {
-        hash = (37 * hash) + OMNILEDGERID_FIELD_NUMBER;
-        hash = (53 * hash) + getOmniledgerid().hashCode();
+      if (hasByzcoinid()) {
+        hash = (37 * hash) + BYZCOINID_FIELD_NUMBER;
+        hash = (53 * hash) + getByzcoinid().hashCode();
       }
       if (hasInstanceid()) {
         hash = (37 * hash) + INSTANCEID_FIELD_NUMBER;
@@ -1268,7 +1268,7 @@ public final class Personhood {
     }
     /**
      * <pre>
-     * Party represents everything necessary to find a party on omniledger.
+     * Party represents everything necessary to find a party in the ledger.
      * </pre>
      *
      * Protobuf type {@code personhood.Party}
@@ -1309,7 +1309,7 @@ public final class Personhood {
       }
       public Builder clear() {
         super.clear();
-        omniledgerid_ = com.google.protobuf.ByteString.EMPTY;
+        byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
         instanceid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -1358,7 +1358,7 @@ public final class Personhood {
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
         }
-        result.omniledgerid_ = omniledgerid_;
+        result.byzcoinid_ = byzcoinid_;
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
@@ -1429,8 +1429,8 @@ public final class Personhood {
 
       public Builder mergeFrom(ch.epfl.dedis.proto.Personhood.Party other) {
         if (other == ch.epfl.dedis.proto.Personhood.Party.getDefaultInstance()) return this;
-        if (other.hasOmniledgerid()) {
-          setOmniledgerid(other.getOmniledgerid());
+        if (other.hasByzcoinid()) {
+          setByzcoinid(other.getByzcoinid());
         }
         if (other.hasInstanceid()) {
           setInstanceid(other.getInstanceid());
@@ -1450,7 +1450,7 @@ public final class Personhood {
       }
 
       public final boolean isInitialized() {
-        if (!hasOmniledgerid()) {
+        if (!hasByzcoinid()) {
           return false;
         }
         if (!hasInstanceid()) {
@@ -1496,53 +1496,53 @@ public final class Personhood {
       }
       private int bitField0_;
 
-      private com.google.protobuf.ByteString omniledgerid_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * OmniLedgerID represents the omniledger where the pop-party is stored.
+       * ByzCoinID represents the ledger where the pop-party is stored.
        * </pre>
        *
-       * <code>required bytes omniledgerid = 1;</code>
+       * <code>required bytes byzcoinid = 1;</code>
        */
-      public boolean hasOmniledgerid() {
+      public boolean hasByzcoinid() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
        * <pre>
-       * OmniLedgerID represents the omniledger where the pop-party is stored.
+       * ByzCoinID represents the ledger where the pop-party is stored.
        * </pre>
        *
-       * <code>required bytes omniledgerid = 1;</code>
+       * <code>required bytes byzcoinid = 1;</code>
        */
-      public com.google.protobuf.ByteString getOmniledgerid() {
-        return omniledgerid_;
+      public com.google.protobuf.ByteString getByzcoinid() {
+        return byzcoinid_;
       }
       /**
        * <pre>
-       * OmniLedgerID represents the omniledger where the pop-party is stored.
+       * ByzCoinID represents the ledger where the pop-party is stored.
        * </pre>
        *
-       * <code>required bytes omniledgerid = 1;</code>
+       * <code>required bytes byzcoinid = 1;</code>
        */
-      public Builder setOmniledgerid(com.google.protobuf.ByteString value) {
+      public Builder setByzcoinid(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000001;
-        omniledgerid_ = value;
+        byzcoinid_ = value;
         onChanged();
         return this;
       }
       /**
        * <pre>
-       * OmniLedgerID represents the omniledger where the pop-party is stored.
+       * ByzCoinID represents the ledger where the pop-party is stored.
        * </pre>
        *
-       * <code>required bytes omniledgerid = 1;</code>
+       * <code>required bytes byzcoinid = 1;</code>
        */
-      public Builder clearOmniledgerid() {
+      public Builder clearByzcoinid() {
         bitField0_ = (bitField0_ & ~0x00000001);
-        omniledgerid_ = getDefaultInstance().getOmniledgerid();
+        byzcoinid_ = getDefaultInstance().getByzcoinid();
         onChanged();
         return this;
       }
@@ -1550,7 +1550,7 @@ public final class Personhood {
       private com.google.protobuf.ByteString instanceid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * InstanceID is where to find the party on OmniLedger
+       * InstanceID is where to find the party in the ledger.
        * </pre>
        *
        * <code>required bytes instanceid = 2;</code>
@@ -1560,7 +1560,7 @@ public final class Personhood {
       }
       /**
        * <pre>
-       * InstanceID is where to find the party on OmniLedger
+       * InstanceID is where to find the party in the ledger.
        * </pre>
        *
        * <code>required bytes instanceid = 2;</code>
@@ -1570,7 +1570,7 @@ public final class Personhood {
       }
       /**
        * <pre>
-       * InstanceID is where to find the party on OmniLedger
+       * InstanceID is where to find the party in the ledger.
        * </pre>
        *
        * <code>required bytes instanceid = 2;</code>
@@ -1586,7 +1586,7 @@ public final class Personhood {
       }
       /**
        * <pre>
-       * InstanceID is where to find the party on OmniLedger
+       * InstanceID is where to find the party in the ledger.
        * </pre>
        *
        * <code>required bytes instanceid = 2;</code>
@@ -14962,36 +14962,36 @@ public final class Personhood {
     java.lang.String[] descriptorData = {
       "\n\020personhood.proto\022\npersonhood\032\ndarc.pro" +
       "to\032\tpop.proto\"+\n\007LinkPoP\022 \n\005party\030\001 \002(\0132" +
-      "\021.personhood.Party\"\226\001\n\005Party\022\024\n\014omniledg" +
-      "erid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022+\n\016finals" +
-      "tatement\030\003 \002(\0132\023.pop.FinalStatement\022\030\n\004d" +
-      "arc\030\004 \002(\0132\n.darc.Darc\022\034\n\006signer\030\005 \002(\0132\014." +
-      "darc.Signer\"\034\n\013StringReply\022\r\n\005reply\030\001 \002(" +
-      "\t\"o\n\rQuestionnaire\022\r\n\005title\030\001 \002(\t\022\021\n\tque" +
-      "stions\030\002 \003(\t\022\017\n\007replies\030\003 \002(\021\022\017\n\007balance" +
-      "\030\004 \002(\004\022\016\n\006reward\030\005 \002(\004\022\n\n\002id\030\006 \002(\014\"#\n\005Re" +
-      "ply\022\013\n\003sum\030\001 \003(\021\022\r\n\005users\030\002 \003(\014\"I\n\025Regis" +
-      "terQuestionnaire\0220\n\rquestionnaire\030\001 \002(\0132" +
-      "\031.personhood.Questionnaire\"3\n\022ListQuesti" +
-      "onnaires\022\r\n\005start\030\001 \002(\021\022\016\n\006number\030\002 \002(\021\"" +
-      "L\n\027ListQuestionnairesReply\0221\n\016questionna" +
-      "ires\030\001 \003(\0132\031.personhood.Questionnaire\"H\n" +
-      "\023AnswerQuestionnaire\022\017\n\007questid\030\001 \002(\014\022\017\n" +
-      "\007replies\030\002 \003(\021\022\017\n\007account\030\003 \002(\014\"4\n\022Topup" +
-      "Questionnaire\022\017\n\007questid\030\001 \002(\014\022\r\n\005topup\030" +
-      "\002 \002(\004\"s\n\007Message\022\017\n\007subject\030\001 \002(\t\022\014\n\004dat" +
-      "e\030\002 \002(\004\022\014\n\004text\030\003 \002(\t\022\016\n\006author\030\004 \002(\014\022\017\n" +
-      "\007balance\030\005 \002(\004\022\016\n\006reward\030\006 \002(\004\022\n\n\002id\030\007 \002" +
-      "(\014\"3\n\013SendMessage\022$\n\007message\030\001 \002(\0132\023.per" +
-      "sonhood.Message\"-\n\014ListMessages\022\r\n\005start" +
-      "\030\001 \002(\021\022\016\n\006number\030\002 \002(\021\"X\n\021ListMessagesRe" +
-      "ply\022\020\n\010subjects\030\001 \003(\t\022\016\n\006msgids\030\002 \003(\014\022\020\n" +
-      "\010balances\030\003 \003(\004\022\017\n\007rewards\030\004 \003(\004\">\n\013Read" +
-      "Message\022\r\n\005msgid\030\001 \002(\014\022\020\n\010partyiid\030\002 \002(\014" +
-      "\022\016\n\006reader\030\003 \002(\014\"8\n\020ReadMessageReply\022$\n\007" +
-      "message\030\001 \002(\0132\023.personhood.Message\"-\n\014To" +
-      "pupMessage\022\r\n\005msgid\030\001 \002(\014\022\016\n\006amount\030\002 \002(" +
-      "\004B!\n\023ch.epfl.dedis.protoB\nPersonhood"
+      "\021.personhood.Party\"\223\001\n\005Party\022\021\n\tbyzcoini" +
+      "d\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022+\n\016finalstat" +
+      "ement\030\003 \002(\0132\023.pop.FinalStatement\022\030\n\004darc" +
+      "\030\004 \002(\0132\n.darc.Darc\022\034\n\006signer\030\005 \002(\0132\014.dar" +
+      "c.Signer\"\034\n\013StringReply\022\r\n\005reply\030\001 \002(\t\"o" +
+      "\n\rQuestionnaire\022\r\n\005title\030\001 \002(\t\022\021\n\tquesti" +
+      "ons\030\002 \003(\t\022\017\n\007replies\030\003 \002(\021\022\017\n\007balance\030\004 " +
+      "\002(\004\022\016\n\006reward\030\005 \002(\004\022\n\n\002id\030\006 \002(\014\"#\n\005Reply" +
+      "\022\013\n\003sum\030\001 \003(\021\022\r\n\005users\030\002 \003(\014\"I\n\025Register" +
+      "Questionnaire\0220\n\rquestionnaire\030\001 \002(\0132\031.p" +
+      "ersonhood.Questionnaire\"3\n\022ListQuestionn" +
+      "aires\022\r\n\005start\030\001 \002(\021\022\016\n\006number\030\002 \002(\021\"L\n\027" +
+      "ListQuestionnairesReply\0221\n\016questionnaire" +
+      "s\030\001 \003(\0132\031.personhood.Questionnaire\"H\n\023An" +
+      "swerQuestionnaire\022\017\n\007questid\030\001 \002(\014\022\017\n\007re" +
+      "plies\030\002 \003(\021\022\017\n\007account\030\003 \002(\014\"4\n\022TopupQue" +
+      "stionnaire\022\017\n\007questid\030\001 \002(\014\022\r\n\005topup\030\002 \002" +
+      "(\004\"s\n\007Message\022\017\n\007subject\030\001 \002(\t\022\014\n\004date\030\002" +
+      " \002(\004\022\014\n\004text\030\003 \002(\t\022\016\n\006author\030\004 \002(\014\022\017\n\007ba" +
+      "lance\030\005 \002(\004\022\016\n\006reward\030\006 \002(\004\022\n\n\002id\030\007 \002(\014\"" +
+      "3\n\013SendMessage\022$\n\007message\030\001 \002(\0132\023.person" +
+      "hood.Message\"-\n\014ListMessages\022\r\n\005start\030\001 " +
+      "\002(\021\022\016\n\006number\030\002 \002(\021\"X\n\021ListMessagesReply" +
+      "\022\020\n\010subjects\030\001 \003(\t\022\016\n\006msgids\030\002 \003(\014\022\020\n\010ba" +
+      "lances\030\003 \003(\004\022\017\n\007rewards\030\004 \003(\004\">\n\013ReadMes" +
+      "sage\022\r\n\005msgid\030\001 \002(\014\022\020\n\010partyiid\030\002 \002(\014\022\016\n" +
+      "\006reader\030\003 \002(\014\"8\n\020ReadMessageReply\022$\n\007mes" +
+      "sage\030\001 \002(\0132\023.personhood.Message\"-\n\014Topup" +
+      "Message\022\r\n\005msgid\030\001 \002(\014\022\016\n\006amount\030\002 \002(\004B!" +
+      "\n\023ch.epfl.dedis.protoB\nPersonhood"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -15018,7 +15018,7 @@ public final class Personhood {
     internal_static_personhood_Party_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_personhood_Party_descriptor,
-        new java.lang.String[] { "Omniledgerid", "Instanceid", "Finalstatement", "Darc", "Signer", });
+        new java.lang.String[] { "Byzcoinid", "Instanceid", "Finalstatement", "Darc", "Signer", });
     internal_static_personhood_StringReply_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_personhood_StringReply_fieldAccessorTable = new

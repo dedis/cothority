@@ -1,7 +1,6 @@
 package ch.epfl.dedis.lib.crypto;
 
 import java.security.SecureRandom;
-import java.util.Random;
 
 public class KeyPair {
     public Scalar scalar;

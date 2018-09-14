@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/omniledger/contracts"
-	"github.com/dedis/cothority/omniledger/darc"
-	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/byzcoin/contracts"
+	"github.com/dedis/cothority/byzcoin/darc"
 	pop "github.com/dedis/cothority/pop/service"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
@@ -36,8 +36,8 @@ func TestService_LinkPoP(t *testing.T) {
 	defer s.Close()
 	s.createParty(t, len(s.servers), 3)
 
-	gpr, err := s.ols.GetProof(&ol.GetProof{
-		Version: ol.CurrentVersion,
+	gpr, err := s.ols.GetProof(&byzcoin.GetProof{
+		Version: byzcoin.CurrentVersion,
 		Key:     s.serCoin.Slice(),
 		ID:      s.olID,
 	})
@@ -124,7 +124,7 @@ func TestService_Questionnaire(t *testing.T) {
 	aq := &AnswerQuestionnaire{
 		QuestID: quests[0].ID,
 		Replies: []int{-1},
-		Account: ol.InstanceID{},
+		Account: byzcoin.InstanceID{},
 	}
 	_, err := s.phs[0].AnswerQuestionnaire(aq)
 	require.NotNil(t, err)
@@ -155,7 +155,7 @@ func TestService_Questionnaire(t *testing.T) {
 	aq = &AnswerQuestionnaire{
 		QuestID: quests[1].ID,
 		Replies: []int{0, 1},
-		Account: ol.InstanceID{},
+		Account: byzcoin.InstanceID{},
 	}
 	_, err = s.phs[0].AnswerQuestionnaire(aq)
 	require.Nil(t, err)
@@ -175,7 +175,7 @@ func TestService_Messages(t *testing.T) {
 			Subject: "test1",
 			Date:    0,
 			Text:    "This is the 1st test message",
-			Author:  ol.InstanceID{},
+			Author:  byzcoin.InstanceID{},
 			Balance: 10,
 			Reward:  10,
 			ID:      random.Bits(256, true, random.New()),
@@ -184,7 +184,7 @@ func TestService_Messages(t *testing.T) {
 			Subject: "test2",
 			Date:    0,
 			Text:    "This is the 2nd test message",
-			Author:  ol.InstanceID{},
+			Author:  byzcoin.InstanceID{},
 			Balance: 20,
 			Reward:  10,
 			ID:      random.Bits(256, true, random.New()),
@@ -282,18 +282,18 @@ type sStruct struct {
 	party     pop.FinalStatement
 	orgs      []*key.Pair
 	attendees []*key.Pair
-	attCoin   []ol.InstanceID
+	attCoin   []byzcoin.InstanceID
 	attDarc   []*darc.Darc
 	attSig    []darc.Signer
 	service   *key.Pair
 	serDarc   *darc.Darc
-	serCoin   ol.InstanceID
+	serCoin   byzcoin.InstanceID
 	serSig    darc.Signer
-	ols       *ol.Service
+	ols       *byzcoin.Service
 	olID      skipchain.SkipBlockID
 	signer    darc.Signer
-	gMsg      *ol.CreateGenesisBlock
-	popI      ol.InstanceID
+	gMsg      *byzcoin.CreateGenesisBlock
+	popI      byzcoin.InstanceID
 }
 
 func newS(t *testing.T) (s *sStruct) {
@@ -310,11 +310,11 @@ func newS(t *testing.T) (s *sStruct) {
 		s.pops = append(s.pops, p.(*pop.Service))
 	}
 
-	// Create OmniLedger
-	s.ols = s.local.Services[s.roster.List[0].ID][onet.ServiceFactory.ServiceID(ol.ServiceName)].(*ol.Service)
+	// Create the ledger
+	s.ols = s.local.Services[s.roster.List[0].ID][onet.ServiceFactory.ServiceID(byzcoin.ServiceName)].(*byzcoin.Service)
 	s.signer = darc.NewSignerEd25519(nil, nil)
 	var err error
-	s.gMsg, err = ol.DefaultGenesisMsg(ol.CurrentVersion, s.roster,
+	s.gMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, s.roster,
 		[]string{"spawn:dummy", "spawn:popParty", "invoke:Finalize"}, s.signer.Identity())
 	require.Nil(t, err)
 	s.gMsg.BlockInterval = 500 * time.Millisecond
@@ -330,7 +330,7 @@ func (s *sStruct) Close() {
 }
 
 // Create a party with orgs organizers and attendees. It will store the party
-// in omniLedger and finalize it.
+// in the ledger and finalize it.
 func (s *sStruct) createParty(t *testing.T, orgs, attendees int) {
 	if orgs > len(s.pops) {
 		t.Fatal("cannot have more organizers than conodes")
@@ -369,7 +369,7 @@ func (s *sStruct) createParty(t *testing.T, orgs, attendees int) {
 		require.Nil(t, err)
 	}
 
-	// Store the party in OmniLedger
+	// Store the party in the ledger
 	s.createPoPSpawn(t)
 
 	// Finalise the party
@@ -391,12 +391,12 @@ func (s *sStruct) createParty(t *testing.T, orgs, attendees int) {
 		}
 	}
 
-	// Store the finalized party in OmniLedger
+	// Store the finalized party in the ledger
 	s.invokePoPFinalize(t)
 
 	_, err := s.phs[0].LinkPoP(&LinkPoP{
 		Party: Party{
-			OmniLedgerID:   s.olID,
+			ByzCoinID:      s.olID,
 			InstanceID:     s.popI,
 			FinalStatement: s.party,
 			Darc:           *s.serDarc,
@@ -407,19 +407,19 @@ func (s *sStruct) createParty(t *testing.T, orgs, attendees int) {
 }
 
 func (s *sStruct) createPoPSpawn(t *testing.T) {
-	log.Lvl2("Publishing the party to omniledger")
+	log.Lvl2("Publishing the party to the ledger")
 
 	fsBuf, err := protobuf.Encode(&s.party)
 	require.Nil(t, err)
 	dID := s.gMsg.GenesisDarc.GetBaseID()
-	ctx := ol.ClientTransaction{
-		Instructions: ol.Instructions{ol.Instruction{
-			InstanceID: ol.NewInstanceID(dID),
+	ctx := byzcoin.ClientTransaction{
+		Instructions: byzcoin.Instructions{byzcoin.Instruction{
+			InstanceID: byzcoin.NewInstanceID(dID),
 			Index:      0,
 			Length:     1,
-			Spawn: &ol.Spawn{
+			Spawn: &byzcoin.Spawn{
 				ContractID: pop.ContractPopParty,
-				Args: ol.Arguments{{
+				Args: byzcoin.Arguments{{
 					Name:  "FinalStatement",
 					Value: fsBuf,
 				}},
@@ -428,8 +428,8 @@ func (s *sStruct) createPoPSpawn(t *testing.T) {
 	}
 	err = ctx.Instructions[0].SignBy(dID, s.signer)
 	require.Nil(t, err)
-	_, err = s.ols.AddTransaction(&ol.AddTxRequest{
-		Version:       ol.CurrentVersion,
+	_, err = s.ols.AddTransaction(&byzcoin.AddTxRequest{
+		Version:       byzcoin.CurrentVersion,
 		SkipchainID:   s.olID,
 		Transaction:   ctx,
 		InclusionWait: 10,
@@ -439,20 +439,20 @@ func (s *sStruct) createPoPSpawn(t *testing.T) {
 }
 
 func (s *sStruct) invokePoPFinalize(t *testing.T) {
-	log.Lvl2("finalizing the party in omniledger")
+	log.Lvl2("finalizing the party in the ledger")
 	fsBuf, err := protobuf.Encode(&s.party)
 	require.Nil(t, err)
 	s.service = key.NewKeyPair(tSuite)
 	sBuf, err := s.service.Public.MarshalBinary()
 	require.Nil(t, err)
-	ctx := ol.ClientTransaction{
-		Instructions: ol.Instructions{ol.Instruction{
+	ctx := byzcoin.ClientTransaction{
+		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: s.popI,
 			Index:      0,
 			Length:     1,
-			Invoke: &ol.Invoke{
+			Invoke: &byzcoin.Invoke{
 				Command: "Finalize",
-				Args: ol.Arguments{
+				Args: byzcoin.Arguments{
 					{
 						Name:  "FinalStatement",
 						Value: fsBuf,
@@ -468,8 +468,8 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 	dID := s.gMsg.GenesisDarc.GetBaseID()
 	err = ctx.Instructions[0].SignBy(dID, s.signer)
 	require.Nil(t, err)
-	_, err = s.ols.AddTransaction(&ol.AddTxRequest{
-		Version:       ol.CurrentVersion,
+	_, err = s.ols.AddTransaction(&byzcoin.AddTxRequest{
+		Version:       byzcoin.CurrentVersion,
 		SkipchainID:   s.olID,
 		Transaction:   ctx,
 		InclusionWait: 10,
@@ -478,9 +478,9 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 	serCoinID := sha256.New()
 	serCoinID.Write(ctx.Instructions[0].InstanceID.Slice())
 	serCoinID.Write(sBuf)
-	s.serCoin = ol.NewInstanceID(serCoinID.Sum(nil))
-	gpr, err := s.ols.GetProof(&ol.GetProof{
-		Version: ol.CurrentVersion,
+	s.serCoin = byzcoin.NewInstanceID(serCoinID.Sum(nil))
+	gpr, err := s.ols.GetProof(&byzcoin.GetProof{
+		Version: byzcoin.CurrentVersion,
 		Key:     s.serCoin.Slice(),
 		ID:      s.olID,
 	})
@@ -488,8 +488,8 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 	require.True(t, gpr.Proof.InclusionProof.Match())
 	_, vals, err := gpr.Proof.KeyValue()
 	require.Nil(t, err)
-	gpr, err = s.ols.GetProof(&ol.GetProof{
-		Version: ol.CurrentVersion,
+	gpr, err = s.ols.GetProof(&byzcoin.GetProof{
+		Version: byzcoin.CurrentVersion,
 		Key:     vals[2],
 		ID:      s.olID,
 	})
@@ -508,10 +508,10 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 		buf, err := att.Public.MarshalBinary()
 		require.Nil(t, err)
 		inst.Write(buf)
-		s.attCoin = append(s.attCoin, ol.NewInstanceID(inst.Sum(nil)))
+		s.attCoin = append(s.attCoin, byzcoin.NewInstanceID(inst.Sum(nil)))
 		s.attSig = append(s.attSig, darc.NewSignerEd25519(att.Public, att.Private))
-		gpr, err = s.ols.GetProof(&ol.GetProof{
-			Version: ol.CurrentVersion,
+		gpr, err = s.ols.GetProof(&byzcoin.GetProof{
+			Version: byzcoin.CurrentVersion,
 			Key:     s.attCoin[i].Slice(),
 			ID:      s.olID,
 		})
@@ -519,8 +519,8 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 		require.True(t, gpr.Proof.InclusionProof.Match())
 		_, vals, err := gpr.Proof.KeyValue()
 		require.Nil(t, err)
-		gpr, err = s.ols.GetProof(&ol.GetProof{
-			Version: ol.CurrentVersion,
+		gpr, err = s.ols.GetProof(&byzcoin.GetProof{
+			Version: byzcoin.CurrentVersion,
 			Key:     vals[2],
 			ID:      s.olID,
 		})
@@ -535,9 +535,9 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 	}
 }
 
-func (s *sStruct) coinGet(t *testing.T, inst ol.InstanceID) (ci ol.Coin) {
-	gpr, err := s.ols.GetProof(&ol.GetProof{
-		Version: ol.CurrentVersion,
+func (s *sStruct) coinGet(t *testing.T, inst byzcoin.InstanceID) (ci byzcoin.Coin) {
+	gpr, err := s.ols.GetProof(&byzcoin.GetProof{
+		Version: byzcoin.CurrentVersion,
 		Key:     inst.Slice(),
 		ID:      s.olID,
 	})
@@ -551,17 +551,17 @@ func (s *sStruct) coinGet(t *testing.T, inst ol.InstanceID) (ci ol.Coin) {
 	return
 }
 
-func (s *sStruct) coinTransfer(t *testing.T, from, to ol.InstanceID, coins uint64, d *darc.Darc, sig darc.Signer) {
+func (s *sStruct) coinTransfer(t *testing.T, from, to byzcoin.InstanceID, coins uint64, d *darc.Darc, sig darc.Signer) {
 	var cBuf = make([]byte, 8)
 	binary.LittleEndian.PutUint64(cBuf, coins)
-	ctx := ol.ClientTransaction{
-		Instructions: []ol.Instruction{{
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
 			InstanceID: from,
 			Index:      0,
 			Length:     1,
-			Invoke: &ol.Invoke{
+			Invoke: &byzcoin.Invoke{
 				Command: "transfer",
-				Args: []ol.Argument{{
+				Args: []byzcoin.Argument{{
 					Name:  "coins",
 					Value: cBuf,
 				},
@@ -573,8 +573,8 @@ func (s *sStruct) coinTransfer(t *testing.T, from, to ol.InstanceID, coins uint6
 		}},
 	}
 	require.Nil(t, ctx.Instructions[0].SignBy(d.GetBaseID(), sig))
-	_, err := s.ols.AddTransaction(&ol.AddTxRequest{
-		Version:       ol.CurrentVersion,
+	_, err := s.ols.AddTransaction(&byzcoin.AddTxRequest{
+		Version:       byzcoin.CurrentVersion,
 		SkipchainID:   s.olID,
 		Transaction:   ctx,
 		InclusionWait: 10,

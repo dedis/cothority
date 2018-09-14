@@ -2192,20 +2192,20 @@ public final class Calypso {
 
     /**
      * <pre>
-     * OLID is the ID of the OmniLedger that can use this LTS.
+     * BCID is the ID of the ByzCoin ledger that can use this LTS.
      * </pre>
      *
-     * <code>required bytes olid = 2;</code>
+     * <code>required bytes bcid = 2;</code>
      */
-    boolean hasOlid();
+    boolean hasBcid();
     /**
      * <pre>
-     * OLID is the ID of the OmniLedger that can use this LTS.
+     * BCID is the ID of the ByzCoin ledger that can use this LTS.
      * </pre>
      *
-     * <code>required bytes olid = 2;</code>
+     * <code>required bytes bcid = 2;</code>
      */
-    com.google.protobuf.ByteString getOlid();
+    com.google.protobuf.ByteString getBcid();
   }
   /**
    * <pre>
@@ -2224,7 +2224,7 @@ public final class Calypso {
       super(builder);
     }
     private CreateLTS() {
-      olid_ = com.google.protobuf.ByteString.EMPTY;
+      bcid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -2273,7 +2273,7 @@ public final class Calypso {
             }
             case 18: {
               bitField0_ |= 0x00000002;
-              olid_ = input.readBytes();
+              bcid_ = input.readBytes();
               break;
             }
           }
@@ -2334,27 +2334,27 @@ public final class Calypso {
       return roster_ == null ? ch.epfl.dedis.proto.OnetProto.Roster.getDefaultInstance() : roster_;
     }
 
-    public static final int OLID_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString olid_;
+    public static final int BCID_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString bcid_;
     /**
      * <pre>
-     * OLID is the ID of the OmniLedger that can use this LTS.
+     * BCID is the ID of the ByzCoin ledger that can use this LTS.
      * </pre>
      *
-     * <code>required bytes olid = 2;</code>
+     * <code>required bytes bcid = 2;</code>
      */
-    public boolean hasOlid() {
+    public boolean hasBcid() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
      * <pre>
-     * OLID is the ID of the OmniLedger that can use this LTS.
+     * BCID is the ID of the ByzCoin ledger that can use this LTS.
      * </pre>
      *
-     * <code>required bytes olid = 2;</code>
+     * <code>required bytes bcid = 2;</code>
      */
-    public com.google.protobuf.ByteString getOlid() {
-      return olid_;
+    public com.google.protobuf.ByteString getBcid() {
+      return bcid_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -2367,7 +2367,7 @@ public final class Calypso {
         memoizedIsInitialized = 0;
         return false;
       }
-      if (!hasOlid()) {
+      if (!hasBcid()) {
         memoizedIsInitialized = 0;
         return false;
       }
@@ -2385,7 +2385,7 @@ public final class Calypso {
         output.writeMessage(1, getRoster());
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, olid_);
+        output.writeBytes(2, bcid_);
       }
       unknownFields.writeTo(output);
     }
@@ -2401,7 +2401,7 @@ public final class Calypso {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, olid_);
+          .computeBytesSize(2, bcid_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2424,10 +2424,10 @@ public final class Calypso {
         result = result && getRoster()
             .equals(other.getRoster());
       }
-      result = result && (hasOlid() == other.hasOlid());
-      if (hasOlid()) {
-        result = result && getOlid()
-            .equals(other.getOlid());
+      result = result && (hasBcid() == other.hasBcid());
+      if (hasBcid()) {
+        result = result && getBcid()
+            .equals(other.getBcid());
       }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
@@ -2444,9 +2444,9 @@ public final class Calypso {
         hash = (37 * hash) + ROSTER_FIELD_NUMBER;
         hash = (53 * hash) + getRoster().hashCode();
       }
-      if (hasOlid()) {
-        hash = (37 * hash) + OLID_FIELD_NUMBER;
-        hash = (53 * hash) + getOlid().hashCode();
+      if (hasBcid()) {
+        hash = (37 * hash) + BCID_FIELD_NUMBER;
+        hash = (53 * hash) + getBcid().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -2588,7 +2588,7 @@ public final class Calypso {
           rosterBuilder_.clear();
         }
         bitField0_ = (bitField0_ & ~0x00000001);
-        olid_ = com.google.protobuf.ByteString.EMPTY;
+        bcid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
@@ -2625,7 +2625,7 @@ public final class Calypso {
         if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
           to_bitField0_ |= 0x00000002;
         }
-        result.olid_ = olid_;
+        result.bcid_ = bcid_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -2671,8 +2671,8 @@ public final class Calypso {
         if (other.hasRoster()) {
           mergeRoster(other.getRoster());
         }
-        if (other.hasOlid()) {
-          setOlid(other.getOlid());
+        if (other.hasBcid()) {
+          setBcid(other.getBcid());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -2683,7 +2683,7 @@ public final class Calypso {
         if (!hasRoster()) {
           return false;
         }
-        if (!hasOlid()) {
+        if (!hasBcid()) {
           return false;
         }
         if (!getRoster().isInitialized()) {
@@ -2865,53 +2865,53 @@ public final class Calypso {
         return rosterBuilder_;
       }
 
-      private com.google.protobuf.ByteString olid_ = com.google.protobuf.ByteString.EMPTY;
+      private com.google.protobuf.ByteString bcid_ = com.google.protobuf.ByteString.EMPTY;
       /**
        * <pre>
-       * OLID is the ID of the OmniLedger that can use this LTS.
+       * BCID is the ID of the ByzCoin ledger that can use this LTS.
        * </pre>
        *
-       * <code>required bytes olid = 2;</code>
+       * <code>required bytes bcid = 2;</code>
        */
-      public boolean hasOlid() {
+      public boolean hasBcid() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
        * <pre>
-       * OLID is the ID of the OmniLedger that can use this LTS.
+       * BCID is the ID of the ByzCoin ledger that can use this LTS.
        * </pre>
        *
-       * <code>required bytes olid = 2;</code>
+       * <code>required bytes bcid = 2;</code>
        */
-      public com.google.protobuf.ByteString getOlid() {
-        return olid_;
+      public com.google.protobuf.ByteString getBcid() {
+        return bcid_;
       }
       /**
        * <pre>
-       * OLID is the ID of the OmniLedger that can use this LTS.
+       * BCID is the ID of the ByzCoin ledger that can use this LTS.
        * </pre>
        *
-       * <code>required bytes olid = 2;</code>
+       * <code>required bytes bcid = 2;</code>
        */
-      public Builder setOlid(com.google.protobuf.ByteString value) {
+      public Builder setBcid(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
   bitField0_ |= 0x00000002;
-        olid_ = value;
+        bcid_ = value;
         onChanged();
         return this;
       }
       /**
        * <pre>
-       * OLID is the ID of the OmniLedger that can use this LTS.
+       * BCID is the ID of the ByzCoin ledger that can use this LTS.
        * </pre>
        *
-       * <code>required bytes olid = 2;</code>
+       * <code>required bytes bcid = 2;</code>
        */
-      public Builder clearOlid() {
+      public Builder clearBcid() {
         bitField0_ = (bitField0_ & ~0x00000002);
-        olid_ = getDefaultInstance().getOlid();
+        bcid_ = getDefaultInstance().getBcid();
         onChanged();
         return this;
       }
@@ -3634,7 +3634,7 @@ public final class Calypso {
      * Read is the proof that he has been accepted to read the secret.
      * </pre>
      *
-     * <code>required .omniledger.Proof read = 1;</code>
+     * <code>required .byzcoin.Proof read = 1;</code>
      */
     boolean hasRead();
     /**
@@ -3642,24 +3642,24 @@ public final class Calypso {
      * Read is the proof that he has been accepted to read the secret.
      * </pre>
      *
-     * <code>required .omniledger.Proof read = 1;</code>
+     * <code>required .byzcoin.Proof read = 1;</code>
      */
-    ch.epfl.dedis.proto.OmniLedgerProto.Proof getRead();
+    ch.epfl.dedis.proto.ByzCoinProto.Proof getRead();
     /**
      * <pre>
      * Read is the proof that he has been accepted to read the secret.
      * </pre>
      *
-     * <code>required .omniledger.Proof read = 1;</code>
+     * <code>required .byzcoin.Proof read = 1;</code>
      */
-    ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder getReadOrBuilder();
+    ch.epfl.dedis.proto.ByzCoinProto.ProofOrBuilder getReadOrBuilder();
 
     /**
      * <pre>
      * Write is the proof containing the write request.
      * </pre>
      *
-     * <code>required .omniledger.Proof write = 2;</code>
+     * <code>required .byzcoin.Proof write = 2;</code>
      */
     boolean hasWrite();
     /**
@@ -3667,22 +3667,22 @@ public final class Calypso {
      * Write is the proof containing the write request.
      * </pre>
      *
-     * <code>required .omniledger.Proof write = 2;</code>
+     * <code>required .byzcoin.Proof write = 2;</code>
      */
-    ch.epfl.dedis.proto.OmniLedgerProto.Proof getWrite();
+    ch.epfl.dedis.proto.ByzCoinProto.Proof getWrite();
     /**
      * <pre>
      * Write is the proof containing the write request.
      * </pre>
      *
-     * <code>required .omniledger.Proof write = 2;</code>
+     * <code>required .byzcoin.Proof write = 2;</code>
      */
-    ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder getWriteOrBuilder();
+    ch.epfl.dedis.proto.ByzCoinProto.ProofOrBuilder getWriteOrBuilder();
   }
   /**
    * <pre>
    * DecryptKey is sent by a reader after he successfully stored a 'Read' request
-   * in omniledger.
+   * in byzcoin.
    * </pre>
    *
    * Protobuf type {@code calypso.DecryptKey}
@@ -3731,11 +3731,11 @@ public final class Calypso {
               break;
             }
             case 10: {
-              ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder subBuilder = null;
+              ch.epfl.dedis.proto.ByzCoinProto.Proof.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = read_.toBuilder();
               }
-              read_ = input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.Proof.PARSER, extensionRegistry);
+              read_ = input.readMessage(ch.epfl.dedis.proto.ByzCoinProto.Proof.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(read_);
                 read_ = subBuilder.buildPartial();
@@ -3744,11 +3744,11 @@ public final class Calypso {
               break;
             }
             case 18: {
-              ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder subBuilder = null;
+              ch.epfl.dedis.proto.ByzCoinProto.Proof.Builder subBuilder = null;
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = write_.toBuilder();
               }
-              write_ = input.readMessage(ch.epfl.dedis.proto.OmniLedgerProto.Proof.PARSER, extensionRegistry);
+              write_ = input.readMessage(ch.epfl.dedis.proto.ByzCoinProto.Proof.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(write_);
                 write_ = subBuilder.buildPartial();
@@ -3782,13 +3782,13 @@ public final class Calypso {
 
     private int bitField0_;
     public static final int READ_FIELD_NUMBER = 1;
-    private ch.epfl.dedis.proto.OmniLedgerProto.Proof read_;
+    private ch.epfl.dedis.proto.ByzCoinProto.Proof read_;
     /**
      * <pre>
      * Read is the proof that he has been accepted to read the secret.
      * </pre>
      *
-     * <code>required .omniledger.Proof read = 1;</code>
+     * <code>required .byzcoin.Proof read = 1;</code>
      */
     public boolean hasRead() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
@@ -3798,30 +3798,30 @@ public final class Calypso {
      * Read is the proof that he has been accepted to read the secret.
      * </pre>
      *
-     * <code>required .omniledger.Proof read = 1;</code>
+     * <code>required .byzcoin.Proof read = 1;</code>
      */
-    public ch.epfl.dedis.proto.OmniLedgerProto.Proof getRead() {
-      return read_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance() : read_;
+    public ch.epfl.dedis.proto.ByzCoinProto.Proof getRead() {
+      return read_ == null ? ch.epfl.dedis.proto.ByzCoinProto.Proof.getDefaultInstance() : read_;
     }
     /**
      * <pre>
      * Read is the proof that he has been accepted to read the secret.
      * </pre>
      *
-     * <code>required .omniledger.Proof read = 1;</code>
+     * <code>required .byzcoin.Proof read = 1;</code>
      */
-    public ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder getReadOrBuilder() {
-      return read_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance() : read_;
+    public ch.epfl.dedis.proto.ByzCoinProto.ProofOrBuilder getReadOrBuilder() {
+      return read_ == null ? ch.epfl.dedis.proto.ByzCoinProto.Proof.getDefaultInstance() : read_;
     }
 
     public static final int WRITE_FIELD_NUMBER = 2;
-    private ch.epfl.dedis.proto.OmniLedgerProto.Proof write_;
+    private ch.epfl.dedis.proto.ByzCoinProto.Proof write_;
     /**
      * <pre>
      * Write is the proof containing the write request.
      * </pre>
      *
-     * <code>required .omniledger.Proof write = 2;</code>
+     * <code>required .byzcoin.Proof write = 2;</code>
      */
     public boolean hasWrite() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
@@ -3831,20 +3831,20 @@ public final class Calypso {
      * Write is the proof containing the write request.
      * </pre>
      *
-     * <code>required .omniledger.Proof write = 2;</code>
+     * <code>required .byzcoin.Proof write = 2;</code>
      */
-    public ch.epfl.dedis.proto.OmniLedgerProto.Proof getWrite() {
-      return write_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance() : write_;
+    public ch.epfl.dedis.proto.ByzCoinProto.Proof getWrite() {
+      return write_ == null ? ch.epfl.dedis.proto.ByzCoinProto.Proof.getDefaultInstance() : write_;
     }
     /**
      * <pre>
      * Write is the proof containing the write request.
      * </pre>
      *
-     * <code>required .omniledger.Proof write = 2;</code>
+     * <code>required .byzcoin.Proof write = 2;</code>
      */
-    public ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder getWriteOrBuilder() {
-      return write_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance() : write_;
+    public ch.epfl.dedis.proto.ByzCoinProto.ProofOrBuilder getWriteOrBuilder() {
+      return write_ == null ? ch.epfl.dedis.proto.ByzCoinProto.Proof.getDefaultInstance() : write_;
     }
 
     private byte memoizedIsInitialized = -1;
@@ -4038,7 +4038,7 @@ public final class Calypso {
     /**
      * <pre>
      * DecryptKey is sent by a reader after he successfully stored a 'Read' request
-     * in omniledger.
+     * in byzcoin.
      * </pre>
      *
      * Protobuf type {@code calypso.DecryptKey}
@@ -4218,15 +4218,15 @@ public final class Calypso {
       }
       private int bitField0_;
 
-      private ch.epfl.dedis.proto.OmniLedgerProto.Proof read_ = null;
+      private ch.epfl.dedis.proto.ByzCoinProto.Proof read_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.OmniLedgerProto.Proof, ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder, ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder> readBuilder_;
+          ch.epfl.dedis.proto.ByzCoinProto.Proof, ch.epfl.dedis.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.proto.ByzCoinProto.ProofOrBuilder> readBuilder_;
       /**
        * <pre>
        * Read is the proof that he has been accepted to read the secret.
        * </pre>
        *
-       * <code>required .omniledger.Proof read = 1;</code>
+       * <code>required .byzcoin.Proof read = 1;</code>
        */
       public boolean hasRead() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
@@ -4236,11 +4236,11 @@ public final class Calypso {
        * Read is the proof that he has been accepted to read the secret.
        * </pre>
        *
-       * <code>required .omniledger.Proof read = 1;</code>
+       * <code>required .byzcoin.Proof read = 1;</code>
        */
-      public ch.epfl.dedis.proto.OmniLedgerProto.Proof getRead() {
+      public ch.epfl.dedis.proto.ByzCoinProto.Proof getRead() {
         if (readBuilder_ == null) {
-          return read_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance() : read_;
+          return read_ == null ? ch.epfl.dedis.proto.ByzCoinProto.Proof.getDefaultInstance() : read_;
         } else {
           return readBuilder_.getMessage();
         }
@@ -4250,9 +4250,9 @@ public final class Calypso {
        * Read is the proof that he has been accepted to read the secret.
        * </pre>
        *
-       * <code>required .omniledger.Proof read = 1;</code>
+       * <code>required .byzcoin.Proof read = 1;</code>
        */
-      public Builder setRead(ch.epfl.dedis.proto.OmniLedgerProto.Proof value) {
+      public Builder setRead(ch.epfl.dedis.proto.ByzCoinProto.Proof value) {
         if (readBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4270,10 +4270,10 @@ public final class Calypso {
        * Read is the proof that he has been accepted to read the secret.
        * </pre>
        *
-       * <code>required .omniledger.Proof read = 1;</code>
+       * <code>required .byzcoin.Proof read = 1;</code>
        */
       public Builder setRead(
-          ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder builderForValue) {
+          ch.epfl.dedis.proto.ByzCoinProto.Proof.Builder builderForValue) {
         if (readBuilder_ == null) {
           read_ = builderForValue.build();
           onChanged();
@@ -4288,15 +4288,15 @@ public final class Calypso {
        * Read is the proof that he has been accepted to read the secret.
        * </pre>
        *
-       * <code>required .omniledger.Proof read = 1;</code>
+       * <code>required .byzcoin.Proof read = 1;</code>
        */
-      public Builder mergeRead(ch.epfl.dedis.proto.OmniLedgerProto.Proof value) {
+      public Builder mergeRead(ch.epfl.dedis.proto.ByzCoinProto.Proof value) {
         if (readBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001) &&
               read_ != null &&
-              read_ != ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance()) {
+              read_ != ch.epfl.dedis.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             read_ =
-              ch.epfl.dedis.proto.OmniLedgerProto.Proof.newBuilder(read_).mergeFrom(value).buildPartial();
+              ch.epfl.dedis.proto.ByzCoinProto.Proof.newBuilder(read_).mergeFrom(value).buildPartial();
           } else {
             read_ = value;
           }
@@ -4312,7 +4312,7 @@ public final class Calypso {
        * Read is the proof that he has been accepted to read the secret.
        * </pre>
        *
-       * <code>required .omniledger.Proof read = 1;</code>
+       * <code>required .byzcoin.Proof read = 1;</code>
        */
       public Builder clearRead() {
         if (readBuilder_ == null) {
@@ -4329,9 +4329,9 @@ public final class Calypso {
        * Read is the proof that he has been accepted to read the secret.
        * </pre>
        *
-       * <code>required .omniledger.Proof read = 1;</code>
+       * <code>required .byzcoin.Proof read = 1;</code>
        */
-      public ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder getReadBuilder() {
+      public ch.epfl.dedis.proto.ByzCoinProto.Proof.Builder getReadBuilder() {
         bitField0_ |= 0x00000001;
         onChanged();
         return getReadFieldBuilder().getBuilder();
@@ -4341,14 +4341,14 @@ public final class Calypso {
        * Read is the proof that he has been accepted to read the secret.
        * </pre>
        *
-       * <code>required .omniledger.Proof read = 1;</code>
+       * <code>required .byzcoin.Proof read = 1;</code>
        */
-      public ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder getReadOrBuilder() {
+      public ch.epfl.dedis.proto.ByzCoinProto.ProofOrBuilder getReadOrBuilder() {
         if (readBuilder_ != null) {
           return readBuilder_.getMessageOrBuilder();
         } else {
           return read_ == null ?
-              ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance() : read_;
+              ch.epfl.dedis.proto.ByzCoinProto.Proof.getDefaultInstance() : read_;
         }
       }
       /**
@@ -4356,14 +4356,14 @@ public final class Calypso {
        * Read is the proof that he has been accepted to read the secret.
        * </pre>
        *
-       * <code>required .omniledger.Proof read = 1;</code>
+       * <code>required .byzcoin.Proof read = 1;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.OmniLedgerProto.Proof, ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder, ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder> 
+          ch.epfl.dedis.proto.ByzCoinProto.Proof, ch.epfl.dedis.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.proto.ByzCoinProto.ProofOrBuilder> 
           getReadFieldBuilder() {
         if (readBuilder_ == null) {
           readBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.OmniLedgerProto.Proof, ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder, ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder>(
+              ch.epfl.dedis.proto.ByzCoinProto.Proof, ch.epfl.dedis.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.proto.ByzCoinProto.ProofOrBuilder>(
                   getRead(),
                   getParentForChildren(),
                   isClean());
@@ -4372,15 +4372,15 @@ public final class Calypso {
         return readBuilder_;
       }
 
-      private ch.epfl.dedis.proto.OmniLedgerProto.Proof write_ = null;
+      private ch.epfl.dedis.proto.ByzCoinProto.Proof write_ = null;
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.OmniLedgerProto.Proof, ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder, ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder> writeBuilder_;
+          ch.epfl.dedis.proto.ByzCoinProto.Proof, ch.epfl.dedis.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.proto.ByzCoinProto.ProofOrBuilder> writeBuilder_;
       /**
        * <pre>
        * Write is the proof containing the write request.
        * </pre>
        *
-       * <code>required .omniledger.Proof write = 2;</code>
+       * <code>required .byzcoin.Proof write = 2;</code>
        */
       public boolean hasWrite() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
@@ -4390,11 +4390,11 @@ public final class Calypso {
        * Write is the proof containing the write request.
        * </pre>
        *
-       * <code>required .omniledger.Proof write = 2;</code>
+       * <code>required .byzcoin.Proof write = 2;</code>
        */
-      public ch.epfl.dedis.proto.OmniLedgerProto.Proof getWrite() {
+      public ch.epfl.dedis.proto.ByzCoinProto.Proof getWrite() {
         if (writeBuilder_ == null) {
-          return write_ == null ? ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance() : write_;
+          return write_ == null ? ch.epfl.dedis.proto.ByzCoinProto.Proof.getDefaultInstance() : write_;
         } else {
           return writeBuilder_.getMessage();
         }
@@ -4404,9 +4404,9 @@ public final class Calypso {
        * Write is the proof containing the write request.
        * </pre>
        *
-       * <code>required .omniledger.Proof write = 2;</code>
+       * <code>required .byzcoin.Proof write = 2;</code>
        */
-      public Builder setWrite(ch.epfl.dedis.proto.OmniLedgerProto.Proof value) {
+      public Builder setWrite(ch.epfl.dedis.proto.ByzCoinProto.Proof value) {
         if (writeBuilder_ == null) {
           if (value == null) {
             throw new NullPointerException();
@@ -4424,10 +4424,10 @@ public final class Calypso {
        * Write is the proof containing the write request.
        * </pre>
        *
-       * <code>required .omniledger.Proof write = 2;</code>
+       * <code>required .byzcoin.Proof write = 2;</code>
        */
       public Builder setWrite(
-          ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder builderForValue) {
+          ch.epfl.dedis.proto.ByzCoinProto.Proof.Builder builderForValue) {
         if (writeBuilder_ == null) {
           write_ = builderForValue.build();
           onChanged();
@@ -4442,15 +4442,15 @@ public final class Calypso {
        * Write is the proof containing the write request.
        * </pre>
        *
-       * <code>required .omniledger.Proof write = 2;</code>
+       * <code>required .byzcoin.Proof write = 2;</code>
        */
-      public Builder mergeWrite(ch.epfl.dedis.proto.OmniLedgerProto.Proof value) {
+      public Builder mergeWrite(ch.epfl.dedis.proto.ByzCoinProto.Proof value) {
         if (writeBuilder_ == null) {
           if (((bitField0_ & 0x00000002) == 0x00000002) &&
               write_ != null &&
-              write_ != ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance()) {
+              write_ != ch.epfl.dedis.proto.ByzCoinProto.Proof.getDefaultInstance()) {
             write_ =
-              ch.epfl.dedis.proto.OmniLedgerProto.Proof.newBuilder(write_).mergeFrom(value).buildPartial();
+              ch.epfl.dedis.proto.ByzCoinProto.Proof.newBuilder(write_).mergeFrom(value).buildPartial();
           } else {
             write_ = value;
           }
@@ -4466,7 +4466,7 @@ public final class Calypso {
        * Write is the proof containing the write request.
        * </pre>
        *
-       * <code>required .omniledger.Proof write = 2;</code>
+       * <code>required .byzcoin.Proof write = 2;</code>
        */
       public Builder clearWrite() {
         if (writeBuilder_ == null) {
@@ -4483,9 +4483,9 @@ public final class Calypso {
        * Write is the proof containing the write request.
        * </pre>
        *
-       * <code>required .omniledger.Proof write = 2;</code>
+       * <code>required .byzcoin.Proof write = 2;</code>
        */
-      public ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder getWriteBuilder() {
+      public ch.epfl.dedis.proto.ByzCoinProto.Proof.Builder getWriteBuilder() {
         bitField0_ |= 0x00000002;
         onChanged();
         return getWriteFieldBuilder().getBuilder();
@@ -4495,14 +4495,14 @@ public final class Calypso {
        * Write is the proof containing the write request.
        * </pre>
        *
-       * <code>required .omniledger.Proof write = 2;</code>
+       * <code>required .byzcoin.Proof write = 2;</code>
        */
-      public ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder getWriteOrBuilder() {
+      public ch.epfl.dedis.proto.ByzCoinProto.ProofOrBuilder getWriteOrBuilder() {
         if (writeBuilder_ != null) {
           return writeBuilder_.getMessageOrBuilder();
         } else {
           return write_ == null ?
-              ch.epfl.dedis.proto.OmniLedgerProto.Proof.getDefaultInstance() : write_;
+              ch.epfl.dedis.proto.ByzCoinProto.Proof.getDefaultInstance() : write_;
         }
       }
       /**
@@ -4510,14 +4510,14 @@ public final class Calypso {
        * Write is the proof containing the write request.
        * </pre>
        *
-       * <code>required .omniledger.Proof write = 2;</code>
+       * <code>required .byzcoin.Proof write = 2;</code>
        */
       private com.google.protobuf.SingleFieldBuilderV3<
-          ch.epfl.dedis.proto.OmniLedgerProto.Proof, ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder, ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder> 
+          ch.epfl.dedis.proto.ByzCoinProto.Proof, ch.epfl.dedis.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.proto.ByzCoinProto.ProofOrBuilder> 
           getWriteFieldBuilder() {
         if (writeBuilder_ == null) {
           writeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
-              ch.epfl.dedis.proto.OmniLedgerProto.Proof, ch.epfl.dedis.proto.OmniLedgerProto.Proof.Builder, ch.epfl.dedis.proto.OmniLedgerProto.ProofOrBuilder>(
+              ch.epfl.dedis.proto.ByzCoinProto.Proof, ch.epfl.dedis.proto.ByzCoinProto.Proof.Builder, ch.epfl.dedis.proto.ByzCoinProto.ProofOrBuilder>(
                   getWrite(),
                   getParentForChildren(),
                   isClean());
@@ -6550,20 +6550,20 @@ public final class Calypso {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rcalypso.proto\022\007calypso\032\020omniledger.pro" +
-      "to\032\nonet.proto\"r\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n" +
-      "\001u\030\002 \002(\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005" +
-      " \002(\014\022\n\n\002cs\030\006 \003(\014\022\021\n\textradata\030\007 \001(\014\022\r\n\005l" +
-      "tsid\030\010 \002(\014\"!\n\004Read\022\r\n\005write\030\001 \002(\014\022\n\n\002xc\030" +
-      "\002 \002(\014\"7\n\tCreateLTS\022\034\n\006roster\030\001 \002(\0132\014.one" +
-      "t.Roster\022\014\n\004olid\030\002 \002(\014\"*\n\016CreateLTSReply" +
-      "\022\r\n\005ltsid\030\001 \002(\014\022\t\n\001x\030\002 \002(\014\"O\n\nDecryptKey" +
-      "\022\037\n\004read\030\001 \002(\0132\021.omniledger.Proof\022 \n\005wri" +
-      "te\030\002 \002(\0132\021.omniledger.Proof\"9\n\017DecryptKe" +
-      "yReply\022\n\n\002cs\030\001 \003(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x" +
-      "\030\003 \002(\014\"\035\n\014SharedPublic\022\r\n\005ltsid\030\001 \002(\014\"\036\n" +
-      "\021SharedPublicReply\022\t\n\001x\030\001 \002(\014B\036\n\023ch.epfl" +
-      ".dedis.protoB\007Calypso"
+      "\n\rcalypso.proto\022\007calypso\032\rbyzcoin.proto\032" +
+      "\nonet.proto\"r\n\005Write\022\014\n\004data\030\001 \002(\014\022\t\n\001u\030" +
+      "\002 \002(\014\022\014\n\004ubar\030\003 \002(\014\022\t\n\001e\030\004 \002(\014\022\t\n\001f\030\005 \002(" +
+      "\014\022\n\n\002cs\030\006 \003(\014\022\021\n\textradata\030\007 \001(\014\022\r\n\005ltsi" +
+      "d\030\010 \002(\014\"!\n\004Read\022\r\n\005write\030\001 \002(\014\022\n\n\002xc\030\002 \002" +
+      "(\014\"7\n\tCreateLTS\022\034\n\006roster\030\001 \002(\0132\014.onet.R" +
+      "oster\022\014\n\004bcid\030\002 \002(\014\"*\n\016CreateLTSReply\022\r\n" +
+      "\005ltsid\030\001 \002(\014\022\t\n\001x\030\002 \002(\014\"I\n\nDecryptKey\022\034\n" +
+      "\004read\030\001 \002(\0132\016.byzcoin.Proof\022\035\n\005write\030\002 \002" +
+      "(\0132\016.byzcoin.Proof\"9\n\017DecryptKeyReply\022\n\n" +
+      "\002cs\030\001 \003(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"\035\n" +
+      "\014SharedPublic\022\r\n\005ltsid\030\001 \002(\014\"\036\n\021SharedPu" +
+      "blicReply\022\t\n\001x\030\001 \002(\014B\036\n\023ch.epfl.dedis.pr" +
+      "otoB\007Calypso"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -6576,7 +6576,7 @@ public final class Calypso {
     com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
-          ch.epfl.dedis.proto.OmniLedgerProto.getDescriptor(),
+          ch.epfl.dedis.proto.ByzCoinProto.getDescriptor(),
           ch.epfl.dedis.proto.OnetProto.getDescriptor(),
         }, assigner);
     internal_static_calypso_Write_descriptor =
@@ -6596,7 +6596,7 @@ public final class Calypso {
     internal_static_calypso_CreateLTS_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_CreateLTS_descriptor,
-        new java.lang.String[] { "Roster", "Olid", });
+        new java.lang.String[] { "Roster", "Bcid", });
     internal_static_calypso_CreateLTSReply_descriptor =
       getDescriptor().getMessageTypes().get(3);
     internal_static_calypso_CreateLTSReply_fieldAccessorTable = new
@@ -6627,7 +6627,7 @@ public final class Calypso {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_calypso_SharedPublicReply_descriptor,
         new java.lang.String[] { "X", });
-    ch.epfl.dedis.proto.OmniLedgerProto.getDescriptor();
+    ch.epfl.dedis.proto.ByzCoinProto.getDescriptor();
     ch.epfl.dedis.proto.OnetProto.getDescriptor();
   }
 

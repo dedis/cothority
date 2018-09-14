@@ -4,7 +4,6 @@ const chai = require("chai");
 const expect = chai.expect;
 
 const cothority = require("../../lib");
-const proto = cothority.protobuf;
 const skipchain = cothority.skipchain;
 const misc = cothority.misc;
 const net = cothority.net;
@@ -13,7 +12,6 @@ const kyber = require("@dedis/kyber-js");
 const helpers = require("../helpers.js");
 
 const curve = new kyber.curve.edwards25519.Curve();
-const child_process = require("child_process");
 const co = require("co");
 
 describe("skipchain client", () => {

@@ -1,6 +1,6 @@
 // Package calypso implements the LTS functionality of the Calypso paper. It
 // implements both the access-control cothority and the secret management
-// cothority. (1) The access-control cothority is implemented using OmniLedger
+// cothority. (1) The access-control cothority is implemented using ByzCoin
 // with two contracts, `Write` and `Read` (2) The secret-management cothority
 // uses an onet service with methods to set up a Long Term Secret (LTS)
 // distributed key and to request a re-encryption
@@ -15,10 +15,10 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/byzcoin/darc"
 	dkgprotocol "github.com/dedis/cothority/dkg"
 	"github.com/dedis/cothority/ocs/protocol"
-	"github.com/dedis/cothority/omniledger/darc"
-	ol "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
 	"github.com/dedis/kyber/util/random"
@@ -60,7 +60,7 @@ type pubPoly struct {
 // is non-nil, Signature needs to hold a valid signature from the reader
 // in the Proof.
 type vData struct {
-	Proof     ol.Proof
+	Proof     byzcoin.Proof
 	Ephemeral kyber.Point
 	Signature *darc.Signature
 }
@@ -98,7 +98,7 @@ func (s *Service) CreateLTS(cl *CreateLTS) (reply *CreateLTSReply, err error) {
 		}
 		s.storage.Polys[string(reply.LTSID)] = &pubPoly{s.Suite().Point().Base(), dks.Commits}
 		s.storage.Rosters[string(reply.LTSID)] = &cl.Roster
-		s.storage.OLIDs[string(reply.LTSID)] = cl.OLID
+		s.storage.OLIDs[string(reply.LTSID)] = cl.BCID
 		s.storage.Unlock()
 		reply.X = shared.X
 	case <-time.After(propagationTimeout):
@@ -109,7 +109,7 @@ func (s *Service) CreateLTS(cl *CreateLTS) (reply *CreateLTSReply, err error) {
 
 // DecryptKey takes as an input a Read- and a Write-proof. Proofs contain
 // everything necessary to verify that a given instance is correct and
-// stored in omniledger.
+// stored in ByzCoin.
 // Using the Read and the Write-instance, this method verifies that the
 // requests match and then re-encrypts the secret to the public key given
 // in the Read-instance.
@@ -126,7 +126,7 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	if err := dkr.Write.ContractValue(cothority.Suite, ContractWriteID, &write); err != nil {
 		return nil, errors.New("didn't get a write instance: " + err.Error())
 	}
-	if !read.Write.Equal(ol.NewInstanceID(dkr.Write.InclusionProof.Key)) {
+	if !read.Write.Equal(byzcoin.NewInstanceID(dkr.Write.InclusionProof.Key)) {
 		return nil, errors.New("read doesn't point to passed write")
 	}
 	s.storage.Lock()
@@ -299,8 +299,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if err := s.RegisterHandlers(s.CreateLTS, s.DecryptKey); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
-	ol.RegisterContract(c, ContractWriteID, s.ContractWrite)
-	ol.RegisterContract(c, ContractReadID, s.ContractRead)
+	byzcoin.RegisterContract(c, ContractWriteID, s.ContractWrite)
+	byzcoin.RegisterContract(c, ContractReadID, s.ContractRead)
 	if err := s.tryLoad(); err != nil {
 		log.Error(err)
 		return nil, err

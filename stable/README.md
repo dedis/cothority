@@ -53,7 +53,8 @@ The source code for this stable branch is
 
 During 2018, we hope to bring you the following new pieces:
 - Evoting using a Neff shuffle
-- Omniledger implementation using key/value pair storage and protected by darcs
+- A distributed implementation using key/value pair storage and protected by darcs
+- A cross-ledger atomic transaction coordinator
 - Cross platform mobile application to interact with the cisc and pop services
 - Onchain-secrets (Scarab) to hide secrets in plain sight on the public ledger!
 

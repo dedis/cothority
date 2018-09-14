@@ -1,11 +1,11 @@
 package ch.epfl.dedis.lib.calypso;
 
+import ch.epfl.dedis.lib.byzcoin.InstanceId;
 import ch.epfl.dedis.lib.crypto.Point;
-import ch.epfl.dedis.lib.omniledger.InstanceId;
 import ch.epfl.dedis.proto.Calypso;
 
 /**
- * A ReadRequest is the data that is sent to the calypsoRead contract in OmniLedger. It is used to log a read request
+ * A ReadRequest is the data that is sent to the calypsoRead contract. It is used to log a read request
  * and must be linked to a corresponding write request.
  */
 public class ReadRequest {

@@ -13,11 +13,11 @@ message LinkPoP {
   required Party party = 1;
 }
 
-// Party represents everything necessary to find a party on omniledger.
+// Party represents everything necessary to find a party in the ledger.
 message Party {
-  // OmniLedgerID represents the omniledger where the pop-party is stored.
-  required bytes omniledgerid = 1;
-  // InstanceID is where to find the party on OmniLedger
+  // ByzCoinID represents the ledger where the pop-party is stored.
+  required bytes byzcoinid = 1;
+  // InstanceID is where to find the party in the ledger.
   required bytes instanceid = 2;
   // FinalStatement describes the party and the signature of the organizers.
   required pop.FinalStatement finalstatement = 3;

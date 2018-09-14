@@ -4,8 +4,8 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/omniledger/darc"
-	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
@@ -14,13 +14,13 @@ import (
 // ContractWriteID references a write contract system-wide.
 var ContractWriteID = "calypsoWrite"
 
-// ContractWrite is used to store a secret in OmniLedger, so that an
+// ContractWrite is used to store a secret in the ledger, so that an
 // authorized reader can retrieve it by creating a Read-instance.
 //
 // Accepted Instructions:
 //  - spawn:calypsoWrite creates a new write-request. TODO: verify the LTS exists
 //  - spawn:calypsoRead creates a new read-request for this write-request.
-func (s *Service) ContractWrite(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) ([]ol.StateChange, []ol.Coin, error) {
+func (s *Service) ContractWrite(cdb byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 	err := inst.VerifyDarcSignature(cdb)
 	if err != nil {
 		return nil, nil, err
@@ -33,8 +33,8 @@ func (s *Service) ContractWrite(cdb ol.CollectionView, inst ol.Instruction, c []
 	}
 
 	switch inst.GetType() {
-	case ol.SpawnType:
-		var sc ol.StateChanges
+	case byzcoin.SpawnType:
+		var sc byzcoin.StateChanges
 		nc := c
 		switch inst.Spawn.ContractID {
 		case ContractWriteID:
@@ -52,9 +52,9 @@ func (s *Service) ContractWrite(cdb ol.CollectionView, inst ol.Instruction, c []
 			}
 			instID := inst.DeriveID("")
 			log.Lvlf3("Successfully verified write request and will store in %x", instID)
-			sc = append(sc, ol.NewStateChange(ol.Create, instID, ContractWriteID, w, darcID))
+			sc = append(sc, byzcoin.NewStateChange(byzcoin.Create, instID, ContractWriteID, w, darcID))
 		case ContractReadID:
-			var scs ol.StateChanges
+			var scs byzcoin.StateChanges
 			var err error
 			scs, nc, err = s.ContractRead(cdb, inst, c)
 			if err != nil {
@@ -82,7 +82,7 @@ var ContractReadID = "calypsoRead"
 // TODO: correctly handle multi signatures for read requests: to whom should the
 // secret be re-encrypted to? Perhaps for multi signatures we only want to have
 // ephemeral keys.
-func (s *Service) ContractRead(cdb ol.CollectionView, inst ol.Instruction, c []ol.Coin) ([]ol.StateChange, []ol.Coin, error) {
+func (s *Service) ContractRead(cdb byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 	err := inst.VerifyDarcSignature(cdb)
 	if err != nil {
 		return nil, nil, err
@@ -95,7 +95,7 @@ func (s *Service) ContractRead(cdb ol.CollectionView, inst ol.Instruction, c []o
 	}
 
 	switch inst.GetType() {
-	case ol.SpawnType:
+	case byzcoin.SpawnType:
 		if inst.Spawn.ContractID != ContractReadID {
 			return nil, nil, errors.New("can only spawn read instances")
 		}
@@ -115,7 +115,7 @@ func (s *Service) ContractRead(cdb ol.CollectionView, inst ol.Instruction, c []o
 		if cid != ContractWriteID {
 			return nil, nil, errors.New("referenced write-id is not a write instance, got " + cid)
 		}
-		return ol.StateChanges{ol.NewStateChange(ol.Create, inst.DeriveID(""), ContractReadID, r, darcID)}, c, nil
+		return byzcoin.StateChanges{byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), ContractReadID, r, darcID)}, c, nil
 	default:
 		return nil, nil, errors.New("not a spawn instruction")
 	}

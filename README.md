@@ -52,8 +52,8 @@ The source code for this stable branch is
 [here](https://github.com/dedis/cothority/tree/v2).
 
 During 2018, we hope to bring you the following new pieces:
-- Cross platform mobile application to interact with the cisc and pop services
-- Omniledger implementation using key/value pair storage and protected by darcs
+- Cross platform mobile application to interact with the pop service
+- ByzCoin implementation using key/value pair storage and protected by darcs
 
 Other pieces we hope to achieve in 2018:
 - Distributed internet archival functionality
@@ -89,7 +89,7 @@ it up as follows:
 +--------------------------+------------+--------------------------+
 |     Onchain-Secrets      |APPLICATIONS|                          |
 |                          +------------+     Proof of Personhood  |
-|       Omniledger                                                 |
+|       ByzCoin                                                    |
 |                               Status            E-voting         |
 | CISC Identity SkipChain                                          |
 +------------------------+---------------+-------------------------+

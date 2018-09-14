@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/dedis/cothority"
-	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
@@ -58,5 +58,5 @@ type storage1 struct {
 }
 
 type readMsg struct {
-	Readers []ol.InstanceID
+	Readers []byzcoin.InstanceID
 }

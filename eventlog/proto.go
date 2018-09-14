@@ -3,7 +3,7 @@ package eventlog
 import (
 	"time"
 
-	omniledger "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet/network"
 )
@@ -27,7 +27,7 @@ func NewEvent(topic, content string) Event {
 
 // PROTOSTART
 // type :skipchain.SkipBlockID:bytes
-// type :omniledger.InstanceID:bytes
+// type :byzcoin.InstanceID:bytes
 //
 // package eventlog;
 //
@@ -43,7 +43,7 @@ func NewEvent(topic, content string) Event {
 // event", and To == 0 means "until now". From and To should be set using the
 // UnixNano() method in package time.
 type SearchRequest struct {
-	Instance omniledger.InstanceID
+	Instance byzcoin.InstanceID
 	ID       skipchain.SkipBlockID
 	// Return events where Event.Topic == Topic, if Topic != "".
 	Topic string

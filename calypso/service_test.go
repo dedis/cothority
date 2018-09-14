@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/omniledger/darc"
-	ol "github.com/dedis/cothority/omniledger/service"
+	"github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
@@ -57,19 +57,19 @@ func TestContract_Write_Benchmark(t *testing.T) {
 	var times []time.Duration
 
 	for i := 0; i < 50; i++ {
-		iids := make([]ol.InstanceID, totalTrans)
+		iids := make([]byzcoin.InstanceID, totalTrans)
 		start := time.Now()
 		for i := 0; i < totalTrans; i++ {
 			iids[i] = s.addWrite(t, []byte("secret key"))
 		}
 		timeSend := time.Now().Sub(start)
-		log.Lvlf1("Time to send %d writes to OmniLedger: %s", totalTrans, timeSend)
+		log.Lvlf1("Time to send %d writes to the ledger: %s", totalTrans, timeSend)
 		start = time.Now()
 		for i := 0; i < totalTrans; i++ {
 			s.waitInstID(t, iids[i])
 		}
 		timeWait := time.Now().Sub(start)
-		log.Lvlf1("Time to wait for %d writes in OmniLedger: %s", totalTrans, timeWait)
+		log.Lvlf1("Time to wait for %d writes in the ledger: %s", totalTrans, timeWait)
 		times = append(times, timeSend+timeWait)
 		for _, ti := range times {
 			log.Lvlf1("Total time: %s - tps: %f", ti,
@@ -129,30 +129,30 @@ type ts struct {
 	roster     *onet.Roster
 	ltsReply   *CreateLTSReply
 	signer     darc.Signer
-	cl         *ol.Client
-	gbReply    *ol.CreateGenesisBlockResponse
-	genesisMsg *ol.CreateGenesisBlock
+	cl         *byzcoin.Client
+	gbReply    *byzcoin.CreateGenesisBlockResponse
+	genesisMsg *byzcoin.CreateGenesisBlock
 	gDarc      *darc.Darc
 }
 
-func (s *ts) addRead(t *testing.T, write *ol.Proof) ol.InstanceID {
+func (s *ts) addRead(t *testing.T, write *byzcoin.Proof) byzcoin.InstanceID {
 	var readBuf []byte
 	read := &Read{
-		Write: ol.NewInstanceID(write.InclusionProof.Key),
+		Write: byzcoin.NewInstanceID(write.InclusionProof.Key),
 		Xc:    s.signer.Ed25519.Point,
 	}
 	var err error
 	readBuf, err = protobuf.Encode(read)
 	require.Nil(t, err)
-	ctx := ol.ClientTransaction{
-		Instructions: ol.Instructions{{
-			InstanceID: ol.NewInstanceID(write.InclusionProof.Key),
-			Nonce:      ol.Nonce{},
+	ctx := byzcoin.ClientTransaction{
+		Instructions: byzcoin.Instructions{{
+			InstanceID: byzcoin.NewInstanceID(write.InclusionProof.Key),
+			Nonce:      byzcoin.Nonce{},
 			Index:      0,
 			Length:     1,
-			Spawn: &ol.Spawn{
+			Spawn: &byzcoin.Spawn{
 				ContractID: ContractReadID,
-				Args:       ol.Arguments{{Name: "read", Value: readBuf}},
+				Args:       byzcoin.Arguments{{Name: "read", Value: readBuf}},
 			},
 		}},
 	}
@@ -162,7 +162,7 @@ func (s *ts) addRead(t *testing.T, write *ol.Proof) ol.InstanceID {
 	return ctx.Instructions[0].DeriveID("")
 }
 
-func (s *ts) addReadAndWait(t *testing.T, write *ol.Proof) *ol.Proof {
+func (s *ts) addReadAndWait(t *testing.T, write *byzcoin.Proof) *byzcoin.Proof {
 	instID := s.addRead(t, write)
 	return s.waitInstID(t, instID)
 }
@@ -184,7 +184,7 @@ func newTS(t *testing.T, nodes int) ts {
 
 	// Start DKG
 	var err error
-	s.ltsReply, err = s.services[0].CreateLTS(&CreateLTS{Roster: *s.roster, OLID: s.gbReply.Skipblock.Hash})
+	s.ltsReply, err = s.services[0].CreateLTS(&CreateLTS{Roster: *s.roster, BCID: s.gbReply.Skipblock.Hash})
 	require.Nil(t, err)
 
 	return s
@@ -192,19 +192,19 @@ func newTS(t *testing.T, nodes int) ts {
 
 func (s *ts) createGenesis(t *testing.T) {
 	var err error
-	s.genesisMsg, err = ol.DefaultGenesisMsg(ol.CurrentVersion, s.roster,
+	s.genesisMsg, err = byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, s.roster,
 		[]string{"spawn:" + ContractWriteID, "spawn:" + ContractReadID}, s.signer.Identity())
 	require.Nil(t, err)
 	s.gDarc = &s.genesisMsg.GenesisDarc
 	s.genesisMsg.BlockInterval = time.Second
 
-	s.cl, s.gbReply, err = ol.NewOmniledger(s.genesisMsg, false)
+	s.cl, s.gbReply, err = byzcoin.NewLedger(s.genesisMsg, false)
 	require.Nil(t, err)
 }
 
-func (s *ts) waitInstID(t *testing.T, instID ol.InstanceID) *ol.Proof {
+func (s *ts) waitInstID(t *testing.T, instID byzcoin.InstanceID) *byzcoin.Proof {
 	var err error
-	var pr *ol.Proof
+	var pr *byzcoin.Proof
 	for i := 0; i < 10; i++ {
 		pr, err = s.cl.WaitProof(instID, s.genesisMsg.BlockInterval, nil)
 		if err == nil {
@@ -218,25 +218,25 @@ func (s *ts) waitInstID(t *testing.T, instID ol.InstanceID) *ol.Proof {
 	return pr
 }
 
-func (s *ts) addWriteAndWait(t *testing.T, key []byte) *ol.Proof {
+func (s *ts) addWriteAndWait(t *testing.T, key []byte) *byzcoin.Proof {
 	instID := s.addWrite(t, key)
 	return s.waitInstID(t, instID)
 }
 
-func (s *ts) addWrite(t *testing.T, key []byte) ol.InstanceID {
+func (s *ts) addWrite(t *testing.T, key []byte) byzcoin.InstanceID {
 	write := NewWrite(cothority.Suite, s.ltsReply.LTSID, s.gDarc.GetBaseID(), s.ltsReply.X, key)
 	writeBuf, err := protobuf.Encode(write)
 	require.Nil(t, err)
 
-	ctx := ol.ClientTransaction{
-		Instructions: ol.Instructions{{
-			InstanceID: ol.NewInstanceID(s.gDarc.GetBaseID()),
-			Nonce:      ol.Nonce{},
+	ctx := byzcoin.ClientTransaction{
+		Instructions: byzcoin.Instructions{{
+			InstanceID: byzcoin.NewInstanceID(s.gDarc.GetBaseID()),
+			Nonce:      byzcoin.Nonce{},
 			Index:      0,
 			Length:     1,
-			Spawn: &ol.Spawn{
+			Spawn: &byzcoin.Spawn{
 				ContractID: ContractWriteID,
-				Args:       ol.Arguments{{Name: "write", Value: writeBuf}},
+				Args:       byzcoin.Arguments{{Name: "write", Value: writeBuf}},
 			},
 		}},
 	}

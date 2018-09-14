@@ -24,11 +24,14 @@ an access control to it
 cryptographic tokens to physical people
 - [E-voting](../evoting/README.md) following Helios to store votes on a blockchain,
 shuffle them and decrypt all votes
-- [Omniledger](../omniledger/README.md) has the first steps of implementing
-an omniledger service, starting with batching transactions in a block and
-precompiled smart contracts
+- [Eventlog](../eventlog) is an event logging system built on top of ByzCoin.
 
-Another block that is on the very edge of application and building block is the
-[skipchain](../skipchain/README.md). It's more than a building block, because it
+# Building Blocks
+
+These two pieces of technology support those above:
+
+- [ByzCoin](../byzcoin/README.md) has a distributed ledger holding keys and
+values. It implements pre-compiled smart contracts.
+- [skipchain](../skipchain/README.md). It's more than a building block, because it
 already has some functionality. But it's not an application, because you cannot
 do anything useful with it as-is.

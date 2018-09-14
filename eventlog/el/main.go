@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/cothority/eventlog"
-	"github.com/dedis/cothority/omniledger/darc"
-	omniledger "github.com/dedis/cothority/omniledger/service"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/onet"
@@ -25,12 +25,12 @@ import (
 
 type config struct {
 	Name       string
-	EventLogID omniledger.InstanceID
+	EventLogID byzcoin.InstanceID
 }
 
-type olConfig struct {
-	Roster       onet.Roster
-	OmniledgerID skipchain.SkipBlockID
+type bcConfig struct {
+	Roster    onet.Roster
+	ByzCoinID skipchain.SkipBlockID
 }
 
 var cmds = cli.Commands{
@@ -49,9 +49,9 @@ var cmds = cli.Commands{
 				Usage:  "the ed25519 private key that will sign the create transaction",
 			},
 			cli.StringFlag{
-				Name:   "ol",
-				EnvVar: "OL",
-				Usage:  "the OmniLedger config",
+				Name:   "bc",
+				EnvVar: "BC",
+				Usage:  "the ByzCoin config",
 			},
 		},
 		Action: create,
@@ -67,9 +67,9 @@ var cmds = cli.Commands{
 				Usage:  "the ed25519 private key that will sign transactions",
 			},
 			cli.StringFlag{
-				Name:   "ol",
-				EnvVar: "OL",
-				Usage:  "the OmniLedger config",
+				Name:   "bc",
+				EnvVar: "BC",
+				Usage:  "the ByzCoin config",
 			},
 			cli.StringFlag{
 				Name:   "el",
@@ -93,9 +93,9 @@ var cmds = cli.Commands{
 		Aliases: []string{"s"},
 		Flags: []cli.Flag{
 			cli.StringFlag{
-				Name:   "ol",
-				EnvVar: "OL",
-				Usage:  "the OmniLedger config",
+				Name:   "bc",
+				EnvVar: "BC",
+				Usage:  "the ByzCoin config",
 			},
 			cli.StringFlag{
 				Name:   "el",
@@ -131,7 +131,7 @@ var cliApp = cli.NewApp()
 
 func init() {
 	cliApp.Name = "el"
-	cliApp.Usage = "Create and work with OmniLedger event logs."
+	cliApp.Usage = "Create and work with event logs."
 	cliApp.Version = "0.1"
 	cliApp.Commands = cmds
 	cliApp.Flags = []cli.Flag{
@@ -157,25 +157,25 @@ func main() {
 // searching, which does not require having a private key available
 // because it does not submit transactions.)
 func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
-	fn := c.String("ol")
+	fn := c.String("bc")
 	if fn == "" {
-		return nil, errors.New("--ol is required")
+		return nil, errors.New("--bc flag is required")
 	}
 
 	cfgBuf, err := ioutil.ReadFile(fn)
 	if err != nil {
 		return nil, err
 	}
-	var cfg olConfig
+	var cfg bcConfig
 	err = protobuf.DecodeWithConstructors(cfgBuf, &cfg,
 		network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		return nil, err
 	}
 
-	cl := eventlog.NewClient(omniledger.NewClient(cfg.OmniledgerID, cfg.Roster))
+	cl := eventlog.NewClient(byzcoin.NewClient(cfg.ByzCoinID, cfg.Roster))
 
-	d, err := cl.OmniLedger.GetGenDarc()
+	d, err := cl.ByzCoin.GetGenDarc()
 	if err != nil {
 		return nil, err
 	}
@@ -210,7 +210,7 @@ func create(c *cli.Context) error {
 		return err
 	}
 
-	genDarc, err := cl.OmniLedger.GetGenDarc()
+	genDarc, err := cl.ByzCoin.GetGenDarc()
 	if err != nil {
 		return err
 	}
@@ -238,7 +238,7 @@ func doLog(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	cl.Instance = omniledger.NewInstanceID(eb)
+	cl.Instance = byzcoin.NewInstanceID(eb)
 
 	t := c.String("topic")
 	content := c.String("content")
@@ -321,7 +321,7 @@ func search(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	cl.Instance = omniledger.NewInstanceID(eb)
+	cl.Instance = byzcoin.NewInstanceID(eb)
 
 	resp, err := cl.Search(req)
 	if err != nil {

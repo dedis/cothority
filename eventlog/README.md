@@ -1,20 +1,20 @@
 # EventLog
 
 The EventLog (EL) service is for logging events into
-[OmniLedger](../omniledger/README.md).
+[ByzCoin](../byzcoin/README.md).
 Contrary to ordinary event logging services, we offer better security and
 auditability. Below are some of the main features that sets us apart.
 
-- Collective witness - a collection of nodes, or conodes, indepdently observe
+- Collective witness - a collection of nodes, or conodes, independently observe
   the logging of an event. The event will only be accepted if a 2/3-majority
   think it is valid, e.g., the timestamp is reasonable, the client is
   authorised and so on.
 - Distributed access control - fine-grained client access control with
-  delegation support is configured using [DARC](../omniledger/README.md#darc).
+  delegation support is configured using [DARC](../byzcoin/README.md#darc).
 - Configurable acceptance criteria - we execute a smart-contract on all nodes,
   nodes only accept the event if the smart-contract returns a positive result.
 - Existance proof - once an event is logged, an authorised client can request
-  a cryptographic proof (powered by [collection](../omniledger/collection/README.md))
+  a cryptographic proof (powered by [collection](../byzcoin/collection/README.md))
   that the event is indeed stored in the blockchain and has not been tampered.
 
 ## Running the service
@@ -24,7 +24,7 @@ not a part of the `cothority.v2` release, please use the `master` branch.
 
 ## Client API
 We offer three ways for clients to connect to the event log service. All the
-APIs expect an existing OmniLedger object that has a darc with "spawn:eventlog"
+APIs expect an existing ByzCoin object that has a Darc with "spawn:eventlog"
 and "invoke:eventlog" in its rules. The eventlog signer (which we will create
 below) *must* be authorised to use these rules.
 
@@ -50,18 +50,18 @@ The detailed API can be found on
 ### Java API
 In java, you need to construct a `EventLogInstance` class. There are two ways
 to initialise it, the first for when you do not have an existing eventlog
-instance on omniledger to connect to, the other when you do.
+instance on ByzCoin to connect to, the other when you do.
 
 ```java
-// Create the eventlog instance. It expects an omniledger RPC, a list of 
+// Create the eventlog instance. It expects an ByzCoin RPC, a list of 
 // signers that have the "spawn:eventlog" permission and the darcID for where
 // the permission is stored.
-EventLogInstance el = new EventLogInstance(olRPC, admins, darcID);
+EventLogInstance el = new EventLogInstance(bcRPC, admins, darcID);
 ```
 
 If you would like to connect to the same instance, you need to save the result
-of `el.getInstanceId()` and of course the omniledger RPC. The constructor
-`EventLogInstance(OmniledgerRPC ol, InstanceId id)` connects to an existing
+of `el.getInstanceId()` and of course the ByzCoin RPC. The constructor
+`EventLogInstance(ByzCoinRPC bc, InstanceId id)` connects to an existing
 instance.
 
 It's straightforward to log events, as long as the event is correctly signed.
@@ -83,7 +83,7 @@ SearchResponse resp = el.search("", now - 1000, now + 1000);
 
 Please refer to the javadocs for more information. The javadocs are not hosted
 anywhere unfortunately, but it is possible to generate them from the
-[source](https://github.com/dedis/cothority/blob/master/external/java/src/main/java/ch/epfl/dedis/lib/omniledger/contracts/EventLogInstance.java).
+[source](https://github.com/dedis/cothority/blob/master/external/java/src/main/java/ch/epfl/dedis/lib/byzcoin/contracts/EventLogInstance.java).
 
 ### CLI
 Please see the `el` documentation [here](el/README.md).

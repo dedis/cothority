@@ -16,8 +16,7 @@ is made to delegate rights to write new documents and to read the written docume
 
 The OCS service uses skipchain to store the transactions on distributed nodes.
 In this proof of concept implementation, each transaction is stored in its own
-block. Only the new Omniledger implementation will allow to collect multiple
-transactions into one block.
+block.
 
 A transaction is a protobuf message with the following fields:
 - Write

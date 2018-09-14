@@ -9,17 +9,17 @@ $ el create -keys
 ```
 
 The keys are printed on the stdout. You will give the public key to the
-OmniLedger administrator to use with the "ol add" command to give your
+ByzCoin administrator to use with the "ol add" command to give your
 private key the right to make new event logs.
 
 ```
 $ PRIVATE_KEY=$priv el create -ol $file
 ```
 
-The OmniLedger admin will give you an OmniLedger config file, which you will
-use with the -ol argument, or you can set the OL environment
-variable to the name of the OmniLedger config file. A new event log will be spawned,
-and the evnet log ID will be printed. Set the EL environment variable to
+The ByzCoin admin will give you an ByzCoin config file, which you will
+use with the -bc argument, or you can set the BC environment
+variable to the name of the ByzCoin config file. A new event log will be spawned,
+and the event log ID will be printed. Set the EL environment variable to
 communicate it to future calls to the `el` program.
 
 You need to give the private key from above, using the PRIVATE_KEY environment
