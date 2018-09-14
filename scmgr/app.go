@@ -242,7 +242,7 @@ func followDel(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	log.Infof("Successfully deleted following of skipchain", scid, link.Conode)
+	log.Infof("Successfully deleted following of skipchain %x in conode %v.", scid, link.Conode)
 	return nil
 }
 func followList(c *cli.Context) error {
@@ -272,7 +272,7 @@ func followList(c *cli.Context) error {
 		}
 	}
 	if list.FollowIDs != nil && list.Follow != nil {
-		log.Infof("Conode %s doesn't follow any skipchain and allows everything.")
+		log.Info("Conode doesn't follow any skipchain and allows everything.")
 	}
 	return nil
 }

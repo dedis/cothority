@@ -35,6 +35,9 @@ matrix:
   include:
     - language: go
 
+      go:
+	    - "1.11.x"
+
       install:
         - go get -t ./...
         - go get github.com/dedis/Coding || true

@@ -550,7 +550,7 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 				s.pollChanWG.Add(1)
 				s.pollChan[k] = s.startPolling(sb.SkipChainID(), interval)
 			} else {
-				log.Warnf("%s we are a new leader but we were already polling for", s.ServerIdentity(), sb.SkipChainID())
+				log.Warnf("%s we are a new leader but we were already polling for %x", s.ServerIdentity(), sb.SkipChainID())
 			}
 		} else {
 			if c, ok := s.pollChan[k]; ok {
