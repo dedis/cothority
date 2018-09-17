@@ -58,7 +58,7 @@ func signFile(c *cli.Context) error {
 	}
 	writeSigAsJSON(sig, outFile)
 	if outFileName != "" {
-		log.Lvl2("Signature written to: %s", outFile.Name())
+		log.Lvlf2("Signature written to: %s", outFile.Name())
 	} // else keep the Stdout empty
 	return nil
 }
