@@ -35,7 +35,7 @@ public class DarcInstance {
      * the current darcInstance. If the instance is not found, or is not of
      * contractId "darc", an exception will be thrown.
      *
-     * @param bc is a link to an byzcoin instance that is running
+     * @param bc is a ByzCoin instance that is running
      * @param id of the darc-instance to connect to
      * @throws CothorityException
      */

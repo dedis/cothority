@@ -31,7 +31,7 @@ public class ValueInstance {
      * the current valueInstance. If the instance is not found, or is not of
      * contractId "Value", an exception will be thrown.
      *
-     * @param bc is a link to an byzcoin instance that is running
+     * @param bc is a ByzCoin instance that is running
      * @param id of the value-instance to connect to
      * @throws CothorityException
      */

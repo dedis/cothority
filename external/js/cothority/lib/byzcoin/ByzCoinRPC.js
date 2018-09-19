@@ -12,7 +12,7 @@ const protobuf = require("protobufjs");
  */
 class ByzCoinRPC {
   /**
-   * Constructs an ByzCoinRPC when the complete configuration is known
+   * Constructs a ByzCoinRPC when the complete configuration is known
    *
    * @param {Config} config - the configuration of the ByzCoin
    * @param {Socket|LeaderSocket|RosterSocket} socket - the socket to communicate with the ByzCoin ledger
@@ -167,7 +167,7 @@ class ByzCoinRPC {
   }
 
   /**
-   * Constructs an ByzGenRPC from a known configuration. The constructor will communicate with the service to
+   * Constructs a ByzGenRPC from a known configuration. The constructor will communicate with the service to
    * populate other fields and perform verification.
    *
    * @param {Socket|LeaderSocket|RosterSocket} socket - the socket to communicate with the conode

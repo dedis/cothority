@@ -53,7 +53,7 @@ to initialise it, the first for when you do not have an existing eventlog
 instance on ByzCoin to connect to, the other when you do.
 
 ```java
-// Create the eventlog instance. It expects an ByzCoin RPC, a list of 
+// Create the eventlog instance. It expects a ByzCoin RPC, a list of 
 // signers that have the "spawn:eventlog" permission and the darcID for where
 // the permission is stored.
 EventLogInstance el = new EventLogInstance(bcRPC, admins, darcID);

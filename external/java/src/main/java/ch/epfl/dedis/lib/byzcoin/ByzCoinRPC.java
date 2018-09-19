@@ -74,7 +74,7 @@ public class ByzCoinRPC {
     }
 
     /**
-     * Constructs an ByzCoinRPC from a known configuration. The constructor will communicate with the service to
+     * Constructs a ByzCoinRPC from a known configuration. The constructor will communicate with the service to
      * populate other fields and perform verification.
      *
      * @param roster      the roster to talk to
@@ -99,16 +99,6 @@ public class ByzCoinRPC {
         this.roster = roster;
         genesis = skipchain.getSkipblock(skipchainId);
         latest = skipchain.getLatestSkipblock();
-    }
-
-    /**
-     * Instantiates an byzcoin object given the byte representation. The byzcoin must already have been
-     * initialized on the cothority.
-     *
-     * @param buf is the representation of the basic byzcoin parameters, it should have a Roster and a skipchain ID.
-     */
-    public ByzCoinRPC(byte[] buf) {
-        throw new RuntimeException("Not implemented yet");
     }
 
     /**
@@ -258,7 +248,7 @@ public class ByzCoinRPC {
     /**
      * Fetches the latest block from the Skipchain and returns the corresponding Block.
      *
-     * @return an Block representation of the skipblock
+     * @return a Block representation of the skipblock
      * @throws CothorityCommunicationException if it couldn't contact the nodes
      * @throws CothorityCryptoException if the omniblock is invalid
      */
