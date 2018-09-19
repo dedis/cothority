@@ -2,10 +2,13 @@ package ch.epfl.dedis.lib;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.skipchain.ForwardLink;
 import ch.epfl.dedis.proto.SkipchainProto;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * SkipBlock is a wrapper around the protobuf SkipBlock class. It is mainly used to serialize the genesis block for
@@ -64,6 +67,17 @@ public class SkipBlock {
     }
 
     /**
+     * @return a list of forwardlinks to next blocks. If the list is empty, then this is the last block of the chain.
+     */
+    public List<ForwardLink>getForwardLinks(){
+        List<ForwardLink> ret = new ArrayList<>();
+        skipBlock.getForwardList().forEach(fl ->{
+            ret.add(new ForwardLink(fl));
+        });
+        return ret;
+    }
+
+    /**
      * Gets the roster from the skipblock.
      */
     public Roster getRoster() throws CothorityException {
@@ -71,6 +85,23 @@ public class SkipBlock {
             return new Roster(skipBlock.getRoster());
         } catch (URISyntaxException e) {
             throw new CothorityException(e);
+        }
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof SkipBlock)) {
+            return super.equals(obj);
+        }
+        SkipBlock other = (SkipBlock) obj;
+
+        try {
+            return other.getId().equals(this.getId());
+        } catch (CothorityCryptoException e){
+            return false;
         }
     }
 }
