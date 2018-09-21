@@ -79,8 +79,8 @@ func createSharding(c *cli.Context) error {
 	if c.NArg() < 5 { // NArg() counts the flags and their value as arguments
 		return errors.New("Not enough arguments (1 required)")
 	}
-	fp := c.Args().First()
 
+	rosterPath := c.Args().First()
 	// Open the roster file and handle its content
 
 	return nil
@@ -92,9 +92,9 @@ func evolveShard(c *cli.Context) error {
 		return errors.New("Not enough arguments (3 required")
 	}
 
-	olFP := c.Args().Get(0)
-	keyFP := c.Args().Get(1)
-	rosterFP := c.Args().Get(2)
+	olPath := c.Args().Get(0)
+	keyPath := c.Args().Get(1)
+	rosterPath := c.Args().Get(2)
 
 	return nil
 }
@@ -105,8 +105,8 @@ func newEpoch(c *cli.Context) error {
 		return errors.New("Not enough arguments (2 required")
 	}
 
-	olFP := c.Args().Get(0)
-	keyFP := c.Args().Get(1)
+	olPath := c.Args().Get(0)
+	keyPath := c.Args().Get(1)
 
 	return nil
 }
