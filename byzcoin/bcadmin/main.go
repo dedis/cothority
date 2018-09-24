@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"strings"
 	"time"
@@ -13,7 +12,6 @@ import (
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/onet"
-	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -69,8 +67,18 @@ var cmds = cli.Commands{
 				Name:  "identity",
 				Usage: "the identity of the signer who will be allowed to access the contract (e.g. ed25519:a35020c70b8d735...0357))",
 			},
+			cli.BoolFlag{
+				Name:  "replace",
+				Usage: "if this rule already exists, replace it with this new one",
+			},
 		},
 		Action: add,
+	},
+	{
+		Name:    "keys",
+		Usage:   "creates a new key pair, which may be used with add",
+		Aliases: []string{"k"},
+		Action:  keys,
 	},
 }
 
@@ -80,7 +88,7 @@ var cliApp = cli.NewApp()
 var getDataPath = cfgpath.GetDataPath
 
 func init() {
-	cliApp.Name = "bc"
+	cliApp.Name = "bcadmin"
 	cliApp.Usage = "Create ByzCoin ledgers and grant access to them."
 	cliApp.Version = "0.1"
 	cliApp.Commands = cmds
@@ -92,16 +100,13 @@ func init() {
 		},
 		cli.StringFlag{
 			Name:  "config, c",
-			Value: "",
+			Value: getDataPath(cliApp.Name),
 			Usage: "path to configuration-directory",
 		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
 		lib.ConfigPath = c.String("config")
-		if lib.ConfigPath == "" {
-			lib.ConfigPath = getDataPath(cliApp.Name)
-		}
 		return nil
 	}
 }
@@ -115,12 +120,7 @@ func create(c *cli.Context) error {
 	if fn == "" {
 		return errors.New("--roster flag is required")
 	}
-
-	in, err := os.Open(fn)
-	if err != nil {
-		return fmt.Errorf("Could not open roster %v: %v", fn, err)
-	}
-	r, err := readRoster(in)
+	r, err := lib.ReadRoster(fn)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,17 @@ func add(c *cli.Context) error {
 	d2 := d.Copy()
 	d2.EvolveFrom(d)
 
-	d2.Rules.AddRule(darc.Action(action), []byte(identity))
+	err = d2.Rules.AddRule(darc.Action(action), []byte(identity))
+	if err != nil {
+		if c.Bool("replace") {
+			err = d2.Rules.UpdateRule(darc.Action(action), []byte(identity))
+			if err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
 
 	d2Buf, err := d2.ToProto()
 	if err != nil {
@@ -272,28 +282,9 @@ func add(c *cli.Context) error {
 	return nil
 }
 
-type configPrivate struct {
-	Owner darc.Signer
-}
-
-func init() { network.RegisterMessages(&configPrivate{}) }
-
-func readRoster(r io.Reader) (*onet.Roster, error) {
-	group, err := app.ReadGroupDescToml(r)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(group.Roster.List) == 0 {
-		return nil, errors.New("empty roster")
-	}
-	return group.Roster, nil
-}
-
-func rosterToServers(r *onet.Roster) []network.Address {
-	out := make([]network.Address, len(r.List))
-	for i := range r.List {
-		out[i] = r.List[i].Address
-	}
-	return out
+func keys(c *cli.Context) error {
+	s := darc.NewSignerEd25519(nil, nil)
+	fmt.Println("Identity:", s.Identity())
+	fmt.Printf("export PRIVATE_KEY=%v\n", s.Ed25519.Secret)
+	return nil
 }

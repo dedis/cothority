@@ -57,18 +57,6 @@ func TestDarc_Copy(t *testing.T) {
 	require.Equal(t, d1.GetID(), d2.GetID())
 }
 
-func TestAddRule(t *testing.T) {
-	// TODO
-}
-
-func TestUpdateRule(t *testing.T) {
-	// TODO
-}
-
-func TestDeleteRule(t *testing.T) {
-	// TODO
-}
-
 // TestDarc_EvolveOne creates two darcs, the first has two owners and the
 // second has one. The first darc is to be evolved into the second one.
 func TestDarc_EvolveOne(t *testing.T) {

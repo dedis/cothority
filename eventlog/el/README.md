@@ -59,5 +59,34 @@ If `-topic` is not set, it defaults to the empty string. If you give
 `-for`, then you must not give `-to`. The default for `-from` is 1
 hours ago.
 
+## OpenID authentication
 
+If the Darc that controls access to the eventlog has the form
+"proxy:$pubkey:$user", then `el` will use the
+[Authentication Proxy](../authprox/README.md) in order to get signatures.
+
+The process looks like this:
+
+```
+# Enroll the external provider with all the Auth Proxies
+$ apadmin add --roster ../../conode/public.toml --issuer https://oauth.dedis.ch/dex
+External provider enrolled. Use identities of this form:
+	 proxy:969168fa299693ee27d4b6f4d58b5be58fbddbbd769abe1d6a703822a0299804:user@example.com
+
+# Add a Darc rule of that form for both spawning and invoking
+$ bcadmin add spawn:eventlog -identity proxy:969168fa299693ee27d4b6f4d58b5be58fbddbbd769abe1d6a703822a0299804:user@example.com
+$ bcadmin add invoke:eventlog -identity proxy:969168fa299693ee27d4b6f4d58b5be58fbddbbd769abe1d6a703822a0299804:user@example.com
+
+# Login to the OpenID provider in order to get the authentication token saved into el's config.
+$ el login
+Opening this URL in your browser:
+	 https://oauth.dedis.ch/dex/auth?client_id=dedis&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob&response_type=code&scope=offline_access+openid+profile+email&state=8d9c965d80ce6baaabcd77e3e18bf4149e55f4724c33690c56027e46e8bce60d
+Enter the access code now: pks4ocibylrm67ht5r4jhd2d2
+Login information saved into /Users/jallen/Library/Application Support/el/data/openid.cfg
+
+# Now you can send transactions, which instead of being signed with a local private
+# key, are signed with the shares of the private key stored in the Authentication Proxies.
+$ el create
+$ el log -content Test
+```
 

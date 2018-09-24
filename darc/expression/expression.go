@@ -5,13 +5,14 @@ the syntax we use is from: https://en.wikipedia.org/wiki/Extended_Backus%E2%80%9
 
 	expr = term, [ '&', term ]*
 	term = factor, [ '|', factor ]*
-	factor = '(', expr, ')' | id
-	id = [0-9a-z]+, ':', [0-9a-f]+
+	factor = '(', expr, ')' | id | openid
+	typeHex = (darc|ed25519|x509ec):[0-9a-fA-F]
+    proxy = proxy:ed25519-pubkey:associated_data
 
 Examples:
 
-        ed25519:deadbeef // every id evaluates to a boolean
-	(a:a & b:b) | (c:c & d:d)
+    ed25519:deadbeef // every id evaluates to a boolean
+	(ed25519:a & x509ec:b) | (darc:c & ed25519:d)
 
 In the simplest case, the evaluation of an expression is performed against a
 set of valid ids.  Suppose we have the expression (a:a & b:b) | (c:c & d:d),
@@ -28,17 +29,19 @@ package expression
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	parsec "github.com/prataprc/goparsec"
 )
 
-const scannerNotEmpty = "parsing failed - scanner is not empty"
-const failedToCast = "evauluation failed - result is not bool"
+var (
+	errScannerNotEmpty = errors.New("parsing failed - scanner is not empty")
+	errFailedToCast    = errors.New("evauluation failed - result is not bool")
+)
 
 // ValueCheckFn is a function that will be called when the parser is
 // parsing/evaluating an expression.
-// TODO it is useful if we can return (bool, error).
 type ValueCheckFn func(string) bool
 
 // Expr represents the unprocess expression of our DSL.
@@ -70,7 +73,7 @@ func InitParser(fn ValueCheckFn) parsec.Parser {
 	// sum -> prod (andop prod)*
 	sum = parsec.And(sumNode(fn), &value, prodK)
 	// value -> id | "(" expr ")"
-	value = parsec.OrdChoice(exprValueNode(fn), id(), groupExpr)
+	value = parsec.OrdChoice(exprValueNode(fn), typeHex(), proxy(), groupExpr)
 	// expr  -> sum
 	Y = parsec.OrdChoice(one2one, sum)
 	return Y
@@ -83,11 +86,12 @@ func Evaluate(parser parsec.Parser, expr Expr) (bool, error) {
 	v, s := parser(parsec.NewScanner(expr))
 	_, s = s.SkipWS()
 	if !s.Endof() {
-		return false, errors.New(scannerNotEmpty)
+		rest, _ := s.Match(".*")
+		return false, fmt.Errorf("%v: (rest = %v)", errScannerNotEmpty, string(rest))
 	}
 	vv, ok := v.(bool)
 	if !ok {
-		return false, errors.New(failedToCast)
+		return false, errFailedToCast
 	}
 	return vv, nil
 }
@@ -117,10 +121,20 @@ func InitOrExpr(ids ...string) Expr {
 	return Expr(strings.Join(ids, " | "))
 }
 
-func id() parsec.Parser {
+// Accepts tokens of the form "type:HEX"
+func typeHex() parsec.Parser {
 	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
-		_, s = s.SkipAny(`^[  \n\t]+`)
-		p := parsec.Token(`[0-9a-z]+:[0-9a-f]+`, "ID")
+		_, s = s.SkipAny(`^[ \n\t]+`)
+		p := parsec.Token(`(darc|ed25519|x509ec):[0-9a-fA-F]+`, "HEX")
+		return p(s)
+	}
+}
+
+// Accepts tokens of the form "proxy:edd25519-pubkey:associate_data"
+func proxy() parsec.Parser {
+	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
+		_, s = s.SkipAny(`^[ \n\t]+`)
+		p := parsec.Token(`proxy:[0-9a-fA-F]+:[a-zA-Z0-9:@\\/.-]+`, "PROXY")
 		return p(s)
 	}
 }

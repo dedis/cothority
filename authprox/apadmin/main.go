@@ -1,0 +1,199 @@
+package main
+
+import (
+	"errors"
+	"fmt"
+	"io"
+	"os"
+
+	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/authprox"
+	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/share"
+	"github.com/dedis/kyber/util/key"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/cfgpath"
+	"github.com/dedis/onet/log"
+	cli "gopkg.in/urfave/cli.v1"
+)
+
+var cmds = cli.Commands{
+	{
+		Name:  "add",
+		Usage: "add an external identity provider",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "roster, r",
+				Usage: "the roster of the cothority that hosts the distributed Authentication Proxy",
+			},
+			cli.StringFlag{
+				Name:  "type",
+				Usage: "the type of validator: oidc (OpenID Connect) or tq (Tequila). Default is oidc.",
+				Value: "oidc",
+			},
+			cli.StringFlag{
+				Name:  "issuer",
+				Usage: "the URL of the identity provider (for OpenID Connect, this is the Issuer URL)",
+			},
+		},
+		Action: add,
+	},
+	{
+		Name:  "show",
+		Usage: "show the enrollments of external identity providers",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "roster, r",
+				Usage: "the roster of the cothority that hosts the distributed Authentication Proxy",
+			},
+		},
+		Action: show,
+	},
+}
+
+var cliApp = cli.NewApp()
+
+// getDataPath is a function pointer so that tests can hook and modify this.
+var getDataPath = cfgpath.GetDataPath
+
+func init() {
+	cliApp.Name = "apadmin"
+	cliApp.Usage = "Administer authentication proxies."
+	cliApp.Version = "0.1"
+	cliApp.Commands = cmds
+	cliApp.Flags = []cli.Flag{
+		cli.IntFlag{
+			Name:  "debug, d",
+			Value: 0,
+			Usage: "debug-level: 1 for terse, 5 for maximal",
+		},
+		cli.StringFlag{
+			Name:  "config, c",
+			Value: "",
+			Usage: "path to configuration-directory",
+		},
+	}
+	cliApp.Before = func(c *cli.Context) error {
+		log.SetDebugVisible(c.Int("debug"))
+		lib.ConfigPath = c.String("config")
+		if lib.ConfigPath == "" {
+			lib.ConfigPath = getDataPath(cliApp.Name)
+		}
+		return nil
+	}
+}
+
+func main() {
+	log.ErrFatal(cliApp.Run(os.Args))
+}
+
+func show(c *cli.Context) error {
+	fn := c.String("roster")
+	if fn == "" {
+		return errors.New("--roster flag is required")
+	}
+
+	in, err := os.Open(fn)
+	if err != nil {
+		return fmt.Errorf("Could not open roster %v: %v", fn, err)
+	}
+	roster, err := readRoster(in)
+	if err != nil {
+		return err
+	}
+	cl := onet.NewClient(cothority.Suite, authprox.ServiceName)
+	req := &authprox.EnrollmentsRequest{}
+	resp := &authprox.EnrollmentsResponse{}
+	err = cl.SendProtobuf(roster.List[0], req, resp)
+	if err != nil {
+		return err
+	}
+
+	for _, x := range resp.Enrollments {
+		fmt.Println(x.Type, x.Issuer, x.Public)
+	}
+	return nil
+}
+
+func add(c *cli.Context) error {
+	is := c.String("issuer")
+	if is == "" {
+		return errors.New("--issuer flag is required")
+	}
+
+	// Load the roster
+	fn := c.String("roster")
+	if fn == "" {
+		return errors.New("--roster flag is required")
+	}
+
+	in, err := os.Open(fn)
+	if err != nil {
+		return fmt.Errorf("Could not open roster %v: %v", fn, err)
+	}
+	roster, err := readRoster(in)
+	if err != nil {
+		return err
+	}
+
+	// Get all the key material ready.
+
+	// n: how many auth proxies will be holding shares
+	n := len(roster.List)
+	T := threshold(n)
+
+	pris := make([]kyber.Scalar, n)
+	pubs := make([]kyber.Point, n)
+	for i := 0; i < n; i++ {
+		kp := key.NewKeyPair(cothority.Suite)
+		pris[i] = kp.Private
+		pubs[i] = kp.Public
+	}
+
+	lPri := share.NewPriPoly(cothority.Suite, T, nil, cothority.Suite.RandomStream())
+	lShares := lPri.Shares(n)
+	lPub := lPri.Commit(nil)
+	_, lPubCommits := lPub.Info()
+
+	for i, s := range roster.List {
+		cl := onet.NewClient(cothority.Suite, authprox.ServiceName)
+		req := &authprox.EnrollRequest{
+			Type:         c.String("type"),
+			Issuer:       is,
+			Secret:       pris[i],
+			Participants: pubs,
+			LongPri:      *lShares[i],
+			LongPubs:     lPubCommits,
+		}
+		resp := &authprox.EnrollResponse{}
+		err := cl.SendProtobuf(s, req, resp)
+		if err != nil {
+			return fmt.Errorf("cannot enroll with %v: %v", s, err)
+		}
+	}
+
+	fmt.Fprintln(c.App.Writer, "External provider enrolled. Use identities of this form:")
+	fmt.Fprintf(c.App.Writer, "\tproxy:%v:user@example.com\n", lPubCommits[0])
+	return nil
+}
+
+func readRoster(r io.Reader) (*onet.Roster, error) {
+	group, err := app.ReadGroupDescToml(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(group.Roster.List) == 0 {
+		return nil, errors.New("empty roster")
+	}
+	return group.Roster, nil
+}
+func faultThreshold(n int) int {
+	return (n - 1) / 3
+}
+
+func threshold(n int) int {
+	return n - faultThreshold(n)
+}

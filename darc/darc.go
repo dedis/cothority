@@ -46,6 +46,7 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/eddsa"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet/log"
@@ -626,7 +627,7 @@ func EvalExprDarc(expr expression.Expr, getDarc GetDarc, acceptDarc bool, ids ..
 				return false
 			}
 			// Recursively evaluate the sign expression until we
-			// find the final signer with a ed25519 key.
+			// find the final signer.
 			if err := EvalExprDarc(signExpr, getDarc, acceptDarc, ids...); err != nil {
 				return false
 			}
@@ -652,6 +653,8 @@ func (s Signer) Type() int {
 		return 1
 	case s.X509EC != nil:
 		return 2
+	case s.Proxy != nil:
+		return 3
 	default:
 		return -1
 	}
@@ -665,6 +668,8 @@ func (s Signer) Identity() Identity {
 		return NewIdentityEd25519(s.Ed25519.Point)
 	case 2:
 		return NewIdentityX509EC(s.X509EC.Point)
+	case 3:
+		return NewIdentityProxy(s.Proxy)
 	default:
 		return Identity{}
 	}
@@ -682,6 +687,8 @@ func (s Signer) Sign(msg []byte) ([]byte, error) {
 		return s.Ed25519.Sign(msg)
 	case 2:
 		return s.X509EC.Sign(msg)
+	case 3:
+		return s.Proxy.Sign(msg)
 	default:
 		return nil, errors.New("unknown signer type")
 	}
@@ -692,7 +699,7 @@ func (s Signer) GetPrivate() (kyber.Scalar, error) {
 	switch s.Type() {
 	case 1:
 		return s.Ed25519.Secret, nil
-	case 0, 2:
+	case 0, 2, 3:
 		return nil, errors.New("signer lacks a private key")
 	default:
 		return nil, errors.New("signer is of unknown type")
@@ -712,6 +719,8 @@ func (id Identity) Equal(id2 *Identity) bool {
 		return id.Ed25519.Equal(id2.Ed25519)
 	case 2:
 		return id.X509EC.Equal(id2.X509EC)
+	case 3:
+		return id.Proxy.Equal(id2.Proxy)
 	}
 	return false
 }
@@ -726,6 +735,8 @@ func (id Identity) Type() int {
 		return 1
 	case id.X509EC != nil:
 		return 2
+	case id.Proxy != nil:
+		return 3
 	}
 	return -1
 }
@@ -739,6 +750,8 @@ func (id Identity) TypeString() string {
 		return "ed25519"
 	case 2:
 		return "x509ec"
+	case 3:
+		return "proxy"
 	default:
 		return "No identity"
 	}
@@ -753,6 +766,8 @@ func (id Identity) String() string {
 		return fmt.Sprintf("%s:%s", id.TypeString(), id.Ed25519.Point.String())
 	case 2:
 		return fmt.Sprintf("%s:%x", id.TypeString(), id.X509EC.Public)
+	case 3:
+		return fmt.Sprintf("%s:%v:%v", id.TypeString(), id.Proxy.Public, id.Proxy.Data)
 	default:
 		return "No identity"
 	}
@@ -768,6 +783,8 @@ func (id Identity) Verify(msg, sig []byte) error {
 		return id.Ed25519.Verify(msg, sig)
 	case 2:
 		return id.X509EC.Verify(msg, sig)
+	case 3:
+		return id.Proxy.Verify(msg, sig)
 	default:
 		return errors.New("unknown identity")
 	}
@@ -816,9 +833,24 @@ func NewIdentityX509EC(public []byte) Identity {
 	}
 }
 
+// NewIdentityProxy creates a new OpenID Connect identity struct.
+func NewIdentityProxy(s *SignerProxy) Identity {
+	return Identity{
+		Proxy: &IdentityProxy{
+			Data:   s.Data,
+			Public: s.Public,
+		},
+	}
+}
+
 // Equal returns true if both IdentityX509EC point to the same data.
 func (idkc IdentityX509EC) Equal(idkc2 *IdentityX509EC) bool {
 	return bytes.Compare(idkc.Public, idkc2.Public) == 0
+}
+
+// Equal returns true if both IdentityProxy are the same.
+func (idp IdentityProxy) Equal(i2 *IdentityProxy) bool {
+	return idp.Data == i2.Data && idp.Public.Equal(i2.Public)
 }
 
 type sigRS struct {
@@ -843,6 +875,21 @@ func (idkc IdentityX509EC) Verify(msg, s []byte) error {
 		return nil
 	}
 	return errors.New("Wrong signature")
+}
+
+// Verify returns nil if the signature is correct, or an error if something
+// fails.
+func (idp IdentityProxy) Verify(msg, s []byte) error {
+	// Make the message we'll be checking: H(len(data)|data|msg)
+	h := sha256.New()
+	b := make([]byte, 4)
+	binary.LittleEndian.PutUint32(b, uint32(len(idp.Data)))
+	h.Write(b)
+	h.Write([]byte(idp.Data))
+	h.Write(msg)
+	msg2 := h.Sum(nil)
+
+	return eddsa.Verify(idp.Public, msg2, s)
 }
 
 // NewSignerEd25519 initializes a new SignerEd25519 signer given public and
@@ -970,6 +1017,28 @@ func NewSignerX509EC() Signer {
 // Sign creates a RSA signature on the message.
 func (kcs SignerX509EC) Sign(msg []byte) ([]byte, error) {
 	return nil, errors.New("not yet implemented")
+}
+
+// NewSignerProxy creates a new SignerProxy. When Sign is called, the getSignature
+// callback will be called, so that the caller can use the appropriate mechanism
+// to retrieve and/or construct the signature.
+func NewSignerProxy(data string, pub kyber.Point, getSignature func([]byte) ([]byte, error)) Signer {
+	return Signer{
+		Proxy: &SignerProxy{
+			Data:         data,
+			Public:       pub,
+			getSignature: getSignature,
+		},
+	}
+}
+
+// Sign delegates generation of the signature to the caller via
+// the callback set in the constructor, so that they can contact
+// the proxy or proxies and do any necessary interpolation to arrive
+// at the final signature.
+func (s SignerProxy) Sign(msg []byte) ([]byte, error) {
+	sig, err := s.getSignature(msg)
+	return sig, err
 }
 
 func copyBytes(a []byte) []byte {

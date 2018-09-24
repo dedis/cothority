@@ -2,24 +2,35 @@ package main
 
 import (
 	"bufio"
+	"bytes"
+	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
+	oidc "github.com/coreos/go-oidc"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/authprox"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/eventlog"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/share"
 	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
+	"github.com/pkg/browser"
+	"golang.org/x/oauth2"
 	"gopkg.in/urfave/cli.v1"
 )
 
@@ -55,6 +66,33 @@ var cmds = cli.Commands{
 			},
 		},
 		Action: create,
+	},
+	{
+		Name:  "login",
+		Usage: "login using OpenID Connect",
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:   "bc",
+				EnvVar: "BC",
+				Usage:  "the ByzCoin config",
+			},
+			cli.StringFlag{
+				Name:  "issuer",
+				Usage: "the issuer URL",
+				Value: "https://oauth.dedis.ch/dex",
+			},
+			cli.StringFlag{
+				Name:  "clientsecret",
+				Usage: "the client secret",
+				Value: "6143443e4635074ddef90ac7bc71443ceed7e6df",
+			},
+			cli.StringFlag{
+				Name:  "clientid",
+				Usage: "the client id",
+				Value: "dedis",
+			},
+		},
+		Action: login,
 	},
 	{
 		Name:    "log",
@@ -145,9 +183,12 @@ func init() {
 		log.SetDebugVisible(c.Int("debug"))
 		return nil
 	}
+
+	network.RegisterMessage(&openidCfg{})
 }
 
 func main() {
+	rand.Seed(time.Now().UTC().UnixNano())
 	log.ErrFatal(cliApp.Run(os.Args))
 }
 
@@ -157,12 +198,12 @@ func main() {
 // searching, which does not require having a private key available
 // because it does not submit transactions.)
 func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
-	fn := c.String("bc")
-	if fn == "" {
+	bc := c.String("bc")
+	if bc == "" {
 		return nil, errors.New("--bc flag is required")
 	}
 
-	cfgBuf, err := ioutil.ReadFile(fn)
+	cfgBuf, err := ioutil.ReadFile(bc)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +222,22 @@ func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
 	}
 	cl.DarcID = d.GetBaseID()
 
-	if priv {
+	// The caller doesn't want/need signers.
+	if !priv {
+		return cl, nil
+	}
+
+	// First look for a valid OpenID Config. If we've got it to get the Signer.
+	ocfg, err := load()
+	if err == nil {
+		s, err := ocfg.getSigners(cl)
+		if err == nil {
+			cl.Signers = s
+		} else {
+			return nil, fmt.Errorf("could not make OpenID signer: %v", err)
+		}
+	} else {
+		// Otherwise, get the private key from the env/cmdline.
 		privStr := c.String("priv")
 		if privStr == "" {
 			return nil, errors.New("--priv is required")
@@ -346,4 +402,278 @@ func search(c *cli.Context) error {
 		return cli.NewExitError("", 1)
 	}
 	return nil
+}
+
+func login(c *cli.Context) error {
+	is := c.String("issuer")
+	if is == "" {
+		return errors.New("--issuer flag is required")
+	}
+	bc := c.String("bc")
+	if bc == "" {
+		return errors.New("--bc flag is required")
+	}
+
+	ctx := context.Background()
+	p, err := oidc.NewProvider(ctx, is)
+	if err != nil {
+		return err
+	}
+
+	cfg := &oauth2.Config{
+		ClientID:     c.String("clientid"),
+		ClientSecret: c.String("clientsecret"),
+		Endpoint:     p.Endpoint(),
+		Scopes:       []string{"offline_access", "openid", "profile", "email"},
+		RedirectURL:  "urn:ietf:wg:oauth:2.0:oob",
+	}
+
+	state := cothority.Suite.Scalar().Pick(cothority.Suite.RandomStream()).String()
+
+	url := cfg.AuthCodeURL(state)
+
+	fmt.Fprintln(c.App.Writer, "Opening this URL in your browser:")
+	fmt.Fprintln(c.App.Writer, "\t", url)
+	browser.OpenURL(url)
+
+	fmt.Fprint(c.App.Writer, "Enter the access code now: ")
+
+	r := bufio.NewReader(os.Stdin)
+	code, err := r.ReadString('\n')
+	if err != nil {
+		return err
+	}
+	code = strings.TrimSpace(code)
+
+	token, err := cfg.Exchange(ctx, code)
+	if err != nil {
+		return err
+	}
+
+	rawIDToken, ok := token.Extra("id_token").(string)
+	if !ok {
+		return errors.New("no id_token in token response")
+	}
+
+	vc := &oidc.Config{ClientID: cfg.ClientID}
+	idToken, err := p.Verifier(vc).Verify(ctx, rawIDToken)
+	if err != nil {
+		return fmt.Errorf("Failed to verify ID token: %v", err)
+	}
+
+	var claims struct {
+		Email string `json:"email"`
+	}
+	err = idToken.Claims(&claims)
+	if err != nil {
+		return fmt.Errorf("could not find the email claim: %v", err)
+	}
+
+	// Need to look up the public key for this issuer
+	pub, err := getPublic(c, is)
+	if err != nil {
+		return err
+	}
+
+	ocfg := &openidCfg{
+		Issuer: is,
+		Config: *cfg,
+		Token:  *token,
+		Data:   claims.Email,
+		Public: pub,
+	}
+	var fn string
+	if fn, err = ocfg.save(); err != nil {
+		return err
+	}
+	fmt.Fprintln(c.App.Writer, "Login information saved into", fn)
+	return nil
+}
+
+type openidCfg struct {
+	Issuer     string
+	Config     oauth2.Config
+	Token      oauth2.Token
+	Data       string
+	Public     kyber.Point
+	curRefresh string
+}
+
+func (o *openidCfg) save() (string, error) {
+	// Do not save when not needed.
+	if o.Token.RefreshToken == o.curRefresh {
+		return "", nil
+	}
+
+	dataDir := cfgpath.GetDataPath(cliApp.Name)
+	os.MkdirAll(dataDir, 0755)
+	fn := filepath.Join(dataDir, "openid.cfg")
+
+	// perms = 0600 because there is key material inside this file.
+	f, err := os.OpenFile(fn, os.O_RDWR|os.O_CREATE, 0600)
+	if err != nil {
+		return fn, fmt.Errorf("could not write %v: %v", fn, err)
+	}
+
+	buf, err := network.Marshal(o)
+	if err != nil {
+		return fn, err
+	}
+	_, err = f.Write(buf)
+	if err != nil {
+		return fn, err
+	}
+
+	// Remember the current refresh token, so we can detect the need to save later.
+	o.curRefresh = o.Token.RefreshToken
+
+	return fn, f.Close()
+}
+
+func load() (*openidCfg, error) {
+	dataDir := cfgpath.GetDataPath(cliApp.Name)
+	os.MkdirAll(dataDir, 0755)
+	fn := filepath.Join(dataDir, "openid.cfg")
+
+	buf, err := ioutil.ReadFile(fn)
+	if err != nil {
+		return nil, err
+	}
+
+	_, x, err := network.Unmarshal(buf, cothority.Suite)
+	if err != nil {
+		return nil, err
+	}
+	ocfg, ok := (x).(*openidCfg)
+	if !ok {
+		return nil, errors.New("wrong type")
+	}
+
+	// Mark this token as expired, because the round-trip thru save/load has caused us to lose
+	// the raw field, which is not exported. So force a refresh on next use.
+	ocfg.Token.Expiry = time.Unix(0, 0)
+
+	return ocfg, err
+}
+
+func (o *openidCfg) getSigners(cl *eventlog.Client) ([]darc.Signer, error) {
+	cfg := &o.Config
+	ts := cfg.TokenSource(context.Background(), &o.Token)
+
+	r := cl.ByzCoin.Roster
+	n := len(r.List)
+	T := threshold(n)
+
+	// The callback from darc.Sign where we need to go contact the Authentication Proxies.
+	cb := func(msg []byte) ([]byte, error) {
+		tok, err := ts.Token()
+		if err != nil {
+			return nil, err
+		}
+		// After calling Token(), o.Token might have been updated, using up the old refresh
+		// code. Call save, which will detect if the save is really needed or not.
+		o.Token = *tok
+		o.save()
+
+		rawIDToken, ok := tok.Extra("id_token").(string)
+		if !ok {
+			return nil, errors.New("no id_token in token response")
+		}
+
+		// Make the random shares for the signature.
+		rPri := share.NewPriPoly(cothority.Suite, T, nil, cothority.Suite.RandomStream())
+		rShares := rPri.Shares(n)
+		rPub := rPri.Commit(nil)
+		_, rPubCommits := rPub.Info()
+
+		// Make a shuffled list of server id's to contact.
+		shuffled := rand.Perm(len(r.List))
+		client := onet.NewClient(cothority.Suite, authprox.ServiceName)
+
+		// Connect to servers, get sigs, stop when we achieve the threshold.
+		// TODO: This could be in parallel.
+		var partials []*share.PriShare
+		for _, idx := range shuffled {
+			s := r.List[idx]
+
+			if len(partials) >= T {
+				// Got enough, all done.
+				break
+			}
+
+			req := &authprox.SignatureRequest{
+				Type:     "oidc",
+				Issuer:   o.Issuer,
+				AuthInfo: []byte(rawIDToken),
+				Message:  msg,
+				RandPri:  *rShares[idx],
+				RandPubs: rPubCommits,
+			}
+			var resp authprox.SignatureResponse
+			err := client.SendProtobuf(s, req, &resp)
+
+			// If no error keep this partial. Otherwise keep going until we have enough.
+			if err == nil {
+				if resp.PartialSignature.Partial != nil {
+					partials = append(partials, resp.PartialSignature.Partial)
+				}
+			} else {
+				log.Warnf("could not get a partial signature from %v: %v", s, err)
+			}
+		}
+		if len(partials) < T {
+			return nil, errors.New("not enough partial signatures")
+		}
+
+		// TODO: We are carelessly accepting all the shares we get back, we
+		// should be doing the same validation done in dss.ProcessPartialSig.
+		// However: to do so, we need all the per-node public keys, from where?
+
+		gamma, err := share.RecoverSecret(cothority.Suite, partials, T, n)
+		if err != nil {
+			return nil, err
+		}
+
+		// RandomPublic || gamma
+		var buff bytes.Buffer
+		_, _ = rPub.Commit().MarshalTo(&buff)
+		_, _ = gamma.MarshalTo(&buff)
+		sig := buff.Bytes()
+		return sig, nil
+	}
+
+	s := darc.NewSignerProxy(o.Data, o.Public, cb)
+	return []darc.Signer{s}, nil
+}
+
+func getPublic(c *cli.Context, issuer string) (kyber.Point, error) {
+	cl, err := getClient(c, false)
+	if err != nil {
+		return nil, err
+	}
+
+	client := onet.NewClient(cothority.Suite, authprox.ServiceName)
+
+	var resp authprox.EnrollmentsResponse
+	err = client.SendProtobuf(cl.ByzCoin.Roster.List[0], &authprox.EnrollmentsRequest{
+		Types:   []string{"oidc"},
+		Issuers: []string{issuer},
+	}, &resp)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(resp.Enrollments) != 1 {
+		return nil, errors.New("did not find 1 enrollment")
+	}
+
+	return resp.Enrollments[0].Public, nil
+}
+
+func faultThreshold(n int) int {
+	return (n - 1) / 3
+}
+
+func threshold(n int) int {
+	return n - faultThreshold(n)
 }
