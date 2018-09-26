@@ -17,7 +17,9 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
+import java.util.stream.Stream;
 
 /**
  * dedis/lib
@@ -80,10 +82,107 @@ public class ServerIdentity {
         return ssm.response.array();
     }
 
+    public StreamingConn SendStreamingMsg(String path, byte[] data) throws CothorityCommunicationException {
+        return new StreamingConn(path, data);
+    }
+
+    private URI buildWebSocketAdddress(final String servicePath) throws URISyntaxException {
+        return new URI("ws",
+                conodeAddress.getUserInfo(),
+                conodeAddress.getHost(),
+                conodeAddress.getPort() + 1, // client operation use higher port number
+                servicePath.startsWith("/") ? servicePath : "/".concat(servicePath),
+                conodeAddress.getQuery(),
+                conodeAddress.getFragment());
+    }
+
+    public static class Result{
+        public ByteBuffer ok;
+        public String err;
+        public Result(ByteBuffer a) {
+            this.ok = a;
+        }
+        public Result(String a) {
+            this.err = a;
+        }
+        public boolean hasError() {
+            return this.err != null;
+        }
+    }
+
+    public class StreamingConn {
+        private ArrayBlockingQueue<ByteBuffer> responses;
+        private WebSocketClient ws;
+        private String error; // TODO may need a mutex on it
+
+        public void close() {
+            ws.close();
+        }
+
+        /**
+         * Instead of throwing an exception, we return a result type which may have an error.
+         */
+        public Result readNext() {
+            try {
+                if (error.equals("")) {
+                    return new Result(responses.take());
+                }
+                return new Result(error);
+            } catch (InterruptedException e) {
+                return new Result(e.toString());
+            }
+        }
+
+        public StreamingConn(String path, byte[] msg) throws CothorityCommunicationException {
+            responses = new ArrayBlockingQueue(100);
+            try {
+                ws = new WebSocketClient(buildWebSocketAdddress(path)) {
+                    @Override
+                    public void onMessage(String msg) {
+                        error = "This should never happen: " + msg;
+                    }
+
+                    @Override
+                    public void onMessage(ByteBuffer message) {
+                        try {
+                            responses.put(message);
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e.toString());
+                        }
+                    }
+
+                    @Override
+                    public void onOpen(ServerHandshake handshake) {
+                        this.send(msg);
+                    }
+
+                    @Override
+                    public void onClose(int code, String reason, boolean remote) {
+                        if (!reason.equals("")) {
+                            error = reason;
+                        }
+                    }
+
+                    @Override
+                    public void onError(Exception ex) {
+                        error = ex.toString();
+                    }
+                };
+
+                // open websocket and send message.
+                ws.connect();
+                // wait for error or message returned.
+            } catch (URISyntaxException e) {
+                throw new CothorityCommunicationException(e.toString());
+            }
+        }
+    }
+
     public class SyncSendMessage {
         public ByteBuffer response;
         public String error;
 
+        // TODO we're creating a new connection for every message, it's better to re-use connections
         public SyncSendMessage(String path, byte[] msg) throws CothorityCommunicationException {
             final CountDownLatch statusLatch = new CountDownLatch(1);
             try {
@@ -108,7 +207,7 @@ public class ServerIdentity {
 
                     @Override
                     public void onClose(int code, String reason, boolean remote) {
-                        if (reason != "") {
+                        if (!reason.equals("")) {
                             error = reason;
                         }
                         statusLatch.countDown();
@@ -125,25 +224,13 @@ public class ServerIdentity {
                 ws.connect();
                 // wait for error or message returned.
                 statusLatch.await();
-            } catch (InterruptedException e) {
-                throw new CothorityCommunicationException(e.toString());
-            } catch (URISyntaxException e) {
+            } catch (InterruptedException | URISyntaxException e) {
                 throw new CothorityCommunicationException(e.toString());
             }
             if (error != null) {
                 logger.error("error: {}", error);
                 throw new CothorityCommunicationException(error);
             }
-        }
-
-        private URI buildWebSocketAdddress(final String servicePath) throws URISyntaxException {
-            return new URI("ws",
-                    conodeAddress.getUserInfo(),
-                    conodeAddress.getHost(),
-                    conodeAddress.getPort() + 1, // client operation use higher port number
-                    servicePath.startsWith("/") ? servicePath : "/".concat(servicePath),
-                    conodeAddress.getQuery(),
-                    conodeAddress.getFragment());
         }
     }
 }

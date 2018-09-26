@@ -212,3 +212,13 @@ message Coin {
   // Value is the total number of coins of that type.
   required uint64 value = 2;
 }
+
+// StreamingRequest TODO document
+message StreamingRequest {
+  required bytes id = 1;
+}
+
+// StreamingResponse TODO document
+message StreamingResponse {
+  optional skipchain.SkipBlock block = 1;
+}

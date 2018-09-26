@@ -141,7 +141,7 @@ message ListMessages {
   required sint32 start = 1;
   // Number of maximum messages returned
   required sint32 number = 2;
-  // ReaderId of the reading account, to skip messages created by this reader
+  // ReaderID of the reading account, to skip messages created by this reader
   required bytes readerid = 3;
 }
 

@@ -9,8 +9,10 @@ import com.google.protobuf.ByteString;
 import com.moandjiezana.toml.Toml;
 
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * dedis/lib
@@ -64,6 +66,10 @@ public class Roster {
     public ByteString sendMessage(String path, com.google.protobuf.GeneratedMessageV3 proto) throws CothorityCommunicationException {
         // TODO - fetch a random node.
         return ByteString.copyFrom(nodes.get(0).SendMessage(path, proto.toByteArray()));
+    }
+
+    public ServerIdentity.StreamingConn sendStreamingMessage(String path, com.google.protobuf.GeneratedMessageV3 proto) throws CothorityCommunicationException {
+        return nodes.get(0).SendStreamingMsg(path, proto.toByteArray());
     }
 
     public static Roster FromToml(String groupToml) {

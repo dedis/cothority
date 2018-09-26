@@ -216,6 +216,25 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 	return nil, errors.New("timeout reached and inclusion not found")
 }
 
+// StreamTransactions TODO doc
+func (c *Client) StreamTransactions(genesisID skipchain.SkipBlockID, handler func(StreamingResponse, error)) error {
+	req := StreamingRequest{
+		ID: genesisID,
+	}
+	conn, err := c.Stream(c.Roster.List[0], &req)
+	if err != nil {
+		return err
+	}
+	for {
+		resp := StreamingResponse{}
+		if err := conn.ReadMessage(&resp); err != nil {
+			handler(StreamingResponse{}, err)
+			return nil
+		}
+		handler(resp, nil)
+	}
+}
+
 // DefaultGenesisMsg creates the message that is used to for creating the
 // genesis Darc and block.
 func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Identity) (*CreateGenesisBlock, error) {

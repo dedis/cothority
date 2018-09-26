@@ -18,6 +18,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static java.time.temporal.ChronoUnit.NANOS;
 
@@ -85,13 +91,13 @@ public class ByzCoinRPC {
      */
     public ByzCoinRPC(Roster roster, SkipblockId skipchainId) throws CothorityException, InvalidProtocolBufferException {
         Proof proof = ByzCoinRPC.getProof(roster, skipchainId, InstanceId.zero());
-        if (!proof.isContract("config", skipchainId)){
+        if (!proof.isContract("config", skipchainId)) {
             throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
         }
         config = new Config(proof.getValue());
 
         Proof proof2 = ByzCoinRPC.getProof(roster, skipchainId, new InstanceId(proof.getDarcID().getId()));
-        if (!proof2.isContract(DarcInstance.ContractId, skipchainId)){
+        if (!proof2.isContract(DarcInstance.ContractId, skipchainId)) {
             throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
         }
         genesisDarc = new Darc(proof2.getValue());
@@ -119,7 +125,7 @@ public class ByzCoinRPC {
      * included in the global state. If more than 'wait' blocks are created and the transaction is not
      * included, an exception will be raised.
      *
-     * @param t is the client transaction holding one or more instructions to be sent to byzcoin.
+     * @param t    is the client transaction holding one or more instructions to be sent to byzcoin.
      * @param wait indicates the number of blocks to wait for the transaction to be included.
      * @return ClientTransactionID the transaction ID
      * @throws CothorityException if the transaction has not been included within 'wait' blocks.
@@ -187,7 +193,7 @@ public class ByzCoinRPC {
      * @return true if all nodes are live, false if one or more are not responding.
      * @throws CothorityException if something failed.
      */
-    public boolean checkLiveness() throws CothorityException {
+    public boolean checkLiveness() {
         for (ServerIdentity si : roster.getNodes()) {
             try {
                 logger.info("Checking status of {}", si.getAddress());
@@ -198,6 +204,54 @@ public class ByzCoinRPC {
             }
         }
         return true;
+    }
+
+    public Stream<ByzCoinProto.StreamingResponse> streamTransactions() throws CothorityException {
+        ByzCoinProto.StreamingRequest.Builder req = ByzCoinProto.StreamingRequest.newBuilder();
+        req.setId(skipchain.getID().toProto());
+
+        ServerIdentity.StreamingConn conn = roster.sendStreamingMessage("ByzCoin/StreamingRequest", req.build());
+        return takeWhile(Stream.generate(conn::readNext), b -> !b.hasError())
+                .map(b -> {
+                    try {
+                        return ByzCoinProto.StreamingResponse.parseFrom(b.ok);
+                    } catch (InvalidProtocolBufferException e) {
+                        conn.close();
+                        return null;
+                    }
+                });
+    }
+
+    /*
+    private static <T> Function<T, String> func() {
+
+    }
+    */
+
+    // workaround for takeWhile in jdk8,
+    // see https://stackoverflow.com/questions/20746429/limit-a-stream-by-a-predicate
+    private static <T> Spliterator<T> takeWhile(Spliterator<T> splitr, Predicate<? super T> predicate) {
+        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
+            boolean stillGoing = true;
+            @Override
+            public boolean tryAdvance(Consumer<? super T> consumer) {
+                if (stillGoing) {
+                    boolean hadNext = splitr.tryAdvance(elem -> {
+                        if (predicate.test(elem)) {
+                            consumer.accept(elem);
+                        } else {
+                            stillGoing = false;
+                        }
+                    });
+                    return hadNext && stillGoing;
+                }
+                return false;
+            }
+        };
+    }
+
+    private static <T> Stream<T> takeWhile(Stream<T> stream, Predicate<? super T> predicate) {
+        return StreamSupport.stream(takeWhile(stream.spliterator(), predicate), false);
     }
 
     /**
@@ -241,9 +295,9 @@ public class ByzCoinRPC {
      * @param id hash of the skipblock to fetch
      * @return a Block representation of the skipblock
      * @throws CothorityCommunicationException if it couldn't contact the nodes
-     * @throws CothorityCryptoException if the omniblock is invalid
+     * @throws CothorityCryptoException        if the omniblock is invalid
      */
-    public Block getBlock(SkipblockId id) throws CothorityCommunicationException, CothorityCryptoException{
+    public Block getBlock(SkipblockId id) throws CothorityCommunicationException, CothorityCryptoException {
         SkipBlock sb = skipchain.getSkipblock(id);
         return new Block(sb);
     }
@@ -253,9 +307,9 @@ public class ByzCoinRPC {
      *
      * @return a Block representation of the skipblock
      * @throws CothorityCommunicationException if it couldn't contact the nodes
-     * @throws CothorityCryptoException if the omniblock is invalid
+     * @throws CothorityCryptoException        if the omniblock is invalid
      */
-    public Block getLatestBlock() throws CothorityCommunicationException, CothorityException{
+    public Block getLatestBlock() throws CothorityCommunicationException, CothorityException {
         this.update();
         return new Block(latest);
     }
@@ -291,9 +345,9 @@ public class ByzCoinRPC {
    /**
      * Static method to request a proof from ByzCoin. This is used in the instantiation method.
      *
-     * @param roster where to contact the cothority
+     * @param roster      where to contact the cothority
      * @param skipchainId the id of the underlying skipchain
-     * @param key which key we're interested in
+     * @param key         which key we're interested in
      * @return a proof pointing to the instance. The proof can also be a proof that the instance does not exist.
      * @throws CothorityCommunicationException
      */

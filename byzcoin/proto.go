@@ -231,3 +231,13 @@ type Coin struct {
 	// Value is the total number of coins of that type.
 	Value uint64
 }
+
+// StreamingRequest TODO document
+type StreamingRequest struct {
+	ID skipchain.SkipBlockID
+}
+
+// StreamingResponse TODO document
+type StreamingResponse struct {
+	Block *skipchain.SkipBlock
+}
