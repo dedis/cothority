@@ -78,7 +78,7 @@ func SaveKey(signer darc.Signer) error {
 func SaveConfig(cfg Config) (string, error) {
 	os.MkdirAll(ConfigPath, 0755)
 
-	fn := fmt.Sprintf("ol-%x.cfg", cfg.ByzCoinID)
+	fn := fmt.Sprintf("bc-%x.cfg", cfg.ByzCoinID)
 	fn = filepath.Join(ConfigPath, fn)
 
 	buf, err := protobuf.Encode(&cfg)
