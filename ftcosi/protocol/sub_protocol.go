@@ -40,6 +40,8 @@ type SubFtCosi struct {
 	ChannelCommitment   chan StructCommitment
 	ChannelChallenge    chan StructChallenge
 	ChannelResponse     chan StructResponse
+
+	stopOnce sync.Once
 }
 
 // NewDefaultSubProtocol is the default sub-protocol function used for registration
@@ -460,10 +462,13 @@ func (p *SubFtCosi) HandleStop(stop StructStop) error {
 		log.Warn(p.ServerIdentity(), "received a Stop from node", stop.ServerIdentity,
 			"that is not the root, ignored")
 	}
-	close(p.ChannelAnnouncement)
-	// close(p.ChannelCommitment) // Channel left open to allow verification function to safely return
-	close(p.ChannelChallenge)
-	close(p.ChannelResponse)
+
+	p.stopOnce.Do(func() {
+		close(p.ChannelAnnouncement)
+		// close(p.ChannelCommitment) // Channel left open to allow verification function to safely return
+		close(p.ChannelChallenge)
+		close(p.ChannelResponse)
+	})
 	return nil
 }
 
