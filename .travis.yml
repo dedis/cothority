@@ -36,7 +36,7 @@ matrix:
     - language: go
 
       go:
-	    - "1.11.x"
+        - "1.11.x"
 
       install:
         - go get -t ./...
