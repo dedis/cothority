@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoin/darc"
-	"github.com/dedis/cothority/byzcoin/darc/expression"
+	"github.com/dedis/cothority/darc"
+	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/random"
@@ -922,6 +922,82 @@ func TestService_DarcDelegation(t *testing.T) {
 	s.sendTx(t, ctx)
 	pr = s.waitProof(t, NewInstanceID(darc3.GetBaseID()))
 	require.True(t, pr.InclusionProof.Match())
+}
+
+func TestService_CheckAuthorization(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	// Spawn second darc with a new owner/signer, but delegate its spawn
+	// rule to the first darc
+	signer2 := darc.NewSignerEd25519(nil, nil)
+	id2 := []darc.Identity{signer2.Identity()}
+	darc2 := darc.NewDarc(darc.InitRules(id2, id2),
+		[]byte("second darc"))
+	darc2.Rules.AddRule("spawn:darc", expression.Expr(s.darc.GetIdentityString()))
+	darc2Buf, err := darc2.ToProto()
+	require.Nil(t, err)
+	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
+	require.Nil(t, err)
+	require.True(t, darc2.Equal(darc2Copy))
+	ctx := ClientTransaction{
+		Instructions: []Instruction{{
+			InstanceID: NewInstanceID(s.darc.GetBaseID()),
+			Nonce:      GenNonce(),
+			Index:      0,
+			Length:     1,
+			Spawn: &Spawn{
+				ContractID: ContractDarcID,
+				Args: []Argument{{
+					Name:  "darc",
+					Value: darc2Buf,
+				}},
+			},
+		}},
+	}
+	require.Nil(t, ctx.Instructions[0].SignBy(s.darc.GetBaseID(), s.signer))
+	s.sendTx(t, ctx)
+	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
+	require.True(t, pr.InclusionProof.Match())
+
+	ca := &CheckAuthorization{
+		Version:    CurrentVersion,
+		ByzCoinID:  s.sb.SkipChainID(),
+		DarcID:     s.darc.GetBaseID(),
+		Identities: []darc.Identity{s.signer.Identity()},
+	}
+	resp, err := s.service().CheckAuthorization(ca)
+	require.Nil(t, err)
+	require.Contains(t, resp.Actions, darc.Action("_sign"))
+
+	ca.Identities[0] = darc.NewIdentityEd25519(s.roster.List[0].Public)
+	resp, err = s.service().CheckAuthorization(ca)
+	require.Nil(t, err)
+	require.Contains(t, resp.Actions, darc.Action("invoke:view_change"))
+
+	ca.Identities = append(ca.Identities, darc.NewIdentityEd25519(s.roster.List[1].Public))
+	resp, err = s.service().CheckAuthorization(ca)
+	require.Nil(t, err)
+	require.Contains(t, resp.Actions, darc.Action("invoke:view_change"))
+
+	log.Lvl1("Check delegation of darcs")
+	ca.DarcID = darc2.GetID()
+	ca.Identities[0] = darc.NewSignerEd25519(nil, nil).Identity()
+	resp, err = s.service().CheckAuthorization(ca)
+	require.Nil(t, err)
+	require.Equal(t, 0, len(resp.Actions))
+
+	ca.DarcID = darc2.GetID()
+	ca.Identities[0] = s.signer.Identity()
+	resp, err = s.service().CheckAuthorization(ca)
+	require.Nil(t, err)
+	require.Contains(t, resp.Actions, darc.Action("spawn:darc"))
+
+	ca.DarcID = darc2.GetID()
+	ca.Identities[0] = darc.NewIdentityDarc(s.darc.GetID())
+	resp, err = s.service().CheckAuthorization(ca)
+	require.Nil(t, err)
+	require.Contains(t, resp.Actions, darc.Action("spawn:darc"))
 }
 
 func TestService_GetLeader(t *testing.T) {

@@ -72,7 +72,7 @@ func verifyFile(c *cli.Context) error {
 func verifyPrintResult(err error) {
 	log.ErrFatal(err, "Invalid: Signature verification failed:")
 
-	log.Print("[+] OK: Signature is valid.")
+	log.Info("[+] OK: Signature is valid.")
 }
 
 // writeSigAsJSON - writes the JSON out to a file
@@ -167,7 +167,7 @@ func verify(fileName, sigFileName, groupToml string) error {
 	log.Lvl4("Reading signature")
 	var sigBytes []byte
 	if sigFileName == "" {
-		log.Print("[+] Reading signature from standard input ...")
+		log.Info("[+] Reading signature from standard input ...")
 		sigBytes, err = ioutil.ReadAll(os.Stdin)
 	} else {
 		sigBytes, err = ioutil.ReadFile(sigFileName)

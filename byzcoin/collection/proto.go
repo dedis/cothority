@@ -8,7 +8,7 @@ import "crypto/sha256"
 // type :step:Step
 // package collection;
 //
-// option java_package = "ch.epfl.dedis.proto";
+// option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "CollectionProto";
 
 // dump

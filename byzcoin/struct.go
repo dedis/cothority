@@ -8,7 +8,7 @@ import (
 
 	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority/byzcoin/collection"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"

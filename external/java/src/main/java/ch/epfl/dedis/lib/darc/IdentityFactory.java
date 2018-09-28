@@ -1,13 +1,13 @@
 package ch.epfl.dedis.lib.darc;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.proto.DarcOCSProto;
+import ch.epfl.dedis.lib.proto.DarcProto;
 
 public class IdentityFactory {
     /**
      * Returns an instantiated identity that is stored in proto.
      */
-    public static Identity New(DarcOCSProto.Identity proto) throws CothorityCryptoException{
+    public static Identity New(DarcProto.Identity proto) throws CothorityCryptoException{
         if (proto.hasEd25519()) {
             return new IdentityEd25519(proto.getEd25519());
         } else if (proto.hasDarc()) {

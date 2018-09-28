@@ -1,7 +1,8 @@
 package ch.epfl.dedis.lib.darc;
 
+import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.proto.DarcOCSProto;
+import ch.epfl.dedis.lib.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
 public class IdentityDarc implements Identity {
@@ -12,7 +13,7 @@ public class IdentityDarc implements Identity {
      *
      * @param proto
      */
-    public IdentityDarc(DarcOCSProto.IdentityDarc proto) throws CothorityCryptoException{
+    public IdentityDarc(DarcProto.IdentityDarc proto) throws CothorityCryptoException{
         darcID = new DarcId(proto.getId().toByteArray());
     }
 
@@ -52,9 +53,9 @@ public class IdentityDarc implements Identity {
      *
      * @return
      */
-    public DarcOCSProto.Identity toProto() {
-        DarcOCSProto.Identity.Builder bid = DarcOCSProto.Identity.newBuilder();
-        DarcOCSProto.IdentityDarc.Builder bdd = DarcOCSProto.IdentityDarc.newBuilder();
+    public DarcProto.Identity toProto() {
+        DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();
+        DarcProto.IdentityDarc.Builder bdd = DarcProto.IdentityDarc.newBuilder();
         bdd.setId(ByteString.copyFrom(darcID.getId()));
         bid.setDarc(bdd);
         return bid.build();
@@ -82,5 +83,13 @@ public class IdentityDarc implements Identity {
     @Override
     public int hashCode() {
         return darcID != null ? darcID.hashCode() : 0;
+    }
+
+    public String toString() {
+        return String.format("%s:%s", this.typeString(), Hex.printHexBinary(this.darcID.getId()).toLowerCase());
+    }
+
+    public String typeString() {
+        return "darc";
     }
 }

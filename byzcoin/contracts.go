@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/cothority/byzcoin/viewchange"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"

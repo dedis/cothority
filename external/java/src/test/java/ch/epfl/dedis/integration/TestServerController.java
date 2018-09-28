@@ -1,10 +1,10 @@
 package ch.epfl.dedis.integration;
 
-import ch.epfl.dedis.byzgen.OcsFactory;
+import ch.epfl.dedis.byzgen.CalypsoFactory;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.status.StatusRPC;
+import ch.epfl.dedis.status.StatusRPC;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
@@ -39,7 +39,7 @@ public abstract class TestServerController {
 
     public abstract void killConode(int nodeNumber) throws IOException, InterruptedException;
 
-    public abstract List<OcsFactory.ConodeAddress> getConodes();
+    public abstract List<CalypsoFactory.ConodeAddress> getConodes();
 
     public Roster getRoster() {
         return new Roster(getConodes().stream()
@@ -47,7 +47,7 @@ public abstract class TestServerController {
                 .collect(Collectors.toList()));
     }
 
-    public OcsFactory.ConodeAddress getMasterConode() {
+    public CalypsoFactory.ConodeAddress getMasterConode() {
         return getConodes().get(0);
     }
 
@@ -56,7 +56,7 @@ public abstract class TestServerController {
         try {
             return new URI(str);
         } catch (URISyntaxException e) {
-            throw new IllegalStateException("Unable to setup test instance", e);
+            throw new IllegalStateException("Unable to setup test services", e);
         }
     }
 }

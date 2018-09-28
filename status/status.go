@@ -77,7 +77,7 @@ func action(c *cli.Context) error {
 
 		if format == "txt" {
 			if err != nil {
-				log.Print(err)
+				log.Error(err)
 			} else {
 				printTxt(sr)
 			}
@@ -118,7 +118,7 @@ func readGroup(tomlFileName string) (*onet.Roster, error) {
 func printTxt(e *status.Response) {
 	var a []string
 	if e.Status == nil {
-		log.Print("no status from ", e.ServerIdentity)
+		log.Error("no status from ", e.ServerIdentity)
 		return
 	}
 
@@ -128,7 +128,7 @@ func printTxt(e *status.Response) {
 		}
 	}
 	sort.Strings(a)
-	log.Print(strings.Join(a, "\n"))
+	log.Info(strings.Join(a, "\n"))
 }
 
 func printJSON(all []se) {

@@ -10,7 +10,7 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	_ "github.com/dedis/cothority/status/service"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"

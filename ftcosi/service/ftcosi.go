@@ -83,9 +83,7 @@ func (s *Service) SignatureRequest(req *SignatureRequest) (network.Message, erro
 		return nil, err
 	}
 
-	if log.DebugVisible() > 1 {
-		log.Printf("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
-	}
+	log.Lvlf2("%s: Signed a message.\n", time.Now().Format("Mon Jan 2 15:04:05 -0700 MST 2006"))
 
 	// wait for reply
 	var sig []byte

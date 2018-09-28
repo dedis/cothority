@@ -1,11 +1,10 @@
 package ch.epfl.dedis.lib;
 
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
-import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.proto.NetworkProto;
-import ch.epfl.dedis.proto.StatusProto;
+import ch.epfl.dedis.lib.proto.NetworkProto;
+import ch.epfl.dedis.lib.proto.StatusProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.moandjiezana.toml.Toml;

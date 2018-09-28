@@ -21,7 +21,7 @@ import (
 // import "onet.proto";
 // import "pop.proto";
 //
-// option java_package = "ch.epfl.dedis.proto";
+// option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "CiscProto";
 
 // IDBlock stores one identity together with the skipblocks.

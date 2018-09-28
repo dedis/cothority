@@ -3,7 +3,7 @@ package byzcoin
 import (
 	"testing"
 
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/stretchr/testify/require"
 )
 

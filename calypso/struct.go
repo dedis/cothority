@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet/log"

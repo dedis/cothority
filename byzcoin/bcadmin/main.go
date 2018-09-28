@@ -11,7 +11,7 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"

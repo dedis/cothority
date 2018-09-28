@@ -1,6 +1,5 @@
 package ch.epfl.dedis.lib;
 
-import ch.epfl.dedis.lib.crypto.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import com.google.protobuf.ByteString;
 

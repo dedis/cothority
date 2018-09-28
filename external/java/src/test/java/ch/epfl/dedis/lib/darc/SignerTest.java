@@ -3,6 +3,7 @@ package ch.epfl.dedis.lib.darc;
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.Scalar;
+import ch.epfl.dedis.lib.crypto.TestSignerX509EC;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.Test;
 

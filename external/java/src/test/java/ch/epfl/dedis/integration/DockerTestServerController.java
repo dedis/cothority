@@ -1,6 +1,6 @@
 package ch.epfl.dedis.integration;
 
-import ch.epfl.dedis.byzgen.OcsFactory;
+import ch.epfl.dedis.byzgen.CalypsoFactory;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.ExecCreateCmdResponse;
 import org.slf4j.Logger;
@@ -84,12 +84,12 @@ public class DockerTestServerController extends TestServerController {
     }
 
     @Override
-    public List<OcsFactory.ConodeAddress> getConodes() {
+    public List<CalypsoFactory.ConodeAddress> getConodes() {
         return Arrays.asList(
-                new OcsFactory.ConodeAddress(buildURI("tcp://" + blockchainContainer.getContainerIpAddress() + ":7002"), CONODE_PUB_1),
-                new OcsFactory.ConodeAddress(buildURI("tcp://localhost:7004"), CONODE_PUB_2),
-                new OcsFactory.ConodeAddress(buildURI("tcp://localhost:7006"), CONODE_PUB_3),
-                new OcsFactory.ConodeAddress(buildURI("tcp://localhost:7008"), CONODE_PUB_4));
+                new CalypsoFactory.ConodeAddress(buildURI("tcp://" + blockchainContainer.getContainerIpAddress() + ":7002"), CONODE_PUB_1),
+                new CalypsoFactory.ConodeAddress(buildURI("tcp://localhost:7004"), CONODE_PUB_2),
+                new CalypsoFactory.ConodeAddress(buildURI("tcp://localhost:7006"), CONODE_PUB_3),
+                new CalypsoFactory.ConodeAddress(buildURI("tcp://localhost:7008"), CONODE_PUB_4));
     }
 
     private void runCmdInBackground(GenericContainer container, String ... cmd) throws InterruptedException {
