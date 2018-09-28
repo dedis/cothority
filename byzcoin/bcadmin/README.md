@@ -15,7 +15,8 @@ from each of the servers.
 The ByzCoin config info (the skipchain ID and the roster for the cothority)
 are stored in the local config directory (~/.config/bcadmin or ~/Library/Application
 Support/bcadmin) and the filename is printed on stdout. The ByzCoin config file
-will be used by other tools to know where to send their transactions.
+will be used by other tools to know where to send their transactions. It has no
+seret information in it.
 
 The secret key is saved in a file named after the public key. It must not be
 shared!
@@ -29,8 +30,12 @@ public key with you, the ByzCoin admin. You grant access to a given contract
 for instructions signed by the given secret key like this:
 
 ```
-$ bcadmin add -bc $file spawn:eventlog -identity ed25519:dd6419b01b49e3ffd18696c93884dc244b4688d95f55d6c2a4639f2b0ce40710
+$ bcadmin add -bc $file spawn:theContractName -identity ed25519:dd6419b01b49e3ffd18696c93884dc244b4688d95f55d6c2a4639f2b0ce40710
 ```
+
+Different contracts will require different permissions. Check
+their docs. Usually they will need at least "spawn:$contractName" and
+"invoke:$contractName".
 
 Using the ByzCoin config file you give them and their private key to sign
 transactions, they will now be able to use their application to send
