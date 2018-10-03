@@ -12,18 +12,14 @@ import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.skipchain.SkipchainRPC;
 import ch.epfl.dedis.proto.ByzCoinProto;
+import ch.epfl.dedis.proto.SkipchainProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
 import java.time.Duration;
-import java.util.Spliterator;
-import java.util.Spliterators;
-import java.util.function.Consumer;
-import java.util.function.Predicate;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static java.time.temporal.ChronoUnit.NANOS;
 
@@ -42,6 +38,7 @@ public class ByzCoinRPC {
     private SkipBlock genesis;
     private SkipBlock latest;
     private SkipchainRPC skipchain;
+
     private Subscription subscription;
     public static final int currentVersion = 1;
 
@@ -78,7 +75,7 @@ public class ByzCoinRPC {
         config = new Config(blockInterval);
         roster = r;
         genesisDarc = d;
-        subscription = new Subscription(skipchain, blockInterval.toMillis());
+        subscription = new Subscription(this);
     }
 
     /**
@@ -107,7 +104,7 @@ public class ByzCoinRPC {
         this.roster = roster;
         genesis = skipchain.getSkipblock(skipchainId);
         latest = skipchain.getLatestSkipblock();
-        subscription = new Subscription(skipchain, config.getBlockInterval().toMillis());
+        subscription = new Subscription(this);
     }
 
     /**
@@ -206,54 +203,6 @@ public class ByzCoinRPC {
         return true;
     }
 
-    public Stream<ByzCoinProto.StreamingResponse> streamTransactions() throws CothorityException {
-        ByzCoinProto.StreamingRequest.Builder req = ByzCoinProto.StreamingRequest.newBuilder();
-        req.setId(skipchain.getID().toProto());
-
-        ServerIdentity.StreamingConn conn = roster.sendStreamingMessage("ByzCoin/StreamingRequest", req.build());
-        return takeWhile(Stream.generate(conn::readNext), b -> !b.hasError())
-                .map(b -> {
-                    try {
-                        return ByzCoinProto.StreamingResponse.parseFrom(b.ok);
-                    } catch (InvalidProtocolBufferException e) {
-                        conn.close();
-                        return null;
-                    }
-                });
-    }
-
-    /*
-    private static <T> Function<T, String> func() {
-
-    }
-    */
-
-    // workaround for takeWhile in jdk8,
-    // see https://stackoverflow.com/questions/20746429/limit-a-stream-by-a-predicate
-    private static <T> Spliterator<T> takeWhile(Spliterator<T> splitr, Predicate<? super T> predicate) {
-        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
-            boolean stillGoing = true;
-            @Override
-            public boolean tryAdvance(Consumer<? super T> consumer) {
-                if (stillGoing) {
-                    boolean hadNext = splitr.tryAdvance(elem -> {
-                        if (predicate.test(elem)) {
-                            consumer.accept(elem);
-                        } else {
-                            stillGoing = false;
-                        }
-                    });
-                    return hadNext && stillGoing;
-                }
-                return false;
-            }
-        };
-    }
-
-    private static <T> Stream<T> takeWhile(Stream<T> stream, Predicate<? super T> predicate) {
-        return StreamSupport.stream(takeWhile(stream.spliterator(), predicate), false);
-    }
-
     /**
      * @return a byte representation of this byzcoin object.
      */
@@ -306,10 +255,9 @@ public class ByzCoinRPC {
      * Fetches the latest block from the Skipchain and returns the corresponding Block.
      *
      * @return a Block representation of the skipblock
-     * @throws CothorityCommunicationException if it couldn't contact the nodes
      * @throws CothorityCryptoException        if the omniblock is invalid
      */
-    public Block getLatestBlock() throws CothorityCommunicationException, CothorityException {
+    public Block getLatestBlock() throws CothorityException {
         this.update();
         return new Block(latest);
     }
@@ -330,7 +278,7 @@ public class ByzCoinRPC {
      * approach until we have a working streaming solution.
      * @param sbr is a SkipBlockReceiver that will be called with any new block(s) available.
      */
-    public void subscribeSkipBlock(Subscription.SkipBlockReceiver sbr){
+    public void subscribeSkipBlock(Subscription.SkipBlockReceiver sbr) throws CothorityCommunicationException {
         subscription.subscribeSkipBlock(sbr);
     }
 
@@ -338,7 +286,7 @@ public class ByzCoinRPC {
      * Unsubscribes a BlockReceiver.
      * @param sbr the SkipBlockReceiver to unsubscribe.
      */
-    public void unsubscribeBlock(Subscription.SkipBlockReceiver sbr){
+    public void unsubscribeBlock(Subscription.SkipBlockReceiver sbr) throws CothorityCommunicationException {
         subscription.unsubscribeSkipBlock(sbr);
     }
 
@@ -366,4 +314,31 @@ public class ByzCoinRPC {
             throw new CothorityCommunicationException(e);
         }
     }
+
+    public Subscription getSubscription() {
+        return subscription;
+    }
+
+    ServerIdentity.StreamingConn streamTransactions(Subscription.SkipBlockReceiver receiver) throws CothorityCommunicationException {
+        ByzCoinProto.StreamingRequest.Builder req = ByzCoinProto.StreamingRequest.newBuilder();
+        req.setId(skipchain.getID().toProto());
+
+        ServerIdentity.StreamHandler h = new ServerIdentity.StreamHandler() {
+            @Override
+            public void receive(ByteBuffer message) {
+                try {
+                    SkipchainProto.SkipBlock block = ByzCoinProto.StreamingResponse.parseFrom(message).getBlock();
+                    receiver.receive(new SkipBlock(block));
+                } catch (InvalidProtocolBufferException e) {
+                    receiver.error(e.getMessage());
+                }
+            }
+            @Override
+            public void error(String s) {
+                receiver.error(s);
+            }
+        };
+        return roster.sendStreamingMessage("ByzCoin/StreamingRequest", req.build(), h);
+    }
+
 }

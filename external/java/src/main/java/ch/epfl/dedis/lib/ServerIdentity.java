@@ -82,8 +82,8 @@ public class ServerIdentity {
         return ssm.response.array();
     }
 
-    public StreamingConn SendStreamingMsg(String path, byte[] data) throws CothorityCommunicationException {
-        return new StreamingConn(path, data);
+    public StreamingConn MakeStreamingConnection(String path, byte[] data, StreamHandler h) throws CothorityCommunicationException {
+        return new StreamingConn(path, data, h);
     }
 
     private URI buildWebSocketAdddress(final String servicePath) throws URISyntaxException {
@@ -96,59 +96,38 @@ public class ServerIdentity {
                 conodeAddress.getFragment());
     }
 
-    public static class Result{
-        public ByteBuffer ok;
-        public String err;
-        public Result(ByteBuffer a) {
-            this.ok = a;
-        }
-        public Result(String a) {
-            this.err = a;
-        }
-        public boolean hasError() {
-            return this.err != null;
-        }
+    public interface StreamHandler {
+        void receive(ByteBuffer message);
+        void error(String s);
     }
 
     public class StreamingConn {
-        private ArrayBlockingQueue<ByteBuffer> responses;
         private WebSocketClient ws;
-        private String error; // TODO may need a mutex on it
 
-        public void close() {
+        public void close() throws CothorityCommunicationException {
             ws.close();
         }
 
         /**
-         * Instead of throwing an exception, we return a result type which may have an error.
+         * Checks whether the connection is open. Note that the close function is non-blocking, so this function might
+         * not return true immediately after close is called.
          */
-        public Result readNext() {
-            try {
-                if (error.equals("")) {
-                    return new Result(responses.take());
-                }
-                return new Result(error);
-            } catch (InterruptedException e) {
-                return new Result(e.toString());
-            }
+        public boolean isClosed() {
+            return ws.isClosed();
         }
 
-        public StreamingConn(String path, byte[] msg) throws CothorityCommunicationException {
-            responses = new ArrayBlockingQueue(100);
+        private StreamingConn(String path, byte[] msg, StreamHandler h) throws CothorityCommunicationException {
             try {
                 ws = new WebSocketClient(buildWebSocketAdddress(path)) {
                     @Override
                     public void onMessage(String msg) {
-                        error = "This should never happen: " + msg;
+                        logger.error("received a string msg, this should not happen on an honest server");
+                        h.error("received a string msg, this should not happen on an honest server: " + msg);
                     }
 
                     @Override
                     public void onMessage(ByteBuffer message) {
-                        try {
-                            responses.put(message);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e.toString());
-                        }
+                        h.receive(message);
                     }
 
                     @Override
@@ -159,21 +138,19 @@ public class ServerIdentity {
                     @Override
                     public void onClose(int code, String reason, boolean remote) {
                         if (!reason.equals("")) {
-                            error = reason;
+                            h.error(reason);
                         }
                     }
 
                     @Override
                     public void onError(Exception ex) {
-                        error = ex.toString();
+                        h.error(ex.toString());
                     }
                 };
 
-                // open websocket and send message.
                 ws.connect();
-                // wait for error or message returned.
             } catch (URISyntaxException e) {
-                throw new CothorityCommunicationException(e.toString());
+                throw new CothorityCommunicationException(e.getMessage());
             }
         }
     }
@@ -183,7 +160,7 @@ public class ServerIdentity {
         public String error;
 
         // TODO we're creating a new connection for every message, it's better to re-use connections
-        public SyncSendMessage(String path, byte[] msg) throws CothorityCommunicationException {
+        private SyncSendMessage(String path, byte[] msg) throws CothorityCommunicationException {
             final CountDownLatch statusLatch = new CountDownLatch(1);
             try {
                 WebSocketClient ws = new WebSocketClient(buildWebSocketAdddress(path)) {

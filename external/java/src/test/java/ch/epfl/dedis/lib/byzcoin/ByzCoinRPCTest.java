@@ -2,6 +2,7 @@ package ch.epfl.dedis.lib.byzcoin;
 
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
+import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.byzcoin.contracts.DarcInstance;
@@ -46,7 +47,7 @@ public class ByzCoinRPCTest {
     }
 
     @Test
-    void ping() throws Exception {
+    void ping() {
         assertTrue(bc.checkLiveness());
     }
 
@@ -184,51 +185,137 @@ public class ByzCoinRPCTest {
 
     }
 
-    int blocks = 0;
+    class TestReceiver implements Subscription.SkipBlockReceiver {
+        private int ctr;
+        private String error;
+
+        private TestReceiver() {
+            ctr = 0;
+        }
+
+        @Override
+        public void receive(SkipBlock block) {
+            if (isOk()) {
+                ctr++;
+            }
+        }
+
+        @Override
+        public void error(String s) {
+            if (isOk()) {
+                error = s;
+            }
+        }
+
+        private int getCtr() {
+            return ctr;
+        }
+
+        private boolean isOk() {
+            return error == null;
+        }
+    }
 
     /**
      * Subscribes to new blocks and verifies it gets them.
-     *
-     * @throws Exception
      */
     @Test
     void subscribeSkipBlocks() throws Exception {
-        blocks = 0;
         logger.info("Subscribing blocks");
-        bc.subscribeSkipBlock(sbs -> receiveSkipBlocks(sbs));
-        // Wait for two possible blocks
+        TestReceiver receiver = new TestReceiver();
+        assertTrue(bc.getSubscription().isClosed());
+        bc.subscribeSkipBlock(receiver);
+        assertFalse(bc.getSubscription().isClosed());
+        // Wait for two block intervals, we should see 0 blocks because we haven't done anything
         Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
-        assertEquals(0, blocks);
+        assertEquals(0, receiver.getCtr());
 
         // Update the darc and thus create some blocks
         updateDarc();
         Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
-        assertNotEquals(0, blocks);
+        assertNotEquals(0, receiver.getCtr());
+        bc.unsubscribeBlock(receiver);
     }
 
-    private void receiveSkipBlocks(List<SkipBlock> sbs) {
-        logger.info("got blocks {}", sbs);
-        blocks += sbs.size();
+    @Test
+    void multipleSubscribeSkipBlocks() throws Exception {
+        logger.info("Subscribing blocks");
+        List<TestReceiver> receivers = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            TestReceiver receiver = new TestReceiver();
+            bc.subscribeSkipBlock(receiver);
+            receivers.add(receiver);
+        }
+        assertFalse(bc.getSubscription().isClosed());
+
+        // Wait for two block intervals, we should see 0 blocks because we haven't done anything
+        Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
+        for (TestReceiver receiver : receivers) {
+            assertEquals(0, receiver.getCtr());
+        }
+
+        // Update the darc and thus create some blocks
+        updateDarc();
+        Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
+        for (TestReceiver receiver : receivers) {
+            assertNotEquals(0, receiver.getCtr());
+        }
+
+        // Remove all, then the connection should close.
+        for (TestReceiver receiver : receivers) {
+            bc.unsubscribeBlock(receiver);
+        }
     }
 
-    List<ClientTransaction> allCtxs = new ArrayList<>();
+
+    class TestTxReceiver implements Subscription.SkipBlockReceiver {
+        private List<ClientTransaction> allCtxs;
+        private String error;
+
+        private TestTxReceiver() {
+            super();
+            allCtxs  = new ArrayList<>();
+        }
+
+        @Override
+        public void receive(SkipBlock block) {
+            logger.info("got SkipBlock {}", block);
+            try {
+                Block b = new Block(block);
+                allCtxs.addAll(b.getClientTransactions());
+            } catch (CothorityCryptoException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public void error(String s) {
+            if (error == null) {
+                error = s;
+            }
+        }
+
+        private List<ClientTransaction> getAllCtxs() {
+            return allCtxs;
+        }
+    }
 
     /**
      * Subscribes to new blocks and verifies it gets them.
-     *
-     * @throws Exception
      */
     @Test
     void subscribeClientTransactions() throws Exception {
         // Create a second subscription that will receive multiple blocks at once.
-        Subscription sub2 = new Subscription(bc.getSkipchain(), 4 * bc.getConfig().getBlockInterval().toMillis());
-        sub2.subscribeSkipBlock(sbs -> receiveSkipBlocks(sbs));
-        blocks = 0;
-        assertEquals(0, allCtxs.size());
-        bc.subscribeSkipBlock(sbs -> receiveClientTransactions(sbs));
+        TestReceiver receiver = new TestReceiver();
+        Subscription sub2 = new Subscription(bc);
+        sub2.subscribeSkipBlock(receiver);
+        TestTxReceiver txReceiver = new TestTxReceiver();
+        bc.subscribeSkipBlock(txReceiver);
+
         // Wait for two possible blocks and make sure we don't get any transactions
         Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
-        assertEquals(0, allCtxs.size());
+        assertEquals(0, receiver.getCtr());
+        assertEquals(0, txReceiver.getAllCtxs().size());
 
         // Update the darc and thus create at least one block with at least the interesting clientTransaction
         DarcInstance dc = new DarcInstance(bc, genesisDarc);
@@ -238,26 +325,27 @@ public class ByzCoinRPCTest {
         ClientTransactionId ctxid = bc.sendTransaction(new ClientTransaction(Arrays.asList(instr)));
 
         Thread.sleep(3 * bc.getConfig().getBlockInterval().toMillis());
-        assertNotEquals(0, allCtxs.size());
-        assertEquals(1, allCtxs.stream().filter(ctx ->
+        assertNotEquals(0, txReceiver.getAllCtxs().size());
+        assertEquals(1, txReceiver.getAllCtxs().stream().filter(ctx ->
                 ctx.getId().equals(ctxid)).count());
 
         // Update the darc again - even if it's the same darc
         bc.sendTransaction(new ClientTransaction(Arrays.asList(instr)));
 
         Thread.sleep(3 * bc.getConfig().getBlockInterval().toMillis());
-        assertEquals(2, blocks);
+        assertEquals(2, receiver.getCtr());
     }
 
-    private void receiveClientTransactions(List<SkipBlock> sbs) {
-        logger.info("got SkipBlocks {}", sbs);
-        sbs.forEach(sb -> {
-            try {
-                Block b = new Block(sb);
-                allCtxs.addAll(b.getClientTransactions());
-            } catch (CothorityCryptoException e) {
-                logger.warn("Received exception: {}", e);
-            }
-        });
+    @Test
+    void streamClientTransaction() throws Exception {
+        TestReceiver receiver = new TestReceiver();
+        ServerIdentity.StreamingConn conn = bc.streamTransactions(receiver);
+
+        // Should generate three blocks because spawnValue waits 3 times.
+        spawnValue();
+        assertTrue(receiver.isOk());
+        assertNotEquals(0, receiver.getCtr());
+
+        conn.close();
     }
 }
