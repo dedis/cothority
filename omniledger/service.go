@@ -136,14 +136,11 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 		return nil, err
 	}
 
-	sc, err := protobuf.Encode(req.ShardCount)
-	if err != nil {
-		return nil, err
-	}
-	es, err := protobuf.Encode(req.EpochSize)
-	if err != nil {
-		return nil, err
-	}
+	scBuff := make([]byte, 4) // 4 bytes for int32
+	binary.PutVarint(scBuff, int64(req.ShardCount))
+
+	esBuff := make([]byte, 4) // 4 bytes for int32
+	binary.PutVarint(scBuff, int64(req.EpochSize))
 
 	instr := byzcoin.Instruction{
 		InstanceID: bc.NewInstanceID(darc.BaseID),
@@ -154,8 +151,8 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 			ContractID: ContractConfigID,
 			Args: []bc.Argument{
 				bc.Argument{Name: "darc", Value: d},
-				bc.Argument{Name: "shardCount", Value: sc},
-				bc.Argument{Name: "epochSize", Value: es}},
+				bc.Argument{Name: "shardCount", Value: scBuff},
+				bc.Argument{Name: "epochSize", Value: esBuff}},
 		},
 	}
 	instr.SignBy(darc.GetID(), owner)
