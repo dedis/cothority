@@ -2,11 +2,13 @@ package ch.epfl.dedis.lib.byzcoin;
 
 import ch.epfl.dedis.lib.Sha256id;
 import ch.epfl.dedis.lib.SkipBlock;
+import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.proto.ByzCoinProto;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,6 +20,7 @@ import java.util.List;
 public class Block {
     private ByzCoinProto.DataHeader dataHeader;
     private DataBody dataBody;
+    private SkipblockId sbId;
 
     /**
      * Instantiates a new OmniBlock given a skipblock.
@@ -30,6 +33,7 @@ public class Block {
             // TODO: check that it is actually an OmniBlock by looking at the verifiers
             dataHeader = ByzCoinProto.DataHeader.parseFrom(sb.getData());
             dataBody = new DataBody(ByzCoinProto.DataBody.parseFrom(sb.getPayload()));
+            sbId = sb.getId();
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCryptoException(e.getMessage());
         }
@@ -78,6 +82,17 @@ public class Block {
     }
 
     /**
+     * @return a list of ClientTransactions stored in this block.
+     */
+    public List<ClientTransaction> getClientTransactions(){
+        List<ClientTransaction> result = new ArrayList<>();
+        dataBody.txResults.forEach(txr ->{
+            result.add(txr.getClientTransaction());
+        });
+        return result;
+    }
+
+    /**
      * @return the unix-timestamp in nanoseconds of the block creation time.
      */
     public long getTimestampNano() {
@@ -97,5 +112,18 @@ public class Block {
      */
     public List<TxResult> getTxResults() {
         return dataBody.txResults;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (!(obj instanceof Block)) {
+            return super.equals(obj);
+        }
+        Block other = (Block) obj;
+
+        return other.sbId.equals(this.sbId);
     }
 }

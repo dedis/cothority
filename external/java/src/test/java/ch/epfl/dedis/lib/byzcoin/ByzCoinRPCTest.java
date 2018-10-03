@@ -8,12 +8,14 @@ import ch.epfl.dedis.lib.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.lib.byzcoin.contracts.ValueInstance;
 import ch.epfl.dedis.lib.byzcoin.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -38,13 +40,13 @@ public class ByzCoinRPCTest {
         genesisDarc = new Darc(rules, "genesis".getBytes());
 
         bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(100, MILLIS));
-        if (!bc.checkLiveness()){
+        if (!bc.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
     }
 
     @Test
-    void ping() throws Exception{
+    void ping() throws Exception {
         assertTrue(bc.checkLiveness());
     }
 
@@ -65,7 +67,7 @@ public class ByzCoinRPCTest {
     }
 
     @Test
-    void spawnDarc() throws Exception{
+    void spawnDarc() throws Exception {
         DarcInstance dc = new DarcInstance(bc, genesisDarc);
         Darc darc2 = genesisDarc.copy();
         darc2.setRule("spawn:darc", admin.getIdentity().toString().getBytes());
@@ -87,7 +89,7 @@ public class ByzCoinRPCTest {
     }
 
     @Test
-    void spawnValue() throws Exception{
+    void spawnValue() throws Exception {
         DarcInstance dc = new DarcInstance(bc, genesisDarc);
         Darc darc2 = genesisDarc.copy();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
@@ -106,7 +108,7 @@ public class ByzCoinRPCTest {
     }
 
     @Test
-    void failToSpawnValue() throws Exception{
+    void failToSpawnValue() throws Exception {
         // In this test we send through a transaction we know is going to fail
         // in order to verify that the txid shows up in the refused transactions
         // list in the next block. We then use spawnContractAndWait on one we know is
@@ -180,5 +182,82 @@ public class ByzCoinRPCTest {
         assertEquals(ByzCoinRPCTest.bc.getLatestBlock().getTimestampNano(), bc.getLatestBlock().getTimestampNano());
         assertEquals(ByzCoinRPCTest.bc.getGenesisDarc().getBaseId(), bc.getGenesisDarc().getBaseId());
 
+    }
+
+    int blocks = 0;
+
+    /**
+     * Subscribes to new blocks and verifies it gets them.
+     *
+     * @throws Exception
+     */
+    @Test
+    void subscribeSkipBlocks() throws Exception {
+        blocks = 0;
+        logger.info("Subscribing blocks");
+        bc.subscribeSkipBlock(sbs -> receiveSkipBlocks(sbs));
+        // Wait for two possible blocks
+        Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
+        assertEquals(0, blocks);
+
+        // Update the darc and thus create some blocks
+        updateDarc();
+        Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
+        assertNotEquals(0, blocks);
+    }
+
+    private void receiveSkipBlocks(List<SkipBlock> sbs) {
+        logger.info("got blocks {}", sbs);
+        blocks += sbs.size();
+    }
+
+    List<ClientTransaction> allCtxs = new ArrayList<>();
+
+    /**
+     * Subscribes to new blocks and verifies it gets them.
+     *
+     * @throws Exception
+     */
+    @Test
+    void subscribeClientTransactions() throws Exception {
+        // Create a second subscription that will receive multiple blocks at once.
+        Subscription sub2 = new Subscription(bc.getSkipchain(), 4 * bc.getConfig().getBlockInterval().toMillis());
+        sub2.subscribeSkipBlock(sbs -> receiveSkipBlocks(sbs));
+        blocks = 0;
+        assertEquals(0, allCtxs.size());
+        bc.subscribeSkipBlock(sbs -> receiveClientTransactions(sbs));
+        // Wait for two possible blocks and make sure we don't get any transactions
+        Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
+        assertEquals(0, allCtxs.size());
+
+        // Update the darc and thus create at least one block with at least the interesting clientTransaction
+        DarcInstance dc = new DarcInstance(bc, genesisDarc);
+        Darc newDarc = genesisDarc.copy();
+        newDarc.setRule("spawn:darc", "all".getBytes());
+        Instruction instr = dc.evolveDarcInstruction(newDarc, admin, 0, 1);
+        ClientTransactionId ctxid = bc.sendTransaction(new ClientTransaction(Arrays.asList(instr)));
+
+        Thread.sleep(3 * bc.getConfig().getBlockInterval().toMillis());
+        assertNotEquals(0, allCtxs.size());
+        assertEquals(1, allCtxs.stream().filter(ctx ->
+                ctx.getId().equals(ctxid)).count());
+
+        // Update the darc again - even if it's the same darc
+        bc.sendTransaction(new ClientTransaction(Arrays.asList(instr)));
+
+        Thread.sleep(3 * bc.getConfig().getBlockInterval().toMillis());
+        assertEquals(2, blocks);
+    }
+
+    private void receiveClientTransactions(List<SkipBlock> sbs) {
+        logger.info("got SkipBlocks {}", sbs);
+        sbs.forEach(sb -> {
+            try {
+                Block b = new Block(sb);
+                allCtxs.addAll(b.getClientTransactions());
+            } catch (CothorityCryptoException e) {
+                logger.warn("Received exception: {}", e);
+            }
+        });
     }
 }

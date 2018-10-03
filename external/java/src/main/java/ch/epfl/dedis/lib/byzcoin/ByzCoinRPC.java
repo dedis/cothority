@@ -36,6 +36,7 @@ public class ByzCoinRPC {
     private SkipBlock genesis;
     private SkipBlock latest;
     private SkipchainRPC skipchain;
+    private Subscription subscription;
     public static final int currentVersion = 1;
 
     private final Logger logger = LoggerFactory.getLogger(ByzCoinRPC.class);
@@ -71,6 +72,7 @@ public class ByzCoinRPC {
         config = new Config(blockInterval);
         roster = r;
         genesisDarc = d;
+        subscription = new Subscription(skipchain, blockInterval.toMillis());
     }
 
     /**
@@ -99,6 +101,7 @@ public class ByzCoinRPC {
         this.roster = roster;
         genesis = skipchain.getSkipblock(skipchainId);
         latest = skipchain.getLatestSkipblock();
+        subscription = new Subscription(skipchain, config.getBlockInterval().toMillis());
     }
 
     /**
@@ -266,6 +269,23 @@ public class ByzCoinRPC {
     public SkipchainRPC getSkipchain() {
         logger.warn("usually you should not need this - please tell us why you do anyway.");
         return skipchain;
+    }
+
+    /**
+     * Subscribes to all new skipBlocks that might arrive. The subscription is implemented using a polling
+     * approach until we have a working streaming solution.
+     * @param sbr is a SkipBlockReceiver that will be called with any new block(s) available.
+     */
+    public void subscribeSkipBlock(Subscription.SkipBlockReceiver sbr){
+        subscription.subscribeSkipBlock(sbr);
+    }
+
+    /**
+     * Unsubscribes a BlockReceiver.
+     * @param sbr the SkipBlockReceiver to unsubscribe.
+     */
+    public void unsubscribeBlock(Subscription.SkipBlockReceiver sbr){
+        subscription.unsubscribeSkipBlock(sbr);
     }
 
    /**

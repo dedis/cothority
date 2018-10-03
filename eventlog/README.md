@@ -23,26 +23,52 @@ For the general information about running a conode, or conodes, please see the
 not a part of the `cothority.v2` release, please use the `master` branch.
 
 ## Client API
+
 We offer three ways for clients to connect to the event log service. All the
 APIs expect an existing ByzCoin object that has a Darc with "spawn:eventlog"
 and "invoke:eventlog" in its rules. The eventlog signer (which we will create
 below) *must* be authorised to use these rules.
 
-### Go API
-To get started, you need a signer and a roster, then we can initialise the
-client like so:
-```go
-r := onet.NewRoster(/* server identities */)
-signer := darc.NewSignerEd25519(nil, nil)
-c := eventlog.NewClient(r)
-err := c.Init(signer, 5*time.Second)
-if err != nil {
-	// something bad happened, check the error message
-}
+An example transcript of correctly setting up and using an Eventlog is:
+
 ```
-If initialisation is ok, you can log an event using `Log`, which would return
-the ID of the event. A new event can be created using `eventlog.NewEvent`. With
-the event ID, one can use `GetEvent` to retrieve the event later.
+# make the ByzCoin instance
+
+$ bcadmin c --roster ../../conode/public.toml
+Created ByzCoin with ID 7ad741d44e216fc4475da60b8656b904937639415ec27f7003e13408d6e0510c.
+export BC="/Users/jallen/Library/Application Support/bc/data/bc-7ad741d44e216fc4475da60b8656b904937639415ec27f7003e13408d6e0510c.cfg"
+$ export BC="/Users/jallen/Library/Application Support/bc/data/bc-7ad741d44e216fc4475da60b8656b904937639415ec27f7003e13408d6e0510c.cfg"
+
+# make a keypair for the new eventlog, give it permissions on the genesis darc
+
+$ el create --keys
+Identity: ed25519:2a53df71edad603e56477d33e82d675a3499ba4719f809fabea95ce546c16b5f
+export PRIVATE_KEY=120c9566ebbcf91887675298485945bad2d3f7be3ae7d6a56bdebd5b8378a80a
+$ export PRIVATE_KEY=120c9566ebbcf91887675298485945bad2d3f7be3ae7d6a56bdebd5b8378a80a
+$ bcadmin add spawn:eventlog --identity ed25519:2a53df71edad603e56477d33e82d675a3499ba4719f809fabea95ce546c16b5f
+$ bcadmin add invoke:eventlog --identity ed25519:2a53df71edad603e56477d33e82d675a3499ba4719f809fabea95ce546c16b5f
+
+# check the persmissions on the genesis darc
+
+$ bcadmin show
+
+# make the new eventlog
+
+$ ./el create 
+export EL=b9a6c3868b01e19f6d3d0f62c881582d5a5bd98046dd4e4274b579fd6e66b643
+$ export EL=b9a6c3868b01e19f6d3d0f62c881582d5a5bd98046dd4e4274b579fd6e66b643
+
+# use the eventlog
+
+$ ./el log -content test
+$ ./el search
+2018-09-28 13:42:23		test
+```
+
+### Go API
+
+For a working example of the Go API, see the `el` directory, where there is
+a command-line interface to the Eventlog.
 
 The detailed API can be found on
 [godoc](https://godoc.org/github.com/dedis/cothority/eventlog).
