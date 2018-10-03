@@ -6,13 +6,18 @@ runs on the node.
 */
 
 import (
+	"bytes"
+	"encoding/binary"
+	"errors"
+	"github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/protobuf"
+	"math/rand"
+	"sync"
 	"time"
 
-	"errors"
-	"sync"
-
-	"github.com/dedis/cothority_template"
-	"github.com/dedis/cothority_template/protocol"
+	bc "github.com/dedis/cothority/byzcoin"
+	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -21,7 +26,6 @@ import (
 // OmniLedgerID contains the service id
 var OmniLedgerID onet.ServiceID
 
-// TODO: Write code for init()
 func init() {
 	var err error
 	OmniLedgerID, err = onet.RegisterNewService(ServiceName, newService)
@@ -30,13 +34,12 @@ func init() {
 }
 
 // Service is our OmniLedger-service
-// TODO: Fill the structure with the necessary fields.
 type Service struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
 	// are correctly handled.
 	*onet.ServiceProcessor
-
-	storage *storage
+	contracts map[string]bc.ContractFn
+	storage   *storage
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -44,41 +47,202 @@ type Service struct {
 var storageID = []byte("OmniLedger")
 
 // storage is used to save our data.
-// TODO: Fill the structure with the necessary fields.
 type storage struct {
 	Count int
 	sync.Mutex
 }
 
-// Clock starts a template-protocol and returns the run-time.
-func (s *Service) Clock(req *template.Clock) (*template.ClockReply, error) {
-	s.storage.Lock()
-	s.storage.Count++
-	s.storage.Unlock()
-	s.save()
-	tree := req.Roster.GenerateNaryTreeWithRoot(2, s.ServerIdentity())
-	if tree == nil {
-		return nil, errors.New("couldn't create tree")
-	}
-	pi, err := s.CreateProtocol(protocol.Name, tree)
+type CreateOmniLedger struct {
+	Version    bc.Version
+	Roster     onet.Roster
+	ShardCount int
+	EpochSize  time.Duration
+}
+
+type CreateOmniLedgerResponse struct {
+	Version     bc.Version
+	ShardRoster []onet.Roster
+	IDSkipBlock *skipchain.SkipBlock  // Genesis block of the identity ledger
+	ShardBlocks []skipchain.SkipBlock // Genesis block of each shard
+	GenesisDarc darc.Darc
+	Owner       darc.Signer
+}
+
+type NewEpoch struct {
+}
+
+type NewEpochResponse struct {
+}
+
+// CreateOmniLedger(CreateOmniledger) CreateOmniLederReply
+func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResponse, error) {
+	// Create owner
+	owner := darc.NewSignerEd25519(nil, nil)
+
+	// Create id skipchain using byzcoin service (will contain genesis block + darc)
+	msg, err := byzcoin.DefaultGenesisMsg(req.Version,
+		&req.Roster, []string{"spawn:darc"}, owner.Identity())
 	if err != nil {
 		return nil, err
 	}
-	start := time.Now()
-	pi.Start()
-	resp := &template.ClockReply{
-		Children: <-pi.(*protocol.TemplateProtocol).ChildCount,
+	c, rep, err := bc.NewLedger(msg, false) // Is c.ID (reply.Skipblock.CalculateHash()) needed?
+	if err != nil {
+		return nil, err
 	}
-	resp.Time = time.Now().Sub(start).Seconds()
-	return resp, nil
+
+	darc := msg.GenesisDarc
+
+	// Do sharding to generate ShardRoster
+	seed, err := binary.ReadVarint(bytes.NewBuffer(c.ID))
+	if err != nil {
+		log.Error("couldn't decode skipblock hash")
+	}
+	shardRosters := sharding(&req.Roster, req.ShardCount, seed)
+
+	// Create shards using byzcoin
+	// Create the messages -> Create the ledger of each shard
+	msgs := make([]*bc.CreateGenesisBlock, req.ShardCount)
+	for i := 0; i < req.ShardCount; i++ {
+		msg, err := byzcoin.DefaultGenesisMsg(req.Version, &shardRosters[i], []string{"spawn:darc"}, owner.Identity())
+		if err != nil {
+			return nil, err
+		}
+		msgs[i] = msg
+	}
+
+	ids := make([]skipchain.SkipBlock, req.ShardCount)
+	for i := 0; i < req.ShardCount; i++ {
+		_, rep, err := bc.NewLedger(msgs[i], false)
+		if err != nil {
+			return nil, err
+		}
+		ids[i] = *rep.Skipblock
+	}
+
+	// Store parameters (#shard and epoch-size) in the identity ledger
+	// Add transcation calling the config contract?
+	tx := byzcoin.ClientTransaction{
+		Instructions: make([]byzcoin.Instruction, 2),
+	}
+	instrNonce := bc.GenNonce()
+	d, err := protobuf.Encode(darc)
+	if err != nil {
+		return nil, err
+	}
+	sc, err := protobuf.Encode(req.ShardCount)
+	if err != nil {
+		return nil, err
+	}
+	es, err := protobuf.Encode(req.EpochSize)
+	if err != nil {
+		return nil, err
+	}
+
+	instr := byzcoin.Instruction{
+		InstanceID: bc.NewInstanceID(darc.BaseID),
+		Nonce:      instrNonce,
+		Index:      0,
+		Length:     1,
+		Spawn: &bc.Spawn{
+			ContractID: ContractConfigID,
+			Args: []bc.Argument{
+				bc.Argument{Name: "darc", Value: d},
+				bc.Argument{Name: "shardCount", Value: sc},
+				bc.Argument{Name: "epochSize", Value: es}},
+		},
+	}
+	instr.SignBy(darc.GetID(), owner)
+	tx.Instructions[0] = instr
+
+	if _, err := c.AddTransaction(tx); err != nil {
+		return nil, err
+	}
+
+	// Build reply
+	reply := &CreateOmniLedgerResponse{
+		Version:     req.Version,
+		ShardRoster: shardRosters,
+		IDSkipBlock: rep.Skipblock,
+		ShardBlocks: ids,
+		GenesisDarc: darc,
+		Owner:       owner,
+	}
+
+	return reply, nil
 }
 
-// Count returns the number of instantiations of the protocol.
-func (s *Service) Count(req *template.Count) (*template.CountReply, error) {
-	s.storage.Lock()
-	defer s.storage.Unlock()
-	return &template.CountReply{Count: s.storage.Count}, nil
+/*
+func sharding(roster *onet.Roster, shardCount int, seed int64) []onet.Roster {
+	rand.Seed(seed)
+	perm := rand.Perm(len(roster.List))
+	shardRosters := make([]onet.Roster, 0)
+	shardSize := int64(math.Floor(float64(len(roster.List) / shardCount)))
+
+	batches := make([][]int, 0)
+	for len(perm) > shardCount {
+		batches = append(batches, perm[0:shardSize])
+		perm = perm[shardSize:]
+	}
+	batches = append(batches, perm)
+
+	for i := 0; i < len(batches)-1; i++ {
+		batch := batches[i]
+		serverIDs := make([]*network.ServerIdentity, 0)
+		for j := 0; j < len(batch); j++ {
+			serverIDs = append(serverIDs, roster.List[batch[j]])
+		}
+		// TODO: new roster method (onet.newroster)
+		shardRosters = append(shardRosters, onet.Roster{
+			// ID?
+			List: serverIDs,
+			// Aggregate?
+		})
+	}
+
+	return shardRosters
 }
+*/
+
+func sharding(roster *onet.Roster, shardCount int, seed int64) []onet.Roster {
+	rand.Seed(seed)
+	perm := rand.Perm(len(roster.List))
+
+	// Build map: validator index to shard index
+	m := make(map[int]int)
+	c := 0
+	for _, p := range perm {
+		if c == shardCount {
+			c = 0
+		}
+
+		m[p] = c
+		c++
+	}
+
+	// Group validators by shard index
+	idGroups := make([][]*network.ServerIdentity, shardCount)
+	for k, v := range m {
+		idGroups[v] = append(idGroups[v], roster.List[k])
+	}
+
+	// Create shard rosters
+	shardRosters := make([]onet.Roster, shardCount)
+	for ind, ids := range idGroups {
+		shardRosters[ind] = *onet.NewRoster(ids)
+	}
+
+	return shardRosters
+}
+
+// NewEpoch
+func (s *Service) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
+
+	return nil, nil
+}
+
+// AddNode
+
+// RemoveNode
 
 // NewProtocol is called on all nodes of a Tree (except the root, since it is
 // the one starting the protocol) so it's the Service that will be called to
@@ -121,20 +285,35 @@ func (s *Service) tryLoad() error {
 	return nil
 }
 
+func (s *Service) registerContract(contractID string, c bc.ContractFn) error {
+	s.contracts[contractID] = c
+	return nil
+}
+
 // newService receives the context that holds information about the node it's
 // running on. Saving and loading can be done using the context. The data will
 // be stored in memory for tests and simulations, and on disk for real deployments.
-// TODO: Write code for newService()
 func newService(c *onet.Context) (onet.Service, error) {
+	// Create the service struct
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
+		contracts:        make(map[string]bc.ContractFn),
 	}
-	if err := s.RegisterHandlers(s.Clock, s.Count); err != nil {
-		return nil, errors.New("Couldn't register messages")
+
+	// Register handlers (i.e. methods the service will call must have signature func({}interface) ({}interface, error))
+	if err := s.RegisterHandlers(s.CreateOmniLedger); err != nil {
+		log.ErrFatal(err, "Couldn't register messages")
 	}
-	if err := s.tryLoad(); err != nil {
-		log.Error(err)
-		return nil, err
-	}
+	// Register processor function (handles certain message types, e.g. ViewChangeReq) if necessary
+	// Register contracts
+	s.registerContract(ContractConfigID, s.ContractConfig)
+	s.registerContract(ContractNewEpochID, s.ContractNewEpoch)
+
+	// Register verification
+	// Register protocols
+	// Register skipchain callbacks + enable view change
+	// Register view-change cosi protocols
+	// Start all chains
+
 	return s, nil
 }

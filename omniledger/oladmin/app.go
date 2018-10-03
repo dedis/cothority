@@ -6,11 +6,35 @@ package main
 
 import (
 	"errors"
-	"os"
-
+	"fmt"
+	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
+	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/omniledger"
+	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/protobuf"
 	"gopkg.in/urfave/cli.v1"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"time"
 )
+
+// ConfigPath points to where the files will be stored by default.
+var ConfigPath = "."
+
+// Config is the structure used to save an omniledger (identity ledger and shards) configuration.
+type Config struct {
+	Roster        onet.Roster
+	ShardRosters  []onet.Roster
+	ByzCoinID     skipchain.SkipBlockID
+	ShardIDs      []skipchain.SkipBlockID
+	GenesisDarc   darc.Darc
+	AdminIdentity darc.Identity
+}
 
 func main() {
 	cliApp := cli.NewApp()
@@ -29,7 +53,7 @@ func main() {
 				},
 				cli.IntFlag{
 					Name:  "epoch",
-					Usage: "the epoch-size in number of blocks",
+					Usage: "the epoch-size in millisecond",
 				},
 			},
 			Action: createSharding,
@@ -61,16 +85,15 @@ func main() {
 	log.ErrFatal(cliApp.Run(os.Args))
 }
 
-// TODO: Finish the function
-// creates two files (ol.cfg, key.cfg), the same way as bcadmin does
 func createSharding(c *cli.Context) error {
+	// Parse CLI arguments
 	sn := c.Int("shards")
 	if sn == 0 {
 		return errors.New(`--shards flag is required 
 			and its value must be greater than 0`)
 	}
 
-	es := c.Int("epoch")
+	es := time.Duration(c.Int("epoch")) * time.Millisecond
 	if es == 0 {
 		return errors.New(`--epoch flag is required 
 			and its value must be greather than 0`)
@@ -80,8 +103,63 @@ func createSharding(c *cli.Context) error {
 		return errors.New("Not enough arguments (1 required)")
 	}
 
+	// Parse, open and read roster file
 	rosterPath := c.Args().First()
-	// Open the roster file and handle its content
+	fp, err := os.Open(rosterPath)
+	if err != nil {
+		return fmt.Errorf("Could not open roster %v, %v", rosterPath, err)
+	}
+	roster, err := readRoster(fp)
+	if err != nil {
+		return err
+	}
+
+	// Check #shard is not too high
+	if 4*sn > len(roster.List) {
+		return fmt.Errorf("Not enough validators per shard, there should be at least 4 validators per shard")
+	}
+
+	// Create new client
+	client := omniledger.NewClient()
+
+	// Create request and reply struct
+	req := &omniledger.CreateOmniLedger{
+		Roster:     *roster,
+		ShardCount: sn,
+		EpochSize:  es,
+	}
+	reply, err := client.CreateOmniLedger(req)
+
+	// Create config
+	shardIDs := make([]skipchain.SkipBlockID, len((*reply).ShardBlocks))
+	for i := 0; i < len(shardIDs); i++ {
+		shardIDs[i] = ((*reply).ShardBlocks)[i].SkipChainID()
+	}
+
+	cfg := Config{
+		Roster:        *roster,
+		ShardRosters:  reply.ShardRoster,
+		ByzCoinID:     reply.IDSkipBlock.SkipChainID(),
+		ShardIDs:      shardIDs,
+		GenesisDarc:   reply.GenesisDarc,
+		AdminIdentity: reply.Owner.Identity(),
+	}
+
+	// Save config and keys
+	cfgPath, err := saveConfig(cfg)
+	if err != nil {
+		return err
+	}
+
+	if err = lib.SaveKey(reply.Owner); err != nil {
+		return err
+	}
+
+	fmt.Fprintf(c.App.Writer, "Created OmniLedger with ID %x. \n", cfg.ByzCoinID)
+	fmt.Fprintf(c.App.Writer, "export OC=\"%v\"\n", cfgPath)
+
+	// For testing purposes
+	//c.App.Metadata["OC"] = cfgPath
 
 	return nil
 }
@@ -112,7 +190,37 @@ func newEpoch(c *cli.Context) error {
 }
 
 // TODO: Finish function
-func darc(c *cli.Context) error {
+func darcUpdate(c *cli.Context) error {
 
 	return nil
+}
+
+func readRoster(r io.Reader) (*onet.Roster, error) {
+	group, err := app.ReadGroupDescToml(r)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(group.Roster.List) == 0 {
+		return nil, errors.New("empty roster")
+	}
+	return group.Roster, nil
+}
+
+func saveConfig(cfg Config) (string, error) {
+	os.MkdirAll(ConfigPath, 0755)
+
+	fn := fmt.Sprintf("ol-%x.cfg", cfg.ByzCoinID)
+	fn = filepath.Join(ConfigPath, fn)
+
+	buf, err := protobuf.Encode(&cfg)
+	if err != nil {
+		return fn, err
+	}
+	err = ioutil.WriteFile(fn, buf, 0644)
+	if err != nil {
+		return fn, err
+	}
+
+	return fn, nil
 }
