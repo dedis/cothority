@@ -76,6 +76,11 @@ type NewEpochResponse struct {
 
 // CreateOmniLedger(CreateOmniledger) CreateOmniLederReply
 func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResponse, error) {
+
+	if err := checkCreateOmniLedger(req); err != nil {
+		return nil, err
+	}
+
 	// Create owner
 	owner := darc.NewSignerEd25519(nil, nil)
 
@@ -96,6 +101,7 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 	seed, err := binary.ReadVarint(bytes.NewBuffer(c.ID))
 	if err != nil {
 		log.Error("couldn't decode skipblock hash")
+		return nil, err
 	}
 	shardRosters := sharding(&req.Roster, req.ShardCount, seed)
 
@@ -125,10 +131,11 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 		Instructions: make([]byzcoin.Instruction, 2),
 	}
 	instrNonce := bc.GenNonce()
-	d, err := protobuf.Encode(darc)
+	d, err := protobuf.Encode(&darc)
 	if err != nil {
 		return nil, err
 	}
+
 	sc, err := protobuf.Encode(req.ShardCount)
 	if err != nil {
 		return nil, err
@@ -169,6 +176,26 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 	}
 
 	return reply, nil
+}
+
+func checkCreateOmniLedger(req *CreateOmniLedger) error {
+	if len(req.Roster.List) < 1 {
+		return errors.New("Empty roster")
+	}
+
+	if req.ShardCount < 1 {
+		return errors.New("Null or negative number of shards")
+	}
+
+	if req.EpochSize < 1 {
+		return errors.New("Null or negative epoch size")
+	}
+
+	if 4*req.ShardCount > len(req.Roster.List) {
+		return errors.New("Not enough validators per shard")
+	}
+
+	return nil
 }
 
 /*
