@@ -147,12 +147,19 @@ func (s *Service) ContractPopParty(cdb byzcoin.CollectionView, inst byzcoin.Inst
 				if err != nil {
 					return nil, nil, errors.New("couldn't unmarshal point: " + err.Error())
 				}
-				log.Lvlf3("Appending service-darc and account for %s", ppi.Service)
+
+				log.Lvlf3("Checking if service-darc and account for %s should be appended", ppi.Service)
 				d, sc, err := createDarc(darcID, ppi.Service)
 				if err != nil {
 					return nil, nil, err
 				}
-				scs = append(scs, sc)
+				_, _, _, err = cdb.GetValues(d.GetBaseID())
+				if err != nil {
+					log.Lvl2("Appending service-darc because it doesn't exist yet")
+					scs = append(scs, sc)
+				}
+
+				log.Lvl3("Creating coin account for service")
 				sc, err = createCoin(inst, d, ppi.Service, 0)
 				if err != nil {
 					return nil, nil, err

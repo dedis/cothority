@@ -137,6 +137,8 @@ type Message struct {
 	Reward uint64
 	// ID of the messgae - should be random.
 	ID []byte
+	// PartyIID - the instance ID of the party this message belongs to
+	PartyIID byzcoin.InstanceID
 }
 
 // SendMessage stores the message in the system.
@@ -152,6 +154,8 @@ type ListMessages struct {
 	Start int
 	// Number of maximum messages returned
 	Number int
+	// ReaderID of the reading account, to skip messages created by this reader
+	ReaderID byzcoin.InstanceID
 }
 
 // ListMessagesReply returns the subjects, IDs, balances and rewards of the top
@@ -165,6 +169,8 @@ type ListMessagesReply struct {
 	Balances []uint64
 	// Rewards
 	Rewards []uint64
+	// PartyIIDs
+	PartyIIDs []byzcoin.InstanceID
 }
 
 // ReadMessage requests the full message and the reward for that message.
@@ -181,6 +187,9 @@ type ReadMessage struct {
 type ReadMessageReply struct {
 	// Messsage to read.
 	Message Message
+	// Rewarded is true if this is the first time the message has been read
+	// by this reader.
+	Rewarded bool
 }
 
 // TopupMessage to fill up the balance of a message
