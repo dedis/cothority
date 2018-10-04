@@ -255,7 +255,7 @@ public class ByzCoinRPC {
      * Fetches the latest block from the Skipchain and returns the corresponding Block.
      *
      * @return a Block representation of the skipblock
-     * @throws CothorityCryptoException        if the omniblock is invalid
+     * @throws CothorityCryptoException if the omniblock is invalid
      */
     public Block getLatestBlock() throws CothorityException {
         this.update();
@@ -276,6 +276,7 @@ public class ByzCoinRPC {
     /**
      * Subscribes to all new skipBlocks that might arrive. The subscription is implemented using a polling
      * approach until we have a working streaming solution.
+     *
      * @param sbr is a SkipBlockReceiver that will be called with any new block(s) available.
      */
     public void subscribeSkipBlock(Subscription.SkipBlockReceiver sbr) throws CothorityCommunicationException {
@@ -284,13 +285,14 @@ public class ByzCoinRPC {
 
     /**
      * Unsubscribes a BlockReceiver.
+     *
      * @param sbr the SkipBlockReceiver to unsubscribe.
      */
-    public void unsubscribeBlock(Subscription.SkipBlockReceiver sbr) throws CothorityCommunicationException {
+    public void unsubscribeBlock(Subscription.SkipBlockReceiver sbr) {
         subscription.unsubscribeSkipBlock(sbr);
     }
 
-   /**
+    /**
      * Static method to request a proof from ByzCoin. This is used in the instantiation method.
      *
      * @param roster      where to contact the cothority
@@ -315,10 +317,20 @@ public class ByzCoinRPC {
         }
     }
 
+    /**
+     * Getter for the subscription object.
+     */
     public Subscription getSubscription() {
         return subscription;
     }
 
+    /**
+     * Helper function for making the initial connection to the streaming API endpoint.
+     *
+     * @param receiver contain callbacks that gets called on every response and/or error.
+     * @return the streaming connection
+     * @throws CothorityCommunicationException
+     */
     ServerIdentity.StreamingConn streamTransactions(Subscription.SkipBlockReceiver receiver) throws CothorityCommunicationException {
         ByzCoinProto.StreamingRequest.Builder req = ByzCoinProto.StreamingRequest.newBuilder();
         req.setId(skipchain.getID().toProto());
@@ -333,12 +345,13 @@ public class ByzCoinRPC {
                     receiver.error(e.getMessage());
                 }
             }
+
             @Override
             public void error(String s) {
                 receiver.error(s);
             }
         };
-        return roster.sendStreamingMessage("ByzCoin/StreamingRequest", req.build(), h);
+        return roster.makeStreamingConn("ByzCoin/StreamingRequest", req.build(), h);
     }
 
 }

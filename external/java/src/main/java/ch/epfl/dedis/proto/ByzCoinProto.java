@@ -18636,7 +18636,8 @@ public final class ByzCoinProto {
   }
   /**
    * <pre>
-   * StreamingRequest TODO document
+   * StreamingRequest is a request asking the service to start streaming blocks
+   * on the chain specified by ID.
    * </pre>
    *
    * Protobuf type {@code byzcoin.StreamingRequest}
@@ -18898,7 +18899,8 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * StreamingRequest TODO document
+     * StreamingRequest is a request asking the service to start streaming blocks
+     * on the chain specified by ID.
      * </pre>
      *
      * Protobuf type {@code byzcoin.StreamingRequest}
@@ -19163,7 +19165,7 @@ public final class ByzCoinProto {
   }
   /**
    * <pre>
-   * StreamingResponse TODO document
+   * StreamingResponse is the reply (block) that is streamed back to the client
    * </pre>
    *
    * Protobuf type {@code byzcoin.StreamingResponse}
@@ -19440,7 +19442,7 @@ public final class ByzCoinProto {
     }
     /**
      * <pre>
-     * StreamingResponse TODO document
+     * StreamingResponse is the reply (block) that is streamed back to the client
      * </pre>
      *
      * Protobuf type {@code byzcoin.StreamingResponse}

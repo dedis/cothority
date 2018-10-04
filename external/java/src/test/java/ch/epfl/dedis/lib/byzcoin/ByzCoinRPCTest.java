@@ -274,7 +274,7 @@ public class ByzCoinRPCTest {
 
         private TestTxReceiver() {
             super();
-            allCtxs  = new ArrayList<>();
+            allCtxs = new ArrayList<>();
         }
 
         @Override

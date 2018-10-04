@@ -9,15 +9,12 @@ import java.util.Set;
 
 /**
  * Subscription class for ByzCoin. A listener can subscribe to different events and then get notified
- * whenever something happens. This first implementation uses polling to fetch latest blocks and then
- * calls the appropriate receivers. Once we have a streaming service, it will directly connect to the
- * streaming service.
+ * whenever something happens via the streaming service. We only maintain one connection because we can
+ * replicate the events to all the subscribers.
  * <p>
- * - The polling only starts if at least one receiver subscribes.
- * - The polling stops, once the last receiver has been unsubscribed.
- * - Only blocks arriving after the subscription will be passed to the receiver(s).
- * - If more than one block has been received during the subscription period, they will be given in
- * a list to the receiver(s).
+ * - The connection is made if at least one receiver subscribes.
+ * - The connection stops once the last receiver has been unsubscribed.
+ * - The subscribers will only see events (blocks) that arrive after the subscription is made.
  */
 public class Subscription {
     /**
@@ -25,6 +22,7 @@ public class Subscription {
      */
     public interface SkipBlockReceiver {
         void receive(SkipBlock block);
+
         void error(String s);
     }
 
@@ -32,11 +30,14 @@ public class Subscription {
     private AggregateReceiver aggr;
     private ServerIdentity.StreamingConn conn;
 
+    /**
+     * To reduce the number of connections, we create this aggregate receiver that replicates events to all the
+     * subscribers.
+     */
     class AggregateReceiver implements SkipBlockReceiver {
         private Set<SkipBlockReceiver> blockReceivers;
 
         private AggregateReceiver() {
-            // TODO concurrent use?
             blockReceivers = new HashSet<>();
         }
 
@@ -66,7 +67,7 @@ public class Subscription {
     /**
      * Starts a subscription service, but doesn't call the polling yet.
      *
-     * @param bc     a reference to the instantiated ByzCoinRPC
+     * @param bc a reference to the instantiated ByzCoinRPC
      */
     public Subscription(ByzCoinRPC bc) {
         this.bc = bc;
@@ -79,7 +80,7 @@ public class Subscription {
      *
      * @param br the receiver that wants to be informed of new blocks.
      */
-    public void subscribeSkipBlock(SkipBlockReceiver br) throws CothorityCommunicationException  {
+    public void subscribeSkipBlock(SkipBlockReceiver br) throws CothorityCommunicationException {
         aggr.add(br);
         if (aggr.size() == 1) {
             conn = bc.streamTransactions(aggr);
@@ -92,13 +93,16 @@ public class Subscription {
      *
      * @param br the receiver to unsubscribe.
      */
-    public void unsubscribeSkipBlock(SkipBlockReceiver br) throws CothorityCommunicationException {
+    public void unsubscribeSkipBlock(SkipBlockReceiver br) {
         aggr.remove(br);
         if (aggr.size() == 0) {
             conn.close();
         }
     }
 
+    /**
+     * Checks whether the connection is closed.
+     */
     public boolean isClosed() {
         if (conn == null) {
             return true;

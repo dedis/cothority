@@ -216,7 +216,10 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 	return nil, errors.New("timeout reached and inclusion not found")
 }
 
-// StreamTransactions TODO doc
+// StreamTransactions sends a streaming request to the service. If successful,
+// the handler will be called whenever a new response (a new block) is
+// available. This function blocks, the streaming stops if the client or the
+// service stops.
 func (c *Client) StreamTransactions(genesisID skipchain.SkipBlockID, handler func(StreamingResponse, error)) error {
 	req := StreamingRequest{
 		ID: genesisID,

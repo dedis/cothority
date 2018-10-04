@@ -63,6 +63,8 @@ func TestClient_GetProof(t *testing.T) {
 	require.Equal(t, value, vs[0])
 }
 
+// Create a streaming client and add blocks in the background. The client
+// should receive valid blocks.
 func TestClient_Streaming(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	servers, roster, _ := l.GenTree(3, true)

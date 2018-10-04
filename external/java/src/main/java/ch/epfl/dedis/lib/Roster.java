@@ -61,12 +61,29 @@ public class Roster {
         return r.build();
     }
 
+    /**
+     * Synchronously sends a message.
+     *
+     * @param path  The API endpoint.
+     * @param proto The protobuf encoded request.
+     * @return the response
+     * @throws CothorityCommunicationException
+     */
     public ByteString sendMessage(String path, com.google.protobuf.GeneratedMessageV3 proto) throws CothorityCommunicationException {
         // TODO - fetch a random node.
         return ByteString.copyFrom(nodes.get(0).SendMessage(path, proto.toByteArray()));
     }
 
-    public ServerIdentity.StreamingConn sendStreamingMessage(String path, com.google.protobuf.GeneratedMessageV3 proto, ServerIdentity.StreamHandler h) throws CothorityCommunicationException {
+    /**
+     * Sends a request to initialise a streaming connection.
+     *
+     * @param path  The API endpoint, note that this endpoint must support streaming (registered using RegisterStreamingRequest in the Go side).
+     * @param proto The protobuf encoded request.
+     * @param h     The handler for handling responses.
+     * @return the streaming connection.
+     * @throws CothorityCommunicationException
+     */
+    public ServerIdentity.StreamingConn makeStreamingConn(String path, com.google.protobuf.GeneratedMessageV3 proto, ServerIdentity.StreamHandler h) throws CothorityCommunicationException {
         // TODO - fetch a random node.
         return nodes.get(0).MakeStreamingConnection(path, proto.toByteArray(), h);
     }

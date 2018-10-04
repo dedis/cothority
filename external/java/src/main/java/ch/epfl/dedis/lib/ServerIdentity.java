@@ -17,9 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.stream.Stream;
 
 /**
  * dedis/lib
@@ -74,14 +72,31 @@ public class ServerIdentity {
         return si.build();
     }
 
+    /**
+     * Synchronously send a message.
+     *
+     * @param path The API endpoint.
+     * @param data The request message.
+     * @return The response.
+     * @throws CothorityCommunicationException
+     */
     public byte[] SendMessage(String path, byte[] data) throws CothorityCommunicationException {
         SyncSendMessage ssm = new SyncSendMessage(path, data);
-        if (ssm.response == null){
+        if (ssm.response == null) {
             throw new CothorityCommunicationException("Error while retrieving response - try again. Error-string is: " + ssm.error);
         }
         return ssm.response.array();
     }
 
+    /**
+     * Make a streaming connection.
+     *
+     * @param path The API endpoint.
+     * @param data The request message.
+     * @param h    The handler for handling every response.
+     * @return The streaming connection.
+     * @throws CothorityCommunicationException
+     */
     public StreamingConn MakeStreamingConnection(String path, byte[] data, StreamHandler h) throws CothorityCommunicationException {
         return new StreamingConn(path, data, h);
     }
@@ -96,15 +111,23 @@ public class ServerIdentity {
                 conodeAddress.getFragment());
     }
 
+    /**
+     * The default handler interface for handling streaming responses.
+     */
     public interface StreamHandler {
         void receive(ByteBuffer message);
+
         void error(String s);
     }
 
     public class StreamingConn {
         private WebSocketClient ws;
 
-        public void close() throws CothorityCommunicationException {
+        /**
+         * Close the connection, note that this function is non-blocking, so calling isClosed immediately after calling
+         * close might not return the desired result.
+         */
+        public void close() {
             ws.close();
         }
 
@@ -116,6 +139,14 @@ public class ServerIdentity {
             return ws.isClosed();
         }
 
+        /**
+         * Create the streaming connection (non-blocking).
+         *
+         * @param path The API endpoint.
+         * @param msg  The initial message.
+         * @param h    The handler, which is called on every message.
+         * @throws CothorityCommunicationException
+         */
         private StreamingConn(String path, byte[] msg, StreamHandler h) throws CothorityCommunicationException {
             try {
                 ws = new WebSocketClient(buildWebSocketAdddress(path)) {

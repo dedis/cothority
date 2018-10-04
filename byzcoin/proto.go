@@ -232,12 +232,13 @@ type Coin struct {
 	Value uint64
 }
 
-// StreamingRequest TODO document
+// StreamingRequest is a request asking the service to start streaming blocks
+// on the chain specified by ID.
 type StreamingRequest struct {
 	ID skipchain.SkipBlockID
 }
 
-// StreamingResponse TODO document
+// StreamingResponse is the reply (block) that is streamed back to the client
 type StreamingResponse struct {
 	Block *skipchain.SkipBlock
 }
