@@ -211,9 +211,6 @@ public final class Calypso {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1545,7 +1542,7 @@ public final class Calypso {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Write(input, extensionRegistry);
+          return new Write(input, extensionRegistry);
       }
     };
 
@@ -1618,9 +1615,6 @@ public final class Calypso {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2142,7 +2136,7 @@ public final class Calypso {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Read(input, extensionRegistry);
+          return new Read(input, extensionRegistry);
       }
     };
 
@@ -2237,9 +2231,6 @@ public final class Calypso {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2945,7 +2936,7 @@ public final class Calypso {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateLTS(input, extensionRegistry);
+          return new CreateLTS(input, extensionRegistry);
       }
     };
 
@@ -3034,9 +3025,6 @@ public final class Calypso {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3606,7 +3594,7 @@ public final class Calypso {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateLTSReply(input, extensionRegistry);
+          return new CreateLTSReply(input, extensionRegistry);
       }
     };
 
@@ -3709,9 +3697,6 @@ public final class Calypso {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4555,7 +4540,7 @@ public final class Calypso {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DecryptKey(input, extensionRegistry);
+          return new DecryptKey(input, extensionRegistry);
       }
     };
 
@@ -4670,9 +4655,6 @@ public final class Calypso {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5422,7 +5404,7 @@ public final class Calypso {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DecryptKeyReply(input, extensionRegistry);
+          return new DecryptKeyReply(input, extensionRegistry);
       }
     };
 
@@ -5492,9 +5474,6 @@ public final class Calypso {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5952,7 +5931,7 @@ public final class Calypso {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SharedPublic(input, extensionRegistry);
+          return new SharedPublic(input, extensionRegistry);
       }
     };
 
@@ -6022,9 +6001,6 @@ public final class Calypso {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6482,7 +6458,7 @@ public final class Calypso {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new SharedPublicReply(input, extensionRegistry);
+          return new SharedPublicReply(input, extensionRegistry);
       }
     };
 
@@ -6559,7 +6535,7 @@ public final class Calypso {
       "oster\022\014\n\004bcid\030\002 \002(\014\"*\n\016CreateLTSReply\022\r\n" +
       "\005ltsid\030\001 \002(\014\022\t\n\001x\030\002 \002(\014\"I\n\nDecryptKey\022\034\n" +
       "\004read\030\001 \002(\0132\016.byzcoin.Proof\022\035\n\005write\030\002 \002" +
-      "(\0132\016.byzcoin.Proof\"9\n\017DecryptKeyReply\022\n\n" +
+      "(\0132\016.byzcoin.Proof\"9\n\017DecryptKeyReply\022\n\n",
       "\002cs\030\001 \003(\014\022\017\n\007xhatenc\030\002 \002(\014\022\t\n\001x\030\003 \002(\014\"\035\n" +
       "\014SharedPublic\022\r\n\005ltsid\030\001 \002(\014\"\036\n\021SharedPu" +
       "blicReply\022\t\n\001x\030\001 \002(\014B\036\n\023ch.epfl.dedis.pr" +

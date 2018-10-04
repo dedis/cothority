@@ -76,9 +76,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -780,7 +777,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ShortDesc(input, extensionRegistry);
+          return new ShortDesc(input, extensionRegistry);
       }
     };
 
@@ -986,9 +983,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2613,7 +2607,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new PopDesc(input, extensionRegistry);
+          return new PopDesc(input, extensionRegistry);
       }
     };
 
@@ -2753,9 +2747,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3748,7 +3739,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FinalStatement(input, extensionRegistry);
+          return new FinalStatement(input, extensionRegistry);
       }
     };
 
@@ -3824,9 +3815,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4400,7 +4388,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CheckConfig(input, extensionRegistry);
+          return new CheckConfig(input, extensionRegistry);
       }
     };
 
@@ -4489,9 +4477,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5152,7 +5137,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CheckConfigReply(input, extensionRegistry);
+          return new CheckConfigReply(input, extensionRegistry);
       }
     };
 
@@ -5247,9 +5232,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5952,7 +5934,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new MergeConfig(input, extensionRegistry);
+          return new MergeConfig(input, extensionRegistry);
       }
     };
 
@@ -6065,9 +6047,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6878,7 +6857,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new MergeConfigReply(input, extensionRegistry);
+          return new MergeConfigReply(input, extensionRegistry);
       }
     };
 
@@ -6957,9 +6936,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7552,7 +7528,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new PinRequest(input, extensionRegistry);
+          return new PinRequest(input, extensionRegistry);
       }
     };
 
@@ -7627,9 +7603,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8260,7 +8233,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreConfig(input, extensionRegistry);
+          return new StoreConfig(input, extensionRegistry);
       }
     };
 
@@ -8324,9 +8297,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8762,7 +8732,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreConfigReply(input, extensionRegistry);
+          return new StoreConfigReply(input, extensionRegistry);
       }
     };
 
@@ -8848,9 +8818,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9511,7 +9478,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FinalizeRequest(input, extensionRegistry);
+          return new FinalizeRequest(input, extensionRegistry);
       }
     };
 
@@ -9578,9 +9545,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -10126,7 +10090,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FinalizeResponse(input, extensionRegistry);
+          return new FinalizeResponse(input, extensionRegistry);
       }
     };
 
@@ -10198,9 +10162,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -10712,7 +10673,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new FetchRequest(input, extensionRegistry);
+          return new FetchRequest(input, extensionRegistry);
       }
     };
 
@@ -10784,9 +10745,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -11307,7 +11265,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new MergeRequest(input, extensionRegistry);
+          return new MergeRequest(input, extensionRegistry);
       }
     };
 
@@ -11361,9 +11319,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -11706,7 +11661,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetProposals(input, extensionRegistry);
+          return new GetProposals(input, extensionRegistry);
       }
     };
 
@@ -11783,9 +11738,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12482,7 +12434,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetProposalsReply(input, extensionRegistry);
+          return new GetProposalsReply(input, extensionRegistry);
       }
     };
 
@@ -12544,9 +12496,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12980,7 +12929,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new VerifyLink(input, extensionRegistry);
+          return new VerifyLink(input, extensionRegistry);
       }
     };
 
@@ -13042,9 +12991,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -13476,7 +13422,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new VerifyLinkReply(input, extensionRegistry);
+          return new VerifyLinkReply(input, extensionRegistry);
       }
     };
 
@@ -13528,9 +13474,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -13871,7 +13814,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetLink(input, extensionRegistry);
+          return new GetLink(input, extensionRegistry);
       }
     };
 
@@ -13933,9 +13876,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -14369,7 +14309,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetLinkReply(input, extensionRegistry);
+          return new GetLinkReply(input, extensionRegistry);
       }
     };
 
@@ -14421,9 +14361,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -14764,7 +14701,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetFinalStatements(input, extensionRegistry);
+          return new GetFinalStatements(input, extensionRegistry);
       }
     };
 
@@ -14850,9 +14787,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -15479,7 +15413,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetFinalStatementsReply(input, extensionRegistry);
+          return new GetFinalStatementsReply(input, extensionRegistry);
       }
     };
 
@@ -15551,9 +15485,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -16074,7 +16005,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreInstanceID(input, extensionRegistry);
+          return new StoreInstanceID(input, extensionRegistry);
       }
     };
 
@@ -16126,9 +16057,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -16469,7 +16397,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreInstanceIDReply(input, extensionRegistry);
+          return new StoreInstanceIDReply(input, extensionRegistry);
       }
     };
 
@@ -16531,9 +16459,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -16967,7 +16892,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetInstanceID(input, extensionRegistry);
+          return new GetInstanceID(input, extensionRegistry);
       }
     };
 
@@ -17029,9 +16954,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -17465,7 +17387,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetInstanceIDReply(input, extensionRegistry);
+          return new GetInstanceIDReply(input, extensionRegistry);
       }
     };
 
@@ -17540,9 +17462,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -18176,7 +18095,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreSigner(input, extensionRegistry);
+          return new StoreSigner(input, extensionRegistry);
       }
     };
 
@@ -18228,9 +18147,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -18571,7 +18487,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreSignerReply(input, extensionRegistry);
+          return new StoreSignerReply(input, extensionRegistry);
       }
     };
 
@@ -18633,9 +18549,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -19069,7 +18982,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetSigner(input, extensionRegistry);
+          return new GetSigner(input, extensionRegistry);
       }
     };
 
@@ -19134,9 +19047,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -19683,7 +19593,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetSignerReply(input, extensionRegistry);
+          return new GetSignerReply(input, extensionRegistry);
       }
     };
 
@@ -19798,9 +19708,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -20550,7 +20457,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreKeys(input, extensionRegistry);
+          return new StoreKeys(input, extensionRegistry);
       }
     };
 
@@ -20602,9 +20509,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -20945,7 +20849,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreKeysReply(input, extensionRegistry);
+          return new StoreKeysReply(input, extensionRegistry);
       }
     };
 
@@ -21008,9 +20912,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -21445,7 +21346,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetKeys(input, extensionRegistry);
+          return new GetKeys(input, extensionRegistry);
       }
     };
 
@@ -21521,9 +21422,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -22097,7 +21995,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetKeysReply(input, extensionRegistry);
+          return new GetKeysReply(input, extensionRegistry);
       }
     };
 
@@ -22257,9 +22155,6 @@ public final class PoPProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -23321,7 +23216,7 @@ public final class PoPProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new PopPartyInstance(input, extensionRegistry);
+          return new PopPartyInstance(input, extensionRegistry);
       }
     };
 
@@ -23538,7 +23433,7 @@ public final class PoPProto {
       "ent\022\032\n\004desc\030\001 \001(\0132\014.pop.PopDesc\022\021\n\tatten" +
       "dees\030\002 \003(\014\022\021\n\tsignature\030\003 \002(\014\022\016\n\006merged\030" +
       "\004 \002(\010\"1\n\013CheckConfig\022\017\n\007pophash\030\001 \002(\014\022\021\n" +
-      "\tattendees\030\002 \003(\014\"I\n\020CheckConfigReply\022\021\n\t" +
+      "\tattendees\030\002 \003(\014\"I\n\020CheckConfigReply\022\021\n\t",
       "popstatus\030\001 \002(\021\022\017\n\007pophash\030\002 \002(\014\022\021\n\tatte" +
       "ndees\030\003 \003(\014\"=\n\013MergeConfig\022\"\n\005final\030\001 \001(" +
       "\0132\023.pop.FinalStatement\022\n\n\002id\030\002 \002(\014\"Z\n\020Me" +
@@ -23548,7 +23443,7 @@ public final class PoPProto {
       "lic\030\002 \002(\014\"<\n\013StoreConfig\022\032\n\004desc\030\001 \001(\0132\014" +
       ".pop.PopDesc\022\021\n\tsignature\030\002 \002(\014\"\036\n\020Store" +
       "ConfigReply\022\n\n\002id\030\001 \002(\014\"G\n\017FinalizeReque" +
-      "st\022\016\n\006descid\030\001 \002(\014\022\021\n\tattendees\030\002 \003(\014\022\021\n" +
+      "st\022\016\n\006descid\030\001 \002(\014\022\021\n\tattendees\030\002 \003(\014\022\021\n",
       "\tsignature\030\003 \002(\014\"6\n\020FinalizeResponse\022\"\n\005" +
       "final\030\001 \001(\0132\023.pop.FinalStatement\"4\n\014Fetc" +
       "hRequest\022\n\n\002id\030\001 \002(\014\022\030\n\020returnuncomplete" +
@@ -23558,7 +23453,7 @@ public final class PoPProto {
       "esc\"\034\n\nVerifyLink\022\016\n\006public\030\001 \002(\014\"!\n\017Ver" +
       "ifyLinkReply\022\016\n\006exists\030\001 \002(\010\"\t\n\007GetLink\"" +
       "\036\n\014GetLinkReply\022\016\n\006public\030\001 \002(\014\"\024\n\022GetFi" +
-      "nalStatements\"\262\001\n\027GetFinalStatementsRepl" +
+      "nalStatements\"\262\001\n\027GetFinalStatementsRepl",
       "y\022J\n\017finalstatements\030\001 \003(\01321.pop.GetFina" +
       "lStatementsReply.FinalstatementsEntry\032K\n" +
       "\024FinalstatementsEntry\022\013\n\003key\030\001 \001(\t\022\"\n\005va" +
@@ -23568,7 +23463,7 @@ public final class PoPProto {
       "tInstanceID\022\017\n\007partyid\030\001 \002(\014\"(\n\022GetInsta" +
       "nceIDReply\022\022\n\ninstanceid\030\001 \002(\014\"<\n\013StoreS" +
       "igner\022\017\n\007partyid\030\001 \002(\014\022\034\n\006signer\030\002 \002(\0132\014" +
-      ".darc.Signer\"\022\n\020StoreSignerReply\"\034\n\tGetS" +
+      ".darc.Signer\"\022\n\020StoreSignerReply\"\034\n\tGetS",
       "igner\022\017\n\007partyid\030\001 \002(\014\".\n\016GetSignerReply" +
       "\022\034\n\006signer\030\001 \002(\0132\014.darc.Signer\"8\n\tStoreK" +
       "eys\022\n\n\002id\030\001 \002(\014\022\014\n\004keys\030\002 \003(\014\022\021\n\tsignatu" +

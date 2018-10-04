@@ -124,6 +124,8 @@ message Message {
   required uint64 reward = 6;
   // ID of the messgae - should be random.
   required bytes id = 7;
+  // PartyIID - the instance ID of the party this message belongs to
+  required bytes partyiid = 8;
 }
 
 // SendMessage stores the message in the system.
@@ -139,6 +141,8 @@ message ListMessages {
   required sint32 start = 1;
   // Number of maximum messages returned
   required sint32 number = 2;
+  // ReaderId of the reading account, to skip messages created by this reader
+  required bytes readerid = 3;
 }
 
 // ListMessagesReply returns the subjects, IDs, balances and rewards of the top
@@ -152,6 +156,8 @@ message ListMessagesReply {
   repeated uint64 balances = 3;
   // Rewards
   repeated uint64 rewards = 4;
+  // PartyIIDs
+  repeated bytes partyiids = 5;
 }
 
 // ReadMessage requests the full message and the reward for that message.
@@ -168,6 +174,9 @@ message ReadMessage {
 message ReadMessageReply {
   // Messsage to read.
   required Message message = 1;
+  // Rewarded is true if this is the first time the message has been read
+  // by this reader.
+  required bool rewarded = 2;
 }
 
 // TopupMessage to fill up the balance of a message

@@ -1,0 +1,17 @@
+syntax = "proto2";
+package byzcoincontracts;
+
+option java_package = "ch.epfl.dedis.proto";
+option java_outer_classname = "OmniLedgerContracts";
+
+// CoinInstance represents the data stored for a coin-account. It holds the
+// type of the coin and the actual balance, which is always positive.
+message CoinInstance {
+  // Type denotes what coin this is. Every coin can have a type, and only
+  // compatible coins can be directly transferred. For incompatible coins,
+  // you need an exchange (not yet implemented).
+  required bytes type = 1;
+  // Balance holds how many coins are stored in this account. It can only
+  // be positive.
+  required uint64 balance = 2;
+}

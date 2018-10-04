@@ -86,9 +86,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1026,7 +1023,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new IDBlock(input, extensionRegistry);
+          return new IDBlock(input, extensionRegistry);
       }
     };
 
@@ -1294,9 +1291,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2924,7 +2918,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Data(input, extensionRegistry);
+          return new Data(input, extensionRegistry);
       }
     };
 
@@ -2994,9 +2988,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3454,7 +3445,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Device(input, extensionRegistry);
+          return new Device(input, extensionRegistry);
       }
     };
 
@@ -3531,9 +3522,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4124,7 +4112,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new PinRequest(input, extensionRegistry);
+          return new PinRequest(input, extensionRegistry);
       }
     };
 
@@ -4223,9 +4211,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5080,7 +5065,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StoreKeys(input, extensionRegistry);
+          return new StoreKeys(input, extensionRegistry);
       }
     };
 
@@ -5233,9 +5218,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6274,7 +6256,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateIdentity(input, extensionRegistry);
+          return new CreateIdentity(input, extensionRegistry);
       }
     };
 
@@ -6340,9 +6322,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6887,7 +6866,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateIdentityReply(input, extensionRegistry);
+          return new CreateIdentityReply(input, extensionRegistry);
       }
     };
 
@@ -6949,9 +6928,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7385,7 +7361,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DataUpdate(input, extensionRegistry);
+          return new DataUpdate(input, extensionRegistry);
       }
     };
 
@@ -7450,9 +7426,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7996,7 +7969,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DataUpdateReply(input, extensionRegistry);
+          return new DataUpdateReply(input, extensionRegistry);
       }
     };
 
@@ -8072,9 +8045,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8706,7 +8676,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ProposeSend(input, extensionRegistry);
+          return new ProposeSend(input, extensionRegistry);
       }
     };
 
@@ -8768,9 +8738,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9204,7 +9171,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ProposeUpdate(input, extensionRegistry);
+          return new ProposeUpdate(input, extensionRegistry);
       }
     };
 
@@ -9269,9 +9236,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9815,7 +9779,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ProposeUpdateReply(input, extensionRegistry);
+          return new ProposeUpdateReply(input, extensionRegistry);
       }
     };
 
@@ -9903,9 +9867,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -10584,7 +10545,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ProposeVote(input, extensionRegistry);
+          return new ProposeVote(input, extensionRegistry);
       }
     };
 
@@ -10650,9 +10611,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -11197,7 +11155,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ProposeVoteReply(input, extensionRegistry);
+          return new ProposeVoteReply(input, extensionRegistry);
       }
     };
 
@@ -11292,9 +11250,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12152,7 +12107,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new PropagateIdentity(input, extensionRegistry);
+          return new PropagateIdentity(input, extensionRegistry);
       }
     };
 
@@ -12227,9 +12182,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12860,7 +12812,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new UpdateSkipBlock(input, extensionRegistry);
+          return new UpdateSkipBlock(input, extensionRegistry);
       }
     };
 
@@ -12934,9 +12886,6 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -13459,7 +13408,7 @@ public final class CiscProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Authenticate(input, extensionRegistry);
+          return new Authenticate(input, extensionRegistry);
       }
     };
 
@@ -13596,7 +13545,7 @@ public final class CiscProto {
       "ry\022(\n\007storage\030\003 \003(\0132\027.cisc.Data.StorageE" +
       "ntry\022\034\n\006roster\030\004 \001(\0132\014.onet.Roster\022$\n\005vo" +
       "tes\030\005 \003(\0132\025.cisc.Data.VotesEntry\032;\n\013Devi" +
-      "ceEntry\022\013\n\003key\030\001 \001(\t\022\033\n\005value\030\002 \001(\0132\014.ci" +
+      "ceEntry\022\013\n\003key\030\001 \001(\t\022\033\n\005value\030\002 \001(\0132\014.ci",
       "sc.Device:\0028\001\032.\n\014StorageEntry\022\013\n\003key\030\001 \001" +
       "(\t\022\r\n\005value\030\002 \001(\t:\0028\001\032,\n\nVotesEntry\022\013\n\003k" +
       "ey\030\001 \001(\t\022\r\n\005value\030\002 \001(\014:\0028\001\"\027\n\006Device\022\r\n" +
@@ -13606,7 +13555,7 @@ public final class CiscProto {
       "\n\007publics\030\003 \003(\014\022\013\n\003sig\030\004 \002(\014\"e\n\016CreateId" +
       "entity\022\030\n\004data\030\001 \001(\0132\n.cisc.Data\022\014\n\004type" +
       "\030\002 \002(\021\022\017\n\007schnsig\030\003 \001(\014\022\013\n\003sig\030\004 \002(\014\022\r\n\005" +
-      "nonce\030\005 \002(\014\"<\n\023CreateIdentityReply\022%\n\007ge" +
+      "nonce\030\005 \002(\014\"<\n\023CreateIdentityReply\022%\n\007ge",
       "nesis\030\001 \001(\0132\024.skipchain.SkipBlock\"\030\n\nDat" +
       "aUpdate\022\n\n\002id\030\001 \002(\014\"+\n\017DataUpdateReply\022\030" +
       "\n\004data\030\001 \001(\0132\n.cisc.Data\"6\n\013ProposeSend\022" +
@@ -13616,7 +13565,7 @@ public final class CiscProto {
       "\"<\n\013ProposeVote\022\n\n\002id\030\001 \002(\014\022\016\n\006signer\030\002 " +
       "\002(\t\022\021\n\tsignature\030\003 \002(\014\"6\n\020ProposeVoteRep" +
       "ly\022\"\n\004data\030\001 \001(\0132\024.skipchain.SkipBlock\"P" +
-      "\n\021PropagateIdentity\022\036\n\007idblock\030\001 \001(\0132\r.c" +
+      "\n\021PropagateIdentity\022\036\n\007idblock\030\001 \001(\0132\r.c",
       "isc.IDBlock\022\013\n\003tag\030\002 \002(\t\022\016\n\006pubstr\030\003 \002(\t" +
       "\"C\n\017UpdateSkipBlock\022\n\n\002id\030\001 \002(\014\022$\n\006lates" +
       "t\030\002 \001(\0132\024.skipchain.SkipBlock\"*\n\014Authent" +

@@ -123,9 +123,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -926,7 +923,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DataHeader(input, extensionRegistry);
+          return new DataHeader(input, extensionRegistry);
       }
     };
 
@@ -1004,9 +1001,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1704,7 +1698,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new DataBody(input, extensionRegistry);
+          return new DataBody(input, extensionRegistry);
       }
     };
 
@@ -1860,9 +1854,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3023,7 +3014,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateGenesisBlock(input, extensionRegistry);
+          return new CreateGenesisBlock(input, extensionRegistry);
       }
     };
 
@@ -3118,9 +3109,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3820,7 +3808,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new CreateGenesisBlockResponse(input, extensionRegistry);
+          return new CreateGenesisBlockResponse(input, extensionRegistry);
       }
     };
 
@@ -3953,9 +3941,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4876,7 +4861,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new AddTxRequest(input, extensionRegistry);
+          return new AddTxRequest(input, extensionRegistry);
       }
     };
 
@@ -4946,9 +4931,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5403,7 +5385,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new AddTxResponse(input, extensionRegistry);
+          return new AddTxResponse(input, extensionRegistry);
       }
     };
 
@@ -5511,9 +5493,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6196,7 +6175,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetProof(input, extensionRegistry);
+          return new GetProof(input, extensionRegistry);
       }
     };
 
@@ -6295,9 +6274,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7013,7 +6989,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new GetProofResponse(input, extensionRegistry);
+          return new GetProofResponse(input, extensionRegistry);
       }
     };
 
@@ -7100,9 +7076,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7820,7 +7793,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ChainConfig(input, extensionRegistry);
+          return new ChainConfig(input, extensionRegistry);
       }
     };
 
@@ -7984,9 +7957,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9327,7 +9297,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Proof(input, extensionRegistry);
+          return new Proof(input, extensionRegistry);
       }
     };
 
@@ -9581,9 +9551,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -11567,7 +11534,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Instruction(input, extensionRegistry);
+          return new Instruction(input, extensionRegistry);
       }
     };
 
@@ -11691,9 +11658,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12678,7 +12642,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Spawn(input, extensionRegistry);
+          return new Spawn(input, extensionRegistry);
       }
     };
 
@@ -12803,9 +12767,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -13791,7 +13752,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Invoke(input, extensionRegistry);
+          return new Invoke(input, extensionRegistry);
       }
     };
 
@@ -13844,9 +13805,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
       try {
@@ -14188,7 +14146,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Delete(input, extensionRegistry);
+          return new Delete(input, extensionRegistry);
       }
     };
 
@@ -14285,9 +14243,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -14938,7 +14893,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Argument(input, extensionRegistry);
+          return new Argument(input, extensionRegistry);
       }
     };
 
@@ -15016,9 +14971,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -15716,7 +15668,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new ClientTransaction(input, extensionRegistry);
+          return new ClientTransaction(input, extensionRegistry);
       }
     };
 
@@ -15791,9 +15743,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -16425,7 +16374,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new TxResult(input, extensionRegistry);
+          return new TxResult(input, extensionRegistry);
       }
     };
 
@@ -16567,9 +16516,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -17468,7 +17414,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new StateChange(input, extensionRegistry);
+          return new StateChange(input, extensionRegistry);
       }
     };
 
@@ -17557,9 +17503,6 @@ public final class ByzCoinProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -18127,7 +18070,7 @@ public final class ByzCoinProto {
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-        return new Coin(input, extensionRegistry);
+          return new Coin(input, extensionRegistry);
       }
     };
 
@@ -18259,7 +18202,7 @@ public final class ByzCoinProto {
       "xResult\"\221\001\n\022CreateGenesisBlock\022\017\n\007versio" +
       "n\030\001 \002(\021\022\034\n\006roster\030\002 \002(\0132\014.onet.Roster\022\037\n" +
       "\013genesisdarc\030\003 \002(\0132\n.darc.Darc\022\025\n\rblocki" +
-      "nterval\030\004 \002(\022\022\024\n\014maxblocksize\030\005 \001(\021\"V\n\032C" +
+      "nterval\030\004 \002(\022\022\024\n\014maxblocksize\030\005 \001(\021\"V\n\032C",
       "reateGenesisBlockResponse\022\017\n\007version\030\001 \002" +
       "(\021\022\'\n\tskipblock\030\002 \001(\0132\024.skipchain.SkipBl" +
       "ock\"|\n\014AddTxRequest\022\017\n\007version\030\001 \002(\021\022\023\n\013" +
@@ -18269,7 +18212,7 @@ public final class ByzCoinProto {
       "\002(\021\"4\n\010GetProof\022\017\n\007version\030\001 \002(\021\022\013\n\003key\030" +
       "\002 \002(\014\022\n\n\002id\030\003 \002(\014\"B\n\020GetProofResponse\022\017\n" +
       "\007version\030\001 \002(\021\022\035\n\005proof\030\002 \002(\0132\016.byzcoin." +
-      "Proof\"X\n\013ChainConfig\022\025\n\rblockinterval\030\001 " +
+      "Proof\"X\n\013ChainConfig\022\025\n\rblockinterval\030\001 ",
       "\002(\022\022\034\n\006roster\030\002 \002(\0132\014.onet.Roster\022\024\n\014max" +
       "blocksize\030\003 \002(\021\"\177\n\005Proof\022)\n\016inclusionpro" +
       "of\030\001 \002(\0132\021.collection.Proof\022$\n\006latest\030\002 " +
@@ -18279,7 +18222,7 @@ public final class ByzCoinProto {
       "ndex\030\003 \002(\021\022\016\n\006length\030\004 \002(\021\022\035\n\005spawn\030\005 \001(" +
       "\0132\016.byzcoin.Spawn\022\037\n\006invoke\030\006 \001(\0132\017.byzc" +
       "oin.Invoke\022\037\n\006delete\030\007 \001(\0132\017.byzcoin.Del" +
-      "ete\022#\n\nsignatures\030\010 \003(\0132\017.darc.Signature" +
+      "ete\022#\n\nsignatures\030\010 \003(\0132\017.darc.Signature",
       "\"<\n\005Spawn\022\022\n\ncontractid\030\001 \002(\t\022\037\n\004args\030\002 " +
       "\003(\0132\021.byzcoin.Argument\":\n\006Invoke\022\017\n\007comm" +
       "and\030\001 \002(\t\022\037\n\004args\030\002 \003(\0132\021.byzcoin.Argume" +
@@ -18289,7 +18232,7 @@ public final class ByzCoinProto {
       "\n\010TxResult\0225\n\021clienttransaction\030\001 \002(\0132\032." +
       "byzcoin.ClientTransaction\022\020\n\010accepted\030\002 " +
       "\002(\010\"i\n\013StateChange\022\023\n\013stateaction\030\001 \002(\021\022" +
-      "\022\n\ninstanceid\030\002 \002(\014\022\022\n\ncontractid\030\003 \002(\014\022" +
+      "\022\n\ninstanceid\030\002 \002(\014\022\022\n\ncontractid\030\003 \002(\014\022",
       "\r\n\005value\030\004 \002(\014\022\016\n\006darcid\030\005 \002(\014\"#\n\004Coin\022\014" +
       "\n\004name\030\001 \002(\014\022\r\n\005value\030\002 \002(\004B#\n\023ch.epfl.d" +
       "edis.protoB\014ByzCoinProto"
