@@ -260,7 +260,7 @@ explains how to join the DEDIS-cothority
 ## Contributing
 
 If you want to contribute to Cothority-ONet, please have a look at
-[CONTRIBUTION](CONTRIBUTION.md) for
+[CONTRIBUTION](CONTRIBUTION) for
 licensing details. Once you are OK with those, you can have a look at our
 coding-guidelines in
 [Coding](https://github.com/dedis/Coding). In short, we use the github-issues

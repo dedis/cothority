@@ -29,3 +29,4 @@ that identifies him anonymously as a unique person
 - [skipchain](../skipchain/README.md) a permissioned
 blockchain for storing arbitrary data if a consensus of a group of nodes is found
 - [status](../status/service/README.md) returns the status of a conode
+- [calypso](../calypso) Auditable Sharing of Private Data over Blockchains
