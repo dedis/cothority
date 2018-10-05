@@ -49,7 +49,7 @@ func init() {
 // the thrid-party authentication system. Return the user-id and the extra_data
 // associated with this auth info, or error.
 type Validator interface {
-	FindClaim(authInfo []byte) (claim string, extraData string, err error)
+	FindClaim(issuer string, authInfo []byte) (claim string, extraData string, err error)
 }
 
 func (s *service) registerValidator(t string, v Validator) {
@@ -215,13 +215,13 @@ func (s *service) Signature(req *SignatureRequest) (*SignatureResponse, error) {
 	}
 
 	// Look for a validator for the external type requested.
-	validator, err := s.validator(fmt.Sprintf("%v:%v", req.Type, req.Issuer))
+	validator, err := s.validator(req.Type)
 	if err != nil {
 		return nil, err
 	}
 
 	// Use the validator to extract a claim from the auth info.
-	claim, _, err := validator.FindClaim(req.AuthInfo)
+	claim, _, err := validator.FindClaim(req.Issuer, req.AuthInfo)
 	if err != nil {
 		return nil, err
 	}
@@ -279,7 +279,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 
 	// Register validators here
-	s.registerValidator("oidc:https://oauth.dedis.ch/dex", newOidc("https://oauth.dedis.ch/dex"))
+	s.registerValidator("oidc", &oidcValidator{})
 
 	return s, nil
 }

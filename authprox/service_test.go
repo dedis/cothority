@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
 	"github.com/dedis/kyber/sign/dss"

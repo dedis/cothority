@@ -44,6 +44,16 @@ type bcConfig struct {
 	ByzCoinID skipchain.SkipBlockID
 }
 
+// Presets for -clientid and -clientsecret.
+var clientIDs = map[string]string{
+	"https://accounts.google.com": "742239812619-g1rqb2esv99gplco7chck7ir3c22g4pf.apps.googleusercontent.com",
+	"https://oauth.dedis.ch":      "dedis",
+}
+var clientSecrets = map[string]string{
+	"https://accounts.google.com": "wYLW80agBpK-EyuXzKqEwieK",
+	"https://oauth.dedis.ch":      "6143443e4635074ddef90ac7bc71443ceed7e6df",
+}
+
 var cmds = cli.Commands{
 	{
 		Name:    "create",
@@ -84,12 +94,10 @@ var cmds = cli.Commands{
 			cli.StringFlag{
 				Name:  "clientsecret",
 				Usage: "the client secret",
-				Value: "6143443e4635074ddef90ac7bc71443ceed7e6df",
 			},
 			cli.StringFlag{
 				Name:  "clientid",
 				Usage: "the client id",
-				Value: "dedis",
 			},
 		},
 		Action: login,
@@ -237,6 +245,7 @@ func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
 			return nil, fmt.Errorf("could not make OpenID signer: %v", err)
 		}
 	} else {
+		fmt.Println("no openid: %v", err)
 		// Otherwise, get the private key from the env/cmdline.
 		privStr := c.String("priv")
 		if privStr == "" {
@@ -414,23 +423,65 @@ func login(c *cli.Context) error {
 		return errors.New("--bc flag is required")
 	}
 
+	// If these are not set, then set them out of the pre-sets, based on the
+	// issuer. If the issuer is not found, they will be set back to "", which
+	// will not work, but is no worse than before this code ran.
+	cid := c.String("clientid")
+	if cid == "" {
+		cid = clientIDs[is]
+	}
+	csec := c.String("clientsecret")
+	if csec == "" {
+		csec = clientSecrets[is]
+	}
+
 	ctx := context.Background()
 	p, err := oidc.NewProvider(ctx, is)
 	if err != nil {
 		return err
 	}
 
+	// This stuff was taken from github.com/dexidp/dex/cmd/example-app.
+	var s struct {
+		// What scopes does a provider support?
+		//
+		// See: https://openid.net/specs/openid-connect-discovery-1_0.html#ProviderMetadata
+		ScopesSupported []string `json:"scopes_supported"`
+	}
+	if err := p.Claims(&s); err != nil {
+		return fmt.Errorf("failed to parse provider scopes_supported: %v", err)
+	}
+
+	hasOffline := func() bool {
+		for _, scope := range s.ScopesSupported {
+			if scope == oidc.ScopeOfflineAccess {
+				return true
+			}
+		}
+		return false
+	}()
+
+	var scopes []string
+	if len(s.ScopesSupported) == 0 || hasOffline {
+		// scopes_supported is a "RECOMMENDED" discovery claim, not a required
+		// one. If missing, assume that the provider follows the spec and has
+		// an "offline_access" scope.
+		scopes = []string{oidc.ScopeOfflineAccess}
+	}
+	scopes = append(scopes, "openid", "email")
+
 	cfg := &oauth2.Config{
-		ClientID:     c.String("clientid"),
-		ClientSecret: c.String("clientsecret"),
+		ClientID:     cid,
+		ClientSecret: csec,
 		Endpoint:     p.Endpoint(),
-		Scopes:       []string{"offline_access", "openid", "profile", "email"},
+		Scopes:       scopes,
 		RedirectURL:  "urn:ietf:wg:oauth:2.0:oob",
 	}
 
-	state := cothority.Suite.Scalar().Pick(cothority.Suite.RandomStream()).String()
-
-	url := cfg.AuthCodeURL(state)
+	// state is none because in the redirect to "OOB" case, (out of band;
+	// meaning "the user has to copy and paste to your app) there's no place
+	// to verify it.
+	url := cfg.AuthCodeURL("none", oauth2.AccessTypeOffline)
 
 	fmt.Fprintln(c.App.Writer, "Opening this URL in your browser:")
 	fmt.Fprintln(c.App.Writer, "\t", url)
@@ -663,8 +714,11 @@ func getPublic(c *cli.Context, issuer string) (kyber.Point, error) {
 		return nil, err
 	}
 
-	if len(resp.Enrollments) != 1 {
-		return nil, errors.New("did not find 1 enrollment")
+	if len(resp.Enrollments) == 0 {
+		return nil, errors.New("found no enrollments")
+	}
+	if len(resp.Enrollments) > 1 {
+		return nil, errors.New("found too many enrollments")
 	}
 
 	return resp.Enrollments[0].Public, nil

@@ -62,8 +62,8 @@ hours ago.
 ## OpenID authentication
 
 If the Darc that controls access to the eventlog has the form
-"proxy:$pubkey:$user", then `el` will use the
-[Authentication Proxy](../authprox/README.md) in order to get signatures.
+"proxy:$pubkey:$user", then `el` will need to use the
+[Authentication Proxy](../../authprox/README.md) in order to get signatures.
 
 The process looks like this:
 
@@ -80,7 +80,7 @@ $ bcadmin add invoke:eventlog -identity proxy:969168fa299693ee27d4b6f4d58b5be58f
 # Login to the OpenID provider in order to get the authentication token saved into el's config.
 $ el login
 Opening this URL in your browser:
-	 https://oauth.dedis.ch/dex/auth?client_id=dedis&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob&response_type=code&scope=offline_access+openid+profile+email&state=8d9c965d80ce6baaabcd77e3e18bf4149e55f4724c33690c56027e46e8bce60d
+	 https://oauth.dedis.ch/dex/auth?client_id=dedis&redirect_uri=urn%3Aietf%3Awg%3Aoauth%3A2.0%3Aoob&response_type=code&scope=offline_access+openid+email&state=none
 Enter the access code now: pks4ocibylrm67ht5r4jhd2d2
 Login information saved into /Users/jallen/Library/Application Support/el/data/openid.cfg
 
@@ -90,3 +90,6 @@ $ el create
 $ el log -content Test
 ```
 
+If you want to stop using OpenID authentication, you need to remove the
+`$HOME/Library/Application Support/el/data/openid.cfg` file, and then set the `-private`
+CLI flag, or `PRIVATE_KEY` environment variable.
