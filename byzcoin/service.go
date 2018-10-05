@@ -112,6 +112,8 @@ type Service struct {
 	closedMutex   sync.Mutex
 	working       sync.WaitGroup
 	viewChangeMan viewChangeManager
+
+	streamingMan streamingManager
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -561,6 +563,9 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 		}
 		s.pollChanMut.Unlock()
 	}
+
+	// At this point everything should be stored.
+	s.streamingMan.notify(string(sb.SkipChainID()), sb)
 	return nil
 }
 
@@ -1427,10 +1432,14 @@ func newService(c *onet.Context) (onet.Service, error) {
 		closeLeaderMonitorChan: make(chan bool, 1),
 		heartbeats:             newHeartbeats(),
 		viewChangeMan:          newViewChangeManager(),
+		streamingMan:           streamingManager{},
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
 		s.GetProof); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
+	}
+	if err := s.RegisterStreamingHandlers(s.StreamTransactions); err != nil {
+		log.ErrFatal(err, "Couldn't register streaming messages")
 	}
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)
 

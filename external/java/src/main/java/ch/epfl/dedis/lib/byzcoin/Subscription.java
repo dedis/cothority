@@ -1,60 +1,77 @@
 package ch.epfl.dedis.lib.byzcoin;
 
+import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
-import ch.epfl.dedis.lib.exception.CothorityException;
-import ch.epfl.dedis.lib.skipchain.SkipchainRPC;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 /**
  * Subscription class for ByzCoin. A listener can subscribe to different events and then get notified
- * whenever something happens. This first implementation uses polling to fetch latest blocks and then
- * calls the appropriate receivers. Once we have a streaming service, it will directly connect to the
- * streaming service.
+ * whenever something happens via the streaming service. We only maintain one connection because we can
+ * replicate the events to all the subscribers.
  * <p>
- * - The polling only starts if at least one receiver subscribes.
- * - The polling stops, once the last receiver has been unsubscribed.
- * - Only blocks arriving after the subscription will be passed to the receiver(s).
- * - If more than one block has been received during the subscription period, they will be given in
- * a list to the receiver(s).
+ * - The connection is made if at least one receiver subscribes.
+ * - The connection stops once the last receiver has been unsubscribed.
+ * - The subscribers will only see events (blocks) that arrive after the subscription is made.
  */
 public class Subscription {
     /**
      * A SkipBlockReceiver will be informed on any new block arriving.
      */
-    @FunctionalInterface
     public interface SkipBlockReceiver {
-        void receive(List<SkipBlock> blocks);
+        void receive(SkipBlock block);
+
+        void error(String s);
     }
 
-    private SkipchainRPC sc;
-    private Set<SkipBlockReceiver> blockReceivers = new HashSet<>();
-    private final ScheduledExecutorService scheduler =
-            Executors.newScheduledThreadPool(1);
-    private Runnable pollRunnable;
-    private ScheduledFuture<?> pollHandle;
-    private SkipBlock latestBlock;
-    private long millis;
+    private ByzCoinRPC bc;
+    private AggregateReceiver aggr;
+    private ServerIdentity.StreamingConn conn;
+
+    /**
+     * To reduce the number of connections, we create this aggregate receiver that replicates events to all the
+     * subscribers.
+     */
+    class AggregateReceiver implements SkipBlockReceiver {
+        private Set<SkipBlockReceiver> blockReceivers;
+
+        private AggregateReceiver() {
+            blockReceivers = new HashSet<>();
+        }
+
+        @Override
+        public void receive(SkipBlock block) {
+            blockReceivers.forEach(br -> br.receive(block));
+        }
+
+        @Override
+        public void error(String s) {
+            blockReceivers.forEach(br -> br.error(s));
+        }
+
+        private boolean add(SkipBlockReceiver r) {
+            return blockReceivers.add(r);
+        }
+
+        private boolean remove(SkipBlockReceiver r) {
+            return blockReceivers.remove(r);
+        }
+
+        private int size() {
+            return blockReceivers.size();
+        }
+    }
 
     /**
      * Starts a subscription service, but doesn't call the polling yet.
      *
-     * @param sc     a reference to the instantiated skipchainRPC
-     * @param millis how many millisecond to wait between two polling events.
-     * @throws CothorityException
+     * @param bc a reference to the instantiated ByzCoinRPC
      */
-    public Subscription(SkipchainRPC sc, long millis) throws CothorityException {
-        this.sc = sc;
-        this.millis = millis;
-        pollRunnable = () -> poll();
+    public Subscription(ByzCoinRPC bc) {
+        this.bc = bc;
+        this.aggr = new AggregateReceiver();
     }
 
     /**
@@ -63,10 +80,10 @@ public class Subscription {
      *
      * @param br the receiver that wants to be informed of new blocks.
      */
-    public void subscribeSkipBlock(SkipBlockReceiver br) {
-        blockReceivers.add(br);
-        if (blockReceivers.size() == 1) {
-            startPolling();
+    public void subscribeSkipBlock(SkipBlockReceiver br) throws CothorityCommunicationException {
+        aggr.add(br);
+        if (aggr.size() == 1) {
+            conn = bc.streamTransactions(aggr);
         }
     }
 
@@ -77,50 +94,19 @@ public class Subscription {
      * @param br the receiver to unsubscribe.
      */
     public void unsubscribeSkipBlock(SkipBlockReceiver br) {
-        blockReceivers.remove(br);
-        if (blockReceivers.size() == 0) {
-            stopPolling();
+        aggr.remove(br);
+        if (aggr.size() == 0) {
+            conn.close();
         }
     }
 
-    private void poll() {
-        List<SkipBlock> newBlocks = new ArrayList<>();
-        try {
-            // Update the latest block
-            latestBlock = sc.getSkipblock(latestBlock.getId());
-            while (latestBlock.getForwardLinks().size() > 0) {
-                // Get next block with link-height 0
-                latestBlock = sc.getSkipblock(latestBlock.getForwardLinks().get(0).getTo());
-                newBlocks.add(latestBlock);
-            }
-        } catch (CothorityException e) {
-            return;
+    /**
+     * Checks whether the connection is closed.
+     */
+    public boolean isClosed() {
+        if (conn == null) {
+            return true;
         }
-        if (newBlocks.size() > 0) {
-            blockReceivers.forEach(br -> br.receive(newBlocks));
-        }
-    }
-
-    private void startPolling() {
-        if (pollHandle == null) {
-            try {
-                latestBlock = sc.getLatestSkipblock();
-            } catch (CothorityException e) {
-            }
-            pollHandle = scheduler.scheduleWithFixedDelay(pollRunnable, 0,
-                    this.millis, MILLISECONDS);
-        }
-    }
-
-    private void stopPolling() {
-        if (pollHandle == null) {
-            return;
-        }
-        pollHandle.cancel(false);
-        try {
-            pollHandle.wait();
-            pollHandle = null;
-        } catch (InterruptedException e) {
-        }
+        return conn.isClosed();
     }
 }

@@ -86,6 +86,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -97,13 +100,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.proto.CiscProto.Data.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -143,6 +139,13 @@ public final class CiscProto {
               bitField0_ |= 0x00000004;
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -160,6 +163,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_IDBlock_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_IDBlock_fieldAccessorTable
@@ -232,6 +236,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -259,6 +264,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -273,6 +279,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -419,6 +426,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -426,6 +434,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.IDBlock prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -453,6 +462,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_IDBlock_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_IDBlock_fieldAccessorTable
@@ -478,6 +488,7 @@ public final class CiscProto {
           getLatestskipblockFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (latestBuilder_ == null) {
@@ -501,15 +512,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_IDBlock_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.IDBlock getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.IDBlock.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.IDBlock build() {
         ch.epfl.dedis.proto.CiscProto.IDBlock result = buildPartial();
         if (!result.isInitialized()) {
@@ -518,6 +532,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.IDBlock buildPartial() {
         ch.epfl.dedis.proto.CiscProto.IDBlock result = new ch.epfl.dedis.proto.CiscProto.IDBlock(this);
         int from_bitField0_ = bitField0_;
@@ -551,32 +566,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.IDBlock) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.IDBlock)other);
@@ -602,6 +624,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (hasLatest()) {
           if (!getLatest().isInitialized()) {
@@ -621,6 +644,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -993,11 +1017,13 @@ public final class CiscProto {
         }
         return latestskipblockBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1019,11 +1045,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<IDBlock>
         PARSER = new com.google.protobuf.AbstractParser<IDBlock>() {
+      @java.lang.Override
       public IDBlock parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new IDBlock(input, extensionRegistry);
+        return new IDBlock(input, extensionRegistry);
       }
     };
 
@@ -1036,6 +1063,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.IDBlock getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1291,6 +1319,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1302,13 +1333,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               threshold_ = input.readSInt32();
@@ -1366,6 +1390,13 @@ public final class CiscProto {
                   votes__.getKey(), votes__.getValue());
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1384,6 +1415,7 @@ public final class CiscProto {
     }
 
     @SuppressWarnings({"rawtypes"})
+    @java.lang.Override
     protected com.google.protobuf.MapField internalGetMapField(
         int number) {
       switch (number) {
@@ -1398,6 +1430,7 @@ public final class CiscProto {
               "Invalid map field number: " + number);
       }
     }
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Data_fieldAccessorTable
@@ -1747,6 +1780,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1772,6 +1806,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1801,6 +1836,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -1982,6 +2018,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -1989,6 +2026,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.Data prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -2047,6 +2085,7 @@ public final class CiscProto {
                 "Invalid map field number: " + number);
         }
       }
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Data_fieldAccessorTable
@@ -2070,6 +2109,7 @@ public final class CiscProto {
           getRosterFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         threshold_ = 0;
@@ -2086,15 +2126,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Data_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.Data getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.Data.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.Data build() {
         ch.epfl.dedis.proto.CiscProto.Data result = buildPartial();
         if (!result.isInitialized()) {
@@ -2103,6 +2146,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.Data buildPartial() {
         ch.epfl.dedis.proto.CiscProto.Data result = new ch.epfl.dedis.proto.CiscProto.Data(this);
         int from_bitField0_ = bitField0_;
@@ -2130,32 +2174,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.Data) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.Data)other);
@@ -2184,6 +2235,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasThreshold()) {
           return false;
@@ -2201,6 +2253,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2888,11 +2941,13 @@ public final class CiscProto {
             .putAll(values);
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -2914,11 +2969,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Data>
         PARSER = new com.google.protobuf.AbstractParser<Data>() {
+      @java.lang.Override
       public Data parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Data(input, extensionRegistry);
+        return new Data(input, extensionRegistry);
       }
     };
 
@@ -2931,6 +2987,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.Data getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -2988,6 +3045,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2999,16 +3059,16 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              point_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              point_ = input.readBytes();
               break;
             }
           }
@@ -3028,6 +3088,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Device_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Device_fieldAccessorTable
@@ -3060,6 +3121,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -3073,6 +3135,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3081,6 +3144,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -3201,6 +3265,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -3208,6 +3273,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.Device prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -3235,6 +3301,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Device_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Device_fieldAccessorTable
@@ -3257,6 +3324,7 @@ public final class CiscProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         point_ = com.google.protobuf.ByteString.EMPTY;
@@ -3264,15 +3332,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Device_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.Device getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.Device.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.Device build() {
         ch.epfl.dedis.proto.CiscProto.Device result = buildPartial();
         if (!result.isInitialized()) {
@@ -3281,6 +3352,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.Device buildPartial() {
         ch.epfl.dedis.proto.CiscProto.Device result = new ch.epfl.dedis.proto.CiscProto.Device(this);
         int from_bitField0_ = bitField0_;
@@ -3294,32 +3366,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.Device) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.Device)other);
@@ -3339,6 +3418,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPoint()) {
           return false;
@@ -3346,6 +3426,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3415,11 +3496,13 @@ public final class CiscProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -3441,11 +3524,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Device>
         PARSER = new com.google.protobuf.AbstractParser<Device>() {
+      @java.lang.Override
       public Device parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Device(input, extensionRegistry);
+        return new Device(input, extensionRegistry);
       }
     };
 
@@ -3458,6 +3542,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.Device getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -3522,6 +3607,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -3533,13 +3621,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -3549,6 +3630,13 @@ public final class CiscProto {
             case 18: {
               bitField0_ |= 0x00000002;
               public_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -3568,6 +3656,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_PinRequest_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_PinRequest_fieldAccessorTable
@@ -3634,6 +3723,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -3651,6 +3741,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3662,6 +3753,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -3794,6 +3886,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -3801,6 +3894,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.PinRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -3828,6 +3922,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_PinRequest_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_PinRequest_fieldAccessorTable
@@ -3850,6 +3945,7 @@ public final class CiscProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         pin_ = "";
@@ -3859,15 +3955,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_PinRequest_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.PinRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.PinRequest.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.PinRequest build() {
         ch.epfl.dedis.proto.CiscProto.PinRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -3876,6 +3975,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.PinRequest buildPartial() {
         ch.epfl.dedis.proto.CiscProto.PinRequest result = new ch.epfl.dedis.proto.CiscProto.PinRequest(this);
         int from_bitField0_ = bitField0_;
@@ -3893,32 +3993,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.PinRequest) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.PinRequest)other);
@@ -3943,6 +4050,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPin()) {
           return false;
@@ -3953,6 +4061,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4082,11 +4191,13 @@ public final class CiscProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4108,11 +4219,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<PinRequest>
         PARSER = new com.google.protobuf.AbstractParser<PinRequest>() {
+      @java.lang.Override
       public PinRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new PinRequest(input, extensionRegistry);
+        return new PinRequest(input, extensionRegistry);
       }
     };
 
@@ -4125,6 +4237,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.PinRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -4211,6 +4324,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4222,13 +4338,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               type_ = input.readSInt32();
@@ -4260,6 +4369,13 @@ public final class CiscProto {
               sig_ = input.readBytes();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -4280,6 +4396,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_StoreKeys_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_StoreKeys_fieldAccessorTable
@@ -4362,6 +4479,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4385,6 +4503,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4402,6 +4521,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4563,6 +4683,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4570,6 +4691,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.StoreKeys prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4597,6 +4719,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_StoreKeys_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_StoreKeys_fieldAccessorTable
@@ -4620,6 +4743,7 @@ public final class CiscProto {
           getFinalFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         type_ = 0;
@@ -4637,15 +4761,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_StoreKeys_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.StoreKeys getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.StoreKeys.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.StoreKeys build() {
         ch.epfl.dedis.proto.CiscProto.StoreKeys result = buildPartial();
         if (!result.isInitialized()) {
@@ -4654,6 +4781,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.StoreKeys buildPartial() {
         ch.epfl.dedis.proto.CiscProto.StoreKeys result = new ch.epfl.dedis.proto.CiscProto.StoreKeys(this);
         int from_bitField0_ = bitField0_;
@@ -4684,32 +4812,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.StoreKeys) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.StoreKeys)other);
@@ -4745,6 +4880,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasType()) {
           return false;
@@ -4760,6 +4896,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5035,11 +5172,13 @@ public final class CiscProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5061,11 +5200,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<StoreKeys>
         PARSER = new com.google.protobuf.AbstractParser<StoreKeys>() {
+      @java.lang.Override
       public StoreKeys parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new StoreKeys(input, extensionRegistry);
+        return new StoreKeys(input, extensionRegistry);
       }
     };
 
@@ -5078,6 +5218,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.StoreKeys getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -5218,6 +5359,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5229,13 +5373,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.proto.CiscProto.Data.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5269,6 +5406,13 @@ public final class CiscProto {
               nonce_ = input.readBytes();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -5286,6 +5430,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_CreateIdentity_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_CreateIdentity_fieldAccessorTable
@@ -5423,6 +5568,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5450,6 +5596,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5470,6 +5617,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5642,6 +5790,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5649,6 +5798,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.CreateIdentity prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5677,6 +5827,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_CreateIdentity_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_CreateIdentity_fieldAccessorTable
@@ -5700,6 +5851,7 @@ public final class CiscProto {
           getDataFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (dataBuilder_ == null) {
@@ -5719,15 +5871,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_CreateIdentity_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.CreateIdentity getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.CreateIdentity.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.CreateIdentity build() {
         ch.epfl.dedis.proto.CiscProto.CreateIdentity result = buildPartial();
         if (!result.isInitialized()) {
@@ -5736,6 +5891,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.CreateIdentity buildPartial() {
         ch.epfl.dedis.proto.CiscProto.CreateIdentity result = new ch.epfl.dedis.proto.CiscProto.CreateIdentity(this);
         int from_bitField0_ = bitField0_;
@@ -5769,32 +5925,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.CreateIdentity) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.CreateIdentity)other);
@@ -5826,6 +5989,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasType()) {
           return false;
@@ -5844,6 +6008,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6226,11 +6391,13 @@ public final class CiscProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6252,11 +6419,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CreateIdentity>
         PARSER = new com.google.protobuf.AbstractParser<CreateIdentity>() {
+      @java.lang.Override
       public CreateIdentity parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new CreateIdentity(input, extensionRegistry);
+        return new CreateIdentity(input, extensionRegistry);
       }
     };
 
@@ -6269,6 +6437,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.CreateIdentity getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6322,6 +6491,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6333,13 +6505,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6351,6 +6516,13 @@ public final class CiscProto {
                 genesis_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -6370,6 +6542,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_CreateIdentityReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_CreateIdentityReply_fieldAccessorTable
@@ -6400,6 +6573,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -6415,6 +6589,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6423,6 +6598,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -6543,6 +6719,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6550,6 +6727,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.CreateIdentityReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6578,6 +6756,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_CreateIdentityReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_CreateIdentityReply_fieldAccessorTable
@@ -6601,6 +6780,7 @@ public final class CiscProto {
           getGenesisFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (genesisBuilder_ == null) {
@@ -6612,15 +6792,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_CreateIdentityReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.CreateIdentityReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.CreateIdentityReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.CreateIdentityReply build() {
         ch.epfl.dedis.proto.CiscProto.CreateIdentityReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -6629,6 +6812,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.CreateIdentityReply buildPartial() {
         ch.epfl.dedis.proto.CiscProto.CreateIdentityReply result = new ch.epfl.dedis.proto.CiscProto.CreateIdentityReply(this);
         int from_bitField0_ = bitField0_;
@@ -6646,32 +6830,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.CreateIdentityReply) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.CreateIdentityReply)other);
@@ -6691,6 +6882,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (hasGenesis()) {
           if (!getGenesis().isInitialized()) {
@@ -6700,6 +6892,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6836,11 +7029,13 @@ public final class CiscProto {
         }
         return genesisBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6862,11 +7057,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CreateIdentityReply>
         PARSER = new com.google.protobuf.AbstractParser<CreateIdentityReply>() {
+      @java.lang.Override
       public CreateIdentityReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new CreateIdentityReply(input, extensionRegistry);
+        return new CreateIdentityReply(input, extensionRegistry);
       }
     };
 
@@ -6879,6 +7075,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.CreateIdentityReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6928,6 +7125,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6939,16 +7139,16 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              id_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              id_ = input.readBytes();
               break;
             }
           }
@@ -6968,6 +7168,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_DataUpdate_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_DataUpdate_fieldAccessorTable
@@ -6992,6 +7193,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7005,6 +7207,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7013,6 +7216,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -7133,6 +7337,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -7140,6 +7345,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.DataUpdate prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -7167,6 +7373,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_DataUpdate_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_DataUpdate_fieldAccessorTable
@@ -7189,6 +7396,7 @@ public final class CiscProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -7196,15 +7404,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_DataUpdate_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.DataUpdate getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.DataUpdate.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.DataUpdate build() {
         ch.epfl.dedis.proto.CiscProto.DataUpdate result = buildPartial();
         if (!result.isInitialized()) {
@@ -7213,6 +7424,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.DataUpdate buildPartial() {
         ch.epfl.dedis.proto.CiscProto.DataUpdate result = new ch.epfl.dedis.proto.CiscProto.DataUpdate(this);
         int from_bitField0_ = bitField0_;
@@ -7226,32 +7438,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.DataUpdate) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.DataUpdate)other);
@@ -7271,6 +7490,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -7278,6 +7498,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7331,11 +7552,13 @@ public final class CiscProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -7357,11 +7580,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<DataUpdate>
         PARSER = new com.google.protobuf.AbstractParser<DataUpdate>() {
+      @java.lang.Override
       public DataUpdate parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new DataUpdate(input, extensionRegistry);
+        return new DataUpdate(input, extensionRegistry);
       }
     };
 
@@ -7374,6 +7598,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.DataUpdate getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -7426,6 +7651,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -7437,13 +7665,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.proto.CiscProto.Data.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7455,6 +7676,13 @@ public final class CiscProto {
                 data_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -7474,6 +7702,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_DataUpdateReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_DataUpdateReply_fieldAccessorTable
@@ -7504,6 +7733,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7519,6 +7749,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7527,6 +7758,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -7647,6 +7879,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -7654,6 +7887,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.DataUpdateReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -7681,6 +7915,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_DataUpdateReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_DataUpdateReply_fieldAccessorTable
@@ -7704,6 +7939,7 @@ public final class CiscProto {
           getDataFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (dataBuilder_ == null) {
@@ -7715,15 +7951,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_DataUpdateReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.DataUpdateReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.DataUpdateReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.DataUpdateReply build() {
         ch.epfl.dedis.proto.CiscProto.DataUpdateReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -7732,6 +7971,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.DataUpdateReply buildPartial() {
         ch.epfl.dedis.proto.CiscProto.DataUpdateReply result = new ch.epfl.dedis.proto.CiscProto.DataUpdateReply(this);
         int from_bitField0_ = bitField0_;
@@ -7749,32 +7989,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.DataUpdateReply) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.DataUpdateReply)other);
@@ -7794,6 +8041,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (hasData()) {
           if (!getData().isInitialized()) {
@@ -7803,6 +8051,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7939,11 +8188,13 @@ public final class CiscProto {
         }
         return dataBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -7965,11 +8216,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<DataUpdateReply>
         PARSER = new com.google.protobuf.AbstractParser<DataUpdateReply>() {
+      @java.lang.Override
       public DataUpdateReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new DataUpdateReply(input, extensionRegistry);
+        return new DataUpdateReply(input, extensionRegistry);
       }
     };
 
@@ -7982,6 +8234,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.DataUpdateReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -8045,6 +8298,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8056,13 +8312,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               id_ = input.readBytes();
@@ -8079,6 +8328,13 @@ public final class CiscProto {
                 propose_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -8098,6 +8354,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeSend_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeSend_fieldAccessorTable
@@ -8143,6 +8400,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -8162,6 +8420,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -8173,6 +8432,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -8306,6 +8566,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -8313,6 +8574,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.ProposeSend prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -8341,6 +8603,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeSend_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeSend_fieldAccessorTable
@@ -8364,6 +8627,7 @@ public final class CiscProto {
           getProposeFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -8377,15 +8641,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeSend_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeSend getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.ProposeSend.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeSend build() {
         ch.epfl.dedis.proto.CiscProto.ProposeSend result = buildPartial();
         if (!result.isInitialized()) {
@@ -8394,6 +8661,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeSend buildPartial() {
         ch.epfl.dedis.proto.CiscProto.ProposeSend result = new ch.epfl.dedis.proto.CiscProto.ProposeSend(this);
         int from_bitField0_ = bitField0_;
@@ -8415,32 +8683,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.ProposeSend) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.ProposeSend)other);
@@ -8463,6 +8738,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -8475,6 +8751,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8646,11 +8923,13 @@ public final class CiscProto {
         }
         return proposeBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -8672,11 +8951,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ProposeSend>
         PARSER = new com.google.protobuf.AbstractParser<ProposeSend>() {
+      @java.lang.Override
       public ProposeSend parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ProposeSend(input, extensionRegistry);
+        return new ProposeSend(input, extensionRegistry);
       }
     };
 
@@ -8689,6 +8969,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.ProposeSend getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -8738,6 +9019,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -8749,16 +9033,16 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              id_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              id_ = input.readBytes();
               break;
             }
           }
@@ -8778,6 +9062,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeUpdate_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeUpdate_fieldAccessorTable
@@ -8802,6 +9087,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -8815,6 +9101,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -8823,6 +9110,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -8943,6 +9231,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -8950,6 +9239,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.ProposeUpdate prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -8977,6 +9267,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeUpdate_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeUpdate_fieldAccessorTable
@@ -8999,6 +9290,7 @@ public final class CiscProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -9006,15 +9298,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeUpdate_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeUpdate getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.ProposeUpdate.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeUpdate build() {
         ch.epfl.dedis.proto.CiscProto.ProposeUpdate result = buildPartial();
         if (!result.isInitialized()) {
@@ -9023,6 +9318,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeUpdate buildPartial() {
         ch.epfl.dedis.proto.CiscProto.ProposeUpdate result = new ch.epfl.dedis.proto.CiscProto.ProposeUpdate(this);
         int from_bitField0_ = bitField0_;
@@ -9036,32 +9332,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.ProposeUpdate) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.ProposeUpdate)other);
@@ -9081,6 +9384,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -9088,6 +9392,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9141,11 +9446,13 @@ public final class CiscProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -9167,11 +9474,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ProposeUpdate>
         PARSER = new com.google.protobuf.AbstractParser<ProposeUpdate>() {
+      @java.lang.Override
       public ProposeUpdate parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ProposeUpdate(input, extensionRegistry);
+        return new ProposeUpdate(input, extensionRegistry);
       }
     };
 
@@ -9184,6 +9492,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.ProposeUpdate getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -9236,6 +9545,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9247,13 +9559,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.proto.CiscProto.Data.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9265,6 +9570,13 @@ public final class CiscProto {
                 propose_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -9284,6 +9596,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeUpdateReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeUpdateReply_fieldAccessorTable
@@ -9314,6 +9627,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -9329,6 +9643,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9337,6 +9652,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -9457,6 +9773,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -9464,6 +9781,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.ProposeUpdateReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -9491,6 +9809,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeUpdateReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeUpdateReply_fieldAccessorTable
@@ -9514,6 +9833,7 @@ public final class CiscProto {
           getProposeFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (proposeBuilder_ == null) {
@@ -9525,15 +9845,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeUpdateReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeUpdateReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.ProposeUpdateReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeUpdateReply build() {
         ch.epfl.dedis.proto.CiscProto.ProposeUpdateReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -9542,6 +9865,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeUpdateReply buildPartial() {
         ch.epfl.dedis.proto.CiscProto.ProposeUpdateReply result = new ch.epfl.dedis.proto.CiscProto.ProposeUpdateReply(this);
         int from_bitField0_ = bitField0_;
@@ -9559,32 +9883,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.ProposeUpdateReply) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.ProposeUpdateReply)other);
@@ -9604,6 +9935,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (hasPropose()) {
           if (!getPropose().isInitialized()) {
@@ -9613,6 +9945,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9749,11 +10082,13 @@ public final class CiscProto {
         }
         return proposeBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -9775,11 +10110,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ProposeUpdateReply>
         PARSER = new com.google.protobuf.AbstractParser<ProposeUpdateReply>() {
+      @java.lang.Override
       public ProposeUpdateReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ProposeUpdateReply(input, extensionRegistry);
+        return new ProposeUpdateReply(input, extensionRegistry);
       }
     };
 
@@ -9792,6 +10128,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.ProposeUpdateReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -9867,6 +10204,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -9878,13 +10218,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               id_ = input.readBytes();
@@ -9899,6 +10232,13 @@ public final class CiscProto {
             case 26: {
               bitField0_ |= 0x00000004;
               signature_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -9918,6 +10258,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeVote_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeVote_fieldAccessorTable
@@ -9999,6 +10340,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -10020,6 +10362,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -10034,6 +10377,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -10179,6 +10523,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -10186,6 +10531,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.ProposeVote prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -10214,6 +10560,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeVote_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeVote_fieldAccessorTable
@@ -10236,6 +10583,7 @@ public final class CiscProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -10247,15 +10595,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeVote_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeVote getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.ProposeVote.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeVote build() {
         ch.epfl.dedis.proto.CiscProto.ProposeVote result = buildPartial();
         if (!result.isInitialized()) {
@@ -10264,6 +10615,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeVote buildPartial() {
         ch.epfl.dedis.proto.CiscProto.ProposeVote result = new ch.epfl.dedis.proto.CiscProto.ProposeVote(this);
         int from_bitField0_ = bitField0_;
@@ -10285,32 +10637,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.ProposeVote) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.ProposeVote)other);
@@ -10338,6 +10697,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -10351,6 +10711,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10515,11 +10876,13 @@ public final class CiscProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -10541,11 +10904,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ProposeVote>
         PARSER = new com.google.protobuf.AbstractParser<ProposeVote>() {
+      @java.lang.Override
       public ProposeVote parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ProposeVote(input, extensionRegistry);
+        return new ProposeVote(input, extensionRegistry);
       }
     };
 
@@ -10558,6 +10922,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.ProposeVote getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -10611,6 +10976,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -10622,13 +10990,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.proto.SkipchainProto.SkipBlock.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -10640,6 +11001,13 @@ public final class CiscProto {
                 data_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -10659,6 +11027,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeVoteReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeVoteReply_fieldAccessorTable
@@ -10689,6 +11058,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -10704,6 +11074,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -10712,6 +11083,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -10832,6 +11204,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -10839,6 +11212,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.ProposeVoteReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -10867,6 +11241,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeVoteReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeVoteReply_fieldAccessorTable
@@ -10890,6 +11265,7 @@ public final class CiscProto {
           getDataFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (dataBuilder_ == null) {
@@ -10901,15 +11277,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_ProposeVoteReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeVoteReply getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.ProposeVoteReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeVoteReply build() {
         ch.epfl.dedis.proto.CiscProto.ProposeVoteReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -10918,6 +11297,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.ProposeVoteReply buildPartial() {
         ch.epfl.dedis.proto.CiscProto.ProposeVoteReply result = new ch.epfl.dedis.proto.CiscProto.ProposeVoteReply(this);
         int from_bitField0_ = bitField0_;
@@ -10935,32 +11315,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.ProposeVoteReply) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.ProposeVoteReply)other);
@@ -10980,6 +11367,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (hasData()) {
           if (!getData().isInitialized()) {
@@ -10989,6 +11377,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11125,11 +11514,13 @@ public final class CiscProto {
         }
         return dataBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -11151,11 +11542,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ProposeVoteReply>
         PARSER = new com.google.protobuf.AbstractParser<ProposeVoteReply>() {
+      @java.lang.Override
       public ProposeVoteReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ProposeVoteReply(input, extensionRegistry);
+        return new ProposeVoteReply(input, extensionRegistry);
       }
     };
 
@@ -11168,6 +11560,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.ProposeVoteReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -11250,6 +11643,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -11261,13 +11657,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.proto.CiscProto.IDBlock.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -11293,6 +11682,13 @@ public final class CiscProto {
               pubstr_ = bs;
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -11310,6 +11706,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_PropagateIdentity_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_PropagateIdentity_fieldAccessorTable
@@ -11424,6 +11821,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -11447,6 +11845,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -11461,6 +11860,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -11605,6 +12005,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -11612,6 +12013,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.PropagateIdentity prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -11639,6 +12041,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_PropagateIdentity_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_PropagateIdentity_fieldAccessorTable
@@ -11662,6 +12065,7 @@ public final class CiscProto {
           getIdblockFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (idblockBuilder_ == null) {
@@ -11677,15 +12081,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_PropagateIdentity_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.PropagateIdentity getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.PropagateIdentity.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.PropagateIdentity build() {
         ch.epfl.dedis.proto.CiscProto.PropagateIdentity result = buildPartial();
         if (!result.isInitialized()) {
@@ -11694,6 +12101,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.PropagateIdentity buildPartial() {
         ch.epfl.dedis.proto.CiscProto.PropagateIdentity result = new ch.epfl.dedis.proto.CiscProto.PropagateIdentity(this);
         int from_bitField0_ = bitField0_;
@@ -11719,32 +12127,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.PropagateIdentity) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.PropagateIdentity)other);
@@ -11774,6 +12189,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasTag()) {
           return false;
@@ -11789,6 +12205,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12077,11 +12494,13 @@ public final class CiscProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -12103,11 +12522,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<PropagateIdentity>
         PARSER = new com.google.protobuf.AbstractParser<PropagateIdentity>() {
+      @java.lang.Override
       public PropagateIdentity parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new PropagateIdentity(input, extensionRegistry);
+        return new PropagateIdentity(input, extensionRegistry);
       }
     };
 
@@ -12120,6 +12540,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.PropagateIdentity getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -12182,6 +12603,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12193,13 +12617,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               id_ = input.readBytes();
@@ -12216,6 +12633,13 @@ public final class CiscProto {
                 latest_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -12235,6 +12659,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_UpdateSkipBlock_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_UpdateSkipBlock_fieldAccessorTable
@@ -12280,6 +12705,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -12299,6 +12725,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -12310,6 +12737,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -12443,6 +12871,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -12450,6 +12879,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.UpdateSkipBlock prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -12477,6 +12907,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_UpdateSkipBlock_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_UpdateSkipBlock_fieldAccessorTable
@@ -12500,6 +12931,7 @@ public final class CiscProto {
           getLatestFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -12513,15 +12945,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_UpdateSkipBlock_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.UpdateSkipBlock getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.UpdateSkipBlock.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.UpdateSkipBlock build() {
         ch.epfl.dedis.proto.CiscProto.UpdateSkipBlock result = buildPartial();
         if (!result.isInitialized()) {
@@ -12530,6 +12965,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.UpdateSkipBlock buildPartial() {
         ch.epfl.dedis.proto.CiscProto.UpdateSkipBlock result = new ch.epfl.dedis.proto.CiscProto.UpdateSkipBlock(this);
         int from_bitField0_ = bitField0_;
@@ -12551,32 +12987,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.UpdateSkipBlock) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.UpdateSkipBlock)other);
@@ -12599,6 +13042,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -12611,6 +13055,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12782,11 +13227,13 @@ public final class CiscProto {
         }
         return latestBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -12808,11 +13255,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<UpdateSkipBlock>
         PARSER = new com.google.protobuf.AbstractParser<UpdateSkipBlock>() {
+      @java.lang.Override
       public UpdateSkipBlock parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new UpdateSkipBlock(input, extensionRegistry);
+        return new UpdateSkipBlock(input, extensionRegistry);
       }
     };
 
@@ -12825,6 +13273,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.UpdateSkipBlock getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -12886,6 +13335,9 @@ public final class CiscProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -12897,13 +13349,6 @@ public final class CiscProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               nonce_ = input.readBytes();
@@ -12912,6 +13357,13 @@ public final class CiscProto {
             case 18: {
               bitField0_ |= 0x00000002;
               ctx_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -12931,6 +13383,7 @@ public final class CiscProto {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Authenticate_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Authenticate_fieldAccessorTable
@@ -12970,6 +13423,7 @@ public final class CiscProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -12987,6 +13441,7 @@ public final class CiscProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -12998,6 +13453,7 @@ public final class CiscProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -13131,6 +13587,7 @@ public final class CiscProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -13138,6 +13595,7 @@ public final class CiscProto {
     public static Builder newBuilder(ch.epfl.dedis.proto.CiscProto.Authenticate prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -13167,6 +13625,7 @@ public final class CiscProto {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Authenticate_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Authenticate_fieldAccessorTable
@@ -13189,6 +13648,7 @@ public final class CiscProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         nonce_ = com.google.protobuf.ByteString.EMPTY;
@@ -13198,15 +13658,18 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.proto.CiscProto.internal_static_cisc_Authenticate_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.Authenticate getDefaultInstanceForType() {
         return ch.epfl.dedis.proto.CiscProto.Authenticate.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.Authenticate build() {
         ch.epfl.dedis.proto.CiscProto.Authenticate result = buildPartial();
         if (!result.isInitialized()) {
@@ -13215,6 +13678,7 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.proto.CiscProto.Authenticate buildPartial() {
         ch.epfl.dedis.proto.CiscProto.Authenticate result = new ch.epfl.dedis.proto.CiscProto.Authenticate(this);
         int from_bitField0_ = bitField0_;
@@ -13232,32 +13696,39 @@ public final class CiscProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.proto.CiscProto.Authenticate) {
           return mergeFrom((ch.epfl.dedis.proto.CiscProto.Authenticate)other);
@@ -13280,6 +13751,7 @@ public final class CiscProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasNonce()) {
           return false;
@@ -13290,6 +13762,7 @@ public final class CiscProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13378,11 +13851,13 @@ public final class CiscProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -13404,11 +13879,12 @@ public final class CiscProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Authenticate>
         PARSER = new com.google.protobuf.AbstractParser<Authenticate>() {
+      @java.lang.Override
       public Authenticate parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Authenticate(input, extensionRegistry);
+        return new Authenticate(input, extensionRegistry);
       }
     };
 
@@ -13421,6 +13897,7 @@ public final class CiscProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.proto.CiscProto.Authenticate getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -13545,7 +14022,7 @@ public final class CiscProto {
       "ry\022(\n\007storage\030\003 \003(\0132\027.cisc.Data.StorageE" +
       "ntry\022\034\n\006roster\030\004 \001(\0132\014.onet.Roster\022$\n\005vo" +
       "tes\030\005 \003(\0132\025.cisc.Data.VotesEntry\032;\n\013Devi" +
-      "ceEntry\022\013\n\003key\030\001 \001(\t\022\033\n\005value\030\002 \001(\0132\014.ci",
+      "ceEntry\022\013\n\003key\030\001 \001(\t\022\033\n\005value\030\002 \001(\0132\014.ci" +
       "sc.Device:\0028\001\032.\n\014StorageEntry\022\013\n\003key\030\001 \001" +
       "(\t\022\r\n\005value\030\002 \001(\t:\0028\001\032,\n\nVotesEntry\022\013\n\003k" +
       "ey\030\001 \001(\t\022\r\n\005value\030\002 \001(\014:\0028\001\"\027\n\006Device\022\r\n" +
@@ -13555,7 +14032,7 @@ public final class CiscProto {
       "\n\007publics\030\003 \003(\014\022\013\n\003sig\030\004 \002(\014\"e\n\016CreateId" +
       "entity\022\030\n\004data\030\001 \001(\0132\n.cisc.Data\022\014\n\004type" +
       "\030\002 \002(\021\022\017\n\007schnsig\030\003 \001(\014\022\013\n\003sig\030\004 \002(\014\022\r\n\005" +
-      "nonce\030\005 \002(\014\"<\n\023CreateIdentityReply\022%\n\007ge",
+      "nonce\030\005 \002(\014\"<\n\023CreateIdentityReply\022%\n\007ge" +
       "nesis\030\001 \001(\0132\024.skipchain.SkipBlock\"\030\n\nDat" +
       "aUpdate\022\n\n\002id\030\001 \002(\014\"+\n\017DataUpdateReply\022\030" +
       "\n\004data\030\001 \001(\0132\n.cisc.Data\"6\n\013ProposeSend\022" +
@@ -13565,7 +14042,7 @@ public final class CiscProto {
       "\"<\n\013ProposeVote\022\n\n\002id\030\001 \002(\014\022\016\n\006signer\030\002 " +
       "\002(\t\022\021\n\tsignature\030\003 \002(\014\"6\n\020ProposeVoteRep" +
       "ly\022\"\n\004data\030\001 \001(\0132\024.skipchain.SkipBlock\"P" +
-      "\n\021PropagateIdentity\022\036\n\007idblock\030\001 \001(\0132\r.c",
+      "\n\021PropagateIdentity\022\036\n\007idblock\030\001 \001(\0132\r.c" +
       "isc.IDBlock\022\013\n\003tag\030\002 \002(\t\022\016\n\006pubstr\030\003 \002(\t" +
       "\"C\n\017UpdateSkipBlock\022\n\n\002id\030\001 \002(\014\022$\n\006lates" +
       "t\030\002 \001(\0132\024.skipchain.SkipBlock\"*\n\014Authent" +
