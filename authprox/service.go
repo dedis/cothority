@@ -183,10 +183,14 @@ func (s *service) Enroll(req *EnrollRequest) (*EnrollResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+	lpri := share.PriShare{
+		I: req.LongPri.I,
+		V: req.LongPri.V,
+	}
 	v, err := network.Marshal(&dssConfig{
 		Secret:       req.Secret,
 		Participants: req.Participants,
-		LongPri:      req.LongPri,
+		LongPri:      lpri,
 		LongPubs:     req.LongPubs,
 	})
 	if err != nil {
@@ -245,10 +249,14 @@ func (s *service) Signature(req *SignatureRequest) (*SignatureResponse, error) {
 
 	// Make the signature.
 	suite := suites.MustFind("ed25519")
+	rpi := share.PriShare{
+		I: req.RandPri.I,
+		V: req.RandPri.V,
+	}
 	d, err := dss.NewDSS(suite, dsscfg.Secret,
 		dsscfg.Participants,
 		&dks{dsscfg.LongPri, dsscfg.LongPubs},
-		&dks{req.RandPri, req.RandPubs},
+		&dks{rpi, req.RandPubs},
 		msg2, threshold(len(dsscfg.Participants)))
 	if err != nil {
 		return nil, err
@@ -258,7 +266,15 @@ func (s *service) Signature(req *SignatureRequest) (*SignatureResponse, error) {
 		return nil, err
 	}
 
-	return &SignatureResponse{PartialSignature: *ps}, nil
+	ps1 := PartialSig{
+		Partial: PriShare{
+			I: ps.Partial.I,
+			V: ps.Partial.V,
+		},
+		SessionID: ps.SessionID,
+		Signature: ps.Signature,
+	}
+	return &SignatureResponse{PartialSignature: ps1}, nil
 }
 
 func newService(c *onet.Context) (onet.Service, error) {

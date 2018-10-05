@@ -245,7 +245,6 @@ func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
 			return nil, fmt.Errorf("could not make OpenID signer: %v", err)
 		}
 	} else {
-		fmt.Println("no openid: %v", err)
 		// Otherwise, get the private key from the env/cmdline.
 		privStr := c.String("priv")
 		if privStr == "" {
@@ -652,12 +651,16 @@ func (o *openidCfg) getSigners(cl *eventlog.Client) ([]darc.Signer, error) {
 				break
 			}
 
+			rpi := authprox.PriShare{
+				I: rShares[idx].I,
+				V: rShares[idx].V,
+			}
 			req := &authprox.SignatureRequest{
 				Type:     "oidc",
 				Issuer:   o.Issuer,
 				AuthInfo: []byte(rawIDToken),
 				Message:  msg,
-				RandPri:  *rShares[idx],
+				RandPri:  rpi,
 				RandPubs: rPubCommits,
 			}
 			var resp authprox.SignatureResponse
@@ -665,9 +668,10 @@ func (o *openidCfg) getSigners(cl *eventlog.Client) ([]darc.Signer, error) {
 
 			// If no error keep this partial. Otherwise keep going until we have enough.
 			if err == nil {
-				if resp.PartialSignature.Partial != nil {
-					partials = append(partials, resp.PartialSignature.Partial)
-				}
+				partials = append(partials, &share.PriShare{
+					I: resp.PartialSignature.Partial.I,
+					V: resp.PartialSignature.Partial.V,
+				})
 			} else {
 				log.Warnf("could not get a partial signature from %v: %v", s, err)
 			}

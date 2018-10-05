@@ -104,6 +104,13 @@ public final class CollectionProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               key_ = input.readBytes();
@@ -122,7 +129,7 @@ public final class CollectionProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = children_.toBuilder();
               }
-              children_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Children.parser(), extensionRegistry);
+              children_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Children.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(children_);
                 children_ = subBuilder.buildPartial();
@@ -133,13 +140,6 @@ public final class CollectionProto {
             case 34: {
               bitField0_ |= 0x00000004;
               label_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -162,7 +162,6 @@ public final class CollectionProto {
       return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Dump_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Dump_fieldAccessorTable
@@ -245,7 +244,6 @@ public final class CollectionProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -271,7 +269,6 @@ public final class CollectionProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -289,7 +286,6 @@ public final class CollectionProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -451,7 +447,6 @@ public final class CollectionProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -459,7 +454,6 @@ public final class CollectionProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.CollectionProto.Dump prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -483,7 +477,6 @@ public final class CollectionProto {
         return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Dump_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Dump_fieldAccessorTable
@@ -507,7 +500,6 @@ public final class CollectionProto {
           getChildrenFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         key_ = com.google.protobuf.ByteString.EMPTY;
@@ -525,18 +517,15 @@ public final class CollectionProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Dump_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.CollectionProto.Dump getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.CollectionProto.Dump.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.CollectionProto.Dump build() {
         ch.epfl.dedis.lib.proto.CollectionProto.Dump result = buildPartial();
         if (!result.isInitialized()) {
@@ -545,7 +534,6 @@ public final class CollectionProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.CollectionProto.Dump buildPartial() {
         ch.epfl.dedis.lib.proto.CollectionProto.Dump result = new ch.epfl.dedis.lib.proto.CollectionProto.Dump(this);
         int from_bitField0_ = bitField0_;
@@ -576,39 +564,32 @@ public final class CollectionProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.CollectionProto.Dump) {
           return mergeFrom((ch.epfl.dedis.lib.proto.CollectionProto.Dump)other);
@@ -644,7 +625,6 @@ public final class CollectionProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasKey()) {
           return false;
@@ -661,7 +641,6 @@ public final class CollectionProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -940,13 +919,11 @@ public final class CollectionProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -968,7 +945,6 @@ public final class CollectionProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Dump>
         PARSER = new com.google.protobuf.AbstractParser<Dump>() {
-      @java.lang.Override
       public Dump parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -986,7 +962,6 @@ public final class CollectionProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.CollectionProto.Dump getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1056,6 +1031,13 @@ public final class CollectionProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               left_ = input.readBytes();
@@ -1064,13 +1046,6 @@ public final class CollectionProto {
             case 18: {
               bitField0_ |= 0x00000002;
               right_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -1090,7 +1065,6 @@ public final class CollectionProto {
       return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Children_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Children_fieldAccessorTable
@@ -1130,7 +1104,6 @@ public final class CollectionProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1148,7 +1121,6 @@ public final class CollectionProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1160,7 +1132,6 @@ public final class CollectionProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -1294,7 +1265,6 @@ public final class CollectionProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -1302,7 +1272,6 @@ public final class CollectionProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.CollectionProto.Children prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -1326,7 +1295,6 @@ public final class CollectionProto {
         return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Children_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Children_fieldAccessorTable
@@ -1349,7 +1317,6 @@ public final class CollectionProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         left_ = com.google.protobuf.ByteString.EMPTY;
@@ -1359,18 +1326,15 @@ public final class CollectionProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Children_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.CollectionProto.Children getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.CollectionProto.Children.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.CollectionProto.Children build() {
         ch.epfl.dedis.lib.proto.CollectionProto.Children result = buildPartial();
         if (!result.isInitialized()) {
@@ -1379,7 +1343,6 @@ public final class CollectionProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.CollectionProto.Children buildPartial() {
         ch.epfl.dedis.lib.proto.CollectionProto.Children result = new ch.epfl.dedis.lib.proto.CollectionProto.Children(this);
         int from_bitField0_ = bitField0_;
@@ -1397,39 +1360,32 @@ public final class CollectionProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.CollectionProto.Children) {
           return mergeFrom((ch.epfl.dedis.lib.proto.CollectionProto.Children)other);
@@ -1452,7 +1408,6 @@ public final class CollectionProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasLeft()) {
           return false;
@@ -1463,7 +1418,6 @@ public final class CollectionProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1552,13 +1506,11 @@ public final class CollectionProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1580,7 +1532,6 @@ public final class CollectionProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Children>
         PARSER = new com.google.protobuf.AbstractParser<Children>() {
-      @java.lang.Override
       public Children parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1598,7 +1549,6 @@ public final class CollectionProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.CollectionProto.Children getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1674,12 +1624,19 @@ public final class CollectionProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.lib.proto.CollectionProto.Dump.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = left_.toBuilder();
               }
-              left_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Dump.parser(), extensionRegistry);
+              left_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Dump.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(left_);
                 left_ = subBuilder.buildPartial();
@@ -1692,19 +1649,12 @@ public final class CollectionProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = right_.toBuilder();
               }
-              right_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Dump.parser(), extensionRegistry);
+              right_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Dump.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(right_);
                 right_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -1724,7 +1674,6 @@ public final class CollectionProto {
       return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Step_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Step_fieldAccessorTable
@@ -1776,7 +1725,6 @@ public final class CollectionProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1802,7 +1750,6 @@ public final class CollectionProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1814,7 +1761,6 @@ public final class CollectionProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -1948,7 +1894,6 @@ public final class CollectionProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -1956,7 +1901,6 @@ public final class CollectionProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.CollectionProto.Step prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -1980,7 +1924,6 @@ public final class CollectionProto {
         return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Step_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Step_fieldAccessorTable
@@ -2005,7 +1948,6 @@ public final class CollectionProto {
           getRightFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (leftBuilder_ == null) {
@@ -2023,18 +1965,15 @@ public final class CollectionProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Step_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.CollectionProto.Step getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.CollectionProto.Step.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.CollectionProto.Step build() {
         ch.epfl.dedis.lib.proto.CollectionProto.Step result = buildPartial();
         if (!result.isInitialized()) {
@@ -2043,7 +1982,6 @@ public final class CollectionProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.CollectionProto.Step buildPartial() {
         ch.epfl.dedis.lib.proto.CollectionProto.Step result = new ch.epfl.dedis.lib.proto.CollectionProto.Step(this);
         int from_bitField0_ = bitField0_;
@@ -2069,39 +2007,32 @@ public final class CollectionProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.CollectionProto.Step) {
           return mergeFrom((ch.epfl.dedis.lib.proto.CollectionProto.Step)other);
@@ -2124,7 +2055,6 @@ public final class CollectionProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasLeft()) {
           return false;
@@ -2141,7 +2071,6 @@ public final class CollectionProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2396,13 +2325,11 @@ public final class CollectionProto {
         }
         return rightBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -2424,7 +2351,6 @@ public final class CollectionProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Step>
         PARSER = new com.google.protobuf.AbstractParser<Step>() {
-      @java.lang.Override
       public Step parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2442,7 +2368,6 @@ public final class CollectionProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.CollectionProto.Step getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -2584,6 +2509,13 @@ public final class CollectionProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               key_ = input.readBytes();
@@ -2594,7 +2526,7 @@ public final class CollectionProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = root_.toBuilder();
               }
-              root_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Dump.parser(), extensionRegistry);
+              root_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Dump.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(root_);
                 root_ = subBuilder.buildPartial();
@@ -2608,14 +2540,7 @@ public final class CollectionProto {
                 mutable_bitField0_ |= 0x00000004;
               }
               steps_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Step.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
+                  input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Step.PARSER, extensionRegistry));
               break;
             }
           }
@@ -2638,7 +2563,6 @@ public final class CollectionProto {
       return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Proof_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Proof_fieldAccessorTable
@@ -2759,7 +2683,6 @@ public final class CollectionProto {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -2787,7 +2710,6 @@ public final class CollectionProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2802,7 +2724,6 @@ public final class CollectionProto {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -2946,7 +2867,6 @@ public final class CollectionProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -2954,7 +2874,6 @@ public final class CollectionProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.CollectionProto.Proof prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -2982,7 +2901,6 @@ public final class CollectionProto {
         return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Proof_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Proof_fieldAccessorTable
@@ -3007,7 +2925,6 @@ public final class CollectionProto {
           getStepsFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         key_ = com.google.protobuf.ByteString.EMPTY;
@@ -3027,18 +2944,15 @@ public final class CollectionProto {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.CollectionProto.internal_static_collection_Proof_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.CollectionProto.Proof getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.CollectionProto.Proof.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.CollectionProto.Proof build() {
         ch.epfl.dedis.lib.proto.CollectionProto.Proof result = buildPartial();
         if (!result.isInitialized()) {
@@ -3047,7 +2961,6 @@ public final class CollectionProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.CollectionProto.Proof buildPartial() {
         ch.epfl.dedis.lib.proto.CollectionProto.Proof result = new ch.epfl.dedis.lib.proto.CollectionProto.Proof(this);
         int from_bitField0_ = bitField0_;
@@ -3078,39 +2991,32 @@ public final class CollectionProto {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.CollectionProto.Proof) {
           return mergeFrom((ch.epfl.dedis.lib.proto.CollectionProto.Proof)other);
@@ -3159,7 +3065,6 @@ public final class CollectionProto {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasKey()) {
           return false;
@@ -3178,7 +3083,6 @@ public final class CollectionProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3714,13 +3618,11 @@ public final class CollectionProto {
         }
         return stepsBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -3742,7 +3644,6 @@ public final class CollectionProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Proof>
         PARSER = new com.google.protobuf.AbstractParser<Proof>() {
-      @java.lang.Override
       public Proof parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3760,7 +3661,6 @@ public final class CollectionProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.CollectionProto.Proof getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }

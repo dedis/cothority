@@ -42,8 +42,10 @@ message Identity {
   optional IdentityDarc darc = 1;
   // Public-key identity
   optional IdentityEd25519 ed25519 = 2;
-  // Public-key identity
+  // Public-key identity from an X.509 certificate.
   optional IdentityX509EC x509ec = 3;
+  // A claim which has been signed by a proxy or proxies.
+  optional IdentityProxy proxy = 4;
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -54,6 +56,13 @@ message IdentityEd25519 {
 // IdentityX509EC holds a public key from a X509EC
 message IdentityX509EC {
   required bytes public = 1;
+}
+
+// IdentityProxy holds the info necessary to verify a claim
+// from an external authentication system via an Authentication Proxy.
+message IdentityProxy {
+  required string data = 1;
+  required bytes public = 2;
 }
 
 // IdentityDarc is a structure that points to a Darc with a given ID on a
@@ -76,6 +85,7 @@ message Signature {
 message Signer {
   optional SignerEd25519 ed25519 = 1;
   optional SignerX509EC x509ec = 2;
+  optional SignerProxy proxy = 3;
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs
@@ -88,6 +98,13 @@ message SignerEd25519 {
 // but the private key will not be given out.
 message SignerX509EC {
   required bytes point = 1;
+}
+
+// SignerProxy holds the information necessary to verify claims
+// coming from external authentication systems via Authentication Proxies.
+message SignerProxy {
+  required string data = 1;
+  required bytes public = 2;
 }
 
 // Request is the structure that the client must provide to be verified

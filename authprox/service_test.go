@@ -8,7 +8,6 @@ import (
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
-	"github.com/dedis/kyber/sign/dss"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
@@ -23,7 +22,7 @@ func TestMain(m *testing.M) {
 // a test validator that allows all auth info
 type valid struct{}
 
-func (e *valid) FindClaim(ai []byte) (string, string, error) {
+func (e *valid) FindClaim(issuer string, ai []byte) (string, string, error) {
 	return "dummy-claim", "dummy-extra-data", nil
 }
 
@@ -58,31 +57,42 @@ func Test_EnrollAndSign(t *testing.T) {
 
 	// Enroll on each proxy.
 	for i, s := range e.services {
-		s.registerValidator(testType+":", &valid{})
+		s.registerValidator(testType, &valid{})
 
+		lpri := PriShare{
+			I: lShares[i].I,
+			V: lShares[i].V,
+		}
 		req := &EnrollRequest{
 			Type:         testType,
 			Secret:       pris[i],
 			Participants: pubs,
-			LongPri:      *lShares[i],
+			LongPri:      lpri,
 			LongPubs:     lPubCommits,
 		}
 		_, err := s.Enroll(req)
 		require.NoError(t, err)
 	}
 
-	partial := make([]dss.PartialSig, len(e.services))
+	var partials []*share.PriShare
 	for i, s := range e.services {
+		rp := PriShare{
+			I: rShares[i].I,
+			V: rShares[i].V,
+		}
 		req := &SignatureRequest{
 			Type:     testType,
 			Message:  zero64[:],
-			RandPri:  *rShares[i],
+			RandPri:  rp,
 			RandPubs: rPubCommits,
 		}
 		resp, err := s.Signature(req)
 		require.NoError(t, err)
-
-		partial[i] = resp.PartialSignature
+		ps := &share.PriShare{
+			I: resp.PartialSignature.Partial.I,
+			V: resp.PartialSignature.Partial.V,
+		}
+		partials = append(partials, ps)
 	}
 
 	// Reassemble the partial signatures and validate them: this will normally
@@ -96,10 +106,6 @@ func Test_EnrollAndSign(t *testing.T) {
 	// be able to check these, the Signer needs to have the roster or all
 	// expected public keys for all Auth Proxies.
 
-	partials := make([]*share.PriShare, nPartic)
-	for i, p := range partial {
-		partials[i] = p.Partial
-	}
 	gamma, err := share.RecoverSecret(suite, partials, nPartic, nPartic)
 	require.NoError(t, err)
 

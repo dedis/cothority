@@ -159,12 +159,16 @@ func add(c *cli.Context) error {
 
 	for i, s := range roster.List {
 		cl := onet.NewClient(cothority.Suite, authprox.ServiceName)
+		lpri := authprox.PriShare{
+			I: lShares[i].I,
+			V: lShares[i].V,
+		}
 		req := &authprox.EnrollRequest{
 			Type:         c.String("type"),
 			Issuer:       is,
 			Secret:       pris[i],
 			Participants: pubs,
-			LongPri:      *lShares[i],
+			LongPri:      lpri,
 			LongPubs:     lPubCommits,
 		}
 		resp := &authprox.EnrollResponse{}

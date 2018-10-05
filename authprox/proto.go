@@ -2,19 +2,19 @@ package authprox
 
 import (
 	"github.com/dedis/kyber"
-	"github.com/dedis/kyber/share"
-	"github.com/dedis/kyber/sign/dss"
 )
+
+// PROTOSTART
+// package authprox;
 
 // EnrollRequest is the request sent to this service to enroll
 // a user, authenticated by a certain type of external authentication.
 type EnrollRequest struct {
-	Type   string
-	Issuer string
-
+	Type         string
+	Issuer       string
 	Secret       kyber.Scalar
 	Participants []kyber.Point
-	LongPri      share.PriShare
+	LongPri      PriShare
 	LongPubs     []kyber.Point
 }
 
@@ -30,14 +30,29 @@ type SignatureRequest struct {
 	Type     string
 	Issuer   string
 	AuthInfo []byte
-	RandPri  share.PriShare
+	RandPri  PriShare
 	RandPubs []kyber.Point
 	Message  []byte
 }
 
+// PriShare is a local copy of github.com/dedis/kyber/share.PriShare
+// because we do not have proto files for Kyber objects.
+type PriShare struct {
+	I int          // Index of the private share
+	V kyber.Scalar // Value of the private share
+}
+
+// PartialSig is a local copy of github.com/dedis/kyber/sign/dss.PartialSig
+// because we do not have proto files for Kyber objects.
+type PartialSig struct {
+	Partial   PriShare
+	SessionID []byte
+	Signature []byte
+}
+
 // SignatureResponse is the response to a SignMessage request.
 type SignatureResponse struct {
-	PartialSignature dss.PartialSig
+	PartialSignature PartialSig
 }
 
 // EnrollmentsRequest gets a list of enrollments, optionally limited
@@ -56,6 +71,7 @@ type EnrollmentsResponse struct {
 
 // EnrollmentInfo is public info about an enrollment.
 type EnrollmentInfo struct {
-	Type, Issuer string
-	Public       kyber.Point
+	Type   string
+	Issuer string
+	Public kyber.Point
 }

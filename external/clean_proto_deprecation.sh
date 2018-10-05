@@ -8,6 +8,7 @@ echo "Fixing PARSER deprecation by using the public getter"
 PROTO_PATH=java/src/main/java/ch/epfl/dedis/lib/proto
 
 for filename in $PROTO_PATH/*.java; do
-	sed -i 's/\.PARSER\b/.parser()/g' $filename
+	sed -i .bak 's/\.PARSER\b/.parser()/g' $filename
+	rm ${filename}.bak
 done
 

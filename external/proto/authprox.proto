@@ -1,0 +1,71 @@
+syntax = "proto2";
+package authprox;
+
+// EnrollRequest is the request sent to this service to enroll
+// a user, authenticated by a certain type of external authentication.
+message EnrollRequest {
+  required string type = 1;
+  required string issuer = 2;
+  required bytes secret = 3;
+  repeated bytes participants = 4;
+  required PriShare longpri = 5;
+  repeated bytes longpubs = 6;
+}
+
+// EnrollResponse is returned when an enrollment has been done correctly.
+message EnrollResponse {
+}
+
+// SignatureRequest is the request sent to this service to request that
+// the Authentication Proxy check the authentication information and
+// generate a signature connecting some information identifying the
+// holder of the AuthInfo to the message.
+message SignatureRequest {
+  required string type = 1;
+  required string issuer = 2;
+  required bytes authinfo = 3;
+  required PriShare randpri = 4;
+  repeated bytes randpubs = 5;
+  required bytes message = 6;
+}
+
+// PriShare is a local copy of github.com/dedis/kyber/share.PriShare
+// because we do not have proto files for Kyber objects.
+message PriShare {
+  // 	I intIndex of the private share
+  // 	V kyber.ScalarValue of the private share
+}
+
+// PartialSig is a local copy of github.com/dedis/kyber/sign/dss.PartialSig
+// because we do not have proto files for Kyber objects.
+message PartialSig {
+  required PriShare partial = 1;
+  required bytes sessionid = 2;
+  required bytes signature = 3;
+}
+
+// SignatureResponse is the response to a SignMessage request.
+message SignatureResponse {
+  required PartialSig partialsignature = 1;
+}
+
+// EnrollmentsRequest gets a list of enrollments, optionally limited
+// by the Types and Issuers list. If an enrollment matches any of
+// the strings in Types or Issuers, it will be returned. If Types
+// or Issuers are empty, then all enrollments are considered to match.
+message EnrollmentsRequest {
+  repeated string types = 1;
+  repeated string issuers = 2;
+}
+
+// EnrollmentsResponse is the returned list of enrollments.
+message EnrollmentsResponse {
+  repeated EnrollmentInfo enrollments = 1;
+}
+
+// EnrollmentInfo is public info about an enrollment.
+message EnrollmentInfo {
+  required string type = 1;
+  required string issuer = 2;
+  required bytes public = 3;
+}
