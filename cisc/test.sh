@@ -448,8 +448,8 @@ testFinal(){
 runLink(){
   local i
   for i in $( seq $1 ); do
-    runCl 1 link pin ${addr[$i]} || fail "getting pin for $i"
-    pin=$( grep PIN ${COLOG}$i.log | tail -n 1 | sed -e "s/.* //" )
+    runCl 1 link pin ${addr[$i]}
+    pin=$( grep PIN: ${COLOG}$i.log | tail -n 1 | sed -e "s/.* //" )
     runCl 1 link pin ${addr[$i]} $pin || fail "linking with $i"
   done
 }
@@ -458,8 +458,8 @@ testLink(){
   runCoBG 1
 
   testOK runCl 1 link pin ${addr[1]}
-  testGrep PIN cat ${COLOG}1.log
-  local pin=$( grep PIN ${COLOG}1.log | sed -e "s/.* //" )
+  testGrep PIN: cat ${COLOG}1.log
+  local pin=$( grep PIN: ${COLOG}1.log | sed -e "s/.* //" )
   testFail runCl 1 link pin ${addr[1]} abcdefg
   testOK runCl 1 link pin ${addr[1]} $pin
   testFile cl1/config.bin
@@ -551,11 +551,11 @@ createFinal(){
   createPopDesc $1
 
   $pop -c cl1 org link ${addr[1]}
-  local pin=$( grep PIN ${COLOG}1.log | sed -e "s/.* //" )
+  local pin=$( grep PIN: ${COLOG}1.log | sed -e "s/.* //" )
   testOK $pop -c cl1 org link ${addr[1]} $pin
 
   $pop -c cl2 org link ${addr[2]}
-  pin=$( grep PIN ${COLOG}2.log | sed -e "s/.* //" )
+  pin=$( grep PIN: ${COLOG}2.log | sed -e "s/.* //" )
   $pop -c cl2 org link ${addr[2]} $pin
 
   $pop -c cl1 org config pop_desc.toml
