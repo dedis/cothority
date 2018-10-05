@@ -13,7 +13,7 @@ import (
 	"github.com/dedis/onet/network"
 
 	"github.com/dedis/cothority/byzcoin/collection"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/protobuf"
 )
 
@@ -317,6 +317,33 @@ func (instr Instruction) VerifyDarcSignature(coll CollectionView) error {
 	return nil
 }
 
+// InstrType is the instruction type, which can be spawn, invoke or delete.
+type InstrType int
+
+const (
+	// InvalidInstrType represents an error in the instruction type.
+	InvalidInstrType InstrType = iota
+	// SpawnType represents the spawn instruction type.
+	SpawnType
+	// InvokeType represents the invoke instruction type.
+	InvokeType
+	// DeleteType represents the delete instruction type.
+	DeleteType
+)
+
+// GetType returns the type of the instruction.
+func (instr Instruction) GetType() InstrType {
+	if instr.Spawn != nil && instr.Invoke == nil && instr.Delete == nil {
+		return SpawnType
+	} else if instr.Spawn == nil && instr.Invoke != nil && instr.Delete == nil {
+		return InvokeType
+	} else if instr.Spawn == nil && instr.Invoke == nil && instr.Delete != nil {
+		return DeleteType
+	} else {
+		return InvalidInstrType
+	}
+}
+
 // Instructions is a slice of Instruction
 type Instructions []Instruction
 
@@ -441,33 +468,6 @@ func (sc StateAction) String() string {
 		return "Remove"
 	default:
 		return "Invalid stateChange"
-	}
-}
-
-// InstrType is the instruction type, which can be spawn, invoke or delete.
-type InstrType int
-
-const (
-	// InvalidInstrType represents an error in the instruction type.
-	InvalidInstrType InstrType = iota
-	// SpawnType represents the spawn instruction type.
-	SpawnType
-	// InvokeType represents the invoke instruction type.
-	InvokeType
-	// DeleteType represents the delete instruction type.
-	DeleteType
-)
-
-// GetType returns the type of the instruction.
-func (instr Instruction) GetType() InstrType {
-	if instr.Spawn != nil && instr.Invoke == nil && instr.Delete == nil {
-		return SpawnType
-	} else if instr.Spawn == nil && instr.Invoke != nil && instr.Delete == nil {
-		return InvokeType
-	} else if instr.Spawn == nil && instr.Invoke == nil && instr.Delete != nil {
-		return DeleteType
-	} else {
-		return InvalidInstrType
 	}
 }
 

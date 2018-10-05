@@ -4,7 +4,7 @@ import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.SchnorrSig;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.proto.DarcOCSProto;
+import ch.epfl.dedis.lib.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
 public class IdentityEd25519 implements Identity {
@@ -14,8 +14,16 @@ public class IdentityEd25519 implements Identity {
      * Creates an IdentityEd25519 from a protobuf representation.
      * @param proto
      */
-    public IdentityEd25519(DarcOCSProto.IdentityEd25519 proto){
+    public IdentityEd25519(DarcProto.IdentityEd25519 proto){
         pub = new Ed25519Point(proto.getPoint());
+    }
+
+    /**
+     * Creates an IdentityEd25519 from a Ed25519 point.
+     * @param p Ed25519 point for the identity
+     */
+    public IdentityEd25519(Ed25519Point p){
+        pub = p;
     }
 
     /**
@@ -47,16 +55,20 @@ public class IdentityEd25519 implements Identity {
      * identity implementations.
      * @return
      */
-    public DarcOCSProto.Identity toProto(){
-        DarcOCSProto.Identity.Builder bid = DarcOCSProto.Identity.newBuilder();
-        DarcOCSProto.IdentityEd25519.Builder bed = DarcOCSProto.IdentityEd25519.newBuilder();
+    public DarcProto.Identity toProto(){
+        DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();
+        DarcProto.IdentityEd25519.Builder bed = DarcProto.IdentityEd25519.newBuilder();
         bed.setPoint(ByteString.copyFrom(pub.toBytes()));
         bid.setEd25519(bed);
         return bid.build();
     }
 
     public String toString(){
-        return pub.toString();
+        return String.format("%s:%s", this.typeString(), this.pub.toString().toLowerCase());
+    }
+
+    public String typeString() {
+        return "ed25519";
     }
 
     @Override

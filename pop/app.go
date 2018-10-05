@@ -22,8 +22,8 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
-	"github.com/dedis/cothority/byzcoin/darc"
-	"github.com/dedis/cothority/byzcoin/darc/expression"
+	"github.com/dedis/cothority/darc"
+	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/cothority/ftcosi/check"
 	ph "github.com/dedis/cothority/personhood"
 	"github.com/dedis/protobuf"
@@ -897,7 +897,6 @@ func bcFinalize(c *cli.Context) error {
 		return errors.New("error while sending transaction: " + err.Error())
 	}
 
-	log.Print("linkpop", fs.Desc.Roster)
 	err = ph.NewClient().LinkPoP(fs.Desc.Roster.List[0], ph.Party{
 		ByzCoinID:      cfg.ByzCoinID,
 		FinalStatement: *fs,

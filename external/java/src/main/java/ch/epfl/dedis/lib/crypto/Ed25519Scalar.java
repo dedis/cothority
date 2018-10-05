@@ -1,5 +1,6 @@
 package ch.epfl.dedis.lib.crypto;
 
+import ch.epfl.dedis.lib.Hex;
 import com.google.protobuf.ByteString;
 import net.i2p.crypto.eddsa.EdDSAPrivateKey;
 import net.i2p.crypto.eddsa.math.FieldElement;

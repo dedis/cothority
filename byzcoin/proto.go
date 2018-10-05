@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/dedis/cothority/byzcoin/collection"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 )
@@ -13,6 +13,7 @@ import (
 // package byzcoin;
 // type :skipchain.SkipBlockID:bytes
 // type :darc.ID:bytes
+// type :darc.Action:string
 // type :Arguments:[]Argument
 // type :Instructions:[]Instruction
 // type :TxResults:[]TxResult
@@ -23,7 +24,7 @@ import (
 // import "darc.proto";
 // import "collection.proto";
 //
-// option java_package = "ch.epfl.dedis.proto";
+// option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "ByzCoinProto";
 
 // DataHeader is the data passed to the Skipchain
@@ -111,6 +112,26 @@ type GetProofResponse struct {
 	// Proof contains everything necessary to prove the inclusion
 	// of the included key/value pair given a genesis skipblock.
 	Proof Proof
+}
+
+// CheckAuthorization returns the list of actions that could be executed if the
+// signatures of the given identities are present and valid
+type CheckAuthorization struct {
+	// Version of the protocol
+	Version Version
+	// ByzCoinID where to look up the darc
+	ByzCoinID skipchain.SkipBlockID
+	// DarcID that holds the rules
+	DarcID darc.ID
+	// Identities that will sign together
+	Identities []darc.Identity
+}
+
+// CheckAuthorizationResponse returns a list of Actions that the given identities
+// can execute in the given darc. The list can be empty, which means that the
+// given identities have now authorization in that darc at all.
+type CheckAuthorizationResponse struct {
+	Actions []darc.Action
 }
 
 // ChainConfig stores all the configuration information for one skipchain. It will

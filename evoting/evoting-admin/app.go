@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -17,6 +16,7 @@ import (
 	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
+	"github.com/dedis/onet/log"
 )
 
 var (
@@ -80,7 +80,7 @@ func main() {
 		}
 	} else {
 		kp := key.NewKeyPair(cothority.Suite)
-		log.Printf("Auth-server private key: %v", kp.Private)
+		log.Infof("Auth-server private key: %v", kp.Private)
 		pub = kp.Public
 	}
 
@@ -111,8 +111,8 @@ func main() {
 		log.Fatal("link request: ", err)
 	}
 
-	log.Printf("Auth-server public  key: %v", pub)
-	log.Printf("Master ID: %x", reply.ID)
+	log.Infof("Auth-server public  key: %v", pub)
+	log.Infof("Master ID: %x", reply.ID)
 }
 
 // parseRoster reads a Dedis group toml file a converts it to a cothority roster.

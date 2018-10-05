@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 )
 
 // The value contract can simply store a value in an instance and serves

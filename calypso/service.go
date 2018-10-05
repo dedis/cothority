@@ -16,9 +16,9 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/calypso/protocol"
+	"github.com/dedis/cothority/darc"
 	dkgprotocol "github.com/dedis/cothority/dkg"
-	"github.com/dedis/cothority/ocs/protocol"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
 	"github.com/dedis/kyber/util/random"
@@ -32,7 +32,7 @@ import (
 var calypsoID onet.ServiceID
 
 // ServiceName of the secret-management part of Calypso.
-var ServiceName = "calypso"
+var ServiceName = "Calypso"
 
 // dkgTimeout is how long the system waits for the DKG to finish
 const propagationTimeout = 10 * time.Second
@@ -206,7 +206,7 @@ func (s *Service) SharedPublic(req *SharedPublic) (reply *SharedPublicReply, err
 	shared, ok := s.storage.Shared[string(req.LTSID)]
 	s.storage.Unlock()
 	if !ok {
-		return nil, errors.New("didn't find this skipchain")
+		return nil, errors.New("didn't find this Long Term Secret")
 	}
 	return &SharedPublicReply{X: shared.X}, nil
 }
@@ -296,7 +296,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	if err := s.RegisterHandlers(s.CreateLTS, s.DecryptKey); err != nil {
+	if err := s.RegisterHandlers(s.CreateLTS, s.DecryptKey, s.SharedPublic); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
 	byzcoin.RegisterContract(c, ContractWriteID, s.ContractWrite)

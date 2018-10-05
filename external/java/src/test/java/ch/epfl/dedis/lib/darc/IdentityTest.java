@@ -1,6 +1,6 @@
 package ch.epfl.dedis.lib.darc;
 
-import ch.epfl.dedis.proto.DarcOCSProto;
+import ch.epfl.dedis.lib.proto.DarcProto;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,7 +23,7 @@ public class IdentityTest {
     void serialization() throws Exception{
         SignerEd25519 owner = new SignerEd25519();
         Identity ownerI = IdentityFactory.New(owner);
-        DarcOCSProto.Identity proto = ownerI.toProto();
+        DarcProto.Identity proto = ownerI.toProto();
         Identity ownerI2 = IdentityFactory.New(proto);
 
         assertTrue(ownerI.equals(ownerI2));

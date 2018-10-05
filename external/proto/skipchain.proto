@@ -6,7 +6,7 @@ package skipchain;
 // is embedded in SkipBlock is difficult to handle automatically in proto.awk.
 // For this reason, this file is created manually.
 
-option java_package = "ch.epfl.dedis.proto";
+option java_package = "ch.epfl.dedis.lib.proto";
 option java_outer_classname = "SkipchainProto";
 
 import "onet.proto";

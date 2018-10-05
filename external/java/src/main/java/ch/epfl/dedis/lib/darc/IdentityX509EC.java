@@ -1,10 +1,12 @@
 package ch.epfl.dedis.lib.darc;
 
+import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.proto.DarcOCSProto;
+import ch.epfl.dedis.lib.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
 import java.security.*;
+import java.security.Signature;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Arrays;
@@ -20,7 +22,7 @@ public class IdentityX509EC implements Identity {
      * Creates an IdentityX509EC from a protobuf representation.
      * @param proto
      */
-    public IdentityX509EC(DarcOCSProto.IdentityX509EC proto) throws CothorityCryptoException {
+    public IdentityX509EC(DarcProto.IdentityX509EC proto) throws CothorityCryptoException {
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("EC");
             X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(proto.getPublic().toByteArray());
@@ -50,8 +52,8 @@ public class IdentityX509EC implements Identity {
      * @return
      */
     public boolean verify(byte[] msg, byte[] signature) {
-        // TODO: it is interesting why client code need to verify keycard singature ? It should
-        // be verified at server side.
+        // TODO: it is interesting why client code need to verify keycard singature ?
+        // TODO It should be verified at server side.
         // TODO: verify the signature given the msg, the signature and our public byte-array.
         try {
             final Signature signature2 = Signature.getInstance("SHA384withECDSA");
@@ -70,16 +72,16 @@ public class IdentityX509EC implements Identity {
      * identity implementations.
      * @return
      */
-    public DarcOCSProto.Identity toProto(){
-        DarcOCSProto.Identity.Builder bid = DarcOCSProto.Identity.newBuilder();
-        DarcOCSProto.IdentityX509EC.Builder bed = DarcOCSProto.IdentityX509EC.newBuilder();
+    public DarcProto.Identity toProto(){
+        DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();
+        DarcProto.IdentityX509EC.Builder bed = DarcProto.IdentityX509EC.newBuilder();
         bed.setPublic(ByteString.copyFrom(pubKey.getEncoded()));
         bid.setX509Ec(bed);
         return bid.build();
     }
 
     public String toString(){
-        return pubKey.getEncoded().toString();
+        return String.format("%s:%s", this.typeString(), Hex.printHexBinary(this.pubKey.getEncoded()).toLowerCase());
     }
 
     @Override
@@ -89,5 +91,9 @@ public class IdentityX509EC implements Identity {
         if (!(other instanceof IdentityX509EC))return false;
         IdentityX509EC otherEd = (IdentityX509EC) other;
         return Arrays.equals(pubKey.getEncoded(), otherEd.pubKey.getEncoded());
+    }
+
+    public String typeString() {
+        return "x509ec";
     }
 }

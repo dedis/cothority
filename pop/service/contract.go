@@ -8,8 +8,8 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/contracts"
-	"github.com/dedis/cothority/byzcoin/darc"
-	"github.com/dedis/cothority/byzcoin/darc/expression"
+	"github.com/dedis/cothority/darc"
+	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -93,11 +93,6 @@ func (s *Service) ContractPopParty(cdb byzcoin.CollectionView, inst byzcoin.Inst
 		if err != nil {
 			return nil, nil, errors.New("couldn't marshal PopPartyInstance: " + err.Error())
 		}
-		// partyID, err := ppData.FinalStatement.Hash()
-		// if err != nil {
-		// 	return nil, nil, errors.New("couldn't get party id: " + err.Error())
-		// }
-		// log.Printf("New party: %x", partyID)
 		return byzcoin.StateChanges{
 			byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), inst.Spawn.ContractID, ppiBuf, darc.ID(inst.InstanceID[:])),
 		}, cOut, nil

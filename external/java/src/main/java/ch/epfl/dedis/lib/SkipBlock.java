@@ -2,8 +2,8 @@ package ch.epfl.dedis.lib;
 
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
-import ch.epfl.dedis.lib.skipchain.ForwardLink;
-import ch.epfl.dedis.proto.SkipchainProto;
+import ch.epfl.dedis.skipchain.ForwardLink;
+import ch.epfl.dedis.lib.proto.SkipchainProto;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.net.URISyntaxException;
@@ -17,10 +17,17 @@ import java.util.List;
 public class SkipBlock {
     private SkipchainProto.SkipBlock skipBlock;
 
+    /**
+     * @param skipBlock the protobuf definition of the skipblock.
+     */
     public SkipBlock(SkipchainProto.SkipBlock skipBlock) {
         this.skipBlock = skipBlock;
     }
 
+    /**
+     * @param sb the binary representation of the protobuf of the skipblock.
+     * @throws CothorityException
+     */
     public SkipBlock(byte[] sb) throws CothorityException {
         try {
             this.skipBlock = SkipchainProto.SkipBlock.parseFrom(sb);
@@ -29,25 +36,26 @@ public class SkipBlock {
         }
     }
 
-    public SkipchainProto.SkipBlock getProto(){
-        return skipBlock;
-    }
-
     /**
-     * Returns the serialized skipblock.
+     * @return the hash of the block, which includes the backward-links and the data.
      */
-    public byte[] toByteArray() {
-        return this.skipBlock.toByteArray();
-    }
-
     public byte[] getHash() {
         return skipBlock.getHash().toByteArray();
     }
 
+    /**
+     * @return the id of the block, which is its hash.
+     * @throws CothorityCryptoException
+     */
     public SkipblockId getId() throws CothorityCryptoException {
         return new SkipblockId(this.getHash());
     }
 
+    /**
+     * @return the id of the skipchain this block is part of. This is equal to the hash for the
+     * genesis block.
+     * @throws CothorityCryptoException
+     */
     public SkipblockId getSkipchainId() throws CothorityCryptoException{
         if (skipBlock.getIndex() == 0){
             return getId();
@@ -55,22 +63,32 @@ public class SkipBlock {
         return new SkipblockId(skipBlock.getGenesis().toByteArray());
     }
 
+    /**
+     * @return the data of the block, which is protected by the block hash.
+     */
     public byte[] getData(){
         return skipBlock.getData().toByteArray();
     }
 
+    /**
+     * @return the payload of the block, which is not directly protected by the block hash.
+     */
     public byte[] getPayload() { return skipBlock.getPayload().toByteArray(); }
 
+    /**
+     * @return the index of the skipblock - the genesis block has index 0.
+     */
     public int getIndex(){
         // Because we're using protobuf's zigzag encoding.
         return skipBlock.getIndex() / 2;
     }
 
     /**
-     * @return a list of forwardlinks to next blocks. If the list is empty, then this is the last block of the chain.
+     * @return the list of all forwardlinks contained in this block. There might be no forward link at all,
+     * if this is the tip of the chain.
      */
     public List<ForwardLink>getForwardLinks(){
-        List<ForwardLink> ret = new ArrayList<>();
+        List<ForwardLink>ret = new ArrayList<>();
         skipBlock.getForwardList().forEach(fl ->{
             ret.add(new ForwardLink(fl));
         });
@@ -79,6 +97,7 @@ public class SkipBlock {
 
     /**
      * Gets the roster from the skipblock.
+     * @return the roster responsible for that skipblock
      */
     public Roster getRoster() throws CothorityException {
         try {
@@ -104,5 +123,18 @@ public class SkipBlock {
             return false;
         }
     }
-}
 
+    /**
+     * @return the serialized skipblock.
+     */
+    public byte[] toByteArray() {
+        return this.skipBlock.toByteArray();
+    }
+
+    /**
+     * @return the protobuf representation of the block.
+     */
+    public SkipchainProto.SkipBlock getProto(){
+        return skipBlock;
+    }
+}

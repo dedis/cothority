@@ -5,16 +5,18 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin/collection"
-	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/cothority/byzcoin/viewchange"
+	"github.com/dedis/cothority/darc"
 	cosiprotocol "github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
@@ -239,6 +241,10 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		return nil, errors.New("transaction too large")
 	}
 
+	for i, instr := range req.Transaction.Instructions {
+		log.Lvlf2("Instruction[%d]: %s", i, instr.Action())
+	}
+
 	// Note to my future self: s.txBuffer.add used to be out here. It used to work
 	// even. But while investigating other race conditions, we realized that
 	// IF there will be a wait channel, THEN it must exist before the call to add().
@@ -318,13 +324,60 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 
 	// Sanity check
 	if err = proof.Verify(req.ID); err != nil {
-		return
+		log.Lvl1("Got wrong proof - trying again")
+		return s.GetProof(req)
 	}
+
 	resp = &GetProofResponse{
 		Version: CurrentVersion,
 		Proof:   *proof,
 	}
 	return
+}
+
+// CheckAuthorization verifies whether a given combination of identities can
+// fulfill a given rule of a given darc. Because all darcs are now used in
+// an online fashion, we need to offer this check.
+func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthorizationResponse, err error) {
+	if req.Version != CurrentVersion {
+		return nil, errors.New("version mismatch")
+	}
+	log.Lvlf2("%s getting authorizations of darc %x", s.ServerIdentity(), req.DarcID)
+
+	resp = &CheckAuthorizationResponse{}
+	cv := s.GetCollectionView(req.ByzCoinID)
+	d, err := LoadDarcFromColl(cv, req.DarcID)
+	if err != nil {
+		return nil, errors.New("couldn't find darc: " + err.Error())
+	}
+	getDarcs := func(s string, latest bool) *darc.Darc {
+		if !latest {
+			log.Error("cannot handle intermediate darcs")
+			return nil
+		}
+		id, err := hex.DecodeString(strings.Replace(s, "darc:", "", 1))
+		if err != nil || len(id) != 32 {
+			log.Error("invalid darc id", s, len(id), err)
+			return nil
+		}
+		d, err := LoadDarcFromColl(cv, id)
+		if err != nil {
+			log.Error("didn't find darc")
+			return nil
+		}
+		return d
+	}
+	var ids []string
+	for _, i := range req.Identities {
+		ids = append(ids, i.String())
+	}
+	for _, r := range d.Rules.List {
+		err = darc.EvalExprDarc(r.Expr, getDarcs, true, ids...)
+		if err == nil {
+			resp.Actions = append(resp.Actions, r.Action)
+		}
+	}
+	return resp, nil
 }
 
 // SetPropagationTimeout overrides the default propagation timeout that is used
@@ -1435,7 +1488,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		streamingMan:           streamingManager{},
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
-		s.GetProof); err != nil {
+		s.GetProof, s.CheckAuthorization); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 	if err := s.RegisterStreamingHandlers(s.StreamTransactions); err != nil {

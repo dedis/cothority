@@ -7,8 +7,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import java.security.*;
 import java.security.spec.ECGenParameterSpec;
 
-import static ch.epfl.dedis.lib.darc.TestSignerX509EC.readPrivateKey;
-import static ch.epfl.dedis.lib.darc.TestSignerX509EC.readPublicKey;
+import static ch.epfl.dedis.lib.crypto.TestSignerX509EC.readPrivateKey;
+import static ch.epfl.dedis.lib.crypto.TestSignerX509EC.readPublicKey;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

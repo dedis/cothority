@@ -2,7 +2,7 @@ package personhood
 
 import (
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	pop "github.com/dedis/cothority/pop/service"
 	"github.com/dedis/cothority/skipchain"
 )
@@ -17,7 +17,7 @@ import (
 // import "darc.proto";
 // import "pop.proto";
 //
-// option java_package = "ch.epfl.dedis.proto";
+// option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "Personhood";
 
 // LinkPoP stores a link to a pop-party to accept this configuration. It will

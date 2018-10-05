@@ -5,7 +5,7 @@ import "onet.proto";
 import "darc.proto";
 import "collection.proto";
 
-option java_package = "ch.epfl.dedis.proto";
+option java_package = "ch.epfl.dedis.lib.proto";
 option java_outer_classname = "ByzCoinProto";
 
 // DataHeader is the data passed to the Skipchain
@@ -92,6 +92,26 @@ message GetProofResponse {
   // Proof contains everything necessary to prove the inclusion
   // of the included key/value pair given a genesis skipblock.
   required Proof proof = 2;
+}
+
+// CheckAuthorization returns the list of actions that could be executed if the
+// signatures of the given identities are present and valid
+message CheckAuthorization {
+  // Version of the protocol
+  required sint32 version = 1;
+  // ByzCoinID where to look up the darc
+  required bytes byzcoinid = 2;
+  // DarcID that holds the rules
+  required bytes darcid = 3;
+  // Identities that will sign together
+  repeated darc.Identity identities = 4;
+}
+
+// CheckAuthorizationResponse returns a list of Actions that the given identities
+// can execute in the given darc. The list can be empty, which means that the
+// given identities have now authorization in that darc at all.
+message CheckAuthorizationResponse {
+  repeated string actions = 1;
 }
 
 // ChainConfig stores all the configuration information for one skipchain. It will

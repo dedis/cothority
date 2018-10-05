@@ -3,8 +3,8 @@ package ch.epfl.dedis.lib;
 import ch.epfl.dedis.lib.crypto.Ed25519;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.proto.NetworkProto;
-import ch.epfl.dedis.proto.OnetProto;
+import ch.epfl.dedis.lib.proto.NetworkProto;
+import ch.epfl.dedis.lib.proto.OnetProto;
 import com.google.protobuf.ByteString;
 import com.moandjiezana.toml.Toml;
 

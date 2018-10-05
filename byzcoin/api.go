@@ -9,8 +9,8 @@ import (
 	"github.com/dedis/protobuf"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoin/darc"
-	"github.com/dedis/cothority/byzcoin/darc/expression"
+	"github.com/dedis/cothority/darc"
+	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 )
@@ -102,6 +102,26 @@ func (c *Client) GetProof(key []byte) (*GetProofResponse, error) {
 		return nil, err
 	}
 	return reply, nil
+}
+
+// CheckAuthorization verifies which actions the given set of identities can
+// execute in the given darc.
+func (c *Client) CheckAuthorization(dID darc.ID, ids ...darc.Identity) ([]darc.Action, error) {
+	reply := &CheckAuthorizationResponse{}
+	err := c.SendProtobuf(c.Roster.List[0], &CheckAuthorization{
+		Version:    CurrentVersion,
+		ByzCoinID:  c.ID,
+		DarcID:     dID,
+		Identities: ids,
+	}, reply)
+	if err != nil {
+		return nil, err
+	}
+	var ret []darc.Action
+	for _, a := range reply.Actions {
+		ret = append(ret, darc.Action(a))
+	}
+	return ret, nil
 }
 
 // GetGenDarc uses the GetProof method to fetch the latest version of the
