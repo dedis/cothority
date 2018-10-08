@@ -28,6 +28,7 @@ public class Config {
 
     /**
      * Instantiates from an existing protobuf representation.
+     * @param config the existing config
      */
     public Config(ByzCoinProto.ChainConfig config) {
         this.blockInterval = Duration.of(config.getBlockinterval(), NANOS);

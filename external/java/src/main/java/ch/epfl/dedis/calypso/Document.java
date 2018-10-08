@@ -34,7 +34,7 @@ public class Document {
      *                    This will be encrypted before the transmission to the skipchain.
      * @param extraData   any public data that will be stored unencrypted on the skipchain.
      * @param publisherId the publisher darc with the rules to create a WriteInstance and a ReadInstance.
-     * @throws CothorityCryptoException in the case the encryption doesn't work
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Document(byte[] data, byte[] keyMaterial, byte[] extraData, DarcId publisherId) throws CothorityCryptoException {
         this.data = data;
@@ -54,7 +54,7 @@ public class Document {
      *                    should be a safe guess for the moment.
      * @param extraData   any public data that will not be encrypted
      * @param publisherId the publisher darc with the rules to create a WriteInstance and a ReadInstance.
-     * @throws CothorityCryptoException in the case the encryption doesn't work
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Document(byte[] data, int keylen, byte[] extraData, DarcId publisherId) throws CothorityCryptoException {
         this(data, new Encryption.keyIv(keylen).getKeyMaterial(), extraData, publisherId);
@@ -65,7 +65,7 @@ public class Document {
      *
      * @param lts the Long Term Secret to use.
      * @return a WriteData with the encrypted data
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public WriteData getWriteData(LTS lts) throws CothorityException {
         return new WriteData(lts, Encryption.encryptData(data, keyMaterial), keyMaterial, extraData, publisherId);
@@ -78,7 +78,7 @@ public class Document {
      * @param publisherDarcId a darc with a 'spawn:calypsoWrite' rule
      * @param publisherSigner a signer having the right to trigger the 'spawn:calypsoWrite' rule.
      * @return a WriteInstance
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public WriteInstance spawnWrite(CalypsoRPC calypso, DarcId publisherDarcId, Signer publisherSigner) throws CothorityException {
         return new WriteInstance(calypso, publisherDarcId, Arrays.asList(publisherSigner), getWriteData(calypso.getLTS()));
@@ -129,7 +129,7 @@ public class Document {
 
     /**
      * @return the decrypted data stored in this document.
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public byte[] getData() throws CothorityCryptoException {
         return data;
@@ -158,8 +158,7 @@ public class Document {
      * @param riId    the instance Id of the read instance
      * @param reader  the private key of the reader (or ephemeral key)
      * @return the document with the decrypted keyMaterial and decrypted data
-     * @throws CothorityException
-     * @throws InvalidProtocolBufferException
+     * @throws CothorityException if something goes wrong
      */
     public static Document fromCalypso(CalypsoRPC calypso, InstanceId riId, Scalar reader) throws CothorityException {
         ReadInstance ri = ReadInstance.fromByzCoin(calypso, riId);
@@ -175,8 +174,8 @@ public class Document {
      * @param wi WriteInstance for this document
      * @param keyMaterial the decrypted key material
      * @return a new Document with the decrypted data
-     * @throws CothorityNotFoundException
-     * @throws CothorityCryptoException
+     * @throws CothorityNotFoundException if the requested instance cannot be found
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public static Document fromWriteInstance(WriteInstance wi, byte[] keyMaterial) throws CothorityNotFoundException, CothorityCryptoException {
         byte[] data = Encryption.decryptData(wi.getWrite().getDataEnc(), keyMaterial);

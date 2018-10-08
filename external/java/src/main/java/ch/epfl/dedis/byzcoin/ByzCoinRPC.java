@@ -55,6 +55,7 @@ public class ByzCoinRPC {
      * @param r             is the roster to be used
      * @param d             is the genesis darc
      * @param blockInterval is the block interval between two blocks
+     * @throws CothorityException if something goes wrong
      */
     public ByzCoinRPC(Roster r, Darc d, Duration blockInterval) throws CothorityException {
         if (d.getExpression("view_change") == null){
@@ -93,7 +94,7 @@ public class ByzCoinRPC {
 
     /**
      * For use by CalypsoRPC
-     * @param bc
+     * @param bc the ByzCoinRPC to copy the config from.
      */
     protected ByzCoinRPC(ByzCoinRPC bc){
         config = bc.config;
@@ -110,6 +111,8 @@ public class ByzCoinRPC {
      * Once the transaction has been sent, you need to poll to verify if it has been included or not.
      *
      * @param t is the client transaction holding one or more instructions to be sent to byzcoin.
+     * @throws CothorityException if something goes wrong if something goes wrong
+     * @return the client transaction
      */
     public ClientTransactionId sendTransaction(ClientTransaction t) throws CothorityException {
         return sendTransactionAndWait(t, 0);
@@ -150,7 +153,8 @@ public class ByzCoinRPC {
      * global state.
      *
      * @param id is the id of the instance to be fetched
-     * @throws CothorityException
+     * @throws CothorityCommunicationException if something goes wrong
+     * @return the proof
      */
     public Proof getProof(InstanceId id) throws CothorityCommunicationException {
         ByzCoinProto.GetProof.Builder request =
@@ -173,7 +177,7 @@ public class ByzCoinRPC {
     /**
      * Fetches the latest configuration and genesis darc from byzcoin.
      *
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong if something goes wrong
      */
     public void update() throws CothorityException {
         SkipBlock sb = skipchain.getLatestSkipblock();
@@ -186,7 +190,6 @@ public class ByzCoinRPC {
      * Verifies if the nodes representing the cothority are alive and reply to a ping.
      *
      * @return true if all nodes are live, false if one or more are not responding.
-     * @throws CothorityException if something failed.
      */
     public boolean checkLiveness() {
         for (ServerIdentity si : roster.getNodes()) {
@@ -224,7 +227,7 @@ public class ByzCoinRPC {
 
     /**
      * @return the darc instance of the genesis darc.
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong if something goes wrong
      */
     public DarcInstance getGenesisDarcInstance() throws CothorityException{
         return DarcInstance.fromByzCoin(this, genesisDarc);
@@ -250,7 +253,7 @@ public class ByzCoinRPC {
      * @param id hash of the skipblock to fetch
      * @return a Block representation of the skipblock
      * @throws CothorityCommunicationException if it couldn't contact the nodes
-     * @throws CothorityCryptoException        if the omniblock is invalid
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Block getBlock(SkipblockId id) throws CothorityCommunicationException, CothorityCryptoException {
         SkipBlock sb = skipchain.getSkipblock(id);
@@ -261,7 +264,7 @@ public class ByzCoinRPC {
      * Fetches the latest block from the Skipchain and returns the corresponding Block.
      *
      * @return a Block representation of the skipblock
-     * @throws CothorityCryptoException if the omniblock is invalid
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Block getLatestBlock() throws CothorityException {
         this.update();
@@ -276,7 +279,7 @@ public class ByzCoinRPC {
      * @param id the base id of the darc to be searched for
      * @param identities a list of identities that might sign
      * @return a list of actions that are allowed by any possible combination of signature from identities
-     * @throws CothorityCommunicationException
+     * @throws CothorityCommunicationException if something goes wrong
      */
     public List<String> checkAuthorization(DarcId id, List<Identity> identities) throws CothorityCommunicationException {
         ByzCoinProto.CheckAuthorization.Builder request =
@@ -313,6 +316,7 @@ public class ByzCoinRPC {
      * approach until we have a working streaming solution.
      *
      * @param sbr is a SkipBlockReceiver that will be called with any new block(s) available.
+     * @throws CothorityCommunicationException if something goes wrong
      */
     public void subscribeSkipBlock(Subscription.SkipBlockReceiver sbr) throws CothorityCommunicationException {
         subscription.subscribeSkipBlock(sbr);
@@ -333,7 +337,8 @@ public class ByzCoinRPC {
      *
      * @param roster      the roster to talk to
      * @param skipchainId the ID of the genesis skipblock, aka skipchain ID
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
+     * @return a new ByzCoinRPC object, connected to the requested roster and chain.
      */
     public static ByzCoinRPC fromByzCoin(Roster roster, SkipblockId skipchainId) throws CothorityException{
         Proof proof = ByzCoinRPC.getProof(roster, skipchainId, InstanceId.zero());
@@ -367,7 +372,7 @@ public class ByzCoinRPC {
      * @param admin the admin of Byzcoin
      * @param roster the nodes of Byzcoin
      * @return a Darc with the correct rights, also for the view_change.
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public static Darc makeGenesisDarc(Signer admin, Roster roster) throws CothorityCryptoException{
         Darc d = new Darc(Arrays.asList(admin.getIdentity()), Arrays.asList(admin.getIdentity()), "Genesis darc".getBytes());
@@ -409,6 +414,7 @@ public class ByzCoinRPC {
 
     /**
      * Getter for the subscription object.
+     * @return the Subscription
      */
     public Subscription getSubscription() {
         return subscription;

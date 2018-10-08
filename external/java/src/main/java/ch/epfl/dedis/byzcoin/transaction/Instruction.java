@@ -30,6 +30,7 @@ public class Instruction {
     /**
      * Use this constructor if it is a spawn instruction, i.e. you want to create a new object.
      *
+     * @param instId The instance ID.
      * @param nonce  The nonce of the object.
      * @param index  The index of the instruction in the atomic set.
      * @param length The length of the atomic set.
@@ -95,6 +96,7 @@ public class Instruction {
 
     /**
      * Getter for the instance ID.
+     * @return the InstanceID
      */
     public InstanceId getInstId() {
         return instId;
@@ -102,6 +104,7 @@ public class Instruction {
 
     /**
      * Setter for the signatures.
+     * @param signatures the signatures to set
      */
     public void setSignatures(List<Signature> signatures) {
         this.signatures = signatures;
@@ -186,6 +189,7 @@ public class Instruction {
      * Converts the instruction to a Darc request representation.
      *
      * @return The Darc request.
+     * @param darcId the input darc ID
      */
     public Request toDarcRequest(DarcId darcId) {
         List<Identity> ids = new ArrayList<>();
@@ -201,8 +205,9 @@ public class Instruction {
      * Have a list of signers sign the instruction. The instruction will *not* be accepted by byzcoin if it is not
      * signed. The signature will not be valid if the instruction is modified after signing.
      *
+     * @param darcId - the darcId
      * @param signers - the list of signers.
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public void signBy(DarcId darcId, List<Signer> signers) throws CothorityCryptoException {
         this.signatures = new ArrayList<>();
@@ -226,7 +231,7 @@ public class Instruction {
      *
      * @param what - the string that gets mixed into the derived instance ID
      * @return the instance ID
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public InstanceId deriveId(String what) throws CothorityCryptoException {
         try {

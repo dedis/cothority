@@ -56,7 +56,7 @@ public class Darc {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             digest.update(new byte[0]);
             this.prevID = new DarcId(digest.digest());
-        } catch (NoSuchAlgorithmException | CothorityCryptoException e) {
+        } catch (NoSuchAlgorithmException e) {
             // NoSuchAlgorithmException or CothorityCryptoException should never happen because SHA-256 exists and the
             // digest of it has the right length (32 bytes).
             throw new RuntimeException(e);
@@ -81,7 +81,7 @@ public class Darc {
     /**
      * Convenience constructor
      * @param proto proto representation of the darc
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Darc(DarcProto.Darc proto) throws CothorityCryptoException {
         version = proto.getVersion();
@@ -102,8 +102,8 @@ public class Darc {
     /**
      * Convenience constructure
      * @param buf byte representation of protobuf representation
-     * @throws InvalidProtocolBufferException
-     * @throws CothorityCryptoException
+     * @throws InvalidProtocolBufferException if the Darc cannot be parsed
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Darc(byte[] buf) throws InvalidProtocolBufferException, CothorityCryptoException {
         this(DarcProto.Darc.parseFrom(buf));
@@ -113,8 +113,8 @@ public class Darc {
      * Sets a rule to be the action/expression pair. This will overwrite an
      * existing rule or create a new one.
      *
-     * @param action
-     * @param expression
+     * @param action the action
+     * @param expression the expression
      */
     public void setRule(String action, byte[] expression) {
         try {
@@ -182,7 +182,7 @@ public class Darc {
      * Updates the version of the darc and clears any eventual signatures from previous
      * evolutions.
      */
-    public void increaseVersion() throws CothorityCryptoException {
+    public void increaseVersion() {
         version++;
         signatures = new ArrayList<>();
         verificationDarcs = new ArrayList<>();
@@ -217,7 +217,7 @@ public class Darc {
      *
      * @return sha256
      */
-    public DarcId getId() throws CothorityCryptoException {
+    public DarcId getId() {
         try {
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             digest.update(Darc.longToArr8(this.version));
@@ -252,7 +252,7 @@ public class Darc {
 
     /**
      * @param d the previous darc
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public void setPrevId(Darc d) throws CothorityCryptoException {
         setPrevId(d.getId());
@@ -262,7 +262,7 @@ public class Darc {
      * Gets the base-ID of the darc, i.e. the ID before any evolution.
      *
      * @return base-ID
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public DarcId getBaseId() throws CothorityCryptoException {
         if (version == 0) {
@@ -285,7 +285,7 @@ public class Darc {
     /**
      * @return a copy of the darc with the same version number.
      * // TODO this part should be in a copy constructor
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Darc copy() throws CothorityCryptoException {
         Rules rs = new Rules(this.rules);
@@ -296,7 +296,7 @@ public class Darc {
 
     /**
      * @return a copy of the darc with the next version number and prevId and baseId set up.
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Darc copyEvolve() throws CothorityCryptoException {
         Rules rs = new Rules(this.rules);
@@ -309,7 +309,7 @@ public class Darc {
 
     /**
      * @return the corresponding identityDarc
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Identity getIdentity() throws CothorityCryptoException{
         return IdentityFactory.New(this);

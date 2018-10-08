@@ -25,7 +25,7 @@ public class SignerEd25519 implements Signer {
     /**
      * Creates a new signer from a slice of bytes. This must correspond to
      * what Ed25519.prime_order.toBytes() returns.
-     * @param data
+     * @param data a public key in byte form
      */
     public SignerEd25519(byte[] data){
         priv = new Ed25519Scalar(data);
@@ -37,8 +37,8 @@ public class SignerEd25519 implements Signer {
      * an array of bytes that can be verified by the
      * corresponding identity-implementation.
      *
-     * @param msg
-     * @return
+     * @param msg the message
+     * @return the signature
      */
     public byte[] sign(byte[] msg) {
         SchnorrSig sig = new SchnorrSig(msg, priv);
@@ -48,7 +48,7 @@ public class SignerEd25519 implements Signer {
     /**
      * Returns the private key of the signer, or throws a NoPrivateKey exception.
      *
-     * @return
+     * @return the private key
      */
     public Scalar getPrivate() {
         return priv;
@@ -57,7 +57,7 @@ public class SignerEd25519 implements Signer {
     /**
      * Returns the public key of the signer or throws a NoPublicKey exception.
      *
-     * @return
+     * @return the public key
      */
     public Point getPublic() {
         return pub;
@@ -67,16 +67,16 @@ public class SignerEd25519 implements Signer {
      * Creates an identity of the signer.
      *
      * @return an identity
-     * @throws CothorityCryptoException
      */
-    public Identity getIdentity() throws CothorityCryptoException{
+    public Identity getIdentity() {
         return IdentityFactory.New(this);
     }
 
     /**
-     * Returns an array of bytes representing the signer. The first byte must indicate the type
+     * Returns an array of bytes representing the signer. The first byte must indicate the type.
      *
-     * @return
+     * @return the serialised signer
+     * @throws IOException if something went wrong with I/O
      */
     public byte[] serialize() throws IOException{
         byte[] result = new byte[1 + priv.toBytes().length];

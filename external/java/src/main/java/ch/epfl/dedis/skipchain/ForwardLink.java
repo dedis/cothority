@@ -30,7 +30,7 @@ public class ForwardLink {
 
     /**
      * @return the block where this link originates.
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public SkipblockId getFrom() throws CothorityCryptoException{
         return new SkipblockId(forwardLink.getFrom());
@@ -38,7 +38,7 @@ public class ForwardLink {
 
     /**
      * @return the block where this link points to.
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public SkipblockId getTo() throws CothorityCryptoException{
         return new SkipblockId(forwardLink.getTo());
@@ -46,7 +46,7 @@ public class ForwardLink {
 
     /**
      * @return the new roster of the 'to' block. If the roster of 'to' and 'from' are the same, this returns null.
-     * @throws URISyntaxException
+     * @throws URISyntaxException if the roster in the forward link has a problem
      */
     public Roster getNewRoster() throws URISyntaxException{
         if (forwardLink.hasNewRoster()) {

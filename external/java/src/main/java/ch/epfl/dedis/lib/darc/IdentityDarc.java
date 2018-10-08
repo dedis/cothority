@@ -11,16 +11,16 @@ public class IdentityDarc implements Identity {
     /**
      * Instantiates a IdentityDarc given its protobuf representation.
      *
-     * @param proto
+     * @param proto the protobuf representation of the IdentityDarc
      */
-    public IdentityDarc(DarcProto.IdentityDarc proto) throws CothorityCryptoException{
+    public IdentityDarc(DarcProto.IdentityDarc proto) {
         darcID = new DarcId(proto.getId().toByteArray());
     }
 
     /**
      * Instantiates a IdentityDarc given a darc-id.
      *
-     * @param darcID
+     * @param darcID the source DarcId
      */
     public IdentityDarc(DarcId darcID) {
         this.darcID = darcID;
@@ -28,9 +28,9 @@ public class IdentityDarc implements Identity {
 
     /**
      * Instantiates a IdentityDarc given a darc.
-     * @param darc
+     * @param darc the source Darc
      */
-    public IdentityDarc(Darc darc)throws CothorityCryptoException{
+    public IdentityDarc(Darc darc){
         this(darc.getId());
     }
 
@@ -38,9 +38,9 @@ public class IdentityDarc implements Identity {
      * Returns true if the verification of signature on the sha-256 of msg is
      * successful or false if not.
      *
-     * @param msg
-     * @param signature
-     * @return
+     * @param msg the message
+     * @param signature the signature
+     * @return true if the signature is correct
      */
     public boolean verify(byte[] msg, byte[] signature) {
         return false;
@@ -51,7 +51,7 @@ public class IdentityDarc implements Identity {
      * representation has to hold all necessary fields to represent any of the
      * identity implementations.
      *
-     * @return
+     * @return a protobuf-representation of the IdentityDarc
      */
     public DarcProto.Identity toProto() {
         DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();

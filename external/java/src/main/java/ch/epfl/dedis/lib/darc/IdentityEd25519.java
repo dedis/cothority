@@ -12,7 +12,7 @@ public class IdentityEd25519 implements Identity {
 
     /**
      * Creates an IdentityEd25519 from a protobuf representation.
-     * @param proto
+     * @param proto the protobuf to parse
      */
     public IdentityEd25519(DarcProto.IdentityEd25519 proto){
         pub = new Ed25519Point(proto.getPoint());
@@ -28,22 +28,22 @@ public class IdentityEd25519 implements Identity {
 
     /**
      * Creates an IdentityEd25519 from a SignerEd25519.
-     * @param signer
+     * @param signer the input signer
      */
-    public IdentityEd25519(Signer signer) throws CothorityCryptoException{
+    public IdentityEd25519(Signer signer) {
         if (SignerEd25519.class.isInstance(signer)) {
             pub = new Ed25519Point(signer.getPublic());
         } else {
-            throw new CothorityCryptoException("Wrong signer type: " + signer.toString());
+            throw new RuntimeException("Wrong signer type: " + signer.toString());
         }
     }
 
     /**
      * Returns true if the verification of signature on the sha-256 of msg is
      * successful or false if not.
-     * @param msg
-     * @param signature
-     * @return
+     * @param msg the message
+     * @param signature the signature
+     * @return true if the signature is correct
      */
     public boolean verify(byte[] msg, byte[] signature){
         return new SchnorrSig(signature).verify(msg, pub);
@@ -53,7 +53,7 @@ public class IdentityEd25519 implements Identity {
      * Creates a protobuf-representation of the implementation. The protobuf
      * representation has to hold all necessary fields to represent any of the
      * identity implementations.
-     * @return
+     * @return a protobuf-representation of the Identity
      */
     public DarcProto.Identity toProto(){
         DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();

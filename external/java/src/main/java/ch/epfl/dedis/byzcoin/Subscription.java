@@ -79,6 +79,7 @@ public class Subscription {
      * be sent to it. Previously received blocks will not be sent to the receiver.
      *
      * @param br the receiver that wants to be informed of new blocks.
+     * @throws CothorityCommunicationException is something went wrong
      */
     public void subscribeSkipBlock(SkipBlockReceiver br) throws CothorityCommunicationException {
         aggr.add(br);
@@ -102,6 +103,7 @@ public class Subscription {
 
     /**
      * Checks whether the connection is closed.
+     * @return true if closed
      */
     public boolean isClosed() {
         if (conn == null) {

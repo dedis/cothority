@@ -12,8 +12,8 @@ public class DataBody {
 
     /**
      * Constructor for DataBody from protobuf.
-     * @param proto
-     * @throws InvalidProtocolBufferException
+     * @param proto the protobuf form of the DataBody
+     * @throws InvalidProtocolBufferException if the DataBody cannot be parsed
      */
     public DataBody(ByzCoinProto.DataBody proto) throws InvalidProtocolBufferException {
         txResults = new ArrayList<TxResult>(proto.getTxresultsCount());

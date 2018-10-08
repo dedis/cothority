@@ -1,6 +1,5 @@
 package ch.epfl.dedis.lib;
 
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import com.google.protobuf.ByteString;
 
 import java.util.Arrays;
@@ -12,13 +11,13 @@ public class Sha256id implements HashId {
     private final byte[] id;
     public final static int length = 32;
 
-    public Sha256id(ByteString bs) throws CothorityCryptoException{
+    public Sha256id(ByteString bs) {
         this(bs.toByteArray());
     }
 
-    public Sha256id(byte[] id) throws CothorityCryptoException {
+    public Sha256id(byte[] id) {
         if (id.length != length) {
-            throw new CothorityCryptoException("need 32 bytes for sha256-hash, only got " + id.length);
+            throw new RuntimeException("need 32 bytes for sha256-hash, only got " + id.length);
         }
         this.id = Arrays.copyOf(id, id.length);
     }

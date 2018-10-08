@@ -29,8 +29,9 @@ public class CalypsoFactory {
     /**
      * Set chain genesis (getId/hash of the fist block in the chain)
      *
-     * @param genesis
+     * @param genesis the skipblock ID of the genesis block
      * @throws IllegalStateException when genesis can not be decoded or is too short
+     * @return the factory
      */
     public CalypsoFactory setGenesis(final SkipblockId genesis) {
         this.genesis = genesis;
@@ -52,6 +53,7 @@ public class CalypsoFactory {
      * @param conode    cothority server address (base address in tcp://127.0.0.0:7001 form)
      * @param publicKey server public symmetricKey hex encoded to a string
      * @throws IllegalArgumentException when conode address is incorrect
+     * @return the factory
      */
     public CalypsoFactory addConode(final URI conode, final String publicKey) {
         if (!conode.getScheme().equals("tcp")) {
@@ -64,6 +66,7 @@ public class CalypsoFactory {
 
     /**
      * @param conode conode address with public key
+     * @return the factory
      * @throws IllegalArgumentException when conode address is incorrect
      */
     public CalypsoFactory addConode(final ConodeAddress conode) {
@@ -72,6 +75,7 @@ public class CalypsoFactory {
 
     /**
      * @param conodes cothority server address with public key
+     * @return the factory
      * @throws IllegalArgumentException when conode address is incorrect
      */
     public CalypsoFactory addConodes(final Collection<ConodeAddress> conodes) {
@@ -96,17 +100,15 @@ public class CalypsoFactory {
      * Create a new skipchain. New skipchain will be created and ID of genesis block will be returned.
      * To make other operations in the same skipchain you need to connect in normal way using skipblock ID.
      *
+     * @param admin the Signer who will be the admin
      * @return skipblock ID of a new genesis block
+     * @throws CothorityException if something goes wrong
      */
-    public CalypsoRPC initialiseNewCalypso(Signer admin) throws CothorityCommunicationException, CothorityCryptoException {
+    public CalypsoRPC initialiseNewCalypso(Signer admin) throws CothorityException {
         Roster roster = createRoster();
 
         Darc adminDarc = ByzCoinRPC.makeGenesisDarc(admin, roster);
-        try {
-            return new CalypsoRPC(roster, adminDarc, Duration.ofMillis(500));
-        } catch (CothorityException e) {
-            throw new CothorityCommunicationException(e.getMessage());
-        }
+        return new CalypsoRPC(roster, adminDarc, Duration.ofMillis(500));
     }
 
     private Roster createRoster() {

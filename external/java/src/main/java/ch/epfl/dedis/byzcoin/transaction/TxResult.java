@@ -10,8 +10,8 @@ public class TxResult {
 
     /** constructor for TxResult
      *
-     * @param proto
-     * @throws InvalidProtocolBufferException
+     * @param proto the input protobuf
+     * @throws InvalidProtocolBufferException if the input cannot be parsed
      */
     public TxResult(ByzCoinProto.TxResult proto) throws InvalidProtocolBufferException {
         ct = new ClientTransaction(proto.getClienttransaction());
@@ -20,7 +20,7 @@ public class TxResult {
 
     /**
      * Getter for the client transaction.
-     * @return
+     * @return a client transaction
      */
     public ClientTransaction getClientTransaction() {
         return ct;
@@ -28,7 +28,7 @@ public class TxResult {
 
     /**
      * isAccepted shows whether this transaction was accepted or rejected in this block.
-     * @return
+     * @return true if accepted
      */
     public boolean isAccepted() {
         return accepted;

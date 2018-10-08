@@ -77,7 +77,7 @@ public class ServerIdentity {
      * @param path The API endpoint.
      * @param data The request message.
      * @return The response.
-     * @throws CothorityCommunicationException
+     * @throws CothorityCommunicationException if something went wrong
      */
     public byte[] SendMessage(String path, byte[] data) throws CothorityCommunicationException {
         SyncSendMessage ssm = new SyncSendMessage(path, data);
@@ -94,7 +94,7 @@ public class ServerIdentity {
      * @param data The request message.
      * @param h    The handler for handling every response.
      * @return The streaming connection.
-     * @throws CothorityCommunicationException
+     * @throws CothorityCommunicationException if something went wrong
      */
     public StreamingConn MakeStreamingConnection(String path, byte[] data, StreamHandler h) throws CothorityCommunicationException {
         return new StreamingConn(path, data, h);
@@ -133,6 +133,7 @@ public class ServerIdentity {
         /**
          * Checks whether the connection is open. Note that the close function is non-blocking, so this function might
          * not return true immediately after close is called.
+         * @return true if closed
          */
         public boolean isClosed() {
             return ws.isClosed();

@@ -67,7 +67,7 @@ public class Roster {
      * @param path  The API endpoint.
      * @param proto The protobuf encoded request.
      * @return the response
-     * @throws CothorityCommunicationException
+     * @throws CothorityCommunicationException if something went wrong
      */
     public ByteString sendMessage(String path, com.google.protobuf.GeneratedMessageV3 proto) throws CothorityCommunicationException {
         // TODO - fetch a random node.
@@ -81,7 +81,7 @@ public class Roster {
      * @param proto The protobuf encoded request.
      * @param h     The handler for handling responses.
      * @return the streaming connection.
-     * @throws CothorityCommunicationException
+     * @throws CothorityCommunicationException if something went wrong
      */
     public ServerIdentity.StreamingConn makeStreamingConn(String path, com.google.protobuf.GeneratedMessageV3 proto, ServerIdentity.StreamHandler h) throws CothorityCommunicationException {
         // TODO - fetch a random node.

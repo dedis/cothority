@@ -17,7 +17,7 @@ public class Delete {
 
     /**
      * Constructor from protobuf.
-     * @param proto
+     * @param proto the input protobuf
      */
     public Delete(ByzCoinProto.Delete proto) {
     }

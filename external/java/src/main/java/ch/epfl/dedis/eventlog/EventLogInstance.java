@@ -23,10 +23,10 @@ import java.util.List;
 
 /**
  * EventLogInstance is for interacting with the eventlog contract on ByzCoin.
- * <p>
+ *
  * Contrary to ordinary event logging services, we offer better security and auditability. Below are some of the main
  * features that sets us apart.
- * <p>
+ *
  * <ul>
  * <li>
  * Collective witness - a collection of nodes, or conodes, independently observe the logging of an event. The event
@@ -41,9 +41,8 @@ import java.util.List;
  * Configurable acceptance criteria - we execute a smart-contract on all nodes, nodes only accept the event if the
  * smart-contract returns a positive result.
  * </li>
- * <p>
  * <li>
- * Existance proof - once an event is logged, an authorised client can request a cryptographic proof (powered by
+ * Existence proof - once an event is logged, an authorised client can request a cryptographic proof (powered by
  * collection) that the event is indeed stored in the blockchain and has not been tampered.
  * </li>
  * </ul>
@@ -62,7 +61,7 @@ public class EventLogInstance {
      * @param bc      the byzcoin RPC
      * @param darcId  the darc ID that has the "spawn:eventlog" permission
      * @param signers a list of signers that has the "spawn:eventlog" permission
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public EventLogInstance(ByzCoinRPC bc, DarcId darcId, List<Signer> signers) throws CothorityException {
         this.bc = bc;
@@ -82,7 +81,7 @@ public class EventLogInstance {
      *
      * @param bc the byzcoin RPC
      * @param id the contract ID, it must be already initialised and stored on byzcoin
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     private EventLogInstance(ByzCoinRPC bc, InstanceId id) throws CothorityException {
         this.bc = bc;
@@ -95,9 +94,10 @@ public class EventLogInstance {
      * get function to verify that the event is actually stored.
      *
      * @param events  a list of events to log
+     * @param darcId  the darc ID
      * @param signers a list of signers with the permission "invoke:eventlog"
      * @return a list of keys which can be used to retrieve the logged events
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public List<InstanceId> log(List<Event> events, DarcId darcId, List<Signer> signers) throws CothorityException {
         Pair<ClientTransaction, List<InstanceId>> txAndKeys = makeTx(events, darcId, signers);
@@ -111,9 +111,10 @@ public class EventLogInstance {
      * that the event is actually stored.
      *
      * @param event   the event to log
+     * @param darcId  the darc ID
      * @param signers a list of signers that has the "invoke:eventlog" permission
      * @return the key which can be used to retrieve the event later
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public InstanceId log(Event event, DarcId darcId, List<Signer> signers) throws CothorityException {
         return this.log(Arrays.asList(event), darcId, signers).get(0);
@@ -124,7 +125,7 @@ public class EventLogInstance {
      *
      * @param key the key for which the event is stored
      * @return The event if it is found.
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public Event get(InstanceId key) throws CothorityException {
         Proof p = bc.getProof(key);
@@ -154,7 +155,7 @@ public class EventLogInstance {
      * @param from  the start of the search range (exclusive).
      * @param to    the end of the search range (inclusive).
      * @return a list of events and a flag indicating whether the result is truncated
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public SearchResponse search(String topic, long from, long to) throws CothorityException {
         // Note: this method is a bit different from the others, we directly use the raw sendMessage instead of via
@@ -190,7 +191,8 @@ public class EventLogInstance {
      *
      * @param bc the byzcoin RPC
      * @param id the contract ID, it must be already initialised and stored on byzcoin
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
+     * @return a new EventLogInstance
      */
     public static EventLogInstance fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityException {
         return new EventLogInstance(bc, id);

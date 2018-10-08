@@ -36,7 +36,7 @@ public class WriteInstance {
      * @param darcId  The darc ID for which the signers belong.
      * @param signers The list of signers that are authorised to create the instance.
      * @param wr      The WriteData object, to be stored in the instance.
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public WriteInstance(CalypsoRPC calypso, DarcId darcId, List<Signer> signers, WriteData wr) throws CothorityException {
         this.calypso = calypso;
@@ -50,7 +50,7 @@ public class WriteInstance {
      *
      * @param calypso The ByzCoinRPC object which should be already running.
      * @param id      The ID of the instance to connect.
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     private WriteInstance(CalypsoRPC calypso, InstanceId id) throws CothorityException {
         this.calypso = calypso;
@@ -60,6 +60,7 @@ public class WriteInstance {
 
     /**
      * Get the LTS configuration.
+     * @return the LTS
      */
     public LTS getLts() {
         return lts;
@@ -67,6 +68,7 @@ public class WriteInstance {
 
     /**
      * Get the instance.
+     * @return the Instance
      */
     public Instance getInstance() {
         return instance;
@@ -78,7 +80,6 @@ public class WriteInstance {
 
     /**
      * @return the WriteData stored in that instance
-     * @throws InvalidProtocolBufferException if the instance data is corrupt
      * @throws CothorityNotFoundException     if the instance does not hold a CalypsoWrite data
      */
     public WriteData getWrite() throws CothorityNotFoundException {
@@ -91,7 +92,7 @@ public class WriteInstance {
      * @param calypso an existing calypso object
      * @param readers one or more readers that can sign the read spawn instruction
      * @return ReadInstance if successful
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public ReadInstance spawnCalypsoRead(CalypsoRPC calypso, List<Signer> readers) throws CothorityException {
         return new ReadInstance(calypso, this, readers);
@@ -100,10 +101,10 @@ public class WriteInstance {
     /**
      * Fetches an already existing writeInstance from Calypso and returns it.
      *
-     * @param calypso
-     * @param writeId
-     * @return
-     * @throws CothorityException
+     * @param calypso the Calypso instance
+     * @param writeId the write instance to load
+     * @return the new WriteInstance
+     * @throws CothorityException if something goes wrong
      */
     public static WriteInstance fromCalypso(CalypsoRPC calypso, InstanceId writeId) throws CothorityException {
         return new WriteInstance(calypso, writeId);

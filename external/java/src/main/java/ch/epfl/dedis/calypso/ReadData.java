@@ -17,6 +17,8 @@ public class ReadData {
 
     /**
      * Construct a read request given the ID of the corresponding write request and the reader's public key.
+     * @param writeId  the instance of the write request
+     * @param readerPk the reader's public key
      */
     public ReadData(InstanceId writeId, Point readerPk) {
         Calypso.Read.Builder b = Calypso.Read.newBuilder();
@@ -27,8 +29,8 @@ public class ReadData {
 
     /**
      * Creates a new ReadData from an existing instance.
-     * @param inst
-     * @throws InvalidProtocolBufferException
+     * @param inst the instance
+     * @throws CothorityNotFoundException if the read request in the instance is corrupt
      */
     public ReadData(Instance inst) throws CothorityNotFoundException{
         if (!inst.getContractId().equals(ReadInstance.ContractId)){
@@ -56,7 +58,7 @@ public class ReadData {
     }
 
     /**
-     * Return the protobuf representation of the ReadData.
+     * @return the the protobuf representation of the ReadData
      */
     public Calypso.Read toProto() {
         return read;

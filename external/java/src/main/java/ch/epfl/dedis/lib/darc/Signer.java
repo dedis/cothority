@@ -12,36 +12,38 @@ public interface Signer {
      * an array of bytes that can be verified by the
      * corresponding identity-implementation.
      *
-     * @param msg
-     * @return
+     * @param msg a message
+     * @return the signature
+     * @throws SignRequestRejectedException if the signature request is rejected
      */
     byte[] sign(byte[] msg) throws SignRequestRejectedException;
 
     /**
      * Returns the private key of the signer, or throws a NoPrivateKey exception.
      *
-     * @return
+     * @return the private key
      */
-    Scalar getPrivate() throws CothorityCryptoException;
+    Scalar getPrivate();
 
     /**
      * Returns the public key of the signer or throws a NoPublicKey exception.
      *
-     * @return
+     * @return the public key
      */
-    Point getPublic() throws CothorityCryptoException;
+    Point getPublic();
 
     /**
      * Returns an identity of the signer.
      *
-     * @return
+     * @return the identity
      */
-    Identity getIdentity() throws CothorityCryptoException;
+    Identity getIdentity();
 
     /**
      * Returns an array of bytes representing the signer. The first byte must indicate the type
      *
-     * @return
+     * @return the serialized signer
+     * @throws IOException if something went wrong with I/O
      */
     byte[] serialize() throws IOException;
 

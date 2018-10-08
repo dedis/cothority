@@ -20,6 +20,7 @@ public class DecryptKeyReply {
 
     /**
      * Construct from the protobuf representation.
+     * @param proto the input protobuf
      */
     public DecryptKeyReply(Calypso.DecryptKeyReply proto) {
         this.Cs = proto.getCsList().stream().map(Ed25519Point::new).collect(Collectors.toList());
@@ -32,6 +33,8 @@ public class DecryptKeyReply {
      * ElGamal encryption that can only encrypt 30 bytes when using Ed25519.
      *
      * @param reader The secret key of the reader.
+     * @return the key material
+     * @throws CothorityCryptoException if something went wrong with decoding the point
      */
     public byte[] getKeyMaterial(Scalar reader) throws CothorityCryptoException {
         // Use our private key to decrypt the re-encryption key and use it

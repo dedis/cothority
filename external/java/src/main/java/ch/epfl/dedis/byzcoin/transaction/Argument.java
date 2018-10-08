@@ -25,7 +25,7 @@ public class Argument {
 
     /**
      * Constructor from protobuf.
-     * @param proto
+     * @param proto the input protobuf
      */
     public Argument(ByzCoinProto.Argument proto) {
         name = proto.getName();

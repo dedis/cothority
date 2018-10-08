@@ -26,7 +26,7 @@ public class Rules {
 
     /**
      * This is the copy constructor.
-     * @param other
+     * @param other the input to copy
      */
     public Rules(Rules other) {
         List<Rule> newList = new ArrayList<>(other.list.size());
@@ -36,7 +36,7 @@ public class Rules {
 
     /**
      * Constructor for the protobuf representation.
-     * @param rules
+     * @param rules the rules in protobuf form
      */
     public Rules(DarcProto.Rules rules) {
         this.list = new ArrayList<>();
@@ -51,7 +51,7 @@ public class Rules {
      * exists.
      * @param a is the action
      * @param expr is the expression
-     * @throws CothorityAlreadyExistsException
+     * @throws CothorityAlreadyExistsException if the rule already exists
      */
     public void addRule(String a, byte[] expr) throws CothorityAlreadyExistsException {
         if (exists(a) != -1) {
@@ -64,7 +64,7 @@ public class Rules {
      * Updates a rule. CothorityNotFoundException is thrown if the action that we are trying to update does not exist.
      * @param a is the action
      * @param expr is the expression
-     * @throws CothorityNotFoundException
+     * @throws CothorityNotFoundException if the rule cannot be found
      */
     public void updateRule(String a, byte[] expr) throws CothorityNotFoundException {
         int i = exists(a);
@@ -77,7 +77,7 @@ public class Rules {
     /**
      * Gets a rule, if it does not exist then null is returned.
      * @param a is the action
-     * @return
+     * @return the Rule
      */
     public Rule get(String a) {
         for (Rule rule : this.list) {
@@ -90,7 +90,7 @@ public class Rules {
 
     /**
      * Gets all rules as a List.
-     * @return
+     * @return a list of Rules
      */
     public List<Rule> getAllRules() {
         return this.list;
@@ -98,7 +98,7 @@ public class Rules {
 
     /**
      * Gets all the actions as a List.
-     * @return
+     * @return a list of actions
      */
     public List<String> getAllActions() {
         return this.list.stream().map(Rule::getAction).collect(Collectors.toList());
@@ -120,7 +120,7 @@ public class Rules {
     /**
      * Checks whether a rule exists.
      * @param a is the action
-     * @return
+     * @return true is the rule exists
      */
     public boolean contains(String a) {
         return exists(a) != -1;
