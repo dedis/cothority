@@ -11,6 +11,7 @@ import (
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
@@ -63,9 +64,14 @@ var cmds = cli.Commands{
 				EnvVar: "BC",
 				Usage:  "the ByzCoin config to use",
 			},
-			cli.StringFlag{
+			cli.StringSliceFlag{
 				Name:  "identity",
-				Usage: "the identity of the signer who will be allowed to access the contract (e.g. ed25519:a35020c70b8d735...0357))",
+				Usage: "the identity(ies) of the signer(s) who will be allowed to access the contract (e.g. ed25519:a35020c70b8d735...0357))",
+			},
+			cli.StringFlag{
+				Name:  "operation",
+				Usage: "will identities by ORed or ANDed?",
+				Value: "OR",
 			},
 			cli.BoolFlag{
 				Name:  "replace",
@@ -219,9 +225,21 @@ func add(c *cli.Context) error {
 	}
 	action := arg[0]
 
-	identity := c.String("identity")
-	if identity == "" {
+	ids := c.StringSlice("identity")
+	if len(ids) == 0 {
 		return errors.New("--identity flag is required")
+	}
+
+	op := c.String("operation")
+
+	var exp expression.Expr
+	switch op {
+	case "AND":
+		exp = expression.InitAndExpr(ids...)
+	case "OR":
+		exp = expression.InitOrExpr(ids...)
+	default:
+		return errors.New("--operation must be OR or AND")
 	}
 
 	d, err := cl.GetGenDarc()
@@ -232,10 +250,10 @@ func add(c *cli.Context) error {
 	d2 := d.Copy()
 	d2.EvolveFrom(d)
 
-	err = d2.Rules.AddRule(darc.Action(action), []byte(identity))
+	err = d2.Rules.AddRule(darc.Action(action), exp)
 	if err != nil {
 		if c.Bool("replace") {
-			err = d2.Rules.UpdateRule(darc.Action(action), []byte(identity))
+			err = d2.Rules.UpdateRule(darc.Action(action), exp)
 			if err != nil {
 				return err
 			}
