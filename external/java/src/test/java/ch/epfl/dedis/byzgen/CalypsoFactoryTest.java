@@ -9,6 +9,7 @@ import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.calypso.CalypsoRPC;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.exception.CothorityException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -103,7 +104,7 @@ class CalypsoFactoryTest {
         assertNotNull(conection);
     }
 
-    private CalypsoRPC createCalypsoForTest() throws CothorityCommunicationException, CothorityCryptoException {
+    private CalypsoRPC createCalypsoForTest() throws CothorityException {
         return new CalypsoFactory()
                 .addConodes(testServerController.getConodes())
                 .initialiseNewCalypso(new SignerEd25519(
