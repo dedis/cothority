@@ -47,11 +47,11 @@ type bcConfig struct {
 // Presets for -clientid and -clientsecret.
 var clientIDs = map[string]string{
 	"https://accounts.google.com": "742239812619-g1rqb2esv99gplco7chck7ir3c22g4pf.apps.googleusercontent.com",
-	"https://oauth.dedis.ch":      "dedis",
+	"https://oauth.dedis.ch/dex":      "dedis",
 }
 var clientSecrets = map[string]string{
 	"https://accounts.google.com": "wYLW80agBpK-EyuXzKqEwieK",
-	"https://oauth.dedis.ch":      "6143443e4635074ddef90ac7bc71443ceed7e6df",
+	"https://oauth.dedis.ch/dex":      "6143443e4635074ddef90ac7bc71443ceed7e6df",
 }
 
 var cmds = cli.Commands{
