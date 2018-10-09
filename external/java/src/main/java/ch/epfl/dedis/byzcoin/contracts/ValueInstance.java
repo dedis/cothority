@@ -42,7 +42,7 @@ public class ValueInstance {
      * @param spawnerDarcId a darc Id with a "spawn:value" rule in it
      * @param spawnerSigner a signer having the right to sign for the "spawn:value" rule
      * @param value         the value to store in the instance
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public ValueInstance(ByzCoinRPC bc, DarcId spawnerDarcId, Signer spawnerSigner, byte[] value) throws CothorityException {
         DarcInstance spawner = DarcInstance.fromByzCoin(bc, spawnerDarcId);
@@ -71,7 +71,7 @@ public class ValueInstance {
     /**
      * Updates the value by getting the latest instance and updating it.
      *
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public void update() throws CothorityException {
         instance = Instance.fromByzcoin(bc, instance.getId());
@@ -89,7 +89,7 @@ public class ValueInstance {
      * @param pos      position of the instruction in the ClientTransaction
      * @param len      total number of instructions in the ClientTransaction
      * @return Instruction to be sent to byzcoin
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Instruction evolveValueInstruction(byte[] newValue, Signer owner, int pos, int len) throws CothorityCryptoException {
         Invoke inv = new Invoke("update", ContractId, newValue);
@@ -120,7 +120,7 @@ public class ValueInstance {
      * @param newValue the value to replace the old value.
      * @param owner    is the owner that can sign to evolve the darc
      * @param wait     how many blocks to wait for inclusion of the instruction
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public void evolveValueAndWait(byte[] newValue, Signer owner, int wait) throws CothorityException {
         Instruction inst = evolveValueInstruction(newValue, owner, 0, 1);
@@ -139,7 +139,7 @@ public class ValueInstance {
     /**
      * @return a copy of the value stored in this instance.
      */
-    public byte[] getValue() throws CothorityCryptoException {
+    public byte[] getValue() {
         byte[] v = new byte[value.length];
         System.arraycopy(value, 0, v, 0, value.length);
         return v;
@@ -160,7 +160,8 @@ public class ValueInstance {
      *
      * @param bc is a running ByzCoin service
      * @param id of the value-instance to connect to
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
+     * @return the new ValueInstance
      */
     public static ValueInstance fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityException {
         return new ValueInstance(bc, Instance.fromByzcoin(bc, id));
@@ -171,10 +172,10 @@ public class ValueInstance {
      *
      * @param bc a running ByzCoin service
      * @param p  the proof for the valueInstance
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
+     * @return the new ValueInstance
      */
     public static ValueInstance fromByzcoin(ByzCoinRPC bc, Proof p) throws CothorityException {
         return fromByzcoin(bc, new InstanceId(p.getKey()));
     }
-
 }

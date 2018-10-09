@@ -11,27 +11,24 @@ public class DarcId extends Sha256id {
     /**
      * Constructs a darc ID from a byte array.
      * @param id the darc ID
-     * @throws CothorityCryptoException
      */
-    public DarcId(byte[] id) throws CothorityCryptoException {
+    public DarcId(byte[] id) {
         super(id);
     }
 
     /**
      * Constructs a darc ID from ByteString.
      * @param id the darc ID
-     * @throws CothorityCryptoException
      */
-    public DarcId(ByteString id) throws CothorityCryptoException {
+    public DarcId(ByteString id) {
         this(id.toByteArray());
     }
 
     /**
      * Creates a darc ID with all zeros.
      * @return the darc ID
-     * @throws CothorityCryptoException
      */
-    public static DarcId zero() throws CothorityCryptoException {
+    public static DarcId zero() {
         return new DarcId(new byte[32]);
     }
 }

@@ -28,7 +28,7 @@ public class Proof {
     /**
      * Creates a new proof given a protobuf-representation.
      *
-     * @param p
+     * @param p the protobuf-representation of the proof
      */
     public Proof(ByzCoinProto.Proof p) {
         proof = p;
@@ -48,7 +48,7 @@ public class Proof {
 
     /**
      * @return the instance stored in this proof - it will not verify if the proof is valid!
-     * @throws CothorityNotFoundException
+     * @throws CothorityNotFoundException if the requested instance cannot be found
      */
     public Instance getInstance() throws CothorityNotFoundException{
         return Instance.fromProof(this);
@@ -56,6 +56,7 @@ public class Proof {
 
     /**
      * Get the protobuf representation of the proof.
+     * @return the protobuf representation of the proof
      */
     public ByzCoinProto.Proof toProto() {
         return this.proof;
@@ -75,9 +76,9 @@ public class Proof {
      * leaf. At the end it will verify against the root hash to make sure
      * that the inclusion proof is correct.
      *
-     * @return true if all checks verify, false if there is a mismatch in the
-     * hashes
-     * @throws CothorityException
+     * @param id the skipblock to verify
+     * @return true if all checks verify, false if there is a mismatch in the hashes
+     * @throws CothorityException if something goes wrong
      */
     public boolean verify(SkipblockId id) throws CothorityException {
         if (!isByzCoinProof()){
@@ -129,7 +130,7 @@ public class Proof {
 
     /**
      * @return the darcID defining the access rules to the instance.
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public DarcId getDarcID() throws CothorityCryptoException{
         return new DarcId(getValues().get(2));
@@ -169,7 +170,7 @@ public class Proof {
      * @param expected the expected contractId
      * @param id the Byzcoin id to verify the proof against
      * @return true if the proof is correct with regard to that Byzcoin id and the contract is of the expected type.
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public boolean isContract(String expected, SkipblockId id) throws CothorityException{
         if (!verify(id)){

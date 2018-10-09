@@ -42,6 +42,7 @@ public class WriteData {
      *                    of the cothority.
      * @param extraData   data that will _not be encrypted_ but will be visible in cleartext on ByzCoin.
      * @param publisher   The darc with a rule for calypsoWrite and calypsoRead.
+     * @throws CothorityException if something went wrong
      */
     public WriteData(LTS lts, byte[] dataEnc, byte[] keyMaterial, byte[] extraData, DarcId publisher) throws CothorityException {
         if (dataEnc.length > 8000000) {
@@ -71,8 +72,9 @@ public class WriteData {
      *
      * @param bc a running Byzcoin service
      * @param id an instanceId of a WriteInstance
-     * @throws InvalidProtocolBufferException
-     * @throws CothorityNotFoundException
+     * @throws CothorityNotFoundException if the requested instance cannot be found
+     * @throws CothorityCommunicationException if something went wrong
+     * @return the new WriteData
      */
     public static WriteData fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityNotFoundException, CothorityCommunicationException {
         return WriteData.fromInstance(Instance.fromByzcoin(bc, id));
@@ -83,7 +85,7 @@ public class WriteData {
      *
      * @param inst an instance representing a WriteData
      * @return WriteData
-     * @throws CothorityNotFoundException
+     * @throws CothorityNotFoundException if the requested instance cannot be found
      */
     public static WriteData fromInstance(Instance inst) throws CothorityNotFoundException {
         if (!inst.getContractId().equals(WriteInstance.ContractId)) {
@@ -102,7 +104,7 @@ public class WriteData {
      * @param wr          the Write.Builder where the encrypted key will be stored
      * @param lts         the Long Term Secret to use
      * @param keyMaterial what should be threshold encrypted in the blockchain
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     private void encryptKey(Calypso.Write.Builder wr, LTS lts, byte[] keyMaterial, DarcId darcId) throws CothorityCryptoException {
         try {
@@ -152,6 +154,7 @@ public class WriteData {
 
     /**
      * Get the encrypted data.
+     * @return the encrypted data
      */
     public byte[] getDataEnc() {
         return write.getData().toByteArray();
@@ -159,6 +162,7 @@ public class WriteData {
 
     /**
      * Get the extra data.
+     * @return the extra data
      */
     public byte[] getExtraData() {
         return write.getExtradata().toByteArray();

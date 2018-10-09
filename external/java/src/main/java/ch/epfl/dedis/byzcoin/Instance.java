@@ -36,7 +36,8 @@ public class Instance {
      * Creates an instance from a proof received from ByzCoin.
      *
      * @param p the proof for the instance
-     * @throws CothorityException
+     * @throws CothorityNotFoundException if the proof is not found
+     * @return a new Instance
      */
     public static Instance fromProof(Proof p) throws CothorityNotFoundException {
         if (!p.matches()){
@@ -44,11 +45,7 @@ public class Instance {
         }
         List<byte[]> values = p.getValues();
         DarcId darcId;
-        try {
-            darcId = new DarcId(values.get(2));
-        } catch (CothorityCryptoException e){
-            throw new CothorityNotFoundException("couldn't get darc from proof: " + e.getMessage());
-        }
+        darcId = new DarcId(values.get(2));
         return new Instance(new InstanceId(p.getKey()), new String(values.get(1)), darcId, values.get(0));
     }
 
@@ -57,9 +54,9 @@ public class Instance {
      *
      * @param bc a running Byzcoin service
      * @param id a valid instance id
-     * @return
-     * @throws CothorityCommunicationException
-     * @throws CothorityNotFoundException
+     * @return a new Instance
+     * @throws CothorityCommunicationException if something goes wrong
+     * @throws CothorityNotFoundException if the requested instance cannot be found
      */
     public static Instance fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityCommunicationException, CothorityNotFoundException{
         return fromProof(bc.getProof(id));

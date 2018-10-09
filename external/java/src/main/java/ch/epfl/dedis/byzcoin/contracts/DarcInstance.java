@@ -42,7 +42,7 @@ public class DarcInstance {
      * @param spawnerDarcId the darcId of a darc with the rights to spawn new darcs
      * @param spawnerSigner the signer with the rights to spawn new darcs
      * @param newDarc       the new darc to spawn
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public DarcInstance(ByzCoinRPC bc, DarcId spawnerDarcId, Signer spawnerSigner, Darc newDarc) throws CothorityException {
         DarcInstance spawner = DarcInstance.fromByzCoin(bc, spawnerDarcId);
@@ -58,7 +58,7 @@ public class DarcInstance {
      *
      * @param bc   a running ByzCoin service
      * @param inst an instance representing a darc
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     private DarcInstance(ByzCoinRPC bc, Instance inst) throws CothorityException {
         this.bc = bc;
@@ -77,7 +77,7 @@ public class DarcInstance {
     /**
      * Update looks up the darc in ByzCoin and updates to the latest version, if available.
      *
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public void update() throws CothorityException {
         instance = Instance.fromByzcoin(bc, instance.getId());
@@ -99,7 +99,7 @@ public class DarcInstance {
      * @param pos     position of the instruction in the ClientTransaction
      * @param len     total number of instructions in the ClientTransaction
      * @return Instruction to be sent to byzcoin
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Instruction evolveDarcInstruction(Darc newDarc, Signer owner, int pos, int len) throws CothorityCryptoException {
         newDarc.increaseVersion();
@@ -132,7 +132,7 @@ public class DarcInstance {
      *
      * @param newDarc the new darc, it should have the same version as the current darc
      * @param owner   a signer allowed to evolve the darc
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public void evolveDarc(Darc newDarc, Signer owner) throws CothorityException {
         evolveDarcAndWait(newDarc, owner, 0);
@@ -147,7 +147,7 @@ public class DarcInstance {
      * @param owner   is the owner that can sign to evolve the darc
      * @param wait    the maximum number of blocks to wait
      * @return ClientTransactionId of the accepted transaction
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public ClientTransactionId evolveDarcAndWait(Darc newDarc, Signer owner, int wait) throws CothorityException {
         Instruction inst = evolveDarcInstruction(newDarc, owner, 0, 1);
@@ -166,7 +166,7 @@ public class DarcInstance {
      * @param pos        position in the ClientTransaction
      * @param len        total length of the ClientTransaction
      * @return the instruction to be added to the ClientTransaction
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Instruction spawnInstanceInstruction(String contractID, Signer s, List<Argument> args, int pos, int len)
             throws CothorityCryptoException {
@@ -191,7 +191,8 @@ public class DarcInstance {
      * @param contractID the id of the instance to create
      * @param s          the signer that is authorized to spawn this contract-type
      * @param args       arguments to give to the contract
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
+     * @return the client transaction ID
      */
     public ClientTransactionId spawnInstance(String contractID, Signer s, List<Argument> args) throws CothorityException {
         Instruction inst = spawnInstanceInstruction(contractID, s, args, 0, 1);
@@ -205,7 +206,9 @@ public class DarcInstance {
      * @param contractID the id of the instance to create
      * @param s          the signer that is authorized to spawn this contract
      * @param args       arguments to give to the contract
-     * @throws CothorityException
+     * @param wait       how many blocks to wait for the instance to be stored (0 = do not wait)
+     * @return the Proof of inclusion
+     * @throws CothorityException if something goes wrong
      */
     public Proof spawnInstanceAndWait(String contractID, Signer s, List<Argument> args, int wait) throws CothorityException {
         Instruction inst = spawnInstanceInstruction(contractID, s, args, 0, 1);
@@ -233,7 +236,7 @@ public class DarcInstance {
      * @param s    the signer allowed to spawn a new darc
      * @param wait how many blocks to wait. If it is 0, the call returns directly
      * @return a new DarcInstance, might be null if wait == 0
-     * @throws CothorityException if something went wrong
+     * @throws CothorityException if something goes wrong if something went wrong
      */
     public DarcInstance spawnDarcAndWait(Darc d, Signer s, int wait) throws CothorityException {
         List<Argument> args = new ArrayList<>();
@@ -249,7 +252,7 @@ public class DarcInstance {
 
     /**
      * @return the id of the darc being held
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public DarcId getId() throws CothorityCryptoException {
         return darc.getId();
@@ -257,6 +260,7 @@ public class DarcInstance {
 
     /**
      * @return a copy of the darc stored in this instance.
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Darc getDarc() throws CothorityCryptoException {
         return darc.copy();
@@ -278,7 +282,7 @@ public class DarcInstance {
      * @param bc is a running ByzCoin ledger
      * @param id of the darc-instance to connect to
      * @return DarcInstance representing the latest version of the darc given in id
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public static DarcInstance fromByzCoin(ByzCoinRPC bc, InstanceId id) throws CothorityException {
         return new DarcInstance(bc, Instance.fromByzcoin(bc, id));
@@ -293,6 +297,7 @@ public class DarcInstance {
      * @param bc     is a running ByzCoin ledger that is running
      * @param baseId of the darc-instance to connect to
      * @return DarcInstance representing the latest version of the given baseId
+     * @throws CothorityException if something goes wrong
      */
     public static DarcInstance fromByzCoin(ByzCoinRPC bc, DarcId baseId) throws CothorityException {
         return fromByzCoin(bc, new InstanceId(baseId.getId()));
@@ -307,6 +312,7 @@ public class DarcInstance {
      * @param bc is a running ByzCoin ledger
      * @param d  of which the base id will be taken to search in ByzCoin
      * @return DarcInstance representing the latest version of the given baseId
+     * @throws CothorityException if somethings goes wrong
      */
     public static DarcInstance fromByzCoin(ByzCoinRPC bc, Darc d) throws CothorityException {
         return fromByzCoin(bc, d.getBaseId());

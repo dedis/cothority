@@ -30,7 +30,7 @@ public class CalypsoRPC extends ByzCoinRPC {
      * Creates a new Long Term Secret on an existing ByzCoin ledger.
      *
      * @param byzcoin the existing byzcoin ledger.
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public CalypsoRPC(ByzCoinRPC byzcoin) throws CothorityException{
         super(byzcoin);
@@ -43,7 +43,7 @@ public class CalypsoRPC extends ByzCoinRPC {
      * @param roster        the nodes participating in the ledger
      * @param genesis       the first darc
      * @param blockInterval how often a new block is created
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public CalypsoRPC(Roster roster, Darc genesis, Duration blockInterval) throws CothorityException {
         super(roster, genesis, blockInterval);
@@ -67,6 +67,7 @@ public class CalypsoRPC extends ByzCoinRPC {
      * symmetric encryption symmetricKey. This will be the same as LTS.X
      * stored when creating Calypso.
      *
+     * @param ltsId the long term secret ID
      * @return the aggregate public symmetricKey of the ocs-shard
      * @throws CothorityCommunicationException in case of communication difficulties
      */
@@ -89,9 +90,9 @@ public class CalypsoRPC extends ByzCoinRPC {
      * Create a long-term-secret (LTS) and retrieve its configuration.
      *
      * @return The LTS configuration that is needed to execute the write contract.
-     * @throws CothorityCommunicationException
+     * @throws CothorityCommunicationException if something went wrong
      */
-    public LTS createLTS() throws CothorityCommunicationException, CothorityCryptoException {
+    public LTS createLTS() throws CothorityCommunicationException {
         Calypso.CreateLTS.Builder b = Calypso.CreateLTS.newBuilder();
         b.setRoster(getRoster().toProto());
         b.setBcid(getGenesisBlock().getId().toProto());
@@ -112,7 +113,7 @@ public class CalypsoRPC extends ByzCoinRPC {
      * @param writeProof The proof of the write request.
      * @param readProof  The proof of the read request.
      * @return All the decryption shares that can be used to reconstruct the decryption key.
-     * @throws CothorityCommunicationException
+     * @throws CothorityCommunicationException if something went wrong
      */
     public DecryptKeyReply tryDecrypt(Proof writeProof, Proof readProof) throws CothorityCommunicationException {
         Calypso.DecryptKey.Builder b = Calypso.DecryptKey.newBuilder();
@@ -157,7 +158,7 @@ public class CalypsoRPC extends ByzCoinRPC {
      * @param byzcoinId the id of the byzcoin ledger to connect to
      * @param ltsId     the id of the Long Term Secret to use
      * @return CalypsoRPC if everything was found
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public static CalypsoRPC fromCalypso(Roster roster, SkipblockId byzcoinId, LTSId ltsId) throws CothorityException {
         return new CalypsoRPC(ByzCoinRPC.fromByzCoin(roster, byzcoinId), ltsId);

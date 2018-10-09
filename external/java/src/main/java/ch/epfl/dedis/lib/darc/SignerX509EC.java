@@ -22,43 +22,42 @@ public abstract class SignerX509EC implements Signer {
      * an array of bytes that can be verified by the
      * corresponding identity-implementation.
      *
-     * @param msg
-     * @return
+     * @param msg the message
+     * @return the signature
      */
     public abstract byte[] sign(byte[] msg) throws SignRequestRejectedException;
 
     /**
      * Returns the private key of the signer, or throws a CothorityCryptoException.
      *
-     * @return
+     * @return the private key
      */
-    public Scalar getPrivate() throws CothorityCryptoException {
-        throw new CothorityCryptoException("cannot reveal private key");
+    public Scalar getPrivate()  {
+        throw new RuntimeException("cannot reveal private key");
     }
 
     /**
      * Returns the public key of the signer, or throws a CothorityCryptoException.
      *
-     * @return
+     * @return the public key
      */
-    public Point getPublic() throws CothorityCryptoException {
-        throw new CothorityCryptoException("non-ed25519 public keys not yet implemented");
+    public Point getPublic()  {
+        throw new RuntimeException("non-ed25519 public keys not yet implemented");
     }
 
     /**
-     * Creates an identity of the signer.
+     * Returns the identity of the signer.
      *
      * @return an identity
-     * @throws CothorityCryptoException
      */
-    public Identity getIdentity() throws CothorityCryptoException {
+    public Identity getIdentity() {
         return IdentityFactory.New(this);
     }
 
     /**
-     * Returns an array of bytes representing the signer. The first byte must indicate the type
+     * Returns an array of bytes repesenting the signer. The first byte must indicate the type.
      *
-     * @return
+     * @return the serialized signer
      */
     public byte[] serialize() throws IOException {
         // TODO - serialize this thing so it can be recognized by go. The byte string must
@@ -69,8 +68,9 @@ public abstract class SignerX509EC implements Signer {
 
     /**
      * Returns the specific public key representation of this signer
-     * TODO: implement something that makes sense here and that can be used by
-     * IdentityX509EC.
+     * @return the output bytes
+     *
+     * TODO: implement something that makes sense here and that can be used by IdentityX509EC.
      *
      * bytes returned by this method are internal, binary representation of X509 key.
      * It should be possible to
@@ -87,7 +87,7 @@ public abstract class SignerX509EC implements Signer {
 
     /**
      * Return public key as a class
-     * @return
+     * @return the PublicKey
      */
     public abstract PublicKey getPublicKey();
 }

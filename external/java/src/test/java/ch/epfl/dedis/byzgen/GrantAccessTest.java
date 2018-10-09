@@ -10,6 +10,7 @@ import ch.epfl.dedis.lib.crypto.TestSignerX509EC;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.exception.CothorityException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -131,7 +132,7 @@ public class GrantAccessTest {
         return new DarcId(user.getId().getId()); // copy to be sure that it is not the same object
     }
 
-    private CalypsoRPC createSkipChainForTest() throws CothorityCommunicationException, CothorityCryptoException {
+    private CalypsoRPC createSkipChainForTest() throws CothorityException {
         return new CalypsoFactory()
                 .addConodes(testServerController.getConodes())
                 .initialiseNewCalypso(new SignerEd25519(

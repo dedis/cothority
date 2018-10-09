@@ -26,7 +26,7 @@ public class SkipBlock {
 
     /**
      * @param sb the binary representation of the protobuf of the skipblock.
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public SkipBlock(byte[] sb) throws CothorityException {
         try {
@@ -45,16 +45,15 @@ public class SkipBlock {
 
     /**
      * @return the id of the block, which is its hash.
-     * @throws CothorityCryptoException
      */
-    public SkipblockId getId() throws CothorityCryptoException {
+    public SkipblockId getId() {
         return new SkipblockId(this.getHash());
     }
 
     /**
      * @return the id of the skipchain this block is part of. This is equal to the hash for the
      * genesis block.
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public SkipblockId getSkipchainId() throws CothorityCryptoException{
         if (skipBlock.getIndex() == 0){
@@ -98,6 +97,7 @@ public class SkipBlock {
     /**
      * Gets the roster from the skipblock.
      * @return the roster responsible for that skipblock
+     * @throws CothorityException if something went wrong
      */
     public Roster getRoster() throws CothorityException {
         try {
@@ -117,11 +117,7 @@ public class SkipBlock {
         }
         SkipBlock other = (SkipBlock) obj;
 
-        try {
-            return other.getId().equals(this.getId());
-        } catch (CothorityCryptoException e){
-            return false;
-        }
+        return other.getId().equals(this.getId());
     }
 
     /**

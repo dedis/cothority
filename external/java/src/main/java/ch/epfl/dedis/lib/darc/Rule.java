@@ -12,8 +12,8 @@ public final class Rule {
 
     /**
      * Constructor for creating a rule.
-     * @param action
-     * @param expr
+     * @param action the action
+     * @param expr the expression
      */
     public Rule(String action, byte[] expr) {
         this.action = action;

@@ -25,17 +25,17 @@ public class Invoke {
 
     /**
      * Constructor from one name/value.
-     * @param command
-     * @param name
-     * @param value
+     * @param command the command
+     * @param name the name
+     * @param value the value
      */
     public Invoke(String command, String name, byte[] value){
         this(command, Arrays.asList(new Argument(name, value)));
     }
 
     /**
-     * Constructo from protobuf.
-     * @param proto
+     * Constructor from protobuf.
+     * @param proto the input proto
      */
     public Invoke(ByzCoinProto.Invoke proto) {
         command = proto.getCommand();

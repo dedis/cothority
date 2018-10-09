@@ -47,7 +47,7 @@ public class SignerTest {
         SignerX509EC signer = new TestSignerX509EC("secp256k1-pkcs8.der", "secp256k1-pub.der");
         SignerX509EC signer2 = new TestSignerX509EC("secp256k1-pkcs8.der", "secp256k1-pub.der");
 
-        assertThrows(CothorityCryptoException.class, () -> signer.getPrivate());
+        assertThrows(RuntimeException.class, () -> signer.getPrivate());
         assertThrows(IllegalStateException.class, () -> signer.serialize());
 
         byte[] msg = "test data to sign".getBytes();

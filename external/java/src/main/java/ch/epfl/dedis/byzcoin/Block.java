@@ -28,7 +28,7 @@ public class Block {
      * Instantiates a new OmniBlock given a skipblock.
      *
      * @param sb skipblock holding data for an OmniBLock.
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Block(SkipBlock sb) throws CothorityCryptoException {
         try {
@@ -43,8 +43,8 @@ public class Block {
 
     /**
      * Constructor for the OmniBlock held in the given Proof.
-     * @param p
-     * @throws CothorityCryptoException
+     * @param p the proof to parse to find the block
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Block(Proof p) throws CothorityCryptoException {
         // TODO: How do we know that the block in the proof legitimately links back to the
@@ -61,7 +61,7 @@ public class Block {
 
     /**
      * @return the root hash of the merkle tree of the global state.
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Sha256id getCollectionRoot() throws CothorityCryptoException {
         return new Sha256id(dataHeader.getCollectionroot());
@@ -69,7 +69,7 @@ public class Block {
 
     /**
      * @return the sha256 of all clientTransactions stored in this block.
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Sha256id getClientTransactionHash() throws CothorityCryptoException {
         return new Sha256id(dataHeader.getClienttransactionhash());
@@ -77,7 +77,7 @@ public class Block {
 
     /**
      * @return the sha256 hash of all state changes created by the clientTransactions in this block.
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Sha256id getStateChangesHash() throws CothorityCryptoException {
         return new Sha256id(dataHeader.getStatechangeshash());
@@ -110,7 +110,7 @@ public class Block {
 
     /**
      * Accessor for the transactions and results in the block.
-     * @return
+     * @return a list of transactions
      */
     public List<TxResult> getTxResults() {
         return dataBody.txResults;

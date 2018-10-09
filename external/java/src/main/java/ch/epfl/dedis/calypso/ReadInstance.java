@@ -38,7 +38,7 @@ public class ReadInstance {
      * @param calypso The CalypsoRPC object.
      * @param write   The write instance where a new read instance should be spawned from.
      * @param signers Signers who are allowed to spawn a new instance.
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     public ReadInstance(CalypsoRPC calypso, WriteInstance write, List<Signer> signers) throws CothorityException {
         this.calypso = calypso;
@@ -59,6 +59,7 @@ public class ReadInstance {
 
     /**
      * Get the instance object.
+     * @return the Instance
      */
     public Instance getInstance() {
         return instance;
@@ -66,7 +67,7 @@ public class ReadInstance {
 
     /**
      * @return the readData stored in this instance.
-     * @throws CothorityNotFoundException
+     * @throws CothorityNotFoundException if the requested instance cannot be found
      */
     public ReadData getRead() throws CothorityNotFoundException {
         return new ReadData(instance);
@@ -77,8 +78,8 @@ public class ReadInstance {
      * for the LTS to allow a re-encryption to the public key stored in the
      * read request.
      * @param reader is the corresponding private key of the public
-     * @return
-     * @throws CothorityException
+     * @return the key material
+     * @throws CothorityException if something goes wrong
      */
     public byte[] decryptKeyMaterial(Scalar reader) throws CothorityException{
         Proof readProof = calypso.getProof(getInstance().getId());
@@ -92,7 +93,8 @@ public class ReadInstance {
      *
      * @param calypso The CalypsoRPC object.
      * @param id      The id of the instance.
-     * @throws CothorityException
+     * @return the new ReadInstance
+     * @throws CothorityException if something goes wrong
      */
     public static ReadInstance fromByzCoin(CalypsoRPC calypso, InstanceId id) throws CothorityException {
         return new ReadInstance(calypso, getInstance(calypso, id));
@@ -103,7 +105,7 @@ public class ReadInstance {
      *
      * @param consumers Array of Signers
      * @return
-     * @throws CothorityCryptoException
+     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     private ClientTransaction createCTX(WriteInstance write, List<Signer> consumers) throws CothorityCryptoException {
         if (consumers.size() != 1) {
@@ -150,7 +152,7 @@ public class ReadInstance {
      * Fetches the instance from ByzCoin over the network.
      *
      * @param id
-     * @throws CothorityException
+     * @throws CothorityException if something goes wrong
      */
     private static Instance getInstance(CalypsoRPC calypso, InstanceId id) throws CothorityException {
         Instance inst = calypso.getProof(id).getInstance();

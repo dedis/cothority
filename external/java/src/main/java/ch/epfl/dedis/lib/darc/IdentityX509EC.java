@@ -20,36 +20,36 @@ public class IdentityX509EC implements Identity {
 
     /**
      * Creates an IdentityX509EC from a protobuf representation.
-     * @param proto
+     * @param proto a protobuf representation
      */
-    public IdentityX509EC(DarcProto.IdentityX509EC proto) throws CothorityCryptoException {
+    public IdentityX509EC(DarcProto.IdentityX509EC proto) {
         try {
             KeyFactory keyFactory = KeyFactory.getInstance("EC");
             X509EncodedKeySpec pubSpec = new X509EncodedKeySpec(proto.getPublic().toByteArray());
             pubKey = keyFactory.generatePublic(pubSpec);
         } catch (InvalidKeySpecException | NoSuchAlgorithmException e) {
-            throw new CothorityCryptoException("Unable to deserialise IdentityX509EC identity", e);
+            throw new RuntimeException("Unable to deserialise IdentityX509EC identity", e);
         }
     }
 
     /**
      * Creates an IdentityEd25519 from a SignerEd25519.
-     * @param signer
+     * @param signer the input signer
      */
-    public IdentityX509EC(Signer signer) throws CothorityCryptoException{
+    public IdentityX509EC(Signer signer) {
         if (SignerX509EC.class.isInstance(signer)) {
             pubKey = ((SignerX509EC) signer).getPublicKey();
         } else {
-            throw new CothorityCryptoException("Wrong signer type: " + signer.toString());
+            throw new RuntimeException("Wrong signer type: " + signer.toString());
         }
     }
 
     /**
      * Returns true if the verification of signature on the sha-256 of msg is
      * successful or false if not.
-     * @param msg
-     * @param signature
-     * @return
+     * @param msg the message
+     * @param signature the signature
+     * @return true if the signature is valid
      */
     public boolean verify(byte[] msg, byte[] signature) {
         // TODO: it is interesting why client code need to verify keycard singature ?
@@ -70,7 +70,7 @@ public class IdentityX509EC implements Identity {
      * Creates a protobuf-representation of the implementation. The protobuf
      * representation has to hold all necessary fields to represent any of the
      * identity implementations.
-     * @return
+     * @return a protobuf-representation of the Identity
      */
     public DarcProto.Identity toProto(){
         DarcProto.Identity.Builder bid = DarcProto.Identity.newBuilder();

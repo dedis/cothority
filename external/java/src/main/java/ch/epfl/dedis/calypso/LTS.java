@@ -16,7 +16,7 @@ public class LTS {
 
     /**
      * Creates a Long Term Secret from a LTSReply.
-     * @param reply
+     * @param reply the input reply
      */
     public LTS(Calypso.CreateLTSReply reply){
         try {
@@ -29,8 +29,8 @@ public class LTS {
 
     /**
      * Creates a long term secret from an id and a point.
-     * @param id
-     * @param X
+     * @param id the id
+     * @param X the point
      */
     public LTS(LTSId id, Point X){
         this.ltsId = id;
