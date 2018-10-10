@@ -16,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -100,6 +101,20 @@ public class ServerIdentity {
         return new StreamingConn(path, data, h);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ServerIdentity other = (ServerIdentity) o;
+        return other.getAddress().equals(getAddress()) &&
+                other.Public.equals(Public);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(Public.toBytes());
+    }
+
     private URI buildWebSocketAdddress(final String servicePath) throws URISyntaxException {
         return new URI("ws",
                 conodeAddress.getUserInfo(),
@@ -133,6 +148,7 @@ public class ServerIdentity {
         /**
          * Checks whether the connection is open. Note that the close function is non-blocking, so this function might
          * not return true immediately after close is called.
+         *
          * @return true if closed
          */
         public boolean isClosed() {
