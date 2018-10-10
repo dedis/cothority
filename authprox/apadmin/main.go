@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net"
 	"os"
 
 	"github.com/dedis/cothority"
@@ -16,6 +17,7 @@ import (
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"
 	"github.com/dedis/onet/log"
+	"github.com/dedis/onet/network"
 	cli "gopkg.in/urfave/cli.v1"
 )
 
@@ -158,6 +160,9 @@ func add(c *cli.Context) error {
 	_, lPubCommits := lPub.Info()
 
 	for i, s := range roster.List {
+		if !(s.Address.ConnType() == "tls" || isLoopback(s.Address)) {
+			return fmt.Errorf("cannot send secret over insecure channel to %v", s)
+		}
 		cl := onet.NewClient(cothority.Suite, authprox.ServiceName)
 		lpri := authprox.PriShare{
 			I: lShares[i].I,
@@ -200,4 +205,13 @@ func faultThreshold(n int) int {
 
 func threshold(n int) int {
 	return n - faultThreshold(n)
+}
+
+func isLoopback(a network.Address) bool {
+	ad := a.Resolve()
+	ip := net.ParseIP(ad)
+	if ip == nil {
+		return false
+	}
+	return ip.IsLoopback()
 }

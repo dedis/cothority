@@ -46,6 +46,10 @@ func (o *oidcValidator) FindClaim(issuerStr string, input []byte) (claim, extraD
 		o.issuers = append(o.issuers, is)
 	}
 
+	// The docs say: Verify does NOT do nonce validation, which is the callers responsibility.
+	// This means that the "state" part of the OAuth 2 flow needs to be
+	// checked at the time the info arrives inbound to the client, i.e. via token.Exchange()
+	// or in a JavaScript OAuth client.
 	idToken, err := is.v.Verify(is.ctx, string(input))
 	if err != nil {
 		return

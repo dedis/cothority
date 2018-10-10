@@ -16,6 +16,7 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
 )
 
 // ServiceName is the name of the Authentication Proxy service.
@@ -80,7 +81,7 @@ type dssConfig struct {
 }
 
 func (s *service) find(typ, issuer string) (*dssConfig, error) {
-	k, err := network.Marshal(&ti{T: typ, I: issuer})
+	k, err := protobuf.Encode(&ti{T: typ, I: issuer})
 	if err != nil {
 		return nil, err
 	}
@@ -98,17 +99,13 @@ func (s *service) find(typ, issuer string) (*dssConfig, error) {
 		return nil, err
 	}
 
-	_, x, err := network.Unmarshal(buf, cothority.Suite)
+	var out dssConfig
+	err = protobuf.DecodeWithConstructors(buf, &out, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		return nil, err
 	}
 
-	var out *dssConfig
-	var ok bool
-	if out, ok = x.(*dssConfig); !ok {
-		return nil, fmt.Errorf("unexpected type %T", x)
-	}
-	return out, nil
+	return &out, nil
 }
 
 func (s *service) Enrollments(req *EnrollmentsRequest) (*EnrollmentsResponse, error) {
@@ -117,26 +114,28 @@ func (s *service) Enrollments(req *EnrollmentsRequest) (*EnrollmentsResponse, er
 		// iterate through all the enrollments
 		c := tx.Bucket(s.bucket).Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
+			// Make copies, since protobuf.Decode might store slices of the data
+			// from BoltDB for access after the txn.
+			var k2 []byte
+			k2 = append(k2, k...)
+			var v2 []byte
+			v2 = append(v2, v...)
+
 			// Decode type, issuer
-			_, x, err := network.Unmarshal(k, cothority.Suite)
+			var ti0 ti
+			err := protobuf.Decode(k2, &ti0)
 			if err != nil {
 				return err
-			}
-			ti0, ok := x.(*ti)
-			if !ok {
-				return fmt.Errorf("unexpected type %T", x)
 			}
 
 			// Decode public key
-			_, x, err = network.Unmarshal(v, cothority.Suite)
+			var out dssConfig
+			err = protobuf.DecodeWithConstructors(v2, &out, network.DefaultConstructors(cothority.Suite))
 			if err != nil {
 				return err
 			}
-			out, ok := x.(*dssConfig)
-			if !ok {
-				return fmt.Errorf("unexpected type %T", x)
-			}
 
+			// Filter by Types, if given.
 			if len(req.Types) != 0 {
 				var ok bool
 				for _, t := range req.Types {
@@ -149,6 +148,7 @@ func (s *service) Enrollments(req *EnrollmentsRequest) (*EnrollmentsResponse, er
 				}
 			}
 
+			// Filter by Issuers, if given.
 			if len(req.Issuers) != 0 {
 				var ok bool
 				for _, i := range req.Issuers {
@@ -179,7 +179,7 @@ func (s *service) Enroll(req *EnrollRequest) (*EnrollResponse, error) {
 	// claim is in the admin list, allow.
 
 	// Prepare the stuff to be written
-	k, err := network.Marshal(&ti{T: req.Type, I: req.Issuer})
+	k, err := protobuf.Encode(&ti{T: req.Type, I: req.Issuer})
 	if err != nil {
 		return nil, err
 	}
@@ -187,7 +187,7 @@ func (s *service) Enroll(req *EnrollRequest) (*EnrollResponse, error) {
 		I: req.LongPri.I,
 		V: req.LongPri.V,
 	}
-	v, err := network.Marshal(&dssConfig{
+	v, err := protobuf.Encode(&dssConfig{
 		Secret:       req.Secret,
 		Participants: req.Participants,
 		LongPri:      lpri,
@@ -201,9 +201,9 @@ func (s *service) Enroll(req *EnrollRequest) (*EnrollResponse, error) {
 	err = s.db.Update(func(tx *bolt.Tx) error {
 		// Need to do the find inside of the Update tx, or else it is racy
 		// with respect to other writers.
-		//if ret := tx.Bucket(s.bucket).Get(k); ret != nil {
-		//	return fmt.Errorf("enrollment already exists for type:issuer %v:%v", req.Type, req.Issuer)
-		//}
+		if ret := tx.Bucket(s.bucket).Get(k); ret != nil {
+			return fmt.Errorf("enrollment already exists for type:issuer %v:%v", req.Type, req.Issuer)
+		}
 		return tx.Bucket(s.bucket).Put(k, v)
 	})
 	if err != nil {
