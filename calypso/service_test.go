@@ -7,6 +7,8 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
@@ -85,7 +87,7 @@ func TestContract_Read(t *testing.T) {
 	defer s.closeAll(t)
 
 	prWrite := s.addWriteAndWait(t, []byte("secret key"))
-	pr := s.addReadAndWait(t, prWrite)
+	pr := s.addReadAndWait(t, prWrite, s.signer.Ed25519.Point)
 	require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
 }
 
@@ -97,10 +99,10 @@ func TestService_DecryptKey(t *testing.T) {
 
 	key1 := []byte("secret key 1")
 	prWr1 := s.addWriteAndWait(t, key1)
-	prRe1 := s.addReadAndWait(t, prWr1)
+	prRe1 := s.addReadAndWait(t, prWr1, s.signer.Ed25519.Point)
 	key2 := []byte("secret key 2")
 	prWr2 := s.addWriteAndWait(t, key2)
-	prRe2 := s.addReadAndWait(t, prWr2)
+	prRe2 := s.addReadAndWait(t, prWr2, s.signer.Ed25519.Point)
 
 	_, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr2})
 	require.NotNil(t, err)
@@ -122,6 +124,27 @@ func TestService_DecryptKey(t *testing.T) {
 	require.Equal(t, key2, keyCopy2)
 }
 
+// TestService_DecryptEphemeralKey requests a read to a different key than the
+// readers.
+func TestService_DecryptEphemeralKey(t *testing.T) {
+	s := newTS(t, 5)
+	defer s.closeAll(t)
+
+	ephemeral := key.NewKeyPair(cothority.Suite)
+
+	key1 := []byte("secret key 1")
+	prWr1 := s.addWriteAndWait(t, key1)
+	prRe1 := s.addReadAndWait(t, prWr1, ephemeral.Public)
+
+	dk1, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr1})
+	require.Nil(t, err)
+	require.True(t, dk1.X.Equal(s.ltsReply.X))
+
+	keyCopy1, err := DecodeKey(cothority.Suite, s.ltsReply.X, dk1.Cs, dk1.XhatEnc, ephemeral.Private)
+	require.Nil(t, err)
+	require.Equal(t, key1, keyCopy1)
+}
+
 type ts struct {
 	local      *onet.LocalTest
 	servers    []*onet.Server
@@ -135,11 +158,11 @@ type ts struct {
 	gDarc      *darc.Darc
 }
 
-func (s *ts) addRead(t *testing.T, write *byzcoin.Proof) byzcoin.InstanceID {
+func (s *ts) addRead(t *testing.T, write *byzcoin.Proof, Xc kyber.Point) byzcoin.InstanceID {
 	var readBuf []byte
 	read := &Read{
 		Write: byzcoin.NewInstanceID(write.InclusionProof.Key),
-		Xc:    s.signer.Ed25519.Point,
+		Xc:    Xc,
 	}
 	var err error
 	readBuf, err = protobuf.Encode(read)
@@ -162,8 +185,8 @@ func (s *ts) addRead(t *testing.T, write *byzcoin.Proof) byzcoin.InstanceID {
 	return ctx.Instructions[0].DeriveID("")
 }
 
-func (s *ts) addReadAndWait(t *testing.T, write *byzcoin.Proof) *byzcoin.Proof {
-	instID := s.addRead(t, write)
+func (s *ts) addReadAndWait(t *testing.T, write *byzcoin.Proof, Xc kyber.Point) *byzcoin.Proof {
+	instID := s.addRead(t, write, Xc)
 	return s.waitInstID(t, instID)
 }
 
