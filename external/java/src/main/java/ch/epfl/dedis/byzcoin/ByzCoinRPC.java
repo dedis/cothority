@@ -1,21 +1,20 @@
 package ch.epfl.dedis.byzcoin;
 
+import ch.epfl.dedis.byzcoin.contracts.ChainConfigData;
+import ch.epfl.dedis.byzcoin.contracts.ChainConfigInstance;
+import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
+import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
+import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
 import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
-import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
-import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
-import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.darc.*;
-import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import ch.epfl.dedis.lib.exception.CothorityException;
-import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
+import ch.epfl.dedis.lib.exception.*;
+import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import ch.epfl.dedis.skipchain.SkipchainRPC;
-import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import org.slf4j.Logger;
@@ -62,7 +61,7 @@ public class ByzCoinRPC {
      * @throws CothorityException if something goes wrong
      */
     public ByzCoinRPC(Roster r, Darc d, Duration blockInterval) throws CothorityException {
-        if (d.getExpression("view_change") == null){
+        if (d.getExpression("view_change") == null) {
             throw new CothorityCommunicationException("need a 'view_change' rule.");
         }
         ByzCoinProto.CreateGenesisBlock.Builder request =
@@ -94,13 +93,15 @@ public class ByzCoinRPC {
     /**
      * For use by fromByzcoin
      */
-    protected ByzCoinRPC(){}
+    protected ByzCoinRPC() {
+    }
 
     /**
      * For use by CalypsoRPC
+     *
      * @param bc the ByzCoinRPC to copy the config from.
      */
-    protected ByzCoinRPC(ByzCoinRPC bc){
+    protected ByzCoinRPC(ByzCoinRPC bc) {
         config = bc.config;
         roster = bc.roster;
         genesisDarc = bc.genesisDarc;
@@ -115,8 +116,8 @@ public class ByzCoinRPC {
      * Once the transaction has been sent, you need to poll to verify if it has been included or not.
      *
      * @param t is the client transaction holding one or more instructions to be sent to byzcoin.
-     * @throws CothorityException if something goes wrong if something goes wrong
      * @return the client transaction
+     * @throws CothorityException if something goes wrong if something goes wrong
      */
     public ClientTransactionId sendTransaction(ClientTransaction t) throws CothorityException {
         return sendTransactionAndWait(t, 0);
@@ -157,8 +158,8 @@ public class ByzCoinRPC {
      * global state.
      *
      * @param id is the id of the instance to be fetched
-     * @throws CothorityCommunicationException if something goes wrong
      * @return the proof
+     * @throws CothorityCommunicationException if something goes wrong
      */
     public Proof getProof(InstanceId id) throws CothorityCommunicationException {
         ByzCoinProto.GetProof.Builder request =
@@ -233,7 +234,7 @@ public class ByzCoinRPC {
      * @return the darc instance of the genesis darc.
      * @throws CothorityException if something goes wrong if something goes wrong
      */
-    public DarcInstance getGenesisDarcInstance() throws CothorityException{
+    public DarcInstance getGenesisDarcInstance() throws CothorityException {
         return DarcInstance.fromByzCoin(this, genesisDarc);
     }
 
@@ -257,7 +258,7 @@ public class ByzCoinRPC {
      * @param id hash of the skipblock to fetch
      * @return a Block representation of the skipblock
      * @throws CothorityCommunicationException if it couldn't contact the nodes
-     * @throws CothorityCryptoException if there's a problem with the cryptography
+     * @throws CothorityCryptoException        if there's a problem with the cryptography
      */
     public Block getBlock(SkipblockId id) throws CothorityCommunicationException, CothorityCryptoException {
         SkipBlock sb = skipchain.getSkipblock(id);
@@ -280,7 +281,7 @@ public class ByzCoinRPC {
      * can be resolved with a combination of signatures given by identities. Each identity can be of any type. If
      * it is a darc, then any "_sign" rule given by that darc will be accepted.
      *
-     * @param id the base id of the darc to be searched for
+     * @param id         the base id of the darc to be searched for
      * @param identities a list of identities that might sign
      * @return a list of actions that are allowed by any possible combination of signature from identities
      * @throws CothorityCommunicationException if something goes wrong
@@ -360,15 +361,71 @@ public class ByzCoinRPC {
     }
 
     /**
+     * Change the current roster of the ByzCoin ledger. You're only allowed to change one node at a time,
+     * because the system needs to be able to contact previous nodes. When removing nodes, there is a
+     * possibility of future proofs getting bigger, as it will be impossible to create forwardlinks.
+     *
+     * @param newRoster a new roster with one addition, one removal or one change
+     * @param admins    a list of admins needed to sign off on the change
+     * @param wait      how many blocks to wait for the new config to go in
+     * @throws CothorityException if something went wrong.
+     */
+    public void setRoster(Roster newRoster, List<Signer> admins, int wait) throws CothorityException {
+        // Verify the new roster is not too different.
+        ChainConfigInstance cci = ChainConfigInstance.fromByzcoin(this);
+        ChainConfigData ccd = cci.getChainConfig();
+        ccd.setRoster(newRoster);
+        cci.evolveConfigAndWait(ccd, admins, 20);
+    }
+
+    /**
+     * Sets the new block interval that ByzCoin uses to create new block. The actual interval between two
+     * block in the current implementation is guaranteed to be at least 1 second higher, depending on the
+     * network delays and the number of transactions to include.
+     *
+     * The chosen interval can not be smaller than 5 seconds.
+     *
+     * @param newInterval how long to wait before starting to assemble a new block
+     * @param admins a list of admins needed to sign off the new configuration
+     * @param wait how many blocks to wait for the new config to go in
+     * @throws CothorityException
+     */
+    public void setBlockInterval(Duration newInterval, List<Signer> admins, int wait) throws CothorityException{
+        ChainConfigInstance cci = ChainConfigInstance.fromByzcoin(this);
+        ChainConfigData ccd = cci.getChainConfig();
+        ccd.setInterval(newInterval);
+        cci.evolveConfigAndWait(ccd, admins, 20);
+    }
+
+    /**
+     * Sets the new block interval that ByzCoin uses to create new block. The actual interval between two
+     * block in the current implementation is guaranteed to be at least 1 second higher, depending on the
+     * network delays and the number of transactions to include.
+     *
+     * The chosen interval can not be smaller than 5 seconds.
+     *
+     * @param newMaxSize new maximum size of the assembled blocks.
+     * @param admins a list of admins needed to sign off the new configuration
+     * @param wait how many blocks to wait for the new config to go in
+     * @throws CothorityException
+     */
+    public void setMaxBlockSize(int newMaxSize, List<Signer> admins, int wait) throws CothorityException{
+        ChainConfigInstance cci = ChainConfigInstance.fromByzcoin(this);
+        ChainConfigData ccd = cci.getChainConfig();
+        ccd.setMaxBlockSize(newMaxSize);
+        cci.evolveConfigAndWait(ccd, admins, 20);
+    }
+
+    /**
      * Constructs a ByzCoinRPC from a known configuration. The constructor will communicate with the service to
      * populate other fields and perform verification.
      *
      * @param roster      the roster to talk to
      * @param skipchainId the ID of the genesis skipblock, aka skipchain ID
-     * @throws CothorityException if something goes wrong
      * @return a new ByzCoinRPC object, connected to the requested roster and chain.
+     * @throws CothorityException if something goes wrong
      */
-    public static ByzCoinRPC fromByzCoin(Roster roster, SkipblockId skipchainId) throws CothorityException{
+    public static ByzCoinRPC fromByzCoin(Roster roster, SkipblockId skipchainId) throws CothorityException {
         Proof proof = ByzCoinRPC.getProof(roster, skipchainId, InstanceId.zero());
         if (!proof.isContract("config", skipchainId)) {
             throw new CothorityNotFoundException("couldn't verify proof for genesisConfiguration");
@@ -382,7 +439,7 @@ public class ByzCoinRPC {
         }
         try {
             bc.genesisDarc = new Darc(proof2.getValue());
-        } catch (InvalidProtocolBufferException e){
+        } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException("couldn't get genesis darc: " + e.getMessage());
         }
 
@@ -397,25 +454,27 @@ public class ByzCoinRPC {
 
     /**
      * Creates a genesis darc to use for the initialisation of Byzcoin.
-     * @param admin the admin of Byzcoin
+     *
+     * @param admin  the admin of Byzcoin
      * @param roster the nodes of Byzcoin
      * @return a Darc with the correct rights, also for the view_change.
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public static Darc makeGenesisDarc(Signer admin, Roster roster) throws CothorityCryptoException{
+    public static Darc makeGenesisDarc(Signer admin, Roster roster) throws CothorityCryptoException {
         Darc d = new Darc(Arrays.asList(admin.getIdentity()), Arrays.asList(admin.getIdentity()), "Genesis darc".getBytes());
-        roster.getNodes().forEach(node ->{
+        roster.getNodes().forEach(node -> {
             try {
                 d.addIdentity("view_change", new IdentityEd25519(new Ed25519Point(node.Public)), Rules.OR);
-            } catch (CothorityCryptoException e){
+            } catch (CothorityCryptoException e) {
                 logger.warn("didn't find Ed25519 point");
             }
         });
         d.addIdentity("spawn:darc", admin.getIdentity(), Rules.OR);
+        d.addIdentity("invoke:update_config", admin.getIdentity(), Rules.OR);
         return d;
     }
 
-   /**
+    /**
      * Static method to request a proof from ByzCoin. This is used in the instantiation method.
      *
      * @param roster      where to contact the cothority
@@ -442,6 +501,7 @@ public class ByzCoinRPC {
 
     /**
      * Getter for the subscription object.
+     *
      * @return the Subscription
      */
     public Subscription getSubscription() {

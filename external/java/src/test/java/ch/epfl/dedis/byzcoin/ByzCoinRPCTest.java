@@ -1,9 +1,12 @@
 package ch.epfl.dedis.byzcoin;
 
+import ch.epfl.dedis.byzcoin.contracts.ChainConfigData;
+import ch.epfl.dedis.byzcoin.contracts.ChainConfigInstance;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
+import ch.epfl.dedis.lib.Roster;
 import ch.epfl.dedis.lib.ServerIdentity;
 import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.darc.Darc;
@@ -11,16 +14,22 @@ import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.exception.CothorityPermissionException;
+import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static ch.epfl.dedis.integration.TestServerController.*;
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -240,5 +249,70 @@ public class ByzCoinRPCTest {
         assertNotEquals(0, receiver.getCtr());
 
         conn.close();
+    }
+
+    @Test
+    @Disabled("ByzCoin service is not able to follow interval changes - you'll have to restart the nodes.")
+    void updateInterval() throws Exception {
+        List<Signer> admins = new ArrayList<>();
+        admins.add(admin);
+        assertThrows(CothorityPermissionException.class, () -> bc.setBlockInterval(Duration.ofMillis(4999), admins, 10));
+        logger.info("Setting interval to 5 seconds");
+        bc.setBlockInterval(Duration.ofMillis(5000), admins, 10);
+        ByzCoinProto.ChainConfig.Builder newCCD = ChainConfigInstance.fromByzcoin(bc).getChainConfig().toProto().toBuilder();
+        // Need to set the blockInterval manually, else it will complain.
+        logger.info("Setting interval back to 500 milliseconds");
+        Instant now = Instant.now();
+        newCCD.setBlockinterval(500 * 1000 * 1000);
+        ChainConfigInstance.fromByzcoin(bc).evolveConfigAndWait(new ChainConfigData(newCCD.build()), admins, 10);
+        assertTrue(Duration.between(now, Instant.now()).toMillis() > 5000);
+    }
+
+    @Test
+    void updateMaxBlockSize() throws Exception {
+    }
+
+    @Test
+    void updateRoster() throws Exception {
+        List<Signer> admins = new ArrayList<>();
+        admins.add(admin);
+        ServerIdentity conode6 = new ServerIdentity(buildURI("tcp://localhost:7010"), conode1.Public.toString());
+
+        bc.setMaxBlockSize(1000*1000, admins, 10);
+        // First make sure we correctly refuse invalid new rosters.
+        // Too few nodes
+        final Roster newRoster1 = new Roster(Arrays.asList(conode1, conode2));
+        assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster1, admins, 10));
+
+        // Too many new nodes
+        List<ServerIdentity> newList = bc.getRoster().getNodes();
+        newList.addAll(newRoster1.getNodes());
+        final Roster newRoster2 = new Roster(newList);
+        assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster2, admins, 10));
+
+        // Too many changes
+        final Roster newRoster3 = new Roster(Arrays.asList(conode1, conode2, conode5, conode6));
+        assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster3, admins, 10));
+
+        // And finally some real update of the roster
+        // First start conode 5 (it is a sleeper conode)
+        try {
+            testInstanceController.startConode(5);
+            logger.info("updating real roster");
+            Roster newRoster = new Roster(Arrays.asList(conode1, conode2, conode3, conode4, conode5));
+            bc.setRoster(newRoster, admins, 10);
+
+            logger.info("shutting down two nodes and it should still run");
+            try {
+                testInstanceController.killConode(3);
+                testInstanceController.killConode(4);
+                bc.setMaxBlockSize(1000 * 1000, admins, 10);
+            } finally {
+                testInstanceController.startConode(3);
+                testInstanceController.startConode(4);
+            }
+        } finally {
+            testInstanceController.killConode(5);
+        }
     }
 }
