@@ -23,7 +23,7 @@ This is an overview of this README:
   - [Links](doc/README.md) collects
   links to other repositories, papers and webpages that are important to the cothority.
 - [1st steps](#first-steps) giving two example apps ready to use
-- [Participating](#participating) on how to help us getting cothority even better
+- [Participating](#participating-in-the-cothority) on how to help us getting cothority even better
   - [Setting up your own conode](#setting-up-your-own-conode) describes why you
     might want to set up your own conode
 
