@@ -63,6 +63,20 @@ public final class NetworkProto {
      */
     com.google.protobuf.ByteString
         getDescriptionBytes();
+
+    /**
+     * <code>optional string url = 5;</code>
+     */
+    boolean hasUrl();
+    /**
+     * <code>optional string url = 5;</code>
+     */
+    java.lang.String getUrl();
+    /**
+     * <code>optional string url = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getUrlBytes();
   }
   /**
    * Protobuf type {@code network.ServerIdentity}
@@ -81,6 +95,7 @@ public final class NetworkProto {
       id_ = com.google.protobuf.ByteString.EMPTY;
       address_ = "";
       description_ = "";
+      url_ = "";
     }
 
     @java.lang.Override
@@ -134,6 +149,12 @@ public final class NetworkProto {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000008;
               description_ = bs;
+              break;
+            }
+            case 42: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000010;
+              url_ = bs;
               break;
             }
           }
@@ -275,6 +296,48 @@ public final class NetworkProto {
       }
     }
 
+    public static final int URL_FIELD_NUMBER = 5;
+    private volatile java.lang.Object url_;
+    /**
+     * <code>optional string url = 5;</code>
+     */
+    public boolean hasUrl() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional string url = 5;</code>
+     */
+    public java.lang.String getUrl() {
+      java.lang.Object ref = url_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          url_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string url = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getUrlBytes() {
+      java.lang.Object ref = url_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        url_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
@@ -315,6 +378,9 @@ public final class NetworkProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, description_);
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, url_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -336,6 +402,9 @@ public final class NetworkProto {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, description_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, url_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -373,6 +442,11 @@ public final class NetworkProto {
         result = result && getDescription()
             .equals(other.getDescription());
       }
+      result = result && (hasUrl() == other.hasUrl());
+      if (hasUrl()) {
+        result = result && getUrl()
+            .equals(other.getUrl());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -399,6 +473,10 @@ public final class NetworkProto {
       if (hasDescription()) {
         hash = (37 * hash) + DESCRIPTION_FIELD_NUMBER;
         hash = (53 * hash) + getDescription().hashCode();
+      }
+      if (hasUrl()) {
+        hash = (37 * hash) + URL_FIELD_NUMBER;
+        hash = (53 * hash) + getUrl().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -537,6 +615,8 @@ public final class NetworkProto {
         bitField0_ = (bitField0_ & ~0x00000004);
         description_ = "";
         bitField0_ = (bitField0_ & ~0x00000008);
+        url_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -577,6 +657,10 @@ public final class NetworkProto {
           to_bitField0_ |= 0x00000008;
         }
         result.description_ = description_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.url_ = url_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -633,6 +717,11 @@ public final class NetworkProto {
         if (other.hasDescription()) {
           bitField0_ |= 0x00000008;
           description_ = other.description_;
+          onChanged();
+        }
+        if (other.hasUrl()) {
+          bitField0_ |= 0x00000010;
+          url_ = other.url_;
           onChanged();
         }
         this.mergeUnknownFields(other.unknownFields);
@@ -896,6 +985,82 @@ public final class NetworkProto {
         onChanged();
         return this;
       }
+
+      private java.lang.Object url_ = "";
+      /**
+       * <code>optional string url = 5;</code>
+       */
+      public boolean hasUrl() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string url = 5;</code>
+       */
+      public java.lang.String getUrl() {
+        java.lang.Object ref = url_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            url_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string url = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getUrlBytes() {
+        java.lang.Object ref = url_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          url_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string url = 5;</code>
+       */
+      public Builder setUrl(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        url_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string url = 5;</code>
+       */
+      public Builder clearUrl() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        url_ = getDefaultInstance().getUrl();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string url = 5;</code>
+       */
+      public Builder setUrlBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        url_ = value;
+        onChanged();
+        return this;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
@@ -959,10 +1124,11 @@ public final class NetworkProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rnetwork.proto\022\007network\"R\n\016ServerIdenti" +
+      "\n\rnetwork.proto\022\007network\"_\n\016ServerIdenti" +
       "ty\022\016\n\006public\030\001 \002(\014\022\n\n\002id\030\002 \002(\014\022\017\n\007addres" +
-      "s\030\003 \002(\t\022\023\n\013description\030\004 \002(\tB\'\n\027ch.epfl." +
-      "dedis.lib.protoB\014NetworkProto"
+      "s\030\003 \002(\t\022\023\n\013description\030\004 \002(\t\022\013\n\003url\030\005 \001(" +
+      "\tB\'\n\027ch.epfl.dedis.lib.protoB\014NetworkPro" +
+      "to"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -981,7 +1147,7 @@ public final class NetworkProto {
     internal_static_network_ServerIdentity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_network_ServerIdentity_descriptor,
-        new java.lang.String[] { "Public", "Id", "Address", "Description", });
+        new java.lang.String[] { "Public", "Id", "Address", "Description", "Url", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

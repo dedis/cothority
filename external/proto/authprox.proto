@@ -1,15 +1,16 @@
 syntax = "proto2";
 package authprox;
+option java_package = "ch.epfl.dedis.lib.proto";
+option java_outer_classname = "AuthProxProto";
 
 // EnrollRequest is the request sent to this service to enroll
 // a user, authenticated by a certain type of external authentication.
 message EnrollRequest {
   required string type = 1;
   required string issuer = 2;
-  required bytes secret = 3;
-  repeated bytes participants = 4;
-  required PriShare longpri = 5;
-  repeated bytes longpubs = 6;
+  repeated bytes participants = 3;
+  required PriShare longpri = 4;
+  repeated bytes longpubs = 5;
 }
 
 // EnrollResponse is returned when an enrollment has been done correctly.

@@ -23,6 +23,8 @@ import (
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
+	"github.com/dedis/kyber/sign/dss"
+	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/encoding"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/cfgpath"
@@ -648,6 +650,13 @@ func (o *openidCfg) getSigners(cl *eventlog.Client) ([]darc.Signer, error) {
 
 			if len(partials) >= T {
 				// Got enough, all done.
+				//
+				// TODO: If we "got enough", but in fact we talked to a dishonest signer
+				// who sent us an incorrect signature, we won't know it until we reconstruct
+				// the sig and then our txn is refused. The brute force method would be to get
+				// sigs from all, then remove one sig at a time and retry as long as the
+				// reconstructed sig is invalid. A nicer way would be for the signer to
+				// send back some proof that it faithfully did the signature.
 				break
 			}
 
@@ -668,10 +677,21 @@ func (o *openidCfg) getSigners(cl *eventlog.Client) ([]darc.Signer, error) {
 
 			// If no error keep this partial. Otherwise keep going until we have enough.
 			if err == nil {
-				partials = append(partials, &share.PriShare{
-					I: resp.PartialSignature.Partial.I,
-					V: resp.PartialSignature.Partial.V,
-				})
+				// Check the sig on the partial sig before trusting it.
+				ps := &dss.PartialSig{
+					Partial: &share.PriShare{
+						I: resp.PartialSignature.Partial.I,
+						V: resp.PartialSignature.Partial.V,
+					},
+					SessionID: resp.PartialSignature.SessionID,
+					Signature: resp.PartialSignature.Signature,
+				}
+				err = schnorr.Verify(cothority.Suite, s.Public, ps.Hash(cothority.Suite), ps.Signature)
+				if err == nil {
+					partials = append(partials, ps.Partial)
+				} else {
+					log.Warnf("got an incorrectly signed partial signature from %v: %v", s, err)
+				}
 			} else {
 				log.Warnf("could not get a partial signature from %v: %v", s, err)
 			}
@@ -679,10 +699,6 @@ func (o *openidCfg) getSigners(cl *eventlog.Client) ([]darc.Signer, error) {
 		if len(partials) < T {
 			return nil, errors.New("not enough partial signatures")
 		}
-
-		// TODO: We are carelessly accepting all the shares we get back, we
-		// should be doing the same validation done in dss.ProcessPartialSig.
-		// However: to do so, we need all the per-node public keys, from where?
 
 		gamma, err := share.RecoverSecret(cothority.Suite, partials, T, n)
 		if err != nil {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/url"
 	"os"
 
 	"github.com/dedis/cothority"
@@ -12,7 +13,6 @@ import (
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/cfgpath"
@@ -146,12 +146,9 @@ func add(c *cli.Context) error {
 	n := len(roster.List)
 	T := threshold(n)
 
-	pris := make([]kyber.Scalar, n)
 	pubs := make([]kyber.Point, n)
 	for i := 0; i < n; i++ {
-		kp := key.NewKeyPair(cothority.Suite)
-		pris[i] = kp.Private
-		pubs[i] = kp.Public
+		pubs[i] = roster.List[i].Public
 	}
 
 	lPri := share.NewPriPoly(cothority.Suite, T, nil, cothority.Suite.RandomStream())
@@ -160,7 +157,7 @@ func add(c *cli.Context) error {
 	_, lPubCommits := lPub.Info()
 
 	for i, s := range roster.List {
-		if !(s.Address.ConnType() == "tls" || isLoopback(s.Address)) {
+		if !(isLoopback(s.Address) || isHTTPS(s.URL)) {
 			return fmt.Errorf("cannot send secret over insecure channel to %v", s)
 		}
 		cl := onet.NewClient(cothority.Suite, authprox.ServiceName)
@@ -171,7 +168,6 @@ func add(c *cli.Context) error {
 		req := &authprox.EnrollRequest{
 			Type:         c.String("type"),
 			Issuer:       is,
-			Secret:       pris[i],
 			Participants: pubs,
 			LongPri:      lpri,
 			LongPubs:     lPubCommits,
@@ -199,6 +195,7 @@ func readRoster(r io.Reader) (*onet.Roster, error) {
 	}
 	return group.Roster, nil
 }
+
 func faultThreshold(n int) int {
 	return (n - 1) / 3
 }
@@ -214,4 +211,12 @@ func isLoopback(a network.Address) bool {
 		return false
 	}
 	return ip.IsLoopback()
+}
+
+func isHTTPS(ustr string) bool {
+	u, err := url.Parse(ustr)
+	if err != nil {
+		return false
+	}
+	return u.Scheme == "https"
 }

@@ -325,7 +325,7 @@ func TestService_DarcProxy(t *testing.T) {
 		msg2 := h.Sum(nil)
 
 		// In this simulation, we can make a signature the simple way: eddsa.Sign
-		// With auth proxies which are using DKG, the client will contact proxies
+		// With auth proxies which are using DSS, the client will contact proxies
 		// to get signatures, then interpolate them into the final signature.
 		return ed.Sign(msg2)
 	}

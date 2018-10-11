@@ -2,14 +2,16 @@ package authprox
 
 import (
 	"bytes"
+	"errors"
 	"testing"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
+	"github.com/dedis/kyber/sign/dss"
+	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/suites"
-	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/stretchr/testify/require"
@@ -20,10 +22,12 @@ func TestMain(m *testing.M) {
 }
 
 // a test validator that allows all auth info
-type valid struct{}
+type valid struct {
+	err error
+}
 
 func (e *valid) FindClaim(issuer string, ai []byte) (string, string, error) {
-	return "dummy-claim", "dummy-extra-data", nil
+	return "dummy-claim", "dummy-extra-data", e.err
 }
 
 // some zeros to send as a message
@@ -34,30 +38,32 @@ func Test_EnrollAndSign(t *testing.T) {
 	e := newEnv(t)
 	defer e.local.CloseAll()
 
+	// Test with 3 or 5 servers.
+	T := 3
 	nPartic := len(e.services)
-	pris := make([]kyber.Scalar, nPartic)
+	require.Equal(t, nPartic, 5)
+
 	pubs := make([]kyber.Point, nPartic)
 	for i := 0; i < nPartic; i++ {
-		kp := key.NewKeyPair(suite)
-		pris[i] = kp.Private
-		pubs[i] = kp.Public
+		pubs[i] = e.roster.List[i].Public
 	}
 
-	lPri := share.NewPriPoly(suite, nPartic, nil, cothority.Suite.RandomStream())
+	lPri := share.NewPriPoly(suite, T, nil, cothority.Suite.RandomStream())
 	lShares := lPri.Shares(nPartic)
 	lPub := lPri.Commit(nil)
 	_, lPubCommits := lPub.Info()
 
-	rPri := share.NewPriPoly(suite, nPartic, nil, cothority.Suite.RandomStream())
+	rPri := share.NewPriPoly(suite, T, nil, cothority.Suite.RandomStream())
 	rShares := rPri.Shares(nPartic)
 	rPub := rPri.Commit(nil)
 	_, rPubCommits := rPub.Info()
 
 	testType := "dummy"
+	validator := &valid{}
 
 	// Enroll on each proxy.
 	for i, s := range e.services {
-		s.registerValidator(testType, &valid{})
+		s.registerValidator(testType, validator)
 
 		lpri := PriShare{
 			I: lShares[i].I,
@@ -65,7 +71,6 @@ func Test_EnrollAndSign(t *testing.T) {
 		}
 		req := &EnrollRequest{
 			Type:         testType,
-			Secret:       pris[i],
 			Participants: pubs,
 			LongPri:      lpri,
 			LongPubs:     lPubCommits,
@@ -88,25 +93,25 @@ func Test_EnrollAndSign(t *testing.T) {
 		}
 		resp, err := s.Signature(req)
 		require.NoError(t, err)
-		ps := &share.PriShare{
-			I: resp.PartialSignature.Partial.I,
-			V: resp.PartialSignature.Partial.V,
+		ps := &dss.PartialSig{
+			Partial: &share.PriShare{
+				I: resp.PartialSignature.Partial.I,
+				V: resp.PartialSignature.Partial.V,
+			},
+			SessionID: resp.PartialSignature.SessionID,
+			Signature: resp.PartialSignature.Signature,
 		}
-		partials = append(partials, ps)
+
+		err = schnorr.Verify(cothority.Suite, s.ServerIdentity().Public, ps.Hash(cothority.Suite), ps.Signature)
+		require.NoError(t, err)
+
+		partials = append(partials, ps.Partial)
 	}
 
 	// Reassemble the partial signatures and validate them: this will normally
 	// happen in the client, but do it here for now to see if this stuff all holds
 	// together.
-
-	// TODO: We are carelessly accepting all the shares we get back, we
-	// should be doing the same validation done in dss.ProcessPartialSig.
-	// The consequences of an advesary slipping in a bad signature seem to be limited to
-	// fraudulently preventing us from sending a txn in, so not so serious. To
-	// be able to check these, the Signer needs to have the roster or all
-	// expected public keys for all Auth Proxies.
-
-	gamma, err := share.RecoverSecret(suite, partials, nPartic, nPartic)
+	gamma, err := share.RecoverSecret(suite, partials, T, nPartic)
 	require.NoError(t, err)
 
 	// RandomPublic || gamma
@@ -115,14 +120,64 @@ func Test_EnrollAndSign(t *testing.T) {
 	_, _ = gamma.MarshalTo(&buff)
 	sig := buff.Bytes()
 
+	// Make a Darc identity for this public key and some other claim.
+	id := darc.IdentityProxy{
+		Public: lPub.Commit(),
+		Data:   "dummy-claim-other",
+	}
+	err = id.Verify(zero64[:], sig)
+	require.Error(t, err)
+
 	// Make a Darc identity for this public key and the claim we know
 	// that the verifier returned.
-	id := darc.IdentityProxy{
+	id = darc.IdentityProxy{
 		Public: lPub.Commit(),
 		Data:   "dummy-claim",
 	}
+	err = id.Verify(zero64[:], sig)
+	require.NoError(t, err)
 
-	// And verify it!
+	// Test behavior of failing FindClaim: error propogates correctly to caller, and
+	// then it is up to the client to see if they can still make final sig.
+	partials = nil
+	for i, s := range e.services {
+		// Cause the first two servers to give an error from FindClaim.
+		if i < 2 {
+			validator.err = errors.New("FindClaim returns error for testing")
+		} else {
+			validator.err = nil
+		}
+		rp := PriShare{
+			I: rShares[i].I,
+			V: rShares[i].V,
+		}
+		req := &SignatureRequest{
+			Type:     testType,
+			Message:  zero64[:],
+			RandPri:  rp,
+			RandPubs: rPubCommits,
+		}
+		resp, err := s.Signature(req)
+		if i < 2 {
+			require.Error(t, err)
+		} else {
+			require.NoError(t, err)
+			ps := &share.PriShare{
+				I: resp.PartialSignature.Partial.I,
+				V: resp.PartialSignature.Partial.V,
+			}
+			partials = append(partials, ps)
+		}
+	}
+	// Expect all the servers expect 2 to contirbute partials.
+	require.Equal(t, len(e.services)-2, len(partials))
+
+	gamma, err = share.RecoverSecret(suite, partials, T, nPartic)
+	require.NoError(t, err)
+	buff.Reset()
+	_, _ = rPub.Commit().MarshalTo(&buff)
+	_, _ = gamma.MarshalTo(&buff)
+	sig = buff.Bytes()
 	err = id.Verify(zero64[:], sig)
 	require.NoError(t, err)
 
@@ -130,7 +185,7 @@ func Test_EnrollAndSign(t *testing.T) {
 	resp, err := e.services[0].Enrollments(&EnrollmentsRequest{Types: []string{"other"}})
 	require.NoError(t, err)
 	require.Equal(t, 0, len(resp.Enrollments))
-	resp, err = e.services[0].Enrollments(&EnrollmentsRequest{Types: []string{"dummy"}})
+	resp, err = e.services[0].Enrollments(&EnrollmentsRequest{Types: []string{"dummy", "other", "dummy"}})
 	require.NoError(t, err)
 	require.Equal(t, 1, len(resp.Enrollments))
 }

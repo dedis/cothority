@@ -46,7 +46,8 @@ testAdd(){
   Description = "A fake server to test refusing sending secrets over TCP."
 %%
 	testFail ./apadmin add --roster tcp.toml -issuer https://NOauth.dedis.ch/
-	testNGrep https://NOauth.dedis.ch ./apadmin show
+	testNGrep https://NOauth.dedis.ch ./apadmin show --roster tcp.toml
+
 }
 
 main

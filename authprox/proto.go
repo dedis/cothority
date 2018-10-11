@@ -6,13 +6,14 @@ import (
 
 // PROTOSTART
 // package authprox;
+// option java_package = "ch.epfl.dedis.lib.proto";
+// option java_outer_classname = "AuthProxProto";
 
 // EnrollRequest is the request sent to this service to enroll
 // a user, authenticated by a certain type of external authentication.
 type EnrollRequest struct {
 	Type         string
 	Issuer       string
-	Secret       kyber.Scalar
 	Participants []kyber.Point
 	LongPri      PriShare
 	LongPubs     []kyber.Point

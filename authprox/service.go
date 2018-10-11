@@ -74,7 +74,6 @@ type ti struct {
 }
 
 type dssConfig struct {
-	Secret       kyber.Scalar
 	Participants []kyber.Point
 	LongPri      share.PriShare
 	LongPubs     []kyber.Point
@@ -87,7 +86,11 @@ func (s *service) find(typ, issuer string) (*dssConfig, error) {
 	}
 	var buf []byte
 	err = s.db.View(func(tx *bolt.Tx) error {
-		v := tx.Bucket(s.bucket).Get(k)
+		b := tx.Bucket(s.bucket)
+		if b == nil {
+			return errors.New("nil bucket")
+		}
+		v := b.Get(k)
 		if v == nil {
 			return errors.New("claim not found")
 		}
@@ -108,11 +111,19 @@ func (s *service) find(typ, issuer string) (*dssConfig, error) {
 	return &out, nil
 }
 
+// Enrollments returns a list of enrollments. The result list is filtered by
+// the Types and Issuers lists in the request. Empty filter lists are treated as
+// "match all". The result is the AND or Types and Issers, and within one list,
+// an enrollment is returned if any of the list items match.
 func (s *service) Enrollments(req *EnrollmentsRequest) (*EnrollmentsResponse, error) {
 	var resp EnrollmentsResponse
-	s.db.View(func(tx *bolt.Tx) error {
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(s.bucket)
+		if b == nil {
+			return errors.New("nil bucket")
+		}
 		// iterate through all the enrollments
-		c := tx.Bucket(s.bucket).Cursor()
+		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
 			// Make copies, since protobuf.Decode might store slices of the data
 			// from BoltDB for access after the txn.
@@ -141,6 +152,7 @@ func (s *service) Enrollments(req *EnrollmentsRequest) (*EnrollmentsResponse, er
 				for _, t := range req.Types {
 					if ti0.T == t {
 						ok = true
+						break
 					}
 				}
 				if !ok {
@@ -154,6 +166,7 @@ func (s *service) Enrollments(req *EnrollmentsRequest) (*EnrollmentsResponse, er
 				for _, i := range req.Issuers {
 					if ti0.I == i {
 						ok = true
+						break
 					}
 				}
 				if !ok {
@@ -169,9 +182,14 @@ func (s *service) Enrollments(req *EnrollmentsRequest) (*EnrollmentsResponse, er
 		}
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
 	return &resp, nil
 }
 
+// Enroll will save the proposed secret key share (and associated information)
+// in the local database.
 func (s *service) Enroll(req *EnrollRequest) (*EnrollResponse, error) {
 	// TODO: How is auth for the right to enroll done?
 	// idea: allow other services (i.e. evoting) to define certain type/claims
@@ -188,7 +206,6 @@ func (s *service) Enroll(req *EnrollRequest) (*EnrollResponse, error) {
 		V: req.LongPri.V,
 	}
 	v, err := protobuf.Encode(&dssConfig{
-		Secret:       req.Secret,
 		Participants: req.Participants,
 		LongPri:      lpri,
 		LongPubs:     req.LongPubs,
@@ -201,10 +218,14 @@ func (s *service) Enroll(req *EnrollRequest) (*EnrollResponse, error) {
 	err = s.db.Update(func(tx *bolt.Tx) error {
 		// Need to do the find inside of the Update tx, or else it is racy
 		// with respect to other writers.
-		if ret := tx.Bucket(s.bucket).Get(k); ret != nil {
+		b := tx.Bucket(s.bucket)
+		if b == nil {
+			return errors.New("nil bucket")
+		}
+		if ret := b.Get(k); ret != nil {
 			return fmt.Errorf("enrollment already exists for type:issuer %v:%v", req.Type, req.Issuer)
 		}
-		return tx.Bucket(s.bucket).Put(k, v)
+		return b.Put(k, v)
 	})
 	if err != nil {
 		return nil, err
@@ -213,6 +234,13 @@ func (s *service) Enroll(req *EnrollRequest) (*EnrollResponse, error) {
 	return &EnrollResponse{}, nil
 }
 
+// Signature will verify the authentication information in
+// the request, according to the rules specific to that authentication type.
+// If the information is valid, it will then generate a partial signature
+// on a new message which binds together the claim found from the authentication
+// information, and the message in the request, using the secret key share associated
+// with the type and issuer. It is the caller's responsibility to gather a
+// threshold of key shares and then combine them into a final signature.
 func (s *service) Signature(req *SignatureRequest) (*SignatureResponse, error) {
 	if req == nil {
 		return nil, errors.New("no request")
@@ -241,7 +269,7 @@ func (s *service) Signature(req *SignatureRequest) (*SignatureResponse, error) {
 	h.Write(req.Message)
 	msg2 := h.Sum(nil)
 
-	// Find the config that is associated the issuer.
+	// Find the config that is associated with the issuer.
 	dsscfg, err := s.find(req.Type, req.Issuer)
 	if err != nil {
 		return nil, fmt.Errorf("cannot find key: %v", err)
@@ -253,7 +281,11 @@ func (s *service) Signature(req *SignatureRequest) (*SignatureResponse, error) {
 		I: req.RandPri.I,
 		V: req.RandPri.V,
 	}
-	d, err := dss.NewDSS(suite, dsscfg.Secret,
+	priv := s.ServerIdentity().GetPrivate()
+	if priv == nil {
+		panic("why no key")
+	}
+	d, err := dss.NewDSS(suite, priv,
 		dsscfg.Participants,
 		&dks{dsscfg.LongPri, dsscfg.LongPubs},
 		&dks{rpi, req.RandPubs},
