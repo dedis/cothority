@@ -18,15 +18,14 @@ func Test_NewTrie(t *testing.T) {
 
 func testNewTrie(t *testing.T, db database) {
 	// Initialise a trie.
-	trie, err := NewTrie(db, []byte(bucketName))
+	trie, err := NewTrie(db)
 	require.NoError(t, err)
 	require.NotNil(t, trie.nonce)
 
 	// If we iterate the database, we should only have 5 items - the root,
 	// the two empty leaves, the entry point and the nonce.
 	var cnt int
-	db.View(func(tx transaction) error {
-		b := tx.Bucket([]byte(bucketName))
+	db.View(func(b bucket) error {
 		return b.ForEach(func(k, v []byte) error {
 			cnt++
 			return nil
@@ -38,7 +37,7 @@ func testNewTrie(t *testing.T, db database) {
 	copy(nonce1, trie.nonce)
 
 	// Load the database again and the nonce should still be there.
-	trie, err = NewTrie(db, []byte(bucketName))
+	trie, err = NewTrie(db)
 	require.NoError(t, err)
 	require.NotNil(t, trie.nonce)
 	require.Equal(t, trie.nonce, nonce1)
@@ -68,7 +67,7 @@ func Test_AddToEmptyNode(t *testing.T) {
 
 func testAddToEmptyNode(t *testing.T, db database) {
 	// Initialise a trie.
-	trie, err := NewTrie(db, []byte(bucketName))
+	trie, err := NewTrie(db)
 	require.NoError(t, err)
 	require.NotNil(t, trie.nonce)
 
@@ -93,7 +92,7 @@ func Test_AddToLeafNode(t *testing.T) {
 
 func testAddToLeafNode(t *testing.T, db database) {
 	// Initialise a trie.
-	trie, err := NewTrie(db, []byte(bucketName))
+	trie, err := NewTrie(db)
 	require.NoError(t, err)
 	require.NotNil(t, trie.nonce)
 
@@ -131,7 +130,7 @@ func Test_Overwrite(t *testing.T) {
 
 func testOverwrite(t *testing.T, db database) {
 	// Initialise a trie.
-	trie, err := NewTrie(db, []byte(bucketName))
+	trie, err := NewTrie(db)
 	require.NoError(t, err)
 	require.NotNil(t, trie.nonce)
 
@@ -150,7 +149,7 @@ func Test_Delete(t *testing.T) {
 
 func testDelete(t *testing.T, db database) {
 	// Initialise a trie.
-	trie, err := NewTrie(db, []byte(bucketName))
+	trie, err := NewTrie(db)
 	require.NoError(t, err)
 	require.NotNil(t, trie.nonce)
 
@@ -207,7 +206,12 @@ func Test_RandomDelete(t *testing.T) {
 func newDiskDB(t *testing.T) database {
 	db, err := bolt.Open(testDB, 0600, nil)
 	require.NoError(t, err)
-	return &diskDB{db}
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte(bucketName))
+		return err
+	})
+	require.NoError(t, err)
+	return &diskDB{db, []byte(bucketName)}
 }
 
 func delDiskDB(t *testing.T, db database) {
@@ -217,11 +221,7 @@ func delDiskDB(t *testing.T, db database) {
 
 func getRootNode(t *testing.T, db database) interiorNode {
 	var root interiorNode
-	err := db.View(func(tx transaction) error {
-		b := tx.Bucket([]byte(bucketName))
-		if b == nil {
-			return errors.New("no bucket name")
-		}
+	err := db.View(func(b bucket) error {
 		rootKey := b.Get([]byte(entryKey))
 		if rootKey == nil {
 			return errors.New("no root")

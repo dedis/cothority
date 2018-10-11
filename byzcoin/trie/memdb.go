@@ -5,57 +5,34 @@ import "sync"
 // implementation for memorydb
 
 type memDB struct {
-	tx *memTx
+	bucket *memBucket
 	sync.RWMutex
 }
 
 func NewMemDB() database {
-	tx := newMemTx()
+	bucket := newMemBucket()
 	db := memDB{
-		tx: &tx,
+		bucket: &bucket,
 	}
 	return &db
 }
 
-func (r *memDB) Update(f func(transaction) error) error {
+func (r *memDB) Update(f func(bucket) error) error {
 	r.Lock()
 	defer r.Unlock()
-	return f(r.tx)
+	return f(r.bucket)
 
 }
-func (r *memDB) View(f func(transaction) error) error {
+func (r *memDB) View(f func(bucket) error) error {
 	r.RLock()
 	defer r.RUnlock()
-	return f(r.tx)
+	return f(r.bucket)
 }
 
 // Close delete the memory-only database, it cannot be recovered.
 func (r *memDB) Close() error {
-	r.tx = nil
+	r.bucket = nil
 	return nil
-}
-
-type memTx struct {
-	buckets map[string]*memBucket
-}
-
-func newMemTx() memTx {
-	return memTx{
-		buckets: make(map[string]*memBucket),
-	}
-}
-
-func (r *memTx) Bucket(b []byte) bucket {
-	return r.buckets[string(b)]
-}
-
-func (r *memTx) CreateBucketIfNotExists(b []byte) (bucket, error) {
-	if b, ok := r.buckets[string(b)]; ok {
-		return b, nil
-	}
-	newBucket := newMemBucket()
-	r.buckets[string(b)] = &newBucket
-	return &newBucket, nil
 }
 
 type memBucket struct {

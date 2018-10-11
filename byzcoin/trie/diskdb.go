@@ -1,43 +1,40 @@
 package trie
 
-import bolt "github.com/coreos/bbolt"
+import (
+	"errors"
+
+	bolt "github.com/coreos/bbolt"
+)
 
 // implementation for boltdb
 
 type diskDB struct {
-	db *bolt.DB
+	db     *bolt.DB
+	bucket []byte
 }
 
-func (r *diskDB) Update(f func(transaction) error) error {
+func (r *diskDB) Update(f func(bucket) error) error {
 	return r.db.Update(func(tx *bolt.Tx) error {
-		return f(&diskTx{tx})
+		b := tx.Bucket(r.bucket)
+		if b == nil {
+			return errors.New("bucket does not exist")
+		}
+		return f(&diskBucket{b})
 	})
 }
 
-func (r *diskDB) View(f func(transaction) error) error {
+func (r *diskDB) View(f func(bucket) error) error {
 	return r.db.View(func(tx *bolt.Tx) error {
-		return f(&diskTx{tx})
+		b := tx.Bucket(r.bucket)
+		if b == nil {
+			return errors.New("bucket does not exist")
+		}
+		return f(&diskBucket{b})
 	})
 }
 
 func (r *diskDB) Close() error {
 	return r.db.Close()
-}
-
-type diskTx struct {
-	tx *bolt.Tx
-}
-
-func (r *diskTx) Bucket(b []byte) bucket {
-	return &diskBucket{r.tx.Bucket(b)}
-}
-
-func (r *diskTx) CreateBucketIfNotExists(b []byte) (bucket, error) {
-	bucket, err := r.tx.CreateBucketIfNotExists(b)
-	if err != nil {
-		return nil, err
-	}
-	return &diskBucket{bucket}, nil
 }
 
 type diskBucket struct {

@@ -1,15 +1,17 @@
 package trie
 
 type database interface {
-	Update(func(transaction) error) error
-	View(func(transaction) error) error
+	Update(func(bucket) error) error
+	View(func(bucket) error) error
 	Close() error
 }
 
+/*
 type transaction interface {
 	Bucket([]byte) bucket
 	CreateBucketIfNotExists([]byte) (bucket, error)
 }
+*/
 
 type bucket interface {
 	Delete([]byte) error

@@ -14,21 +14,15 @@ const nonceKey = "dedis_trie_nonce"
 
 // Trie implements the merkle prefix tree described in the coniks paper.
 type Trie struct {
-	nonce  []byte
-	db     database
-	bucket []byte
+	nonce []byte
+	db    database
 }
 
 // NewTrie loads the tried from a boltDB database, it creates one if it does
 // not exist.
-func NewTrie(db database, bucket []byte) (Trie, error) {
+func NewTrie(db database) (Trie, error) {
 	nonce := make([]byte, 32)
-	err := db.Update(func(tx transaction) error {
-		b, err := tx.CreateBucketIfNotExists(bucket)
-		if err != nil {
-			return err
-		}
-
+	err := db.Update(func(b bucket) error {
 		// create or load the nonce
 		nonceBuf := b.Get([]byte(nonceKey))
 		if nonceBuf == nil {
@@ -53,16 +47,15 @@ func NewTrie(db database, bucket []byte) (Trie, error) {
 		if rootVal == nil {
 			return errors.New("invalid reference to root")
 		}
-		return err
+		return nil
 	})
 
 	if err != nil {
 		return Trie{}, err
 	}
 	return Trie{
-		nonce:  nonce,
-		db:     db,
-		bucket: bucket,
+		nonce: nonce,
+		db:    db,
 	}, nil
 }
 
@@ -107,11 +100,7 @@ func newRootNode(b bucket, nonce []byte) error {
 
 // Set sets or overwrites a key-value pair.
 func (t *Trie) Set(key []byte, value []byte) error {
-	return t.db.Update(func(tx transaction) error {
-		b := tx.Bucket(t.bucket)
-		if b == nil {
-			return errors.New("bucket does not exist")
-		}
+	return t.db.Update(func(b bucket) error {
 		newRoot, err := t.set(t.getRoot(b), toBinarySlice(key), 0, key, value, b)
 		if err != nil {
 			return err
@@ -321,11 +310,7 @@ func (t *Trie) extendLeaf(currPrefix []bool, key1, valueKey1, key2, valueKey2 []
 // Delete deletes the key-value pair, an error is returned if the key does not
 // exist.
 func (t *Trie) Delete(key []byte) error {
-	return t.db.Update(func(tx transaction) error {
-		b := tx.Bucket(t.bucket)
-		if b == nil {
-			return errors.New("bucket does not exist")
-		}
+	return t.db.Update(func(b bucket) error {
 		rootKey := t.getRoot(b)
 		if rootKey == nil {
 			return errors.New("no root key")
@@ -341,11 +326,7 @@ func (t *Trie) Delete(key []byte) error {
 // Get looks up whether a value exists for the given key.
 func (t *Trie) Get(key []byte) ([]byte, error) {
 	var val []byte
-	err := t.db.View(func(tx transaction) error {
-		b := tx.Bucket(t.bucket)
-		if b == nil {
-			return errors.New("bucket does not exist")
-		}
+	err := t.db.View(func(b bucket) error {
 		rootKey := t.getRoot(b)
 		if rootKey == nil {
 			return errors.New("no root key")
@@ -395,6 +376,39 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 	}
 	return nil, errors.New("invalid node type")
 }
+
+/*
+// CopyTo will make a copy of the database without the values to the target
+// database.
+func (t *Trie) CopyTo(target database, targetBucket string, bool includeValues) error {
+	return t.db.View(func(tx transaction) error {
+	})
+}
+
+func (t *Trie) copyTo(nodeKey []byte, target database, bool includeValues) error {
+	nodeVal := b.Get(nodeKey)
+	if len(nodeVal) == 0 {
+		return nil, errors.New("invalid node key")
+	}
+	switch nodeType(nodeVal[0]) {
+	case typeEmpty:
+	case typeLeaf:
+	case typeInterior:
+		node, err := decodeInteriorNode(nodeVal)
+		if err != nil {
+			return err
+		}
+		if err := t.copyTo(node.Left, target, includeValues); err != nil {
+			return err
+		}
+		if err := t.copyTo(node.Right, target, includeValues); err != nil {
+			return err
+		}
+		return nil
+	}
+	return nil, errors.New("invalid node type")
+}
+*/
 
 // TODO for now we just replace leafs with empty nodes, which is ok but it'll
 // be better if we can "shrink" the tree as well.
@@ -486,11 +500,7 @@ func (t *Trie) delete(depth int, nodeKey []byte, bits []bool, key []byte, b buck
 // getRaw gets the value, it returns nil if the value does not exist.
 func (t *Trie) getRaw(key []byte) ([]byte, error) {
 	var val []byte
-	err := t.db.View(func(tx transaction) error {
-		b := tx.Bucket(t.bucket)
-		if b == nil {
-			return errors.New("bucket does not exist")
-		}
+	err := t.db.View(func(b bucket) error {
 		buf := b.Get(key)
 		val = make([]byte, len(buf))
 		copy(val, buf)

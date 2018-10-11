@@ -71,11 +71,7 @@ func equal(a []bool, b []bool) bool {
 // GetProof TODO
 func (t *Trie) GetProof(key []byte) (*Proof, error) {
 	p := &Proof{}
-	err := t.db.View(func(tx transaction) error {
-		b := tx.Bucket(t.bucket)
-		if b == nil {
-			return errors.New("no such bucket")
-		}
+	err := t.db.View(func(b bucket) error {
 		rootKey := t.getRoot(b)
 		if rootKey == nil {
 			return errors.New("no root key")

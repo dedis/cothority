@@ -12,7 +12,7 @@ func TestProof(t *testing.T) {
 
 func testProof(t *testing.T, db database) {
 	// Initialise a trie.
-	trie, err := NewTrie(db, []byte(bucketName))
+	trie, err := NewTrie(db)
 	require.NoError(t, err)
 	require.NotNil(t, trie.nonce)
 
