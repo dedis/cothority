@@ -181,7 +181,7 @@ func TestParsing_RealIDs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	expr = []byte("proxy:5764e85642c3bda8748c5cf3d7f14c6d5c18e193228d70f4c58dd80ed4582748:admin@example.com")
+	expr = []byte("proxy:5764e85642c3bda8748c5cf3d7f14c6d5c18e193228d70f4c58dd80ed4582748:admin_user@example.com")
 	_, err = Evaluate(InitParser(trueFn), expr)
 	if err != nil {
 		t.Fatal(err)

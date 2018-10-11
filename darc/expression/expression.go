@@ -134,7 +134,7 @@ func typeHex() parsec.Parser {
 func proxy() parsec.Parser {
 	return func(s parsec.Scanner) (parsec.ParsecNode, parsec.Scanner) {
 		_, s = s.SkipAny(`^[ \n\t]+`)
-		p := parsec.Token(`proxy:[0-9a-fA-F]+:[a-zA-Z0-9:@\\/.-]+`, "PROXY")
+		p := parsec.Token(`proxy:[0-9a-fA-F]+:[^ \n\t]*`, "PROXY")
 		return p(s)
 	}
 }

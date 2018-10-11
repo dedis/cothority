@@ -12,6 +12,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	oidc "github.com/coreos/go-oidc"
@@ -643,58 +644,69 @@ func (o *openidCfg) getSigners(cl *eventlog.Client) ([]darc.Signer, error) {
 		client := onet.NewClient(cothority.Suite, authprox.ServiceName)
 
 		// Connect to servers, get sigs, stop when we achieve the threshold.
-		// TODO: This could be in parallel.
-		var partials []*share.PriShare
-		for _, idx := range shuffled {
-			s := r.List[idx]
+		wg := &sync.WaitGroup{}
+		wg.Add(len(r.List))
+		pChan := make(chan *share.PriShare, len(r.List))
+		for _, i := range shuffled {
+			go func(idx int) {
+				s := r.List[idx]
 
-			if len(partials) >= T {
-				// Got enough, all done.
-				//
-				// TODO: If we "got enough", but in fact we talked to a dishonest signer
-				// who sent us an incorrect signature, we won't know it until we reconstruct
-				// the sig and then our txn is refused. The brute force method would be to get
-				// sigs from all, then remove one sig at a time and retry as long as the
-				// reconstructed sig is invalid. A nicer way would be for the signer to
-				// send back some proof that it faithfully did the signature.
-				break
-			}
-
-			rpi := authprox.PriShare{
-				I: rShares[idx].I,
-				V: rShares[idx].V,
-			}
-			req := &authprox.SignatureRequest{
-				Type:     "oidc",
-				Issuer:   o.Issuer,
-				AuthInfo: []byte(rawIDToken),
-				Message:  msg,
-				RandPri:  rpi,
-				RandPubs: rPubCommits,
-			}
-			var resp authprox.SignatureResponse
-			err := client.SendProtobuf(s, req, &resp)
-
-			// If no error keep this partial. Otherwise keep going until we have enough.
-			if err == nil {
-				// Check the sig on the partial sig before trusting it.
-				ps := &dss.PartialSig{
-					Partial: &share.PriShare{
-						I: resp.PartialSignature.Partial.I,
-						V: resp.PartialSignature.Partial.V,
-					},
-					SessionID: resp.PartialSignature.SessionID,
-					Signature: resp.PartialSignature.Signature,
+				rpi := authprox.PriShare{
+					I: rShares[idx].I,
+					V: rShares[idx].V,
 				}
-				err = schnorr.Verify(cothority.Suite, s.Public, ps.Hash(cothority.Suite), ps.Signature)
+				req := &authprox.SignatureRequest{
+					Type:     "oidc",
+					Issuer:   o.Issuer,
+					AuthInfo: []byte(rawIDToken),
+					Message:  msg,
+					RandPri:  rpi,
+					RandPubs: rPubCommits,
+				}
+				var resp authprox.SignatureResponse
+				err := client.SendProtobuf(s, req, &resp)
+
+				// If no error keep this partial. Otherwise keep going until we have enough.
 				if err == nil {
-					partials = append(partials, ps.Partial)
+					// Check the sig on the partial sig before trusting it.
+					ps := &dss.PartialSig{
+						Partial: &share.PriShare{
+							I: resp.PartialSignature.Partial.I,
+							V: resp.PartialSignature.Partial.V,
+						},
+						SessionID: resp.PartialSignature.SessionID,
+						Signature: resp.PartialSignature.Signature,
+					}
+					err = schnorr.Verify(cothority.Suite, s.Public, ps.Hash(cothority.Suite), ps.Signature)
+					if err == nil {
+						pChan <- ps.Partial
+					} else {
+						log.Warnf("got an incorrectly signed partial signature from %v: %v", s, err)
+					}
 				} else {
-					log.Warnf("got an incorrectly signed partial signature from %v: %v", s, err)
+					log.Warnf("could not get a partial signature from %v: %v", s, err)
 				}
-			} else {
-				log.Warnf("could not get a partial signature from %v: %v", s, err)
-			}
+
+				wg.Done()
+			}(i)
+		}
+
+		// TODO: In a perfect world, we'd be using an http.Client
+		// with a context, and then once we got enough signatures, we'd
+		// kill the outstanding requests. But for now, we will wait until
+		// they all timeout, even if we've already got enough.
+		wg.Wait()
+		close(pChan)
+
+		// TODO: If we "got enough", but in fact we talked to a dishonest signer
+		// who sent us an incorrect signature, we won't know it until we reconstruct
+		// the sig and then our txn is refused. The brute force method would be to get
+		// sigs from all, then remove one sig at a time and retry as long as the
+		// reconstructed sig is invalid. A nicer way would be for the signer to
+		// send back some proof that it faithfully did the signature.
+		var partials []*share.PriShare
+		for p := range pChan {
+			partials = append(partials, p)
 		}
 		if len(partials) < T {
 			return nil, errors.New("not enough partial signatures")
