@@ -151,10 +151,14 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 		// If the key is the same, then we don't need to create a new
 		// internal node, just update the value and hash.
 		if bytes.Equal(node.Key, key) {
+			oldKey := node.hash(t.nonce)
 			oldValueKey := node.DataKey
 			valueKey := sha256.Sum256(value)
 			node.DataKey = valueKey[:]
 			if err := b.Delete(oldValueKey); err != nil {
+				return nil, err
+			}
+			if err := b.Delete(oldKey); err != nil {
 				return nil, err
 			}
 			leafBuf, err := node.encode()
@@ -200,6 +204,7 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 		if err != nil {
 			return nil, err
 		}
+		oldHash := node.hash()
 		var retHash []byte
 		if bits[depth] {
 			println(" LEFT")
@@ -217,6 +222,9 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 			node.Right = retHash
 		}
 		// update the interior node
+		if err := b.Delete(oldHash); err != nil {
+			return nil, err
+		}
 		newNodeBuf, err := node.encode()
 		if err != nil {
 			return nil, err
@@ -324,7 +332,11 @@ func (t *Trie) Delete(key []byte) error {
 		if rootKey == nil {
 			return errors.New("no root key")
 		}
-		return t.delete(key, b)
+		newRoot, err := t.delete(0, rootKey, toBinarySlice(key), key, b)
+		if err != nil {
+			return err
+		}
+		return b.Put([]byte(entryKey), newRoot)
 	})
 }
 
@@ -367,7 +379,7 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b *bolt.B
 		if err != nil {
 			return nil, err
 		}
-		if bytes.Equal(key, node.Key) {
+		if !bytes.Equal(key, node.Key) {
 			return nil, nil
 		}
 		return b.Get(node.DataKey), nil
@@ -386,8 +398,91 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b *bolt.B
 	return nil, errors.New("invalid node type")
 }
 
-func (t *Trie) delete(key []byte, b *bolt.Bucket) error {
-	return nil
+// TODO for now we just replace leafs with empty nodes, which is ok but it'll
+// be better if we can "shrink" the tree as well.
+func (t *Trie) delete(depth int, nodeKey []byte, bits []bool, key []byte, b *bolt.Bucket) ([]byte, error) {
+	nodeVal := b.Get(nodeKey)
+	if len(nodeVal) == 0 {
+		return nil, errors.New("invalid node key")
+	}
+	switch nodeType(nodeVal[0]) {
+	case typeEmpty:
+		// base case 1, nothing to delete
+		return nil, nil
+	case typeLeaf:
+		node, err := decodeLeafNode(nodeVal)
+		if err != nil {
+			return nil, err
+		}
+		if !bytes.Equal(key, node.Key) {
+			// key doesn't exist, nothing to delete
+			return nil, nil
+		}
+		if err := b.Delete(node.hash(t.nonce)); err != nil {
+			return nil, err
+		}
+		if err := b.Delete(node.DataKey); err != nil {
+			return nil, err
+		}
+		empty := newEmptyNode(node.Prefix)
+		emptyBuf, err := empty.encode()
+		if err != nil {
+			return nil, err
+		}
+		if err := b.Put(empty.hash(t.nonce), emptyBuf); err != nil {
+			return nil, err
+		}
+		return empty.hash(t.nonce), nil
+	case typeInterior:
+		node, err := decodeInteriorNode(nodeVal)
+		if err != nil {
+			return nil, err
+		}
+		// update this interior node
+		if bits[depth] {
+			// look left
+			res, err := t.delete(depth+1, node.Left, bits, key, b)
+			if err != nil {
+				return nil, err
+			}
+			if res == nil {
+				// not found, so do nothing
+				return nil, nil
+			}
+			// delete the old interior node
+			if err := b.Delete(node.hash()); err != nil {
+				return nil, err
+			}
+			// update this interior node
+			node.Left = res
+			nodeBuf, err := node.encode()
+			if err != nil {
+				return nil, err
+			}
+			return node.hash(), b.Put(node.hash(), nodeBuf)
+		}
+		// look right
+		res, err := t.delete(depth+1, node.Right, bits, key, b)
+		if err != nil {
+			return nil, err
+		}
+		if res == nil {
+			// not found, so do nothing
+			return nil, nil
+		}
+		// delete the old interior node
+		if err := b.Delete(node.hash()); err != nil {
+			return nil, err
+		}
+		// update this interior node
+		node.Right = res
+		nodeBuf, err := node.encode()
+		if err != nil {
+			return nil, err
+		}
+		return node.hash(), b.Put(node.hash(), nodeBuf)
+	}
+	return nil, errors.New("invalid node type")
 }
 
 // getRaw gets the value, it returns nil if the value does not exist.

@@ -21,6 +21,18 @@ func Test_NewTrie(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, trie.nonce)
 
+	// If we iterate the database, we should only have 5 items - the root,
+	// the two empty leaves, the entry point and the nonce.
+	var cnt int
+	db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucketName))
+		return b.ForEach(func(k, v []byte) error {
+			cnt++
+			return nil
+		})
+	})
+	require.Equal(t, 5, cnt)
+
 	nonce1 := make([]byte, 32)
 	copy(nonce1, trie.nonce)
 
@@ -129,6 +141,51 @@ func Test_Overwrite(t *testing.T) {
 }
 
 func Test_Delete(t *testing.T) {
+	db := newTempDB(t)
+	defer deleteDB(t, db)
+
+	// Initialise a trie.
+	trie, err := NewTrie(db, []byte(bucketName))
+	require.NoError(t, err)
+	require.NotNil(t, trie.nonce)
+
+	// Create some keys
+	for i := 0; i < 10; i++ {
+		k := []byte{byte(i)}
+		require.NoError(t, trie.Set(k, k))
+		val, err := trie.Get(k)
+		require.NoError(t, err)
+		require.Equal(t, val, k)
+	}
+
+	// Delete them
+	for i := 0; i < 10; i++ {
+		k := []byte{byte(i)}
+		require.NoError(t, trie.Delete(k))
+	}
+
+	// They should disappear
+	for i := 0; i < 10; i++ {
+		k := []byte{byte(i)}
+		val, err := trie.Get(k)
+		require.NoError(t, err)
+		require.Nil(t, val)
+	}
+
+	// TODO the following is not true because we cannot shink the tree yet
+	/*
+		// If we iterate the database, we should only have 5 items - the root,
+		// the two empty leaves, the entry point and the nonce.
+		var cnt int
+		db.View(func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte(bucketName))
+			return b.ForEach(func(k, v []byte) error {
+				cnt++
+				return nil
+			})
+		})
+		require.Equal(t, 5, cnt)
+	*/
 }
 
 func Test_RandomAdd(t *testing.T) {
