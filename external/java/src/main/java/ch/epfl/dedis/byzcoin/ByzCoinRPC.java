@@ -11,7 +11,10 @@ import ch.epfl.dedis.lib.SkipBlock;
 import ch.epfl.dedis.lib.SkipblockId;
 import ch.epfl.dedis.lib.crypto.Ed25519Point;
 import ch.epfl.dedis.lib.darc.*;
-import ch.epfl.dedis.lib.exception.*;
+import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.exception.CothorityException;
+import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
 import ch.epfl.dedis.skipchain.SkipchainRPC;
@@ -330,7 +333,7 @@ public class ByzCoinRPC {
     /**
      * Subscribe to an infinite stream of future SkipBlocks. Note that you need to give a limit or the
      * thread will hang indefinitely
-     *
+     * <p>
      * Each subscription request uses its own connection and the stream must be correctly closed to clean
      * the resources
      *
@@ -382,15 +385,15 @@ public class ByzCoinRPC {
      * Sets the new block interval that ByzCoin uses to create new block. The actual interval between two
      * block in the current implementation is guaranteed to be at least 1 second higher, depending on the
      * network delays and the number of transactions to include.
-     *
+     * <p>
      * The chosen interval can not be smaller than 5 seconds.
      *
      * @param newInterval how long to wait before starting to assemble a new block
-     * @param admins a list of admins needed to sign off the new configuration
-     * @param wait how many blocks to wait for the new config to go in
+     * @param admins      a list of admins needed to sign off the new configuration
+     * @param wait        how many blocks to wait for the new config to go in
      * @throws CothorityException
      */
-    public void setBlockInterval(Duration newInterval, List<Signer> admins, int wait) throws CothorityException{
+    public void setBlockInterval(Duration newInterval, List<Signer> admins, int wait) throws CothorityException {
         ChainConfigInstance cci = ChainConfigInstance.fromByzcoin(this);
         ChainConfigData ccd = cci.getChainConfig();
         ccd.setInterval(newInterval);
@@ -401,15 +404,15 @@ public class ByzCoinRPC {
      * Sets the new block interval that ByzCoin uses to create new block. The actual interval between two
      * block in the current implementation is guaranteed to be at least 1 second higher, depending on the
      * network delays and the number of transactions to include.
-     *
+     * <p>
      * The chosen interval can not be smaller than 5 seconds.
      *
      * @param newMaxSize new maximum size of the assembled blocks.
-     * @param admins a list of admins needed to sign off the new configuration
-     * @param wait how many blocks to wait for the new config to go in
+     * @param admins     a list of admins needed to sign off the new configuration
+     * @param wait       how many blocks to wait for the new config to go in
      * @throws CothorityException
      */
-    public void setMaxBlockSize(int newMaxSize, List<Signer> admins, int wait) throws CothorityException{
+    public void setMaxBlockSize(int newMaxSize, List<Signer> admins, int wait) throws CothorityException {
         ChainConfigInstance cci = ChainConfigInstance.fromByzcoin(this);
         ChainConfigData ccd = cci.getChainConfig();
         ccd.setMaxBlockSize(newMaxSize);
@@ -541,7 +544,7 @@ public class ByzCoinRPC {
     /**
      * Helper function to make a connection to the streaming API endpoint and populate a blocking queue with the
      * new blocks. The queue will be used during a stream generation
-     *
+     * <p>
      * As a stream doesn't handle errors, they are ignored and written in the logs.
      *
      * @param queue The blocking queue used by the stream

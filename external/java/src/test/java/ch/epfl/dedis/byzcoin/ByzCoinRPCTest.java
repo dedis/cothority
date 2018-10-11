@@ -14,6 +14,7 @@ import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
+import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityPermissionException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import org.junit.jupiter.api.BeforeEach;
@@ -252,10 +253,8 @@ public class ByzCoinRPCTest {
     }
 
     @Test
-    @Disabled("ByzCoin service is not able to follow interval changes - you'll have to restart the nodes.")
     void updateInterval() throws Exception {
-        List<Signer> admins = new ArrayList<>();
-        admins.add(admin);
+        List<Signer> admins = Arrays.asList(admin);
         assertThrows(CothorityPermissionException.class, () -> bc.setBlockInterval(Duration.ofMillis(4999), admins, 10));
         logger.info("Setting interval to 5 seconds");
         bc.setBlockInterval(Duration.ofMillis(5000), admins, 10);
@@ -270,15 +269,29 @@ public class ByzCoinRPCTest {
 
     @Test
     void updateMaxBlockSize() throws Exception {
+        List<Signer> admins = Arrays.asList(admin);
+        Arrays.asList(ChainConfigData.blocksizeMin - 1, ChainConfigData.blocksizeMax + 1).forEach(invalidSize ->
+                assertThrows(CothorityException.class, () ->
+                        bc.setMaxBlockSize(invalidSize, admins, 10)
+                )
+        );
+        Arrays.asList(ChainConfigData.blocksizeMin, (ChainConfigData.blocksizeMin + ChainConfigData.blocksizeMax) / 2,
+                ChainConfigData.blocksizeMax).forEach(validSize -> {
+                    try {
+                        bc.setMaxBlockSize(validSize, admins, 10);
+                    } catch (CothorityException e) {
+                        fail("should accept this size");
+                    }
+                }
+        );
     }
 
     @Test
+    @Disabled("Cannot change members of a roster for the moment.")
     void updateRoster() throws Exception {
         List<Signer> admins = new ArrayList<>();
         admins.add(admin);
-        ServerIdentity conode6 = new ServerIdentity(buildURI("tcp://localhost:7010"), conode1.Public.toString());
 
-        bc.setMaxBlockSize(1000*1000, admins, 10);
         // First make sure we correctly refuse invalid new rosters.
         // Too few nodes
         final Roster newRoster1 = new Roster(Arrays.asList(conode1, conode2));

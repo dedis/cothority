@@ -125,7 +125,12 @@ func invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (s
 		if err != nil {
 			return
 		}
-		if err = newConfig.sanityCheck(); err != nil {
+		var oldConfig *ChainConfig
+		oldConfig, err = loadConfigFromColl(cdb)
+		if err != nil {
+			return
+		}
+		if err = newConfig.sanityCheck(oldConfig); err != nil {
 			return
 		}
 		sc = []StateChange{
@@ -218,7 +223,7 @@ func spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc
 		Roster:        roster,
 		MaxBlockSize:  int(maxsz),
 	}
-	if err = config.sanityCheck(); err != nil {
+	if err = config.sanityCheck(nil); err != nil {
 		return
 	}
 

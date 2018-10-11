@@ -121,9 +121,10 @@ func TestService_AddTransaction_WithFailure_OnFollower(t *testing.T) {
 }
 
 func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
+	log.SetShowTime(true)
 	var s *ser
 	if failure {
-		s = newSerN(t, 1, 500*time.Millisecond, 4, false)
+		s = newSerN(t, 1, 200*time.Millisecond, 4, false)
 		for _, service := range s.services {
 			service.SetPropagationTimeout(4 * time.Second)
 		}
@@ -193,6 +194,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		if i == 1 {
 			// Now read the key/values from a new service
 			log.Lvl1("Recreate services and fetch keys again")
+			s.service().TestClose()
 			require.NoError(t, s.service().startAllChains())
 		}
 		for _, tx := range txs {
@@ -210,7 +212,6 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	// Bring the failed node back up and it should also see the transactions.
 	if failure {
 		log.Lvl1("bringing the failed node back up")
-		s.services[len(s.hosts)-1].closed = false
 		s.hosts[len(s.hosts)-1].Unpause()
 		require.NoError(t, s.services[len(s.hosts)-1].startAllChains())
 
@@ -233,6 +234,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		require.NoError(t, err2)
 		require.True(t, pr.InclusionProof.Match())
 
+		log.Lvl1("done")
 		// Wait for tasks to finish.
 		time.Sleep(time.Second)
 	}
@@ -1017,28 +1019,46 @@ func TestService_SetConfig(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	ctx, newConfig := createConfigTx(t, s, false, false)
-	s.sendTx(t, ctx)
+	interval := 42 * time.Millisecond
+	maxBlock := 424242
+	ctx, _ := createConfigTx(t, interval, *s.roster, maxBlock, s)
+	s.sendTxAndWait(t, ctx, 10)
 
-	// wait for a change
-	i := 0
-	for ; i < 5; i++ {
-		time.Sleep(s.interval)
-		config, err := s.service().LoadConfig(s.sb.SkipChainID())
-		require.NoError(t, err)
-
-		if config.BlockInterval == newConfig.BlockInterval {
-			break
-		}
-	}
-	if i == 5 {
-		require.Fail(t, "did not find new config in time")
-	}
+	_, err := s.service().LoadConfig(s.sb.SkipChainID())
+	require.NoError(t, err)
 
 	interval, maxsz, err := s.service().LoadBlockInfo(s.sb.SkipChainID())
 	require.NoError(t, err)
-	require.Equal(t, interval, 420*time.Millisecond)
-	require.Equal(t, maxsz, 424242)
+	require.Equal(t, interval, interval)
+	require.Equal(t, maxsz, maxBlock)
+}
+
+func TestService_SetConfigInterval(t *testing.T) {
+	log.SetShowTime(true)
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	intervals := []time.Duration{testInterval, 100 * time.Millisecond,
+		time.Second, 100 * time.Millisecond, 10 * time.Second}
+	if testing.Short() {
+		intervals = intervals[0:3]
+	}
+
+	lastInterval := testInterval
+	for i := 0; i < len(intervals); i++ {
+		for _, interval := range intervals {
+			// The next block should now be in the range of testInterval.
+			log.Lvl1("Setting interval to", interval)
+			start := time.Now()
+			ctx, _ := createConfigTx(t, interval, *s.roster, defaultMaxBlockSize, s)
+			s.sendTxAndWait(t, ctx, 10)
+			require.True(t, time.Now().Sub(start) > lastInterval)
+			if interval > lastInterval {
+				require.True(t, time.Now().Sub(start) < interval)
+			}
+			lastInterval = interval
+		}
+	}
 }
 
 func TestService_SetBadConfig(t *testing.T) {
@@ -1046,7 +1066,7 @@ func TestService_SetBadConfig(t *testing.T) {
 	defer s.local.CloseAll()
 
 	// send in a bad new block size
-	ctx, badConfig := createConfigTx(t, s, false, true)
+	ctx, badConfig := createBadConfigTx(t, s, false, true)
 	s.sendTx(t, ctx)
 
 	// wait for a change, which should not happen
@@ -1061,7 +1081,7 @@ func TestService_SetBadConfig(t *testing.T) {
 	}
 
 	// send in a bad new interval
-	ctx, badConfig = createConfigTx(t, s, true, false)
+	ctx, badConfig = createBadConfigTx(t, s, true, false)
 	s.sendTx(t, ctx)
 
 	// wait for a change, which should not happen
@@ -1159,7 +1179,6 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// check that they can synchronise to the latest state.
 	for i := 0; i < nFailures; i++ {
 		log.Lvl1("starting node at index", i)
-		s.services[i].closed = false
 		s.hosts[i].Unpause()
 		require.NoError(t, s.services[i].startAllChains())
 	}
@@ -1184,6 +1203,7 @@ func TestService_DarcToSc(t *testing.T) {
 	// remove the mapping and then load it again
 	for _, service := range s.services {
 		service.darcToSc = make(map[string]skipchain.SkipBlockID)
+		service.TestClose()
 		require.NoError(t, service.startAllChains())
 	}
 
@@ -1221,6 +1241,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	require.Nil(t, err)
 
 	// Add a second tx that is invalid because it is for an unknown contract.
+	log.Lvl1("Calling invalid invoke on contract")
 	tx2, err := createOneClientTx(s.darc.GetBaseID(), contractID+"x", []byte{}, s.signer)
 	require.Nil(t, err)
 
@@ -1253,15 +1274,22 @@ func TestService_StateChangeCache(t *testing.T) {
 	require.Equal(t, 2, ctr)
 }
 
-func createConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
-	var config ChainConfig
+func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
 	switch {
 	case intervalBad:
-		config = ChainConfig{-1, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), defaultMaxBlockSize}
+		return createConfigTx(t, -1, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), defaultMaxBlockSize, s)
 	case szBad:
-		config = ChainConfig{420 * time.Millisecond, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), 30 * 1e6}
+		return createConfigTx(t, 420*time.Millisecond, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), 30*1e6, s)
 	default:
-		config = ChainConfig{420 * time.Millisecond, *s.roster, 424242}
+		return createConfigTx(t, 420*time.Millisecond, *s.roster, 424242, s)
+	}
+}
+
+func createConfigTx(t *testing.T, interval time.Duration, roster onet.Roster, size int, s *ser) (ClientTransaction, ChainConfig) {
+	config := ChainConfig{
+		BlockInterval: interval,
+		Roster:        roster,
+		MaxBlockSize:  size,
 	}
 	configBuf, err := protobuf.Encode(&config)
 	require.NoError(t, err)
@@ -1364,6 +1392,20 @@ func (s *ser) sendTxTo(t *testing.T, ctx ClientTransaction, idx int) {
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 		Transaction: ctx,
+	})
+	require.Nil(t, err)
+}
+
+func (s *ser) sendTxAndWait(t *testing.T, ctx ClientTransaction, wait int) {
+	s.sendTxToAndWait(t, ctx, 0, wait)
+}
+
+func (s *ser) sendTxToAndWait(t *testing.T, ctx ClientTransaction, idx int, wait int) {
+	_, err := s.services[idx].AddTransaction(&AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.sb.SkipChainID(),
+		Transaction:   ctx,
+		InclusionWait: wait,
 	})
 	require.Nil(t, err)
 }

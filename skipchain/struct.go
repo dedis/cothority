@@ -713,7 +713,7 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 	if db.callback != nil {
 		for _, r := range result {
 			if err := db.callback(r); err != nil {
-				log.Error(err)
+				log.Errorf("Error while adding block %x: %s", r, err)
 			}
 		}
 	}
