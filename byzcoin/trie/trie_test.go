@@ -13,9 +13,10 @@ const testDB = "test_trie.db"
 const bucketName = "test_trie_bucket"
 
 func Test_NewTrie(t *testing.T) {
-	db := newTempDB(t)
-	defer deleteDB(t, db)
+	testMemAndDisk(t, testNewTrie)
+}
 
+func testNewTrie(t *testing.T, db database) {
 	// Initialise a trie.
 	trie, err := NewTrie(db, []byte(bucketName))
 	require.NoError(t, err)
@@ -24,7 +25,7 @@ func Test_NewTrie(t *testing.T) {
 	// If we iterate the database, we should only have 5 items - the root,
 	// the two empty leaves, the entry point and the nonce.
 	var cnt int
-	db.View(func(tx *bolt.Tx) error {
+	db.View(func(tx transaction) error {
 		b := tx.Bucket([]byte(bucketName))
 		return b.ForEach(func(k, v []byte) error {
 			cnt++
@@ -62,9 +63,10 @@ func Test_NewTrie(t *testing.T) {
 }
 
 func Test_AddToEmptyNode(t *testing.T) {
-	db := newTempDB(t)
-	defer deleteDB(t, db)
+	testMemAndDisk(t, testAddToEmptyNode)
+}
 
+func testAddToEmptyNode(t *testing.T, db database) {
 	// Initialise a trie.
 	trie, err := NewTrie(db, []byte(bucketName))
 	require.NoError(t, err)
@@ -86,9 +88,10 @@ func Test_AddToEmptyNode(t *testing.T) {
 }
 
 func Test_AddToLeafNode(t *testing.T) {
-	db := newTempDB(t)
-	defer deleteDB(t, db)
+	testMemAndDisk(t, testAddToLeafNode)
+}
 
+func testAddToLeafNode(t *testing.T, db database) {
 	// Initialise a trie.
 	trie, err := NewTrie(db, []byte(bucketName))
 	require.NoError(t, err)
@@ -123,9 +126,10 @@ func Test_AddToLeafNode(t *testing.T) {
 }
 
 func Test_Overwrite(t *testing.T) {
-	db := newTempDB(t)
-	defer deleteDB(t, db)
+	testMemAndDisk(t, testOverwrite)
+}
 
+func testOverwrite(t *testing.T, db database) {
 	// Initialise a trie.
 	trie, err := NewTrie(db, []byte(bucketName))
 	require.NoError(t, err)
@@ -141,9 +145,10 @@ func Test_Overwrite(t *testing.T) {
 }
 
 func Test_Delete(t *testing.T) {
-	db := newTempDB(t)
-	defer deleteDB(t, db)
+	testMemAndDisk(t, testDelete)
+}
 
+func testDelete(t *testing.T, db database) {
 	// Initialise a trie.
 	trie, err := NewTrie(db, []byte(bucketName))
 	require.NoError(t, err)
@@ -199,20 +204,20 @@ func Test_RandomDelete(t *testing.T) {
 	// at the end the database should be empty
 }
 
-func newTempDB(t *testing.T) *bolt.DB {
+func newDiskDB(t *testing.T) database {
 	db, err := bolt.Open(testDB, 0600, nil)
 	require.NoError(t, err)
-	return db
+	return &diskDB{db}
 }
 
-func deleteDB(t *testing.T, db *bolt.DB) {
+func delDiskDB(t *testing.T, db database) {
 	require.NoError(t, db.Close())
 	require.NoError(t, os.Remove(testDB))
 }
 
-func getRootNode(t *testing.T, db *bolt.DB) interiorNode {
+func getRootNode(t *testing.T, db database) interiorNode {
 	var root interiorNode
-	err := db.View(func(tx *bolt.Tx) error {
+	err := db.View(func(tx transaction) error {
 		b := tx.Bucket([]byte(bucketName))
 		if b == nil {
 			return errors.New("no bucket name")
@@ -228,4 +233,14 @@ func getRootNode(t *testing.T, db *bolt.DB) interiorNode {
 	})
 	require.NoError(t, err)
 	return root
+}
+
+func testMemAndDisk(t *testing.T, f func(*testing.T, database)) {
+	mem := NewMemDB()
+	defer mem.Close()
+	f(t, mem)
+
+	disk := newDiskDB(t)
+	defer delDiskDB(t, disk)
+	f(t, disk)
 }

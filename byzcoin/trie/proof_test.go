@@ -7,9 +7,10 @@ import (
 )
 
 func TestProof(t *testing.T) {
-	db := newTempDB(t)
-	defer deleteDB(t, db)
+	testMemAndDisk(t, testProof)
+}
 
+func testProof(t *testing.T, db database) {
 	// Initialise a trie.
 	trie, err := NewTrie(db, []byte(bucketName))
 	require.NoError(t, err)

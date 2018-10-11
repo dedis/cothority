@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
-
-	bolt "github.com/coreos/bbolt"
 )
 
 // Proof TODO the proof structure
@@ -73,7 +71,7 @@ func equal(a []bool, b []bool) bool {
 // GetProof TODO
 func (t *Trie) GetProof(key []byte) (*Proof, error) {
 	p := &Proof{}
-	err := t.db.View(func(tx *bolt.Tx) error {
+	err := t.db.View(func(tx transaction) error {
 		b := tx.Bucket(t.bucket)
 		if b == nil {
 			return errors.New("no such bucket")
@@ -90,7 +88,7 @@ func (t *Trie) GetProof(key []byte) (*Proof, error) {
 }
 
 // getProof updates Proof p as it traverses the tree.
-func (t *Trie) getProof(depth int, nodeKey []byte, bits []bool, p *Proof, b *bolt.Bucket) error {
+func (t *Trie) getProof(depth int, nodeKey []byte, bits []bool, p *Proof, b bucket) error {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
 		return errors.New("invalid node key")

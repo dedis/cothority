@@ -6,8 +6,6 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-
-	bolt "github.com/coreos/bbolt"
 )
 
 // this is where the root hash is stored
@@ -17,15 +15,15 @@ const nonceKey = "dedis_trie_nonce"
 // Trie implements the merkle prefix tree described in the coniks paper.
 type Trie struct {
 	nonce  []byte
-	db     *bolt.DB
+	db     database
 	bucket []byte
 }
 
 // NewTrie loads the tried from a boltDB database, it creates one if it does
 // not exist.
-func NewTrie(db *bolt.DB, bucket []byte) (Trie, error) {
+func NewTrie(db database, bucket []byte) (Trie, error) {
 	nonce := make([]byte, 32)
-	err := db.Update(func(tx *bolt.Tx) error {
+	err := db.Update(func(tx transaction) error {
 		b, err := tx.CreateBucketIfNotExists(bucket)
 		if err != nil {
 			return err
@@ -70,7 +68,7 @@ func NewTrie(db *bolt.DB, bucket []byte) (Trie, error) {
 
 // newRootNode creates the root node and two empty nodes and store these in the
 // bucket.
-func newRootNode(b *bolt.Bucket, nonce []byte) error {
+func newRootNode(b bucket, nonce []byte) error {
 	left := newEmptyNode([]bool{true})
 	right := newEmptyNode([]bool{false})
 	root := newInteriorNode(left.hash(nonce), right.hash(nonce))
@@ -109,7 +107,7 @@ func newRootNode(b *bolt.Bucket, nonce []byte) error {
 
 // Set sets or overwrites a key-value pair.
 func (t *Trie) Set(key []byte, value []byte) error {
-	return t.db.Update(func(tx *bolt.Tx) error {
+	return t.db.Update(func(tx transaction) error {
 		b := tx.Bucket(t.bucket)
 		if b == nil {
 			return errors.New("bucket does not exist")
@@ -122,11 +120,11 @@ func (t *Trie) Set(key []byte, value []byte) error {
 	})
 }
 
-func (t *Trie) getRoot(b *bolt.Bucket) []byte {
+func (t *Trie) getRoot(b bucket) []byte {
 	return b.Get([]byte(entryKey))
 }
 
-func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b *bolt.Bucket) ([]byte, error) {
+func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
 		return nil, errors.New("invalid node key")
@@ -238,7 +236,7 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 	return nil, errors.New("invalid node type")
 }
 
-func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, data []byte, b *bolt.Bucket) ([]byte, error) {
+func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, data []byte, b bucket) ([]byte, error) {
 	valueKey := sha256.Sum256(data)
 	leaf := newLeafNode(empty.Prefix, key, valueKey[:])
 	leafBuf, err := leaf.encode()
@@ -260,7 +258,7 @@ func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, data []byte, b *bolt.Buc
 }
 
 // extendLeaf recursively extends a leaf node that's at the given prefix.
-func (t *Trie) extendLeaf(currPrefix []bool, key1, valueKey1, key2, valueKey2 []byte, b *bolt.Bucket) ([]byte, []byte, error) {
+func (t *Trie) extendLeaf(currPrefix []bool, key1, valueKey1, key2, valueKey2 []byte, b bucket) ([]byte, []byte, error) {
 	i := len(currPrefix)
 	// TODO maybe we don't need to re-compute all the time
 	fmt.Printf("EXTENDING LEAF %v\n", currPrefix)
@@ -323,7 +321,7 @@ func (t *Trie) extendLeaf(currPrefix []bool, key1, valueKey1, key2, valueKey2 []
 // Delete deletes the key-value pair, an error is returned if the key does not
 // exist.
 func (t *Trie) Delete(key []byte) error {
-	return t.db.Update(func(tx *bolt.Tx) error {
+	return t.db.Update(func(tx transaction) error {
 		b := tx.Bucket(t.bucket)
 		if b == nil {
 			return errors.New("bucket does not exist")
@@ -343,7 +341,7 @@ func (t *Trie) Delete(key []byte) error {
 // Get looks up whether a value exists for the given key.
 func (t *Trie) Get(key []byte) ([]byte, error) {
 	var val []byte
-	err := t.db.View(func(tx *bolt.Tx) error {
+	err := t.db.View(func(tx transaction) error {
 		b := tx.Bucket(t.bucket)
 		if b == nil {
 			return errors.New("bucket does not exist")
@@ -362,7 +360,7 @@ func (t *Trie) Get(key []byte) ([]byte, error) {
 	return val, nil
 }
 
-func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b *bolt.Bucket) ([]byte, error) {
+func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
 		return nil, errors.New("invalid node key")
@@ -400,7 +398,7 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b *bolt.B
 
 // TODO for now we just replace leafs with empty nodes, which is ok but it'll
 // be better if we can "shrink" the tree as well.
-func (t *Trie) delete(depth int, nodeKey []byte, bits []bool, key []byte, b *bolt.Bucket) ([]byte, error) {
+func (t *Trie) delete(depth int, nodeKey []byte, bits []bool, key []byte, b bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
 		return nil, errors.New("invalid node key")
@@ -488,7 +486,7 @@ func (t *Trie) delete(depth int, nodeKey []byte, bits []bool, key []byte, b *bol
 // getRaw gets the value, it returns nil if the value does not exist.
 func (t *Trie) getRaw(key []byte) ([]byte, error) {
 	var val []byte
-	err := t.db.View(func(tx *bolt.Tx) error {
+	err := t.db.View(func(tx transaction) error {
 		b := tx.Bucket(t.bucket)
 		if b == nil {
 			return errors.New("bucket does not exist")
