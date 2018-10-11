@@ -1,6 +1,7 @@
 package trie
 
 import (
+	"bytes"
 	"errors"
 	"os"
 	"testing"
@@ -18,9 +19,9 @@ func Test_NewTrie(t *testing.T) {
 
 func testNewTrie(t *testing.T, db database) {
 	// Initialise a trie.
-	trie, err := NewTrie(db)
+	testTrie, err := NewTrie(db)
 	require.NoError(t, err)
-	require.NotNil(t, trie.nonce)
+	require.NotNil(t, testTrie.nonce)
 
 	// If we iterate the database, we should only have 5 items - the root,
 	// the two empty leaves, the entry point and the nonce.
@@ -34,28 +35,28 @@ func testNewTrie(t *testing.T, db database) {
 	require.Equal(t, 5, cnt)
 
 	nonce1 := make([]byte, 32)
-	copy(nonce1, trie.nonce)
+	copy(nonce1, testTrie.nonce)
 
 	// Load the database again and the nonce should still be there.
-	trie, err = NewTrie(db)
+	testTrie, err = NewTrie(db)
 	require.NoError(t, err)
-	require.NotNil(t, trie.nonce)
-	require.Equal(t, trie.nonce, nonce1)
+	require.NotNil(t, testTrie.nonce)
+	require.Equal(t, testTrie.nonce, nonce1)
 
 	// Check that the root has two children and they exist.
 	root := getRootNode(t, db)
-	leftBuf, err := trie.getRaw(root.Left)
+	leftBuf, err := testTrie.getRaw(root.Left)
 	require.NoError(t, err)
 	left, err := decodeEmptyNode(leftBuf)
 	require.NoError(t, err)
 
-	rightBuf, err := trie.getRaw(root.Right)
+	rightBuf, err := testTrie.getRaw(root.Right)
 	require.NoError(t, err)
 	right, err := decodeEmptyNode(rightBuf)
 	require.NoError(t, err)
 
-	require.Equal(t, root.Left, left.hash(trie.nonce))
-	require.Equal(t, root.Right, right.hash(trie.nonce))
+	require.Equal(t, root.Left, left.hash(testTrie.nonce))
+	require.Equal(t, root.Right, right.hash(testTrie.nonce))
 
 	// Load the database again and the root and child should still be there.
 	// TODO
@@ -67,20 +68,20 @@ func Test_AddToEmptyNode(t *testing.T) {
 
 func testAddToEmptyNode(t *testing.T, db database) {
 	// Initialise a trie.
-	trie, err := NewTrie(db)
+	testTrie, err := NewTrie(db)
 	require.NoError(t, err)
-	require.NotNil(t, trie.nonce)
+	require.NotNil(t, testTrie.nonce)
 
 	// Set two values, which should make the two empty nodes into leaf
 	// nodes. 0xff -> MSB is 1, 127 -> MSB is 0
-	require.NoError(t, trie.Set([]byte{0xff}, []byte{0xff}))
-	require.NoError(t, trie.Set([]byte{127}, []byte{127}))
+	require.NoError(t, testTrie.Set([]byte{0xff}, []byte{0xff}))
+	require.NoError(t, testTrie.Set([]byte{127}, []byte{127}))
 
-	val0, err := trie.Get([]byte{0xff})
+	val0, err := testTrie.Get([]byte{0xff})
 	require.NoError(t, err)
 	require.Equal(t, val0, []byte{0xff})
 
-	val1, err := trie.Get([]byte{127})
+	val1, err := testTrie.Get([]byte{127})
 	require.NoError(t, err)
 	require.Equal(t, val1, []byte{127})
 
@@ -92,34 +93,34 @@ func Test_AddToLeafNode(t *testing.T) {
 
 func testAddToLeafNode(t *testing.T, db database) {
 	// Initialise a trie.
-	trie, err := NewTrie(db)
+	testTrie, err := NewTrie(db)
 	require.NoError(t, err)
-	require.NotNil(t, trie.nonce)
+	require.NotNil(t, testTrie.nonce)
 
 	// Set two values, which should make the two empty nodes into leaf
 	// nodes. 0xff is 11111111, 0xdf is 11011111. So we need to create new
 	// interior nodes.
-	require.NoError(t, trie.Set([]byte{0xff}, []byte{0xff}))
-	require.NoError(t, trie.Set([]byte{0xdf}, []byte{0xdf}))
+	require.NoError(t, testTrie.Set([]byte{0xff}, []byte{0xff}))
+	require.NoError(t, testTrie.Set([]byte{0xdf}, []byte{0xdf}))
 
-	val0, err := trie.Get([]byte{0xff})
+	val0, err := testTrie.Get([]byte{0xff})
 	require.NoError(t, err)
 	require.Equal(t, val0, []byte{0xff})
 
-	val1, err := trie.Get([]byte{0xdf})
+	val1, err := testTrie.Get([]byte{0xdf})
 	require.NoError(t, err)
 	require.Equal(t, val1, []byte{0xdf})
 
 	// On the other side of the tree, we add nodes on 0x00 and 0x01 to
 	// create a even longer list of interior nodes.
-	require.NoError(t, trie.Set([]byte{0x00}, []byte{0x00}))
-	require.NoError(t, trie.Set([]byte{0x01}, []byte{0x01}))
+	require.NoError(t, testTrie.Set([]byte{0x00}, []byte{0x00}))
+	require.NoError(t, testTrie.Set([]byte{0x01}, []byte{0x01}))
 
-	val2, err := trie.Get([]byte{0x00})
+	val2, err := testTrie.Get([]byte{0x00})
 	require.NoError(t, err)
 	require.Equal(t, val2, []byte{0x00})
 
-	val3, err := trie.Get([]byte{0x01})
+	val3, err := testTrie.Get([]byte{0x01})
 	require.NoError(t, err)
 	require.Equal(t, val3, []byte{0x01})
 }
@@ -130,14 +131,14 @@ func Test_Overwrite(t *testing.T) {
 
 func testOverwrite(t *testing.T, db database) {
 	// Initialise a trie.
-	trie, err := NewTrie(db)
+	testTrie, err := NewTrie(db)
 	require.NoError(t, err)
-	require.NotNil(t, trie.nonce)
+	require.NotNil(t, testTrie.nonce)
 
 	for i := 0; i < 10; i++ {
 		v := []byte{byte(i)}
-		require.NoError(t, trie.Set([]byte{0xff}, v))
-		val, err := trie.Get([]byte{0xff})
+		require.NoError(t, testTrie.Set([]byte{0xff}, v))
+		val, err := testTrie.Get([]byte{0xff})
 		require.NoError(t, err)
 		require.Equal(t, val, v)
 	}
@@ -149,15 +150,15 @@ func Test_Delete(t *testing.T) {
 
 func testDelete(t *testing.T, db database) {
 	// Initialise a trie.
-	trie, err := NewTrie(db)
+	testTrie, err := NewTrie(db)
 	require.NoError(t, err)
-	require.NotNil(t, trie.nonce)
+	require.NotNil(t, testTrie.nonce)
 
 	// Create some keys
 	for i := 0; i < 10; i++ {
 		k := []byte{byte(i)}
-		require.NoError(t, trie.Set(k, k))
-		val, err := trie.Get(k)
+		require.NoError(t, testTrie.Set(k, k))
+		val, err := testTrie.Get(k)
 		require.NoError(t, err)
 		require.Equal(t, val, k)
 	}
@@ -165,13 +166,13 @@ func testDelete(t *testing.T, db database) {
 	// Delete them
 	for i := 0; i < 10; i++ {
 		k := []byte{byte(i)}
-		require.NoError(t, trie.Delete(k))
+		require.NoError(t, testTrie.Delete(k))
 	}
 
 	// They should disappear
 	for i := 0; i < 10; i++ {
 		k := []byte{byte(i)}
-		val, err := trie.Get(k)
+		val, err := testTrie.Get(k)
 		require.NoError(t, err)
 		require.Nil(t, val)
 	}
@@ -193,14 +194,68 @@ func testDelete(t *testing.T, db database) {
 }
 
 func Test_RandomAdd(t *testing.T) {
-	// add a bunch of random transactions
+	// TODO add a bunch of random transactions
 	// check that there are no dangling blocks
 }
 
 func Test_RandomDelete(t *testing.T) {
-	// add a bunch of random nodes
+	// TODO add a bunch of random nodes
 	// delete them in random order
 	// at the end the database should be empty
+}
+
+func Test_Copy(t *testing.T) {
+	mem := NewMemDB()
+	defer mem.Close()
+
+	disk := newDiskDB(t)
+	defer delDiskDB(t, disk)
+
+	testTrie, err := NewTrie(disk)
+	require.NoError(t, err)
+	require.NotNil(t, testTrie.nonce)
+
+	// Create some keys
+	for i := 0; i < 10; i++ {
+		k := []byte{byte(i)}
+		require.NoError(t, testTrie.Set(k, k))
+		val, err := testTrie.Get(k)
+		require.NoError(t, err)
+		require.Equal(t, val, k)
+	}
+
+	// Make a copy
+	trie2, err := NewTrie(mem)
+	require.NoError(t, err)
+	require.NotNil(t, testTrie.nonce)
+
+	err = trie2.db.Update(func(b bucket) error {
+		return testTrie.CopyTo(b, true)
+	})
+	require.NoError(t, err)
+
+	for i := 0; i < 10; i++ {
+		k := []byte{byte(i)}
+		val, err := trie2.Get(k)
+		require.NoError(t, err)
+		require.Equal(t, val, k)
+	}
+
+	// TODO we have some dangling nodes
+	// check that everything exists
+	err = disk.View(func(b bucket) error {
+		return b.ForEach(func(k, v []byte) error {
+			v2, err := trie2.Get(k)
+			if err != nil {
+				return err
+			}
+			if !bytes.Equal(v, v2) {
+				return errors.New("values are not equal")
+			}
+			return nil
+		})
+	})
+	require.NoError(t, err)
 }
 
 func newDiskDB(t *testing.T) database {

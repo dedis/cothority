@@ -12,15 +12,15 @@ func TestProof(t *testing.T) {
 
 func testProof(t *testing.T, db database) {
 	// Initialise a trie.
-	trie, err := NewTrie(db)
+	testTrie, err := NewTrie(db)
 	require.NoError(t, err)
-	require.NotNil(t, trie.nonce)
+	require.NotNil(t, testTrie.nonce)
 
 	// Create some keys
 	for i := 10; i < 20; i++ {
 		k := []byte{byte(i)}
-		require.NoError(t, trie.Set(k, k))
-		val, err := trie.Get(k)
+		require.NoError(t, testTrie.Set(k, k))
+		val, err := testTrie.Get(k)
 		require.NoError(t, err)
 		require.Equal(t, val, k)
 	}
@@ -28,7 +28,7 @@ func testProof(t *testing.T, db database) {
 	// Create and verify proof
 	for i := 10; i < 20; i++ {
 		k := []byte{byte(i)}
-		p, err := trie.GetProof(k)
+		p, err := testTrie.GetProof(k)
 		require.NoError(t, err)
 		ok, err := p.Exists(k)
 		require.NoError(t, err)
@@ -38,7 +38,7 @@ func testProof(t *testing.T, db database) {
 	// Check thet proofs don't exist in other keys
 	for i := 0; i < 10; i++ {
 		k := []byte{byte(i)}
-		p, err := trie.GetProof(k)
+		p, err := testTrie.GetProof(k)
 		require.NoError(t, err)
 		ok, err := p.Exists(k)
 		require.NoError(t, err)
@@ -48,9 +48,9 @@ func testProof(t *testing.T, db database) {
 	// Delete the keys and the proof should not exist
 	for i := 10; i < 20; i++ {
 		k := []byte{byte(i)}
-		require.NoError(t, trie.Delete(k))
+		require.NoError(t, testTrie.Delete(k))
 
-		p, err := trie.GetProof(k)
+		p, err := testTrie.GetProof(k)
 		require.NoError(t, err)
 		ok, err := p.Exists(k)
 		require.NoError(t, err)

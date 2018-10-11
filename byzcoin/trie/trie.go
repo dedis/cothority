@@ -315,7 +315,7 @@ func (t *Trie) Delete(key []byte) error {
 		if rootKey == nil {
 			return errors.New("no root key")
 		}
-		newRoot, err := t.delete(0, rootKey, toBinarySlice(key), key, b)
+		newRoot, err := t.del(0, rootKey, toBinarySlice(key), key, b)
 		if err != nil {
 			return err
 		}
@@ -377,42 +377,77 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 	return nil, errors.New("invalid node type")
 }
 
-/*
 // CopyTo will make a copy of the database without the values to the target
 // database.
-func (t *Trie) CopyTo(target database, targetBucket string, bool includeValues) error {
-	return t.db.View(func(tx transaction) error {
+func (t *Trie) CopyTo(target bucket, includeValues bool) error {
+	return t.db.View(func(b bucket) error {
+		rootKey := t.getRoot(b)
+		if rootKey == nil {
+			return errors.New("no root key")
+		}
+		// copy the well-known keysj
+		if err := target.Put([]byte(entryKey), append([]byte{}, rootKey...)); err != nil {
+			return err
+		}
+		if err := target.Put([]byte(nonceKey), t.nonce); err != nil {
+			return err
+		}
+		// copy the tree
+		return t.copyTo(rootKey, includeValues, target, b)
 	})
 }
 
-func (t *Trie) copyTo(nodeKey []byte, target database, bool includeValues) error {
-	nodeVal := b.Get(nodeKey)
+func (t *Trie) copyTo(nodeKey []byte, includeValues bool, target, source bucket) error {
+	nodeVal := source.Get(nodeKey)
 	if len(nodeVal) == 0 {
-		return nil, errors.New("invalid node key")
+		return errors.New("invalid node key")
 	}
 	switch nodeType(nodeVal[0]) {
 	case typeEmpty:
+		node, err := decodeEmptyNode(nodeVal)
+		if err != nil {
+			return err
+		}
+		if err := target.Put(node.hash(t.nonce), append([]byte{}, nodeVal...)); err != nil {
+			return err
+		}
+		return nil
 	case typeLeaf:
+		node, err := decodeLeafNode(nodeVal)
+		if err != nil {
+			return err
+		}
+		if err := target.Put(node.hash(t.nonce), append([]byte{}, nodeVal...)); err != nil {
+			return err
+		}
+		if includeValues {
+			if err := target.Put(node.DataKey, append([]byte{}, source.Get(node.DataKey)...)); err != nil {
+				return err
+			}
+		}
+		return nil
 	case typeInterior:
 		node, err := decodeInteriorNode(nodeVal)
 		if err != nil {
 			return err
 		}
-		if err := t.copyTo(node.Left, target, includeValues); err != nil {
+		if err := target.Put(node.hash(), append([]byte{}, nodeVal...)); err != nil {
 			return err
 		}
-		if err := t.copyTo(node.Right, target, includeValues); err != nil {
+		if err := t.copyTo(node.Left, includeValues, target, source); err != nil {
+			return err
+		}
+		if err := t.copyTo(node.Right, includeValues, target, source); err != nil {
 			return err
 		}
 		return nil
 	}
-	return nil, errors.New("invalid node type")
+	return errors.New("invalid node type")
 }
-*/
 
 // TODO for now we just replace leafs with empty nodes, which is ok but it'll
 // be better if we can "shrink" the tree as well.
-func (t *Trie) delete(depth int, nodeKey []byte, bits []bool, key []byte, b bucket) ([]byte, error) {
+func (t *Trie) del(depth int, nodeKey []byte, bits []bool, key []byte, b bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
 		return nil, errors.New("invalid node key")
@@ -453,7 +488,7 @@ func (t *Trie) delete(depth int, nodeKey []byte, bits []bool, key []byte, b buck
 		// update this interior node
 		if bits[depth] {
 			// look left
-			res, err := t.delete(depth+1, node.Left, bits, key, b)
+			res, err := t.del(depth+1, node.Left, bits, key, b)
 			if err != nil {
 				return nil, err
 			}
@@ -474,7 +509,7 @@ func (t *Trie) delete(depth int, nodeKey []byte, bits []bool, key []byte, b buck
 			return node.hash(), b.Put(node.hash(), nodeBuf)
 		}
 		// look right
-		res, err := t.delete(depth+1, node.Right, bits, key, b)
+		res, err := t.del(depth+1, node.Right, bits, key, b)
 		if err != nil {
 			return nil, err
 		}
