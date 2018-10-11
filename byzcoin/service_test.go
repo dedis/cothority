@@ -1017,28 +1017,46 @@ func TestService_SetConfig(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	ctx, newConfig := createConfigTx(t, s, false, false)
-	s.sendTx(t, ctx)
+	interval := 42 * time.Millisecond
+	maxBlock := 424242
+	ctx, _ := createConfigTx(t, interval, *s.roster, defaultMaxBlockSize, s)
+	s.sendTxAndWait(t, ctx, 10)
 
-	// wait for a change
-	i := 0
-	for ; i < 5; i++ {
-		time.Sleep(s.interval)
-		config, err := s.service().LoadConfig(s.sb.SkipChainID())
-		require.NoError(t, err)
-
-		if config.BlockInterval == newConfig.BlockInterval {
-			break
-		}
-	}
-	if i == 5 {
-		require.Fail(t, "did not find new config in time")
-	}
+	_, err := s.service().LoadConfig(s.sb.SkipChainID())
+	require.NoError(t, err)
 
 	interval, maxsz, err := s.service().LoadBlockInfo(s.sb.SkipChainID())
 	require.NoError(t, err)
-	require.Equal(t, interval, 420*time.Millisecond)
-	require.Equal(t, maxsz, 424242)
+	require.Equal(t, interval, interval)
+	require.Equal(t, maxsz, maxBlock)
+}
+
+func TestService_SetConfigInterval(t *testing.T) {
+	log.SetShowTime(true)
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	intervals := []time.Duration{testInterval, 100 * time.Millisecond,
+		time.Second, 100 * time.Millisecond, 10 * time.Second}
+	if testing.Short() {
+		intervals = intervals[0:3]
+	}
+
+	lastInterval := testInterval
+	for i := 0; i < len(intervals); i++ {
+		for _, interval := range intervals {
+			// The next block should now be in the range of testInterval.
+			log.Lvl1("Setting interval to", interval)
+			start := time.Now()
+			ctx, _ := createConfigTx(t, interval, *s.roster, defaultMaxBlockSize, s)
+			s.sendTxAndWait(t, ctx, 10)
+			require.True(t, time.Now().Sub(start) > lastInterval)
+			if interval > lastInterval {
+				require.True(t, time.Now().Sub(start) < interval)
+			}
+			lastInterval = interval
+		}
+	}
 }
 
 func TestService_SetBadConfig(t *testing.T) {
@@ -1046,7 +1064,7 @@ func TestService_SetBadConfig(t *testing.T) {
 	defer s.local.CloseAll()
 
 	// send in a bad new block size
-	ctx, badConfig := createConfigTx(t, s, false, true)
+	ctx, badConfig := createBadConfigTx(t, s, false, true)
 	s.sendTx(t, ctx)
 
 	// wait for a change, which should not happen
@@ -1061,7 +1079,7 @@ func TestService_SetBadConfig(t *testing.T) {
 	}
 
 	// send in a bad new interval
-	ctx, badConfig = createConfigTx(t, s, true, false)
+	ctx, badConfig = createBadConfigTx(t, s, true, false)
 	s.sendTx(t, ctx)
 
 	// wait for a change, which should not happen
@@ -1253,15 +1271,22 @@ func TestService_StateChangeCache(t *testing.T) {
 	require.Equal(t, 2, ctr)
 }
 
-func createConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
-	var config ChainConfig
+func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
 	switch {
 	case intervalBad:
-		config = ChainConfig{-1, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), defaultMaxBlockSize}
+		return createConfigTx(t, -1, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), defaultMaxBlockSize, s)
 	case szBad:
-		config = ChainConfig{420 * time.Millisecond, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), 30 * 1e6}
+		return createConfigTx(t, 420*time.Millisecond, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), 30*1e6, s)
 	default:
-		config = ChainConfig{420 * time.Millisecond, *s.roster, 424242}
+		return createConfigTx(t, 420*time.Millisecond, *s.roster, 424242, s)
+	}
+}
+
+func createConfigTx(t *testing.T, interval time.Duration, roster onet.Roster, size int, s *ser) (ClientTransaction, ChainConfig) {
+	config := ChainConfig{
+		BlockInterval: interval,
+		Roster:        roster,
+		MaxBlockSize:  size,
 	}
 	configBuf, err := protobuf.Encode(&config)
 	require.NoError(t, err)
@@ -1364,6 +1389,20 @@ func (s *ser) sendTxTo(t *testing.T, ctx ClientTransaction, idx int) {
 		Version:     CurrentVersion,
 		SkipchainID: s.sb.SkipChainID(),
 		Transaction: ctx,
+	})
+	require.Nil(t, err)
+}
+
+func (s *ser) sendTxAndWait(t *testing.T, ctx ClientTransaction, wait int) {
+	s.sendTxToAndWait(t, ctx, 0, wait)
+}
+
+func (s *ser) sendTxToAndWait(t *testing.T, ctx ClientTransaction, idx int, wait int) {
+	_, err := s.services[idx].AddTransaction(&AddTxRequest{
+		Version:       CurrentVersion,
+		SkipchainID:   s.sb.SkipChainID(),
+		Transaction:   ctx,
+		InclusionWait: wait,
 	})
 	require.Nil(t, err)
 }

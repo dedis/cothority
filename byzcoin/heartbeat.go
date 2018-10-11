@@ -17,17 +17,18 @@ type heartbeat struct {
 	getTimeChan chan chan time.Time
 	timeout     time.Duration
 	timeoutChan chan string
+	updateTO    chan time.Duration
 }
 
 type heartbeats struct {
 	sync.Mutex
 	wg           sync.WaitGroup
-	heartbeatMap map[string]heartbeat
+	heartbeatMap map[string]*heartbeat
 }
 
 func newHeartbeats() heartbeats {
 	return heartbeats{
-		heartbeatMap: make(map[string]heartbeat),
+		heartbeatMap: make(map[string]*heartbeat),
 	}
 }
 
@@ -60,7 +61,7 @@ func (r *heartbeats) closeAll() {
 		c.closeChan <- true
 	}
 	r.wg.Wait()
-	r.heartbeatMap = make(map[string]heartbeat)
+	r.heartbeatMap = make(map[string]*heartbeat)
 }
 
 func (r *heartbeats) exists(key string) bool {
@@ -77,42 +78,54 @@ func (r *heartbeats) start(key string, timeout time.Duration, timeoutChan chan s
 		return errors.New("key already exists")
 	}
 
-	beatChan := make(chan bool)
-	closeChan := make(chan bool, 1)
-	getTimeChan := make(chan chan time.Time, 1)
+	r.heartbeatMap[key] = &heartbeat{
+		beatChan:    make(chan bool),
+		closeChan:   make(chan bool, 1),
+		getTimeChan: make(chan chan time.Time, 1),
+		timeout:     timeout,
+		timeoutChan: timeoutChan,
+		updateTO:    make(chan time.Duration),
+	}
 
 	r.wg.Add(1)
-	go func() {
+	go func(h *heartbeat) {
 		defer r.wg.Done()
 		currTime := time.Now()
-		to := time.After(timeout)
+		to := time.NewTimer(h.timeout)
 		for {
 			select {
-			case <-beatChan:
+			case <-h.beatChan:
 				currTime = time.Now()
-				to = time.After(timeout)
-			case <-to:
+				h.resetTimer(to)
+			case <-to.C:
 				// the timeoutChan channel might not be reading
 				// any message when heartbeats are disabled
 				select {
-				case timeoutChan <- key:
+				case h.timeoutChan <- key:
 				default:
 				}
-				to = time.After(timeout)
-			case outChan := <-getTimeChan:
+				h.resetTimer(to)
+			case outChan := <-h.getTimeChan:
 				outChan <- currTime
-			case <-closeChan:
+			case <-h.closeChan:
 				return
+			case h.timeout = <-h.updateTO:
+				h.resetTimer(to)
 			}
 		}
-	}()
+	}(r.heartbeatMap[key])
 
-	r.heartbeatMap[key] = heartbeat{
-		beatChan:    beatChan,
-		closeChan:   closeChan,
-		getTimeChan: getTimeChan,
-		timeout:     timeout,
-		timeoutChan: timeoutChan,
-	}
 	return nil
+}
+
+func (h *heartbeat) resetTimer(to *time.Timer) {
+	if !to.Stop() {
+		<-to.C
+	}
+	to.Reset(h.timeout)
+}
+
+// updateTimeout stores the new timeout and resets the timer.
+func (h *heartbeat) updateTimeout(timeout time.Duration) {
+	h.updateTO <- timeout
 }
