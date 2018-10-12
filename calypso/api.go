@@ -8,15 +8,16 @@ import (
 	"github.com/dedis/protobuf"
 )
 
-// calypso.Client is a class to communicate to the calypso service.
+// Client is a class to communicate to the calypso service.
 type Client struct {
 	byzcoin  *byzcoin.Client
 	onet     *onet.Client
 	ltsReply *CreateLTSReply
 }
 
-// NewClient instantiates a new calypso.Client.
+// NewClient instantiates a new Client.
 // It takes as input an "initialized" byzcoin client
+// with an already created ledger
 func NewClient(byzcoin *byzcoin.Client) *Client {
 	return &Client{byzcoin: byzcoin, onet: onet.NewClient(
 		cothority.Suite, ServiceName)}
@@ -36,8 +37,9 @@ func (c *Client) CreateLTS() (reply *CreateLTSReply, err error) {
 	return reply, nil
 }
 
-// CreateLTS creates a random LTSID that can be used to reference
-// the LTS group created.
+// DecryptKey takes as input Read- and Write- Proofs. It verifies that
+// the read/write requests match and then re-encrypts the secret
+// given the public key information of the reader.
 func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
 	reply = &DecryptKeyReply{}
 	err = c.onet.SendProtobuf(c.byzcoin.Roster.List[0], dkr, reply)
@@ -47,23 +49,30 @@ func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error)
 	return reply, nil
 }
 
-// AddWrite creates a Write Instance by adding a transaction on the byzcoin client
-func (c *Client) AddWrite(data []byte, signer darc.Signer) (
+// AddWrite creates a Write Instance by adding a transaction on the byzcoin client.
+// Input:
+//   - write - A Write structure
+//   - signer - The data owner who will sign the transaction
+//   - darc - The darc governing this instance
+//   - wait - The number of blocks to wait -- 0 means no wait
+//
+// Output:
+//   - reply - WriteReply containing the transaction response and instance id
+//	 - err - Error if any, nil otherwise.
+func (c *Client) AddWrite(write Write, signer darc.Signer, darc darc.Darc,
+	wait int) (
 	reply *WriteReply, err error) {
 	reply = &WriteReply{}
-	gDarc, err := c.byzcoin.GetGenDarc()
 	if err != nil {
 		return nil, err
 	}
-	write := NewWrite(cothority.Suite, c.ltsReply.LTSID, gDarc.GetBaseID(),
-		c.ltsReply.X, data)
 	writeBuf, err := protobuf.Encode(write)
 	if err != nil {
 		return nil, err
 	}
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{{
-			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
+			InstanceID: byzcoin.NewInstanceID(darc.GetBaseID()),
 			Nonce:      byzcoin.Nonce{},
 			Index:      0,
 			Length:     1,
@@ -75,20 +84,31 @@ func (c *Client) AddWrite(data []byte, signer darc.Signer) (
 		}},
 	}
 	//Sign the transaction
-	err = ctx.Instructions[0].SignBy(gDarc.GetID(), signer)
+	err = ctx.Instructions[0].SignBy(darc.GetID(), signer)
 	if err != nil {
 		return nil, err
 	}
 	reply.InstanceID = ctx.Instructions[0].DeriveID("")
 	//Delegate the work to the byzcoin client
-	reply.AddTxResponse, err = c.byzcoin.AddTransaction(ctx)
+	reply.AddTxResponse, err = c.byzcoin.AddTransactionAndWait(ctx, wait)
 	if err != nil {
 		return nil, err
 	}
 	return reply, err
 }
 
-func (c *Client) AddRead(write *byzcoin.Proof, signer darc.Signer) (
+// AddRead creates a Read Instance by adding a transaction on the byzcoin client.
+// Input:
+//   - write - A Write structure
+//   - signer - The data owner who will sign the transaction
+//   - darc - The darc governing this instance
+//   - wait - The number of blocks to wait -- 0 means no wait
+//
+// Output:
+//   - reply - ReadReply containing the transaction response and instance id
+//	 - err - Error if any, nil otherwise.
+func (c *Client) AddRead(write *byzcoin.Proof, signer darc.Signer,
+	darc darc.Darc, wait int) (
 	reply *ReadReply, err error) {
 	var readBuf []byte
 	read := &Read{
@@ -100,7 +120,7 @@ func (c *Client) AddRead(write *byzcoin.Proof, signer darc.Signer) (
 	if err != nil {
 		return nil, err
 	}
-	gDarc, err := c.byzcoin.GetGenDarc()
+
 	if err != nil {
 		return nil, err
 	}
@@ -116,12 +136,12 @@ func (c *Client) AddRead(write *byzcoin.Proof, signer darc.Signer) (
 			},
 		}},
 	}
-	err = ctx.Instructions[0].SignBy(gDarc.GetID(), signer)
+	err = ctx.Instructions[0].SignBy(darc.GetID(), signer)
 	reply.InstanceID = ctx.Instructions[0].DeriveID("")
 	if err != nil {
 		return nil, err
 	}
-	reply.AddTxResponse, err = c.byzcoin.AddTransaction(ctx)
+	reply.AddTxResponse, err = c.byzcoin.AddTransactionAndWait(ctx, wait)
 	if err != nil {
 		return nil, err
 	}
