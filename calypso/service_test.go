@@ -196,7 +196,7 @@ func newTS(t *testing.T, nodes int) ts {
 
 	// Create the service
 	s.servers, s.roster, _ = s.local.GenTree(nodes, true)
-	services := s.local.GetServices(s.servers, calypsoID)
+	services := s.local.GetServices(s.servers, CalypsoID)
 	for _, ser := range services {
 		s.services = append(s.services, ser.(*Service))
 	}

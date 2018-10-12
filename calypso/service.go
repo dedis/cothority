@@ -29,7 +29,7 @@ import (
 )
 
 // Used for tests
-var calypsoID onet.ServiceID
+var CalypsoID onet.ServiceID
 
 // ServiceName of the secret-management part of Calypso.
 var ServiceName = "Calypso"
@@ -39,7 +39,7 @@ const propagationTimeout = 10 * time.Second
 
 func init() {
 	var err error
-	calypsoID, err = onet.RegisterNewService(ServiceName, newService)
+	CalypsoID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
 	network.RegisterMessages(&storage1{}, &vData{})
 }
