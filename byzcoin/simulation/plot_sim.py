@@ -4,7 +4,7 @@ import os
 
 data_dir = './test_data/'
 files = [(data_dir + fname) for fname in os.listdir(data_dir)\
-         if fname.startswith('service') and fname.endswith('.csv')]
+         if fname.startswith('coins') and fname.endswith('.csv')]
 
 def read_all_files(files):
     df = pd.DataFrame()
@@ -38,7 +38,7 @@ for delay in delays:
         for b in batch:
             titlestring = 'Transactions: 1000, delay: {}, keep: {}, batch: {}'.format(delay, k, b)
             # No whitespace, colons or commata in filenames
-            namestring = titlestring.replace(' ','').replace(':','-').replace(',','_') 
+            namestring = titlestring.replace(' ','').replace(':','-').replace(',','_')
             data = df.ix[df['delay'] == delay].sort_values('hosts')
             data = data.ix[data['keep'] == k]
             data = data.ix[data['batch'] == b]
@@ -55,8 +55,8 @@ for delay in delays:
             plt.title(titlestring)
             plt.savefig(data_dir + 'barplot_' + namestring + '.png')
             plt.close()
-            
-            
+
+
             ax = data.plot.bar(\
                     x='hosts',\
                     y=['prepare_wall_sum','send_wall_sum','confirm_wall_avg'],\
@@ -64,7 +64,7 @@ for delay in delays:
             data.plot(y='round_wall_avg', marker='o', ax=ax)
 
             ax.set_yscale('log')
- 
+
             plt.xlabel('number of hosts')
             plt.ylabel('logarithm of time in seconds')
             plt.title(titlestring)
