@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"errors"
-	"fmt"
 )
 
 // this is where the root hash is stored
@@ -16,6 +15,8 @@ const nonceKey = "dedis_trie_nonce"
 type Trie struct {
 	nonce []byte
 	db    database
+
+	// TODO do we need a lock for the ephemeral trie?
 }
 
 // NewTrie loads the tried from a boltDB database, it creates one if it does
@@ -98,19 +99,23 @@ func newRootNode(b bucket, nonce []byte) error {
 	return nil
 }
 
+func (t *Trie) getRoot(b bucket) []byte {
+	return b.Get([]byte(entryKey))
+}
+
 // Set sets or overwrites a key-value pair.
 func (t *Trie) Set(key []byte, value []byte) error {
 	return t.db.Update(func(b bucket) error {
-		newRoot, err := t.set(t.getRoot(b), toBinarySlice(key), 0, key, value, b)
-		if err != nil {
-			return err
-		}
-		return b.Put([]byte(entryKey), newRoot)
+		return t.startSet(key, value, b)
 	})
 }
 
-func (t *Trie) getRoot(b bucket) []byte {
-	return b.Get([]byte(entryKey))
+func (t *Trie) startSet(key []byte, value []byte, b bucket) error {
+	newRoot, err := t.set(t.getRoot(b), toBinarySlice(key), 0, key, value, b)
+	if err != nil {
+		return err
+	}
+	return b.Put([]byte(entryKey), newRoot)
 }
 
 func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b bucket) ([]byte, error) {
@@ -121,7 +126,6 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 	switch nodeType(nodeVal[0]) {
 	case typeEmpty:
 		// base case 1
-		println("EMPTY")
 		node, err := decodeEmptyNode(nodeVal)
 		if err != nil {
 			return nil, err
@@ -129,7 +133,6 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 		return t.emptyToLeaf(node, key, value, b)
 	case typeLeaf:
 		// base case 2
-		println("LEAF")
 		node, err := decodeLeafNode(nodeVal)
 		if err != nil {
 			return nil, err
@@ -186,7 +189,6 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 		return interior.hash(), nil
 	case typeInterior:
 		// recursive case
-		print("INTERIOR")
 		node, err := decodeInteriorNode(nodeVal)
 		if err != nil {
 			return nil, err
@@ -194,14 +196,12 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 		oldHash := node.hash()
 		var retHash []byte
 		if bits[depth] {
-			println(" LEFT")
 			retHash, err = t.set(node.Left, bits, depth+1, key, value, b)
 			if err != nil {
 				return nil, err
 			}
 			node.Left = retHash
 		} else {
-			println(" RIGHT")
 			retHash, err = t.set(node.Right, bits, depth+1, key, value, b)
 			if err != nil {
 				return nil, err
@@ -250,7 +250,6 @@ func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, data []byte, b bucket) (
 func (t *Trie) extendLeaf(currPrefix []bool, key1, valueKey1, key2, valueKey2 []byte, b bucket) ([]byte, []byte, error) {
 	i := len(currPrefix)
 	// TODO maybe we don't need to re-compute all the time
-	fmt.Printf("EXTENDING LEAF %v\n", currPrefix)
 	bits1 := toBinarySlice(key1)
 	bits2 := toBinarySlice(key2)
 	if bits1[i] != bits2[i] {
@@ -271,7 +270,6 @@ func (t *Trie) extendLeaf(currPrefix []bool, key1, valueKey1, key2, valueKey2 []
 		if err := b.Put(right.hash(t.nonce), rightBuf); err != nil {
 			return nil, nil, err
 		}
-		fmt.Printf("BASE: STORING %x, %x, common %v\n", left.hash(t.nonce), right.hash(t.nonce), currPrefix)
 		if bits1[i] {
 			return left.hash(t.nonce), right.hash(t.nonce), nil
 		}
@@ -300,10 +298,8 @@ func (t *Trie) extendLeaf(currPrefix []bool, key1, valueKey1, key2, valueKey2 []
 		return nil, nil, err
 	}
 	if bits1[i] {
-		fmt.Printf("REC: STORING %x, %x\n", interior.hash(), empty.hash(t.nonce))
 		return interior.hash(), empty.hash(t.nonce), nil
 	}
-	fmt.Printf("REC: STORING %x, %x\n", empty.hash(t.nonce), interior.hash())
 	return empty.hash(t.nonce), interior.hash(), nil
 }
 
@@ -311,16 +307,20 @@ func (t *Trie) extendLeaf(currPrefix []bool, key1, valueKey1, key2, valueKey2 []
 // exist.
 func (t *Trie) Delete(key []byte) error {
 	return t.db.Update(func(b bucket) error {
-		rootKey := t.getRoot(b)
-		if rootKey == nil {
-			return errors.New("no root key")
-		}
-		newRoot, err := t.del(0, rootKey, toBinarySlice(key), key, b)
-		if err != nil {
-			return err
-		}
-		return b.Put([]byte(entryKey), newRoot)
+		return t.startDel(key, b)
 	})
+}
+
+func (t *Trie) startDel(key []byte, b bucket) error {
+	rootKey := t.getRoot(b)
+	if rootKey == nil {
+		return errors.New("no root key")
+	}
+	newRoot, err := t.del(0, rootKey, toBinarySlice(key), key, b)
+	if err != nil {
+		return err
+	}
+	return b.Put([]byte(entryKey), newRoot)
 }
 
 // Get looks up whether a value exists for the given key.
@@ -349,11 +349,9 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 	switch nodeType(nodeVal[0]) {
 	case typeEmpty:
 		// base case 1
-		fmt.Printf("-- EMPTY %x\n", nodeKey)
 		return nil, nil
 	case typeLeaf:
 		// base case 2
-		fmt.Printf("-- LEAF %x\n", nodeKey)
 		node, err := decodeLeafNode(nodeVal)
 		if err != nil {
 			return nil, err
@@ -364,7 +362,6 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 		return b.Get(node.DataKey), nil
 	case typeInterior:
 		// recursive case
-		fmt.Printf("-- INTERIOR %x\n", nodeKey)
 		node, err := decodeInteriorNode(nodeVal)
 		if err != nil {
 			return nil, err
@@ -377,6 +374,17 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 	return nil, errors.New("invalid node type")
 }
 
+// MakeEphemeralTrie creates a lazy ephemeral copy of the trie.
+func (t *Trie) MakeEphemeralTrie() *EphemeralTrie {
+	e := EphemeralTrie{
+		source:     t,
+		overlay:    make(map[string][]byte),
+		deleteList: make(map[string][]byte),
+		instrList:  nil,
+	}
+	return &e
+}
+
 // CopyTo will make a copy of the database without the values to the target
 // database.
 func (t *Trie) CopyTo(target bucket, includeValues bool) error {
@@ -385,7 +393,7 @@ func (t *Trie) CopyTo(target bucket, includeValues bool) error {
 		if rootKey == nil {
 			return errors.New("no root key")
 		}
-		// copy the well-known keysj
+		// copy the well-known keys
 		if err := target.Put([]byte(entryKey), append([]byte{}, rootKey...)); err != nil {
 			return err
 		}
