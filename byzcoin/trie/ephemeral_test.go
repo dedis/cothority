@@ -10,7 +10,7 @@ func Test_Ephemeral(t *testing.T) {
 	testMemAndDisk(t, testEphemeral)
 }
 
-func testEphemeral(t *testing.T, db database) {
+func testEphemeral(t *testing.T, db DB) {
 	// Initialise a trie.
 	testTrie, err := NewTrie(db)
 	require.NoError(t, err)
@@ -80,11 +80,13 @@ func Test_EphemeralCommit(t *testing.T) {
 	testMemAndDisk(t, testEphemeralCommit)
 }
 
-func testEphemeralCommit(t *testing.T, db database) {
+func testEphemeralCommit(t *testing.T, db DB) {
 	// Initialise a trie.
 	testTrie, err := NewTrie(db)
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
+	testTrie.noHashKey = true
+
 	eTrie := testTrie.MakeEphemeralTrie()
 
 	// Make set/delete transactions and then commit, make sure they exist

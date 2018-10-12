@@ -1,15 +1,17 @@
 package trie
 
-import "sync"
+import (
+	"sync"
+)
 
-// implementation for memorydb
-
+// memDB is the DB implementation for an in-memory database.
 type memDB struct {
 	bucket *memBucket
-	sync.RWMutex
+	sync.Mutex
 }
 
-func NewMemDB() database {
+// NewMemDB creates a new in-memory database.
+func NewMemDB() DB {
 	bucket := newMemBucket()
 	db := memDB{
 		bucket: &bucket,
@@ -23,9 +25,10 @@ func (r *memDB) Update(f func(bucket) error) error {
 	return f(r.bucket)
 
 }
+
 func (r *memDB) View(f func(bucket) error) error {
-	r.RLock()
-	defer r.RUnlock()
+	r.Lock()
+	defer r.Unlock()
 	return f(r.bucket)
 }
 

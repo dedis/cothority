@@ -6,8 +6,7 @@ import (
 	bolt "github.com/coreos/bbolt"
 )
 
-// implementation for boltdb
-
+// diskDB is the DB implementation for boltdb.
 type diskDB struct {
 	db     *bolt.DB
 	bucket []byte

@@ -90,7 +90,7 @@ func (n *emptyNode) hashInterface(nonce []byte) hash.Hash {
 	h := sha256.New()
 	h.Write(typeEmpty.toBytes())
 	h.Write(nonce)
-	h.Write(getByteSlice(n.Prefix))
+	h.Write(toByteSlice(n.Prefix))
 
 	lBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(lBuf, uint32(len(n.Prefix)))
@@ -123,22 +123,22 @@ func decodeEmptyNode(buf []byte) (emptyNode, error) {
 
 type leafNode struct {
 	emptyNode
-	Key     []byte
-	DataKey []byte
+	Key   []byte
+	Value []byte
 }
 
 func (n *leafNode) hash(nonce []byte) []byte {
 	h := n.hashInterface(nonce)
 	h.Write(n.Key)
-	h.Write(n.DataKey)
+	h.Write(n.Value)
 	return h.Sum(nil)
 }
 
-func newLeafNode(prefix []bool, key []byte, dataKey []byte) leafNode {
+func newLeafNode(prefix []bool, key []byte, value []byte) leafNode {
 	return leafNode{
 		emptyNode: newEmptyNode(prefix),
 		Key:       key,
-		DataKey:   dataKey,
+		Value:     value,
 	}
 }
 

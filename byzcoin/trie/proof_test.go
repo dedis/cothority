@@ -10,7 +10,7 @@ func TestProof(t *testing.T) {
 	testMemAndDisk(t, testProof)
 }
 
-func testProof(t *testing.T, db database) {
+func testProof(t *testing.T, db DB) {
 	// Initialise a trie.
 	testTrie, err := NewTrie(db)
 	require.NoError(t, err)

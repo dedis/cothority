@@ -7,21 +7,24 @@ import (
 	"errors"
 )
 
-// this is where the root hash is stored
 const entryKey = "dedis_trie"
 const nonceKey = "dedis_trie_nonce"
 
 // Trie implements the merkle prefix tree described in the coniks paper.
 type Trie struct {
 	nonce []byte
-	db    database
-
+	db    DB
+	// We need to control the traversal during testing, so it's important
+	// to have a way to specify an actual key for traversal instead of the
+	// hash of it which we cannot predict. So we introduce the noHashKey
+	// flag, which should only be used in the unit test.
+	noHashKey bool
 	// TODO do we need a lock for the ephemeral trie?
 }
 
 // NewTrie loads the tried from a boltDB database, it creates one if it does
 // not exist.
-func NewTrie(db database) (Trie, error) {
+func NewTrie(db DB) (Trie, error) {
 	nonce := make([]byte, 32)
 	err := db.Update(func(b bucket) error {
 		// create or load the nonce
@@ -111,7 +114,7 @@ func (t *Trie) Set(key []byte, value []byte) error {
 }
 
 func (t *Trie) startSet(key []byte, value []byte, b bucket) error {
-	newRoot, err := t.set(t.getRoot(b), toBinarySlice(key), 0, key, value, b)
+	newRoot, err := t.set(t.getRoot(b), t.binSlice(key), 0, key, value, b)
 	if err != nil {
 		return err
 	}
@@ -121,7 +124,7 @@ func (t *Trie) startSet(key []byte, value []byte, b bucket) error {
 func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
-		return nil, errors.New("invalid node key")
+		return nil, errors.New("node key does not exist in set")
 	}
 	switch nodeType(nodeVal[0]) {
 	case typeEmpty:
@@ -141,16 +144,10 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 		// If the key is the same, then we don't need to create a new
 		// internal node, just update the value and hash.
 		if bytes.Equal(node.Key, key) {
-			oldKey := node.hash(t.nonce)
-			oldValueKey := node.DataKey
-			valueKey := sha256.Sum256(value)
-			node.DataKey = valueKey[:]
-			if err := b.Delete(oldValueKey); err != nil {
+			if err := b.Delete(node.hash(t.nonce)); err != nil {
 				return nil, err
 			}
-			if err := b.Delete(oldKey); err != nil {
-				return nil, err
-			}
+			node.Value = value
 			leafBuf, err := node.encode()
 			if err != nil {
 				return nil, err
@@ -158,14 +155,10 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 			if err := b.Put(node.hash(t.nonce), leafBuf); err != nil {
 				return nil, err
 			}
-			if err := b.Put(valueKey[:], value); err != nil {
-				return nil, err
-			}
 			return node.hash(t.nonce), nil
 		}
 		// Otherwise, we need to create one or more interior nodes.
-		valueKey := sha256.Sum256(value)
-		left, right, err := t.extendLeaf(node.Prefix, node.Key, node.DataKey, key, valueKey[:], b)
+		left, right, err := t.extendLeaf(node.Prefix, node.Key, node.Value, key, value, b)
 		if err != nil {
 			return nil, err
 		}
@@ -176,10 +169,6 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 			return nil, err
 		}
 		if err := b.Put(interior.hash(), interiorBuff); err != nil {
-			return nil, err
-		}
-		// Store the new value.
-		if err := b.Put(valueKey[:], value); err != nil {
 			return nil, err
 		}
 		// Delete the old leaf node.
@@ -225,9 +214,8 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 	return nil, errors.New("invalid node type")
 }
 
-func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, data []byte, b bucket) ([]byte, error) {
-	valueKey := sha256.Sum256(data)
-	leaf := newLeafNode(empty.Prefix, key, valueKey[:])
+func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, value []byte, b bucket) ([]byte, error) {
+	leaf := newLeafNode(empty.Prefix, key, value)
 	leafBuf, err := leaf.encode()
 	if err != nil {
 		return nil, err
@@ -240,9 +228,6 @@ func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, data []byte, b bucket) (
 	if err := b.Put(leaf.hash(t.nonce), leafBuf); err != nil {
 		return nil, err
 	}
-	if err := b.Put(valueKey[:], data); err != nil {
-		return nil, err
-	}
 	return leaf.hash(t.nonce), nil
 }
 
@@ -250,12 +235,13 @@ func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, data []byte, b bucket) (
 func (t *Trie) extendLeaf(currPrefix []bool, key1, valueKey1, key2, valueKey2 []byte, b bucket) ([]byte, []byte, error) {
 	i := len(currPrefix)
 	// TODO maybe we don't need to re-compute all the time
-	bits1 := toBinarySlice(key1)
-	bits2 := toBinarySlice(key2)
+	bits1 := t.binSlice(key1)
+	bits2 := t.binSlice(key2)
 	if bits1[i] != bits2[i] {
 		// base case:
+		currPrefixCopy := append([]bool{}, currPrefix...)
 		left := newLeafNode(append(currPrefix, bits1[i]), key1, valueKey1)
-		right := newLeafNode(append(currPrefix, bits2[i]), key2, valueKey2)
+		right := newLeafNode(append(currPrefixCopy, bits2[i]), key2, valueKey2)
 		leftBuf, err := left.encode()
 		if err != nil {
 			return nil, nil, err
@@ -316,7 +302,7 @@ func (t *Trie) startDel(key []byte, b bucket) error {
 	if rootKey == nil {
 		return errors.New("no root key")
 	}
-	newRoot, err := t.del(0, rootKey, toBinarySlice(key), key, b)
+	newRoot, err := t.del(0, rootKey, t.binSlice(key), key, b)
 	if err != nil {
 		return err
 	}
@@ -332,7 +318,7 @@ func (t *Trie) Get(key []byte) ([]byte, error) {
 			return errors.New("no root key")
 		}
 		var err error
-		val, err = t.get(0, rootKey, toBinarySlice(key), key, b)
+		val, err = t.get(0, rootKey, t.binSlice(key), key, b)
 		return err
 	})
 	if err != nil {
@@ -344,7 +330,7 @@ func (t *Trie) Get(key []byte) ([]byte, error) {
 func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
-		return nil, errors.New("invalid node key")
+		return nil, errors.New("node key does not exist in get")
 	}
 	switch nodeType(nodeVal[0]) {
 	case typeEmpty:
@@ -359,7 +345,7 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 		if !bytes.Equal(key, node.Key) {
 			return nil, nil
 		}
-		return b.Get(node.DataKey), nil
+		return node.Value, nil
 	case typeInterior:
 		// recursive case
 		node, err := decodeInteriorNode(nodeVal)
@@ -385,9 +371,17 @@ func (t *Trie) MakeEphemeralTrie() *EphemeralTrie {
 	return &e
 }
 
-// CopyTo will make a copy of the database without the values to the target
-// database.
-func (t *Trie) CopyTo(target bucket, includeValues bool) error {
+// CopyTo will make a copy of the database, the target bucket will have
+// its old data wiped.
+func (t *Trie) CopyTo(target bucket) error {
+	// First clean everything in the target bucket.
+	err := target.ForEach(func(k, v []byte) error {
+		return target.Delete(k)
+	})
+	if err != nil {
+		return err
+	}
+	// Do the actual copy.
 	return t.db.View(func(b bucket) error {
 		rootKey := t.getRoot(b)
 		if rootKey == nil {
@@ -400,15 +394,17 @@ func (t *Trie) CopyTo(target bucket, includeValues bool) error {
 		if err := target.Put([]byte(nonceKey), t.nonce); err != nil {
 			return err
 		}
-		// copy the tree
-		return t.copyTo(rootKey, includeValues, target, b)
+		// copy the trie
+		return t.copyTo(rootKey, target, b)
 	})
 }
 
-func (t *Trie) copyTo(nodeKey []byte, includeValues bool, target, source bucket) error {
+// copyTo performs a depth-first traversal down the trie and copies every node
+// that it encounters.
+func (t *Trie) copyTo(nodeKey []byte, target, source bucket) error {
 	nodeVal := source.Get(nodeKey)
 	if len(nodeVal) == 0 {
-		return errors.New("invalid node key")
+		return errors.New("node key does not exist in copyTo")
 	}
 	switch nodeType(nodeVal[0]) {
 	case typeEmpty:
@@ -428,11 +424,6 @@ func (t *Trie) copyTo(nodeKey []byte, includeValues bool, target, source bucket)
 		if err := target.Put(node.hash(t.nonce), append([]byte{}, nodeVal...)); err != nil {
 			return err
 		}
-		if includeValues {
-			if err := target.Put(node.DataKey, append([]byte{}, source.Get(node.DataKey)...)); err != nil {
-				return err
-			}
-		}
 		return nil
 	case typeInterior:
 		node, err := decodeInteriorNode(nodeVal)
@@ -442,10 +433,10 @@ func (t *Trie) copyTo(nodeKey []byte, includeValues bool, target, source bucket)
 		if err := target.Put(node.hash(), append([]byte{}, nodeVal...)); err != nil {
 			return err
 		}
-		if err := t.copyTo(node.Left, includeValues, target, source); err != nil {
+		if err := t.copyTo(node.Left, target, source); err != nil {
 			return err
 		}
-		if err := t.copyTo(node.Right, includeValues, target, source); err != nil {
+		if err := t.copyTo(node.Right, target, source); err != nil {
 			return err
 		}
 		return nil
@@ -458,7 +449,7 @@ func (t *Trie) copyTo(nodeKey []byte, includeValues bool, target, source bucket)
 func (t *Trie) del(depth int, nodeKey []byte, bits []bool, key []byte, b bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
-		return nil, errors.New("invalid node key")
+		return nil, errors.New("node key does not exist in del")
 	}
 	switch nodeType(nodeVal[0]) {
 	case typeEmpty:
@@ -474,9 +465,6 @@ func (t *Trie) del(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 			return nil, nil
 		}
 		if err := b.Delete(node.hash(t.nonce)); err != nil {
-			return nil, err
-		}
-		if err := b.Delete(node.DataKey); err != nil {
 			return nil, err
 		}
 		empty := newEmptyNode(node.Prefix)
@@ -540,6 +528,11 @@ func (t *Trie) del(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 	return nil, errors.New("invalid node type")
 }
 
+// Valid checks whether the trie is valid.
+func (t *Trie) Valid() error {
+	return errors.New("not implemented")
+}
+
 // getRaw gets the value, it returns nil if the value does not exist.
 func (t *Trie) getRaw(key []byte) ([]byte, error) {
 	var val []byte
@@ -555,6 +548,14 @@ func (t *Trie) getRaw(key []byte) ([]byte, error) {
 	return val, nil
 }
 
+func (t *Trie) binSlice(buf []byte) []bool {
+	if t.noHashKey {
+		return toBinSlice(buf)
+	}
+	hashKey := sha256.Sum256(buf)
+	return toBinSlice(hashKey[:])
+}
+
 func genNonce() []byte {
 	buf := make([]byte, 32)
 	n, err := rand.Read(buf)
@@ -567,7 +568,7 @@ func genNonce() []byte {
 	return buf
 }
 
-func toBinarySlice(buf []byte) []bool {
+func toBinSlice(buf []byte) []bool {
 	bits := make([]bool, len(buf)*8)
 	for i := 0; i < len(bits); i++ {
 		bits[i] = (buf[i/8]<<uint(i%8))&(1<<7) > 0
@@ -575,7 +576,7 @@ func toBinarySlice(buf []byte) []bool {
 	return bits
 }
 
-func getByteSlice(bits []bool) []byte {
+func toByteSlice(bits []bool) []byte {
 	buf := make([]byte, (len(bits)+7)/8)
 	for i := 0; i < len(bits); i++ {
 		if bits[i] {

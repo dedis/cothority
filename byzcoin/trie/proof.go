@@ -11,17 +11,30 @@ type Proof struct {
 	Interiors []interiorNode // the final one should be root
 	Leaf      leafNode
 	Empty     emptyNode
-	Value     []byte
 	Nonce     []byte
+
+	// We need to control the traversal during testing, so it's important
+	// to have a way to specify an actual key for traversal instead of the
+	// hash of it which we cannot predict. So we introduce the noHashKey
+	// flag, which should only be used in the unit test.
+	noHashKey bool
 }
 
 func (p *Proof) addInterior(node interiorNode) {
 	p.Interiors = append(p.Interiors, node)
 }
 
+func (p *Proof) binSlice(buf []byte) []bool {
+	if p.noHashKey {
+		return toBinSlice(buf)
+	}
+	hashKey := sha256.Sum256(buf)
+	return toBinSlice(hashKey[:])
+}
+
 // Exists checks the proof for inclusion/absence
 func (p *Proof) Exists(key []byte) (bool, error) {
-	bits := toBinarySlice(key)
+	bits := p.binSlice(key)
 	expectedHash := p.Interiors[0].hash()
 	var i int
 	for i = range p.Interiors {
@@ -40,10 +53,6 @@ func (p *Proof) Exists(key []byte) (bool, error) {
 		}
 		if !bytes.Equal(p.Leaf.Key, key) {
 			return false, nil
-		}
-		valHash := sha256.Sum256(p.Value)
-		if !bytes.Equal(p.Leaf.DataKey, valHash[:]) {
-			return false, errors.New("invalid value hash")
 		}
 		return true, nil
 	} else if bytes.Equal(expectedHash, p.Empty.hash(p.Nonce)) {
@@ -68,7 +77,7 @@ func equal(a []bool, b []bool) bool {
 	return true
 }
 
-// GetProof TODO
+// GetProof TODO doc
 func (t *Trie) GetProof(key []byte) (*Proof, error) {
 	p := &Proof{}
 	err := t.db.View(func(b bucket) error {
@@ -78,7 +87,7 @@ func (t *Trie) GetProof(key []byte) (*Proof, error) {
 		}
 		p.Nonce = make([]byte, len(t.nonce))
 		copy(p.Nonce, t.nonce)
-		return t.getProof(0, rootKey, toBinarySlice(key), p, b)
+		return t.getProof(0, rootKey, t.binSlice(key), p, b)
 	})
 	return p, err
 }
@@ -103,9 +112,6 @@ func (t *Trie) getProof(depth int, nodeKey []byte, bits []bool, p *Proof, b buck
 			return err
 		}
 		p.Leaf = node
-		val := b.Get(node.DataKey)
-		p.Value = make([]byte, len(val))
-		copy(p.Value, val)
 		return nil
 	case typeInterior:
 		node, err := decodeInteriorNode(nodeVal)
