@@ -1,16 +1,17 @@
 package calypso
 
 import (
-	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/onet"
 	"github.com/dedis/cothority"
+	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/onet"
 	"github.com/dedis/protobuf"
 )
+
 // calypso.Client is a class to communicate to the calypso service.
 type Client struct {
-	byzcoin *byzcoin.Client
-	onet *onet.Client
+	byzcoin  *byzcoin.Client
+	onet     *onet.Client
 	ltsReply *CreateLTSReply
 }
 
@@ -23,11 +24,11 @@ func NewClient(byzcoin *byzcoin.Client) *Client {
 
 // CreateLTS creates a random LTSID that can be used to reference
 // the LTS group created.
-func (c * Client) CreateLTS() (reply *CreateLTSReply, err error) {
+func (c *Client) CreateLTS() (reply *CreateLTSReply, err error) {
 	reply = &CreateLTSReply{}
 	err = c.onet.SendProtobuf(c.byzcoin.Roster.List[0], &CreateLTS{
-		Roster:	c.byzcoin.Roster,
-		BCID:	c.byzcoin.ID,
+		Roster: c.byzcoin.Roster,
+		BCID:   c.byzcoin.ID,
 	}, reply)
 	if err != nil {
 		return nil, err
@@ -37,7 +38,7 @@ func (c * Client) CreateLTS() (reply *CreateLTSReply, err error) {
 
 // CreateLTS creates a random LTSID that can be used to reference
 // the LTS group created.
-func (c * Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
+func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
 	reply = &DecryptKeyReply{}
 	err = c.onet.SendProtobuf(c.byzcoin.Roster.List[0], dkr, reply)
 	if err != nil {
@@ -47,7 +48,7 @@ func (c * Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 }
 
 // AddWrite creates a Write Instance by adding a transaction on the byzcoin client
-func (c * Client) AddWrite(data []byte, signer darc.Signer) (
+func (c *Client) AddWrite(data []byte, signer darc.Signer) (
 	reply *WriteReply, err error) {
 	reply = &WriteReply{}
 	gDarc, err := c.byzcoin.GetGenDarc()
@@ -57,7 +58,7 @@ func (c * Client) AddWrite(data []byte, signer darc.Signer) (
 	write := NewWrite(cothority.Suite, c.ltsReply.LTSID, gDarc.GetBaseID(),
 		c.ltsReply.X, data)
 	writeBuf, err := protobuf.Encode(write)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	ctx := byzcoin.ClientTransaction{
@@ -68,20 +69,20 @@ func (c * Client) AddWrite(data []byte, signer darc.Signer) (
 			Length:     1,
 			Spawn: &byzcoin.Spawn{
 				ContractID: ContractWriteID,
-				Args:       byzcoin.Arguments{{
+				Args: byzcoin.Arguments{{
 					Name: "write", Value: writeBuf}},
 			},
 		}},
 	}
 	//Sign the transaction
 	err = ctx.Instructions[0].SignBy(gDarc.GetID(), signer)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	reply.InstanceID = ctx.Instructions[0].DeriveID("")
 	//Delegate the work to the byzcoin client
 	reply.AddTxResponse, err = c.byzcoin.AddTransaction(ctx)
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	return reply, err
@@ -100,7 +101,7 @@ func (c *Client) AddRead(write *byzcoin.Proof, signer darc.Signer) (
 		return nil, err
 	}
 	gDarc, err := c.byzcoin.GetGenDarc()
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 	ctx := byzcoin.ClientTransaction{

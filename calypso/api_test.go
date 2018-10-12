@@ -1,13 +1,13 @@
 package calypso
 
 import (
-	"testing"
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/byzcoin"
-	"time"
-	"github.com/stretchr/testify/require"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/onet"
+	"github.com/stretchr/testify/require"
+	"testing"
+	"time"
 )
 
 // waitInstID this is a utility testing function to wait for the proof
@@ -31,7 +31,6 @@ func (c *Client) waitInstID(t *testing.T, instID byzcoin.InstanceID,
 	}
 	return pr
 }
-
 
 func TestClient_CreateLTS(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
@@ -92,14 +91,14 @@ func TestClient_DecryptKey(t *testing.T) {
 	wr1, err := calypsoClient.AddWrite(key1, signer)
 	require.Nil(t, err)
 	require.NotNil(t, wr1.InstanceID)
-	prWr1 := calypsoClient.waitInstID(t, wr1.InstanceID, 2*time.Second)
+	prWr1 := calypsoClient.waitInstID(t, wr1.InstanceID, time.Second)
 	re1, err := calypsoClient.AddRead(prWr1, signer)
 	require.Nil(t, err)
-	prRe1 := calypsoClient.waitInstID(t, re1.InstanceID, 2*time.Second)
+	prRe1 := calypsoClient.waitInstID(t, re1.InstanceID, time.Second)
 	key2 := []byte("secret key 2")
 	wr2, err := calypsoClient.AddWrite(key2, signer)
 	require.Nil(t, err)
-	prWr2 := calypsoClient.waitInstID(t, wr2.InstanceID, 2*time.Second)
+	prWr2 := calypsoClient.waitInstID(t, wr2.InstanceID, time.Second)
 	require.Nil(t, err)
 	re2, err := calypsoClient.AddRead(prWr2, signer)
 	require.Nil(t, err)
