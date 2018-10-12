@@ -6,6 +6,7 @@ import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
 import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
+import ch.epfl.dedis.lib.crypto.KeyPair;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.darc.Darc;
 import ch.epfl.dedis.lib.darc.Rules;
@@ -123,6 +124,29 @@ class CalypsoTest {
 
         // Create new Document from wi and ri
         Document doc2 = Document.fromCalypso(calypso, ri.getInstance().getId(), reader.getPrivate());
+
+        // Should be the same
+        assertTrue(doc.equals(doc2));
+    }
+
+    @Test
+    void ephemeralKey() throws CothorityException{
+        KeyPair ephemeral = new KeyPair();
+
+        // Same as above, but shortest possible calls.
+        // Create WriteInstance.
+        WriteInstance wi = new WriteInstance(calypso, publisherDarc.getBaseId(), Arrays.asList(publisher), doc.getWriteData(calypso.getLTS()));
+
+        // Get ReadInstance with 'reader'
+        ReadInstance ri = new ReadInstance(calypso, wi, Arrays.asList(reader), ephemeral.point);
+
+        KeyPair wrong = new KeyPair();
+        // Create new Document from wi and ri using the wrong ephemeral key
+        assertThrows(CothorityException.class, ()->
+                Document.fromCalypso(calypso, ri.getInstance().getId(), wrong.scalar));
+
+        // Create new Document from wi and ri using the correct ephemeral key
+        Document doc2 = Document.fromCalypso(calypso, ri.getInstance().getId(), ephemeral.scalar);
 
         // Should be the same
         assertTrue(doc.equals(doc2));

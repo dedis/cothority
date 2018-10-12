@@ -1,6 +1,5 @@
 package ch.epfl.dedis.calypso;
 
-import ch.epfl.dedis.lib.Hex;
 import ch.epfl.dedis.byzcoin.Instance;
 import ch.epfl.dedis.byzcoin.InstanceId;
 import ch.epfl.dedis.byzcoin.Proof;
@@ -8,6 +7,8 @@ import ch.epfl.dedis.byzcoin.transaction.Argument;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.Instruction;
 import ch.epfl.dedis.byzcoin.transaction.Spawn;
+import ch.epfl.dedis.lib.Hex;
+import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.crypto.Scalar;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.darc.Request;
@@ -33,7 +34,9 @@ public class ReadInstance {
     private final static Logger logger = LoggerFactory.getLogger(ReadInstance.class);
 
     /**
-     * Constructor used for when a new instance is needed.
+     * Create a new ReadInstance to request access to an encrypted document. This call
+     * will send a transaction to ByzCoin and wait for it to be accepted or rejected.
+     * The key to re-encrypt to is taken as the public key of the first signer.
      *
      * @param calypso The CalypsoRPC object.
      * @param write   The write instance where a new read instance should be spawned from.
@@ -42,23 +45,43 @@ public class ReadInstance {
      */
     public ReadInstance(CalypsoRPC calypso, WriteInstance write, List<Signer> signers) throws CothorityException {
         this.calypso = calypso;
-        ClientTransaction ctx = createCTX(write, signers);
+        ClientTransaction ctx = createCTX(write, signers, signers.get(0).getPublic());
+        calypso.sendTransactionAndWait(ctx, 10);
+        instance = getInstance(calypso, ctx.getInstructions().get(0).deriveId(""));
+    }
+
+    /**
+     * Create a new ReadInstance to request access to an encrypted document. This call
+     * will send a transaction to ByzCoin and wait for it to be accepted or rejected.
+     * The key to re-encrypt to is taken in an argument
+     *
+     * @param calypso The CalypsoRPC object.
+     * @param write   The write instance where a new read instance should be spawned from.
+     * @param signers Signers who are allowed to spawn a new instance.
+     * @param Xc      is the key to which the dataEnc will be re-encrypted to
+     * @throws CothorityException if something goes wrong
+     */
+    public ReadInstance(CalypsoRPC calypso, WriteInstance write, List<Signer> signers, Point Xc) throws CothorityException {
+        this.calypso = calypso;
+        ClientTransaction ctx = createCTX(write, signers, Xc);
         calypso.sendTransactionAndWait(ctx, 10);
         instance = getInstance(calypso, ctx.getInstructions().get(0).deriveId(""));
     }
 
     /**
      * Private constructor for already existing CalypsoRead instance.
+     *
      * @param calypso
      * @param inst
      */
-    private ReadInstance(CalypsoRPC calypso, Instance inst){
+    private ReadInstance(CalypsoRPC calypso, Instance inst) {
         this.calypso = calypso;
         this.instance = inst;
     }
 
     /**
      * Get the instance object.
+     *
      * @return the Instance
      */
     public Instance getInstance() {
@@ -77,11 +100,12 @@ public class ReadInstance {
      * Decrypts the key material by creating the read and write proofs necessary
      * for the LTS to allow a re-encryption to the public key stored in the
      * read request.
+     *
      * @param reader is the corresponding private key of the public
      * @return the key material
      * @throws CothorityException if something goes wrong
      */
-    public byte[] decryptKeyMaterial(Scalar reader) throws CothorityException{
+    public byte[] decryptKeyMaterial(Scalar reader) throws CothorityException {
         Proof readProof = calypso.getProof(getInstance().getId());
         Proof writeProof = calypso.getProof(getRead().getWriteId());
         DecryptKeyReply dk = calypso.tryDecrypt(writeProof, readProof);
@@ -104,10 +128,11 @@ public class ReadInstance {
      * Prepares a new transaction to create a read instance.
      *
      * @param consumers Array of Signers
-     * @return
+     * @param Xc        is the public key the dataEnc will be re-encrypted to
+     * @return the ClientTransaction ready to be sent to ByzCoin.
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    private ClientTransaction createCTX(WriteInstance write, List<Signer> consumers) throws CothorityCryptoException {
+    private ClientTransaction createCTX(WriteInstance write, List<Signer> consumers, Point Xc) throws CothorityCryptoException {
         if (consumers.size() != 1) {
             throw new CothorityCryptoException("Currently only one signer supported.");
         }
@@ -115,7 +140,7 @@ public class ReadInstance {
         Instance writeInstance = write.getInstance();
 
         // Create the Calypso.Read structure
-        ReadData read = new ReadData(writeInstance.getId(), consumer.getPublic());
+        ReadData read = new ReadData(writeInstance.getId(), Xc);
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("read", read.toProto().toByteArray()));
         Spawn sp = new Spawn(ReadInstance.ContractId, args);
