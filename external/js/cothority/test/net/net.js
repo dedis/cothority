@@ -3,7 +3,6 @@ const expect = chai.expect;
 
 const root = require("../../lib/protobuf").root;
 const network = require("../../lib/net");
-const cothority = require("../../lib");
 const identity = require("../../lib/identity.js");
 
 const helpers = require("../helpers.js");
@@ -12,13 +11,6 @@ const WebSocket = require("ws");
 
 const kyber = require("@dedis/kyber-js");
 const ed25519 = new kyber.curve.edwards25519.Curve();
-const serverAddr = "ws://127.0.0.1:9000";
-const deviceProtoName = "Device";
-const idProtoName = "Device";
-const message = new Uint8Array([1, 2, 3, 4]);
-const deviceMessage = {
-  point: message
-};
 
 describe("leader socket", () => {
   it("fails with no node", () => {
@@ -36,7 +28,7 @@ describe("leader socket", () => {
       });
 
       mockServer.on("connection", function connection(ws) {
-        ws.on("message", function incoming(msg) {
+        ws.on("message", function incoming() {
           const proto = root.lookup("ServerIdentity");
           const ret = {
             id: [],

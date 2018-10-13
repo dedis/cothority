@@ -461,6 +461,36 @@ describe("edwards25519", () => {
     // prettier-ignore
     let b2 = new Uint8Array([88, 146, 91, 18, 158, 90, 102, 25, 82, 85, 219, 232, 60, 253, 138, 65, 183, 2, 157, 218, 70, 58, 193, 179, 212, 232, 104, 98, 125, 202, 176, 9]);
 
+    describe("setInt", () => {
+      it("should not accept strings", () => {
+        assert.throws( () => {
+        let s2 = curve.scalar().zero();
+        s2.setInt("1023");
+        })
+      });
+
+      it("should not accept ints that are too big", () => {
+        assert.throws( () => {
+        let s2 = curve.scalar().zero()
+        s2.setInt(2 * Number.MAX_SAFE_INTEGER);
+        })
+      });
+
+      it("should set the scalar from the int", () => {
+        // make it big enough to use 2 bytes to check byte order.
+        const target = 1023;
+        // add it up the old fashioned way
+        let s = curve.scalar().zero();
+        const one = curve.scalar().one();
+        for (let i = 0; i < target; i++) {
+          s.add(s, one);
+        }
+        let s2 = curve.scalar().zero()
+        s2.setInt(target);
+        assert.isTrue(s2.equal(s));
+      });
+    });
+
     describe("setBytes", () => {
       it("should set the scalar reading bytes from little endian array", () => {
         let bytes = new Uint8Array([2, 4, 8, 10]);

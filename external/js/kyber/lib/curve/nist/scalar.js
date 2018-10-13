@@ -166,6 +166,21 @@ class Scalar extends group.Scalar {
   }
 
   /**
+   * Sets the scalar from an integer.
+   * @param {integer} i - the value to set
+   */
+  setInt(i) {
+    if (!(typeof(i) == typeof(0))) {
+      throw("first argument should be an integer");
+    }
+    if (i > Number.MAX_SAFE_INTEGER) {
+      throw("first argument must be < Number.MAX_SAFE_INTEGER");
+    }
+    this.ref.arr = new BN(i, 10).toRed(this.ref.red);
+    return this;
+  }
+
+  /**
    * Returns a big-endian representation of the scalar
    *
    * @return {Uint8Array}

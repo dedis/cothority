@@ -149,6 +149,10 @@ class Scalar {
   setBytes(bytes) {
     throw new Error("Not implemented");
   }
+
+  setInt(i) {
+    throw new Error("Not implemented");
+  }
 }
 
 module.exports = {
