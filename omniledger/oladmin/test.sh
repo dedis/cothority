@@ -1,29 +1,32 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=2
 # Debug-level for app
 DBG_APP=2
+DBG_SRV=2
+NBR_SERVERS=5
 
 . $(go env GOPATH)/src/github.com/dedis/onet/app/libtest.sh
 
 main(){
     startTest
-    buildConode
+    buildConode github.com/dedis/cothority/omniledger
 	test Create
-    test Evolve
-    test NewEpoch
+    #test Evolve
+    #test NewEpoch
     stopTest
 }
 
 testCreate(){
-    runCoBG 1 2
+    runCoBG 1 2 3 4
+	
     testFail run create
 	testFail run create -shards
 	testFail run create -shards 0
 	testFail run create -shards 1
 	testFail run create -shards 1 -epoch
-	testFail run create -shards 1 -epoch 1
-	testOK run create -shards 1 -epoch 1 roster.toml
+	testFail run create -shards 1 -epoch 500
+	testOK run create -shards 1 -epoch 500 public.toml
 }
 
 testEvolve(){
