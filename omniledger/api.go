@@ -18,19 +18,29 @@ type Client struct {
 	Roster onet.Roster
 }
 
-// NewClient instantiates a new OmniLedger client.
-func NewClient() *Client {
-	return &Client{Client: onet.NewClient(cothority.Suite, ServiceName)}
+// NewClient returns a new client connected to the service
+func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
+	return &Client{
+		Client: onet.NewClient(cothority.Suite, ServiceName),
+		ID:     ID,
+		Roster: Roster,
+	}
 }
 
-func (c *Client) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResponse, error) {
+func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
+	error) {
+	// Create client
+	c := NewClient(nil, req.Roster)
+
 	// Create reply struct
 	req.Version = byzcoin.CurrentVersion
 	reply := &CreateOmniLedgerResponse{}
-	err := c.SendProtobuf(c.Roster.List[0], req, reply)
+	err := c.SendProtobuf(req.Roster.List[0], req, reply)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return reply, nil
+	c.ID = reply.IDSkipBlock.CalculateHash()
+
+	return c, reply, nil
 }

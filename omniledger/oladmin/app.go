@@ -120,17 +120,15 @@ func createSharding(c *cli.Context) error {
 		return fmt.Errorf("Not enough validators per shard, there should be at least 4 validators per shard")
 	}
 
-	// Create new client
-	client := omniledger.NewClient()
-
 	// Create request and reply struct
 	req := &omniledger.CreateOmniLedger{
 		Roster:     *roster,
 		ShardCount: sn,
 		EpochSize:  es,
 	}
-	// log.Print()
-	reply, err := client.CreateOmniLedger(req)
+
+	// Create new omniledger
+	_, reply, err := omniledger.NewOmniLedger(req)
 	if err != nil {
 		return err
 	}
