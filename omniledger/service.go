@@ -136,10 +136,10 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 		return nil, err
 	}
 
-	scBuff := make([]byte, 4) // 4 bytes for int32
+	scBuff := make([]byte, 8) // 8 bytes for int64
 	binary.PutVarint(scBuff, int64(req.ShardCount))
 
-	esBuff := make([]byte, 4) // 4 bytes for int32
+	esBuff := make([]byte, 8) // 8 bytes for int64
 	binary.PutVarint(scBuff, int64(req.EpochSize))
 
 	instr := byzcoin.Instruction{
@@ -275,24 +275,24 @@ func (s *Service) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 // instantiate the protocol on its own. If you need more control at the
 // instantiation of the protocol, use CreateProtocolService, and you can
 // give some extra-configuration to your protocol in here.
-func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
+/*func (s *Service) NewProtocol(tn *onet.TreeNodeInstance, conf *onet.GenericConfig) (onet.ProtocolInstance, error) {
 	log.Lvl3("Not templated yet")
 	return nil, nil
-}
+}*/
 
 // saves all data.
-func (s *Service) save() {
+/*func (s *Service) save() {
 	s.storage.Lock()
 	defer s.storage.Unlock()
 	err := s.Save(storageID, s.storage)
 	if err != nil {
 		log.Error("Couldn't save data:", err)
 	}
-}
+}*/
 
 // Tries to load the configuration and updates the data in the service
 // if it finds a valid config-file.
-func (s *Service) tryLoad() error {
+/*func (s *Service) tryLoad() error {
 	s.storage = &storage{}
 	msg, err := s.Load(storageID)
 	if err != nil {
@@ -307,7 +307,7 @@ func (s *Service) tryLoad() error {
 		return errors.New("Data of wrong type")
 	}
 	return nil
-}
+}*/
 
 func (s *Service) registerContract(contractID string, c bc.ContractFn) error {
 	s.contracts[contractID] = c
