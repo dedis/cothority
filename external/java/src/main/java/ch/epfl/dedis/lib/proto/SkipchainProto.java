@@ -14,6 +14,1005 @@ public final class SkipchainProto {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
+  public interface GetAllSkipChainIDsOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:skipchain.GetAllSkipChainIDs)
+      com.google.protobuf.MessageOrBuilder {
+  }
+  /**
+   * <pre>
+   * GetAllSkipChainIDs - returns the SkipBlockIDs of the genesis blocks
+   * of all of the known skipchains.
+   * </pre>
+   *
+   * Protobuf type {@code skipchain.GetAllSkipChainIDs}
+   */
+  public  static final class GetAllSkipChainIDs extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:skipchain.GetAllSkipChainIDs)
+      GetAllSkipChainIDsOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetAllSkipChainIDs.newBuilder() to construct.
+    private GetAllSkipChainIDs(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetAllSkipChainIDs() {
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetAllSkipChainIDs(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetAllSkipChainIDs_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetAllSkipChainIDs_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs.class, ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs.Builder.class);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs other = (ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs) obj;
+
+      boolean result = true;
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetAllSkipChainIDs - returns the SkipBlockIDs of the genesis blocks
+     * of all of the known skipchains.
+     * </pre>
+     *
+     * Protobuf type {@code skipchain.GetAllSkipChainIDs}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:skipchain.GetAllSkipChainIDs)
+        ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetAllSkipChainIDs_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetAllSkipChainIDs_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs.class, ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetAllSkipChainIDs_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs build() {
+        ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs buildPartial() {
+        ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs result = new ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs(this);
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs other) {
+        if (other == ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs.getDefaultInstance()) return this;
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:skipchain.GetAllSkipChainIDs)
+    }
+
+    // @@protoc_insertion_point(class_scope:skipchain.GetAllSkipChainIDs)
+    private static final ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs();
+    }
+
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetAllSkipChainIDs>
+        PARSER = new com.google.protobuf.AbstractParser<GetAllSkipChainIDs>() {
+      @java.lang.Override
+      public GetAllSkipChainIDs parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetAllSkipChainIDs(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetAllSkipChainIDs> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetAllSkipChainIDs> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDs getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetAllSkipChainIDsReplyOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:skipchain.GetAllSkipChainIDsReply)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated bytes skipChainIDs = 1;</code>
+     */
+    java.util.List<com.google.protobuf.ByteString> getSkipChainIDsList();
+    /**
+     * <code>repeated bytes skipChainIDs = 1;</code>
+     */
+    int getSkipChainIDsCount();
+    /**
+     * <code>repeated bytes skipChainIDs = 1;</code>
+     */
+    com.google.protobuf.ByteString getSkipChainIDs(int index);
+  }
+  /**
+   * <pre>
+   * GetAllSkipChainIDsReply - reply to GetAllSkipchains
+   * </pre>
+   *
+   * Protobuf type {@code skipchain.GetAllSkipChainIDsReply}
+   */
+  public  static final class GetAllSkipChainIDsReply extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:skipchain.GetAllSkipChainIDsReply)
+      GetAllSkipChainIDsReplyOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetAllSkipChainIDsReply.newBuilder() to construct.
+    private GetAllSkipChainIDsReply(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetAllSkipChainIDsReply() {
+      skipChainIDs_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetAllSkipChainIDsReply(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                skipChainIDs_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              skipChainIDs_.add(input.readBytes());
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          skipChainIDs_ = java.util.Collections.unmodifiableList(skipChainIDs_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetAllSkipChainIDsReply_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetAllSkipChainIDsReply_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply.class, ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply.Builder.class);
+    }
+
+    public static final int SKIPCHAINIDS_FIELD_NUMBER = 1;
+    private java.util.List<com.google.protobuf.ByteString> skipChainIDs_;
+    /**
+     * <code>repeated bytes skipChainIDs = 1;</code>
+     */
+    public java.util.List<com.google.protobuf.ByteString>
+        getSkipChainIDsList() {
+      return skipChainIDs_;
+    }
+    /**
+     * <code>repeated bytes skipChainIDs = 1;</code>
+     */
+    public int getSkipChainIDsCount() {
+      return skipChainIDs_.size();
+    }
+    /**
+     * <code>repeated bytes skipChainIDs = 1;</code>
+     */
+    public com.google.protobuf.ByteString getSkipChainIDs(int index) {
+      return skipChainIDs_.get(index);
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      for (int i = 0; i < skipChainIDs_.size(); i++) {
+        output.writeBytes(1, skipChainIDs_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      {
+        int dataSize = 0;
+        for (int i = 0; i < skipChainIDs_.size(); i++) {
+          dataSize += com.google.protobuf.CodedOutputStream
+            .computeBytesSizeNoTag(skipChainIDs_.get(i));
+        }
+        size += dataSize;
+        size += 1 * getSkipChainIDsList().size();
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply other = (ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply) obj;
+
+      boolean result = true;
+      result = result && getSkipChainIDsList()
+          .equals(other.getSkipChainIDsList());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getSkipChainIDsCount() > 0) {
+        hash = (37 * hash) + SKIPCHAINIDS_FIELD_NUMBER;
+        hash = (53 * hash) + getSkipChainIDsList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetAllSkipChainIDsReply - reply to GetAllSkipchains
+     * </pre>
+     *
+     * Protobuf type {@code skipchain.GetAllSkipChainIDsReply}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:skipchain.GetAllSkipChainIDsReply)
+        ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReplyOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetAllSkipChainIDsReply_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetAllSkipChainIDsReply_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply.class, ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        skipChainIDs_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetAllSkipChainIDsReply_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply build() {
+        ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply buildPartial() {
+        ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply result = new ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply(this);
+        int from_bitField0_ = bitField0_;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          skipChainIDs_ = java.util.Collections.unmodifiableList(skipChainIDs_);
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.skipChainIDs_ = skipChainIDs_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply other) {
+        if (other == ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply.getDefaultInstance()) return this;
+        if (!other.skipChainIDs_.isEmpty()) {
+          if (skipChainIDs_.isEmpty()) {
+            skipChainIDs_ = other.skipChainIDs_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensureSkipChainIDsIsMutable();
+            skipChainIDs_.addAll(other.skipChainIDs_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<com.google.protobuf.ByteString> skipChainIDs_ = java.util.Collections.emptyList();
+      private void ensureSkipChainIDsIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          skipChainIDs_ = new java.util.ArrayList<com.google.protobuf.ByteString>(skipChainIDs_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <code>repeated bytes skipChainIDs = 1;</code>
+       */
+      public java.util.List<com.google.protobuf.ByteString>
+          getSkipChainIDsList() {
+        return java.util.Collections.unmodifiableList(skipChainIDs_);
+      }
+      /**
+       * <code>repeated bytes skipChainIDs = 1;</code>
+       */
+      public int getSkipChainIDsCount() {
+        return skipChainIDs_.size();
+      }
+      /**
+       * <code>repeated bytes skipChainIDs = 1;</code>
+       */
+      public com.google.protobuf.ByteString getSkipChainIDs(int index) {
+        return skipChainIDs_.get(index);
+      }
+      /**
+       * <code>repeated bytes skipChainIDs = 1;</code>
+       */
+      public Builder setSkipChainIDs(
+          int index, com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureSkipChainIDsIsMutable();
+        skipChainIDs_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes skipChainIDs = 1;</code>
+       */
+      public Builder addSkipChainIDs(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  ensureSkipChainIDsIsMutable();
+        skipChainIDs_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes skipChainIDs = 1;</code>
+       */
+      public Builder addAllSkipChainIDs(
+          java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+        ensureSkipChainIDsIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, skipChainIDs_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bytes skipChainIDs = 1;</code>
+       */
+      public Builder clearSkipChainIDs() {
+        skipChainIDs_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:skipchain.GetAllSkipChainIDsReply)
+    }
+
+    // @@protoc_insertion_point(class_scope:skipchain.GetAllSkipChainIDsReply)
+    private static final ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply();
+    }
+
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetAllSkipChainIDsReply>
+        PARSER = new com.google.protobuf.AbstractParser<GetAllSkipChainIDsReply>() {
+      @java.lang.Override
+      public GetAllSkipChainIDsReply parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetAllSkipChainIDsReply(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetAllSkipChainIDsReply> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetAllSkipChainIDsReply> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.SkipchainProto.GetAllSkipChainIDsReply getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface GetSingleBlockOrBuilder extends
       // @@protoc_insertion_point(interface_extends:skipchain.GetSingleBlock)
       com.google.protobuf.MessageOrBuilder {
@@ -57,6 +1056,9 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -68,16 +1070,16 @@ public final class SkipchainProto {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              id_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              id_ = input.readBytes();
               break;
             }
           }
@@ -97,6 +1099,7 @@ public final class SkipchainProto {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetSingleBlock_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetSingleBlock_fieldAccessorTable
@@ -121,6 +1124,7 @@ public final class SkipchainProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -134,6 +1138,7 @@ public final class SkipchainProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -142,6 +1147,7 @@ public final class SkipchainProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -262,6 +1268,7 @@ public final class SkipchainProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -269,6 +1276,7 @@ public final class SkipchainProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlock prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -296,6 +1304,7 @@ public final class SkipchainProto {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetSingleBlock_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetSingleBlock_fieldAccessorTable
@@ -318,6 +1327,7 @@ public final class SkipchainProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -325,15 +1335,18 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetSingleBlock_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlock getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlock.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlock build() {
         ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlock result = buildPartial();
         if (!result.isInitialized()) {
@@ -342,6 +1355,7 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlock buildPartial() {
         ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlock result = new ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlock(this);
         int from_bitField0_ = bitField0_;
@@ -355,32 +1369,39 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlock) {
           return mergeFrom((ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlock)other);
@@ -400,6 +1421,7 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -407,6 +1429,7 @@ public final class SkipchainProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -460,11 +1483,13 @@ public final class SkipchainProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -486,11 +1511,12 @@ public final class SkipchainProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetSingleBlock>
         PARSER = new com.google.protobuf.AbstractParser<GetSingleBlock>() {
+      @java.lang.Override
       public GetSingleBlock parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new GetSingleBlock(input, extensionRegistry);
+        return new GetSingleBlock(input, extensionRegistry);
       }
     };
 
@@ -503,7 +1529,530 @@ public final class SkipchainProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlock getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface GetSingleBlockByIndexOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:skipchain.GetSingleBlockByIndex)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required int32 index = 1;</code>
+     */
+    boolean hasIndex();
+    /**
+     * <code>required int32 index = 1;</code>
+     */
+    int getIndex();
+  }
+  /**
+   * <pre>
+   * GetSingleBlockByIndex searches for a block with the given index following
+   * the genesis-block
+   * </pre>
+   *
+   * Protobuf type {@code skipchain.GetSingleBlockByIndex}
+   */
+  public  static final class GetSingleBlockByIndex extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:skipchain.GetSingleBlockByIndex)
+      GetSingleBlockByIndexOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use GetSingleBlockByIndex.newBuilder() to construct.
+    private GetSingleBlockByIndex(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private GetSingleBlockByIndex() {
+      index_ = 0;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private GetSingleBlockByIndex(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+              bitField0_ |= 0x00000001;
+              index_ = input.readInt32();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetSingleBlockByIndex_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetSingleBlockByIndex_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex.class, ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int INDEX_FIELD_NUMBER = 1;
+    private int index_;
+    /**
+     * <code>required int32 index = 1;</code>
+     */
+    public boolean hasIndex() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required int32 index = 1;</code>
+     */
+    public int getIndex() {
+      return index_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasIndex()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeInt32(1, index_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(1, index_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex other = (ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex) obj;
+
+      boolean result = true;
+      result = result && (hasIndex() == other.hasIndex());
+      if (hasIndex()) {
+        result = result && (getIndex()
+            == other.getIndex());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasIndex()) {
+        hash = (37 * hash) + INDEX_FIELD_NUMBER;
+        hash = (53 * hash) + getIndex();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * <pre>
+     * GetSingleBlockByIndex searches for a block with the given index following
+     * the genesis-block
+     * </pre>
+     *
+     * Protobuf type {@code skipchain.GetSingleBlockByIndex}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:skipchain.GetSingleBlockByIndex)
+        ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndexOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetSingleBlockByIndex_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetSingleBlockByIndex_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex.class, ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        index_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetSingleBlockByIndex_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex build() {
+        ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex buildPartial() {
+        ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex result = new ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.index_ = index_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex other) {
+        if (other == ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex.getDefaultInstance()) return this;
+        if (other.hasIndex()) {
+          setIndex(other.getIndex());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasIndex()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private int index_ ;
+      /**
+       * <code>required int32 index = 1;</code>
+       */
+      public boolean hasIndex() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required int32 index = 1;</code>
+       */
+      public int getIndex() {
+        return index_;
+      }
+      /**
+       * <code>required int32 index = 1;</code>
+       */
+      public Builder setIndex(int value) {
+        bitField0_ |= 0x00000001;
+        index_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required int32 index = 1;</code>
+       */
+      public Builder clearIndex() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        index_ = 0;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:skipchain.GetSingleBlockByIndex)
+    }
+
+    // @@protoc_insertion_point(class_scope:skipchain.GetSingleBlockByIndex)
+    private static final ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex();
+    }
+
+    public static ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<GetSingleBlockByIndex>
+        PARSER = new com.google.protobuf.AbstractParser<GetSingleBlockByIndex>() {
+      @java.lang.Override
+      public GetSingleBlockByIndex parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new GetSingleBlockByIndex(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<GetSingleBlockByIndex> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<GetSingleBlockByIndex> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -562,6 +2111,9 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -573,16 +2125,16 @@ public final class SkipchainProto {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              latestID_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              latestID_ = input.readBytes();
               break;
             }
           }
@@ -602,6 +2154,7 @@ public final class SkipchainProto {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetUpdateChain_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetUpdateChain_fieldAccessorTable
@@ -634,6 +2187,7 @@ public final class SkipchainProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -647,6 +2201,7 @@ public final class SkipchainProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -655,6 +2210,7 @@ public final class SkipchainProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -775,6 +2331,7 @@ public final class SkipchainProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -782,6 +2339,7 @@ public final class SkipchainProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChain prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -811,6 +2369,7 @@ public final class SkipchainProto {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetUpdateChain_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetUpdateChain_fieldAccessorTable
@@ -833,6 +2392,7 @@ public final class SkipchainProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         latestID_ = com.google.protobuf.ByteString.EMPTY;
@@ -840,15 +2400,18 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetUpdateChain_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChain getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChain.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChain build() {
         ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChain result = buildPartial();
         if (!result.isInitialized()) {
@@ -857,6 +2420,7 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChain buildPartial() {
         ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChain result = new ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChain(this);
         int from_bitField0_ = bitField0_;
@@ -870,32 +2434,39 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChain) {
           return mergeFrom((ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChain)other);
@@ -915,6 +2486,7 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasLatestID()) {
           return false;
@@ -922,6 +2494,7 @@ public final class SkipchainProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -991,11 +2564,13 @@ public final class SkipchainProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1017,11 +2592,12 @@ public final class SkipchainProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetUpdateChain>
         PARSER = new com.google.protobuf.AbstractParser<GetUpdateChain>() {
+      @java.lang.Override
       public GetUpdateChain parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new GetUpdateChain(input, extensionRegistry);
+        return new GetUpdateChain(input, extensionRegistry);
       }
     };
 
@@ -1034,6 +2610,7 @@ public final class SkipchainProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChain getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1124,6 +2701,9 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -1135,13 +2715,6 @@ public final class SkipchainProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 update_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock>();
@@ -1149,6 +2722,13 @@ public final class SkipchainProto {
               }
               update_.add(
                   input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -1171,6 +2751,7 @@ public final class SkipchainProto {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetUpdateChainReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetUpdateChainReply_fieldAccessorTable
@@ -1239,6 +2820,7 @@ public final class SkipchainProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1254,6 +2836,7 @@ public final class SkipchainProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < update_.size(); i++) {
@@ -1262,6 +2845,7 @@ public final class SkipchainProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -1379,6 +2963,7 @@ public final class SkipchainProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -1386,6 +2971,7 @@ public final class SkipchainProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChainReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -1414,6 +3000,7 @@ public final class SkipchainProto {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetUpdateChainReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetUpdateChainReply_fieldAccessorTable
@@ -1437,6 +3024,7 @@ public final class SkipchainProto {
           getUpdateFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (updateBuilder_ == null) {
@@ -1448,15 +3036,18 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_GetUpdateChainReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChainReply getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChainReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChainReply build() {
         ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChainReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -1465,6 +3056,7 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChainReply buildPartial() {
         ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChainReply result = new ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChainReply(this);
         int from_bitField0_ = bitField0_;
@@ -1481,32 +3073,39 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChainReply) {
           return mergeFrom((ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChainReply)other);
@@ -1549,6 +3148,7 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getUpdateCount(); i++) {
           if (!getUpdate(i).isInitialized()) {
@@ -1558,6 +3158,7 @@ public final class SkipchainProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1906,11 +3507,13 @@ public final class SkipchainProto {
         }
         return updateBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1932,11 +3535,12 @@ public final class SkipchainProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<GetUpdateChainReply>
         PARSER = new com.google.protobuf.AbstractParser<GetUpdateChainReply>() {
+      @java.lang.Override
       public GetUpdateChainReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new GetUpdateChainReply(input, extensionRegistry);
+        return new GetUpdateChainReply(input, extensionRegistry);
       }
     };
 
@@ -1949,6 +3553,7 @@ public final class SkipchainProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.GetUpdateChainReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -2154,6 +3759,9 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -2165,13 +3773,6 @@ public final class SkipchainProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               index_ = input.readInt32();
@@ -2263,6 +3864,13 @@ public final class SkipchainProto {
               payload_ = input.readBytes();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -2292,6 +3900,7 @@ public final class SkipchainProto {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_SkipBlock_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_SkipBlock_fieldAccessorTable
@@ -2558,6 +4167,7 @@ public final class SkipchainProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -2609,6 +4219,7 @@ public final class SkipchainProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2656,6 +4267,7 @@ public final class SkipchainProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -2948,6 +4560,7 @@ public final class SkipchainProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -2955,6 +4568,7 @@ public final class SkipchainProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -2978,6 +4592,7 @@ public final class SkipchainProto {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_SkipBlock_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_SkipBlock_fieldAccessorTable
@@ -3002,6 +4617,7 @@ public final class SkipchainProto {
           getForwardFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         index_ = 0;
@@ -3043,15 +4659,18 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_SkipBlock_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock build() {
         ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock result = buildPartial();
         if (!result.isInitialized()) {
@@ -3060,6 +4679,7 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock buildPartial() {
         ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock result = new ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock(this);
         int from_bitField0_ = bitField0_;
@@ -3137,32 +4757,39 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock) {
           return mergeFrom((ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock)other);
@@ -3265,6 +4892,7 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasIndex()) {
           return false;
@@ -3301,6 +4929,7 @@ public final class SkipchainProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4196,11 +5825,13 @@ public final class SkipchainProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4222,11 +5853,12 @@ public final class SkipchainProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SkipBlock>
         PARSER = new com.google.protobuf.AbstractParser<SkipBlock>() {
+      @java.lang.Override
       public SkipBlock parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SkipBlock(input, extensionRegistry);
+        return new SkipBlock(input, extensionRegistry);
       }
     };
 
@@ -4239,6 +5871,7 @@ public final class SkipchainProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -4320,6 +5953,9 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -4331,13 +5967,6 @@ public final class SkipchainProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               from_ = input.readBytes();
@@ -4374,6 +6003,13 @@ public final class SkipchainProto {
               bitField0_ |= 0x00000008;
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -4391,6 +6027,7 @@ public final class SkipchainProto {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_ForwardLink_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_ForwardLink_fieldAccessorTable
@@ -4472,6 +6109,7 @@ public final class SkipchainProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4503,6 +6141,7 @@ public final class SkipchainProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4520,6 +6159,7 @@ public final class SkipchainProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4679,6 +6319,7 @@ public final class SkipchainProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4686,6 +6327,7 @@ public final class SkipchainProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4709,6 +6351,7 @@ public final class SkipchainProto {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_ForwardLink_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_ForwardLink_fieldAccessorTable
@@ -4733,6 +6376,7 @@ public final class SkipchainProto {
           getSignatureFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         from_ = com.google.protobuf.ByteString.EMPTY;
@@ -4754,15 +6398,18 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_ForwardLink_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink build() {
         ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink result = buildPartial();
         if (!result.isInitialized()) {
@@ -4771,6 +6418,7 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink buildPartial() {
         ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink result = new ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink(this);
         int from_bitField0_ = bitField0_;
@@ -4804,32 +6452,39 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink) {
           return mergeFrom((ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink)other);
@@ -4858,6 +6513,7 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasFrom()) {
           return false;
@@ -4879,6 +6535,7 @@ public final class SkipchainProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5203,11 +6860,13 @@ public final class SkipchainProto {
         }
         return signatureBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5229,11 +6888,12 @@ public final class SkipchainProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ForwardLink>
         PARSER = new com.google.protobuf.AbstractParser<ForwardLink>() {
+      @java.lang.Override
       public ForwardLink parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ForwardLink(input, extensionRegistry);
+        return new ForwardLink(input, extensionRegistry);
       }
     };
 
@@ -5246,6 +6906,7 @@ public final class SkipchainProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -5301,6 +6962,9 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5312,13 +6976,6 @@ public final class SkipchainProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               msg_ = input.readBytes();
@@ -5327,6 +6984,13 @@ public final class SkipchainProto {
             case 18: {
               bitField0_ |= 0x00000002;
               sig_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -5346,6 +7010,7 @@ public final class SkipchainProto {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_ByzcoinSig_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_ByzcoinSig_fieldAccessorTable
@@ -5385,6 +7050,7 @@ public final class SkipchainProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5402,6 +7068,7 @@ public final class SkipchainProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5413,6 +7080,7 @@ public final class SkipchainProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5546,6 +7214,7 @@ public final class SkipchainProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5553,6 +7222,7 @@ public final class SkipchainProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5576,6 +7246,7 @@ public final class SkipchainProto {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_ByzcoinSig_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_ByzcoinSig_fieldAccessorTable
@@ -5598,6 +7269,7 @@ public final class SkipchainProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         msg_ = com.google.protobuf.ByteString.EMPTY;
@@ -5607,15 +7279,18 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_ByzcoinSig_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig build() {
         ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig result = buildPartial();
         if (!result.isInitialized()) {
@@ -5624,6 +7299,7 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig buildPartial() {
         ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig result = new ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig(this);
         int from_bitField0_ = bitField0_;
@@ -5641,32 +7317,39 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig) {
           return mergeFrom((ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig)other);
@@ -5689,6 +7372,7 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasMsg()) {
           return false;
@@ -5699,6 +7383,7 @@ public final class SkipchainProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5787,11 +7472,13 @@ public final class SkipchainProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5813,11 +7500,12 @@ public final class SkipchainProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ByzcoinSig>
         PARSER = new com.google.protobuf.AbstractParser<ByzcoinSig>() {
+      @java.lang.Override
       public ByzcoinSig parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new ByzcoinSig(input, extensionRegistry);
+        return new ByzcoinSig(input, extensionRegistry);
       }
     };
 
@@ -5830,6 +7518,7 @@ public final class SkipchainProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -5885,6 +7574,9 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -5896,13 +7588,6 @@ public final class SkipchainProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               challenge_ = input.readBytes();
@@ -5911,6 +7596,13 @@ public final class SkipchainProto {
             case 18: {
               bitField0_ |= 0x00000002;
               response_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -5930,6 +7622,7 @@ public final class SkipchainProto {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_SchnorrSig_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_SchnorrSig_fieldAccessorTable
@@ -5969,6 +7662,7 @@ public final class SkipchainProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5986,6 +7680,7 @@ public final class SkipchainProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5997,6 +7692,7 @@ public final class SkipchainProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -6130,6 +7826,7 @@ public final class SkipchainProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6137,6 +7834,7 @@ public final class SkipchainProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.SkipchainProto.SchnorrSig prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6160,6 +7858,7 @@ public final class SkipchainProto {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_SchnorrSig_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_SchnorrSig_fieldAccessorTable
@@ -6182,6 +7881,7 @@ public final class SkipchainProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         challenge_ = com.google.protobuf.ByteString.EMPTY;
@@ -6191,15 +7891,18 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_SchnorrSig_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.SchnorrSig getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.SchnorrSig.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.SchnorrSig build() {
         ch.epfl.dedis.lib.proto.SkipchainProto.SchnorrSig result = buildPartial();
         if (!result.isInitialized()) {
@@ -6208,6 +7911,7 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.SchnorrSig buildPartial() {
         ch.epfl.dedis.lib.proto.SkipchainProto.SchnorrSig result = new ch.epfl.dedis.lib.proto.SkipchainProto.SchnorrSig(this);
         int from_bitField0_ = bitField0_;
@@ -6225,32 +7929,39 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.SkipchainProto.SchnorrSig) {
           return mergeFrom((ch.epfl.dedis.lib.proto.SkipchainProto.SchnorrSig)other);
@@ -6273,6 +7984,7 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasChallenge()) {
           return false;
@@ -6283,6 +7995,7 @@ public final class SkipchainProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6371,11 +8084,13 @@ public final class SkipchainProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6397,11 +8112,12 @@ public final class SkipchainProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SchnorrSig>
         PARSER = new com.google.protobuf.AbstractParser<SchnorrSig>() {
+      @java.lang.Override
       public SchnorrSig parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new SchnorrSig(input, extensionRegistry);
+        return new SchnorrSig(input, extensionRegistry);
       }
     };
 
@@ -6414,6 +8130,7 @@ public final class SkipchainProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.SchnorrSig getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6469,6 +8186,9 @@ public final class SkipchainProto {
         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
         throws com.google.protobuf.InvalidProtocolBufferException {
       this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
       int mutable_bitField0_ = 0;
       com.google.protobuf.UnknownFieldSet.Builder unknownFields =
           com.google.protobuf.UnknownFieldSet.newBuilder();
@@ -6480,13 +8200,6 @@ public final class SkipchainProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               index_ = input.readInt32();
@@ -6495,6 +8208,13 @@ public final class SkipchainProto {
             case 18: {
               bitField0_ |= 0x00000002;
               commitment_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -6514,6 +8234,7 @@ public final class SkipchainProto {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_Exception_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_Exception_fieldAccessorTable
@@ -6553,6 +8274,7 @@ public final class SkipchainProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -6570,6 +8292,7 @@ public final class SkipchainProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6581,6 +8304,7 @@ public final class SkipchainProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -6714,6 +8438,7 @@ public final class SkipchainProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6721,6 +8446,7 @@ public final class SkipchainProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.SkipchainProto.Exception prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6744,6 +8470,7 @@ public final class SkipchainProto {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_Exception_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_Exception_fieldAccessorTable
@@ -6766,6 +8493,7 @@ public final class SkipchainProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         index_ = 0;
@@ -6775,15 +8503,18 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.internal_static_skipchain_Exception_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.Exception getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.SkipchainProto.Exception.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.Exception build() {
         ch.epfl.dedis.lib.proto.SkipchainProto.Exception result = buildPartial();
         if (!result.isInitialized()) {
@@ -6792,6 +8523,7 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.SkipchainProto.Exception buildPartial() {
         ch.epfl.dedis.lib.proto.SkipchainProto.Exception result = new ch.epfl.dedis.lib.proto.SkipchainProto.Exception(this);
         int from_bitField0_ = bitField0_;
@@ -6809,32 +8541,39 @@ public final class SkipchainProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.SkipchainProto.Exception) {
           return mergeFrom((ch.epfl.dedis.lib.proto.SkipchainProto.Exception)other);
@@ -6857,6 +8596,7 @@ public final class SkipchainProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasIndex()) {
           return false;
@@ -6867,6 +8607,7 @@ public final class SkipchainProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6952,11 +8693,13 @@ public final class SkipchainProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6978,11 +8721,12 @@ public final class SkipchainProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Exception>
         PARSER = new com.google.protobuf.AbstractParser<Exception>() {
+      @java.lang.Override
       public Exception parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
           throws com.google.protobuf.InvalidProtocolBufferException {
-          return new Exception(input, extensionRegistry);
+        return new Exception(input, extensionRegistry);
       }
     };
 
@@ -6995,6 +8739,7 @@ public final class SkipchainProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.SkipchainProto.Exception getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -7002,10 +8747,25 @@ public final class SkipchainProto {
   }
 
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_skipchain_GetAllSkipChainIDs_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_skipchain_GetAllSkipChainIDs_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_skipchain_GetAllSkipChainIDsReply_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_skipchain_GetAllSkipChainIDsReply_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_GetSingleBlock_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_skipchain_GetSingleBlock_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_skipchain_GetSingleBlockByIndex_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_skipchain_GetSingleBlockByIndex_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_skipchain_GetUpdateChain_descriptor;
   private static final 
@@ -7051,24 +8811,27 @@ public final class SkipchainProto {
   static {
     java.lang.String[] descriptorData = {
       "\n\017skipchain.proto\022\tskipchain\032\nonet.proto" +
-      "\"\034\n\016GetSingleBlock\022\n\n\002id\030\001 \002(\014\"\"\n\016GetUpd" +
-      "ateChain\022\020\n\010latestID\030\001 \002(\014\";\n\023GetUpdateC" +
-      "hainReply\022$\n\006update\030\001 \003(\0132\024.skipchain.Sk" +
-      "ipBlock\"\240\002\n\tSkipBlock\022\r\n\005index\030\001 \002(\005\022\016\n\006" +
-      "height\030\002 \002(\005\022\022\n\nmax_height\030\003 \002(\005\022\023\n\013base" +
-      "_height\030\004 \002(\005\022\021\n\tbacklinks\030\005 \003(\014\022\021\n\tveri" +
-      "fiers\030\006 \003(\014\022\016\n\006parent\030\007 \001(\014\022\017\n\007genesis\030\010" +
-      " \002(\014\022\014\n\004data\030\t \002(\014\022\034\n\006roster\030\n \002(\0132\014.one" +
-      "t.Roster\022\014\n\004hash\030\013 \002(\014\022\'\n\007forward\030\014 \003(\0132",
-      "\026.skipchain.ForwardLink\022\020\n\010children\030\r \003(" +
-      "\014\022\017\n\007payload\030\016 \001(\014\"r\n\013ForwardLink\022\014\n\004fro" +
-      "m\030\001 \002(\014\022\n\n\002to\030\002 \002(\014\022\037\n\tnewRoster\030\003 \001(\0132\014" +
-      ".onet.Roster\022(\n\tsignature\030\004 \002(\0132\025.skipch" +
-      "ain.ByzcoinSig\"&\n\nByzcoinSig\022\013\n\003msg\030\001 \002(" +
-      "\014\022\013\n\003sig\030\002 \002(\014\"1\n\nSchnorrSig\022\021\n\tchalleng" +
-      "e\030\001 \002(\014\022\020\n\010response\030\002 \002(\014\".\n\tException\022\r" +
-      "\n\005index\030\001 \002(\005\022\022\n\ncommitment\030\002 \002(\014B)\n\027ch." +
-      "epfl.dedis.lib.protoB\016SkipchainProto"
+      "\"\024\n\022GetAllSkipChainIDs\"/\n\027GetAllSkipChai" +
+      "nIDsReply\022\024\n\014skipChainIDs\030\001 \003(\014\"\034\n\016GetSi" +
+      "ngleBlock\022\n\n\002id\030\001 \002(\014\"&\n\025GetSingleBlockB" +
+      "yIndex\022\r\n\005index\030\001 \002(\005\"\"\n\016GetUpdateChain\022" +
+      "\020\n\010latestID\030\001 \002(\014\";\n\023GetUpdateChainReply" +
+      "\022$\n\006update\030\001 \003(\0132\024.skipchain.SkipBlock\"\240" +
+      "\002\n\tSkipBlock\022\r\n\005index\030\001 \002(\005\022\016\n\006height\030\002 " +
+      "\002(\005\022\022\n\nmax_height\030\003 \002(\005\022\023\n\013base_height\030\004" +
+      " \002(\005\022\021\n\tbacklinks\030\005 \003(\014\022\021\n\tverifiers\030\006 \003" +
+      "(\014\022\016\n\006parent\030\007 \001(\014\022\017\n\007genesis\030\010 \002(\014\022\014\n\004d" +
+      "ata\030\t \002(\014\022\034\n\006roster\030\n \002(\0132\014.onet.Roster\022" +
+      "\014\n\004hash\030\013 \002(\014\022\'\n\007forward\030\014 \003(\0132\026.skipcha" +
+      "in.ForwardLink\022\020\n\010children\030\r \003(\014\022\017\n\007payl" +
+      "oad\030\016 \001(\014\"r\n\013ForwardLink\022\014\n\004from\030\001 \002(\014\022\n" +
+      "\n\002to\030\002 \002(\014\022\037\n\tnewRoster\030\003 \001(\0132\014.onet.Ros" +
+      "ter\022(\n\tsignature\030\004 \002(\0132\025.skipchain.Byzco" +
+      "inSig\"&\n\nByzcoinSig\022\013\n\003msg\030\001 \002(\014\022\013\n\003sig\030" +
+      "\002 \002(\014\"1\n\nSchnorrSig\022\021\n\tchallenge\030\001 \002(\014\022\020" +
+      "\n\010response\030\002 \002(\014\".\n\tException\022\r\n\005index\030\001" +
+      " \002(\005\022\022\n\ncommitment\030\002 \002(\014B)\n\027ch.epfl.dedi" +
+      "s.lib.protoB\016SkipchainProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -7083,50 +8846,68 @@ public final class SkipchainProto {
         new com.google.protobuf.Descriptors.FileDescriptor[] {
           ch.epfl.dedis.lib.proto.OnetProto.getDescriptor(),
         }, assigner);
-    internal_static_skipchain_GetSingleBlock_descriptor =
+    internal_static_skipchain_GetAllSkipChainIDs_descriptor =
       getDescriptor().getMessageTypes().get(0);
+    internal_static_skipchain_GetAllSkipChainIDs_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_skipchain_GetAllSkipChainIDs_descriptor,
+        new java.lang.String[] { });
+    internal_static_skipchain_GetAllSkipChainIDsReply_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_skipchain_GetAllSkipChainIDsReply_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_skipchain_GetAllSkipChainIDsReply_descriptor,
+        new java.lang.String[] { "SkipChainIDs", });
+    internal_static_skipchain_GetSingleBlock_descriptor =
+      getDescriptor().getMessageTypes().get(2);
     internal_static_skipchain_GetSingleBlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_skipchain_GetSingleBlock_descriptor,
         new java.lang.String[] { "Id", });
+    internal_static_skipchain_GetSingleBlockByIndex_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_skipchain_GetSingleBlockByIndex_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_skipchain_GetSingleBlockByIndex_descriptor,
+        new java.lang.String[] { "Index", });
     internal_static_skipchain_GetUpdateChain_descriptor =
-      getDescriptor().getMessageTypes().get(1);
+      getDescriptor().getMessageTypes().get(4);
     internal_static_skipchain_GetUpdateChain_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_skipchain_GetUpdateChain_descriptor,
         new java.lang.String[] { "LatestID", });
     internal_static_skipchain_GetUpdateChainReply_descriptor =
-      getDescriptor().getMessageTypes().get(2);
+      getDescriptor().getMessageTypes().get(5);
     internal_static_skipchain_GetUpdateChainReply_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_skipchain_GetUpdateChainReply_descriptor,
         new java.lang.String[] { "Update", });
     internal_static_skipchain_SkipBlock_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(6);
     internal_static_skipchain_SkipBlock_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_skipchain_SkipBlock_descriptor,
         new java.lang.String[] { "Index", "Height", "MaxHeight", "BaseHeight", "Backlinks", "Verifiers", "Parent", "Genesis", "Data", "Roster", "Hash", "Forward", "Children", "Payload", });
     internal_static_skipchain_ForwardLink_descriptor =
-      getDescriptor().getMessageTypes().get(4);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_skipchain_ForwardLink_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_skipchain_ForwardLink_descriptor,
         new java.lang.String[] { "From", "To", "NewRoster", "Signature", });
     internal_static_skipchain_ByzcoinSig_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_skipchain_ByzcoinSig_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_skipchain_ByzcoinSig_descriptor,
         new java.lang.String[] { "Msg", "Sig", });
     internal_static_skipchain_SchnorrSig_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_skipchain_SchnorrSig_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_skipchain_SchnorrSig_descriptor,
         new java.lang.String[] { "Challenge", "Response", });
     internal_static_skipchain_Exception_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_skipchain_Exception_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_skipchain_Exception_descriptor,
