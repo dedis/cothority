@@ -86,6 +86,11 @@ func main() {
 }
 
 func createSharding(c *cli.Context) error {
+	/*fmt.Println(c.NArg())
+	if c.NArg() < 5 { // NArg() counts the flags and their value as arguments
+		return errors.New("Not enough arguments (1 required)")
+	}*/
+
 	// Parse CLI arguments
 	sn := c.Int("shards")
 	if sn == 0 {
@@ -97,10 +102,6 @@ func createSharding(c *cli.Context) error {
 	if es == 0 {
 		return errors.New(`--epoch flag is required 
 			and its value must be greather than 0`)
-	}
-
-	if c.NArg() < 5 { // NArg() counts the flags and their value as arguments
-		return errors.New("Not enough arguments (1 required)")
 	}
 
 	// Parse, open and read roster file
@@ -128,7 +129,11 @@ func createSharding(c *cli.Context) error {
 		ShardCount: sn,
 		EpochSize:  es,
 	}
+	// log.Print()
 	reply, err := client.CreateOmniLedger(req)
+	if err != nil {
+		return err
+	}
 
 	// Create config
 	shardIDs := make([]skipchain.SkipBlockID, len((*reply).ShardBlocks))
@@ -159,7 +164,7 @@ func createSharding(c *cli.Context) error {
 	fmt.Fprintf(c.App.Writer, "export OC=\"%v\"\n", cfgPath)
 
 	// For testing purposes
-	//c.App.Metadata["OC"] = cfgPath
+	c.App.Metadata["OC"] = cfgPath
 
 	return nil
 }
@@ -170,9 +175,11 @@ func evolveShard(c *cli.Context) error {
 		return errors.New("Not enough arguments (3 required")
 	}
 
-	olPath := c.Args().Get(0)
-	keyPath := c.Args().Get(1)
-	rosterPath := c.Args().Get(2)
+	/*
+		olPath := c.Args().Get(0)
+		keyPath := c.Args().Get(1)
+		rosterPath := c.Args().Get(2)
+	*/
 
 	return nil
 }
@@ -183,8 +190,10 @@ func newEpoch(c *cli.Context) error {
 		return errors.New("Not enough arguments (2 required")
 	}
 
-	olPath := c.Args().Get(0)
-	keyPath := c.Args().Get(1)
+	/*
+		olPath := c.Args().Get(0)
+		keyPath := c.Args().Get(1)
+	*/
 
 	return nil
 }
