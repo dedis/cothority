@@ -59,6 +59,9 @@ func testNewTrie(t *testing.T, db DB) {
 
 	require.Equal(t, root.Left, left.hash(testTrie.nonce))
 	require.Equal(t, root.Right, right.hash(testTrie.nonce))
+
+	// Check validity.
+	require.NoError(t, testTrie.IsValid())
 }
 
 func Test_AddToEmptyNode(t *testing.T) {
@@ -84,6 +87,9 @@ func testAddToEmptyNode(t *testing.T, db DB) {
 	val1, err := testTrie.Get([]byte{0x7f})
 	require.NoError(t, err)
 	require.Equal(t, val1, []byte{0x7f})
+
+	// Check validity.
+	require.NoError(t, testTrie.IsValid())
 }
 
 func Test_AddToLeafNode(t *testing.T) {
@@ -123,6 +129,9 @@ func testAddToLeafNode(t *testing.T, db DB) {
 	val3, err := testTrie.Get([]byte{0x01})
 	require.NoError(t, err)
 	require.Equal(t, val3, []byte{0x01})
+
+	// Check validity.
+	require.NoError(t, testTrie.IsValid())
 }
 
 func Test_LongThenShortKey(t *testing.T) {
@@ -148,6 +157,9 @@ func testLongThenShortKey(t *testing.T, db DB) {
 	shortVal, err := testTrie.Get(shortKey)
 	require.NoError(t, err)
 	require.Equal(t, shortVal, shortKey)
+
+	// Check validity.
+	require.NoError(t, testTrie.IsValid())
 }
 
 func Test_Overwrite(t *testing.T) {
@@ -187,6 +199,9 @@ func testOverwrite(t *testing.T, db DB) {
 		require.NoError(t, err)
 		require.Equal(t, val, v)
 	}
+
+	// Check validity.
+	require.NoError(t, testTrie.IsValid())
 }
 
 func Test_Delete(t *testing.T) {
@@ -231,6 +246,10 @@ func testDelete(t *testing.T, db DB) {
 		require.NoError(t, testTrie.Delete(k))
 	}
 	require.Equal(t, oldRoot, testTrie.GetRoot())
+
+	// Check validity.
+	require.NoError(t, testTrie.IsValid())
+
 	// TODO the following is not true because we cannot shink the tree yet
 	/*
 		// If we iterate the database, we should only have 5 items - the root,
@@ -300,6 +319,11 @@ func Test_QuickCheck(t *testing.T) {
 			if v, err := testTrie.Get(k); err != nil || v != nil {
 				return false
 			}
+		}
+
+		// Check that everything is ok.
+		if testTrie.IsValid() != nil {
+			return false
 		}
 		return true
 	}

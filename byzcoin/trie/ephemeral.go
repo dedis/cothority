@@ -20,7 +20,8 @@ type instr struct {
 
 // EphemeralTrie represents an ephemeral lazy copy of a Trie. The keys and
 // values stored in this object will not go into the Trie from which it is
-// created. Unless the Commit function is called.
+// created until the Commit function is called. The EphemeralTrie becomes
+// invalid if the source Trie is modified directly.
 type EphemeralTrie struct {
 	source     *Trie
 	overlay    map[string][]byte

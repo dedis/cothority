@@ -19,7 +19,6 @@ type Trie struct {
 	// hash of it which we cannot predict. So we introduce the noHashKey
 	// flag, which should only be used in the unit test.
 	noHashKey bool
-	// TODO do we need a lock for the ephemeral trie?
 }
 
 // NewTrie loads the tried from a boltDB database, it creates one if it does
@@ -408,54 +407,10 @@ func (t *Trie) CopyTo(target bucket) error {
 		if err := target.Put([]byte(nonceKey), t.nonce); err != nil {
 			return err
 		}
+		p := copyNodeProcessor{target}
 		// copy the trie
-		return t.copyTo(rootKey, target, b)
+		return t.dfs(&p, rootKey, b)
 	})
-}
-
-// copyTo performs a depth-first traversal down the trie and copies every node
-// that it encounters.
-func (t *Trie) copyTo(nodeKey []byte, target, source bucket) error {
-	nodeVal := source.Get(nodeKey)
-	if len(nodeVal) == 0 {
-		return errors.New("node key does not exist in copyTo")
-	}
-	switch nodeType(nodeVal[0]) {
-	case typeEmpty:
-		node, err := decodeEmptyNode(nodeVal)
-		if err != nil {
-			return err
-		}
-		if err := target.Put(node.hash(t.nonce), append([]byte{}, nodeVal...)); err != nil {
-			return err
-		}
-		return nil
-	case typeLeaf:
-		node, err := decodeLeafNode(nodeVal)
-		if err != nil {
-			return err
-		}
-		if err := target.Put(node.hash(t.nonce), append([]byte{}, nodeVal...)); err != nil {
-			return err
-		}
-		return nil
-	case typeInterior:
-		node, err := decodeInteriorNode(nodeVal)
-		if err != nil {
-			return err
-		}
-		if err := target.Put(node.hash(), append([]byte{}, nodeVal...)); err != nil {
-			return err
-		}
-		if err := t.copyTo(node.Left, target, source); err != nil {
-			return err
-		}
-		if err := t.copyTo(node.Right, target, source); err != nil {
-			return err
-		}
-		return nil
-	}
-	return errors.New("invalid node type")
 }
 
 // TODO for now we just replace leafs with empty nodes, which is ok but it'll
@@ -542,9 +497,51 @@ func (t *Trie) del(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 	return nil, errors.New("invalid node type")
 }
 
-// Valid checks whether the trie is valid.
-func (t *Trie) Valid() error {
-	return errors.New("not implemented")
+// IsValid checks whether the trie is valid.
+func (t *Trie) IsValid() error {
+	p := countNodeProcessor{}
+	err := t.db.View(func(b bucket) error {
+		rootKey := t.getRoot(b)
+		if rootKey == nil {
+			return errors.New("no root key")
+		}
+		return t.dfs(&p, rootKey, b)
+	})
+	if err != nil {
+		return err
+	}
+
+	// We can get proof for all the leaves.
+	for _, leave := range p.leaves {
+		proof, err := t.GetProof(leave.Key)
+		if err != nil {
+			return err
+		}
+		ok, err := proof.Exists(leave.Key)
+		if err != nil {
+			return err
+		}
+		if !ok {
+			return errors.New("got absence proof")
+		}
+	}
+
+	// Check that we have no dangling nodes.
+	var total int
+	err = t.db.View(func(b bucket) error {
+		return b.ForEach(func(k, v []byte) error {
+			total++
+			return nil
+		})
+	})
+	if err != nil {
+		return err
+	}
+	if total != p.total+2 {
+		// plus 2 because there are two well-known keys
+		return errors.New("dangling nodes")
+	}
+	return nil
 }
 
 // getRaw gets the value, it returns nil if the value does not exist.

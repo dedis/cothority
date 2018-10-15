@@ -6,9 +6,9 @@ import (
 	"errors"
 )
 
-// Proof TODO the proof structure
+// Proof contains an inclusion/absence proof for a key.
 type Proof struct {
-	Interiors []interiorNode // the final one should be root
+	Interiors []interiorNode
 	Leaf      leafNode
 	Empty     emptyNode
 	Nonce     []byte
@@ -18,18 +18,6 @@ type Proof struct {
 	// hash of it which we cannot predict. So we introduce the noHashKey
 	// flag, which should only be used in the unit test.
 	noHashKey bool
-}
-
-func (p *Proof) addInterior(node interiorNode) {
-	p.Interiors = append(p.Interiors, node)
-}
-
-func (p *Proof) binSlice(buf []byte) []bool {
-	if p.noHashKey {
-		return toBinSlice(buf)
-	}
-	hashKey := sha256.Sum256(buf)
-	return toBinSlice(hashKey[:])
 }
 
 // Exists checks the proof for inclusion/absence
@@ -65,19 +53,15 @@ func (p *Proof) Exists(key []byte) (bool, error) {
 	}
 }
 
-func equal(a []bool, b []bool) bool {
-	if len(a) != len(b) {
-		return false
+// GetRoot returns the Merkle root.
+func (p *Proof) GetRoot() []byte {
+	if len(p.Interiors) == 0 {
+		return nil
 	}
-	for i := range a {
-		if a[i] != b[i] {
-			return false
-		}
-	}
-	return true
+	return p.Interiors[len(p.Interiors)-1].hash()
 }
 
-// GetProof TODO doc
+// GetProof gets the inclusion/absence proof for the given key.
 func (t *Trie) GetProof(key []byte) (*Proof, error) {
 	p := &Proof{}
 	err := t.db.View(func(b bucket) error {
@@ -126,4 +110,28 @@ func (t *Trie) getProof(depth int, nodeKey []byte, bits []bool, p *Proof, b buck
 		return t.getProof(depth+1, node.Right, bits, p, b)
 	}
 	return errors.New("invalid node type")
+}
+
+func (p *Proof) addInterior(node interiorNode) {
+	p.Interiors = append(p.Interiors, node)
+}
+
+func (p *Proof) binSlice(buf []byte) []bool {
+	if p.noHashKey {
+		return toBinSlice(buf)
+	}
+	hashKey := sha256.Sum256(buf)
+	return toBinSlice(hashKey[:])
+}
+
+func equal(a []bool, b []bool) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
