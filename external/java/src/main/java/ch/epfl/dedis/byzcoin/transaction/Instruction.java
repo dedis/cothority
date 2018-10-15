@@ -4,6 +4,7 @@ import ch.epfl.dedis.byzcoin.InstanceId;
 import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
+import ch.epfl.dedis.lib.proto.DarcProto;
 import com.google.protobuf.ByteString;
 
 import java.nio.ByteBuffer;
@@ -78,7 +79,7 @@ public class Instruction {
         this.delete = delete;
     }
 
-    public Instruction(ByzCoinProto.Instruction inst) {
+    public Instruction(ByzCoinProto.Instruction inst) throws CothorityCryptoException {
         this.instId = new InstanceId(inst.getInstanceid());
         this.nonce = inst.getNonce().toByteArray();
         this.index = inst.getIndex();
@@ -91,6 +92,10 @@ public class Instruction {
         }
         if (inst.hasDelete()) {
             this.delete = new Delete(inst.getDelete());
+        }
+        this.signatures = new ArrayList<Signature>();
+        for (DarcProto.Signature sig : inst.getSignaturesList()) {
+            this.signatures.add(new Signature(sig));
         }
     }
 

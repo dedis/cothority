@@ -1,5 +1,6 @@
 package ch.epfl.dedis.byzcoin.contracts;
 
+import ch.epfl.dedis.byzcoin.transaction.Instruction;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.SkipBlock;
@@ -15,6 +16,7 @@ import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.eventlog.EventLogInstance;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -66,6 +68,21 @@ class ValueTest {
         myvalue = "27".getBytes();
         vi.evolveValueAndWait(myvalue, admin, 10);
         assertArrayEquals(vi.getValue(), myvalue);
+
+        // this part is a regression test for
+        // https://github.com/dedis/cothority/issues/1527
+        Block ob = new Block(p);
+        ob.getClientTransactions()
+                .forEach(clientTransaction -> clientTransaction.getInstructions().
+                        forEach(instr -> processInstr(instr)));
+    }
+
+    void processInstr(Instruction instr) {
+        try {
+            instr.deriveId("");
+        } catch (CothorityCryptoException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

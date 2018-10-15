@@ -22,7 +22,7 @@ public class ClientTransaction {
         this.instructions = instructions;
     }
 
-    public ClientTransaction(ByzCoinProto.ClientTransaction proto) {
+    public ClientTransaction(ByzCoinProto.ClientTransaction proto) throws CothorityCryptoException {
         instructions = new ArrayList<Instruction>();
         for (ByzCoinProto.Instruction i : proto.getInstructionsList()) {
             instructions.add(new Instruction(i));
