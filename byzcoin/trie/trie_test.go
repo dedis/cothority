@@ -223,6 +223,14 @@ func testDelete(t *testing.T, db DB) {
 		require.Nil(t, val)
 	}
 
+	// We should be allowed to delete again and nothing should happen.
+	oldRoot := testTrie.GetRoot()
+	require.NotNil(t, oldRoot)
+	for i := 0; i < 10; i++ {
+		k := []byte{byte(i)}
+		require.NoError(t, testTrie.Delete(k))
+	}
+	require.Equal(t, oldRoot, testTrie.GetRoot())
 	// TODO the following is not true because we cannot shink the tree yet
 	/*
 		// If we iterate the database, we should only have 5 items - the root,
@@ -260,7 +268,7 @@ func testSetDeleteSet(t *testing.T, db DB) {
 	require.NoError(t, testTrie.Set([]byte{0xdf}, []byte{0xdf}))
 }
 
-func Test_RandomAdd(t *testing.T) {
+func Test_QuickCheck(t *testing.T) {
 	mem := NewMemDB()
 	defer mem.Close()
 
@@ -269,25 +277,33 @@ func Test_RandomAdd(t *testing.T) {
 	require.NotNil(t, testTrie.nonce)
 
 	f := func(keys [][]byte) bool {
+		// Add a bunch of random keys
 		for _, k := range keys {
 			if testTrie.Set(k, k) != nil {
 				return false
 			}
 		}
+		// Check that they exist
 		for _, k := range keys {
 			if v, err := testTrie.Get(k); err != nil || v == nil {
+				return false
+			}
+		}
+		// Delete everything
+		for _, k := range keys {
+			if err := testTrie.Delete(k); err != nil {
+				return false
+			}
+		}
+		// We should be left with nothing
+		for _, k := range keys {
+			if v, err := testTrie.Get(k); err != nil || v != nil {
 				return false
 			}
 		}
 		return true
 	}
 	require.NoError(t, quick.Check(f, nil))
-}
-
-func Test_RandomDelete(t *testing.T) {
-	// TODO add a bunch of random nodes
-	// delete them in random order
-	// at the end the database should be empty
 }
 
 func Test_Copy(t *testing.T) {

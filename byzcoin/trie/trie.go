@@ -102,6 +102,16 @@ func newRootNode(b bucket, nonce []byte) error {
 	return nil
 }
 
+// GetRoot returns the root of the trie.
+func (t *Trie) GetRoot() []byte {
+	var root []byte
+	t.db.View(func(b bucket) error {
+		root = append([]byte{}, t.getRoot(b)...)
+		return nil
+	})
+	return root
+}
+
 func (t *Trie) getRoot(b bucket) []byte {
 	return b.Get([]byte(entryKey))
 }
@@ -305,6 +315,10 @@ func (t *Trie) startDel(key []byte, b bucket) error {
 	newRoot, err := t.del(0, rootKey, t.binSlice(key), key, b)
 	if err != nil {
 		return err
+	}
+	if newRoot == nil {
+		// nothing was deleted, so don't update the root
+		return nil
 	}
 	return b.Put([]byte(entryKey), newRoot)
 }

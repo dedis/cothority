@@ -1,7 +1,12 @@
 package trie
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
+	"math/rand"
+	"reflect"
 	"testing"
+	"testing/quick"
 
 	"github.com/stretchr/testify/require"
 )
@@ -58,8 +63,75 @@ func testProof(t *testing.T, db DB) {
 	}
 }
 
-func TestProof_Randomised(t *testing.T) {
-	// TODO have two sets of keys
-	// insert the keys from one set
-	// randomly get proofs from both sets
+type disjointSet struct {
+	A [][]byte
+	B [][]byte
+}
+
+func (disjointSet) Generate(rand *rand.Rand, size int) reflect.Value {
+	res := disjointSet{}
+	start := rand.Uint32()
+	for i := 0; i < size; i++ {
+		iA := start + uint32(i)
+		bufA := make([]byte, 4)
+		binary.LittleEndian.PutUint32(bufA, iA)
+		elemA := sha256.Sum256(bufA)
+		res.A = append(res.A, elemA[:])
+	}
+	for i := size; i < size*2; i++ {
+		iB := start + uint32(i)
+		bufB := make([]byte, 4)
+		binary.LittleEndian.PutUint32(bufB, iB)
+		elemB := sha256.Sum256(bufB)
+		res.B = append(res.B, elemB[:])
+	}
+	return reflect.ValueOf(res)
+}
+
+func TestProof_QuickCheck(t *testing.T) {
+	mem := NewMemDB()
+	defer mem.Close()
+
+	testTrie, err := NewTrie(mem)
+	require.NoError(t, err)
+	require.NotNil(t, testTrie.nonce)
+
+	f := func(s disjointSet) bool {
+		// Add a bunch of random keys
+		for _, k := range s.A {
+			if testTrie.Set(k, k) != nil {
+				return false
+			}
+		}
+		// Check that we can get proof
+		for _, k := range s.A {
+			p, err := testTrie.GetProof(k)
+			if err != nil {
+				return false
+			}
+			ok, err := p.Exists(k)
+			if err != nil {
+				return false
+			}
+			if !ok {
+				return false
+			}
+		}
+		// Check that there are no proofs for the other set.
+		for _, k := range s.B {
+			p, err := testTrie.GetProof(k)
+			if err != nil {
+				return false
+			}
+			ok, err := p.Exists(k)
+			if err != nil {
+				return false
+			}
+			if ok {
+				return false
+			}
+		}
+		return true
+	}
+	require.NoError(t, quick.Check(f, nil))
 }
