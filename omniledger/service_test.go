@@ -1,11 +1,10 @@
 package omniledger
 
 import (
-	"fmt"
 	"github.com/dedis/kyber/suites"
+	"github.com/dedis/onet/network"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"log"
 	"testing"
 	"time"
 
@@ -17,7 +16,8 @@ import (
 
 var tSuite = suites.MustFind("Ed25519")
 var testInterval = 500 * time.Millisecond
-var shardCount = 1
+var shardCount = 2
+var serverCount = 10
 
 type ser struct {
 	local    *onet.LocalTest
@@ -33,7 +33,7 @@ type ser struct {
 }
 
 func TestService_CreateOmniLedger(t *testing.T) {
-	s := newSer(t, 0, testInterval)
+	s := newSer(t, 0, testInterval, serverCount)
 	defer s.local.CloseAll()
 
 	// Check roster
@@ -61,28 +61,44 @@ func TestService_CreateOmniLedger(t *testing.T) {
 	rep, err = s.service().CreateOmniLedger(&CreateOmniLedger{
 		Version:    bc.CurrentVersion,
 		Roster:     *s.roster,
-		ShardCount: 5 * len(s.roster.List),
+		ShardCount: 5 * serverCount,
 		EpochSize:  1,
 	})
 	require.NotNil(t, err)
 
-	// Passing
+	// Passing argument check
 	rep, err = s.service().CreateOmniLedger(&CreateOmniLedger{
 		Version:    bc.CurrentVersion,
 		Roster:     *s.roster,
-		ShardCount: 1,
+		ShardCount: shardCount,
 		EpochSize:  1,
 	})
 
-	log.Println(err)
-	fmt.Println(rep)
-
 	assert.NotNil(t, rep)
+
+	// Verify number of created shard is correct
 	assert.True(t, len(rep.ShardRoster) == shardCount)
+
+	// Verify each shard has enough validators, i.e. >= 4
+	for _, shard := range rep.ShardRoster {
+		valPerShard := len(shard.List)
+		assert.True(t, valPerShard == 4 || valPerShard > 4)
+	}
+
+	// Verify no two shards have same node
+	m := make(map[network.ServerIdentity]int)
+	for _, shard := range rep.ShardRoster {
+		for _, si := range shard.List {
+			m[*si]++
+		}
+	}
+	for k := range m {
+		assert.True(t, m[k] < 2)
+	}
 }
 
-func newSer(t *testing.T, step int, interval time.Duration) *ser {
-	return newSerN(t, step, interval, 4, false)
+func newSer(t *testing.T, step int, interval time.Duration, serverCount int) *ser {
+	return newSerN(t, step, interval, serverCount, false)
 }
 
 func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange bool) *ser {
