@@ -65,7 +65,7 @@ func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error)
 // WaitProof calls the byzcoin client's wait proof
 func (c *Client) WaitProof(id byzcoin.InstanceID, interval time.Duration,
 	value []byte) (*byzcoin.Proof, error) {
-		return c.bcClient.WaitProof(id, interval, value)
+	return c.bcClient.WaitProof(id, interval, value)
 }
 
 // AddWrite creates a Write Instance by adding a transaction on the byzcoin client.
