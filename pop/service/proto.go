@@ -28,6 +28,7 @@ func init() {
 // package pop;
 // type :map\[string\]FinalStatement:map<string, FinalStatement>
 // type :byzcoin.InstanceID:bytes
+// type :darc.ID:bytes
 // import "onet.proto";
 // import "darc.proto";
 //
@@ -193,6 +194,7 @@ type GetFinalStatementsReply struct {
 type StoreInstanceID struct {
 	PartyID    []byte
 	InstanceID byzcoin.InstanceID
+	DarcID     darc.ID
 }
 
 // StoreInstanceIDReply is an empty reply
@@ -207,6 +209,7 @@ type GetInstanceID struct {
 // GetInstanceIDReply is the InstanceID for the party
 type GetInstanceIDReply struct {
 	InstanceID byzcoin.InstanceID
+	DarcID     darc.ID
 }
 
 // StoreSigner writes an Signer from ByzCoin to a FinalStatement.

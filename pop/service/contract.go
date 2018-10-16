@@ -159,6 +159,7 @@ func (s *Service) ContractPopParty(cdb byzcoin.CollectionView, inst byzcoin.Inst
 				if err != nil {
 					return nil, nil, err
 				}
+
 				scs = append(scs, sc)
 			}
 

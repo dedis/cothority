@@ -232,6 +232,7 @@ func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 			},
 		}},
 	}
+
 	err = ctx.Instructions[0].SignBy(party.Darc.GetBaseID(), party.Signer)
 	if err != nil {
 		return nil, errors.New("couldn't sign: " + err.Error())

@@ -109,12 +109,9 @@ type Service struct {
 	// verifyMergeBuffer is a temporary buffer for bftVerifyMerge results.
 	// The logic is the same for verifyFinalBuffer above.
 	verifyMergeBuffer sync.Map
-	// all proposed configurations - they don't need to be saved. Every time they
-	// are retrived, they will be deleted.
+	// all proposed configurations - they don't need to be saved. Every time
+	// a party is finalized, they are deleted.
 	proposedDescription []PopDesc
-	// storedKeys is a temporary storage for saving keys of attendees while
-	// scanning.
-	storedKeys map[string]*keyList
 }
 
 type keyList struct {
@@ -131,8 +128,13 @@ type saveData struct {
 	Finals map[string]*FinalStatement
 	// InstanceIDs stores a map of partyID to InstanceID
 	InstanceIDs map[string]*byzcoin.InstanceID
+	// DarcIDs stores a map of partyID to DarcID
+	DarcIDs map[string]*darc.ID
 	// Signers stores a map of partyID to Signer
 	Signers map[string]*darc.Signer
+	// StoredKeys is a temporary storage for saving keys of attendees while
+	// scanning.
+	StoredKeys map[string]*keyList
 	// The info used in merge process
 	// key is ID of party
 	merges map[string]*merge
@@ -243,7 +245,6 @@ func (s *Service) StoreConfig(req *StoreConfig) (network.Message, error) {
 // GetProposals returns all collected proposals so far.
 func (s *Service) GetProposals(req *GetProposals) (*GetProposalsReply, error) {
 	tmp := s.proposedDescription
-	s.proposedDescription = make([]PopDesc, 0)
 	log.Lvlf2("Sending proposals: %+v", tmp)
 	return &GetProposalsReply{
 		Proposals: tmp,
@@ -254,6 +255,7 @@ func (s *Service) GetProposals(req *GetProposals) (*GetProposalsReply, error) {
 // a PopDesc and signed off. The FinalStatement holds the updated PopDesc, the
 // pruned attendees-public-key-list and the collective signature.
 func (s *Service) FinalizeRequest(req *FinalizeRequest) (*FinalizeResponse, error) {
+	s.proposedDescription = make([]PopDesc, 0)
 	log.Lvlf2("Finalize: %s %+v", s.Context.ServerIdentity(), req)
 	if s.data.Public == nil {
 		return nil, errors.New("Not linked yet")
@@ -435,13 +437,13 @@ func (s *Service) GetFinalStatements(req *GetFinalStatements) (*GetFinalStatemen
 // StoreKeys stores the given keys in the service to be retrieved by the users.
 func (s *Service) StoreKeys(req *StoreKeys) (*StoreKeysReply, error) {
 	// TODO: verify signature
-	s.storedKeys[string(req.ID)] = &keyList{req.Keys}
+	s.data.StoredKeys[string(req.ID)] = &keyList{req.Keys}
 	return &StoreKeysReply{}, nil
 }
 
 // GetKeys will return the keys stored for that party.
 func (s *Service) GetKeys(req *GetKeys) (*GetKeysReply, error) {
-	ks := s.storedKeys[string(req.ID)]
+	ks := s.data.StoredKeys[string(req.ID)]
 	if ks == nil {
 		return nil, errors.New("no keys stored for this party")
 	}
@@ -454,6 +456,7 @@ func (s *Service) GetKeys(req *GetKeys) (*GetKeysReply, error) {
 // StoreInstanceID will store the instanceID in a given final statement
 func (s *Service) StoreInstanceID(req *StoreInstanceID) (*StoreInstanceIDReply, error) {
 	s.data.InstanceIDs[string(req.PartyID)] = &req.InstanceID
+	s.data.DarcIDs[string(req.PartyID)] = &req.DarcID
 	s.save()
 	return &StoreInstanceIDReply{}, nil
 }
@@ -464,7 +467,11 @@ func (s *Service) GetInstanceID(req *GetInstanceID) (*GetInstanceIDReply, error)
 	if !ok {
 		return nil, errors.New("no such instanceID stored")
 	}
-	return &GetInstanceIDReply{*iid}, nil
+	did, ok := s.data.DarcIDs[string(req.PartyID)]
+	if !ok {
+		return nil, errors.New("no such darcID stored")
+	}
+	return &GetInstanceIDReply{*iid, *did}, nil
 }
 
 // StoreSigner will store the Signer in a given final statement
@@ -1139,7 +1146,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 		data:             &saveData{},
-		storedKeys:       map[string]*keyList{},
 	}
 	err := s.RegisterHandlers(s.PinRequest, s.VerifyLink, s.StoreConfig, s.FinalizeRequest,
 		s.FetchFinal, s.MergeRequest, s.GetProposals, s.GetLink, s.GetFinalStatements,
@@ -1160,8 +1166,14 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if len(s.data.InstanceIDs) == 0 {
 		s.data.InstanceIDs = map[string]*byzcoin.InstanceID{}
 	}
+	if len(s.data.DarcIDs) == 0 {
+		s.data.DarcIDs = map[string]*darc.ID{}
+	}
 	if len(s.data.Signers) == 0 {
 		s.data.Signers = map[string]*darc.Signer{}
+	}
+	if len(s.data.StoredKeys) == 0 {
+		s.data.StoredKeys = map[string]*keyList{}
 	}
 	s.syncs = make(map[string]*syncChans)
 	s.propagateFinalize, err = messaging.NewPropagationFunc(c, propagFinal, s.PropagateFinal, 0)
