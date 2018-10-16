@@ -2,7 +2,7 @@
 // implements both the access-control cothority and the secret management
 // cothority. (1) The access-control cothority is implemented using ByzCoin
 // with two contracts, `Write` and `Read` (2) The secret-management cothority
-// uses an c service with methods to set up a Long Term Secret (LTS)
+// uses an onet service with methods to set up a Long Term Secret (LTS)
 // distributed key and to request a re-encryption
 //
 // For more details, see
