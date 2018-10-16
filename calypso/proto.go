@@ -46,7 +46,7 @@ type Write struct {
 	LTSID []byte
 }
 
-// WriteReply is is returned upon successfully spawning a Write instance.
+// WriteReply is returned upon successfully spawning a Write instance.
 type WriteReply struct {
 	*byzcoin.AddTxResponse
 	byzcoin.InstanceID

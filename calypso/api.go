@@ -59,7 +59,7 @@ func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error)
 // Output:
 //   - reply - WriteReply containing the transaction response and instance id
 //	 - err - Error if any, nil otherwise.
-func (c *Client) AddWrite(write Write, signer darc.Signer, darc darc.Darc,
+func (c *Client) AddWrite(write *Write, signer darc.Signer, darc darc.Darc,
 	wait int) (
 	reply *WriteReply, err error) {
 	reply = &WriteReply{}
@@ -99,7 +99,7 @@ func (c *Client) AddWrite(write Write, signer darc.Signer, darc darc.Darc,
 
 // AddRead creates a Read Instance by adding a transaction on the byzcoin client.
 // Input:
-//   - write - A Write structure
+//   - proof - A ByzCoin proof of the Write Operation.
 //   - signer - The data owner who will sign the transaction
 //   - darc - The darc governing this instance
 //   - wait - The number of blocks to wait -- 0 means no wait
@@ -107,12 +107,12 @@ func (c *Client) AddWrite(write Write, signer darc.Signer, darc darc.Darc,
 // Output:
 //   - reply - ReadReply containing the transaction response and instance id
 //	 - err - Error if any, nil otherwise.
-func (c *Client) AddRead(write *byzcoin.Proof, signer darc.Signer,
+func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 	darc darc.Darc, wait int) (
 	reply *ReadReply, err error) {
 	var readBuf []byte
 	read := &Read{
-		Write: byzcoin.NewInstanceID(write.InclusionProof.Key),
+		Write: byzcoin.NewInstanceID(proof.InclusionProof.Key),
 		Xc:    signer.Ed25519.Point,
 	}
 	reply = &ReadReply{}
@@ -126,7 +126,7 @@ func (c *Client) AddRead(write *byzcoin.Proof, signer darc.Signer,
 	}
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{{
-			InstanceID: byzcoin.NewInstanceID(write.InclusionProof.Key),
+			InstanceID: byzcoin.NewInstanceID(proof.InclusionProof.Key),
 			Nonce:      byzcoin.Nonce{},
 			Index:      0,
 			Length:     1,
@@ -146,4 +146,48 @@ func (c *Client) AddRead(write *byzcoin.Proof, signer darc.Signer,
 		return nil, err
 	}
 	return reply, nil
+}
+
+// SpawnDarc spawns a Darc Instance by adding a transaction on the byzcoin client.
+// Input:
+//   - signer - The signer authorizing the spawn of this darc (calypso "admin")
+//   - controlDarc - The darc governing this spawning
+//	 - spawnDarc - The darc to be spawned
+//   - wait - The number of blocks to wait -- 0 means no wait
+//
+// Output:
+//   - reply - WriteReply containing the transaction response and instance id
+//	 - err - Error if any, nil otherwise.
+func (c *Client) SpawnDarc(signer darc.Signer,
+	controlDarc darc.Darc, spawnDarc darc.Darc, wait int) (
+	reply *byzcoin.AddTxResponse, err error) {
+	reply = &byzcoin.AddTxResponse{}
+	if err != nil {
+		return nil, err
+	}
+	darcBuf, err := spawnDarc.ToProto()
+	if err != nil {
+		return nil, err
+	}
+
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{{
+			InstanceID: byzcoin.NewInstanceID(controlDarc.GetBaseID()),
+			Nonce:      byzcoin.GenNonce(),
+			Index:      0,
+			Length:     1,
+			Spawn: &byzcoin.Spawn{
+				ContractID: byzcoin.ContractDarcID,
+				Args: []byzcoin.Argument{{
+					Name:  "darc",
+					Value: darcBuf,
+				}},
+			},
+		}},
+	}
+	err = ctx.Instructions[0].SignBy(controlDarc.GetBaseID(), signer)
+	if err != nil {
+		return nil, err
+	}
+	return c.byzcoin.AddTransactionAndWait(ctx, wait)
 }
