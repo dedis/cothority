@@ -77,7 +77,7 @@ type CreateLTSReply struct {
 }
 
 // DecryptKey is sent by a reader after he successfully stored a 'Read' request
-// in byzcoin.
+// in byzcoin Client.
 type DecryptKey struct {
 	// Read is the proof that he has been accepted to read the secret.
 	Read byzcoin.Proof

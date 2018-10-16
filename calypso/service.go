@@ -163,7 +163,7 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	log.Lvlf2("Public key is: %s", ocsProto.Xc)
 	ocsProto.VerificationData, err = protobuf.Encode(verificationData)
 	if err != nil {
-		return nil, errors.New("couldn't marshal verificationdata: " + err.Error())
+		return nil, errors.New("couldn't marshal verification data: " + err.Error())
 	}
 
 	// Make sure everything used from the s.Storage structure is copied, so
