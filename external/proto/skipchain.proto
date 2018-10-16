@@ -11,9 +11,25 @@ option java_outer_classname = "SkipchainProto";
 
 import "onet.proto";
 
+// GetAllSkipChainIDs - returns the SkipBlockIDs of the genesis blocks
+// of all of the known skipchains.
+message GetAllSkipChainIDs {
+}
+
+// GetAllSkipChainIDsReply - reply to GetAllSkipchains
+message GetAllSkipChainIDsReply {
+	repeated bytes skipChainIDs = 1;
+}
+
 // GetSingleBlock asks for a single block.
 message GetSingleBlock {
     required bytes id = 1;
+}
+
+// GetSingleBlockByIndex searches for a block with the given index following
+// the genesis-block
+message GetSingleBlockByIndex {
+		required int32 index = 1;
 }
 
 // GetUpdateChain - the client sends the hash of the last known
