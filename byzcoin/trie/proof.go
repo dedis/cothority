@@ -23,7 +23,12 @@ type Proof struct {
 // Exists checks the proof for inclusion/absence
 func (p *Proof) Exists(key []byte) (bool, error) {
 	bits := p.binSlice(key)
-	expectedHash := p.Interiors[0].hash()
+	expectedHash := p.Interiors[0].hash() // first one is the root hash
+
+	if len(p.Interiors) == 0 {
+		return false, errors.New("no interior nodes")
+	}
+
 	var i int
 	for i = range p.Interiors {
 		if !bytes.Equal(p.Interiors[i].hash(), expectedHash) {
@@ -36,7 +41,7 @@ func (p *Proof) Exists(key []byte) (bool, error) {
 		}
 	}
 	if bytes.Equal(expectedHash, p.Leaf.hash(p.Nonce)) {
-		if equal(bits[:i], p.Empty.Prefix) {
+		if !equal(bits[:i+1], p.Leaf.Prefix) {
 			return false, errors.New("invalid prefix in leaf node")
 		}
 		if !bytes.Equal(p.Leaf.Key, key) {
@@ -44,7 +49,7 @@ func (p *Proof) Exists(key []byte) (bool, error) {
 		}
 		return true, nil
 	} else if bytes.Equal(expectedHash, p.Empty.hash(p.Nonce)) {
-		if equal(bits[:i], p.Empty.Prefix) {
+		if !equal(bits[:i+1], p.Empty.Prefix) {
 			return false, errors.New("invalid prefix in empty node")
 		}
 		return false, nil
@@ -58,7 +63,7 @@ func (p *Proof) GetRoot() []byte {
 	if len(p.Interiors) == 0 {
 		return nil
 	}
-	return p.Interiors[len(p.Interiors)-1].hash()
+	return p.Interiors[0].hash()
 }
 
 // GetProof gets the inclusion/absence proof for the given key.

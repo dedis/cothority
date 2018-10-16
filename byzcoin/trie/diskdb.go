@@ -12,6 +12,15 @@ type diskDB struct {
 	bucket []byte
 }
 
+// NewDiskDB creates a new boltdb-backed database.
+func NewDiskDB(db *bolt.DB, bucket []byte) DB {
+	disk := diskDB{
+		db:     db,
+		bucket: bucket,
+	}
+	return &disk
+}
+
 func (r *diskDB) Update(f func(bucket) error) error {
 	return r.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(r.bucket)
@@ -30,6 +39,24 @@ func (r *diskDB) View(f func(bucket) error) error {
 		}
 		return f(&diskBucket{b})
 	})
+}
+
+func (r *diskDB) UpdateDryRun(f func(bucket) error) error {
+	dryRunErr := errors.New("this is a dry-run")
+	err := r.db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket(r.bucket)
+		if b == nil {
+			return errors.New("bucket does not exist")
+		}
+		if err := f(&diskBucket{b}); err != nil {
+			return err
+		}
+		return dryRunErr
+	})
+	if err != dryRunErr {
+		return err
+	}
+	return nil
 }
 
 func (r *diskDB) Close() error {

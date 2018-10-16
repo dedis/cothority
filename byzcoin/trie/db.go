@@ -3,6 +3,7 @@ package trie
 type DB interface {
 	Update(func(bucket) error) error
 	View(func(bucket) error) error
+	UpdateDryRun(func(bucket) error) error
 	Close() error
 }
 

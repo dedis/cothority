@@ -1,6 +1,7 @@
 package trie
 
 import (
+	"errors"
 	"sync"
 )
 
@@ -30,6 +31,10 @@ func (r *memDB) View(f func(bucket) error) error {
 	r.Lock()
 	defer r.Unlock()
 	return f(r.bucket)
+}
+
+func (r *memDB) UpdateDryRun(f func(bucket) error) error {
+	return errors.New("dry-run is not currently supported for in-memory database")
 }
 
 // Close delete the memory-only database, it cannot be recovered.

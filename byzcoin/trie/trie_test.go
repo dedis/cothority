@@ -287,6 +287,48 @@ func testSetDeleteSet(t *testing.T, db DB) {
 	require.NoError(t, testTrie.Set([]byte{0xdf}, []byte{0xdf}))
 }
 
+func Test_IsValid(t *testing.T) {
+	mem := NewMemDB()
+	defer mem.Close()
+
+	testTrie, err := NewTrie(mem)
+	require.NoError(t, err)
+	require.NotNil(t, testTrie.nonce)
+
+	require.NoError(t, testTrie.Set([]byte{0xff}, []byte{0xff}))
+	require.NoError(t, testTrie.Set([]byte{0xdf}, []byte{0xdf}))
+
+	p, err := testTrie.GetProof([]byte{0xff})
+	require.NoError(t, err)
+	ok, err := p.Exists([]byte{0xff})
+	require.NoError(t, err)
+	require.True(t, ok)
+
+	err = mem.Update(func(b bucket) error {
+		// tamper with one of the leaves, the results should be invalid
+		k := p.Leaf.hash(testTrie.nonce)
+		leafValBuf := b.Get(k)
+		if leafValBuf == nil {
+			return errors.New("can't find leaf")
+		}
+
+		leaf, err := decodeLeafNode(leafValBuf)
+		if err != nil {
+			return err
+		}
+		leaf.Value = []byte{0xdf}
+
+		leafValBuf2, err := leaf.encode()
+		if err != nil {
+			return err
+		}
+
+		return b.Put(k, leafValBuf2)
+	})
+	require.NoError(t, err)
+	require.NotNil(t, testTrie.IsValid())
+}
+
 func Test_QuickCheck(t *testing.T) {
 	mem := NewMemDB()
 	defer mem.Close()
@@ -301,6 +343,69 @@ func Test_QuickCheck(t *testing.T) {
 			if testTrie.Set(k, k) != nil {
 				return false
 			}
+		}
+		// Check that they exist
+		for _, k := range keys {
+			if v, err := testTrie.Get(k); err != nil || v == nil {
+				return false
+			}
+		}
+		// Delete everything
+		for _, k := range keys {
+			if err := testTrie.Delete(k); err != nil {
+				return false
+			}
+		}
+		// We should be left with nothing
+		for _, k := range keys {
+			if v, err := testTrie.Get(k); err != nil || v != nil {
+				return false
+			}
+		}
+
+		// Check that everything is ok.
+		if testTrie.IsValid() != nil {
+			return false
+		}
+		return true
+	}
+	require.NoError(t, quick.Check(f, nil))
+}
+
+type kvPair struct {
+	op  OpType
+	key []byte
+	val []byte
+}
+
+func (p *kvPair) Op() OpType {
+	return p.op
+}
+
+func (p *kvPair) Key() []byte {
+	return p.key
+}
+
+func (p *kvPair) Val() []byte {
+	return p.val
+}
+
+func Test_BatchQuickCheck(t *testing.T) {
+	mem := NewMemDB()
+	defer mem.Close()
+
+	testTrie, err := NewTrie(mem)
+	require.NoError(t, err)
+	require.NotNil(t, testTrie.nonce)
+
+	f := func(keys [][]byte) bool {
+		// Add a bunch of random keys
+		var pairs []KVPair
+		for _, k := range keys {
+			pairs = append(pairs, &kvPair{OpSet, k, k})
+		}
+		if testTrie.Batch(pairs) != nil {
+			return false
 		}
 		// Check that they exist
 		for _, k := range keys {
@@ -402,7 +507,7 @@ func newDiskDB(t *testing.T) DB {
 		return err
 	})
 	require.NoError(t, err)
-	return &diskDB{db, []byte(bucketName)}
+	return NewDiskDB(db, []byte(bucketName))
 }
 
 func delDiskDB(t *testing.T, db DB) {

@@ -48,6 +48,9 @@ func testProof(t *testing.T, db DB) {
 		ok, err := p.Exists(k)
 		require.NoError(t, err)
 		require.False(t, ok)
+
+		// Check that the roots are the same.
+		require.Equal(t, testTrie.GetRoot(), p.GetRoot())
 	}
 
 	// Delete the keys and the proof should not exist
@@ -60,7 +63,11 @@ func testProof(t *testing.T, db DB) {
 		ok, err := p.Exists(k)
 		require.NoError(t, err)
 		require.False(t, ok)
+
+		// Check that the roots are the same.
+		require.Equal(t, testTrie.GetRoot(), p.GetRoot())
 	}
+
 }
 
 type disjointSet struct {

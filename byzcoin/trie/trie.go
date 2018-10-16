@@ -62,6 +62,39 @@ func NewTrie(db DB) (Trie, error) {
 	}, nil
 }
 
+// NewTrieWithNonce allows the user to specify the nonce, it will return an
+// error if loading from an existing database.
+func NewTrieWithNonce(db DB, nonce []byte) (Trie, error) {
+	err := db.Update(func(b bucket) error {
+		// create or load the nonce
+		nonceBuf := b.Get([]byte(nonceKey))
+		if nonceBuf != nil {
+			return errors.New("nonce already exists")
+		}
+		if err := b.Put([]byte(nonceKey), nonce); err != nil {
+			return err
+		}
+
+		// create the root node
+		rootKey := b.Get([]byte(entryKey))
+		if rootKey != nil {
+			return errors.New("root already exists")
+		}
+		err := newRootNode(b, nonce)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return Trie{}, err
+	}
+	return Trie{
+		nonce: nonce,
+		db:    db,
+	}, nil
+}
+
 // newRootNode creates the root node and two empty nodes and store these in the
 // bucket.
 func newRootNode(b bucket, nonce []byte) error {
@@ -122,6 +155,34 @@ func (t *Trie) Set(key []byte, value []byte) error {
 	})
 }
 
+// KVPair is the interface to get a
+type KVPair interface {
+	Op() OpType
+	Key() []byte
+	Val() []byte
+}
+
+// Batch is similar to Set, but for multiple key-value pairs.
+func (t *Trie) Batch(pairs []KVPair) error {
+	return t.db.Update(func(b bucket) error {
+		for _, p := range pairs {
+			switch p.Op() {
+			case OpSet:
+				if err := t.startSet(p.Key(), p.Val(), b); err != nil {
+					return err
+				}
+			case OpDel:
+				if err := t.startDel(p.Key(), b); err != nil {
+					return err
+				}
+			default:
+				return errors.New("no such operation")
+			}
+		}
+		return nil
+	})
+}
+
 func (t *Trie) startSet(key []byte, value []byte, b bucket) error {
 	newRoot, err := t.set(t.getRoot(b), t.binSlice(key), 0, key, value, b)
 	if err != nil {
@@ -167,7 +228,9 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 			return node.hash(t.nonce), nil
 		}
 		// Otherwise, we need to create one or more interior nodes.
-		left, right, err := t.extendLeaf(node.Prefix, node.Key, node.Value, key, value, b)
+		bits1 := t.binSlice(node.Key)
+		bits2 := t.binSlice(key)
+		left, right, err := t.extendLeaf(node.Prefix, node.Key, node.Value, bits1, key, value, bits2, b)
 		if err != nil {
 			return nil, err
 		}
@@ -241,11 +304,11 @@ func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, value []byte, b bucket) 
 }
 
 // extendLeaf recursively extends a leaf node that's at the given prefix.
-func (t *Trie) extendLeaf(currPrefix []bool, key1, valueKey1, key2, valueKey2 []byte, b bucket) ([]byte, []byte, error) {
+func (t *Trie) extendLeaf(currPrefix []bool,
+	key1, valueKey1 []byte, bits1 []bool,
+	key2, valueKey2 []byte, bits2 []bool,
+	b bucket) ([]byte, []byte, error) {
 	i := len(currPrefix)
-	// TODO maybe we don't need to re-compute all the time
-	bits1 := t.binSlice(key1)
-	bits2 := t.binSlice(key2)
 	if bits1[i] != bits2[i] {
 		// base case:
 		currPrefixCopy := append([]bool{}, currPrefix...)
@@ -271,7 +334,7 @@ func (t *Trie) extendLeaf(currPrefix []bool, key1, valueKey1, key2, valueKey2 []
 		return right.hash(t.nonce), left.hash(t.nonce), nil
 	}
 	// recursive case:
-	leftHash, rightHash, err := t.extendLeaf(append(currPrefix, bits1[i]), key1, valueKey1, key2, valueKey2, b)
+	leftHash, rightHash, err := t.extendLeaf(append(currPrefix, bits1[i]), key1, valueKey1, bits1, key2, valueKey2, bits2, b)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -517,6 +580,9 @@ func (t *Trie) IsValid() error {
 		if err != nil {
 			return err
 		}
+
+		proof.noHashKey = t.noHashKey
+
 		ok, err := proof.Exists(leave.Key)
 		if err != nil {
 			return err
