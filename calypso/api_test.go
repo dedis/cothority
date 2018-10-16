@@ -107,13 +107,13 @@ func TestClient_Calypso(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, wr1.InstanceID)
 	//Get the write proof
-	prWr1, err := calypsoClient.byzcoin.WaitProof(wr1.InstanceID, time.Second, nil)
+	prWr1, err := calypsoClient.bcClient.WaitProof(wr1.InstanceID, time.Second, nil)
 	require.Nil(t, err)
 	require.NotNil(t, prWr1)
 
 	re1, err := calypsoClient.AddRead(prWr1, reader1, *darc1, 10)
 	require.Nil(t, err)
-	prRe1, err := calypsoClient.byzcoin.WaitProof(re1.InstanceID, time.Second, nil)
+	prRe1, err := calypsoClient.bcClient.WaitProof(re1.InstanceID, time.Second, nil)
 	require.Nil(t, err)
 	require.True(t, prRe1.InclusionProof.Match())
 
@@ -123,12 +123,12 @@ func TestClient_Calypso(t *testing.T) {
 		darc2.GetBaseID(), calypsoClient.ltsReply.X, key2)
 	wr2, err := calypsoClient.AddWrite(write2, provider2, *darc2, 10)
 	require.Nil(t, err)
-	prWr2, err := calypsoClient.byzcoin.WaitProof(wr2.InstanceID, time.Second, nil)
+	prWr2, err := calypsoClient.bcClient.WaitProof(wr2.InstanceID, time.Second, nil)
 	require.Nil(t, err)
 	require.True(t, prWr2.InclusionProof.Match())
 	re2, err := calypsoClient.AddRead(prWr2, reader2, *darc2, 10)
 	require.Nil(t, err)
-	prRe2, err := calypsoClient.byzcoin.WaitProof(re2.InstanceID, time.Second, nil)
+	prRe2, err := calypsoClient.bcClient.WaitProof(re2.InstanceID, time.Second, nil)
 	require.Nil(t, err)
 	require.True(t, prRe2.InclusionProof.Match())
 

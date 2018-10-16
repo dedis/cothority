@@ -10,8 +10,8 @@ import (
 
 // Client is a class to communicate to the calypso service.
 type Client struct {
-	byzcoin  *byzcoin.Client
-	onet     *onet.Client
+	bcClient *byzcoin.Client
+	c        *onet.Client
 	ltsReply *CreateLTSReply
 }
 
@@ -28,10 +28,10 @@ type ReadReply struct {
 }
 
 // NewClient instantiates a new Client.
-// It takes as input an "initialized" byzcoin client
+// It takes as input an "initialized" bcClient client
 // with an already created ledger
 func NewClient(byzcoin *byzcoin.Client) *Client {
-	return &Client{byzcoin: byzcoin, onet: onet.NewClient(
+	return &Client{bcClient: byzcoin, c: onet.NewClient(
 		cothority.Suite, ServiceName)}
 }
 
@@ -39,9 +39,9 @@ func NewClient(byzcoin *byzcoin.Client) *Client {
 // the LTS group created.
 func (c *Client) CreateLTS() (reply *CreateLTSReply, err error) {
 	reply = &CreateLTSReply{}
-	err = c.onet.SendProtobuf(c.byzcoin.Roster.List[0], &CreateLTS{
-		Roster: c.byzcoin.Roster,
-		BCID:   c.byzcoin.ID,
+	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], &CreateLTS{
+		Roster: c.bcClient.Roster,
+		BCID:   c.bcClient.ID,
 	}, reply)
 	if err != nil {
 		return nil, err
@@ -54,14 +54,14 @@ func (c *Client) CreateLTS() (reply *CreateLTSReply, err error) {
 // given the public key information of the reader.
 func (c *Client) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error) {
 	reply = &DecryptKeyReply{}
-	err = c.onet.SendProtobuf(c.byzcoin.Roster.List[0], dkr, reply)
+	err = c.c.SendProtobuf(c.bcClient.Roster.List[0], dkr, reply)
 	if err != nil {
 		return nil, err
 	}
 	return reply, nil
 }
 
-// AddWrite creates a Write Instance by adding a transaction on the byzcoin client.
+// AddWrite creates a Write Instance by adding a transaction on the bcClient client.
 // Input:
 //   - write - A Write structure
 //   - signer - The data owner who will sign the transaction
@@ -101,15 +101,15 @@ func (c *Client) AddWrite(write *Write, signer darc.Signer, darc darc.Darc,
 		return nil, err
 	}
 	reply.InstanceID = ctx.Instructions[0].DeriveID("")
-	//Delegate the work to the byzcoin client
-	reply.AddTxResponse, err = c.byzcoin.AddTransactionAndWait(ctx, wait)
+	//Delegate the work to the bcClient client
+	reply.AddTxResponse, err = c.bcClient.AddTransactionAndWait(ctx, wait)
 	if err != nil {
 		return nil, err
 	}
 	return reply, err
 }
 
-// AddRead creates a Read Instance by adding a transaction on the byzcoin client.
+// AddRead creates a Read Instance by adding a transaction on the bcClient client.
 // Input:
 //   - proof - A ByzCoin proof of the Write Operation.
 //   - signer - The data owner who will sign the transaction
@@ -153,14 +153,14 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 	if err != nil {
 		return nil, err
 	}
-	reply.AddTxResponse, err = c.byzcoin.AddTransactionAndWait(ctx, wait)
+	reply.AddTxResponse, err = c.bcClient.AddTransactionAndWait(ctx, wait)
 	if err != nil {
 		return nil, err
 	}
 	return reply, nil
 }
 
-// SpawnDarc spawns a Darc Instance by adding a transaction on the byzcoin client.
+// SpawnDarc spawns a Darc Instance by adding a transaction on the bcClient client.
 // Input:
 //   - signer - The signer authorizing the spawn of this darc (calypso "admin")
 //   - controlDarc - The darc governing this spawning
@@ -201,5 +201,5 @@ func (c *Client) SpawnDarc(signer darc.Signer,
 	if err != nil {
 		return nil, err
 	}
-	return c.byzcoin.AddTransactionAndWait(ctx, wait)
+	return c.bcClient.AddTransactionAndWait(ctx, wait)
 }

@@ -10,8 +10,8 @@ import (
 // PROTOSTART
 // type :skipchain.SkipBlockID:bytes
 // package calypso;
-// import "byzcoin.proto";
-// import "onet.proto";
+// import "bcClient.proto";
+// import "c.proto";
 //
 // option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "Calypso";
@@ -77,7 +77,7 @@ type CreateLTSReply struct {
 }
 
 // DecryptKey is sent by a reader after he successfully stored a 'Read' request
-// in byzcoin.
+// in bcClient.
 type DecryptKey struct {
 	// Read is the proof that he has been accepted to read the secret.
 	Read byzcoin.Proof
