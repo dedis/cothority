@@ -46,23 +46,11 @@ type Write struct {
 	LTSID []byte
 }
 
-// WriteReply is returned upon successfully spawning a Write instance.
-type WriteReply struct {
-	*byzcoin.AddTxResponse
-	byzcoin.InstanceID
-}
-
 // Read is the data stored in a read instance. It has a pointer to the write
 // instance and the public key used to create the read instance.
 type Read struct {
 	Write byzcoin.InstanceID
 	Xc    kyber.Point
-}
-
-// ReadReply is is returned upon successfully spawning a Read instance.
-type ReadReply struct {
-	*byzcoin.AddTxResponse
-	byzcoin.InstanceID
 }
 
 // ***

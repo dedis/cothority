@@ -15,7 +15,7 @@ import (
 func TestClient_CreateLTS(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	servers, roster, _ := l.GenTree(3, true)
-	l.GetServices(servers, CalypsoID)
+	l.GetServices(servers, calypsoID)
 	defer l.CloseAll()
 
 	// Initialise the genesis message and send it to the service.
@@ -43,7 +43,7 @@ func TestClient_CreateLTS(t *testing.T) {
 func TestClient_Calypso(t *testing.T) {
 	l := onet.NewTCPTest(cothority.Suite)
 	servers, roster, _ := l.GenTree(3, true)
-	l.GetServices(servers, CalypsoID)
+	l.GetServices(servers, calypsoID)
 	defer l.CloseAll()
 
 	admin := darc.NewSignerEd25519(nil, nil)

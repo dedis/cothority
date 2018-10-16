@@ -15,6 +15,18 @@ type Client struct {
 	ltsReply *CreateLTSReply
 }
 
+// WriteReply is returned upon successfully spawning a Write instance.
+type WriteReply struct {
+	*byzcoin.AddTxResponse
+	byzcoin.InstanceID
+}
+
+// ReadReply is is returned upon successfully spawning a Read instance.
+type ReadReply struct {
+	*byzcoin.AddTxResponse
+	byzcoin.InstanceID
+}
+
 // NewClient instantiates a new Client.
 // It takes as input an "initialized" byzcoin client
 // with an already created ledger
@@ -156,7 +168,7 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 //   - wait - The number of blocks to wait -- 0 means no wait
 //
 // Output:
-//   - reply - WriteReply containing the transaction response and instance id
+//   - reply - AddTxResponse containing the transaction response
 //	 - err - Error if any, nil otherwise.
 func (c *Client) SpawnDarc(signer darc.Signer,
 	controlDarc darc.Darc, spawnDarc darc.Darc, wait int) (
