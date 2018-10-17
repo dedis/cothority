@@ -1,8 +1,7 @@
 package ch.epfl.dedis.byzcoin.transaction;
 
-import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
+import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
-import com.google.protobuf.InvalidProtocolBufferException;
 
 public class TxResult {
     private ClientTransaction ct;
@@ -11,9 +10,9 @@ public class TxResult {
     /** constructor for TxResult
      *
      * @param proto the input protobuf
-     * @throws InvalidProtocolBufferException if the input cannot be parsed
+     * @throws CothorityCryptoException if there is an issue with the protobuf encoding
      */
-    public TxResult(ByzCoinProto.TxResult proto) throws InvalidProtocolBufferException {
+    public TxResult(ByzCoinProto.TxResult proto) throws CothorityCryptoException  {
         ct = new ClientTransaction(proto.getClienttransaction());
         accepted = proto.getAccepted();
     }

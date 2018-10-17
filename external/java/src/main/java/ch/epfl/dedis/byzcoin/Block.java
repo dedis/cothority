@@ -88,7 +88,7 @@ public class Block {
      */
     public List<ClientTransaction> getClientTransactions(){
         List<ClientTransaction> result = new ArrayList<>();
-        dataBody.txResults.forEach(txr ->{
+        dataBody.getTxResults().forEach(txr ->{
             result.add(txr.getClientTransaction());
         });
         return result;
@@ -113,7 +113,7 @@ public class Block {
      * @return a list of transactions
      */
     public List<TxResult> getTxResults() {
-        return dataBody.txResults;
+        return dataBody.getTxResults();
     }
 
     @java.lang.Override
