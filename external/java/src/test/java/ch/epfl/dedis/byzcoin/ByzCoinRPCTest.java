@@ -1,9 +1,7 @@
 package ch.epfl.dedis.byzcoin;
 
-import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
-import ch.epfl.dedis.byzcoin.transaction.Instruction;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.ServerIdentity;
@@ -13,18 +11,14 @@ import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.darc.SignerEd25519;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
-import org.junit.Rule;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.omg.CORBA.TIMEOUT;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
