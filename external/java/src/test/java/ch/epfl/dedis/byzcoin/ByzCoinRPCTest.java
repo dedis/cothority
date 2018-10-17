@@ -1,9 +1,7 @@
 package ch.epfl.dedis.byzcoin;
 
-import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransactionId;
-import ch.epfl.dedis.byzcoin.transaction.Instruction;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.ServerIdentity;
@@ -20,8 +18,8 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.*;
@@ -117,6 +115,22 @@ public class ByzCoinRPCTest {
         Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
         assertNotEquals(0, receiver.getCtr());
         bc.unsubscribeBlock(receiver);
+    }
+
+    /**
+     * Subscribe to new blocks using a stream
+     */
+    @Test
+    void subscribeSkipBlockStream() throws Exception {
+        Stream<SkipBlock> stream = bc.subscribeSkipBlock();
+
+        // create one block
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, 0);
+
+        // no need to wait as it will hang until one block is accepted
+        assertEquals(1, stream.limit(1).count());
+
+        stream.close();
     }
 
     @Test

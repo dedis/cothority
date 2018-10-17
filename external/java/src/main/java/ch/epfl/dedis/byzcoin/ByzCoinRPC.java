@@ -25,6 +25,10 @@ import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Stream;
 
 import static java.time.temporal.ChronoUnit.NANOS;
 
@@ -323,6 +327,30 @@ public class ByzCoinRPC {
     }
 
     /**
+     * Subscribe to an infinite stream of future SkipBlocks. Note that you need to give a limit or the
+     * thread will hang indefinitely
+     *
+     * Each subscription request uses its own connection and the stream must be correctly closed to clean
+     * the resources
+     *
+     * @throws CothorityCommunicationException if something goes wrong when establishing the connection
+     */
+    public Stream<SkipBlock> subscribeSkipBlock() throws CothorityCommunicationException {
+        BlockingQueue<SkipBlock> queue = new LinkedBlockingQueue<>();
+        ServerIdentity.StreamingConn conn = streamTransactions(queue);
+
+        Stream<SkipBlock> stream = Stream.generate(() -> {
+            try {
+                return queue.take();
+            } catch (InterruptedException e) {
+                return null;
+            }
+        });
+
+        return stream.onClose(conn::close).filter(Objects::nonNull); // we don't want any null in the stream
+    }
+
+    /**
      * Unsubscribes a BlockReceiver.
      *
      * @param sbr the SkipBlockReceiver to unsubscribe.
@@ -447,6 +475,40 @@ public class ByzCoinRPC {
                 receiver.error(s);
             }
         };
+        return roster.makeStreamingConn("ByzCoin/StreamingRequest", req.build(), h);
+    }
+
+    /**
+     * Helper function to make a connection to the streaming API endpoint and populate a blocking queue with the
+     * new blocks. The queue will be used during a stream generation
+     *
+     * As a stream doesn't handle errors, they are ignored and written in the logs.
+     *
+     * @param queue The blocking queue used by the stream
+     * @throws CothorityCommunicationException if something goes wrong when establishing the connection
+     */
+    private ServerIdentity.StreamingConn streamTransactions(BlockingQueue<SkipBlock> queue) throws CothorityCommunicationException {
+        ByzCoinProto.StreamingRequest.Builder req = ByzCoinProto.StreamingRequest.newBuilder();
+        req.setId(skipchain.getID().toProto());
+
+        ServerIdentity.StreamHandler h = new ServerIdentity.StreamHandler() {
+            @Override
+            public void receive(ByteBuffer message) {
+                try {
+                    SkipchainProto.SkipBlock block = ByzCoinProto.StreamingResponse.parseFrom(message).getBlock();
+                    queue.add(new SkipBlock(block));
+                } catch (InvalidProtocolBufferException e) {
+                    // ignore invalid block but keep a log of the event
+                    logger.error(e.getMessage());
+                }
+            }
+
+            @Override
+            public void error(String s) {
+                logger.error(s);
+            }
+        };
+
         return roster.makeStreamingConn("ByzCoin/StreamingRequest", req.build(), h);
     }
 
