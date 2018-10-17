@@ -1049,7 +1049,7 @@ public final class ByzCoinProto {
                 mutable_bitField0_ |= 0x00000001;
               }
               txresults_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.TxResult.parser(), extensionRegistry));
               break;
             }
             default: {
@@ -1934,7 +1934,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = roster_.toBuilder();
               }
-              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.PARSER, extensionRegistry);
+              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(roster_);
                 roster_ = subBuilder.buildPartial();
@@ -1947,7 +1947,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = genesisdarc_.toBuilder();
               }
-              genesisdarc_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Darc.PARSER, extensionRegistry);
+              genesisdarc_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Darc.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(genesisdarc_);
                 genesisdarc_ = subBuilder.buildPartial();
@@ -3217,7 +3217,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = skipblock_.toBuilder();
               }
-              skipblock_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry);
+              skipblock_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(skipblock_);
                 skipblock_ = subBuilder.buildPartial();
@@ -4082,7 +4082,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = transaction_.toBuilder();
               }
-              transaction_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.PARSER, extensionRegistry);
+              transaction_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(transaction_);
                 transaction_ = subBuilder.buildPartial();
@@ -6494,7 +6494,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = proof_.toBuilder();
               }
-              proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.PARSER, extensionRegistry);
+              proof_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(proof_);
                 proof_ = subBuilder.buildPartial();
@@ -7400,7 +7400,7 @@ public final class ByzCoinProto {
                 mutable_bitField0_ |= 0x00000008;
               }
               identities_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Identity.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Identity.parser(), extensionRegistry));
               break;
             }
             default: {
@@ -9241,7 +9241,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = roster_.toBuilder();
               }
-              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.PARSER, extensionRegistry);
+              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(roster_);
                 roster_ = subBuilder.buildPartial();
@@ -10145,7 +10145,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = inclusionproof_.toBuilder();
               }
-              inclusionproof_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Proof.PARSER, extensionRegistry);
+              inclusionproof_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Proof.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(inclusionproof_);
                 inclusionproof_ = subBuilder.buildPartial();
@@ -10158,7 +10158,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = latest_.toBuilder();
               }
-              latest_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry);
+              latest_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(latest_);
                 latest_ = subBuilder.buildPartial();
@@ -10172,7 +10172,7 @@ public final class ByzCoinProto {
                 mutable_bitField0_ |= 0x00000004;
               }
               links_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.parser(), extensionRegistry));
               break;
             }
             default: {
@@ -11787,7 +11787,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 subBuilder = spawn_.toBuilder();
               }
-              spawn_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn.PARSER, extensionRegistry);
+              spawn_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Spawn.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(spawn_);
                 spawn_ = subBuilder.buildPartial();
@@ -11800,7 +11800,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 subBuilder = invoke_.toBuilder();
               }
-              invoke_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke.PARSER, extensionRegistry);
+              invoke_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Invoke.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(invoke_);
                 invoke_ = subBuilder.buildPartial();
@@ -11813,7 +11813,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000040) == 0x00000040)) {
                 subBuilder = delete_.toBuilder();
               }
-              delete_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.PARSER, extensionRegistry);
+              delete_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Delete.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(delete_);
                 delete_ = subBuilder.buildPartial();
@@ -11827,7 +11827,7 @@ public final class ByzCoinProto {
                 mutable_bitField0_ |= 0x00000080;
               }
               signatures_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signature.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signature.parser(), extensionRegistry));
               break;
             }
             default: {
@@ -13909,7 +13909,7 @@ public final class ByzCoinProto {
                 mutable_bitField0_ |= 0x00000002;
               }
               args_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.parser(), extensionRegistry));
               break;
             }
             default: {
@@ -15046,7 +15046,7 @@ public final class ByzCoinProto {
                 mutable_bitField0_ |= 0x00000002;
               }
               args_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Argument.parser(), extensionRegistry));
               break;
             }
             default: {
@@ -17328,7 +17328,7 @@ public final class ByzCoinProto {
                 mutable_bitField0_ |= 0x00000001;
               }
               instructions_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction.parser(), extensionRegistry));
               break;
             }
             default: {
@@ -18127,7 +18127,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = clienttransaction_.toBuilder();
               }
-              clienttransaction_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.PARSER, extensionRegistry);
+              clienttransaction_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(clienttransaction_);
                 clienttransaction_ = subBuilder.buildPartial();
@@ -21128,7 +21128,7 @@ public final class ByzCoinProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = block_.toBuilder();
               }
-              block_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry);
+              block_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(block_);
                 block_ = subBuilder.buildPartial();

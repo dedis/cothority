@@ -80,7 +80,7 @@ public final class Personhood {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = party_.toBuilder();
               }
-              party_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Party.PARSER, extensionRegistry);
+              party_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Party.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(party_);
                 party_ = subBuilder.buildPartial();
@@ -828,7 +828,7 @@ public final class Personhood {
               if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = finalstatement_.toBuilder();
               }
-              finalstatement_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.PARSER, extensionRegistry);
+              finalstatement_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(finalstatement_);
                 finalstatement_ = subBuilder.buildPartial();
@@ -841,7 +841,7 @@ public final class Personhood {
               if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 subBuilder = darc_.toBuilder();
               }
-              darc_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Darc.PARSER, extensionRegistry);
+              darc_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Darc.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(darc_);
                 darc_ = subBuilder.buildPartial();
@@ -854,7 +854,7 @@ public final class Personhood {
               if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 subBuilder = signer_.toBuilder();
               }
-              signer_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signer.PARSER, extensionRegistry);
+              signer_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signer.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(signer_);
                 signer_ = subBuilder.buildPartial();
@@ -5091,7 +5091,7 @@ public final class Personhood {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = questionnaire_.toBuilder();
               }
-              questionnaire_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Questionnaire.PARSER, extensionRegistry);
+              questionnaire_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Questionnaire.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(questionnaire_);
                 questionnaire_ = subBuilder.buildPartial();
@@ -6493,7 +6493,7 @@ public final class Personhood {
                 mutable_bitField0_ |= 0x00000001;
               }
               questionnaires_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Questionnaire.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Questionnaire.parser(), extensionRegistry));
               break;
             }
             default: {
@@ -10611,7 +10611,7 @@ public final class Personhood {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = message_.toBuilder();
               }
-              message_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Message.PARSER, extensionRegistry);
+              message_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Message.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(message_);
                 message_ = subBuilder.buildPartial();
@@ -14471,7 +14471,7 @@ public final class Personhood {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = message_.toBuilder();
               }
-              message_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Message.PARSER, extensionRegistry);
+              message_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Message.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(message_);
                 message_ = subBuilder.buildPartial();

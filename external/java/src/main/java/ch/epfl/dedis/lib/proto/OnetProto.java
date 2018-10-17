@@ -113,7 +113,7 @@ public final class OnetProto {
                 mutable_bitField0_ |= 0x00000002;
               }
               list_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.parser(), extensionRegistry));
               break;
             }
             case 26: {
