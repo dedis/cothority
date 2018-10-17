@@ -1214,7 +1214,7 @@ public final class EventLogProto {
                 mutable_bitField0_ |= 0x00000001;
               }
               events_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.EventLogProto.Event.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.EventLogProto.Event.parser(), extensionRegistry));
               break;
             }
             case 16: {

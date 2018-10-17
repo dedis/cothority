@@ -2306,7 +2306,7 @@ public final class Calypso {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = roster_.toBuilder();
               }
-              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.PARSER, extensionRegistry);
+              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(roster_);
                 roster_ = subBuilder.buildPartial();
@@ -3828,7 +3828,7 @@ public final class Calypso {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = read_.toBuilder();
               }
-              read_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.PARSER, extensionRegistry);
+              read_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(read_);
                 read_ = subBuilder.buildPartial();
@@ -3841,7 +3841,7 @@ public final class Calypso {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = write_.toBuilder();
               }
-              write_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.PARSER, extensionRegistry);
+              write_ = input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(write_);
                 write_ = subBuilder.buildPartial();

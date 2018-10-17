@@ -105,7 +105,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = latest_.toBuilder();
               }
-              latest_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.Data.PARSER, extensionRegistry);
+              latest_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.Data.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(latest_);
                 latest_ = subBuilder.buildPartial();
@@ -118,7 +118,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = proposed_.toBuilder();
               }
-              proposed_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.Data.PARSER, extensionRegistry);
+              proposed_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.Data.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(proposed_);
                 proposed_ = subBuilder.buildPartial();
@@ -131,7 +131,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = latestskipblock_.toBuilder();
               }
-              latestskipblock_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry);
+              latestskipblock_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(latestskipblock_);
                 latestskipblock_ = subBuilder.buildPartial();
@@ -1369,7 +1369,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = roster_.toBuilder();
               }
-              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.PARSER, extensionRegistry);
+              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(roster_);
                 roster_ = subBuilder.buildPartial();
@@ -4348,7 +4348,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = final_.toBuilder();
               }
-              final_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.PARSER, extensionRegistry);
+              final_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(final_);
                 final_ = subBuilder.buildPartial();
@@ -5378,7 +5378,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = data_.toBuilder();
               }
-              data_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.Data.PARSER, extensionRegistry);
+              data_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.Data.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(data_);
                 data_ = subBuilder.buildPartial();
@@ -6510,7 +6510,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = genesis_.toBuilder();
               }
-              genesis_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry);
+              genesis_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(genesis_);
                 genesis_ = subBuilder.buildPartial();
@@ -7670,7 +7670,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = data_.toBuilder();
               }
-              data_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.Data.PARSER, extensionRegistry);
+              data_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.Data.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(data_);
                 data_ = subBuilder.buildPartial();
@@ -8322,7 +8322,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = propose_.toBuilder();
               }
-              propose_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.Data.PARSER, extensionRegistry);
+              propose_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.Data.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(propose_);
                 propose_ = subBuilder.buildPartial();
@@ -9564,7 +9564,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = propose_.toBuilder();
               }
-              propose_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.Data.PARSER, extensionRegistry);
+              propose_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.Data.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(propose_);
                 propose_ = subBuilder.buildPartial();
@@ -10995,7 +10995,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = data_.toBuilder();
               }
-              data_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry);
+              data_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(data_);
                 data_ = subBuilder.buildPartial();
@@ -11662,7 +11662,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = idblock_.toBuilder();
               }
-              idblock_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.IDBlock.PARSER, extensionRegistry);
+              idblock_ = input.readMessage(ch.epfl.dedis.lib.proto.CiscProto.IDBlock.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(idblock_);
                 idblock_ = subBuilder.buildPartial();
@@ -12627,7 +12627,7 @@ public final class CiscProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = latest_.toBuilder();
               }
-              latest_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry);
+              latest_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(latest_);
                 latest_ = subBuilder.buildPartial();

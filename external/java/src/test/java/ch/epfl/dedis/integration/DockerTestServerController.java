@@ -9,7 +9,7 @@ import org.testcontainers.containers.Container;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.output.FrameConsumerResultCallback;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
-import org.testcontainers.containers.wait.Wait;
+import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.ImageFromDockerfile;
 
 import java.io.IOException;
@@ -22,7 +22,7 @@ public class DockerTestServerController extends TestServerController {
     private static final String TEST_SERVER_IMAGE_NAME = "dedis/conode-test:latest";
     private static final String TEMPORARY_DOCKER_IMAGE = "conode-test-run";
 
-    private final GenericContainer blockchainContainer;
+    private final GenericContainer<?> blockchainContainer;
 
     protected DockerTestServerController() {
         logger.warn("local docker will be started for tests.");
@@ -31,13 +31,11 @@ public class DockerTestServerController extends TestServerController {
         logger.info("For a test run this code will create additional docker image with name " + TEMPORARY_DOCKER_IMAGE +
                 ", at the end this additional image will be automatically deleted");
         try {
-            blockchainContainer = new GenericContainer(
+            blockchainContainer = new GenericContainer<>(
                     new ImageFromDockerfile(TEMPORARY_DOCKER_IMAGE, true)
-                            .withDockerfileFromBuilder(builder -> {
-                                builder
-                                        .from(TEST_SERVER_IMAGE_NAME)
-                                        .expose(7002, 7003, 7004, 7005, 7006, 7007, 7008, 7009);
-                            })
+                            .withDockerfileFromBuilder(builder -> builder
+                                    .from(TEST_SERVER_IMAGE_NAME)
+                                    .expose(7002, 7003, 7004, 7005, 7006, 7007, 7008, 7009))
             );
 
             blockchainContainer.setPortBindings(Arrays.asList(

@@ -247,6 +247,6 @@ public class EventLogInstance {
             idx++;
         }
         ClientTransaction tx = new ClientTransaction(instrs);
-        return new Pair(tx, keys);
+        return new Pair<>(tx, keys);
     }
 }
