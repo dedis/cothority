@@ -23,28 +23,29 @@ message GetAllSkipChainIDsReply {
 
 // GetSingleBlock asks for a single block.
 message GetSingleBlock {
-    required bytes id = 1;
+	required bytes id = 1;
 }
 
 // GetSingleBlockByIndex searches for a block with the given index following
 // the genesis-block
 message GetSingleBlockByIndex {
-		required int32 index = 1;
+	required bytes genesis = 1;
+	required int32 index = 2;
 }
 
 // GetUpdateChain - the client sends the hash of the last known
 // Skipblock and will get back a list of all necessary SkipBlocks
 // to get to the latest.
 message GetUpdateChain {
-  // latest known id of a block.
+	// latest known id of a block.
 	required bytes latestID = 1;
 }
 
 // GetUpdateChainReply - returns the shortest chain to the current SkipBlock,
 // starting from the SkipBlock the client sent
 message GetUpdateChainReply {
-  // update is the shortest path from the requested block to the latest
-  // block.
+	// update is the shortest path from the requested block to the latest
+	// block.
 	repeated SkipBlock update = 1;
 }
 
