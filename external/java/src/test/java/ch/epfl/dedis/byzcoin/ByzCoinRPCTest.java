@@ -125,7 +125,7 @@ public class ByzCoinRPCTest {
         Stream<SkipBlock> stream = bc.subscribeSkipBlock();
 
         // create one block
-        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, 10);
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, 0);
 
         // no need to wait as it will hang until one block is accepted
         assertEquals(1, stream.limit(1).count());
