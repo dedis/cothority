@@ -27,15 +27,15 @@ func TestSkipBlock_GetResponsible(t *testing.T) {
 	root0.Roster = roster
 	root0.Hash = root0.CalculateHash()
 	root0.BackLinkIDs = []SkipBlockID{root0.Hash}
-	db.Store(root0)
+	db.Store(root0, nil)
 	root1 := root0.Copy()
 	root1.Index++
-	db.Store(root1)
+	db.Store(root1, nil)
 	inter0 := NewSkipBlock()
 	inter0.ParentBlockID = root1.Hash
 	inter0.Roster = roster
 	inter0.Hash = inter0.CalculateHash()
-	db.Store(inter0)
+	db.Store(inter0, nil)
 	inter1 := inter0.Copy()
 	inter1.Index++
 	inter1.BackLinkIDs = []SkipBlockID{inter0.Hash}
@@ -71,16 +71,16 @@ func TestSkipBlock_VerifySignatures(t *testing.T) {
 	root.Roster = roster2
 	root.BackLinkIDs = append(root.BackLinkIDs, SkipBlockID{1, 2, 3, 4})
 	root.Hash = root.CalculateHash()
-	db.Store(root)
-	log.ErrFatal(root.VerifyForwardSignatures())
-	log.ErrFatal(db.VerifyLinks(root))
+	db.Store(root, nil)
+	log.ErrFatal(root.VerifyForwardSignatures(nil))
+	log.ErrFatal(db.VerifyLinks(root, nil))
 
 	block1 := root.Copy()
 	block1.BackLinkIDs = append(block1.BackLinkIDs, root.Hash)
 	block1.Index++
-	db.Store(block1)
-	require.Nil(t, block1.VerifyForwardSignatures())
-	require.NotNil(t, db.VerifyLinks(block1))
+	db.Store(block1, nil)
+	require.Nil(t, block1.VerifyForwardSignatures(nil))
+	require.NotNil(t, db.VerifyLinks(block1, nil))
 }
 
 func TestSkipBlock_Hash1(t *testing.T) {

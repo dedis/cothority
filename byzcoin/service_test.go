@@ -75,6 +75,7 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 	// finally passing
 	resp, err = s.service().CreateGenesisBlock(genesisMsg)
 	require.Nil(t, err)
+	require.True(t, s.service().skService().CheckViewChangeAllowed(resp.Skipblock.SkipChainID()))
 	assert.Equal(t, CurrentVersion, resp.Version)
 	assert.NotNil(t, resp.Skipblock)
 
@@ -487,7 +488,7 @@ func TestService_FloodLedger(t *testing.T) {
 	defer s.local.CloseAll()
 
 	// Store the latest block
-	reply, err := skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
+	reply, err := skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID(), nil)
 	require.Nil(t, err)
 	before := reply.Update[len(reply.Update)-1]
 
@@ -499,7 +500,7 @@ func TestService_FloodLedger(t *testing.T) {
 	sendTransaction(t, s, 0, dummyContract, 100)
 
 	// Suppose we need at least 2 blocks (slowContract waits 1/5 interval for each execution)
-	reply, err = skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
+	reply, err = skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID(), nil)
 	require.Nil(t, err)
 	latest := reply.Update[len(reply.Update)-1]
 	if latest.Index-before.Index < 2 {
@@ -515,7 +516,7 @@ func TestService_BigTx(t *testing.T) {
 	defer s.local.CloseAll()
 
 	// Check block number before.
-	reply, err := skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
+	reply, err := skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID(), nil)
 	require.Nil(t, err)
 	latest := reply.Update[len(reply.Update)-1]
 	require.Equal(t, 0, latest.Index)

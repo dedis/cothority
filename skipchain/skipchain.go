@@ -41,18 +41,6 @@ const bftFollowBlock = "SkipchainBFTFollow"
 var storageKey = []byte("skipchainconfig")
 var dbVersion = 1
 
-// If this flag is set, then we relax our forward-link signature verification
-// to accept the aggregate signature by the public keys of the rotated roster.
-// View-change should only be enabled if there are no security implications
-// when the forward-links are signed by the rotated roster instead of the
-// roster in the skipblock that points to it. The security implication depends
-// on the services that use skipchain, so it is disabled by default. The option
-// can be changed from outside of the package by calling EnableViewChange. This
-// flag should ideally be the service configuration, but other structs depend
-// on it too, e.g., SkipBlock, so we keep it in a global.
-var enableViewChange bool
-var enableViewChangeOnce sync.Once
-
 var sid onet.ServiceID
 
 func init() {
@@ -77,6 +65,7 @@ type Service struct {
 	closedMutex             sync.Mutex
 	working                 sync.WaitGroup
 	closing                 chan bool
+	enableViewChange        map[string]bool
 }
 
 type chainLocker struct {
@@ -327,7 +316,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 							"Didn't find convenient SkipBlock for height " +
 								strconv.Itoa(h))
 					}
-					s.db.Store(pp[0])
+					s.db.Store(pp[0], s)
 					prevPointer = pp[0]
 				}
 				pointer = prevPointer
@@ -467,7 +456,7 @@ func (s *Service) SyncChain(roster *onet.Roster, latest SkipBlockID) error {
 		}
 		latest = lBlock.Hash
 	}
-	_, err := s.db.StoreBlocks(allBlocks)
+	_, err := s.db.StoreBlocks(allBlocks, s)
 	return err
 }
 
@@ -861,11 +850,27 @@ func (s *Service) SetPropTimeout(t time.Duration) {
 	s.propTimeout = t
 }
 
-// EnableViewChange enables view-change, it cannot be turned off afterwards.
-func (s *Service) EnableViewChange() {
-	enableViewChangeOnce.Do(func() {
-		enableViewChange = true
-	})
+// EnableViewChange turns on the flag to allow a more relax verification
+// of the forward-links by allowing a rotated roster
+func (s *Service) EnableViewChange(id SkipBlockID) error {
+	sb := s.db.GetByID(id)
+	if sb == nil {
+		return errors.New("Skipchain not found when trying to enable view change")
+	}
+
+	s.enableViewChange[string(sb.SkipChainID())] = true
+	return nil
+}
+
+// CheckViewChangeAllowed returns true if the forward-links of the skipchain
+// can be verified with rotated roster
+func (s *Service) CheckViewChangeAllowed(id SkipBlockID) bool {
+	sb := s.db.GetByID(id)
+	if sb == nil {
+		return false
+	}
+
+	return s.enableViewChange[string(sb.SkipChainID())]
 }
 
 // TestClose is called by Server.Close in case we're in testing. It
@@ -924,7 +929,7 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	// create the message we want to sign for this round
 	roster := src.Roster
 
-	if enableViewChange {
+	if s.CheckViewChangeAllowed(src.SkipChainID()) {
 		// If the server identities in the two rosters are the same,
 		// then it might be a view-change, so we use the second roster
 		// with the new leader.
@@ -960,11 +965,11 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	}
 
 	src.ForwardLink = []*ForwardLink{fwd}
-	if err = src.VerifyForwardSignatures(); err != nil {
+	if err = src.VerifyForwardSignatures(s); err != nil {
 		return errors.New("Wrong BFT-signature: " + err.Error())
 	}
 
-	if _, err := s.db.StoreBlocks([]*SkipBlock{src, dst}); err != nil {
+	if _, err := s.db.StoreBlocks([]*SkipBlock{src, dst}, s); err != nil {
 		return errors.New("couldn't store new forward link or new block: " + err.Error())
 	}
 	var proof []*SkipBlock
@@ -1187,7 +1192,7 @@ func (s *Service) bftForwardLink(msg, data []byte) bool {
 		}
 		newRoster := src.Roster
 		for i, fl := range fs.Links {
-			if err := fl.Verify(cothority.Suite, newRoster.Publics()); err != nil {
+			if err := fl.Verify(cothority.Suite, newRoster.Publics(), s.CheckViewChangeAllowed(src.SkipChainID())); err != nil {
 				return errors.New("verification failed: " + err.Error())
 			}
 			if fl.NewRoster != nil {
@@ -1301,7 +1306,7 @@ func (s *Service) propagateSkipBlock(msg network.Message) {
 			return
 		}
 	}
-	_, err := s.db.StoreBlocks(sbs.SkipBlocks)
+	_, err := s.db.StoreBlocks(sbs.SkipBlocks, s)
 	if err != nil {
 		log.Error(err)
 	}
@@ -1514,6 +1519,7 @@ func newSkipchainService(c *onet.Context) (onet.Service, error) {
 		verifiers:        map[VerifierID]SkipBlockVerifier{},
 		propTimeout:      defaultPropagateTimeout,
 		closing:          make(chan bool),
+		enableViewChange: map[string]bool{},
 	}
 
 	if err := s.tryLoad(); err != nil {

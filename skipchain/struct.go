@@ -372,14 +372,15 @@ func NewSkipBlock() *SkipBlock {
 
 // VerifyForwardSignatures returns whether all signatures in the forward-links
 // are correctly signed by the aggregate public key of the roster.
-func (sb *SkipBlock) VerifyForwardSignatures() error {
+func (sb *SkipBlock) VerifyForwardSignatures(service *Service) error {
 	for _, fl := range sb.ForwardLink {
 		if fl.IsEmpty() {
 			// This means it's an empty forward-link to correctly place a higher-order
 			// forward-link in place.
 			continue
 		}
-		if err := fl.Verify(cothority.Suite, sb.Roster.Publics()); err != nil {
+		allowViewChange := service != nil && service.CheckViewChangeAllowed(sb.SkipChainID())
+		if err := fl.Verify(cothority.Suite, sb.Roster.Publics(), allowViewChange); err != nil {
 			return errors.New("Wrong signature in forward-link: " + err.Error())
 		}
 	}
@@ -554,13 +555,13 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 // Verify checks the signature against a list of public keys. This list must
 // be in the same order as the Roster that signed the message.
 // It returns nil if the signature is correct, or an error if not.
-func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
+func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point, allowViewChange bool) error {
 	if bytes.Compare(fl.Signature.Msg, fl.Hash()) != 0 {
 		return errors.New("wrong hash of forward link")
 	}
 	// If we allow view-change, then we should try to verify the signature
 	// using all the valid rotations of the given public key slice.
-	if enableViewChange {
+	if allowViewChange {
 		n := len(pubs)
 		if n == 0 {
 			return errors.New("no public keys")
@@ -643,7 +644,7 @@ func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 
 // StoreBlocks stores the set of blocks in the boltdb in a transaction,
 // so that the db is consistent at every moment.
-func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
+func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock, service *Service) ([]SkipBlockID, error) {
 	var result []SkipBlockID
 	err := db.Update(func(tx *bolt.Tx) error {
 		fl := blocks[len(blocks)-1].ForwardLink
@@ -666,7 +667,8 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 							// Don't overwrite existing forwardlinks and ignore empty links
 							continue
 						}
-						if err := fl.Verify(cothority.Suite, sbOld.Roster.Publics()); err != nil {
+						allowViewChange := service != nil && service.CheckViewChangeAllowed(fl.From)
+						if err := fl.Verify(cothority.Suite, sbOld.Roster.Publics(), allowViewChange); err != nil {
 							return errors.New("Got a known block with wrong signature in forward-link with error: " + err.Error())
 						}
 						if err := sbOld.AddForwardLink(fl, i); err != nil {
@@ -722,8 +724,8 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 }
 
 // Store stores the given SkipBlock in the service-list
-func (db *SkipBlockDB) Store(sb *SkipBlock) SkipBlockID {
-	ids, err := db.StoreBlocks([]*SkipBlock{sb})
+func (db *SkipBlockDB) Store(sb *SkipBlock, service *Service) SkipBlockID {
+	ids, err := db.StoreBlocks([]*SkipBlock{sb}, service)
 	if err != nil {
 		log.Error(err)
 	}
@@ -814,12 +816,12 @@ func (db *SkipBlockDB) GetResponsible(sb *SkipBlock) (*SkipBlock, error) {
 
 // VerifyLinks makes sure that all forward- and backward-links are correct.
 // It takes a skipblock to verify and returns nil in case of success.
-func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
+func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock, service *Service) error {
 	if len(sb.BackLinkIDs) == 0 {
 		return errors.New("need at least one backlink")
 	}
 
-	if err := sb.VerifyForwardSignatures(); err != nil {
+	if err := sb.VerifyForwardSignatures(service); err != nil {
 		return errors.New("Wrong signatures: " + err.Error())
 	}
 
@@ -829,7 +831,7 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 		if parent == nil {
 			return errors.New("Didn't find parent")
 		}
-		if err := parent.VerifyForwardSignatures(); err != nil {
+		if err := parent.VerifyForwardSignatures(service); err != nil {
 			return err
 		}
 		found := false
@@ -858,7 +860,7 @@ func (db *SkipBlockDB) VerifyLinks(sb *SkipBlock) error {
 		}
 		return errors.New("Didn't find height-0 skipblock in db")
 	}
-	if err := sbBack.VerifyForwardSignatures(); err != nil {
+	if err := sbBack.VerifyForwardSignatures(service); err != nil {
 		return err
 	}
 	if !sbBack.GetForward(0).Hash().Equal(sb.Hash) {

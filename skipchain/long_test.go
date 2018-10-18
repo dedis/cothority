@@ -92,7 +92,7 @@ func TestClient_ParallelGetUpdateChain(t *testing.T) {
 	for i := range [128]byte{} {
 		wg.Add(1)
 		go func(i int) {
-			_, err := clients[i%8].GetUpdateChain(inter.Roster, inter.Hash)
+			_, err := clients[i%8].GetUpdateChain(inter.Roster, inter.Hash, nil)
 			log.ErrFatal(err)
 			wg.Done()
 		}(i)

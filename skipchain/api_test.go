@@ -1,15 +1,11 @@
 package skipchain
 
 import (
+	"bytes"
 	"fmt"
 	"strings"
-	"testing"
-
-	"github.com/stretchr/testify/require"
-
-	"bytes"
-
 	"sync"
+	"testing"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/kyber"
@@ -17,6 +13,7 @@ import (
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
+	"github.com/stretchr/testify/require"
 )
 
 func init() {
@@ -64,11 +61,11 @@ func TestClient_CreateRootInter(t *testing.T) {
 	if root == nil || inter == nil {
 		t.Fatal("Pointers are nil")
 	}
-	log.ErrFatal(root.VerifyForwardSignatures(),
+	log.ErrFatal(root.VerifyForwardSignatures(nil),
 		"Root signature invalid:")
-	log.ErrFatal(inter.VerifyForwardSignatures(),
+	log.ErrFatal(inter.VerifyForwardSignatures(nil),
 		"Root signature invalid:")
-	update, err := c.GetUpdateChain(root.Roster, root.Hash)
+	update, err := c.GetUpdateChain(root.Roster, root.Hash, nil)
 	log.ErrFatal(err)
 	root = update.Update[0]
 	require.True(t, root.ChildSL[0].Equal(inter.Hash), "Root doesn't point to intermediate")
@@ -114,7 +111,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 	}
 
 	for i := 0; i < sbCount; i++ {
-		sbc, err := c.GetUpdateChain(sbs[i].Roster, sbs[i].Hash)
+		sbc, err := c.GetUpdateChain(sbs[i].Roster, sbs[i].Hash, nil)
 		require.Nil(t, err)
 
 		require.True(t, len(sbc.Update) > 0, "Empty update-chain")
@@ -128,7 +125,7 @@ func TestClient_GetUpdateChain(t *testing.T) {
 			t.Fatal("Last Hash is not equal to last SkipBlock for", i)
 		}
 		for up, sb1 := range sbc.Update {
-			log.ErrFatal(sb1.VerifyForwardSignatures())
+			log.ErrFatal(sb1.VerifyForwardSignatures(nil))
 			if up < len(sbc.Update)-1 {
 				sb2 := sbc.Update[up+1]
 				h1 := sb1.Height
@@ -182,7 +179,7 @@ func TestClient_StoreSkipBlock(t *testing.T) {
 	var updates *GetUpdateChainReply
 	// Check if we get a conode that doesn't know about the latest block.
 	for i := 0; i < 10; i++ {
-		updates, err = c.GetUpdateChain(inter.Roster, inter.Hash)
+		updates, err = c.GetUpdateChain(inter.Roster, inter.Hash, nil)
 		log.ErrFatal(err)
 	}
 	if len(updates.Update) != 4 {
@@ -480,7 +477,7 @@ func TestClient_ParallelWrite(t *testing.T) {
 	require.Equal(t, expected, num)
 
 	// Read the chain back, check it.
-	reply, err := cl.GetUpdateChain(ro, gen.SkipChainID())
+	reply, err := cl.GetUpdateChain(ro, gen.SkipChainID(), nil)
 	require.Nil(t, err)
 	for i, sb := range reply.Update {
 		if i == 0 {

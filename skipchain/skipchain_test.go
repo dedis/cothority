@@ -180,7 +180,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		}
 		// We need to verify the signature on the child-link, too. This
 		// has to be signed by the collective signature of sbRoot.
-		if err := sbRoot.VerifyForwardSignatures(); err != nil {
+		if err := sbRoot.VerifyForwardSignatures(service); err != nil {
 			t.Fatal("Signature on child-link is not valid")
 		}
 	}
@@ -198,7 +198,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 		if !bytes.Equal(sb.Update[0].ParentBlockID, sbRoot.Hash) {
 			t.Fatal("The intermediate SkipBlock doesn't point to the root")
 		}
-		if err := sb.Update[0].VerifyForwardSignatures(); err != nil {
+		if err := sb.Update[0].VerifyForwardSignatures(service); err != nil {
 			t.Fatal("Signature of that SkipBlock doesn't fit")
 		}
 	}
@@ -308,8 +308,8 @@ func TestService_SignBlock(t *testing.T) {
 	sbRoot = reply.Previous
 	sbSecond := reply.Latest
 	log.Lvl1("Verifying signatures")
-	log.ErrFatal(sbRoot.VerifyForwardSignatures())
-	log.ErrFatal(sbSecond.VerifyForwardSignatures())
+	log.ErrFatal(sbRoot.VerifyForwardSignatures(service))
+	log.ErrFatal(sbSecond.VerifyForwardSignatures(service))
 }
 
 func TestService_ProtocolVerification(t *testing.T) {
@@ -534,7 +534,7 @@ func TestService_ParallelGUC(t *testing.T) {
 				}
 				for {
 					time.Sleep(10 * time.Millisecond)
-					update, err := cl.GetUpdateChain(latest.Roster, latest.Hash)
+					update, err := cl.GetUpdateChain(latest.Roster, latest.Hash, s1)
 					if err == nil {
 						latest = update.Update[len(update.Update)-1]
 						break
@@ -699,7 +699,7 @@ func TestService_AddFollow(t *testing.T) {
 	sbs, err := service.db.getAll()
 	log.ErrFatal(err)
 	for _, sb := range sbs {
-		services[1].db.Store(sb)
+		services[1].db.Store(sb, service)
 	}
 	master2, err := services[1].StoreSkipBlock(ssb)
 	log.ErrFatal(err)
@@ -1196,4 +1196,29 @@ func TestRosterAddCausesSync(t *testing.T) {
 		require.Nil(t, err)
 		log.Lvl1("Got block with servers[4]")
 	}
+}
+
+func TestEnableViewChange(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	_, roster, genService := local.MakeSRS(cothority.Suite, 2, skipchainSID)
+	leader := genService.(*Service)
+
+	sbRoot, err := makeGenesisRosterArgs(leader, roster, nil, VerificationNone, 1, 1)
+	log.ErrFatal(err)
+
+	sb := NewSkipBlock()
+	sb.Roster = roster
+	reply, err := leader.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: sbRoot.Hash, NewBlock: sb})
+	log.ErrFatal(err)
+
+	require.False(t, leader.CheckViewChangeAllowed(reply.Latest.SkipChainID()))
+	require.False(t, leader.CheckViewChangeAllowed([]byte{1, 2, 3}))
+
+	leader.EnableViewChange(reply.Latest.Hash)
+	require.True(t, leader.CheckViewChangeAllowed(reply.Latest.SkipChainID()))
+
+	err = leader.EnableViewChange([]byte{})
+	require.NotNil(t, err)
 }

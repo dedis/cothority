@@ -107,13 +107,13 @@ func createSC(t *testing.T) (s sc) {
 	s.sb2.Hash = s.sb2.CalculateHash()
 	s.genesis.ForwardLink = genForwardLink(t, s.genesis, s.sb2, s.genesisPrivs)
 
-	_, err = s.s.StoreBlocks([]*skipchain.SkipBlock{s.genesis, s.sb2})
+	_, err = s.s.StoreBlocks([]*skipchain.SkipBlock{s.genesis, s.sb2}, nil)
 	require.Nil(t, err)
 
 	s.genesis2 = skipchain.NewSkipBlock()
 	s.genesis2.Roster, _ = genRoster(2)
 	s.genesis2.Hash = s.genesis2.CalculateHash()
-	s.s.Store(s.genesis2)
+	s.s.Store(s.genesis2, nil)
 	return
 }
 

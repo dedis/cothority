@@ -211,6 +211,11 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		return nil, err
 	}
 
+	// Skipchains used for Byzcoin can have view changes
+	if err = s.skService().EnableViewChange(sb.SkipChainID()); err != nil {
+		return nil, err
+	}
+
 	return &CreateGenesisBlockResponse{
 		Version:   CurrentVersion,
 		Skipblock: sb,
@@ -1398,6 +1403,10 @@ func (s *Service) startAllChains() error {
 		s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(gen))
 		s.viewChangeMan.start(s.ServerIdentity().ID, gen, initialDur, s.getFaultThreshold(gen), string(gen))
 		// TODO fault threshold might change
+
+		if err = s.skService().EnableViewChange(gen); err != nil {
+			return err
+		}
 	}
 
 	s.monitorLeaderFailure()
@@ -1503,7 +1512,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 	s.skService().RegisterStoreSkipblockCallback(s.updateCollectionCallback)
-	s.skService().EnableViewChange()
 
 	// Register the view-change cosi protocols.
 	var err error

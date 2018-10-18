@@ -185,7 +185,7 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain. It takes a roster that knows the
 // 'latest' skipblock and the id (=hash) of the latest skipblock.
-func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply *GetUpdateChainReply, err error) {
+func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID, service *Service) (reply *GetUpdateChainReply, err error) {
 	const retries = 3
 	delay := 1 * time.Second
 
@@ -228,7 +228,7 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 				}
 			}
 
-			if err := b.VerifyForwardSignatures(); err != nil {
+			if err := b.VerifyForwardSignatures(service); err != nil {
 				return nil, err
 			}
 			// Cannot check back links until we've confirmed the first one

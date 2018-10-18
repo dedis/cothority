@@ -81,7 +81,7 @@ func (p Proof) Verify(scID skipchain.SkipBlockID) error {
 			publics = l.NewRoster.Publics()
 			continue
 		}
-		if err = l.Verify(cothority.Suite, publics); err != nil {
+		if err = l.Verify(cothority.Suite, publics, true); err != nil {
 			return ErrorVerifySkipchain
 		}
 		if !l.From.Equal(sbID) {
