@@ -1541,11 +1541,20 @@ public final class SkipchainProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required int32 index = 1;</code>
+     * <code>required bytes genesis = 1;</code>
+     */
+    boolean hasGenesis();
+    /**
+     * <code>required bytes genesis = 1;</code>
+     */
+    com.google.protobuf.ByteString getGenesis();
+
+    /**
+     * <code>required int32 index = 2;</code>
      */
     boolean hasIndex();
     /**
-     * <code>required int32 index = 1;</code>
+     * <code>required int32 index = 2;</code>
      */
     int getIndex();
   }
@@ -1567,6 +1576,7 @@ public final class SkipchainProto {
       super(builder);
     }
     private GetSingleBlockByIndex() {
+      genesis_ = com.google.protobuf.ByteString.EMPTY;
       index_ = 0;
     }
 
@@ -1594,8 +1604,13 @@ public final class SkipchainProto {
             case 0:
               done = true;
               break;
-            case 8: {
+            case 10: {
               bitField0_ |= 0x00000001;
+              genesis_ = input.readBytes();
+              break;
+            }
+            case 16: {
+              bitField0_ |= 0x00000002;
               index_ = input.readInt32();
               break;
             }
@@ -1632,16 +1647,31 @@ public final class SkipchainProto {
     }
 
     private int bitField0_;
-    public static final int INDEX_FIELD_NUMBER = 1;
-    private int index_;
+    public static final int GENESIS_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString genesis_;
     /**
-     * <code>required int32 index = 1;</code>
+     * <code>required bytes genesis = 1;</code>
      */
-    public boolean hasIndex() {
+    public boolean hasGenesis() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required int32 index = 1;</code>
+     * <code>required bytes genesis = 1;</code>
+     */
+    public com.google.protobuf.ByteString getGenesis() {
+      return genesis_;
+    }
+
+    public static final int INDEX_FIELD_NUMBER = 2;
+    private int index_;
+    /**
+     * <code>required int32 index = 2;</code>
+     */
+    public boolean hasIndex() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required int32 index = 2;</code>
      */
     public int getIndex() {
       return index_;
@@ -1654,6 +1684,10 @@ public final class SkipchainProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
+      if (!hasGenesis()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       if (!hasIndex()) {
         memoizedIsInitialized = 0;
         return false;
@@ -1666,7 +1700,10 @@ public final class SkipchainProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeInt32(1, index_);
+        output.writeBytes(1, genesis_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeInt32(2, index_);
       }
       unknownFields.writeTo(output);
     }
@@ -1679,7 +1716,11 @@ public final class SkipchainProto {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(1, index_);
+          .computeBytesSize(1, genesis_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, index_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1697,6 +1738,11 @@ public final class SkipchainProto {
       ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex other = (ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex) obj;
 
       boolean result = true;
+      result = result && (hasGenesis() == other.hasGenesis());
+      if (hasGenesis()) {
+        result = result && getGenesis()
+            .equals(other.getGenesis());
+      }
       result = result && (hasIndex() == other.hasIndex());
       if (hasIndex()) {
         result = result && (getIndex()
@@ -1713,6 +1759,10 @@ public final class SkipchainProto {
       }
       int hash = 41;
       hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasGenesis()) {
+        hash = (37 * hash) + GENESIS_FIELD_NUMBER;
+        hash = (53 * hash) + getGenesis().hashCode();
+      }
       if (hasIndex()) {
         hash = (37 * hash) + INDEX_FIELD_NUMBER;
         hash = (53 * hash) + getIndex();
@@ -1855,8 +1905,10 @@ public final class SkipchainProto {
       @java.lang.Override
       public Builder clear() {
         super.clear();
-        index_ = 0;
+        genesis_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000001);
+        index_ = 0;
+        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -1887,6 +1939,10 @@ public final class SkipchainProto {
         int to_bitField0_ = 0;
         if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
           to_bitField0_ |= 0x00000001;
+        }
+        result.genesis_ = genesis_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
         }
         result.index_ = index_;
         result.bitField0_ = to_bitField0_;
@@ -1938,6 +1994,9 @@ public final class SkipchainProto {
 
       public Builder mergeFrom(ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex other) {
         if (other == ch.epfl.dedis.lib.proto.SkipchainProto.GetSingleBlockByIndex.getDefaultInstance()) return this;
+        if (other.hasGenesis()) {
+          setGenesis(other.getGenesis());
+        }
         if (other.hasIndex()) {
           setIndex(other.getIndex());
         }
@@ -1948,6 +2007,9 @@ public final class SkipchainProto {
 
       @java.lang.Override
       public final boolean isInitialized() {
+        if (!hasGenesis()) {
+          return false;
+        }
         if (!hasIndex()) {
           return false;
         }
@@ -1974,33 +2036,68 @@ public final class SkipchainProto {
       }
       private int bitField0_;
 
-      private int index_ ;
+      private com.google.protobuf.ByteString genesis_ = com.google.protobuf.ByteString.EMPTY;
       /**
-       * <code>required int32 index = 1;</code>
+       * <code>required bytes genesis = 1;</code>
        */
-      public boolean hasIndex() {
+      public boolean hasGenesis() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required int32 index = 1;</code>
+       * <code>required bytes genesis = 1;</code>
+       */
+      public com.google.protobuf.ByteString getGenesis() {
+        return genesis_;
+      }
+      /**
+       * <code>required bytes genesis = 1;</code>
+       */
+      public Builder setGenesis(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        genesis_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes genesis = 1;</code>
+       */
+      public Builder clearGenesis() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        genesis_ = getDefaultInstance().getGenesis();
+        onChanged();
+        return this;
+      }
+
+      private int index_ ;
+      /**
+       * <code>required int32 index = 2;</code>
+       */
+      public boolean hasIndex() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required int32 index = 2;</code>
        */
       public int getIndex() {
         return index_;
       }
       /**
-       * <code>required int32 index = 1;</code>
+       * <code>required int32 index = 2;</code>
        */
       public Builder setIndex(int value) {
-        bitField0_ |= 0x00000001;
+        bitField0_ |= 0x00000002;
         index_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required int32 index = 1;</code>
+       * <code>required int32 index = 2;</code>
        */
       public Builder clearIndex() {
-        bitField0_ = (bitField0_ & ~0x00000001);
+        bitField0_ = (bitField0_ & ~0x00000002);
         index_ = 0;
         onChanged();
         return this;
@@ -8813,25 +8910,26 @@ public final class SkipchainProto {
       "\n\017skipchain.proto\022\tskipchain\032\nonet.proto" +
       "\"\024\n\022GetAllSkipChainIDs\"/\n\027GetAllSkipChai" +
       "nIDsReply\022\024\n\014skipChainIDs\030\001 \003(\014\"\034\n\016GetSi" +
-      "ngleBlock\022\n\n\002id\030\001 \002(\014\"&\n\025GetSingleBlockB" +
-      "yIndex\022\r\n\005index\030\001 \002(\005\"\"\n\016GetUpdateChain\022" +
-      "\020\n\010latestID\030\001 \002(\014\";\n\023GetUpdateChainReply" +
-      "\022$\n\006update\030\001 \003(\0132\024.skipchain.SkipBlock\"\240" +
-      "\002\n\tSkipBlock\022\r\n\005index\030\001 \002(\005\022\016\n\006height\030\002 " +
-      "\002(\005\022\022\n\nmax_height\030\003 \002(\005\022\023\n\013base_height\030\004" +
-      " \002(\005\022\021\n\tbacklinks\030\005 \003(\014\022\021\n\tverifiers\030\006 \003" +
-      "(\014\022\016\n\006parent\030\007 \001(\014\022\017\n\007genesis\030\010 \002(\014\022\014\n\004d" +
-      "ata\030\t \002(\014\022\034\n\006roster\030\n \002(\0132\014.onet.Roster\022" +
-      "\014\n\004hash\030\013 \002(\014\022\'\n\007forward\030\014 \003(\0132\026.skipcha" +
-      "in.ForwardLink\022\020\n\010children\030\r \003(\014\022\017\n\007payl" +
-      "oad\030\016 \001(\014\"r\n\013ForwardLink\022\014\n\004from\030\001 \002(\014\022\n" +
-      "\n\002to\030\002 \002(\014\022\037\n\tnewRoster\030\003 \001(\0132\014.onet.Ros" +
-      "ter\022(\n\tsignature\030\004 \002(\0132\025.skipchain.Byzco" +
-      "inSig\"&\n\nByzcoinSig\022\013\n\003msg\030\001 \002(\014\022\013\n\003sig\030" +
-      "\002 \002(\014\"1\n\nSchnorrSig\022\021\n\tchallenge\030\001 \002(\014\022\020" +
-      "\n\010response\030\002 \002(\014\".\n\tException\022\r\n\005index\030\001" +
-      " \002(\005\022\022\n\ncommitment\030\002 \002(\014B)\n\027ch.epfl.dedi" +
-      "s.lib.protoB\016SkipchainProto"
+      "ngleBlock\022\n\n\002id\030\001 \002(\014\"7\n\025GetSingleBlockB" +
+      "yIndex\022\017\n\007genesis\030\001 \002(\014\022\r\n\005index\030\002 \002(\005\"\"" +
+      "\n\016GetUpdateChain\022\020\n\010latestID\030\001 \002(\014\";\n\023Ge" +
+      "tUpdateChainReply\022$\n\006update\030\001 \003(\0132\024.skip" +
+      "chain.SkipBlock\"\240\002\n\tSkipBlock\022\r\n\005index\030\001" +
+      " \002(\005\022\016\n\006height\030\002 \002(\005\022\022\n\nmax_height\030\003 \002(\005" +
+      "\022\023\n\013base_height\030\004 \002(\005\022\021\n\tbacklinks\030\005 \003(\014" +
+      "\022\021\n\tverifiers\030\006 \003(\014\022\016\n\006parent\030\007 \001(\014\022\017\n\007g" +
+      "enesis\030\010 \002(\014\022\014\n\004data\030\t \002(\014\022\034\n\006roster\030\n \002" +
+      "(\0132\014.onet.Roster\022\014\n\004hash\030\013 \002(\014\022\'\n\007forwar" +
+      "d\030\014 \003(\0132\026.skipchain.ForwardLink\022\020\n\010child" +
+      "ren\030\r \003(\014\022\017\n\007payload\030\016 \001(\014\"r\n\013ForwardLin" +
+      "k\022\014\n\004from\030\001 \002(\014\022\n\n\002to\030\002 \002(\014\022\037\n\tnewRoster" +
+      "\030\003 \001(\0132\014.onet.Roster\022(\n\tsignature\030\004 \002(\0132" +
+      "\025.skipchain.ByzcoinSig\"&\n\nByzcoinSig\022\013\n\003" +
+      "msg\030\001 \002(\014\022\013\n\003sig\030\002 \002(\014\"1\n\nSchnorrSig\022\021\n\t" +
+      "challenge\030\001 \002(\014\022\020\n\010response\030\002 \002(\014\".\n\tExc" +
+      "eption\022\r\n\005index\030\001 \002(\005\022\022\n\ncommitment\030\002 \002(" +
+      "\014B)\n\027ch.epfl.dedis.lib.protoB\016SkipchainP" +
+      "roto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -8869,7 +8967,7 @@ public final class SkipchainProto {
     internal_static_skipchain_GetSingleBlockByIndex_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_skipchain_GetSingleBlockByIndex_descriptor,
-        new java.lang.String[] { "Index", });
+        new java.lang.String[] { "Genesis", "Index", });
     internal_static_skipchain_GetUpdateChain_descriptor =
       getDescriptor().getMessageTypes().get(4);
     internal_static_skipchain_GetUpdateChain_fieldAccessorTable = new
