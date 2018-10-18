@@ -12,7 +12,7 @@ func Test_Ephemeral(t *testing.T) {
 
 func testEphemeral(t *testing.T, db DB) {
 	// Initialise a trie.
-	testTrie, err := NewTrie(db)
+	testTrie, err := NewTrie(db, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 
@@ -82,7 +82,7 @@ func Test_EphemeralCommit(t *testing.T) {
 
 func testEphemeralCommit(t *testing.T, db DB) {
 	// Initialise a trie.
-	testTrie, err := NewTrie(db)
+	testTrie, err := NewTrie(db, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 	testTrie.noHashKey = true
@@ -149,15 +149,16 @@ func Test_EphemeralGetRoot(t *testing.T) {
 	disk := newDiskDB(t)
 	defer delDiskDB(t, disk)
 
-	testTrie, err := NewTrie(disk)
+	testTrie, err := NewTrie(disk, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 
 	eTrie := testTrie.MakeEphemeralTrie()
 
 	// We should start with the same root
-	require.NotNil(t, testTrie.GetRoot())
-	require.Equal(t, testTrie.GetRoot(), eTrie.GetRoot())
+	initialRoot := testTrie.GetRoot()
+	require.NotNil(t, initialRoot)
+	require.Equal(t, initialRoot, eTrie.GetRoot())
 
 	// The root of the ephemeral trie should match the real trie after
 	// making operations.
@@ -170,6 +171,13 @@ func Test_EphemeralGetRoot(t *testing.T) {
 		require.NoError(t, eTrie.Delete(k))
 	}
 	eRoot := eTrie.GetRoot()
+
+	// The initial root shouldn't change.
+	require.Equal(t, initialRoot, testTrie.GetRoot())
+
+	// Commit the ephemeral trie, then the source root should match the
+	// root on the previously computed ephemeral trie.
 	require.NoError(t, eTrie.Commit())
 	require.Equal(t, eRoot, testTrie.GetRoot())
+	require.Equal(t, eRoot, eTrie.GetRoot())
 }

@@ -2,7 +2,6 @@ package trie
 
 import (
 	"bytes"
-	"crypto/rand"
 	"crypto/sha256"
 	"errors"
 )
@@ -21,30 +20,23 @@ type Trie struct {
 	noHashKey bool
 }
 
-// NewTrie loads the tried from a boltDB database, it creates one if it does
-// not exist.
-func NewTrie(db DB) (Trie, error) {
+// LoadTrie loads the trie from a boltDB database, it must exist otherwise an
+// error is returned. It does not check the consistency after loading the
+// database. If that is required, called IsValid.
+func LoadTrie(db DB) (*Trie, error) {
 	nonce := make([]byte, 32)
 	err := db.Update(func(b bucket) error {
-		// create or load the nonce
+		// load the nonce
 		nonceBuf := b.Get([]byte(nonceKey))
 		if nonceBuf == nil {
-			nonce = genNonce()
-			if err := b.Put([]byte(nonceKey), nonce); err != nil {
-				return err
-			}
-		} else {
-			copy(nonce, nonceBuf)
+			return errors.New("nonce does not exist")
 		}
+		copy(nonce, nonceBuf)
 
-		// create or load the root node
+		// check the root node and that the value exists
 		rootKey := b.Get([]byte(entryKey))
 		if rootKey == nil {
-			err := newRootNode(b, nonce)
-			if err != nil {
-				return err
-			}
-			return nil
+			return errors.New("root does not exist")
 		}
 		rootVal := b.Get([]byte(rootKey))
 		if rootVal == nil {
@@ -52,21 +44,20 @@ func NewTrie(db DB) (Trie, error) {
 		}
 		return nil
 	})
-
 	if err != nil {
-		return Trie{}, err
+		return nil, err
 	}
-	return Trie{
+	return &Trie{
 		nonce: nonce,
 		db:    db,
 	}, nil
 }
 
-// NewTrieWithNonce allows the user to specify the nonce, it will return an
-// error if loading from an existing database.
-func NewTrieWithNonce(db DB, nonce []byte) (Trie, error) {
+// NewTrie creates a new trie with a user-specified nonce, it will return an
+// error if it is called on an existing database.
+func NewTrie(db DB, nonce []byte) (*Trie, error) {
 	err := db.Update(func(b bucket) error {
-		// create or load the nonce
+		// create the nonce
 		nonceBuf := b.Get([]byte(nonceKey))
 		if nonceBuf != nil {
 			return errors.New("nonce already exists")
@@ -87,9 +78,9 @@ func NewTrieWithNonce(db DB, nonce []byte) (Trie, error) {
 		return nil
 	})
 	if err != nil {
-		return Trie{}, err
+		return nil, err
 	}
-	return Trie{
+	return &Trie{
 		nonce: nonce,
 		db:    db,
 	}, nil
@@ -631,18 +622,6 @@ func (t *Trie) binSlice(buf []byte) []bool {
 	}
 	hashKey := sha256.Sum256(buf)
 	return toBinSlice(hashKey[:])
-}
-
-func genNonce() []byte {
-	buf := make([]byte, 32)
-	n, err := rand.Read(buf)
-	if err != nil {
-		return nil
-	}
-	if n != 32 {
-		return nil
-	}
-	return buf
 }
 
 func toBinSlice(buf []byte) []bool {

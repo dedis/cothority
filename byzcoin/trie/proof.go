@@ -22,6 +22,10 @@ type Proof struct {
 
 // Exists checks the proof for inclusion/absence
 func (p *Proof) Exists(key []byte) (bool, error) {
+	if key == nil {
+		return false, errors.New("key is nil")
+	}
+
 	bits := p.binSlice(key)
 	expectedHash := p.Interiors[0].hash() // first one is the root hash
 
@@ -58,12 +62,27 @@ func (p *Proof) Exists(key []byte) (bool, error) {
 	}
 }
 
+// Match is a convenience function that ignores the error of Exists and just
+// returns false.
+func (p *Proof) Match(key []byte) bool {
+	ok, err := p.Exists(key)
+	if err != nil {
+		return false
+	}
+	return ok
+}
+
 // GetRoot returns the Merkle root.
 func (p *Proof) GetRoot() []byte {
 	if len(p.Interiors) == 0 {
 		return nil
 	}
 	return p.Interiors[0].hash()
+}
+
+// KeyValue gets the key and the value that this proof contains.
+func (p *Proof) KeyValue() ([]byte, []byte) {
+	return p.Leaf.Key, p.Leaf.Value
 }
 
 // GetProof gets the inclusion/absence proof for the given key.

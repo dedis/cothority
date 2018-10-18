@@ -2,6 +2,7 @@ package trie
 
 import (
 	"bytes"
+	"crypto/rand"
 	"errors"
 	"os"
 	"testing"
@@ -20,7 +21,7 @@ func Test_NewTrie(t *testing.T) {
 
 func testNewTrie(t *testing.T, db DB) {
 	// Initialise a trie.
-	testTrie, err := NewTrie(db)
+	testTrie, err := NewTrie(db, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 	testTrie.noHashKey = true
@@ -40,7 +41,7 @@ func testNewTrie(t *testing.T, db DB) {
 	copy(nonce1, testTrie.nonce)
 
 	// Load the database again and the nonce should still be there.
-	testTrie, err = NewTrie(db)
+	testTrie, err = LoadTrie(db)
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 	require.Equal(t, testTrie.nonce, nonce1)
@@ -70,7 +71,7 @@ func Test_AddToEmptyNode(t *testing.T) {
 
 func testAddToEmptyNode(t *testing.T, db DB) {
 	// Initialise a trie.
-	testTrie, err := NewTrie(db)
+	testTrie, err := NewTrie(db, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 	testTrie.noHashKey = true
@@ -98,7 +99,7 @@ func Test_AddToLeafNode(t *testing.T) {
 
 func testAddToLeafNode(t *testing.T, db DB) {
 	// Initialise a trie.
-	testTrie, err := NewTrie(db)
+	testTrie, err := NewTrie(db, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 	testTrie.noHashKey = true
@@ -140,7 +141,7 @@ func Test_LongThenShortKey(t *testing.T) {
 
 func testLongThenShortKey(t *testing.T, db DB) {
 	// Initialise a trie.
-	testTrie, err := NewTrie(db)
+	testTrie, err := NewTrie(db, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 
@@ -168,7 +169,7 @@ func Test_Overwrite(t *testing.T) {
 
 func testOverwrite(t *testing.T, db DB) {
 	// Initialise a trie.
-	testTrie, err := NewTrie(db)
+	testTrie, err := NewTrie(db, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 	testTrie.noHashKey = true
@@ -210,7 +211,7 @@ func Test_Delete(t *testing.T) {
 
 func testDelete(t *testing.T, db DB) {
 	// Initialise a trie.
-	testTrie, err := NewTrie(db)
+	testTrie, err := NewTrie(db, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 	testTrie.noHashKey = true
@@ -272,7 +273,7 @@ func Test_SetDeleteSet(t *testing.T) {
 
 func testSetDeleteSet(t *testing.T, db DB) {
 	// Initialise a trie.
-	testTrie, err := NewTrie(db)
+	testTrie, err := NewTrie(db, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 	testTrie.noHashKey = true
@@ -291,7 +292,7 @@ func Test_IsValid(t *testing.T) {
 	mem := NewMemDB()
 	defer mem.Close()
 
-	testTrie, err := NewTrie(mem)
+	testTrie, err := NewTrie(mem, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 
@@ -333,7 +334,7 @@ func Test_QuickCheck(t *testing.T) {
 	mem := NewMemDB()
 	defer mem.Close()
 
-	testTrie, err := NewTrie(mem)
+	testTrie, err := NewTrie(mem, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 
@@ -394,7 +395,7 @@ func Test_BatchQuickCheck(t *testing.T) {
 	mem := NewMemDB()
 	defer mem.Close()
 
-	testTrie, err := NewTrie(mem)
+	testTrie, err := NewTrie(mem, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 
@@ -442,7 +443,7 @@ func Test_Copy(t *testing.T) {
 	disk := newDiskDB(t)
 	defer delDiskDB(t, disk)
 
-	testTrie, err := NewTrie(disk)
+	testTrie, err := NewTrie(disk, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 	testTrie.noHashKey = true
@@ -459,7 +460,7 @@ func Test_Copy(t *testing.T) {
 	}
 
 	// Make a copy
-	trie2, err := NewTrie(mem)
+	trie2, err := NewTrie(mem, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 	trie2.noHashKey = true
@@ -539,4 +540,16 @@ func testMemAndDisk(t *testing.T, f func(*testing.T, DB)) {
 	disk := newDiskDB(t)
 	defer delDiskDB(t, disk)
 	f(t, disk)
+}
+
+func genNonce() []byte {
+	buf := make([]byte, 32)
+	n, err := rand.Read(buf)
+	if err != nil {
+		return nil
+	}
+	if n != 32 {
+		return nil
+	}
+	return buf
 }

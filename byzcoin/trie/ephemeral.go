@@ -47,14 +47,6 @@ type EphemeralTrie struct {
 	sync.Mutex
 }
 
-// NewEphemeralTrie creates a new ephemeral trie without a source (i.e., no
-// database is attached to it). It is useful for storing a list of operations
-// temporarily. Calling Commit on this trie will always return an error.
-// Consider using Trie.MakeEphemeralTrie if the source trie is needed.
-func NewEphemeralTrie() EphemeralTrie {
-	return EphemeralTrie{}
-}
-
 func (t *EphemeralTrie) Clone() *EphemeralTrie {
 	clone := EphemeralTrie{
 		source: t.source,
@@ -85,9 +77,6 @@ func (t *EphemeralTrie) Get(k []byte) ([]byte, error) {
 
 	if v, ok := t.overlay[string(k)]; ok {
 		return v, nil
-	}
-	if t.source == nil {
-		return nil, nil
 	}
 	return t.source.Get(k)
 }
@@ -152,9 +141,6 @@ func (t *EphemeralTrie) Batch(pairs []KVPair) error {
 // Commit commits all operations performed on the EphemeralTrie since creation
 // or the previous commit to the source Trie.
 func (t *EphemeralTrie) Commit() error {
-	if t.source == nil {
-		return errors.New("cannot commit to nil source")
-	}
 	err := t.source.db.Update(func(b bucket) error {
 		for _, instr := range t.instrList {
 			switch instr.ty {
@@ -205,6 +191,10 @@ func (t *EphemeralTrie) GetRoot() []byte {
 		return nil
 	}
 	return root
+}
+
+func (t *EphemeralTrie) GetProof(key []byte) (*Proof, error) {
+	return nil, errors.New("not implemented")
 }
 
 // PendingOpsHash returns the hash of the pending operations.
