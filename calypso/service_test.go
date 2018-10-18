@@ -161,7 +161,7 @@ type ts struct {
 func (s *ts) addRead(t *testing.T, write *byzcoin.Proof, Xc kyber.Point) byzcoin.InstanceID {
 	var readBuf []byte
 	read := &Read{
-		Write: byzcoin.NewInstanceID(write.InclusionProof.Key),
+		Write: byzcoin.NewInstanceID(write.InclusionProof.Key()),
 		Xc:    Xc,
 	}
 	var err error
@@ -169,7 +169,7 @@ func (s *ts) addRead(t *testing.T, write *byzcoin.Proof, Xc kyber.Point) byzcoin
 	require.Nil(t, err)
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{{
-			InstanceID: byzcoin.NewInstanceID(write.InclusionProof.Key),
+			InstanceID: byzcoin.NewInstanceID(write.InclusionProof.Key()),
 			Nonce:      byzcoin.Nonce{},
 			Index:      0,
 			Length:     1,

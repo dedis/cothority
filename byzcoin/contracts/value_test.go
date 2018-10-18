@@ -50,10 +50,10 @@ func TestValue_Spawn(t *testing.T) {
 	require.Nil(t, err)
 	pr, err := cl.WaitProof(byzcoin.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), genesisMsg.BlockInterval, myvalue)
 	require.Nil(t, err)
-	require.True(t, pr.InclusionProof.Match())
-	values, err := pr.InclusionProof.RawValues()
+	require.True(t, pr.InclusionProof.Match(ctx.Instructions[0].DeriveID("").Slice()))
+	v0, _, _, err := pr.Get(ctx.Instructions[0].DeriveID("").Slice())
 	require.Nil(t, err)
-	require.Equal(t, myvalue, values[0])
+	require.Equal(t, myvalue, v0)
 
 	local.WaitDone(genesisMsg.BlockInterval)
 }

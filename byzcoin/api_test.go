@@ -51,16 +51,16 @@ func TestClient_GetProof(t *testing.T) {
 		if err != nil {
 			continue
 		}
-		if p.Proof.InclusionProof.Match() {
+		if p.Proof.InclusionProof.Match(newID) {
 			break
 		}
 	}
 	require.NotEqual(t, 10, i, "didn't get proof in time")
 	require.Nil(t, p.Proof.Verify(csr.Skipblock.SkipChainID()))
-	k, vs, err := p.Proof.KeyValue()
+	k, v0, _, _, err := p.Proof.KeyValue()
 	require.Nil(t, err)
 	require.Equal(t, k, newID)
-	require.Equal(t, value, vs[0])
+	require.Equal(t, value, v0)
 }
 
 // Create a streaming client and add blocks in the background. The client

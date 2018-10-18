@@ -22,7 +22,7 @@ func (b bucket) isFirst() bool {
 
 type eventLog struct {
 	Instance byzcoin.InstanceID
-	v        byzcoin.CollectionView
+	v        byzcoin.ReadOnlyStateTrie
 }
 
 func (e eventLog) getLatestBucket() ([]byte, *bucket, error) {
@@ -46,40 +46,24 @@ func (e eventLog) getLatestBucket() ([]byte, *bucket, error) {
 }
 
 func (e eventLog) getBucketByID(objID []byte) (*bucket, error) {
-	r, err := e.v.Get(objID).Record()
+	v0, _, _, err := e.v.GetValues(objID)
 	if err != nil {
 		return nil, err
-	}
-	v, err := r.Values()
-	if err != nil {
-		return nil, err
-	}
-	newval, ok := v[0].([]byte)
-	if !ok {
-		return nil, errors.New("invalid value")
 	}
 	var b bucket
-	if err := protobuf.Decode(newval, &b); err != nil {
+	if err := protobuf.Decode(v0, &b); err != nil {
 		return nil, err
 	}
 	return &b, nil
 }
 
 func (e eventLog) getIndexValue() ([]byte, error) {
-	r, err := e.v.Get(e.Instance.Slice()).Record()
+	v0, _, _, err := e.v.GetValues(e.Instance.Slice())
 	if err != nil {
 		return nil, err
 	}
-	if !r.Match() {
+	if v0 == nil {
 		return nil, errIndexMissing
 	}
-	v, err := r.Values()
-	if err != nil {
-		return nil, err
-	}
-	newval, ok := v[0].([]byte)
-	if !ok {
-		return nil, errors.New("invalid value")
-	}
-	return newval, nil
+	return v0, nil
 }

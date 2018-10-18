@@ -101,6 +101,12 @@ func (p *Proof) KeyValue() ([]byte, []byte) {
 	return p.Leaf.Key, p.Leaf.Value
 }
 
+// Key gets the key for this proof. Nil is returned if there is no key in the
+// proof.
+func (p *Proof) Key() []byte {
+	return p.Leaf.Key
+}
+
 // Get returns the value associated with the given key in the proof. If the key
 // does not exist, nil is returned. Note that there is at most one key/value
 // pair in the proof.

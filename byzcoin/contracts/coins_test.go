@@ -1,10 +1,11 @@
 package contracts
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/collection"
+	"github.com/dedis/cothority/byzcoin/trie"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/onet/log"
@@ -147,7 +148,7 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 	sc, co, err = ContractCoin(ct, inst, nil)
 	require.Error(t, err)
 
-	// Apply the changes to the mock collection.
+	// Apply the changes to the mock trie.
 	ct.Store(coAddr, ciOne, ContractCoinID, gdarc.GetBaseID())
 
 	sc, co, err = ContractCoin(ct, inst, nil)
@@ -233,9 +234,6 @@ func newCT(rStr ...string) *cvTest {
 	return ct
 }
 
-func (ct cvTest) Get(key []byte) collection.Getter {
-	panic("not implemented")
-}
 func (ct *cvTest) Store(key byzcoin.InstanceID, value []byte, contractID string, darcID darc.ID) {
 	k := string(key.Slice())
 	ct.values[k] = value
@@ -250,4 +248,7 @@ func (ct cvTest) GetValue(key []byte) ([]byte, error) {
 }
 func (ct cvTest) GetContractID(key []byte) (string, error) {
 	return ct.contractIDs[string(key)], nil
+}
+func (ct cvTest) GetProof(key []byte) (*trie.Proof, error) {
+	return nil, errors.New("not implemented")
 }

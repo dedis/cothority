@@ -228,12 +228,12 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		if err != nil {
 			return errors.New("couldn't get proof for transaction: " + err.Error())
 		}
-		_, v, err := proof.Proof.KeyValue()
+		_, v0, _, _, err := proof.Proof.KeyValue()
 		if err != nil {
 			return errors.New("proof doesn't hold transaction: " + err.Error())
 		}
 		var account byzcoin.Coin
-		err = protobuf.Decode(v[0], &account)
+		err = protobuf.Decode(v0, &account)
 		if err != nil {
 			return errors.New("couldn't decode account: " + err.Error())
 		}

@@ -51,7 +51,7 @@ func init() {
 //         needs to be correctly finalized by the pop-service.
 //       * "Service" - when given, will create a darc and a coin-account for
 //         the service to use.
-func (s *Service) ContractPopParty(cdb byzcoin.CollectionView, inst byzcoin.Instruction, coins []byzcoin.Coin) (scs []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
+func (s *Service) ContractPopParty(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (scs []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
 	cOut = coins
 
 	err = inst.VerifyDarcSignature(cdb)

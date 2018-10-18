@@ -43,10 +43,8 @@ public class Instance {
         if (!p.matches()){
             throw new CothorityNotFoundException("this is a proof of absence");
         }
-        List<byte[]> values = p.getValues();
-        DarcId darcId;
-        darcId = new DarcId(values.get(2));
-        return new Instance(new InstanceId(p.getKey()), new String(values.get(1)), darcId, values.get(0));
+        StateChangeBody body = p.getValues();
+        return new Instance(new InstanceId(p.getKey()), new String(body.getContractID()), body.getDarcId(), body.getValue());
     }
 
     /**

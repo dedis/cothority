@@ -225,13 +225,6 @@ public final class Calypso {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               data_ = input.readBytes();
@@ -275,6 +268,13 @@ public final class Calypso {
               ltsid_ = input.readBytes();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -295,6 +295,7 @@ public final class Calypso {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Write_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Write_fieldAccessorTable
@@ -510,6 +511,7 @@ public final class Calypso {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -543,6 +545,7 @@ public final class Calypso {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -572,6 +575,7 @@ public final class Calypso {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -785,6 +789,7 @@ public final class Calypso {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -792,6 +797,7 @@ public final class Calypso {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.Write prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -820,6 +826,7 @@ public final class Calypso {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Write_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Write_fieldAccessorTable
@@ -842,6 +849,7 @@ public final class Calypso {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         data_ = com.google.protobuf.ByteString.EMPTY;
@@ -863,15 +871,18 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Write_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.Write getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Calypso.Write.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.Write build() {
         ch.epfl.dedis.lib.proto.Calypso.Write result = buildPartial();
         if (!result.isInitialized()) {
@@ -880,6 +891,7 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.Write buildPartial() {
         ch.epfl.dedis.lib.proto.Calypso.Write result = new ch.epfl.dedis.lib.proto.Calypso.Write(this);
         int from_bitField0_ = bitField0_;
@@ -922,32 +934,39 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Calypso.Write) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.Write)other);
@@ -995,6 +1014,7 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasData()) {
           return false;
@@ -1017,6 +1037,7 @@ public final class Calypso {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1515,11 +1536,13 @@ public final class Calypso {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1541,6 +1564,7 @@ public final class Calypso {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Write>
         PARSER = new com.google.protobuf.AbstractParser<Write>() {
+      @java.lang.Override
       public Write parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1558,6 +1582,7 @@ public final class Calypso {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Calypso.Write getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1632,13 +1657,6 @@ public final class Calypso {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               write_ = input.readBytes();
@@ -1647,6 +1665,13 @@ public final class Calypso {
             case 18: {
               bitField0_ |= 0x00000002;
               xc_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -1666,6 +1691,7 @@ public final class Calypso {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Read_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Read_fieldAccessorTable
@@ -1705,6 +1731,7 @@ public final class Calypso {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1722,6 +1749,7 @@ public final class Calypso {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1733,6 +1761,7 @@ public final class Calypso {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -1866,6 +1895,7 @@ public final class Calypso {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -1873,6 +1903,7 @@ public final class Calypso {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.Read prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -1901,6 +1932,7 @@ public final class Calypso {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Read_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Read_fieldAccessorTable
@@ -1923,6 +1955,7 @@ public final class Calypso {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         write_ = com.google.protobuf.ByteString.EMPTY;
@@ -1932,15 +1965,18 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_Read_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.Read getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Calypso.Read.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.Read build() {
         ch.epfl.dedis.lib.proto.Calypso.Read result = buildPartial();
         if (!result.isInitialized()) {
@@ -1949,6 +1985,7 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.Read buildPartial() {
         ch.epfl.dedis.lib.proto.Calypso.Read result = new ch.epfl.dedis.lib.proto.Calypso.Read(this);
         int from_bitField0_ = bitField0_;
@@ -1966,32 +2003,39 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Calypso.Read) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.Read)other);
@@ -2014,6 +2058,7 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasWrite()) {
           return false;
@@ -2024,6 +2069,7 @@ public final class Calypso {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2112,11 +2158,13 @@ public final class Calypso {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -2138,6 +2186,7 @@ public final class Calypso {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Read>
         PARSER = new com.google.protobuf.AbstractParser<Read>() {
+      @java.lang.Override
       public Read parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2155,6 +2204,7 @@ public final class Calypso {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Calypso.Read getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -2251,13 +2301,6 @@ public final class Calypso {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.lib.proto.OnetProto.Roster.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2274,6 +2317,13 @@ public final class Calypso {
             case 18: {
               bitField0_ |= 0x00000002;
               bcid_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -2293,6 +2343,7 @@ public final class Calypso {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_CreateLTS_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_CreateLTS_fieldAccessorTable
@@ -2358,6 +2409,7 @@ public final class Calypso {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -2379,6 +2431,7 @@ public final class Calypso {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2390,6 +2443,7 @@ public final class Calypso {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -2523,6 +2577,7 @@ public final class Calypso {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -2530,6 +2585,7 @@ public final class Calypso {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.CreateLTS prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -2557,6 +2613,7 @@ public final class Calypso {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_CreateLTS_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_CreateLTS_fieldAccessorTable
@@ -2580,6 +2637,7 @@ public final class Calypso {
           getRosterFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (rosterBuilder_ == null) {
@@ -2593,15 +2651,18 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_CreateLTS_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.CreateLTS getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Calypso.CreateLTS.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.CreateLTS build() {
         ch.epfl.dedis.lib.proto.Calypso.CreateLTS result = buildPartial();
         if (!result.isInitialized()) {
@@ -2610,6 +2671,7 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.CreateLTS buildPartial() {
         ch.epfl.dedis.lib.proto.Calypso.CreateLTS result = new ch.epfl.dedis.lib.proto.Calypso.CreateLTS(this);
         int from_bitField0_ = bitField0_;
@@ -2631,32 +2693,39 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Calypso.CreateLTS) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.CreateLTS)other);
@@ -2679,6 +2748,7 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasRoster()) {
           return false;
@@ -2692,6 +2762,7 @@ public final class Calypso {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2915,11 +2986,13 @@ public final class Calypso {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -2941,6 +3014,7 @@ public final class Calypso {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CreateLTS>
         PARSER = new com.google.protobuf.AbstractParser<CreateLTS>() {
+      @java.lang.Override
       public CreateLTS parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2958,6 +3032,7 @@ public final class Calypso {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Calypso.CreateLTS getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -3048,13 +3123,6 @@ public final class Calypso {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               ltsid_ = input.readBytes();
@@ -3063,6 +3131,13 @@ public final class Calypso {
             case 18: {
               bitField0_ |= 0x00000002;
               x_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -3082,6 +3157,7 @@ public final class Calypso {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_CreateLTSReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_CreateLTSReply_fieldAccessorTable
@@ -3137,6 +3213,7 @@ public final class Calypso {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -3154,6 +3231,7 @@ public final class Calypso {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3165,6 +3243,7 @@ public final class Calypso {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -3298,6 +3377,7 @@ public final class Calypso {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -3305,6 +3385,7 @@ public final class Calypso {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -3333,6 +3414,7 @@ public final class Calypso {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_CreateLTSReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_CreateLTSReply_fieldAccessorTable
@@ -3355,6 +3437,7 @@ public final class Calypso {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         ltsid_ = com.google.protobuf.ByteString.EMPTY;
@@ -3364,15 +3447,18 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_CreateLTSReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply build() {
         ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -3381,6 +3467,7 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply buildPartial() {
         ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply result = new ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply(this);
         int from_bitField0_ = bitField0_;
@@ -3398,32 +3485,39 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply)other);
@@ -3446,6 +3540,7 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasLtsid()) {
           return false;
@@ -3456,6 +3551,7 @@ public final class Calypso {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3576,11 +3672,13 @@ public final class Calypso {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -3602,6 +3700,7 @@ public final class Calypso {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<CreateLTSReply>
         PARSER = new com.google.protobuf.AbstractParser<CreateLTSReply>() {
+      @java.lang.Override
       public CreateLTSReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3619,6 +3718,7 @@ public final class Calypso {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Calypso.CreateLTSReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -3723,13 +3823,6 @@ public final class Calypso {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.lib.proto.ByzCoinProto.Proof.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3756,6 +3849,13 @@ public final class Calypso {
               bitField0_ |= 0x00000002;
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -3773,6 +3873,7 @@ public final class Calypso {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_DecryptKey_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_DecryptKey_fieldAccessorTable
@@ -3848,6 +3949,7 @@ public final class Calypso {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -3873,6 +3975,7 @@ public final class Calypso {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3884,6 +3987,7 @@ public final class Calypso {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4017,6 +4121,7 @@ public final class Calypso {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4024,6 +4129,7 @@ public final class Calypso {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.DecryptKey prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4052,6 +4158,7 @@ public final class Calypso {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_DecryptKey_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_DecryptKey_fieldAccessorTable
@@ -4076,6 +4183,7 @@ public final class Calypso {
           getWriteFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (readBuilder_ == null) {
@@ -4093,15 +4201,18 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_DecryptKey_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.DecryptKey getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Calypso.DecryptKey.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.DecryptKey build() {
         ch.epfl.dedis.lib.proto.Calypso.DecryptKey result = buildPartial();
         if (!result.isInitialized()) {
@@ -4110,6 +4221,7 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.DecryptKey buildPartial() {
         ch.epfl.dedis.lib.proto.Calypso.DecryptKey result = new ch.epfl.dedis.lib.proto.Calypso.DecryptKey(this);
         int from_bitField0_ = bitField0_;
@@ -4135,32 +4247,39 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Calypso.DecryptKey) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.DecryptKey)other);
@@ -4183,6 +4302,7 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasRead()) {
           return false;
@@ -4199,6 +4319,7 @@ public final class Calypso {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4525,11 +4646,13 @@ public final class Calypso {
         }
         return writeBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4551,6 +4674,7 @@ public final class Calypso {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<DecryptKey>
         PARSER = new com.google.protobuf.AbstractParser<DecryptKey>() {
+      @java.lang.Override
       public DecryptKey parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4568,6 +4692,7 @@ public final class Calypso {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Calypso.DecryptKey getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -4684,13 +4809,6 @@ public final class Calypso {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 cs_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
@@ -4707,6 +4825,13 @@ public final class Calypso {
             case 26: {
               bitField0_ |= 0x00000002;
               x_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -4729,6 +4854,7 @@ public final class Calypso {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_DecryptKeyReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_DecryptKeyReply_fieldAccessorTable
@@ -4818,6 +4944,7 @@ public final class Calypso {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4835,6 +4962,7 @@ public final class Calypso {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < cs_.size(); i++) {
@@ -4849,6 +4977,7 @@ public final class Calypso {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4997,6 +5126,7 @@ public final class Calypso {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5004,6 +5134,7 @@ public final class Calypso {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5032,6 +5163,7 @@ public final class Calypso {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_DecryptKeyReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_DecryptKeyReply_fieldAccessorTable
@@ -5054,6 +5186,7 @@ public final class Calypso {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         cs_ = java.util.Collections.emptyList();
@@ -5065,15 +5198,18 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_DecryptKeyReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply build() {
         ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -5082,6 +5218,7 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply buildPartial() {
         ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply result = new ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply(this);
         int from_bitField0_ = bitField0_;
@@ -5104,32 +5241,39 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply)other);
@@ -5162,6 +5306,7 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasXhatenc()) {
           return false;
@@ -5172,6 +5317,7 @@ public final class Calypso {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5392,11 +5538,13 @@ public final class Calypso {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5418,6 +5566,7 @@ public final class Calypso {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<DecryptKeyReply>
         PARSER = new com.google.protobuf.AbstractParser<DecryptKeyReply>() {
+      @java.lang.Override
       public DecryptKeyReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5435,6 +5584,7 @@ public final class Calypso {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Calypso.DecryptKeyReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -5506,16 +5656,16 @@ public final class Calypso {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              ltsid_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              ltsid_ = input.readBytes();
               break;
             }
           }
@@ -5535,6 +5685,7 @@ public final class Calypso {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublic_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublic_fieldAccessorTable
@@ -5567,6 +5718,7 @@ public final class Calypso {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5580,6 +5732,7 @@ public final class Calypso {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5588,6 +5741,7 @@ public final class Calypso {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5708,6 +5862,7 @@ public final class Calypso {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5715,6 +5870,7 @@ public final class Calypso {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.SharedPublic prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5742,6 +5898,7 @@ public final class Calypso {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublic_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublic_fieldAccessorTable
@@ -5764,6 +5921,7 @@ public final class Calypso {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         ltsid_ = com.google.protobuf.ByteString.EMPTY;
@@ -5771,15 +5929,18 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublic_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.SharedPublic getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Calypso.SharedPublic.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.SharedPublic build() {
         ch.epfl.dedis.lib.proto.Calypso.SharedPublic result = buildPartial();
         if (!result.isInitialized()) {
@@ -5788,6 +5949,7 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.SharedPublic buildPartial() {
         ch.epfl.dedis.lib.proto.Calypso.SharedPublic result = new ch.epfl.dedis.lib.proto.Calypso.SharedPublic(this);
         int from_bitField0_ = bitField0_;
@@ -5801,32 +5963,39 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Calypso.SharedPublic) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.SharedPublic)other);
@@ -5846,6 +6015,7 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasLtsid()) {
           return false;
@@ -5853,6 +6023,7 @@ public final class Calypso {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5922,11 +6093,13 @@ public final class Calypso {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5948,6 +6121,7 @@ public final class Calypso {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SharedPublic>
         PARSER = new com.google.protobuf.AbstractParser<SharedPublic>() {
+      @java.lang.Override
       public SharedPublic parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5965,6 +6139,7 @@ public final class Calypso {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Calypso.SharedPublic getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6036,16 +6211,16 @@ public final class Calypso {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              x_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              x_ = input.readBytes();
               break;
             }
           }
@@ -6065,6 +6240,7 @@ public final class Calypso {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublicReply_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublicReply_fieldAccessorTable
@@ -6097,6 +6273,7 @@ public final class Calypso {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -6110,6 +6287,7 @@ public final class Calypso {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6118,6 +6296,7 @@ public final class Calypso {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -6238,6 +6417,7 @@ public final class Calypso {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6245,6 +6425,7 @@ public final class Calypso {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6272,6 +6453,7 @@ public final class Calypso {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublicReply_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublicReply_fieldAccessorTable
@@ -6294,6 +6476,7 @@ public final class Calypso {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         x_ = com.google.protobuf.ByteString.EMPTY;
@@ -6301,15 +6484,18 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Calypso.internal_static_calypso_SharedPublicReply_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply build() {
         ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -6318,6 +6504,7 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply buildPartial() {
         ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply result = new ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply(this);
         int from_bitField0_ = bitField0_;
@@ -6331,32 +6518,39 @@ public final class Calypso {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply)other);
@@ -6376,6 +6570,7 @@ public final class Calypso {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasX()) {
           return false;
@@ -6383,6 +6578,7 @@ public final class Calypso {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6452,11 +6648,13 @@ public final class Calypso {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6478,6 +6676,7 @@ public final class Calypso {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SharedPublicReply>
         PARSER = new com.google.protobuf.AbstractParser<SharedPublicReply>() {
+      @java.lang.Override
       public SharedPublicReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6495,6 +6694,7 @@ public final class Calypso {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Calypso.SharedPublicReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }

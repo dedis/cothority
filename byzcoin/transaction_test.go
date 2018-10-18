@@ -7,10 +7,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func id(s string) InstanceID {
-	return NewInstanceID([]byte(s))
-}
-
 func TestTransaction_Signing(t *testing.T) {
 	signer := darc.NewSignerEd25519(nil, nil)
 	ids := []darc.Identity{signer.Identity()}

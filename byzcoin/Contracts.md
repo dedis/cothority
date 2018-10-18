@@ -50,12 +50,12 @@ A contract is always pre-compiled into every node and has the following
 method signature:
 
 ```go
-type ByzCoinContract func(coll CollectionView, tx Instruction, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
+type ByzCoinContract func(st ReadOnlyStateTrie, tx Instruction, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
 ```
 
 Input:
-- `coll` is a read-only reference to the collection representing the global state
-of all instances.
+- `st` is a read-only reference to the trie representing the global state of
+all instances.
 - `tx` is the instruction sent by the client, which also holds the `InstanceID`
 pointing to the data the contract should work on.
 - `inCoins` is a list of coins given as input to this instruction.
@@ -69,13 +69,13 @@ be passed as input to the next instruction.
 - `err` if not nil, the contract indicates it failed, and all instructions in that
 `ClientTransaction` will be discarded.
 
-The contract itself has access to all elements of the collection, but will mainly
+The contract itself has access to all elements of the trie, but will mainly
 work on the data pointed to by the `tx Instruction` given as a parameter. It is
-not allowed to change the collection by itself, only by creating one or more
+not allowed to change the trie by itself, only by creating one or more
 `StateChange`s that create/update/delete instances in the global state.
 
 The `StateChange`s are applied between all instructions to a temporary copy of
-the collection, and only committed if all instructions are successful, else all
+the trie, and only committed if all instructions are successful, else all
 `StateChange`s from this `ClientTransaction` will be discarded.
 
 If there are more than one `ClientTransaction`s in a block, the contracts called

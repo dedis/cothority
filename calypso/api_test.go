@@ -1,14 +1,15 @@
 package calypso
 
 import (
+	"testing"
+	"time"
+
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/onet"
 	"github.com/stretchr/testify/require"
-	"testing"
-	"time"
 )
 
 // Tests the client function CreateLTS
@@ -115,7 +116,7 @@ func TestClient_Calypso(t *testing.T) {
 	require.Nil(t, err)
 	prRe1, err := calypsoClient.WaitProof(re1.InstanceID, time.Second, nil)
 	require.Nil(t, err)
-	require.True(t, prRe1.InclusionProof.Match())
+	require.True(t, prRe1.InclusionProof.Match(re1.InstanceID.Slice()))
 
 	key2 := []byte("secret key 2")
 	//Create a Write instance
@@ -125,12 +126,12 @@ func TestClient_Calypso(t *testing.T) {
 	require.Nil(t, err)
 	prWr2, err := calypsoClient.WaitProof(wr2.InstanceID, time.Second, nil)
 	require.Nil(t, err)
-	require.True(t, prWr2.InclusionProof.Match())
+	require.True(t, prWr2.InclusionProof.Match(wr2.InstanceID.Slice()))
 	re2, err := calypsoClient.AddRead(prWr2, reader2, *darc2, 10)
 	require.Nil(t, err)
 	prRe2, err := calypsoClient.WaitProof(re2.InstanceID, time.Second, nil)
 	require.Nil(t, err)
-	require.True(t, prRe2.InclusionProof.Match())
+	require.True(t, prRe2.InclusionProof.Match(re2.InstanceID.Slice()))
 
 	// Make sure you can't decrypt with non-matching proofs
 	_, err = calypsoClient.DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr2})

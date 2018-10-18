@@ -127,46 +127,50 @@ func (c *Client) CheckAuthorization(dID darc.ID, ids ...darc.Identity) ([]darc.A
 // GetGenDarc uses the GetProof method to fetch the latest version of the
 // Genesis Darc from ByzCoin and parses it.
 func (c *Client) GetGenDarc() (*darc.Darc, error) {
+	// Get proof of the genesis darc.
 	p, err := c.GetProof(NewInstanceID(nil).Slice())
 	if err != nil {
 		return nil, err
 	}
-	if !p.Proof.InclusionProof.Match() {
+	ok, err := p.Proof.InclusionProof.Exists(NewInstanceID(nil).Slice())
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		return nil, errors.New("cannot find genesis Darc ID")
 	}
 
-	_, vs, err := p.Proof.KeyValue()
-
-	if len(vs) < 3 {
-		return nil, errors.New("not enough records")
+	// Sanity check the values.
+	_, _, contract, darcID, err := p.Proof.KeyValue()
+	if contract != ContractConfigID {
+		return nil, errors.New("expected contract to be config but got: " + contract)
 	}
-	contractBuf := vs[1]
-	if string(contractBuf) != ContractConfigID {
-		return nil, errors.New("expected contract to be config but got: " + string(contractBuf))
-	}
-	darcID := vs[2]
 	if len(darcID) != 32 {
 		return nil, errors.New("genesis darc ID is wrong length")
 	}
 
+	// Find the actual darc.
 	p, err = c.GetProof(darcID)
 	if err != nil {
 		return nil, err
 	}
-	if !p.Proof.InclusionProof.Match() {
+	ok, err = p.Proof.InclusionProof.Exists(darcID)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		return nil, errors.New("cannot find genesis Darc")
 	}
 
-	_, vs, err = p.Proof.KeyValue()
-
-	if len(vs) < 2 {
-		return nil, errors.New("not enough records")
+	// Check and parse the darc.
+	_, darcBuf, contract, _, err := p.Proof.KeyValue()
+	if err != nil {
+		return nil, err
 	}
-	contractBuf = vs[1]
-	if string(contractBuf) != ContractDarcID {
-		return nil, errors.New("expected contract to be darc but got: " + string(contractBuf))
+	if contract != ContractDarcID {
+		return nil, errors.New("expected contract to be darc but got: " + contract)
 	}
-	d, err := darc.NewFromProtobuf(vs[0])
+	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {
 		return nil, err
 	}
@@ -180,20 +184,20 @@ func (c *Client) GetChainConfig() (*ChainConfig, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !p.Proof.InclusionProof.Match() {
+	ok, err := p.Proof.InclusionProof.Exists(NewInstanceID(nil).Slice())
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
 		return nil, errors.New("cannot find config")
 	}
 
-	_, vs, err := p.Proof.KeyValue()
-	if len(vs) < 2 {
-		return nil, errors.New("not enough records")
-	}
-	contractBuf := vs[1]
-	if string(contractBuf) != ContractConfigID {
-		return nil, errors.New("expected contract to be config but got: " + string(contractBuf))
+	_, configBuf, contract, _, err := p.Proof.KeyValue()
+	if contract != ContractConfigID {
+		return nil, errors.New("expected contract to be config but got: " + contract)
 	}
 	config := &ChainConfig{}
-	err = protobuf.DecodeWithConstructors(vs[0], config, network.DefaultConstructors(cothority.Suite))
+	err = protobuf.DecodeWithConstructors(configBuf, config, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		return nil, err
 	}
@@ -216,15 +220,19 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 			return nil, err
 		}
 		pr = resp.Proof
-		if pr.InclusionProof.Match() {
+		ok, err := pr.InclusionProof.Exists(id.Slice())
+		if err != nil {
+			return nil, err
+		}
+		if ok {
 			if value == nil {
 				return &pr, nil
 			}
-			vs, err := pr.InclusionProof.RawValues()
+			_, buf, _, _, err := pr.KeyValue()
 			if err != nil {
 				return nil, err
 			}
-			if bytes.Compare(vs[0], value) == 0 {
+			if bytes.Compare(buf, value) == 0 {
 				return &pr, nil
 			}
 		}

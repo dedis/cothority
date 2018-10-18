@@ -131,7 +131,7 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 	reply *ReadReply, err error) {
 	var readBuf []byte
 	read := &Read{
-		Write: byzcoin.NewInstanceID(proof.InclusionProof.Key),
+		Write: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
 		Xc:    signer.Ed25519.Point,
 	}
 	reply = &ReadReply{}
@@ -145,7 +145,7 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 	}
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{{
-			InstanceID: byzcoin.NewInstanceID(proof.InclusionProof.Key),
+			InstanceID: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
 			Nonce:      byzcoin.Nonce{},
 			Index:      0,
 			Length:     1,

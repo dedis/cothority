@@ -63,8 +63,8 @@ public class Block {
      * @return the root hash of the merkle tree of the global state.
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Sha256id getCollectionRoot() throws CothorityCryptoException {
-        return new Sha256id(dataHeader.getCollectionroot());
+    public Sha256id getTrieRoot() throws CothorityCryptoException {
+        return new Sha256id(dataHeader.getTrieroot());
     }
 
     /**

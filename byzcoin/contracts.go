@@ -3,11 +3,13 @@ package byzcoin
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin/viewchange"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -27,49 +29,29 @@ var ConfigInstanceID = InstanceID{}
 // CmdDarcEvolve is needed to evolve a darc.
 var CmdDarcEvolve = "evolve"
 
-// loadConfigFromColl loads the configuration data from the collections.
-func loadConfigFromColl(coll CollectionView) (*ChainConfig, error) {
-	// Find the genesis-darc ID.
-	val, contract, _, err := getValueContract(coll, NewInstanceID(nil).Slice())
-	if err != nil {
-		return nil, err
-	}
-	if string(contract) != ContractConfigID {
-		return nil, errors.New("did not get " + ContractConfigID)
-	}
+// ContractFn is the type signature of the class functions which can be
+// registered with the ByzCoin service.
+type ContractFn func(st ReadOnlyStateTrie, inst Instruction, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
 
-	config := ChainConfig{}
-	err = protobuf.DecodeWithConstructors(val, &config, network.DefaultConstructors(cothority.Suite))
-	if err != nil {
-		return nil, err
+// RegisterContract stores the contract in a map and will call it whenever a
+// contract needs to be done. GetService makes it possible to give either an
+// `onet.Context` or `onet.Server` to `RegisterContract`.
+func RegisterContract(s skipchain.GetService, kind string, f ContractFn) error {
+	scs := s.Service(ServiceName)
+	if scs == nil {
+		return errors.New("Didn't find our service: " + ServiceName)
 	}
-
-	return &config, nil
+	return scs.(*Service).registerContract(kind, f)
 }
 
-// LoadDarcFromColl loads a darc which should be stored in key.
-func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
-	rec, err := coll.Get(key).Record()
+// LoadDarcFromTrie loads a darc which should be stored in key.
+func LoadDarcFromTrie(st ReadOnlyStateTrie, key []byte) (*darc.Darc, error) {
+	darcBuf, contract, _, err := st.GetValues(key)
 	if err != nil {
 		return nil, err
 	}
-	vs, err := rec.Values()
-	if err != nil {
-		return nil, err
-	}
-	if len(vs) < 2 {
-		return nil, errors.New("not enough records")
-	}
-	contractBuf, ok := vs[1].([]byte)
-	if !ok {
-		return nil, errors.New("can not cast value to byte slice")
-	}
-	if string(contractBuf) != ContractDarcID {
-		return nil, errors.New("expected contract to be darc but got: " + string(contractBuf))
-	}
-	darcBuf, ok := vs[0].([]byte)
-	if !ok {
-		return nil, errors.New("cannot cast value to byte slice")
+	if contract != ContractDarcID {
+		return nil, errors.New("expected contract to be darc but got: " + contract)
 	}
 	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {
@@ -80,13 +62,17 @@ func LoadDarcFromColl(coll CollectionView, key []byte) (*darc.Darc, error) {
 
 // ContractConfig can only be instantiated once per skipchain, and only for
 // the genesis block.
-func (s *Service) ContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+func (s *Service) ContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	// Verify the darc signature if the config instance does not exist yet.
-	pr, err := cdb.Get(ConfigInstanceID.Slice()).Proof()
+	pr, err := cdb.GetProof(ConfigInstanceID.Slice())
 	if err != nil {
 		return
 	}
-	if pr.Match() {
+	ok, err := pr.Exists(ConfigInstanceID.Slice())
+	if err != nil {
+		return
+	}
+	if ok {
 		err = inst.VerifyDarcSignature(cdb)
 		if err != nil {
 			return
@@ -102,7 +88,7 @@ func (s *Service) ContractConfig(cdb CollectionView, inst Instruction, coins []C
 	}
 }
 
-func invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
+func invokeContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
 	cOut = coins
 
 	// Find the darcID for this instance.
@@ -126,7 +112,7 @@ func invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (s
 			return
 		}
 		var oldConfig *ChainConfig
-		oldConfig, err = loadConfigFromColl(cdb)
+		oldConfig, err = loadConfigFromTrie(cdb)
 		if err != nil {
 			return
 		}
@@ -159,8 +145,8 @@ func invokeContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (s
 	return
 }
 
-func updateRosterScs(cdb CollectionView, darcID darc.ID, newRoster onet.Roster) (StateChanges, error) {
-	config, err := loadConfigFromColl(cdb)
+func updateRosterScs(cdb ReadOnlyStateTrie, darcID darc.ID, newRoster onet.Roster) (StateChanges, error) {
+	config, err := loadConfigFromTrie(cdb)
 	if err != nil {
 		return nil, err
 	}
@@ -175,21 +161,7 @@ func updateRosterScs(cdb CollectionView, darcID darc.ID, newRoster onet.Roster) 
 	}, nil
 }
 
-func validRotation(oldRoster, newRoster onet.Roster) error {
-	if !oldRoster.IsRotation(&newRoster) {
-		return errors.New("the new roster is not a valid rotation of the old roster")
-	}
-	newRoster2 := onet.NewRoster(newRoster.List)
-	if !newRoster2.ID.Equal(newRoster.ID) {
-		return errors.New("re-created roster does not have the same ID")
-	}
-	if !newRoster2.Aggregate.Equal(newRoster.Aggregate) {
-		return errors.New("re-created roster does not have the same aggregate public key")
-	}
-	return nil
-}
-
-func spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+func spawnContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	c = coins
 	darcBuf := inst.Spawn.Args.Search("darc")
 	d, err := darc.NewFromProtobuf(darcBuf)
@@ -243,7 +215,7 @@ func spawnContractConfig(cdb CollectionView, inst Instruction, coins []Coin) (sc
 // ContractDarc accepts the following instructions:
 //   - Spawn - creates a new darc
 //   - Invoke.Evolve - evolves an existing darc
-func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
+func (s *Service) ContractDarc(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
 	cOut = coins
 	err = inst.VerifyDarcSignature(cdb)
 	if err != nil {
@@ -283,7 +255,7 @@ func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coi
 			if err != nil {
 				return nil, nil, err
 			}
-			oldD, err := LoadDarcFromColl(cdb, darcID)
+			oldD, err := LoadDarcFromTrie(cdb, darcID)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -301,4 +273,55 @@ func (s *Service) ContractDarc(cdb CollectionView, inst Instruction, coins []Coi
 	default:
 		return nil, nil, errors.New("unknown instruction type")
 	}
+}
+
+// loadConfigFromTrie loads the configuration data from the trie.
+func loadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
+	// Find the genesis-darc ID.
+	val, contract, _, err := getValueContract(st, NewInstanceID(nil).Slice())
+	if err != nil {
+		return nil, err
+	}
+	if string(contract) != ContractConfigID {
+		return nil, errors.New("did not get " + ContractConfigID)
+	}
+
+	config := ChainConfig{}
+	err = protobuf.DecodeWithConstructors(val, &config, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, err
+	}
+
+	return &config, nil
+}
+
+func getValueContract(st ReadOnlyStateTrie, key []byte) (value []byte, contract string, darcID darc.ID, err error) {
+	value, contract, darcID, err = st.GetValues(key)
+	if err != nil {
+		return
+	}
+	if value == nil {
+		err = errKeyNotSet
+		return
+	}
+	return
+}
+
+func getInstanceDarc(c ReadOnlyStateTrie, iid InstanceID) (*darc.Darc, error) {
+	// From instance ID, find the darcID that controls access to it.
+	_, _, dID, err := c.GetValues(iid.Slice())
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch the darc itself.
+	value, contract, _, err := c.GetValues(dID)
+	if err != nil {
+		return nil, err
+	}
+
+	if string(contract) != ContractDarcID {
+		return nil, fmt.Errorf("for instance %v, expected Kind to be 'darc' but got '%v'", iid, string(contract))
+	}
+	return darc.NewFromProtobuf(value)
 }
