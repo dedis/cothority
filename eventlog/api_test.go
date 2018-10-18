@@ -372,14 +372,14 @@ func newSer(t *testing.T) (*ser, *Client) {
 }
 
 func (s *ser) getCurrentBlock(t *testing.T) skipchain.SkipBlockID {
-	reply, err := skipchain.NewClient().GetUpdateChain(s.roster, s.id)
+	reply, err := skipchain.NewClient().GetUpdateChain(s.roster, s.id, nil)
 	require.Nil(t, err)
 	return reply.Update[len(reply.Update)-1].Hash
 }
 
 func (s *ser) waitNextBlock(t *testing.T, current skipchain.SkipBlockID) {
 	for i := 0; i < 10; i++ {
-		reply, err := skipchain.NewClient().GetUpdateChain(s.roster, s.id)
+		reply, err := skipchain.NewClient().GetUpdateChain(s.roster, s.id, nil)
 		require.Nil(t, err)
 		if !current.Equal(reply.Update[len(reply.Update)-1].Hash) {
 			return

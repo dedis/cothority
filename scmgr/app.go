@@ -297,7 +297,7 @@ func scCreate(c *cli.Context) error {
 		return errors.New("while creating the genesis-roster: " + err.Error())
 	}
 	log.Infof("Created new skipblock with id %x", sb.Hash)
-	cfg.Db.Store(sb)
+	cfg.Db.Store(sb, nil)
 	log.ErrFatal(cfg.save(c))
 	return nil
 }
@@ -317,7 +317,7 @@ func scAdd(c *cli.Context) error {
 		return errors.New("didn't find this skipchain")
 	}
 	log.Info("Updating the skipchain to know where to add a new block.")
-	guc, err := skipchain.NewClient().GetUpdateChain(sb.Roster, sb.Hash)
+	guc, err := skipchain.NewClient().GetUpdateChain(sb.Roster, sb.Hash, nil)
 	if err != nil {
 		return err
 	}
@@ -356,7 +356,7 @@ func scAdd(c *cli.Context) error {
 	if err != nil {
 		return errors.New("while storing block: " + err.Error())
 	}
-	cfg.Db.Store(ssbr.Latest)
+	cfg.Db.Store(ssbr.Latest, nil)
 	log.ErrFatal(cfg.save(c))
 	log.Infof("Added new block %x to chain %x", ssbr.Latest.Hash, ssbr.Latest.SkipChainID())
 	return nil
@@ -416,7 +416,7 @@ func dnsFetch(c *cli.Context) error {
 		return err
 	}
 	log.Infof("Requesting latest block attached to %x", sbid)
-	gcr, err := skipchain.NewClient().GetUpdateChain(group.Roster, sbid)
+	gcr, err := skipchain.NewClient().GetUpdateChain(group.Roster, sbid, nil)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -424,13 +424,13 @@ func dnsFetch(c *cli.Context) error {
 	latest := gcr.Update[len(gcr.Update)-1]
 	genesis := latest.SkipChainID()
 	cfg := getConfigOrFail(c)
-	cfg.Db.Store(latest)
+	cfg.Db.Store(latest, nil)
 	if cfg.Db.GetByID(genesis) == nil {
 		genesisBlock, err := skipchain.NewClient().GetSingleBlock(group.Roster, genesis)
 		if err != nil {
 			return err
 		}
-		cfg.Db.Store(genesisBlock)
+		cfg.Db.Store(genesisBlock, nil)
 	}
 	log.Infof("Fetched skipchain with id: %x", genesis)
 	log.ErrFatal(cfg.save(c))
@@ -581,7 +581,7 @@ func dnsUpdate(c *cli.Context) error {
 				sisNew = updateNewSIs(sb.Roster, sisNew, sisAll)
 			}
 			log.Infof("Found skipchain %x", sb.SkipChainID())
-			cfg.Db.Store(sb)
+			cfg.Db.Store(sb, nil)
 		}
 	}
 	return cfg.save(c)

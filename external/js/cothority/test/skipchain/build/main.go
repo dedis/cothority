@@ -55,7 +55,7 @@ func main() {
 		latest = sb.Latest
 	}
 
-	reply, err := client.GetUpdateChain(ro, inter.Hash)
+	reply, err := client.GetUpdateChain(ro, inter.Hash, nil)
 	log.ErrFatal(err)
 	block := reply.Update[0]
 	link := block.ForwardLink[len(block.ForwardLink)-1]

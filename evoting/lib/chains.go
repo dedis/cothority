@@ -3,11 +3,10 @@ package lib
 import (
 	"errors"
 
+	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
-
-	"github.com/dedis/cothority/skipchain"
 )
 
 // NewSkipchain creates a new skipchain for a given roster and verification function.
@@ -33,7 +32,7 @@ func NewSkipchain(s *skipchain.Service, roster *onet.Roster, verifier []skipchai
 // using websockets. Used for storing a block while executing a protocol.
 func StoreUsingWebsocket(id skipchain.SkipBlockID, roster *onet.Roster, transaction *Transaction) error {
 	client := skipchain.NewClient()
-	reply, err := client.GetUpdateChain(roster, id)
+	reply, err := client.GetUpdateChain(roster, id, nil)
 	if err != nil {
 		return err
 	}
