@@ -15,7 +15,7 @@ import (
 const testDB = "test_trie.db"
 const bucketName = "test_trie_bucket"
 
-func Test_NewTrie(t *testing.T) {
+func TestNewTrie(t *testing.T) {
 	testMemAndDisk(t, testNewTrie)
 }
 
@@ -65,7 +65,7 @@ func testNewTrie(t *testing.T, db DB) {
 	require.NoError(t, testTrie.IsValid())
 }
 
-func Test_AddToEmptyNode(t *testing.T) {
+func TestAddToEmptyNode(t *testing.T) {
 	testMemAndDisk(t, testAddToEmptyNode)
 }
 
@@ -93,7 +93,7 @@ func testAddToEmptyNode(t *testing.T, db DB) {
 	require.NoError(t, testTrie.IsValid())
 }
 
-func Test_AddToLeafNode(t *testing.T) {
+func TestAddToLeafNode(t *testing.T) {
 	testMemAndDisk(t, testAddToLeafNode)
 }
 
@@ -135,7 +135,7 @@ func testAddToLeafNode(t *testing.T, db DB) {
 	require.NoError(t, testTrie.IsValid())
 }
 
-func Test_LongThenShortKey(t *testing.T) {
+func TestLongThenShortKey(t *testing.T) {
 	testMemAndDisk(t, testLongThenShortKey)
 }
 
@@ -163,7 +163,7 @@ func testLongThenShortKey(t *testing.T, db DB) {
 	require.NoError(t, testTrie.IsValid())
 }
 
-func Test_Overwrite(t *testing.T) {
+func TestOverwrite(t *testing.T) {
 	testMemAndDisk(t, testOverwrite)
 }
 
@@ -205,7 +205,7 @@ func testOverwrite(t *testing.T, db DB) {
 	require.NoError(t, testTrie.IsValid())
 }
 
-func Test_Delete(t *testing.T) {
+func TestDelete(t *testing.T) {
 	testMemAndDisk(t, testDelete)
 }
 
@@ -267,7 +267,7 @@ func testDelete(t *testing.T, db DB) {
 	*/
 }
 
-func Test_SetDeleteSet(t *testing.T) {
+func TestSetDeleteSet(t *testing.T) {
 	testMemAndDisk(t, testSetDeleteSet)
 }
 
@@ -288,7 +288,7 @@ func testSetDeleteSet(t *testing.T, db DB) {
 	require.NoError(t, testTrie.Set([]byte{0xdf}, []byte{0xdf}))
 }
 
-func Test_IsValid(t *testing.T) {
+func TestIsValid(t *testing.T) {
 	mem := NewMemDB()
 	defer mem.Close()
 
@@ -330,7 +330,7 @@ func Test_IsValid(t *testing.T) {
 	require.NotNil(t, testTrie.IsValid())
 }
 
-func Test_QuickCheck(t *testing.T) {
+func TestQuickCheck(t *testing.T) {
 	mem := NewMemDB()
 	defer mem.Close()
 
@@ -391,7 +391,7 @@ func (p *kvPair) Val() []byte {
 	return p.val
 }
 
-func Test_BatchQuickCheck(t *testing.T) {
+func TestBatchQuickCheck(t *testing.T) {
 	mem := NewMemDB()
 	defer mem.Close()
 
@@ -436,7 +436,7 @@ func Test_BatchQuickCheck(t *testing.T) {
 	require.NoError(t, quick.Check(f, nil))
 }
 
-func Test_Copy(t *testing.T) {
+func TestCopy(t *testing.T) {
 	mem := NewMemDB()
 	defer mem.Close()
 

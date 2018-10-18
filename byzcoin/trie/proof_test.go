@@ -95,7 +95,7 @@ func (disjointSet) Generate(rand *rand.Rand, size int) reflect.Value {
 	return reflect.ValueOf(res)
 }
 
-func TestProof_QuickCheck(t *testing.T) {
+func TestProofQuickCheck(t *testing.T) {
 	mem := NewMemDB()
 	defer mem.Close()
 

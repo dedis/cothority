@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func Test_Ephemeral(t *testing.T) {
+func TestEphemeral(t *testing.T) {
 	testMemAndDisk(t, testEphemeral)
 }
 
@@ -76,7 +76,7 @@ func testEphemeral(t *testing.T, db DB) {
 	}
 }
 
-func Test_EphemeralCommit(t *testing.T) {
+func TestEphemeralCommit(t *testing.T) {
 	testMemAndDisk(t, testEphemeralCommit)
 }
 
@@ -145,7 +145,7 @@ func testEphemeralCommit(t *testing.T, db DB) {
 	}
 }
 
-func Test_EphemeralGetRoot(t *testing.T) {
+func TestEphemeralGetRoot(t *testing.T) {
 	disk := newDiskDB(t)
 	defer delDiskDB(t, disk)
 

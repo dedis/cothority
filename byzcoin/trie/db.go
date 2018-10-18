@@ -1,5 +1,6 @@
 package trie
 
+// DB is the interface for the underlying storage system of the trie.
 type DB interface {
 	Update(func(bucket) error) error
 	View(func(bucket) error) error

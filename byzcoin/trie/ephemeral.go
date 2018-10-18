@@ -1,16 +1,17 @@
 package trie
 
 import (
-	"crypto/sha256"
-	"encoding/binary"
 	"errors"
 	"sync"
 )
 
+// OpType is the operation type that modifies state.
 type OpType int
 
 const (
+	// OpSet is the set operation.
 	OpSet OpType = iota + 1
+	// OpDel is the delete operation.
 	OpDel
 )
 
@@ -18,20 +19,6 @@ type instr struct {
 	ty OpType
 	k  []byte
 	v  []byte
-}
-
-func (r *instr) toBytes() []byte {
-	tyBuf := []byte{byte(r.ty)}
-	lenK := make([]byte, 4)
-	binary.LittleEndian.PutUint32(lenK, uint32(len(r.k)))
-	lenV := make([]byte, 4)
-	binary.LittleEndian.PutUint32(lenV, uint32(len(r.v)))
-
-	res := append(tyBuf, lenK...)
-	res = append(res, r.k...)
-	res = append(res, lenV...)
-	res = append(res, r.v...)
-	return res
 }
 
 // EphemeralTrie represents an ephemeral lazy copy of a Trie. The keys and
@@ -47,6 +34,8 @@ type EphemeralTrie struct {
 	sync.Mutex
 }
 
+// Clone makes a clone of the uncommitted data of the ephemeral trie. The
+// source trie used for creating the ephemeral trie is not cloned.
 func (t *EphemeralTrie) Clone() *EphemeralTrie {
 	clone := EphemeralTrie{
 		source: t.source,
@@ -118,6 +107,7 @@ func (t *EphemeralTrie) del(k []byte) error {
 	return nil
 }
 
+// Batch is similar to Set, but for multiple key-value pairs.
 func (t *EphemeralTrie) Batch(pairs []KVPair) error {
 	t.Lock()
 	defer t.Unlock()
@@ -167,6 +157,7 @@ func (t *EphemeralTrie) Commit() error {
 	return nil
 }
 
+// GetRoot returns the root of the trie.
 func (t *EphemeralTrie) GetRoot() []byte {
 	var root []byte
 	err := t.source.db.UpdateDryRun(func(b bucket) error {
@@ -193,18 +184,9 @@ func (t *EphemeralTrie) GetRoot() []byte {
 	return root
 }
 
+// GetProof gets the inclusion/absence proof for the given key.
 func (t *EphemeralTrie) GetProof(key []byte) (*Proof, error) {
 	return nil, errors.New("not implemented")
-}
-
-// PendingOpsHash returns the hash of the pending operations.
-func (t *EphemeralTrie) PendingOpsHash() []byte {
-	h := sha256.New()
-	// TODO hash length of t.instrList
-	for _, instr := range t.instrList {
-		h.Write(instr.toBytes())
-	}
-	return h.Sum(nil)
 }
 
 func (t *EphemeralTrie) isDeleted(k []byte) bool {
