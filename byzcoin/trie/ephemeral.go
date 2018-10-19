@@ -38,7 +38,10 @@ type EphemeralTrie struct {
 // source trie used for creating the ephemeral trie is not cloned.
 func (t *EphemeralTrie) Clone() *EphemeralTrie {
 	clone := EphemeralTrie{
-		source: t.source,
+		source:     t.source,
+		overlay:    make(map[string][]byte),
+		deleteList: make(map[string][]byte),
+		instrList:  nil,
 	}
 	for k, v := range t.overlay {
 		val := make([]byte, len(v))
@@ -172,7 +175,7 @@ func (t *EphemeralTrie) GetRoot() []byte {
 					return err
 				}
 			default:
-				return errors.New("invalid instruction during commit")
+				return errors.New("invalid instruction during get root")
 			}
 		}
 		root = append([]byte{}, t.source.getRoot(b)...)
@@ -186,7 +189,33 @@ func (t *EphemeralTrie) GetRoot() []byte {
 
 // GetProof gets the inclusion/absence proof for the given key.
 func (t *EphemeralTrie) GetProof(key []byte) (*Proof, error) {
-	return nil, errors.New("not implemented")
+	p := &Proof{}
+	err := t.source.db.UpdateDryRun(func(b bucket) error {
+		// run the pending instructions
+		for _, instr := range t.instrList {
+			switch instr.ty {
+			case OpSet:
+				if err := t.source.startSet(instr.k, instr.v, b); err != nil {
+					return err
+				}
+			case OpDel:
+				if err := t.source.startDel(instr.k, b); err != nil {
+					return err
+				}
+			default:
+				return errors.New("invalid instruction during get proof")
+			}
+		}
+		// create the proof
+		rootKey := t.source.getRoot(b)
+		if rootKey == nil {
+			return errors.New("no root key")
+		}
+		p.Nonce = make([]byte, len(t.source.nonce))
+		copy(p.Nonce, t.source.nonce)
+		return t.source.getProof(0, rootKey, t.source.binSlice(key), p, b)
+	})
+	return p, err
 }
 
 func (t *EphemeralTrie) isDeleted(k []byte) bool {

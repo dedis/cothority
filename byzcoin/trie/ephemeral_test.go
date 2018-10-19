@@ -181,3 +181,69 @@ func TestEphemeralGetRoot(t *testing.T) {
 	require.Equal(t, eRoot, testTrie.GetRoot())
 	require.Equal(t, eRoot, eTrie.GetRoot())
 }
+
+func TestEphemeralGetProof(t *testing.T) {
+	disk := newDiskDB(t)
+	defer delDiskDB(t, disk)
+
+	testTrie, err := NewTrie(disk, genNonce())
+	require.NoError(t, err)
+	require.NotNil(t, testTrie.nonce)
+
+	eTrie := testTrie.MakeEphemeralTrie()
+
+	// Make some ephemeral operations and check for proofs.
+	var ephExistProof []*Proof
+	var ephAbsenceProof []*Proof
+	for i := 0; i < 20; i++ {
+		k := []byte{byte(i)}
+		require.NoError(t, eTrie.Set(k, k))
+	}
+	for i := 10; i < 20; i++ {
+		k := []byte{byte(i)}
+		require.NoError(t, eTrie.Delete(k))
+	}
+
+	for i := 0; i < 10; i++ {
+		k := []byte{byte(i)}
+		p, err := eTrie.GetProof(k)
+		require.NoError(t, err)
+		require.True(t, p.Match(k))
+		ephExistProof = append(ephExistProof, p)
+	}
+	for i := 10; i < 20; i++ {
+		k := []byte{byte(i)}
+		p, err := eTrie.GetProof(k)
+		ok, err := p.Exists(k)
+		require.NoError(t, err)
+		require.False(t, ok)
+		ephAbsenceProof = append(ephAbsenceProof, p)
+	}
+
+	// Commit the operations and make the same proofs on the source trie,
+	// make sure they're the same.
+	require.NoError(t, eTrie.Commit())
+	for i := 0; i < 10; i++ {
+		k := []byte{byte(i)}
+		p, err := testTrie.GetProof(k)
+		require.NoError(t, err)
+		require.True(t, p.Match(k))
+
+		// The root and the leaf are the same, so the proof must be the
+		// same due to properties of hash functions.
+		require.Equal(t, ephExistProof[i].GetRoot(), p.GetRoot())
+		require.Equal(t, ephExistProof[i].Leaf.hash(eTrie.source.nonce), p.Leaf.hash(testTrie.nonce))
+	}
+	for i := 10; i < 20; i++ {
+		k := []byte{byte(i)}
+		p, err := testTrie.GetProof(k)
+		ok, err := p.Exists(k)
+		require.NoError(t, err)
+		require.False(t, ok)
+
+		// The root and the leaf are the same, so the proof must be the
+		// same due to properties of hash functions.
+		require.Equal(t, ephAbsenceProof[i-10].GetRoot(), p.GetRoot())
+		require.Equal(t, ephAbsenceProof[i-10].Empty.hash(eTrie.source.nonce), p.Empty.hash(testTrie.nonce))
+	}
+}

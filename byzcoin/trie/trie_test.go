@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const testDB = "test_trie.db"
+const testDBName = "test_trie.db"
 const bucketName = "test_trie_bucket"
 
 func TestNewTrie(t *testing.T) {
@@ -501,7 +501,7 @@ func TestCopy(t *testing.T) {
 }
 
 func newDiskDB(t *testing.T) DB {
-	db, err := bolt.Open(testDB, 0600, nil)
+	db, err := bolt.Open(testDBName, 0600, nil)
 	require.NoError(t, err)
 	err = db.Update(func(tx *bolt.Tx) error {
 		_, err := tx.CreateBucketIfNotExists([]byte(bucketName))
@@ -513,7 +513,7 @@ func newDiskDB(t *testing.T) DB {
 
 func delDiskDB(t *testing.T, db DB) {
 	require.NoError(t, db.Close())
-	require.NoError(t, os.Remove(testDB))
+	require.NoError(t, os.Remove(testDBName))
 }
 
 func getRootNode(t *testing.T, db DB) interiorNode {
@@ -530,16 +530,6 @@ func getRootNode(t *testing.T, db DB) interiorNode {
 	})
 	require.NoError(t, err)
 	return root
-}
-
-func testMemAndDisk(t *testing.T, f func(*testing.T, DB)) {
-	mem := NewMemDB()
-	defer mem.Close()
-	f(t, mem)
-
-	disk := newDiskDB(t)
-	defer delDiskDB(t, disk)
-	f(t, disk)
 }
 
 func genNonce() []byte {
