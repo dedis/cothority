@@ -21,11 +21,11 @@ type instr struct {
 	v  []byte
 }
 
-// EphemeralTrie represents an ephemeral lazy copy of a Trie. The keys and
-// values stored in this object will not go into the Trie from which it is
-// created until the Commit function is called. The EphemeralTrie becomes
-// invalid if the source Trie is modified directly.
-type EphemeralTrie struct {
+// StagingTrie represents an lazy copy of a Trie for staging operations. The
+// keys and values stored in this object will not go into the source Trie from
+// which it is created until the Commit function is called. The StagingTrie
+// becomes invalid if the source Trie is modified directly.
+type StagingTrie struct {
 	source     *Trie
 	overlay    map[string][]byte
 	deleteList map[string][]byte
@@ -34,10 +34,10 @@ type EphemeralTrie struct {
 	sync.Mutex
 }
 
-// Clone makes a clone of the uncommitted data of the ephemeral trie. The
-// source trie used for creating the ephemeral trie is not cloned.
-func (t *EphemeralTrie) Clone() *EphemeralTrie {
-	clone := EphemeralTrie{
+// Clone makes a clone of the uncommitted data of the staging trie. The source
+// trie used for creating the staging trie is not cloned.
+func (t *StagingTrie) Clone() *StagingTrie {
+	clone := StagingTrie{
 		source:     t.source,
 		overlay:    make(map[string][]byte),
 		deleteList: make(map[string][]byte),
@@ -59,7 +59,7 @@ func (t *EphemeralTrie) Clone() *EphemeralTrie {
 }
 
 // Get gets the value for the given key.
-func (t *EphemeralTrie) Get(k []byte) ([]byte, error) {
+func (t *StagingTrie) Get(k []byte) ([]byte, error) {
 	t.Lock()
 	defer t.Unlock()
 
@@ -74,13 +74,13 @@ func (t *EphemeralTrie) Get(k []byte) ([]byte, error) {
 }
 
 // Set sets a key/value pair, it will overwrite if necessary.
-func (t *EphemeralTrie) Set(k, v []byte) error {
+func (t *StagingTrie) Set(k, v []byte) error {
 	t.Lock()
 	defer t.Unlock()
 	return t.set(k, v)
 }
 
-func (t *EphemeralTrie) set(k, v []byte) error {
+func (t *StagingTrie) set(k, v []byte) error {
 	delete(t.deleteList, string(k))
 	t.overlay[string(k)] = v
 
@@ -93,13 +93,13 @@ func (t *EphemeralTrie) set(k, v []byte) error {
 }
 
 // Delete deletes a key/value pair.
-func (t *EphemeralTrie) Delete(k []byte) error {
+func (t *StagingTrie) Delete(k []byte) error {
 	t.Lock()
 	defer t.Unlock()
 	return t.del(k)
 }
 
-func (t *EphemeralTrie) del(k []byte) error {
+func (t *StagingTrie) del(k []byte) error {
 	t.deleteList[string(k)] = nil
 
 	t.instrList = append(t.instrList, instr{
@@ -111,7 +111,7 @@ func (t *EphemeralTrie) del(k []byte) error {
 }
 
 // Batch is similar to Set, but for multiple key-value pairs.
-func (t *EphemeralTrie) Batch(pairs []KVPair) error {
+func (t *StagingTrie) Batch(pairs []KVPair) error {
 	t.Lock()
 	defer t.Unlock()
 	for _, p := range pairs {
@@ -131,9 +131,9 @@ func (t *EphemeralTrie) Batch(pairs []KVPair) error {
 	return nil
 }
 
-// Commit commits all operations performed on the EphemeralTrie since creation
+// Commit commits all operations performed on the StagingTrie since creation
 // or the previous commit to the source Trie.
-func (t *EphemeralTrie) Commit() error {
+func (t *StagingTrie) Commit() error {
 	err := t.source.db.Update(func(b bucket) error {
 		for _, instr := range t.instrList {
 			switch instr.ty {
@@ -161,7 +161,7 @@ func (t *EphemeralTrie) Commit() error {
 }
 
 // GetRoot returns the root of the trie.
-func (t *EphemeralTrie) GetRoot() []byte {
+func (t *StagingTrie) GetRoot() []byte {
 	var root []byte
 	err := t.source.db.UpdateDryRun(func(b bucket) error {
 		for _, instr := range t.instrList {
@@ -188,7 +188,7 @@ func (t *EphemeralTrie) GetRoot() []byte {
 }
 
 // GetProof gets the inclusion/absence proof for the given key.
-func (t *EphemeralTrie) GetProof(key []byte) (*Proof, error) {
+func (t *StagingTrie) GetProof(key []byte) (*Proof, error) {
 	p := &Proof{}
 	err := t.source.db.UpdateDryRun(func(b bucket) error {
 		// run the pending instructions
@@ -218,7 +218,7 @@ func (t *EphemeralTrie) GetProof(key []byte) (*Proof, error) {
 	return p, err
 }
 
-func (t *EphemeralTrie) isDeleted(k []byte) bool {
+func (t *StagingTrie) isDeleted(k []byte) bool {
 	if _, ok := t.deleteList[string(k)]; ok {
 		return true
 	}

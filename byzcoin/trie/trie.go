@@ -427,9 +427,9 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 	return nil, errors.New("invalid node type")
 }
 
-// MakeEphemeralTrie creates a lazy ephemeral copy of the trie.
-func (t *Trie) MakeEphemeralTrie() *EphemeralTrie {
-	e := EphemeralTrie{
+// MakeStagingTrie creates a lazy copy of the trie for staging operations.
+func (t *Trie) MakeStagingTrie() *StagingTrie {
+	e := StagingTrie{
 		source:     t,
 		overlay:    make(map[string][]byte),
 		deleteList: make(map[string][]byte),

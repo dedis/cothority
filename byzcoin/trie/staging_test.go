@@ -6,11 +6,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestEphemeral(t *testing.T) {
-	testMemAndDisk(t, testEphemeral)
+func TestStaging(t *testing.T) {
+	testMemAndDisk(t, testStaging)
 }
 
-func testEphemeral(t *testing.T, db DB) {
+func testStaging(t *testing.T, db DB) {
 	// Initialise a trie.
 	testTrie, err := NewTrie(db, genNonce())
 	require.NoError(t, err)
@@ -25,8 +25,8 @@ func testEphemeral(t *testing.T, db DB) {
 		require.Equal(t, val, k)
 	}
 
-	// Create the ephemeral trie
-	eTrie := testTrie.MakeEphemeralTrie()
+	// Create the staging trie
+	eTrie := testTrie.MakeStagingTrie()
 
 	// Test that we can get values from the source trie
 	for i := 90; i < 100; i++ {
@@ -57,7 +57,7 @@ func testEphemeral(t *testing.T, db DB) {
 		require.Equal(t, val, v)
 	}
 
-	// Delete values from the ephemeral trie
+	// Delete values from the staging trie
 	for i := 0; i < 10; i++ {
 		k := []byte{byte(i)}
 		require.NoError(t, eTrie.Delete(k))
@@ -76,18 +76,18 @@ func testEphemeral(t *testing.T, db DB) {
 	}
 }
 
-func TestEphemeralCommit(t *testing.T) {
-	testMemAndDisk(t, testEphemeralCommit)
+func TestStagingCommit(t *testing.T) {
+	testMemAndDisk(t, testStagingCommit)
 }
 
-func testEphemeralCommit(t *testing.T, db DB) {
+func testStagingCommit(t *testing.T, db DB) {
 	// Initialise a trie.
 	testTrie, err := NewTrie(db, genNonce())
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 	testTrie.noHashKey = true
 
-	eTrie := testTrie.MakeEphemeralTrie()
+	eTrie := testTrie.MakeStagingTrie()
 
 	// Make set/delete transactions and then commit, make sure they exist
 	// in the source Trie.
@@ -145,7 +145,7 @@ func testEphemeralCommit(t *testing.T, db DB) {
 	}
 }
 
-func TestEphemeralGetRoot(t *testing.T) {
+func TestStagingGetRoot(t *testing.T) {
 	disk := newDiskDB(t)
 	defer delDiskDB(t, disk)
 
@@ -153,15 +153,15 @@ func TestEphemeralGetRoot(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 
-	eTrie := testTrie.MakeEphemeralTrie()
+	eTrie := testTrie.MakeStagingTrie()
 
 	// We should start with the same root
 	initialRoot := testTrie.GetRoot()
 	require.NotNil(t, initialRoot)
 	require.Equal(t, initialRoot, eTrie.GetRoot())
 
-	// The root of the ephemeral trie should match the real trie after
-	// making operations.
+	// The root of the staging trie should match the real trie after making
+	// operations.
 	for i := 100; i < 200; i++ {
 		k := []byte{byte(i)}
 		require.NoError(t, eTrie.Set(k, k))
@@ -175,14 +175,14 @@ func TestEphemeralGetRoot(t *testing.T) {
 	// The initial root shouldn't change.
 	require.Equal(t, initialRoot, testTrie.GetRoot())
 
-	// Commit the ephemeral trie, then the source root should match the
-	// root on the previously computed ephemeral trie.
+	// Commit the staging trie, then the source root should match the root
+	// on the previously computed staging trie.
 	require.NoError(t, eTrie.Commit())
 	require.Equal(t, eRoot, testTrie.GetRoot())
 	require.Equal(t, eRoot, eTrie.GetRoot())
 }
 
-func TestEphemeralGetProof(t *testing.T) {
+func TestStagingGetProof(t *testing.T) {
 	disk := newDiskDB(t)
 	defer delDiskDB(t, disk)
 
@@ -190,9 +190,9 @@ func TestEphemeralGetProof(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, testTrie.nonce)
 
-	eTrie := testTrie.MakeEphemeralTrie()
+	eTrie := testTrie.MakeStagingTrie()
 
-	// Make some ephemeral operations and check for proofs.
+	// Make some staging operations and check for proofs.
 	var ephExistProof []*Proof
 	var ephAbsenceProof []*Proof
 	for i := 0; i < 20; i++ {
