@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"errors"
+	"fmt"
 )
 
 // Proof contains an inclusion/absence proof for a key.
@@ -18,6 +19,18 @@ type Proof struct {
 	// hash of it which we cannot predict. So we introduce the noHashKey
 	// flag, which should only be used in the unit test.
 	noHashKey bool
+}
+
+func (p *Proof) String() string {
+	var out string
+	out += fmt.Sprintf("Nonce: %x", p.Nonce)
+	out += "\nInteriors:"
+	for _, interior := range p.Interiors {
+		out += fmt.Sprintf("\n\t%x -> [%x, %x]", interior.hash(), interior.Left, interior.Right)
+	}
+	out += fmt.Sprintf("\nLeaf: %x", p.Leaf.hash(p.Nonce))
+	out += fmt.Sprintf("\nEmpty: %x", p.Empty.hash(p.Nonce))
+	return out
 }
 
 // Exists checks the proof for inclusion/absence
@@ -93,8 +106,7 @@ func (t *Trie) GetProof(key []byte) (*Proof, error) {
 		if rootKey == nil {
 			return errors.New("no root key")
 		}
-		p.Nonce = make([]byte, len(t.nonce))
-		copy(p.Nonce, t.nonce)
+		p.Nonce = clone(t.nonce)
 		return t.getProof(0, rootKey, t.binSlice(key), p, b)
 	})
 	return p, err
@@ -102,7 +114,7 @@ func (t *Trie) GetProof(key []byte) (*Proof, error) {
 
 // getProof updates Proof p as it traverses the tree.
 func (t *Trie) getProof(depth int, nodeKey []byte, bits []bool, p *Proof, b bucket) error {
-	nodeVal := b.Get(nodeKey)
+	nodeVal := clone(b.Get(nodeKey))
 	if len(nodeVal) == 0 {
 		return errors.New("invalid node key")
 	}
@@ -126,7 +138,7 @@ func (t *Trie) getProof(depth int, nodeKey []byte, bits []bool, p *Proof, b buck
 		if err != nil {
 			return err
 		}
-		p.addInterior(node)
+		p.Interiors = append(p.Interiors, node)
 		if bits[depth] {
 			return t.getProof(depth+1, node.Left, bits, p, b)
 		}
@@ -134,10 +146,6 @@ func (t *Trie) getProof(depth int, nodeKey []byte, bits []bool, p *Proof, b buck
 		return t.getProof(depth+1, node.Right, bits, p, b)
 	}
 	return errors.New("invalid node type")
-}
-
-func (p *Proof) addInterior(node interiorNode) {
-	p.Interiors = append(p.Interiors, node)
 }
 
 func (p *Proof) binSlice(buf []byte) []bool {

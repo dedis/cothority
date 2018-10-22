@@ -37,25 +37,23 @@ type StagingTrie struct {
 // Clone makes a clone of the uncommitted data of the staging trie. The source
 // trie used for creating the staging trie is not cloned.
 func (t *StagingTrie) Clone() *StagingTrie {
-	clone := StagingTrie{
+	out := StagingTrie{
 		source:     t.source,
 		overlay:    make(map[string][]byte),
 		deleteList: make(map[string][]byte),
 		instrList:  nil,
 	}
 	for k, v := range t.overlay {
-		val := make([]byte, len(v))
-		copy(val, v)
-		clone.overlay[k] = val
+		val := clone(v)
+		out.overlay[k] = val
 	}
 	for k, v := range t.deleteList {
-		val := make([]byte, len(v))
-		copy(val, v)
-		clone.deleteList[k] = val
+		val := clone(v)
+		out.deleteList[k] = val
 	}
-	clone.instrList = make([]instr, len(t.instrList))
-	copy(clone.instrList, t.instrList)
-	return &clone
+	out.instrList = make([]instr, len(t.instrList))
+	copy(out.instrList, t.instrList)
+	return &out
 }
 
 // Get gets the value for the given key.
@@ -211,8 +209,7 @@ func (t *StagingTrie) GetProof(key []byte) (*Proof, error) {
 		if rootKey == nil {
 			return errors.New("no root key")
 		}
-		p.Nonce = make([]byte, len(t.source.nonce))
-		copy(p.Nonce, t.source.nonce)
+		p.Nonce = clone(t.source.nonce)
 		return t.source.getProof(0, rootKey, t.source.binSlice(key), p, b)
 	})
 	return p, err

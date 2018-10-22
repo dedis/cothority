@@ -24,14 +24,14 @@ type Trie struct {
 // error is returned. It does not check the consistency after loading the
 // database. If that is required, called IsValid.
 func LoadTrie(db DB) (*Trie, error) {
-	nonce := make([]byte, 32)
+	var nonce []byte
 	err := db.Update(func(b bucket) error {
 		// load the nonce
 		nonceBuf := b.Get([]byte(nonceKey))
 		if nonceBuf == nil {
 			return errors.New("nonce does not exist")
 		}
-		copy(nonce, nonceBuf)
+		nonce = clone(nonceBuf)
 
 		// check the root node and that the value exists
 		rootKey := b.Get([]byte(entryKey))
@@ -412,7 +412,7 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 		if !bytes.Equal(key, node.Key) {
 			return nil, nil
 		}
-		return node.Value, nil
+		return clone(node.Value), nil
 	case typeInterior:
 		// recursive case
 		node, err := decodeInteriorNode(nodeVal)
@@ -606,8 +606,7 @@ func (t *Trie) getRaw(key []byte) ([]byte, error) {
 	var val []byte
 	err := t.db.View(func(b bucket) error {
 		buf := b.Get(key)
-		val = make([]byte, len(buf))
-		copy(val, buf)
+		val = clone(buf)
 		return nil
 	})
 	if err != nil {
@@ -640,4 +639,10 @@ func toByteSlice(bits []bool) []byte {
 		}
 	}
 	return buf
+}
+
+func clone(buf []byte) []byte {
+	out := make([]byte, len(buf))
+	copy(out, buf)
+	return out
 }
