@@ -551,31 +551,18 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 	}
 }
 
-// Verify checks the signature against a list of public keys. This list must
-// be in the same order as the Roster that signed the message.
+// Verify checks the signature against a list of public keys. When the list
+// corresponds to the new roster but in a different order, the new roster is used.
 // It returns nil if the signature is correct, or an error if not.
 func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
 	if bytes.Compare(fl.Signature.Msg, fl.Hash()) != 0 {
 		return errors.New("wrong hash of forward link")
 	}
-	// If we allow view-change, then we should try to verify the signature
-	// using all the valid rotations of the given public key slice.
-	if enableViewChange {
-		n := len(pubs)
-		if n == 0 {
-			return errors.New("no public keys")
-		}
-		for i := 0; i < n; i++ {
-			err := cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig,
-				cosi.NewThresholdPolicy(byzcoinx.Threshold(n)))
-			if err == nil {
-				return nil
-			}
-			pubs = append(pubs[1:], pubs[0])
-			continue
-		}
-		return errors.New("no successful view-change verification")
+
+	if fl.NewRoster != nil && fl.NewRoster.Contains(pubs) {
+		pubs = fl.NewRoster.Publics()
 	}
+
 	// This calculation must match the one in byzcoinx.
 	return cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig,
 		cosi.NewThresholdPolicy(byzcoinx.Threshold(len(pubs))))
