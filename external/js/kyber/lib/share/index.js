@@ -55,7 +55,7 @@ class PriShare {
 // for each share, if it is in range, then create
 // an entry in the returned map: share#->1+share.I
 function filterPriShares(g, shares, t, n) {
-    var ret = new Map();
+    let ret = {};
     for (let i=0; i < shares.length; i++) {
         const s = shares[i];
         if (s === undefined || s.i < 0 || s.v === undefined || n <= s.i) {
@@ -63,7 +63,7 @@ function filterPriShares(g, shares, t, n) {
         }
         let ii = g.scalar().zero();
         ii.setInt(1 + s.i);
-        ret.set(i, ii);
+        ret[i] = ii;
         if (ret.length == t) {
             break;
         }
@@ -88,7 +88,7 @@ function RecoverSecret(g, shares, t, n) {
         throw "fourth argument must be an int";
     }
 
-    let x = filterPriShares(g, shares, t, n);
+    const x = filterPriShares(g, shares, t, n);
     if (x.length < t) {
         throw "not enough shares to recover secret";
     }
@@ -98,11 +98,12 @@ function RecoverSecret(g, shares, t, n) {
     let den = g.scalar().zero();
     let tmp = g.scalar().zero();
 
-    x.forEach( (xi, i) => {
+    for (let i in x) {
+        let xi = x[i];
         num.set(shares[i].v);
         den.one();
-        for (j in x.keys()) {
-            if (i == j) {
+        for (let j in x) {
+            if (i === j) {
                 continue;
             }
             let xj = x[j];
@@ -110,7 +111,7 @@ function RecoverSecret(g, shares, t, n) {
             den.mul(den, tmp.sub(xj, xi));
         }
         acc.add(acc, num.div(num, den));
-    });
+    };
  	return acc
 }
 

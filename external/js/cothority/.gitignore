@@ -2,3 +2,6 @@ package-lock.json
 node_modules/
 dist/
 .idea/
+.nyc_output/
+.vscode/
+coverage/

@@ -27,6 +27,7 @@ describe("poly", () => {
         const shares = p.shares(5);
         // send the first 3 shares in
         const s2 = share.RecoverSecret(group, shares.slice(0,3), p.T, shares.length);
-        expect(s2).to.eq(secret);
+        const ok = s2.equal(secret);
+        expect(ok).to.be.true;
     });
 });
