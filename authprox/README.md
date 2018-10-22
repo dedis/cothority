@@ -1,3 +1,8 @@
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
+[Cothority](../README.md) ::
+[Applications](../doc/Applications.md) ::
+Authentication Proxy
+
 # Authentication Proxy
 
 A service that takes authentication info and a message as input, checks that the
@@ -22,7 +27,7 @@ During the enrollment process, a secret is generated in the RAM of the `apadmin`
 tool, sharded, and sent to the authentication proxies. It then exits, causing the
 only copy of the complete secret to be lost. All users of the system need
 to trust that `apadmin` has discarded the original secret key. (Having the authentication
-proxies execute teh DKG protocol among them would remove this risk, but we
+proxies execute the DKG protocol among them would remove this risk, but we
 decided that was overkill for this job.)
 
 The roster of the authentication proxies can be disjoint from the roster of

@@ -147,7 +147,7 @@ func add(c *cli.Context) error {
 	T := threshold(n)
 
 	pubs := make([]kyber.Point, n)
-	for i := 0; i < n; i++ {
+	for i := range pubs {
 		pubs[i] = roster.List[i].Public
 	}
 
