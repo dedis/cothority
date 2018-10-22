@@ -84,12 +84,17 @@ public class Block {
     }
 
     /**
-     * @return a list of ClientTransactions stored in this block.
+     * Returns only accepted ClientTransactions stored in the block. If you also need rejected
+     * transactions, then use getTxResults.
+     *
+     * @return a list of accepted ClientTransactions stored in this block.
      */
-    public List<ClientTransaction> getClientTransactions(){
+    public List<ClientTransaction> getAcceptedClientTransactions(){
         List<ClientTransaction> result = new ArrayList<>();
         dataBody.getTxResults().forEach(txr ->{
-            result.add(txr.getClientTransaction());
+            if (txr.isAccepted()) {
+                result.add(txr.getClientTransaction());
+            }
         });
         return result;
     }

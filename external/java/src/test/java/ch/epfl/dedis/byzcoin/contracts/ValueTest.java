@@ -72,7 +72,7 @@ class ValueTest {
         // this part is a regression test for
         // https://github.com/dedis/cothority/issues/1527
         Block ob = new Block(p);
-        ob.getClientTransactions()
+        ob.getAcceptedClientTransactions()
                 .forEach(clientTransaction -> clientTransaction.getInstructions().
                         forEach(instr -> processInstr(instr)));
     }
