@@ -93,9 +93,21 @@ func (p *Proof) GetRoot() []byte {
 	return p.Interiors[0].hash()
 }
 
-// KeyValue gets the key and the value that this proof contains.
+// KeyValue gets the key and the value that this proof contains. Similar to
+// Match and Exists, the caller must check the key to make sure it is the one
+// they're expecting.
 func (p *Proof) KeyValue() ([]byte, []byte) {
 	return p.Leaf.Key, p.Leaf.Value
+}
+
+// Get returns the value associated with the given key in the proof. If the key
+// does not exist, nil is returned. Note that there is at most one key/value
+// pair in the proof.
+func (p *Proof) Get(key []byte) []byte {
+	if bytes.Equal(p.Leaf.Key, key) {
+		return p.Leaf.Value
+	}
+	return nil
 }
 
 // GetProof gets the inclusion/absence proof for the given key.

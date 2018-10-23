@@ -1,6 +1,7 @@
 package trie
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"math/rand"
@@ -123,6 +124,17 @@ func TestProofQuickCheck(t *testing.T) {
 			if !ok {
 				return false
 			}
+			// Check that key/values exist and are correct.
+			k2, v2 := p.KeyValue()
+			if !bytes.Equal(k2, k) {
+				return false
+			}
+			if !bytes.Equal(v2, k) {
+				return false
+			}
+			if !bytes.Equal(p.Get(k), k) {
+				return false
+			}
 		}
 		// Check that there are no proofs for the other set.
 		for _, k := range s.B {
@@ -135,6 +147,14 @@ func TestProofQuickCheck(t *testing.T) {
 				return false
 			}
 			if ok {
+				return false
+			}
+			// Check that key/values do not exist
+			k2, _ := p.KeyValue()
+			if bytes.Equal(k2, k) {
+				return false
+			}
+			if p.Get(k) != nil {
 				return false
 			}
 		}
