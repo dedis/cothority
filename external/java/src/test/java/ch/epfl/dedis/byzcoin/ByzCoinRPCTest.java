@@ -178,7 +178,7 @@ public class ByzCoinRPCTest {
             logger.info("got SkipBlock {}", block);
             try {
                 Block b = new Block(block);
-                allCtxs.addAll(b.getClientTransactions());
+                allCtxs.addAll(b.getAcceptedClientTransactions());
             } catch (CothorityCryptoException e) {
                 throw new RuntimeException(e);
             }
