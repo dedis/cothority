@@ -6,13 +6,13 @@ runs on the node.
 */
 
 import (
-	"bytes"
 	"encoding/binary"
 	"errors"
+	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
+	//	"github.com/dedis/cothority/byzcoin/darc/expression"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/protobuf"
-	"math/rand"
 	"sync"
 	"time"
 
@@ -69,12 +69,12 @@ type CreateOmniLedgerResponse struct {
 }
 
 type NewEpoch struct {
+	//
 }
 
 type NewEpochResponse struct {
 }
 
-// CreateOmniLedger(CreateOmniledger) CreateOmniLederReply
 func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResponse, error) {
 
 	if err := checkCreateOmniLedger(req); err != nil {
@@ -84,26 +84,99 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 	// Create owner
 	owner := darc.NewSignerEd25519(nil, nil)
 
-	// Create id skipchain using byzcoin service (will contain genesis block + darc)
+	// Create the IB using byzcoin service (will contain genesis block + darc)
 	msg, err := byzcoin.DefaultGenesisMsg(req.Version,
 		&req.Roster, []string{"spawn:darc"}, owner.Identity())
 	if err != nil {
 		return nil, err
 	}
-	c, rep, err := bc.NewLedger(msg, false) // Is c.ID (reply.Skipblock.CalculateHash()) needed?
+	c, rep, err := bc.NewLedger(msg, false)
 	if err != nil {
 		return nil, err
+	}
+
+	tx := byzcoin.ClientTransaction{
+		Instructions: make([]byzcoin.Instruction, 1),
 	}
 
 	darc := msg.GenesisDarc
+	//darc.Rules.AddRule("spawn:omniledgerepoch", expression.Expr(owner.Identity().String()))
+	darc.Rules.AddRule("spawn:omniledgerepoch", darc.Rules.GetSignExpr())
 
-	// Do sharding to generate ShardRoster
-	seed, err := binary.ReadVarint(bytes.NewBuffer(c.ID))
+	darcBuf, err := protobuf.Encode(&darc)
 	if err != nil {
-		log.Error("couldn't decode skipblock hash")
 		return nil, err
 	}
-	shardRosters := sharding(&req.Roster, req.ShardCount, seed)
+
+	instr1 := byzcoin.Instruction{
+		InstanceID: bc.NewInstanceID(darc.BaseID),
+		Nonce:      bc.GenNonce(),
+		Index:      0,
+		Length:     1,
+		Invoke: &bc.Invoke{
+			Command: "evolve",
+			Args: []bc.Argument{
+				bc.Argument{Name: "darc", Value: darcBuf},
+			},
+		},
+	}
+	instr1.SignBy(darc.GetBaseID(), owner)
+
+	tx.Instructions[0] = instr1
+	if _, err := c.AddTransactionAndWait(tx, 10); err != nil {
+		return nil, err
+	}
+
+	// Store parameters (#shard and epoch-size) in the identity ledger
+	scBuff := make([]byte, 8)
+	binary.PutVarint(scBuff, int64(req.ShardCount))
+
+	esBuff := make([]byte, 8)
+	binary.PutVarint(scBuff, int64(req.EpochSize))
+
+	instr2 := byzcoin.Instruction{
+		InstanceID: bc.NewInstanceID(darc.BaseID),
+		Nonce:      bc.GenNonce(),
+		Index:      0,
+		Length:     1,
+		Spawn: &bc.Spawn{
+			ContractID: ContractOmniledgerEpochID,
+			Args: []bc.Argument{
+				bc.Argument{Name: "darc", Value: darcBuf},
+				bc.Argument{Name: "shardCount", Value: scBuff},
+				bc.Argument{Name: "epochSize", Value: esBuff}},
+		},
+	}
+	instr2.SignBy(darc.GetID(), owner)
+
+	tx.Instructions[0] = instr2
+	if _, err := c.AddTransactionAndWait(tx, 10); err != nil {
+		return nil, err
+	}
+
+	// Do sharding to generate ShardRoster
+	/*
+		seed, err := binary.ReadVarint(bytes.NewBuffer(c.ID))
+		if err != nil {
+			log.Error("couldn't decode skipblock hash")
+			return nil, err
+		}
+		shardRosters := sharding(&req.Roster, req.ShardCount, seed)
+	*/
+
+	// Get shardRosters from proof
+	id := tx.Instructions[0].Hash()
+	gpr, err := c.GetProof(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if !gpr.Proof.InclusionProof.Match() {
+		return nil, errors.New("no association found for the proof")
+	}
+
+	var shardRosters []onet.Roster
+	gpr.Proof.ContractValue(cothority.Suite, ContractOmniledgerEpochID, shardRosters)
 
 	// Create shards using byzcoin
 	// Create the messages -> Create the ledger of each shard
@@ -123,43 +196,6 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 			return nil, err
 		}
 		ids[i] = *rep.Skipblock
-	}
-
-	// Store parameters (#shard and epoch-size) in the identity ledger
-	// Add transcation calling the config contract?
-	tx := byzcoin.ClientTransaction{
-		Instructions: make([]byzcoin.Instruction, 2),
-	}
-	instrNonce := bc.GenNonce()
-	d, err := protobuf.Encode(&darc)
-	if err != nil {
-		return nil, err
-	}
-
-	scBuff := make([]byte, 8) // 8 bytes for int64
-	binary.PutVarint(scBuff, int64(req.ShardCount))
-
-	esBuff := make([]byte, 8) // 8 bytes for int64
-	binary.PutVarint(scBuff, int64(req.EpochSize))
-
-	instr := byzcoin.Instruction{
-		InstanceID: bc.NewInstanceID(darc.BaseID),
-		Nonce:      instrNonce,
-		Index:      0,
-		Length:     1,
-		Spawn: &bc.Spawn{
-			ContractID: ContractConfigID,
-			Args: []bc.Argument{
-				bc.Argument{Name: "darc", Value: d},
-				bc.Argument{Name: "shardCount", Value: scBuff},
-				bc.Argument{Name: "epochSize", Value: esBuff}},
-		},
-	}
-	instr.SignBy(darc.GetID(), owner)
-	tx.Instructions[0] = instr
-
-	if _, err := c.AddTransaction(tx); err != nil {
-		return nil, err
 	}
 
 	// Build reply
@@ -227,7 +263,7 @@ func sharding(roster *onet.Roster, shardCount int, seed int64) []onet.Roster {
 }
 */
 
-func sharding(roster *onet.Roster, shardCount int, seed int64) []onet.Roster {
+/*func sharding(roster *onet.Roster, shardCount int, seed int64) []onet.Roster {
 	rand.Seed(seed)
 	perm := rand.Perm(len(roster.List))
 
@@ -257,9 +293,16 @@ func sharding(roster *onet.Roster, shardCount int, seed int64) []onet.Roster {
 
 	return shardRosters
 }
+*/
 
 // NewEpoch
 func (s *Service) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
+	// > Connect to the IB via a client, requires a SkipBlockID -> need to store the genesis block of the IB in the service?
+	// Send an invoke:requestNewEpoch
+	/*byzcoin.NewClient()
+	invoke := &bc.Invoke{
+		Command: "request_new_epoch",
+	}*/
 
 	return nil, nil
 }
@@ -330,7 +373,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	}
 	// Register processor function (handles certain message types, e.g. ViewChangeReq) if necessary
 	// Register contracts
-	s.registerContract(ContractConfigID, s.ContractConfig)
+	s.registerContract(ContractOmniledgerEpochID, s.ContractOmniledgerEpoch)
 	s.registerContract(ContractNewEpochID, s.ContractNewEpoch)
 
 	// Register verification

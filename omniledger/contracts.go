@@ -11,24 +11,25 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
+	"math/rand"
 	"time"
 )
 
-var ContractConfigID = "config"
+var ContractOmniledgerEpochID = "omniledgerepoch"
+var ContractNewEpochID = "newepoch"
 
 // ConfigInstanceID represents the 0-id of the configuration instance.
 var ConfigInstanceID = bc.InstanceID{}
-
-var ContractNewEpochID = "newepoch"
 
 type ChainConfig struct {
 	Roster     onet.Roster
 	ShardCount int
 	EpochSize  time.Duration
+	Timestamp  time.Time
 }
 
-// ContractConfig ...
-func (s *Service) ContractConfig(cdb bc.CollectionView, inst bc.Instruction,
+// ContractOmniledgerEpoch ...
+func (s *Service) ContractOmniledgerEpoch(cdb bc.CollectionView, inst bc.Instruction,
 	coins []bc.Coin) (sc []bc.StateChange, c []bc.Coin, err error) {
 
 	switch inst.GetType() {
@@ -81,14 +82,18 @@ func spawnContractConfig(cdb bc.CollectionView, inst bc.Instruction, coins []bc.
 		return
 	}
 
-	// Create ChainConfig struct to store
+	// Do sharding
+	shardRosters := sharding(&roster, shardCount, int64(binary.BigEndian.Uint64(inst.DeriveID("").Slice())))
+
+	// Create ChainConfig struct to store data on the chain
 	config := &ChainConfig{
 		Roster:     roster,
 		ShardCount: shardCount,
 		EpochSize:  epochSize,
+		Timestamp:  time.Now(),
 	}
 
-	// Check sanity of config
+	// TODO: Check sanity of config
 
 	// Encode the config
 	configBuf, err := protobuf.Encode(&config)
@@ -96,14 +101,37 @@ func spawnContractConfig(cdb bc.CollectionView, inst bc.Instruction, coins []bc.
 		return
 	}
 
+	// Encode the rosters
+	shardRostersBuf, err := protobuf.Encode(shardRosters)
+	if err != nil {
+		return
+	}
+
 	// Return state changes
-	id := d.GetBaseID()
+	darcID := d.GetBaseID()
 	return []bc.StateChange{
-		bc.NewStateChange(bc.Create, ConfigInstanceID, ContractConfigID, configBuf, id),
+		bc.NewStateChange(bc.Create, ConfigInstanceID, ContractOmniledgerEpochID, configBuf, darcID),
+		bc.NewStateChange(bc.Create, ConfigInstanceID, ContractOmniledgerEpochID, shardRostersBuf, darcID),
 	}, coins, nil
 }
 
 func invokeContractConfig(cdb bc.CollectionView, inst bc.Instruction, coins []bc.Coin) (sc []bc.StateChange, c []bc.Coin, err error) {
+
+	if inst.Invoke.Command == "request_new_epoch" {
+		// No args
+		// Checks that it is indeed time for a new epoch
+		// Must retrieve current config to get the epoch_duration parameter
+
+		// Updates the omniledger epoch instance with the latest roster from the IB (which is a BC config)
+		// > Get the latest roster from the IB
+		// > Create a new ChainConfig with the new Roster
+		// > Return these changes
+
+		// After the update, the service needs to take its proof and send it to the BC config using invoke:newEpoch (called for the shards)
+
+		// Create state change that includes copy of the new fixed roster to be used
+
+	}
 
 	return
 }
@@ -124,4 +152,35 @@ func (s *Service) ContractNewEpoch(cdb bc.CollectionView, inst bc.Instruction,
 	default:
 		return nil, coins, errors.New("unsupported instruction type")
 	}
+}
+
+func sharding(roster *onet.Roster, shardCount int, seed int64) []onet.Roster {
+	rand.Seed(seed)
+	perm := rand.Perm(len(roster.List))
+
+	// Build map: validator index to shard index
+	m := make(map[int]int)
+	c := 0
+	for _, p := range perm {
+		if c == shardCount {
+			c = 0
+		}
+
+		m[p] = c
+		c++
+	}
+
+	// Group validators by shard index
+	idGroups := make([][]*network.ServerIdentity, shardCount)
+	for k, v := range m {
+		idGroups[v] = append(idGroups[v], roster.List[k])
+	}
+
+	// Create shard rosters
+	shardRosters := make([]onet.Roster, shardCount)
+	for ind, ids := range idGroups {
+		shardRosters[ind] = *onet.NewRoster(ids)
+	}
+
+	return shardRosters
 }
