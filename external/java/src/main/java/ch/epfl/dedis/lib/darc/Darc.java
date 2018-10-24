@@ -283,11 +283,11 @@ public class Darc {
     }
 
     /**
-     * @return a copy of the darc with the same version number.
-     * // TODO this part should be in a copy constructor
+     * @return a copy of the darc with the same version number, rules and description.
+     * The prevID and baseID are initiated to null, which must be set afterwards if the darc is to be used.
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Darc copy() throws CothorityCryptoException {
+    public Darc copyRulesAndVersion() {
         Rules rs = new Rules(this.rules);
         Darc c = new Darc(rs, description.clone());
         c.version = version;

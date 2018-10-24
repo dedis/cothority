@@ -54,7 +54,7 @@ class ValueTest {
     @Test
     void spawnValue() throws Exception {
         DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
-        Darc darc2 = genesisDarc.copy();
+        Darc darc2 = genesisDarc.copyRulesAndVersion();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
         darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin, 10);
@@ -93,7 +93,7 @@ class ValueTest {
         // going to succeed in order to sync the test to the creation of the new
         // block.
         DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
-        Darc darc2 = genesisDarc.copy();
+        Darc darc2 = genesisDarc.copyRulesAndVersion();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
         darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin, 10);

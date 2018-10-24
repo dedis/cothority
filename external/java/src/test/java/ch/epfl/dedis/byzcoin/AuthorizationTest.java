@@ -179,7 +179,7 @@ public class AuthorizationTest {
     private static void grantSystemWriteAccess(CalypsoRPC ocs, Darc userDarc) throws Exception {
         SignerEd25519 admin = new SignerEd25519(Hex.parseHexBinary(SUPERADMIN_SCALAR));
 
-        Darc newGenesis = ocs.getGenesisDarc().copy();
+        Darc newGenesis = ocs.getGenesisDarc().copyRulesAndVersion();
         newGenesis.addIdentity(Darc.RuleSignature, IdentityFactory.New(userDarc), Rules.OR);
         newGenesis.addIdentity(Darc.RuleEvolve, IdentityFactory.New(userDarc), Rules.OR);
 

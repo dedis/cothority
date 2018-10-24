@@ -263,7 +263,7 @@ public class DarcInstance {
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Darc getDarc() throws CothorityCryptoException {
-        return darc.copy();
+        return darc.copyRulesAndVersion();
     }
 
     /**
