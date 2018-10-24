@@ -51,7 +51,7 @@ class DarcTest {
         DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
         logger.info("DC is: {}", dc.getId());
         logger.info("genesisDarc is: {}", genesisDarc.getId());
-        Darc newDarc = genesisDarc.copy();
+        Darc newDarc = genesisDarc.copyRulesAndVersion();
         newDarc.setRule("spawn:darc", "all".getBytes());
         Instruction instr = dc.evolveDarcInstruction(newDarc, admin, 0, 1);
         logger.info("DC is: {}", dc.getId());
@@ -66,14 +66,14 @@ class DarcTest {
     void keycardSignature() throws Exception {
         SignerX509EC kcsigner = new TestSignerX509EC();
         SignerX509EC kcsigner2 = new TestSignerX509EC();
-        Darc adminDarc2 = genesisDarc.copy();
+        Darc adminDarc2 = genesisDarc.copyRulesAndVersion();
         adminDarc2.setRule(Darc.RuleEvolve, kcsigner.getIdentity().toString().getBytes());
         DarcInstance di = DarcInstance.fromByzCoin(bc, genesisDarc);
         di.evolveDarcAndWait(adminDarc2, admin, 10);
         di.update();
         assertEquals(1, di.getDarc().getVersion());
 
-        final Darc adminDarc3 = adminDarc2.copy();
+        final Darc adminDarc3 = adminDarc2.copyRulesAndVersion();
         assertThrows(Exception.class, () -> {
                     logger.info("Trying to evolve darc with wrong signer");
                     adminDarc3.setRule(Darc.RuleEvolve, kcsigner2.getIdentity().toString().getBytes());
@@ -83,7 +83,7 @@ class DarcTest {
         di.update();
         assertEquals(1, di.getDarc().getVersion());
 
-        final Darc adminDarc3bis = adminDarc2.copy();
+        final Darc adminDarc3bis = adminDarc2.copyRulesAndVersion();
         adminDarc3bis.setRule(Darc.RuleEvolve, kcsigner2.getIdentity().toString().getBytes());
         logger.info("Updating darc with new signer");
         di.evolveDarcAndWait(adminDarc3bis, kcsigner, 10);
@@ -94,7 +94,7 @@ class DarcTest {
     @Test
     void spawnDarc() throws Exception {
         DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
-        Darc darc2 = genesisDarc.copy();
+        Darc darc2 = genesisDarc.copyRulesAndVersion();
         darc2.setRule("spawn:darc", admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin, 10);
 

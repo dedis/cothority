@@ -8,8 +8,6 @@ import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.calypso.*;
 import ch.epfl.dedis.lib.crypto.TestSignerX509EC;
 import ch.epfl.dedis.lib.darc.*;
-import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -74,7 +72,7 @@ public class GrantAccessTest {
 
         //when
         Identity identityX509EC = new IdentityX509EC(consumerPublicPart);
-        Darc newDarc = documentDarc.copy();
+        Darc newDarc = documentDarc.copyRulesAndVersion();
         newDarc.addIdentity("spawn:calypsoRead", identityX509EC, Rules.OR);
         documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 10);
 
@@ -103,7 +101,7 @@ public class GrantAccessTest {
                 doc.getWriteData(calypso.getLTS()));
 
         //when
-        Darc newDarc = documentDarc.copy();
+        Darc newDarc = documentDarc.copyRulesAndVersion();
         newDarc.addIdentity("spawn:calypsoRead", new IdentityDarc(consumerId), Rules.OR);
         documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 10);
 
@@ -145,7 +143,7 @@ public class GrantAccessTest {
     }
 
     private static void grantSystemWriteAccess(CalypsoRPC ocs, Darc userDarc) throws Exception {
-        Darc newGenesis = ocs.getGenesisDarc().copy();
+        Darc newGenesis = ocs.getGenesisDarc().copyRulesAndVersion();
         newGenesis.addIdentity(Darc.RuleSignature, IdentityFactory.New(userDarc), Rules.OR);
         newGenesis.addIdentity(Darc.RuleEvolve, IdentityFactory.New(userDarc), Rules.OR);
 
