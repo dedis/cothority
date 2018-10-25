@@ -454,6 +454,8 @@ func login(c *cli.Context) error {
 		return fmt.Errorf("failed to parse provider scopes_supported: %v", err)
 	}
 
+	fmt.Println("scopes supported", s.ScopesSupported)
+
 	hasOffline := func() bool {
 		for _, scope := range s.ScopesSupported {
 			if scope == oidc.ScopeOfflineAccess {
@@ -610,9 +612,7 @@ func load() (*openidCfg, error) {
 }
 
 func (o *openidCfg) getSigners(cl *eventlog.Client) ([]darc.Signer, error) {
-	cfg := &o.Config
-	ts := cfg.TokenSource(context.Background(), &o.Token)
-
+	ts := o.Config.TokenSource(context.Background(), &o.Token)
 	r := cl.ByzCoin.Roster
 	n := len(r.List)
 	T := threshold(n)

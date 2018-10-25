@@ -1,11 +1,14 @@
 package authprox
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 
 	"github.com/coreos/go-oidc"
+	"github.com/dedis/onet/log"
 )
 
 type oidcValidator struct {
@@ -21,7 +24,7 @@ type issuer struct {
 	ctx    context.Context
 }
 
-func (o *oidcValidator) FindClaim(issuerStr string, input []byte) (claim, extraData string, err error) {
+func (o *oidcValidator) FindClaim(issuerStr string, input []byte) (string, string, error) {
 	o.Lock()
 	defer o.Unlock()
 
@@ -37,9 +40,10 @@ func (o *oidcValidator) FindClaim(issuerStr string, input []byte) (claim, extraD
 			Issuer: issuerStr,
 			ctx:    context.Background(),
 		}
+		var err error
 		is.p, err = oidc.NewProvider(is.ctx, is.Issuer)
 		if err != nil {
-			return
+			return "", "", err
 		}
 		is.cfg.SkipClientIDCheck = true
 		is.v = is.p.Verifier(&is.cfg)
@@ -52,17 +56,27 @@ func (o *oidcValidator) FindClaim(issuerStr string, input []byte) (claim, extraD
 	// or in a JavaScript OAuth client.
 	idToken, err := is.v.Verify(is.ctx, string(input))
 	if err != nil {
-		return
+		return "", "", err
 	}
 
 	var claims struct {
 		Email string `json:"email"`
+		Nonce string `json:"nonce"`
 	}
 	err = idToken.Claims(&claims)
 	if err != nil {
-		err = fmt.Errorf("could not find the email claim: %v", err)
-		return
+		return "", "", fmt.Errorf("could not find the email claim: %v", err)
 	}
 
-	return claims.Email, "", nil
+	// Code to dump all the claims, for debugging.
+	const dumpClaims = false
+	if dumpClaims {
+		var rclaims json.RawMessage
+		idToken.Claims(&rclaims)
+		buff := new(bytes.Buffer)
+		json.Indent(buff, []byte(rclaims), "", "  ")
+		log.Lvl2("claims", string(buff.Bytes()))
+	}
+
+	return claims.Email, claims.Nonce, nil
 }

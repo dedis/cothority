@@ -2,6 +2,8 @@ package authprox
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"testing"
 
@@ -27,7 +29,9 @@ type valid struct {
 }
 
 func (e *valid) FindClaim(issuer string, ai []byte) (string, string, error) {
-	return "dummy-claim", "dummy-extra-data", e.err
+	// For the hash, return the ai itself, unparsed. This allows max flexability
+	// for testing different cases.
+	return "dummy-claim", string(ai), e.err
 }
 
 // some zeros to send as a message
@@ -38,7 +42,7 @@ func Test_EnrollAndSign(t *testing.T) {
 	e := newEnv(t)
 	defer e.local.CloseAll()
 
-	// Test with 3 or 5 servers.
+	// Test with 3 out of 5 servers.
 	T := 3
 	nPartic := len(e.services)
 	require.Equal(t, nPartic, 5)
@@ -79,20 +83,40 @@ func Test_EnrollAndSign(t *testing.T) {
 		require.NoError(t, err)
 	}
 
+	h := sha256.Sum256(zero64[:])
+	hStr := hex.EncodeToString(h[:])
+	hBad := "00" + hStr[2:]
+	require.Equal(t, len(hStr), len(hBad))
+
 	var partials []*share.PriShare
 	for i, s := range e.services {
 		rp := PriShare{
 			I: rShares[i].I,
 			V: rShares[i].V,
 		}
+
+		// One time with incorrect hash in the auth info.
 		req := &SignatureRequest{
 			Type:     testType,
 			Message:  zero64[:],
+			AuthInfo: []byte(hBad),
 			RandPri:  rp,
 			RandPubs: rPubCommits,
 		}
 		resp, err := s.Signature(req)
+		require.Error(t, err)
+
+		// And now correctly.
+		req = &SignatureRequest{
+			Type:     testType,
+			Message:  zero64[:],
+			AuthInfo: []byte(hStr),
+			RandPri:  rp,
+			RandPubs: rPubCommits,
+		}
+		resp, err = s.Signature(req)
 		require.NoError(t, err)
+
 		ps := &dss.PartialSig{
 			Partial: &share.PriShare{
 				I: resp.PartialSignature.Partial.I,
@@ -154,6 +178,7 @@ func Test_EnrollAndSign(t *testing.T) {
 		req := &SignatureRequest{
 			Type:     testType,
 			Message:  zero64[:],
+			AuthInfo: []byte(hStr),
 			RandPri:  rp,
 			RandPubs: rPubCommits,
 		}

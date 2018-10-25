@@ -32,7 +32,7 @@ var cmds = cli.Commands{
 			},
 			cli.StringFlag{
 				Name:  "type",
-				Usage: "the type of validator: oidc (OpenID Connect) or tq (Tequila). Default is oidc.",
+				Usage: "the type of validator: oidc (OpenID Connect)",
 				Value: "oidc",
 			},
 			cli.StringFlag{

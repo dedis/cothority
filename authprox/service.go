@@ -1,9 +1,11 @@
 package authprox
 
 import (
+	"bytes"
 	"context"
 	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 
@@ -47,10 +49,10 @@ func init() {
 }
 
 // A Validator is able to check the provided authInfo with respect to
-// the thrid-party authentication system. Return the user-id and the extra_data
-// associated with this auth info, or error.
+// the thrid-party authentication system. Extracts the user-id and the
+// (optional) hash of the message from the auth info.
 type Validator interface {
-	FindClaim(issuer string, authInfo []byte) (claim string, extraData string, err error)
+	FindClaim(issuer string, authInfo []byte) (claim string, hash string, err error)
 }
 
 func (s *service) registerValidator(t string, v Validator) {
@@ -253,12 +255,31 @@ func (s *service) Signature(req *SignatureRequest) (*SignatureResponse, error) {
 	}
 
 	// Use the validator to extract a claim from the auth info.
-	claim, _, err := validator.FindClaim(req.Issuer, req.AuthInfo)
+	claim, hashStr, err := validator.FindClaim(req.Issuer, req.AuthInfo)
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: check that if extraData != "", then extraData == msg
+	// TODO: For now, hash will always be unset because the only production
+	// validator is OIDC, and we have not yet figured out how to tunnel the
+	// hash of the transaction through OpenID. The "nonce" claim seems like
+	// the right tool for the job, but the oauth2 package does not let
+	// us set it, and dex does not let refreshed tokens update it.
+	if hashStr != "" {
+		// Because it travels through the 3rd party auth system, the hash
+		// is a hex encoded string here.
+		hashBin, err := hex.DecodeString(hashStr)
+		if err != nil {
+			return nil, fmt.Errorf("unable to decode hash %v: %v", hashStr, err)
+		}
+
+		// We managed to extract the hash from the authInfo, so we need to make sure
+		// that H(req.Message) == hash, so that we know this is not a replay attempt.
+		h := sha256.Sum256(req.Message)
+		if !bytes.Equal(h[:], hashBin) {
+			return nil, errors.New("hash from AuthInfo does not match hash of message")
+		}
+	}
 
 	// Given this claim, sign a
 	h := sha256.New()
@@ -283,7 +304,7 @@ func (s *service) Signature(req *SignatureRequest) (*SignatureResponse, error) {
 	}
 	priv := s.ServerIdentity().GetPrivate()
 	if priv == nil {
-		panic("why no key")
+		return nil, errors.New("server has no private key")
 	}
 	d, err := dss.NewDSS(suite, priv,
 		dsscfg.Participants,
