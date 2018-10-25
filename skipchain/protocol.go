@@ -224,7 +224,7 @@ type GetBlocks struct {
 func NewProtocolGetBlocks(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 	t := &GetBlocks{
 		TreeNodeInstance: n,
-		GetBlocksReply:   make(chan []*SkipBlock),
+		GetBlocksReply:   make(chan []*SkipBlock, 1),
 	}
 	return t, t.RegisterHandlers(t.HandleGetBlocks, t.HandleGetBlocksReply)
 }

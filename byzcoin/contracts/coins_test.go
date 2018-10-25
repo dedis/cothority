@@ -235,6 +235,7 @@ type cvTest struct {
 	values      map[string][]byte
 	contractIDs map[string]string
 	darcIDs     map[string]darc.ID
+	index       int
 }
 
 var gdarc *darc.Darc
@@ -245,6 +246,7 @@ func newCT(rStr ...string) *cvTest {
 		make(map[string][]byte),
 		make(map[string]string),
 		make(map[string]darc.ID),
+		0,
 	}
 	gsigner = darc.NewSignerEd25519(nil, nil)
 	rules := darc.InitRules([]darc.Identity{gsigner.Identity()},
@@ -264,6 +266,7 @@ func (ct *cvTest) Store(key byzcoin.InstanceID, value []byte, contractID string,
 	ct.values[k] = value
 	ct.contractIDs[k] = contractID
 	ct.darcIDs[k] = darcID
+	ct.index++
 }
 func (ct cvTest) GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error) {
 	return ct.values[string(key)], ct.contractIDs[string(key)], ct.darcIDs[string(key)], nil
@@ -276,6 +279,10 @@ func (ct cvTest) GetContractID(key []byte) (string, error) {
 }
 func (ct cvTest) GetProof(key []byte) (*trie.Proof, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (ct cvTest) GetIndex() int {
+	return ct.index
 }
 
 func (ct cvTest) setSignatureCounter(id string, v uint64) {

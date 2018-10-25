@@ -32,7 +32,7 @@ func TestCli(t *testing.T) {
 	defer os.RemoveAll(dir)
 
 	l := onet.NewTCPTest(cothority.Suite)
-	_, roster, _ := l.GenTree(2, true)
+	_, roster, _ := l.GenTree(3, true)
 
 	defer l.CloseAll()
 

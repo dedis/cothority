@@ -276,7 +276,7 @@ public class ByzCoinRPC {
      * @return the roster responsible for the ledger
      */
     public Roster getRoster() {
-        return roster;
+        return new Roster(roster.getNodes());
     }
 
     /**
@@ -391,6 +391,10 @@ public class ByzCoinRPC {
      * Change the current roster of the ByzCoin ledger. You're only allowed to change one node at a time,
      * because the system needs to be able to contact previous nodes. When removing nodes, there is a
      * possibility of future proofs getting bigger, as it will be impossible to create forwardlinks.
+     * <p>
+     * When adding new nodes, it will take at least two blocks until they are completely active and ready
+     * to participate in the consensus. This is due to the time it takes for those blocks to download
+     * the global state.
      *
      * @param newRoster a new roster with one addition, one removal or one change
      * @param admins    a list of admins needed to sign off on the change
@@ -404,6 +408,7 @@ public class ByzCoinRPC {
         ChainConfigData ccd = cci.getChainConfig();
         ccd.setRoster(newRoster);
         cci.evolveConfigAndWait(ccd, admins, adminCtrs, wait);
+        roster = new Roster(newRoster.getNodes());
     }
 
     /**

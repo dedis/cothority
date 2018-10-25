@@ -86,7 +86,16 @@ type StoreSkipBlockReply struct {
 // Skipblock and will get back a list of all necessary SkipBlocks
 // to get to the latest.
 type GetUpdateChain struct {
+	// LatestID is the latest known ID of the chain
 	LatestID SkipBlockID
+	// MaxHeight is the maximum height used to create the update chain. If it
+	// is not set, it defaults to the maximum height available. MaxHeight 1
+	// will only return direct forward links. MaxHeight 0 will return the
+	// highest available forward links.
+	MaxHeight int `protobuf:"opt"`
+	// MaxBlocks is the maximum number of blocks to be returned. If it is not
+	// given, or equal to 0, all available blocks will be returned.
+	MaxBlocks int `protobuf:"opt"`
 }
 
 // GetUpdateChainReply - returns the shortest chain to the current SkipBlock,

@@ -284,6 +284,34 @@ func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, e
 	return &reply, nil
 }
 
+// DownloadState is used by a new node to ask to download the global state.
+// The first call to DownloadState needs to have start = 0, so that the
+// service creates a snapshot of the current state which it will serve over
+// multiple requests.
+//
+// Every subsequent request should have start incremented by 'len'.
+// If start > than the number of StateChanges available, an empty slice of
+// StateChanges is returned.
+//
+// If less than 'len' StateChanges are available, only the remaining
+// StateChanges are returned.
+//
+// The first StateChange with start == 0 holds the metadata of the
+// trie which can be `protobuf.Decode`d into a struct{map[string][]byte}.
+func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, reset bool, length int) (reply *DownloadStateResponse, err error) {
+	if length <= 0 {
+		return nil, errors.New("invalid parameter")
+	}
+
+	reply = &DownloadStateResponse{}
+	err = c.SendProtobuf(c.Roster.List[len(c.Roster.List)/2], &DownloadState{
+		ByzCoinID: byzcoinID,
+		Reset:     reset,
+		Length:    length,
+	}, reply)
+	return reply, err
+}
+
 // DefaultGenesisMsg creates the message that is used to for creating the
 // genesis Darc and block.
 func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Identity) (*CreateGenesisBlock, error) {

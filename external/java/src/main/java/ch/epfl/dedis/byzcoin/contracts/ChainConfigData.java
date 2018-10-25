@@ -91,7 +91,7 @@ public class ChainConfigData {
         if (newSIs.containsAll(oldSIs) && oldSIs.containsAll(newSIs)) {
             return;
         }
-        throw new CothorityPermissionException("Not allowed to change the set of rosters in this version!");
+        config.setRoster(newRoster.toProto());
     }
 
     /**
@@ -132,10 +132,10 @@ public class ChainConfigData {
      * @throws CothorityPermissionException if the chosen interval is wrong.
      */
     public void setInterval(Duration newInterval) throws CothorityPermissionException {
-        logger.warn("Please restart the conodes, so that the services can pick up the new interval");
         if (newInterval.toMillis() < 5000) {
             throw new CothorityPermissionException("The interval should never be smaller than 5 seconds");
         }
+        logger.info("Setting up new interval of {}", newInterval);
         config.setBlockinterval(newInterval.toNanos());
     }
 

@@ -17,8 +17,8 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityPermissionException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,6 +46,7 @@ public class ByzCoinRPCTest {
 
     @BeforeEach
     void initAll() throws Exception {
+        logger.info("Starting new test");
         testInstanceController = TestServerInit.getInstance();
         admin = new SignerEd25519();
         genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
@@ -54,6 +55,11 @@ public class ByzCoinRPCTest {
         if (!bc.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
+    }
+
+    @AfterEach
+    void endAll(){
+        logger.info("Test stopped");
     }
 
     @Test
@@ -270,6 +276,8 @@ public class ByzCoinRPCTest {
 
     @Test
     void updateInterval() throws Exception {
+        logger.info("test-start: updateInterval");
+		
         // Get the counter for the admin and increment it
         SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
         counters.increment();
@@ -285,11 +293,13 @@ public class ByzCoinRPCTest {
         // Need to set the blockInterval manually, else it will complain.
         logger.info("Setting interval back to 500 milliseconds");
         Instant now = Instant.now();
+        // The value is in nanoseconds.
         newCCD.setBlockinterval(500 * 1000 * 1000);
 
         counters.increment();
         ChainConfigInstance.fromByzcoin(bc).evolveConfigAndWait(new ChainConfigData(newCCD.build()), admins, counters.getCounters(), 10);
         assertTrue(Duration.between(now, Instant.now()).toMillis() > 5000);
+        logger.info("test-end: updateInterval");
     }
 
     @Test
@@ -317,8 +327,8 @@ public class ByzCoinRPCTest {
     }
 
     @Test
-    @Disabled("Cannot change members of a roster for the moment.")
     void updateRoster() throws Exception {
+        logger.info("test-start: updateRoster");
         List<Signer> admins = new ArrayList<>();
         admins.add(admin);
 
@@ -333,7 +343,7 @@ public class ByzCoinRPCTest {
 
         // Too many new nodes
         List<ServerIdentity> newList = bc.getRoster().getNodes();
-        newList.addAll(newRoster1.getNodes());
+        newList.addAll(Arrays.asList(conode4, conode5));
         final Roster newRoster2 = new Roster(newList);
         assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster2, admins, counters.getCounters(), 10));
 
@@ -342,25 +352,50 @@ public class ByzCoinRPCTest {
         assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster3, admins, counters.getCounters(), 10));
 
         // And finally some real update of the roster
-        // First start conode 5 (it is a sleeper conode)
+        // First start conode5, conode6, conode7 (these are sleeper conodes)
         try {
             testInstanceController.startConode(5);
+            testInstanceController.startConode(6);
+            testInstanceController.startConode(7);
+
             logger.info("updating real roster");
             Roster newRoster = new Roster(Arrays.asList(conode1, conode2, conode3, conode4, conode5));
+
+            bc.setRoster(newRoster, admins, counters.getCounters(), 10);
+            newRoster = new Roster(Arrays.asList(conode1, conode2, conode3, conode4, conode5, conode6));
+            bc.setRoster(newRoster, admins, counters.getCounters(), 10);
+            newRoster = new Roster(Arrays.asList(conode1, conode2, conode3, conode4, conode5, conode6, conode7));
             bc.setRoster(newRoster, admins, counters.getCounters(), 10);
 
+            // Need to send in at least two blocks before the new node is active
+            bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 10);
+            bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 10);
+
+            // This should work - why does it fail?
             logger.info("shutting down two nodes and it should still run");
             try {
                 testInstanceController.killConode(3);
                 testInstanceController.killConode(4);
                 counters.increment();
                 bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 10);
+            } catch (CothorityException e) {
+                throw e;
             } finally {
+                // Start nodes 3 and 4 again
+                logger.info("Starting conodes to make sure everything's OK for next tests");
                 testInstanceController.startConode(3);
                 testInstanceController.startConode(4);
             }
+
+            assertEquals(7, bc.getRoster().getNodes().size());
+        } catch (CothorityException e) {
+            throw e;
         } finally {
+            logger.info("stopping conode for next tests");
             testInstanceController.killConode(5);
+            testInstanceController.killConode(6);
+            testInstanceController.killConode(7);
         }
+        logger.info("test-end: updateRoster");
     }
 }

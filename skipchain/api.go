@@ -185,11 +185,29 @@ func (c *Client) CreateRootControl(elRoot, elControl *onet.Roster,
 // GetUpdateChain will return the chain of SkipBlocks going from the 'latest' to
 // the most current SkipBlock of the chain. It takes a roster that knows the
 // 'latest' skipblock and the id (=hash) of the latest skipblock.
+// The returned list of blocks is linked using the highest level links available
+// to shorten the returned chain.
 func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply *GetUpdateChainReply, err error) {
+	update, err := c.GetUpdateChainLevel(roster, latest, -1, -1)
+	if err != nil {
+		return nil, err
+	}
+	return &GetUpdateChainReply{update}, nil
+}
+
+// GetUpdateChainLevel will return the chain of SkipBlocks going from the 'latest' to
+// the most current SkipBlock of the chain. It takes a roster that knows the
+// 'latest' skipblock and the id (=hash) of the latest known skipblock.
+//   - roster: which nodes to contact to get updates
+//   - latest: the latest known block
+//   - maxLevel: what maximum height to use. -1 means the highest height available.
+//     0 means only direct forward links, n means level-n forwardlinks.
+//   - maxBlocks: how many blocks to return at maximum.
+func (c *Client) GetUpdateChainLevel(roster *onet.Roster, latest SkipBlockID,
+	maxLevel int, maxBlocks int) (update []*SkipBlock, err error) {
 	const retries = 3
 	delay := 1 * time.Second
 
-	reply = &GetUpdateChainReply{}
 	for {
 		r2 := &GetUpdateChainReply{}
 
@@ -199,7 +217,11 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 		for ; i < retries; i++ {
 			// To handle the case where len(perm) < retries.
 			which := i % len(perm)
-			err = c.SendProtobuf(roster.List[perm[which]], &GetUpdateChain{LatestID: latest}, r2)
+			err = c.SendProtobuf(roster.List[perm[which]], &GetUpdateChain{
+				LatestID:  latest,
+				MaxHeight: maxLevel,
+				MaxBlocks: maxBlocks,
+			}, r2)
 			if err == nil && len(r2.Update) != 0 {
 				break
 			}
@@ -222,8 +244,8 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 		// Step through the returned blocks one at a time, verifying
 		// the forward links, and that they link correctly backwards.
 		for j, b := range r2.Update {
-			if j == 0 && len(reply.Update) > 0 {
-				if reply.Update[len(reply.Update)-1].Hash.Equal(b.Hash) {
+			if j == 0 && len(update) > 0 {
+				if update[len(update)-1].Hash.Equal(b.Hash) {
 					continue
 				}
 			}
@@ -232,7 +254,7 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 				return nil, err
 			}
 			// Cannot check back links until we've confirmed the first one
-			if len(reply.Update) > 0 {
+			if len(update) > 0 {
 				if len(b.BackLinkIDs) == 0 {
 					return nil, errors.New("no backlinks?")
 				}
@@ -245,7 +267,7 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 				// n-1 to n, we need to check the backlink at height 1.
 				// Summary: we need to check the backlink of the minimal height between the
 				// two blocks.
-				prevBlock := reply.Update[len(reply.Update)-1]
+				prevBlock := update[len(update)-1]
 				link := prevBlock.Height
 				if link > b.Height {
 					link = b.Height
@@ -257,20 +279,23 @@ func (c *Client) GetUpdateChain(roster *onet.Roster, latest SkipBlockID) (reply 
 					return nil, errors.New("corresponding forwardlink doesn't point to next block")
 				}
 			}
-
-			reply.Update = append(reply.Update, b)
+			update = append(update, b)
 		}
 
-		last := reply.Update[len(reply.Update)-1]
+		last := update[len(update)-1]
 
 		// If they updated us to the end of the chain, return.
 		if last.GetForwardLen() == 0 {
-			return reply, nil
+			return update, nil
 		}
 
 		// Otherwise update the roster and contact the new servers
 		// to continue following the chain.
-		highestFL := last.ForwardLink[len(last.ForwardLink)-1]
+		flHeight := len(last.ForwardLink)
+		if maxLevel > 0 && flHeight > maxLevel {
+			flHeight = maxLevel
+		}
+		highestFL := last.ForwardLink[flHeight-1]
 		latest = highestFL.To
 		roster = highestFL.NewRoster
 		if roster == nil {

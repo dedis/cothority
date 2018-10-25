@@ -629,12 +629,12 @@ func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 	var result []SkipBlockID
 	err := db.Update(func(tx *bolt.Tx) error {
-		fl := blocks[len(blocks)-1].ForwardLink
-		if len(fl) > 0 {
-			if db.GetByID(fl[len(fl)-1].To) == nil {
-				return errors.New("can't have last block pointing into empty space")
-			}
-		}
+		// fl := blocks[len(blocks)-1].ForwardLink
+		// if len(fl) > 0 {
+		// 	if db.GetByID(fl[len(fl)-1].To) == nil {
+		// 		return errors.New("can't have last block pointing into empty space")
+		// 	}
+		// }
 		for i, sb := range blocks {
 			sbOld, err := db.getFromTx(tx, sb.Hash)
 			if err != nil {

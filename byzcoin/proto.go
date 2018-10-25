@@ -264,6 +264,32 @@ type StreamingResponse struct {
 	Block *skipchain.SkipBlock
 }
 
+// DownloadState requests the current global state of that node. If it is the first call to the service, then Reset
+// must be true, else an error will be returned, or old data
+// might be used.
+type DownloadState struct {
+	// ByzCoinID of the state to download
+	ByzCoinID skipchain.SkipBlockID
+	// Reset must be true for the first batch of downloads
+	Reset bool
+	// Length of the statechanges to download
+	Length int
+}
+
+// DownloadStateResponse is returned by the service. If there are no
+// Instances left, then the length of Instances is 0.
+type DownloadStateResponse struct {
+	// KeyValues holds a copy of a slice of DBKeyValues
+	// directly from bboltdb
+	KeyValues []DBKeyValue
+}
+
+// DBKeyValue represents one element in bboltdb
+type DBKeyValue struct {
+	Key   []byte
+	Value []byte
+}
+
 // StateChangeBody represents the body part of a state change, which is the
 // part that needs to be serialised and stored in a merkle tree.
 type StateChangeBody struct {

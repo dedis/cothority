@@ -16,6 +16,7 @@ var errKeyNotSet = errors.New("key not set")
 type ReadOnlyStateTrie interface {
 	GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error)
 	GetProof(key []byte) (*trie.Proof, error)
+	GetIndex() int
 }
 
 // stagingStateTrie is a wrapper around trie.StagingTrie that allows for use in
@@ -73,6 +74,11 @@ func (t *stagingStateTrie) GetValues(key []byte) (value []byte, contractID strin
 func (t *stagingStateTrie) Commit() error {
 	// TODO if this is implemented, we can replace the stateChangeCache.
 	return errors.New("not implemented")
+}
+
+// GetIndex returns the index of the current trie.
+func (t *stagingStateTrie) GetIndex() int {
+	panic("cannot get index in stagingStateTrie")
 }
 
 const trieIndexKey = "trieIndexKey"

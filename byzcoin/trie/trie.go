@@ -20,7 +20,7 @@ type Trie struct {
 
 // LoadTrie loads the trie from a BoltDB database, it must exist otherwise an
 // error is returned. It does not check the consistency after loading the
-// database. If that is required, called IsValid.
+// database. If that is required, call IsValid.
 func LoadTrie(db DB) (*Trie, error) {
 	var nonce []byte
 	err := db.View(func(b Bucket) error {

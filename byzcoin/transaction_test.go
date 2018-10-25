@@ -81,7 +81,7 @@ func createOneClientTx(dID darc.ID, kind string, value []byte, signer darc.Signe
 }
 
 func createOneClientTxWithCounter(dID darc.ID, kind string, value []byte, signer darc.Signer, counter uint64) (ClientTransaction, error) {
-	instr := createInstr(dID, kind, value)
+	instr := createInstr(dID, kind, "data", value)
 	instr.SignerCounter = []uint64{counter}
 	t := ClientTransaction{
 		Instructions: []Instruction{instr},
@@ -95,12 +95,12 @@ func createOneClientTxWithCounter(dID darc.ID, kind string, value []byte, signer
 	return t, nil
 }
 
-func createInstr(dID darc.ID, contractID string, value []byte) Instruction {
+func createInstr(dID darc.ID, contractID string, argName string, value []byte) Instruction {
 	return Instruction{
 		InstanceID: NewInstanceID(dID),
 		Spawn: &Spawn{
 			ContractID: contractID,
-			Args:       Arguments{{Name: "data", Value: value}},
+			Args:       Arguments{{Name: argName, Value: value}},
 		},
 		SignerCounter: []uint64{1},
 	}

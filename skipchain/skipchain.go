@@ -392,8 +392,22 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 
 	blocks := []*SkipBlock{block.Copy()}
 	log.Lvlf3("Starting to search chain at %s", s.Context.ServerIdentity())
-	for block.GetForwardLen() > 0 {
-		link := block.ForwardLink[block.GetForwardLen()-1]
+	maxHeight := guc.MaxHeight
+	if maxHeight == 0 {
+		maxHeight = block.MaximumHeight
+	}
+	maxBlocks := guc.MaxBlocks
+	// Loop for as long as we have available forward links and that we don't have
+	// more than maxBlocks blocks - except if it is 0, then add as many blocks as
+	// we have.
+	for block.GetForwardLen() > 0 &&
+		(maxBlocks == 0 || len(blocks) < maxBlocks) {
+		var link *ForwardLink
+		if block.GetForwardLen() < maxHeight {
+			link = block.ForwardLink[block.GetForwardLen()-1]
+		} else {
+			link = block.ForwardLink[maxHeight-1]
+		}
 		next := s.db.GetByID(link.To)
 		if next == nil {
 			// Next not found means that maybe the roster
@@ -406,6 +420,7 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 			if i, _ := next.Roster.Search(s.ServerIdentity().ID); i < 0 {
 				// Likewise for the case where we know the block,
 				// but we are no longer in the Roster, stop searching.
+				// TODO: should we still add the block here?
 				break
 			}
 		}

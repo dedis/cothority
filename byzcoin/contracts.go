@@ -111,6 +111,7 @@ func invokeContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin)
 		if err != nil {
 			return
 		}
+
 		var oldConfig *ChainConfig
 		oldConfig, err = loadConfigFromTrie(cdb)
 		if err != nil {
