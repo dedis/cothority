@@ -1020,17 +1020,17 @@ func TestService_SetConfig(t *testing.T) {
 	defer s.local.CloseAll()
 
 	interval := 42 * time.Millisecond
-	maxBlock := 424242
-	ctx, _ := createConfigTx(t, interval, *s.roster, maxBlock, s)
+	blocksize := 424242
+	ctx, _ := createConfigTx(t, interval, *s.roster, blocksize, s)
 	s.sendTxAndWait(t, ctx, 10)
 
 	_, err := s.service().LoadConfig(s.sb.SkipChainID())
 	require.NoError(t, err)
 
-	interval, maxsz, err := s.service().LoadBlockInfo(s.sb.SkipChainID())
+	newInterval, newBlocksize, err := s.service().LoadBlockInfo(s.sb.SkipChainID())
 	require.NoError(t, err)
-	require.Equal(t, interval, interval)
-	require.Equal(t, maxsz, maxBlock)
+	require.Equal(t, interval, newInterval)
+	require.Equal(t, blocksize, newBlocksize)
 }
 
 func TestService_SetConfigInterval(t *testing.T) {
@@ -1038,8 +1038,8 @@ func TestService_SetConfigInterval(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	intervals := []time.Duration{testInterval, 100 * time.Millisecond,
-		time.Second, 100 * time.Millisecond, 10 * time.Second}
+	intervals := []time.Duration{testInterval, testInterval / 5,
+		testInterval * 2, testInterval / 5, testInterval * 20}
 	if testing.Short() {
 		intervals = intervals[0:3]
 	}
@@ -1051,6 +1051,10 @@ func TestService_SetConfigInterval(t *testing.T) {
 			log.Lvl1("Setting interval to", interval)
 			start := time.Now()
 			ctx, _ := createConfigTx(t, interval, *s.roster, defaultMaxBlockSize, s)
+			// The wait argument here is also used in case no block is received, so
+			// it means: at most 10*blockInterval, or after 10 blocks, whichever comes
+			// first. Putting it to 1 doesn't work, because the actual blockInterval
+			// is bigger, due to dedis/cothority#1409
 			s.sendTxAndWait(t, ctx, 10)
 			require.True(t, time.Now().Sub(start) > lastInterval)
 			if interval > lastInterval {

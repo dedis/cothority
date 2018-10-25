@@ -12,12 +12,12 @@ import (
 // another signal will be sent to timeoutChan so that the outside listener can
 // react to it.
 type heartbeat struct {
-	beatChan    chan bool
-	closeChan   chan bool
-	getTimeChan chan chan time.Time
-	timeout     time.Duration
-	timeoutChan chan string
-	updateTO    chan time.Duration
+	beatChan          chan bool
+	closeChan         chan bool
+	getTimeChan       chan chan time.Time
+	timeout           time.Duration
+	timeoutChan       chan string
+	updateTimeoutChan chan time.Duration
 }
 
 type heartbeats struct {
@@ -80,7 +80,7 @@ func (r *heartbeats) updateTimeout(key string, timeout time.Duration) {
 		return
 	}
 	if h.timeout != timeout {
-		h.updateTO <- timeout
+		h.updateTimeoutChan <- timeout
 	}
 }
 
@@ -92,40 +92,48 @@ func (r *heartbeats) start(key string, timeout time.Duration, timeoutChan chan s
 	}
 
 	r.heartbeatMap[key] = &heartbeat{
-		beatChan:    make(chan bool),
-		closeChan:   make(chan bool, 1),
-		getTimeChan: make(chan chan time.Time, 1),
-		timeout:     timeout,
-		timeoutChan: timeoutChan,
-		updateTO:    make(chan time.Duration),
+		beatChan:          make(chan bool),
+		closeChan:         make(chan bool, 1),
+		getTimeChan:       make(chan chan time.Time, 1),
+		timeout:           timeout,
+		timeoutChan:       timeoutChan,
+		updateTimeoutChan: make(chan time.Duration),
 	}
 
 	r.wg.Add(1)
 	go func(h *heartbeat) {
 		defer r.wg.Done()
-		currTime := time.Now()
-		to := time.NewTimer(h.timeout)
+		lastHeartbeat := time.Now()
+		timeout := time.NewTimer(h.timeout)
 		for {
+			// The internal state of one heartbeat monitor. It's state can be
+			// changed using channels. The following changes are possible:
+			// - h.beatChan: receive a heartbeat and reset the timeout
+			// - timeout and send a timeout message
+			// - h.getTimeChan: be asked to return the time of the last heartbeat
+			// - h.closeChan: close down and return
+			// - h.updateTimeoutChan: update the timeout interval
 			select {
 			case <-h.beatChan:
-				currTime = time.Now()
-				h.resetTimer(to)
-			case <-to.C:
+				lastHeartbeat = time.Now()
+				h.resetTimeout(timeout)
+			case <-timeout.C:
+				select {
 				// the timeoutChan channel might not be reading
 				// any message when heartbeats are disabled
-				select {
 				case h.timeoutChan <- key:
 				default:
 				}
+
 				// Because we already used the channel, we can directly reset the
-				// timer
-				to.Reset(h.timeout)
+				// timer and don't need to drain it: https://golang.org/pkg/time/#Timer.Reset
+				timeout.Reset(h.timeout)
 			case outChan := <-h.getTimeChan:
-				outChan <- currTime
+				outChan <- lastHeartbeat
 			case <-h.closeChan:
 				return
-			case h.timeout = <-h.updateTO:
-				h.resetTimer(to)
+			case h.timeout = <-h.updateTimeoutChan:
+				h.resetTimeout(timeout)
 			}
 		}
 	}(r.heartbeatMap[key])
@@ -133,7 +141,9 @@ func (r *heartbeats) start(key string, timeout time.Duration, timeoutChan chan s
 	return nil
 }
 
-func (h *heartbeat) resetTimer(to *time.Timer) {
+func (h *heartbeat) resetTimeout(to *time.Timer) {
+	// According to https://golang.org/pkg/time/#Timer.Reset we need to make
+	// sure the channel gets drained after stopping.
 	if !to.Stop() {
 		<-to.C
 	}

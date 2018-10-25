@@ -82,17 +82,15 @@ func testSetupViewChange2F1(t *testing.T, signerID [16]byte, dur time.Duration, 
 	vcChan, nvChan, view, vcl := testSetupViewChangeF1(t, signerID, dur, f, true)
 	// Suppose more view-change message arrive, until there are 2f+1 of
 	// them, then a timer should start.
-	ctrChan := vcl.diagnoseStartTimer(func() {
-		for i := f + 1; i < 2*f+1; i++ {
-			req := InitReq{
-				SignerID: [16]byte{byte(i)},
-				View:     view,
-			}
-			vcl.AddReq(req)
+	for i := f + 1; i < 2*f+1; i++ {
+		req := InitReq{
+			SignerID: [16]byte{byte(i)},
+			View:     view,
 		}
-	})
+		vcl.AddReq(req)
+	}
 	select {
-	case ctr := <-ctrChan:
+	case ctr := <-vcl.startTimerChan:
 		require.Equal(t, 1, ctr)
 	case <-time.After(dur):
 		require.Fail(t, "timer should have started")
@@ -111,11 +109,9 @@ func testNormal(t *testing.T, f int) {
 
 	// If we signal that the view-change completed successfully, then
 	// everything should be reset.
-	ctrChan := vcl.diagnoseStopTimer(func() {
-		vcl.Done(view)
-	})
+	vcl.Done(view)
 	select {
-	case ctr := <-ctrChan:
+	case ctr := <-vcl.stopTimerChan:
 		require.Equal(t, 0, ctr)
 	case <-time.After(dur):
 		require.Fail(t, "timer should have stopped on done")
@@ -139,7 +135,7 @@ func testTimeout(t *testing.T, f int) {
 		require.Fail(t, "new view function should have been called")
 	}
 	select {
-	case ctr := <-vcl.diagnoseExpireTimer():
+	case ctr := <-vcl.expireTimerChan:
 		require.Equal(t, 1, ctr)
 	case <-time.After(2*dur + dur/2):
 		require.Fail(t, "expected timer to expire")
@@ -150,22 +146,20 @@ func testTimeout(t *testing.T, f int) {
 	// expiration.
 	newView := view
 	newView.LeaderIndex++
-	startCtrChan := vcl.diagnoseStartTimer(func() {
-		for i := 0; i < 2*f; i++ {
-			req := InitReq{
-				SignerID: [16]byte{byte(i)},
-				View:     newView,
-			}
-			vcl.AddReq(req)
+	for i := 0; i < 2*f; i++ {
+		req := InitReq{
+			SignerID: [16]byte{byte(i)},
+			View:     newView,
 		}
-		select {
-		case <-vcChan:
-		case <-time.After(100 * time.Millisecond):
-			require.Fail(t, "view change function should have been called")
-		}
-	})
+		vcl.AddReq(req)
+	}
 	select {
-	case ctr := <-startCtrChan:
+	case <-vcChan:
+	case <-time.After(100 * time.Millisecond):
+		require.Fail(t, "view change function should have been called")
+	}
+	select {
+	case ctr := <-vcl.startTimerChan:
 		require.Equal(t, newView.LeaderIndex, ctr)
 	case <-time.After(dur + dur/2):
 		require.Fail(t, "timer should have started")
@@ -178,7 +172,7 @@ func testTimeout(t *testing.T, f int) {
 		require.Fail(t, "new view function should have been called")
 	}
 	select {
-	case i := <-vcl.diagnoseExpireTimer():
+	case i := <-vcl.expireTimerChan:
 		require.Equal(t, 2, i)
 	case <-time.After(4*dur + dur/2):
 		require.Fail(t, "expected timer to expire")
