@@ -366,7 +366,7 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			})
 
 			if err != nil {
-				log.Lvlf2("%v", err)
+				log.Warn(err)
 			}
 		}
 	}
