@@ -759,8 +759,8 @@ func bcStore(c *cli.Context) error {
 		Instructions: byzcoin.Instructions{inst},
 	}
 	log.Info("Contacting ByzCoin to store the new darc")
-	olc := byzcoin.NewClient(cfg.ByzCoinID, cfg.Roster)
-	_, err = olc.AddTransactionAndWait(ct, 10)
+	bccl := byzcoin.NewClient(cfg.ByzCoinID, cfg.Roster)
+	_, err = bccl.AddTransactionAndWait(ct, 10)
 	if err != nil {
 		return err
 	}
@@ -789,8 +789,12 @@ func bcStore(c *cli.Context) error {
 	ct = byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{inst},
 	}
-	log.Info("Contacting ByzCoin to spawn the new party")
-	_, err = olc.AddTransactionAndWait(ct, 10)
+	fsID, err := finalStatement.Hash()
+	if err != nil {
+		return err
+	}
+	log.Infof("Contacting ByzCoin to spawn the new party with id %x", fsID)
+	_, err = bccl.AddTransactionAndWait(ct, 10)
 	if err != nil {
 		return err
 	}
@@ -798,7 +802,7 @@ func bcStore(c *cli.Context) error {
 	log.Info("Storing InstanceID in pop-service")
 	iid := inst.DeriveID("")
 	for _, c := range cfg.Roster.List {
-		err = service.NewClient().StoreInstanceID(c.Address, finalID, iid)
+		err = service.NewClient().StoreInstanceID(c.Address, finalID, iid, orgDarc.GetBaseID())
 		if err != nil {
 			log.Error("couldn't store instanceID: " + err.Error())
 		}
@@ -845,7 +849,7 @@ func bcFinalize(c *cli.Context) error {
 		}
 		return errors.New("didn't find final statement")
 	}
-	if fs.Signature == nil || len(fs.Attendees) == 0 {
+	if fs.Signature == nil || len(fs.Signature) == 0 || len(fs.Attendees) == 0 {
 		log.Infof("%+v", fs)
 		return errors.New("proposed configuration not finalized")
 	}
@@ -854,7 +858,7 @@ func bcFinalize(c *cli.Context) error {
 		return errors.New("couldn't encode final statement: " + err.Error())
 	}
 
-	partyInstance, err := cl.GetInstanceID(cfg.Roster.List[0].Address, partyID)
+	partyInstance, darcID, err := cl.GetInstanceID(cfg.Roster.List[0].Address, partyID)
 	if err != nil {
 		return errors.New("couldn't get instanceID: " + err.Error())
 	}
@@ -871,6 +875,7 @@ func bcFinalize(c *cli.Context) error {
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: partyInstance,
+			Nonce:      byzcoin.Nonce{},
 			Index:      0,
 			Length:     1,
 			Invoke: &byzcoin.Invoke{
@@ -887,7 +892,7 @@ func bcFinalize(c *cli.Context) error {
 			},
 		}},
 	}
-	err = ctx.Instructions[0].SignBy(cfg.GenesisDarc.GetBaseID(), *signer)
+	err = ctx.Instructions[0].SignBy(darcID, *signer)
 	if err != nil {
 		return errors.New("couldn't sign instruction: " + err.Error())
 	}
@@ -897,17 +902,46 @@ func bcFinalize(c *cli.Context) error {
 		return errors.New("error while sending transaction: " + err.Error())
 	}
 
+	iid := sha256.New()
+	iid.Write(ctx.Instructions[0].InstanceID.Slice())
+	pubBuf, err := signer.Ed25519.Point.MarshalBinary()
+	if err != nil {
+		return errors.New("couldn't marshal public key: " + err.Error())
+	}
+	iid.Write(pubBuf)
+	p, err := ocl.GetProof(iid.Sum(nil))
+	if err != nil {
+		return errors.New("couldn't calculate service coin address: " + err.Error())
+	}
+	_, values, err := p.Proof.KeyValue()
+	if err != nil {
+		return errors.New("proof was invalid: " + err.Error())
+	}
+	p, err = ocl.GetProof(values[2])
+	if err != nil {
+		return errors.New("couldn't get proof for service-darc: " + err.Error())
+	}
+	_, values, err = p.Proof.KeyValue()
+	if err != nil {
+		return errors.New("service-darc proof is invalid: " + err.Error())
+	}
+	serviceDarc, err := darc.NewFromProtobuf(values[0])
+	if err != nil {
+		return errors.New("got invalid service-darc: " + err.Error())
+	}
+
 	err = ph.NewClient().LinkPoP(fs.Desc.Roster.List[0], ph.Party{
 		ByzCoinID:      cfg.ByzCoinID,
 		FinalStatement: *fs,
 		InstanceID:     partyInstance,
-		Darc:           cfg.GenesisDarc,
+		Darc:           *serviceDarc,
 		Signer:         *signer,
 	})
 	if err != nil {
 		return errors.New("couldn't store in personhood service: " + err.Error())
 	}
 
+	log.Infof("Finalized party %x with instance-id %x", partyID, partyInstance)
 	return nil
 }
 
@@ -967,7 +1001,7 @@ func bcCoinShow(c *cli.Context) error {
 	if err != nil {
 		return errors.New("couldn't unmarshal coin balance: " + err.Error())
 	}
-	log.Info("Coin value is: ", ci.Value)
+	log.Info("Coin balance is: ", ci.Value)
 	return nil
 }
 
@@ -1036,21 +1070,6 @@ func bcCoinTransfer(c *cli.Context) error {
 
 	log.Info("Getting darc for source account")
 	dID := srcInstanceValues[2]
-	// dProof, err := olc.GetProof(dID)
-	// if err != nil {
-	// 	return errors.New("couldn't get source darc instance: " + err.Error())
-	// }
-	// if !dProof.Proof.InclusionProof.Match() {
-	// 	return errors.New("source instance darc doesn't exist")
-	// }
-	// _, dValues, err := dProof.Proof.KeyValue()
-	// if err != nil {
-	// 	return errors.New("cannot get proof for source instance darc: " + err.Error())
-	// }
-	// d, err := darc.NewFromProtobuf(dValues[1])
-	// if err != nil {
-	// 	return errors.New("cannot unmarshal source darc: " + err.Error())
-	// }
 
 	log.Info("Transferring coins")
 	amountBuf := make([]byte, 8)

@@ -143,12 +143,14 @@ func TestClient_StoreGetInstanceID(t *testing.T) {
 	defer ts.Close()
 
 	iid := byzcoin.NewInstanceID(random.Bits(256, true, random.New()))
-	err := NewClient().StoreInstanceID(ts.addr, ts.fsID, iid)
+	darcID := darc.ID(random.Bits(256, true, random.New()))
+	err := NewClient().StoreInstanceID(ts.addr, ts.fsID, iid, darcID)
 	require.Nil(t, err)
 
-	gii, err := NewClient().GetInstanceID(ts.addr, ts.fsID)
+	gii, dID, err := NewClient().GetInstanceID(ts.addr, ts.fsID)
 	require.Nil(t, err)
 	require.True(t, gii.Equal(iid))
+	require.True(t, darcID.Equal(dID))
 }
 
 func TestClient_StoreGetSigner(t *testing.T) {
