@@ -14,7 +14,7 @@ func TestDB(t *testing.T) {
 
 func testDB(t *testing.T, db DB) {
 	// Write things in a write tx should be ok.
-	err := db.Update(func(b bucket) error {
+	err := db.Update(func(b Bucket) error {
 		for i := 0; i < 10; i++ {
 			k := []byte{byte(i)}
 			if err := b.Put(k, k); err != nil {
@@ -32,7 +32,7 @@ func testDB(t *testing.T, db DB) {
 	require.NoError(t, err)
 
 	// Read these back in a read tx should be ok.
-	err = db.View(func(b bucket) error {
+	err = db.View(func(b Bucket) error {
 		for i := 0; i < 10; i++ {
 			k := []byte{byte(i)}
 			if v := b.Get(k); !bytes.Equal(k, v) {
@@ -44,13 +44,13 @@ func testDB(t *testing.T, db DB) {
 	require.NoError(t, err)
 
 	// Write thing in a read tx should fail.
-	err = db.View(func(b bucket) error {
+	err = db.View(func(b Bucket) error {
 		return b.Put([]byte("hello"), []byte("world"))
 	})
 	require.Error(t, err)
 
 	// The failed tx should not exist.
-	err = db.View(func(b bucket) error {
+	err = db.View(func(b Bucket) error {
 		v := b.Get([]byte("hello"))
 		if v != nil {
 			return errors.New("failed tx exists")
@@ -61,7 +61,7 @@ func testDB(t *testing.T, db DB) {
 
 	// Check that the iteration is correct.
 	var cnt int
-	err = db.View(func(b bucket) error {
+	err = db.View(func(b Bucket) error {
 		return b.ForEach(func(k, v []byte) error {
 			cnt++
 			return nil
@@ -72,7 +72,7 @@ func testDB(t *testing.T, db DB) {
 
 	// Delete everything and the iteration should find nothing.
 	var cntRem int
-	err = db.Update(func(b bucket) error {
+	err = db.Update(func(b Bucket) error {
 		for i := 0; i < 10; i++ {
 			k := []byte{byte(i)}
 			if err := b.Delete(k); err != nil {
@@ -94,7 +94,7 @@ func TestDBDryRun(t *testing.T) {
 
 func testDBDryRun(t *testing.T, db DB) {
 	// Write values to the database.
-	err := db.Update(func(b bucket) error {
+	err := db.Update(func(b Bucket) error {
 		for i := 0; i < 10; i++ {
 			k := []byte{byte(i)}
 			if err := b.Put(k, k); err != nil {
@@ -107,7 +107,7 @@ func testDBDryRun(t *testing.T, db DB) {
 
 	// Overwrite these values in a dry-run transaction, and in the same
 	// transaction, check that these new values exist.
-	err = db.UpdateDryRun(func(b bucket) error {
+	err = db.UpdateDryRun(func(b Bucket) error {
 		for i := 0; i < 10; i++ {
 			k := []byte{byte(i)}
 			v := []byte{byte(i * 2)}
@@ -127,7 +127,7 @@ func testDBDryRun(t *testing.T, db DB) {
 	require.NoError(t, err)
 
 	// Check that the original are present.
-	err = db.View(func(b bucket) error {
+	err = db.View(func(b Bucket) error {
 		for i := 0; i < 10; i++ {
 			k := []byte{byte(i)}
 			if v := b.Get(k); !bytes.Equal(k, v) {

@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
-	"hash"
 
 	"github.com/dedis/protobuf"
 )
@@ -12,23 +11,10 @@ import (
 type nodeType int
 
 const (
-	typeInterior nodeType = iota
+	typeInterior nodeType = iota + 1
 	typeEmpty
 	typeLeaf
 )
-
-func (ty nodeType) toBytes() []byte {
-	switch ty {
-	case typeInterior:
-		return []byte{0}
-	case typeEmpty:
-		return []byte{1}
-	case typeLeaf:
-		return []byte{2}
-	default:
-		panic("no such type")
-	}
-}
 
 type interiorNode struct {
 	Left  []byte
@@ -47,7 +33,7 @@ func (n *interiorNode) encode() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return append(typeInterior.toBytes(), buf...), nil
+	return append([]byte{byte(typeInterior)}, buf...), nil
 }
 
 func newInteriorNode(left, right []byte) interiorNode {
@@ -57,18 +43,19 @@ func newInteriorNode(left, right []byte) interiorNode {
 	}
 }
 
-func decodeInteriorNode(buf []byte) (interiorNode, error) {
+func decodeInteriorNode(buf []byte) (node interiorNode, err error) {
 	if len(buf) == 0 {
-		return interiorNode{}, errors.New("empty buffer")
+		err = errors.New("empty buffer")
+		return
 	}
 	if nodeType(buf[0]) != typeInterior {
-		return interiorNode{}, errors.New("wrong node type")
+		err = errors.New("wrong node type")
+		return
 	}
-	var node interiorNode
-	if err := protobuf.Decode(buf[1:], &node); err != nil {
-		return interiorNode{}, err
+	if err = protobuf.Decode(buf[1:], &node); err != nil {
+		return
 	}
-	return node, nil
+	return
 }
 
 type emptyNode struct {
@@ -82,21 +69,15 @@ func newEmptyNode(prefix []bool) emptyNode {
 }
 
 func (n *emptyNode) hash(nonce []byte) []byte {
-	h := n.hashInterface(nonce)
-	return h.Sum(nil)
-}
-
-func (n *emptyNode) hashInterface(nonce []byte) hash.Hash {
 	h := sha256.New()
-	h.Write(typeEmpty.toBytes())
+	h.Write([]byte{byte(typeEmpty)})
 	h.Write(nonce)
 	h.Write(toByteSlice(n.Prefix))
 
 	lBuf := make([]byte, 4)
 	binary.LittleEndian.PutUint32(lBuf, uint32(len(n.Prefix)))
 	h.Write(lBuf)
-
-	return h
+	return h.Sum(nil)
 }
 
 func (n *emptyNode) encode() ([]byte, error) {
@@ -104,21 +85,22 @@ func (n *emptyNode) encode() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return append(typeEmpty.toBytes(), buf...), nil
+	return append([]byte{byte(typeEmpty)}, buf...), nil
 }
 
-func decodeEmptyNode(buf []byte) (emptyNode, error) {
+func decodeEmptyNode(buf []byte) (node emptyNode, err error) {
 	if len(buf) == 0 {
-		return emptyNode{}, errors.New("empty buffer")
+		err = errors.New("empty buffer")
+		return
 	}
 	if nodeType(buf[0]) != typeEmpty {
-		return emptyNode{}, errors.New("wrong node type")
+		err = errors.New("wrong node type")
+		return
 	}
-	var node emptyNode
-	if err := protobuf.Decode(buf[1:], &node); err != nil {
-		return emptyNode{}, err
+	if err = protobuf.Decode(buf[1:], &node); err != nil {
+		return
 	}
-	return node, nil
+	return
 }
 
 type leafNode struct {
@@ -128,7 +110,15 @@ type leafNode struct {
 }
 
 func (n *leafNode) hash(nonce []byte) []byte {
-	h := n.hashInterface(nonce)
+	h := sha256.New()
+	h.Write([]byte{byte(typeLeaf)})
+	h.Write(nonce)
+	h.Write(toByteSlice(n.Prefix))
+
+	lBuf := make([]byte, 4)
+	binary.LittleEndian.PutUint32(lBuf, uint32(len(n.Prefix)))
+	h.Write(lBuf)
+
 	h.Write(n.Key)
 	h.Write(n.Value)
 	return h.Sum(nil)
@@ -147,19 +137,20 @@ func (n *leafNode) encode() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return append(typeLeaf.toBytes(), buf...), nil
+	return append([]byte{byte(typeLeaf)}, buf...), nil
 }
 
-func decodeLeafNode(buf []byte) (leafNode, error) {
+func decodeLeafNode(buf []byte) (node leafNode, err error) {
 	if len(buf) == 0 {
-		return leafNode{}, errors.New("empty buffer")
+		err = errors.New("empty buffer")
+		return
 	}
 	if nodeType(buf[0]) != typeLeaf {
-		return leafNode{}, errors.New("wrong node type")
+		err = errors.New("wrong node type")
+		return
 	}
-	var node leafNode
-	if err := protobuf.Decode(buf[1:], &node); err != nil {
-		return leafNode{}, err
+	if err = protobuf.Decode(buf[1:], &node); err != nil {
+		return
 	}
-	return node, nil
+	return
 }

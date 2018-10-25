@@ -75,8 +75,9 @@ func (p *Proof) Exists(key []byte) (bool, error) {
 	}
 }
 
-// Match is a convenience function that ignores the error of Exists and just
-// returns false.
+// Match returns true if the proof is an existence proof for the given key, any
+// error during the process of verifying the proof or if the key is absent then
+// it returns false.
 func (p *Proof) Match(key []byte) bool {
 	ok, err := p.Exists(key)
 	if err != nil {
@@ -113,7 +114,7 @@ func (p *Proof) Get(key []byte) []byte {
 // GetProof gets the inclusion/absence proof for the given key.
 func (t *Trie) GetProof(key []byte) (*Proof, error) {
 	p := &Proof{}
-	err := t.db.View(func(b bucket) error {
+	err := t.db.View(func(b Bucket) error {
 		rootKey := t.getRoot(b)
 		if rootKey == nil {
 			return errors.New("no root key")
@@ -125,7 +126,7 @@ func (t *Trie) GetProof(key []byte) (*Proof, error) {
 }
 
 // getProof updates Proof p as it traverses the tree.
-func (t *Trie) getProof(depth int, nodeKey []byte, bits []bool, p *Proof, b bucket) error {
+func (t *Trie) getProof(depth int, nodeKey []byte, bits []bool, p *Proof, b Bucket) error {
 	nodeVal := clone(b.Get(nodeKey))
 	if len(nodeVal) == 0 {
 		return errors.New("invalid node key")

@@ -29,7 +29,7 @@ func testNewTrie(t *testing.T, db DB) {
 	// If we iterate the database, we should only have 5 items - the root,
 	// the two empty leaves, the entry point and the nonce.
 	var cnt int
-	db.View(func(b bucket) error {
+	db.View(func(b Bucket) error {
 		return b.ForEach(func(k, v []byte) error {
 			cnt++
 			return nil
@@ -305,7 +305,7 @@ func TestIsValid(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, ok)
 
-	err = mem.Update(func(b bucket) error {
+	err = mem.Update(func(b Bucket) error {
 		// tamper with one of the leaves, the results should be invalid
 		k := p.Leaf.hash(testTrie.nonce)
 		leafValBuf := b.Get(k)
@@ -379,15 +379,15 @@ type kvPair struct {
 	val []byte
 }
 
-func (p *kvPair) Op() OpType {
+func (p kvPair) Op() OpType {
 	return p.op
 }
 
-func (p *kvPair) Key() []byte {
+func (p kvPair) Key() []byte {
 	return p.key
 }
 
-func (p *kvPair) Val() []byte {
+func (p kvPair) Val() []byte {
 	return p.val
 }
 
@@ -403,7 +403,7 @@ func TestBatchQuickCheck(t *testing.T) {
 		// Add a bunch of random keys
 		var pairs []KVPair
 		for _, k := range keys {
-			pairs = append(pairs, &kvPair{OpSet, k, k})
+			pairs = append(pairs, kvPair{OpSet, k, k})
 		}
 		if testTrie.Batch(pairs) != nil {
 			return false
@@ -465,7 +465,7 @@ func TestCopy(t *testing.T) {
 	require.NotNil(t, testTrie.nonce)
 	trie2.noHashKey = true
 
-	err = trie2.db.Update(func(b bucket) error {
+	err = trie2.DB().Update(func(b Bucket) error {
 		return testTrie.CopyTo(b)
 	})
 	require.NoError(t, err)
@@ -482,7 +482,7 @@ func TestCopy(t *testing.T) {
 		require.Equal(t, val, k)
 	}
 
-	err = disk.View(func(b bucket) error {
+	err = disk.View(func(b Bucket) error {
 		return b.ForEach(func(k, v []byte) error {
 			v2, err := trie2.getRaw(k)
 			if err != nil {
@@ -518,7 +518,7 @@ func delDiskDB(t *testing.T, db DB) {
 
 func getRootNode(t *testing.T, db DB) interiorNode {
 	var root interiorNode
-	err := db.View(func(b bucket) error {
+	err := db.View(func(b Bucket) error {
 		rootKey := b.Get([]byte(entryKey))
 		if rootKey == nil {
 			return errors.New("no root")

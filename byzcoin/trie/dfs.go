@@ -10,7 +10,7 @@ type nodeProcessor interface {
 
 // dfs is a depth first traversal. On every node, the corresponding function in
 // nodeProcessor is called. If an error is returned, then the traversal stops.
-func (t *Trie) dfs(p nodeProcessor, nodeKey []byte, b bucket) error {
+func (t *Trie) dfs(p nodeProcessor, nodeKey []byte, b Bucket) error {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
 		return errors.New("node key does not exist in copyTo")
@@ -45,22 +45,6 @@ func (t *Trie) dfs(p nodeProcessor, nodeKey []byte, b bucket) error {
 		return nil
 	}
 	return errors.New("invalid node type")
-}
-
-type copyNodeProcessor struct {
-	target bucket
-}
-
-func (p *copyNodeProcessor) OnEmpty(n emptyNode, k, v []byte) error {
-	return p.target.Put(k, append([]byte{}, v...))
-}
-
-func (p *copyNodeProcessor) OnLeaf(n leafNode, k, v []byte) error {
-	return p.target.Put(k, append([]byte{}, v...))
-}
-
-func (p *copyNodeProcessor) OnInterior(n interiorNode, k, v []byte) error {
-	return p.target.Put(k, append([]byte{}, v...))
 }
 
 type countNodeProcessor struct {

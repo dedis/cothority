@@ -20,7 +20,7 @@ func NewMemDB() DB {
 	return &db
 }
 
-func (r *memDB) Update(f func(bucket) error) error {
+func (r *memDB) Update(f func(Bucket) error) error {
 	r.Lock()
 	defer r.Unlock()
 
@@ -29,7 +29,7 @@ func (r *memDB) Update(f func(bucket) error) error {
 
 }
 
-func (r *memDB) View(f func(bucket) error) error {
+func (r *memDB) View(f func(Bucket) error) error {
 	r.Lock()
 	defer r.Unlock()
 
@@ -37,7 +37,12 @@ func (r *memDB) View(f func(bucket) error) error {
 	return f(r.bucket)
 }
 
-func (r *memDB) UpdateDryRun(f func(bucket) error) error {
+// UpdateDryRun attempts to execute the operations on a copy of the database
+// and then discards it. Hence, it may be more expensive than the UpdateDryRun
+// in the disk implementation which rolls back transactions. It is useful for
+// seeing the intermediate values. If they need to be used after doing the
+// dry-run, they should be copied.
+func (r *memDB) UpdateDryRun(f func(Bucket) error) error {
 	r.Lock()
 	defer r.Unlock()
 	r.bucket.writable = false
@@ -73,7 +78,7 @@ func (r *memBucket) Put(k, v []byte) error {
 	if !r.writable {
 		return errors.New("trying to use Put in a read-only transaction")
 	}
-	r.storage[string(k)] = v
+	r.storage[string(k)] = clone(v)
 	return nil
 }
 

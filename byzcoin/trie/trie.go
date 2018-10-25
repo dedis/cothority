@@ -6,9 +6,6 @@ import (
 	"errors"
 )
 
-const entryKey = "dedis_trie"
-const nonceKey = "dedis_trie_nonce"
-
 // Trie implements the merkle prefix tree described in the coniks paper.
 type Trie struct {
 	nonce []byte
@@ -25,7 +22,7 @@ type Trie struct {
 // database. If that is required, called IsValid.
 func LoadTrie(db DB) (*Trie, error) {
 	var nonce []byte
-	err := db.Update(func(b bucket) error {
+	err := db.Update(func(b Bucket) error {
 		// load the nonce
 		nonceBuf := b.Get([]byte(nonceKey))
 		if nonceBuf == nil {
@@ -56,7 +53,7 @@ func LoadTrie(db DB) (*Trie, error) {
 // NewTrie creates a new trie with a user-specified nonce, it will return an
 // error if it is called on an existing database.
 func NewTrie(db DB, nonce []byte) (*Trie, error) {
-	err := db.Update(func(b bucket) error {
+	err := db.Update(func(b Bucket) error {
 		// create the nonce
 		nonceBuf := b.Get([]byte(nonceKey))
 		if nonceBuf != nil {
@@ -86,9 +83,18 @@ func NewTrie(db DB, nonce []byte) (*Trie, error) {
 	}, nil
 }
 
+// DB returns the backend DB interface which is needed for creating transaction
+// for use by the *WithBucket methods. Take extreme care when using DB
+// directly, because it offers raw access to the data. A mistake can corrupt
+// the trie structure. Most of the time using Set, Get, Delete and Batch is
+// enough.
+func (t *Trie) DB() DB {
+	return t.db
+}
+
 // newRootNode creates the root node and two empty nodes and store these in the
 // bucket.
-func newRootNode(b bucket, nonce []byte) error {
+func newRootNode(b Bucket, nonce []byte) error {
 	left := newEmptyNode([]bool{true})
 	right := newEmptyNode([]bool{false})
 	root := newInteriorNode(left.hash(nonce), right.hash(nonce))
@@ -128,25 +134,25 @@ func newRootNode(b bucket, nonce []byte) error {
 // GetRoot returns the root of the trie.
 func (t *Trie) GetRoot() []byte {
 	var root []byte
-	t.db.View(func(b bucket) error {
-		root = append([]byte{}, t.getRoot(b)...)
+	t.db.View(func(b Bucket) error {
+		root = clone(t.getRoot(b))
 		return nil
 	})
 	return root
 }
 
-func (t *Trie) getRoot(b bucket) []byte {
+func (t *Trie) getRoot(b Bucket) []byte {
 	return b.Get([]byte(entryKey))
 }
 
 // Set sets or overwrites a key-value pair.
 func (t *Trie) Set(key []byte, value []byte) error {
-	return t.db.Update(func(b bucket) error {
-		return t.startSet(key, value, b)
+	return t.db.Update(func(b Bucket) error {
+		return t.SetWithBucket(key, value, b)
 	})
 }
 
-// KVPair is the interface to get a
+// KVPair is the interface for getting a key-value pair and an operation type.
 type KVPair interface {
 	Op() OpType
 	Key() []byte
@@ -155,26 +161,34 @@ type KVPair interface {
 
 // Batch is similar to Set, but for multiple key-value pairs.
 func (t *Trie) Batch(pairs []KVPair) error {
-	return t.db.Update(func(b bucket) error {
-		for _, p := range pairs {
-			switch p.Op() {
-			case OpSet:
-				if err := t.startSet(p.Key(), p.Val(), b); err != nil {
-					return err
-				}
-			case OpDel:
-				if err := t.startDel(p.Key(), b); err != nil {
-					return err
-				}
-			default:
-				return errors.New("no such operation")
-			}
-		}
-		return nil
+	return t.db.Update(func(b Bucket) error {
+		return t.BatchWithBucket(pairs, b)
 	})
 }
 
-func (t *Trie) startSet(key []byte, value []byte, b bucket) error {
+// BatchWithBucket is similar to SetWithBucket, but for multiple key-value
+// pairs.
+func (t *Trie) BatchWithBucket(pairs []KVPair, b Bucket) error {
+	for _, p := range pairs {
+		switch p.Op() {
+		case OpSet:
+			if err := t.SetWithBucket(p.Key(), p.Val(), b); err != nil {
+				return err
+			}
+		case OpDel:
+			if err := t.DeleteWithBucket(p.Key(), b); err != nil {
+				return err
+			}
+		default:
+			return errors.New("no such operation")
+		}
+	}
+	return nil
+}
+
+// SetWithBucket sets or overwrites a key-value pair. It must be called inside
+// a DB.Update transaction.
+func (t *Trie) SetWithBucket(key []byte, value []byte, b Bucket) error {
 	newRoot, err := t.set(t.getRoot(b), t.binSlice(key), 0, key, value, b)
 	if err != nil {
 		return err
@@ -182,7 +196,7 @@ func (t *Trie) startSet(key []byte, value []byte, b bucket) error {
 	return b.Put([]byte(entryKey), newRoot)
 }
 
-func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b bucket) ([]byte, error) {
+func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b Bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
 		return nil, errors.New("node key does not exist in set")
@@ -277,7 +291,7 @@ func (t *Trie) set(nodeKey []byte, bits []bool, depth int, key, value []byte, b 
 	return nil, errors.New("invalid node type")
 }
 
-func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, value []byte, b bucket) ([]byte, error) {
+func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, value []byte, b Bucket) ([]byte, error) {
 	leaf := newLeafNode(empty.Prefix, key, value)
 	leafBuf, err := leaf.encode()
 	if err != nil {
@@ -298,7 +312,7 @@ func (t *Trie) emptyToLeaf(empty emptyNode, key []byte, value []byte, b bucket) 
 func (t *Trie) extendLeaf(currPrefix []bool,
 	key1, valueKey1 []byte, bits1 []bool,
 	key2, valueKey2 []byte, bits2 []bool,
-	b bucket) ([]byte, []byte, error) {
+	b Bucket) ([]byte, []byte, error) {
 	i := len(currPrefix)
 	if bits1[i] != bits2[i] {
 		// base case:
@@ -355,12 +369,14 @@ func (t *Trie) extendLeaf(currPrefix []bool,
 // Delete deletes the key-value pair, an error is returned if the key does not
 // exist.
 func (t *Trie) Delete(key []byte) error {
-	return t.db.Update(func(b bucket) error {
-		return t.startDel(key, b)
+	return t.db.Update(func(b Bucket) error {
+		return t.DeleteWithBucket(key, b)
 	})
 }
 
-func (t *Trie) startDel(key []byte, b bucket) error {
+// DeleteWithBucket deletes the key-value pair, an error is returned if the key
+// does not. It must be called inside an DB.Update transaction.
+func (t *Trie) DeleteWithBucket(key []byte, b Bucket) error {
 	rootKey := t.getRoot(b)
 	if rootKey == nil {
 		return errors.New("no root key")
@@ -379,13 +395,9 @@ func (t *Trie) startDel(key []byte, b bucket) error {
 // Get looks up whether a value exists for the given key.
 func (t *Trie) Get(key []byte) ([]byte, error) {
 	var val []byte
-	err := t.db.View(func(b bucket) error {
-		rootKey := t.getRoot(b)
-		if rootKey == nil {
-			return errors.New("no root key")
-		}
+	err := t.db.View(func(b Bucket) error {
 		var err error
-		val, err = t.get(0, rootKey, t.binSlice(key), key, b)
+		val, err = t.GetWithBucket(key, b)
 		return err
 	})
 	if err != nil {
@@ -394,7 +406,21 @@ func (t *Trie) Get(key []byte) ([]byte, error) {
 	return val, nil
 }
 
-func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b bucket) ([]byte, error) {
+// GetWithBucket looks up whether a value exists for the given key, it must be
+// executed in a valid transaction.
+func (t *Trie) GetWithBucket(key []byte, b Bucket) ([]byte, error) {
+	rootKey := t.getRoot(b)
+	if rootKey == nil {
+		return nil, errors.New("no root key")
+	}
+	val, err := t.get(0, rootKey, t.binSlice(key), key, b)
+	if err != nil {
+		return nil, err
+	}
+	return clone(val), err
+}
+
+func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b Bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
 		return nil, errors.New("node key does not exist in get")
@@ -412,7 +438,7 @@ func (t *Trie) get(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 		if !bytes.Equal(key, node.Key) {
 			return nil, nil
 		}
-		return clone(node.Value), nil
+		return node.Value, nil
 	case typeInterior:
 		// recursive case
 		node, err := decodeInteriorNode(nodeVal)
@@ -438,38 +464,20 @@ func (t *Trie) MakeStagingTrie() *StagingTrie {
 	return &e
 }
 
-// CopyTo will make a copy of the database, the target bucket will have
-// its old data wiped.
-func (t *Trie) CopyTo(target bucket) error {
-	// First clean everything in the target bucket.
-	err := target.ForEach(func(k, v []byte) error {
-		return target.Delete(k)
-	})
-	if err != nil {
-		return err
-	}
-	// Do the actual copy.
-	return t.db.View(func(b bucket) error {
-		rootKey := t.getRoot(b)
-		if rootKey == nil {
-			return errors.New("no root key")
-		}
-		// copy the well-known keys
-		if err := target.Put([]byte(entryKey), append([]byte{}, rootKey...)); err != nil {
-			return err
-		}
-		if err := target.Put([]byte(nonceKey), t.nonce); err != nil {
-			return err
-		}
-		p := copyNodeProcessor{target}
-		// copy the trie
-		return t.dfs(&p, rootKey, b)
+// CopyTo will make a copy of the database to a target bucket. The caller
+// should ensure that the target is clean so that this function does not
+// overwrite any data.
+func (t *Trie) CopyTo(target Bucket) error {
+	return t.db.View(func(b Bucket) error {
+		return b.ForEach(func(k, v []byte) error {
+			return target.Put(clone(k), clone(v))
+		})
 	})
 }
 
 // TODO for now we just replace leafs with empty nodes, which is ok but it'll
 // be better if we can "shrink" the tree as well.
-func (t *Trie) del(depth int, nodeKey []byte, bits []bool, key []byte, b bucket) ([]byte, error) {
+func (t *Trie) del(depth int, nodeKey []byte, bits []bool, key []byte, b Bucket) ([]byte, error) {
 	nodeVal := b.Get(nodeKey)
 	if len(nodeVal) == 0 {
 		return nil, errors.New("node key does not exist in del")
@@ -554,7 +562,7 @@ func (t *Trie) del(depth int, nodeKey []byte, bits []bool, key []byte, b bucket)
 // IsValid checks whether the trie is valid.
 func (t *Trie) IsValid() error {
 	p := countNodeProcessor{}
-	err := t.db.View(func(b bucket) error {
+	err := t.db.View(func(b Bucket) error {
 		rootKey := t.getRoot(b)
 		if rootKey == nil {
 			return errors.New("no root key")
@@ -585,7 +593,7 @@ func (t *Trie) IsValid() error {
 
 	// Check that we have no dangling nodes.
 	var total int
-	err = t.db.View(func(b bucket) error {
+	err = t.db.View(func(b Bucket) error {
 		return b.ForEach(func(k, v []byte) error {
 			total++
 			return nil
@@ -604,7 +612,7 @@ func (t *Trie) IsValid() error {
 // getRaw gets the value, it returns nil if the value does not exist.
 func (t *Trie) getRaw(key []byte) ([]byte, error) {
 	var val []byte
-	err := t.db.View(func(b bucket) error {
+	err := t.db.View(func(b Bucket) error {
 		buf := b.Get(key)
 		val = clone(buf)
 		return nil
@@ -642,6 +650,9 @@ func toByteSlice(bits []bool) []byte {
 }
 
 func clone(buf []byte) []byte {
+	if buf == nil {
+		return nil
+	}
 	out := make([]byte, len(buf))
 	copy(out, buf)
 	return out

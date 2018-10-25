@@ -6,6 +6,8 @@ import (
 	bolt "github.com/coreos/bbolt"
 )
 
+var errDryRun = errors.New("this is a dry-run")
+
 // diskDB is the DB implementation for boltdb.
 type diskDB struct {
 	db     *bolt.DB
@@ -21,7 +23,7 @@ func NewDiskDB(db *bolt.DB, bucket []byte) DB {
 	return &disk
 }
 
-func (r *diskDB) Update(f func(bucket) error) error {
+func (r *diskDB) Update(f func(Bucket) error) error {
 	return r.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(r.bucket)
 		if b == nil {
@@ -31,7 +33,7 @@ func (r *diskDB) Update(f func(bucket) error) error {
 	})
 }
 
-func (r *diskDB) View(f func(bucket) error) error {
+func (r *diskDB) View(f func(Bucket) error) error {
 	return r.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket(r.bucket)
 		if b == nil {
@@ -41,8 +43,11 @@ func (r *diskDB) View(f func(bucket) error) error {
 	})
 }
 
-func (r *diskDB) UpdateDryRun(f func(bucket) error) error {
-	dryRunErr := errors.New("this is a dry-run")
+// UpdateDryRun executes the given transaction and then performs a rollback at
+// the end to return the database to its earlier state (before UpdateDryRun is
+// called). It is useful for seeing the intermediate values. If they need to be
+// used after doing the dry-run, they should be copied.
+func (r *diskDB) UpdateDryRun(f func(Bucket) error) error {
 	err := r.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket(r.bucket)
 		if b == nil {
@@ -51,9 +56,9 @@ func (r *diskDB) UpdateDryRun(f func(bucket) error) error {
 		if err := f(&diskBucket{b}); err != nil {
 			return err
 		}
-		return dryRunErr
+		return errDryRun
 	})
-	if err != dryRunErr {
+	if err != errDryRun {
 		return err
 	}
 	return nil

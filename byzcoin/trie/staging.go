@@ -132,15 +132,15 @@ func (t *StagingTrie) Batch(pairs []KVPair) error {
 // Commit commits all operations performed on the StagingTrie since creation
 // or the previous commit to the source Trie.
 func (t *StagingTrie) Commit() error {
-	err := t.source.db.Update(func(b bucket) error {
+	err := t.source.db.Update(func(b Bucket) error {
 		for _, instr := range t.instrList {
 			switch instr.ty {
 			case OpSet:
-				if err := t.source.startSet(instr.k, instr.v, b); err != nil {
+				if err := t.source.SetWithBucket(instr.k, instr.v, b); err != nil {
 					return err
 				}
 			case OpDel:
-				if err := t.source.startDel(instr.k, b); err != nil {
+				if err := t.source.DeleteWithBucket(instr.k, b); err != nil {
 					return err
 				}
 			default:
@@ -161,22 +161,22 @@ func (t *StagingTrie) Commit() error {
 // GetRoot returns the root of the trie.
 func (t *StagingTrie) GetRoot() []byte {
 	var root []byte
-	err := t.source.db.UpdateDryRun(func(b bucket) error {
+	err := t.source.db.UpdateDryRun(func(b Bucket) error {
 		for _, instr := range t.instrList {
 			switch instr.ty {
 			case OpSet:
-				if err := t.source.startSet(instr.k, instr.v, b); err != nil {
+				if err := t.source.SetWithBucket(instr.k, instr.v, b); err != nil {
 					return err
 				}
 			case OpDel:
-				if err := t.source.startDel(instr.k, b); err != nil {
+				if err := t.source.DeleteWithBucket(instr.k, b); err != nil {
 					return err
 				}
 			default:
 				return errors.New("invalid instruction during get root")
 			}
 		}
-		root = append([]byte{}, t.source.getRoot(b)...)
+		root = clone(t.source.getRoot(b))
 		return nil
 	})
 	if err != nil {
@@ -188,16 +188,16 @@ func (t *StagingTrie) GetRoot() []byte {
 // GetProof gets the inclusion/absence proof for the given key.
 func (t *StagingTrie) GetProof(key []byte) (*Proof, error) {
 	p := &Proof{}
-	err := t.source.db.UpdateDryRun(func(b bucket) error {
+	err := t.source.db.UpdateDryRun(func(b Bucket) error {
 		// run the pending instructions
 		for _, instr := range t.instrList {
 			switch instr.ty {
 			case OpSet:
-				if err := t.source.startSet(instr.k, instr.v, b); err != nil {
+				if err := t.source.SetWithBucket(instr.k, instr.v, b); err != nil {
 					return err
 				}
 			case OpDel:
-				if err := t.source.startDel(instr.k, b); err != nil {
+				if err := t.source.DeleteWithBucket(instr.k, b); err != nil {
 					return err
 				}
 			default:
