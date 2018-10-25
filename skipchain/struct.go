@@ -559,10 +559,6 @@ func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
 		return errors.New("wrong hash of forward link")
 	}
 
-	if fl.NewRoster != nil && fl.NewRoster.Contains(pubs) {
-		pubs = fl.NewRoster.Publics()
-	}
-
 	// This calculation must match the one in byzcoinx.
 	return cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig,
 		cosi.NewThresholdPolicy(byzcoinx.Threshold(len(pubs))))

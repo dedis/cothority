@@ -359,12 +359,15 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			// Requesting creation of secondary forward link.
 			log.Lvlf2("%s: sending request for height %d to %s", s.ServerIdentity(),
 				i+1, back.Roster.List[0])
-			s.SendRaw(back.Roster.List[0], &ForwardSignature{
+			err := s.SendRaw(back.Roster.List[0], &ForwardSignature{
 				TargetHeight: i + 1,
 				Previous:     back.Hash,
 				Newest:       prop.Copy(),
 			})
-			// time.Sleep(time.Second)
+
+			if err != nil {
+				log.Lvlf2("%v", err)
+			}
 		}
 	}
 	reply := &StoreSkipBlockReply{
@@ -904,13 +907,6 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 
 	// create the message we want to sign for this round
 	roster := src.Roster
-
-	// If the server identities in the two rosters are the same,
-	// then it might be a view-change, so we use the second roster
-	// with the new leader.
-	if src.Roster.Contains(dst.Roster.Publics()) {
-		roster = dst.Roster
-	}
 
 	log.Lvlf2("%s is adding forward-link level 0 to: %d->%d with roster %s", s.ServerIdentity(),
 		src.Index, dst.Index, roster.List)
