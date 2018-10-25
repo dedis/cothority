@@ -551,8 +551,8 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 	}
 }
 
-// Verify checks the signature against a list of public keys. When the list
-// corresponds to the new roster but in a different order, the new roster is used.
+// Verify checks the signature against a list of public keys. The list must
+// correspond to the block roster to match the signature.
 // It returns nil if the signature is correct, or an error if not.
 func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
 	if bytes.Compare(fl.Signature.Msg, fl.Hash()) != 0 {
