@@ -1,12 +1,177 @@
 package byzcoin
 
 import (
+	"bytes"
+	"encoding/gob"
 	"errors"
+	"sort"
 	"sync"
 
+	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
 )
+
+const bucketStateChangeStorage = "statechangestorage"
+
+// StateChangeEntry is the object stored to keep track of instance history. It
+// contains the state change and the block index
+type StateChangeEntry struct {
+	StateChange StateChange
+	BlockIndex  int
+}
+
+// StateChangeEntries is a list of StateChangeEntry and it can be marshaled
+// and unmarshaled
+type StateChangeEntries []StateChangeEntry
+
+// Marshal will encode the list of entries into a byte array that
+// can be store inside the database
+func (sce StateChangeEntries) Marshal() ([]byte, error) {
+	b := bytes.Buffer{}
+	e := gob.NewEncoder(&b)
+	err := e.Encode(sce)
+
+	return b.Bytes(), err
+}
+
+// Unmarshal will decode a byte array and try populate it as
+// a list of StateChangeEntry
+func (sce *StateChangeEntries) Unmarshal(buf []byte) error {
+	b := bytes.Buffer{}
+	_, err := b.Write(buf)
+	if err != nil {
+		return err
+	}
+
+	d := gob.NewDecoder(&b)
+
+	return d.Decode(sce)
+}
+
+// Len returns the length of the array
+func (sce StateChangeEntries) Len() int {
+	return len(sce)
+}
+
+// Swap swaps the position of two elements in the array
+func (sce StateChangeEntries) Swap(i, j int) {
+	sce[i], sce[j] = sce[j], sce[i]
+}
+
+// Less returns true when i's version is less than j's
+func (sce StateChangeEntries) Less(i, j int) bool {
+	return sce[i].StateChange.Version < sce[j].StateChange.Version
+}
+
+type stateChangeStorage struct {
+	db *bolt.DB
+}
+
+func newStateChangeStorage(c *onet.Context) *stateChangeStorage {
+	db, _ := c.GetAdditionalBucket([]byte(bucketStateChangeStorage))
+	return &stateChangeStorage{db: db}
+}
+
+// this will append the state changes at the end of the list
+// of the right instance for each state and then sort them by version
+func (s *stateChangeStorage) append(scs StateChanges) error {
+	// prepare the state changes per InstanceID
+	sorted := make(map[string]StateChangeEntries)
+	for _, sc := range scs {
+		_, ok := sorted[string(sc.InstanceID)]
+		if !ok {
+			sorted[string(sc.InstanceID)] = make(StateChangeEntries, 0)
+		}
+
+		sorted[string(sc.InstanceID)] = append(sorted[string(sc.InstanceID)], StateChangeEntry{StateChange: sc})
+	}
+
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(bucketStateChangeStorage))
+		if err != nil {
+			return err
+		}
+
+		// append each list of state changes (or create the entry)
+		for _, scs := range sorted {
+			key := scs[0].StateChange.InstanceID
+
+			sort.Sort(scs)
+
+			// Get the previous versions if any
+			v := b.Get(key)
+			var prev StateChangeEntries
+			if v != nil {
+				if err := prev.Unmarshal(v); err != nil {
+					return err
+				}
+			}
+
+			if len(prev) == 0 {
+				prev = scs
+			} else {
+				for _, sc := range scs {
+					prevVersion := prev[len(prev)-1].StateChange.Version
+
+					if sc.StateChange.Version == prevVersion+1 {
+						prev = append(prev, sc)
+					} else if sc.StateChange.Version > prevVersion {
+						return errors.New("State change version mismatch")
+					}
+
+					// The last case only means the state change has been already
+					// stored so we ignore it
+				}
+			}
+
+			buf, err := prev.Marshal()
+			if err != nil {
+				return err
+			}
+
+			err = b.Put(key, buf)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+// This will return the list of state changes for the given instance
+func (s *stateChangeStorage) getAll(iid []byte) (entries StateChangeEntries, err error) {
+	err = s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucketStateChangeStorage))
+		v := b.Get(iid[:])
+
+		if v != nil {
+			return entries.Unmarshal(v)
+		}
+
+		return nil
+	})
+
+	return
+}
+
+// This will return the state change entry for the given instance and version.
+// Use the bool return value to check if the version exists
+func (s *stateChangeStorage) getByVersion(iid []byte, v int) (StateChangeEntry, bool, error) {
+	entries, err := s.getAll(iid)
+	if err != nil {
+		return StateChangeEntry{}, false, err
+	}
+
+	for _, e := range entries {
+		if e.StateChange.Version == v {
+			return e, true, nil
+		}
+	}
+
+	return StateChangeEntry{}, false, nil
+}
 
 // SafeAdd will add a to the value of the coin if there will be no
 // overflow.

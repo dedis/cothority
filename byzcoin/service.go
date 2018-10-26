@@ -86,6 +86,9 @@ type Service struct {
 	// responsible for, one for each skipchain.
 	stateTries     map[string]*stateTrie
 	stateTriesLock sync.Mutex
+	// We need to store the state changes for keeping track
+	// of the history of an instance
+	stateChangeStorage *stateChangeStorage
 	// notifications is used for client transaction and block notification
 	notifications bcNotifications
 
@@ -609,6 +612,10 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	if err != nil {
 		return nil, err
 	}
+
+	// State changes are cached only when the block is confirmed
+	s.stateChangeStorage.append(scs)
+
 	return ssbReply.Latest, nil
 }
 
@@ -894,6 +901,8 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		// This should never happen...
 		panic(s.ServerIdentity().String() + ": hash of collection doesn't correspond to root hash")
 	}
+
+	s.stateChangeStorage.append(scs)
 
 	// Notify all waiting channels for processed ClientTransactions.
 	for _, t := range body.TxResults {
@@ -1564,7 +1573,26 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	}
 	// Now we call the contract function with the data of the key.
 	log.Lvlf3("%s Calling contract '%s'", s.ServerIdentity(), contractID)
-	return contract(st, instr, ctxHash, cin)
+	scs, cout, err = contract(st, instr, ctxHash, cin)
+	if err != nil || instr.InstanceID == [32]byte{} {
+		// The config contract is ignore for the versioning
+		return
+	}
+
+	// Get the last version in the global state
+	_, _, _, err = st.GetValues(instr.InstanceID.Slice())
+	version := 0 // TODO: use the value from the global state
+	if err != nil {
+		return
+	}
+
+	// increment the instance ID for each state change
+	for _, sc := range scs {
+		version++
+		sc.Version = version
+	}
+
+	return
 }
 
 func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity, error) {
@@ -1900,6 +1928,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		storage:                &bcStorage{},
 		darcToSc:               make(map[string]skipchain.SkipBlockID),
 		stateChangeCache:       newStateChangeCache(),
+		stateChangeStorage:     newStateChangeStorage(c),
 		heartbeatsTimeout:      make(chan string, 1),
 		closeLeaderMonitorChan: make(chan bool, 1),
 		heartbeats:             newHeartbeats(),

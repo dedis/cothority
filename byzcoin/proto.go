@@ -242,6 +242,8 @@ type StateChange struct {
 	Value []byte
 	// DarcID is the Darc controlling access to this key.
 	DarcID darc.ID
+	// Version is the monotonically increased version of the instance
+	Version int
 }
 
 // Coin is a generic structure holding any type of coin. Coins are defined

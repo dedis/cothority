@@ -1688,6 +1688,35 @@ func TestService_UpdateTrieCallback(t *testing.T) {
 	require.Nil(t, err)
 }
 
+func TestService_StateChangeStorage(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer)
+	require.Nil(t, err)
+	_, err = s.service().AddTransaction(&AddTxRequest{
+		Version:     CurrentVersion,
+		SkipchainID: s.genesis.SkipChainID(),
+		Transaction: tx1,
+	})
+	require.Nil(t, err)
+
+	s.waitProofWithIdx(t, tx1.Instructions[0].Hash(), 0)
+
+	for _, service := range s.services {
+		key := NewInstanceID(tx1.Instructions[0].Hash())
+		scs, err := service.stateChangeStorage.getAll(key[:])
+
+		require.Nil(t, err)
+		require.Equal(t, 1, len(scs))
+
+		sc, ok, err := service.stateChangeStorage.getByVersion(key[:], 0)
+		require.Nil(t, err)
+		require.True(t, ok)
+		require.Equal(t, 0, sc.StateChange.Version)
+	}
+}
+
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
 	switch {
 	case intervalBad:
