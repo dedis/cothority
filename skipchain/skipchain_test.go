@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"io"
+	"os"
 	"strconv"
 	"sync"
 	"testing"
@@ -1196,4 +1198,91 @@ func TestRosterAddCausesSync(t *testing.T) {
 		require.Nil(t, err)
 		log.Lvl1("Got block with servers[4]")
 	}
+}
+
+func dumpChain(s *Service, w io.Writer, id SkipBlockID) {
+	fmt.Fprintln(w, "-- dump start --")
+	db := s.GetDB()
+
+	sb := db.GetByID(id)
+	if sb == nil {
+		fmt.Fprintf(w, "chain not found: %v\n", id)
+	} else {
+		// walk the chain to learn the hash->index mapping
+		idx := make(map[string]int)
+		for {
+			idx[string(sb.Hash)] = sb.Index
+			if len(sb.ForwardLink) == 0 {
+				break
+			}
+			sb = db.GetByID(sb.GetForward(0).To)
+		}
+
+		sb := db.GetByID(id)
+		for {
+			fmt.Fprintf(w, "block: %v\n", sb.Index)
+			fmt.Fprintf(w, "  fwd:\n")
+			for _, x := range sb.ForwardLink {
+				fmt.Fprintf(w, "       %v\n", idx[string(x.To)])
+			}
+
+			fmt.Fprintf(w, " back:\n")
+			for _, x := range sb.BackLinkIDs {
+				fmt.Fprintf(w, "       %v\n", idx[string(x)])
+			}
+
+			if sb.GetForwardLen() == 0 {
+				break
+			}
+
+			want := sb.GetForward(0).To
+			sb = db.GetByID(want)
+			if sb == nil {
+				fmt.Fprintf(w, "missing block: %x\n", want)
+				break
+			}
+			fmt.Fprintln(w)
+		}
+	}
+	fmt.Fprintln(w, "-- dump done --")
+}
+
+func TestService_ShowBaseHeight(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer waitPropagationFinished(t, local)
+	defer local.CloseAll()
+	servers, el, genService := local.MakeSRS(cothority.Suite, 3, skipchainSID)
+	services := make([]*Service, len(servers))
+	for i, s := range local.GetServices(servers, skipchainSID) {
+		services[i] = s.(*Service)
+	}
+	service := genService.(*Service)
+
+	baseStr := os.Getenv("BASE")
+	if baseStr == "" {
+		baseStr = "2"
+	}
+	base, _ := strconv.Atoi(baseStr)
+	heightStr := os.Getenv("HEIGHT")
+	if heightStr == "" {
+		heightStr = "2"
+	}
+	height, _ := strconv.Atoi(heightStr)
+
+	log.Lvl1("Making genesis for", base, height)
+	sbRoot, err := makeGenesisRosterArgs(service, el, nil, VerificationNone,
+		base, height)
+	log.ErrFatal(err)
+	latest := sbRoot
+	log.Lvl1("Adding blocks for", base, height)
+	for sbi := 1; sbi < 200; sbi++ {
+		log.Lvl3("Adding block", sbi)
+		sb := NewSkipBlock()
+		sb.Roster = el
+		psbr, err := service.StoreSkipBlock(&StoreSkipBlock{TargetSkipChainID: latest.Hash, NewBlock: sb})
+		log.ErrFatal(err)
+		latest = psbr.Latest
+	}
+
+	dumpChain(services[0], os.Stdout, sbRoot.Hash)
 }
