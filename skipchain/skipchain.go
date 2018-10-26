@@ -41,18 +41,6 @@ const bftFollowBlock = "SkipchainBFTFollow"
 var storageKey = []byte("skipchainconfig")
 var dbVersion = 1
 
-// If this flag is set, then we relax our forward-link signature verification
-// to accept the aggregate signature by the public keys of the rotated roster.
-// View-change should only be enabled if there are no security implications
-// when the forward-links are signed by the rotated roster instead of the
-// roster in the skipblock that points to it. The security implication depends
-// on the services that use skipchain, so it is disabled by default. The option
-// can be changed from outside of the package by calling EnableViewChange. This
-// flag should ideally be the service configuration, but other structs depend
-// on it too, e.g., SkipBlock, so we keep it in a global.
-var enableViewChange bool
-var enableViewChangeOnce sync.Once
-
 var sid onet.ServiceID
 
 func init() {
@@ -371,12 +359,15 @@ func (s *Service) StoreSkipBlock(psbd *StoreSkipBlock) (*StoreSkipBlockReply, er
 			// Requesting creation of secondary forward link.
 			log.Lvlf2("%s: sending request for height %d to %s", s.ServerIdentity(),
 				i+1, back.Roster.List[0])
-			s.SendRaw(back.Roster.List[0], &ForwardSignature{
+			err := s.SendRaw(back.Roster.List[0], &ForwardSignature{
 				TargetHeight: i + 1,
 				Previous:     back.Hash,
 				Newest:       prop.Copy(),
 			})
-			// time.Sleep(time.Second)
+
+			if err != nil {
+				log.Warn(err)
+			}
 		}
 	}
 	reply := &StoreSkipBlockReply{
@@ -861,13 +852,6 @@ func (s *Service) SetPropTimeout(t time.Duration) {
 	s.propTimeout = t
 }
 
-// EnableViewChange enables view-change, it cannot be turned off afterwards.
-func (s *Service) EnableViewChange() {
-	enableViewChangeOnce.Do(func() {
-		enableViewChange = true
-	})
-}
-
 // TestClose is called by Server.Close in case we're in testing. It
 // makes sure that skipchain is not processing requests and will avoid
 // further requests that might be queued up.
@@ -923,15 +907,6 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 
 	// create the message we want to sign for this round
 	roster := src.Roster
-
-	if enableViewChange {
-		// If the server identities in the two rosters are the same,
-		// then it might be a view-change, so we use the second roster
-		// with the new leader.
-		if src.Roster.IsRotation(dst.Roster) {
-			roster = dst.Roster
-		}
-	}
 
 	log.Lvlf2("%s is adding forward-link level 0 to: %d->%d with roster %s", s.ServerIdentity(),
 		src.Index, dst.Index, roster.List)

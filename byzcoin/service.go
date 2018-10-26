@@ -1503,7 +1503,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 		return nil, err
 	}
 	s.skService().RegisterStoreSkipblockCallback(s.updateCollectionCallback)
-	s.skService().EnableViewChange()
 
 	// Register the view-change cosi protocols.
 	var err error

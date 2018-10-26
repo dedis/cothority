@@ -903,6 +903,31 @@ func TestService_MissingForwardlink(t *testing.T) {
 	require.Nil(t, waitForwardLinks(service1, sbRoot, 3))
 }
 
+func TestService_LeaderChange(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	servers, ro, service := local.MakeSRS(cothority.Suite, 8, skipchainSID)
+	leader := service.(*Service)
+	sbRoot, err := makeGenesisRosterArgs(leader, ro, nil, VerificationNone, 2, 4)
+
+	require.Nil(t, err)
+
+	servers[0].Pause()
+	leader = local.GetServices(servers, skipchainSID)[2].(*Service)
+
+	sb := NewSkipBlock()
+	sb.Roster = onet.NewRoster(append(ro.List[2:], ro.List[0], ro.List[1]))
+	_, err = addBlockToChain(leader, sbRoot.Hash, sb)
+	require.Nil(t, err)
+
+	res, err := leader.getBlocks(sb.Roster, sbRoot.Hash, 2)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(res[0].ForwardLink))
+	// Forward link must be verified with the src block
+	require.Nil(t, res[0].ForwardLink[0].Verify(cothority.Suite, ro.Publics()))
+}
+
 func addBlockToChain(s *Service, scid SkipBlockID, sb *SkipBlock) (latest *SkipBlock, err error) {
 	reply, err := s.StoreSkipBlock(
 		&StoreSkipBlock{TargetSkipChainID: scid,
