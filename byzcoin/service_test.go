@@ -2,6 +2,7 @@ package byzcoin
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/binary"
 	"errors"
 	"math"
@@ -12,6 +13,7 @@ import (
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/kyber/sign/eddsa"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
@@ -276,6 +278,74 @@ func TestService_GetProof(t *testing.T) {
 	require.Nil(t, rep.Proof.Verify(s.sb.SkipChainID()))
 	key, values, err = rep.Proof.KeyValue()
 	require.NotNil(t, err)
+}
+
+func TestService_DarcProxy(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	email := "test@example.com"
+	ed := eddsa.NewEdDSA(cothority.Suite.RandomStream())
+
+	// signer with placeholder callback while we find out the Id string
+	signer := darc.NewSignerProxy(email, ed.Public, nil)
+	id := signer.Identity()
+
+	// Evolve the genesis Darc to have a rule for OpenID signing
+	d2 := s.darc.Copy()
+	require.Nil(t, d2.EvolveFrom(s.darc))
+	err := d2.Rules.UpdateRule("spawn:dummy", expression.Expr(id.String()))
+	require.NoError(t, err)
+	s.testDarcEvolution(t, *d2, false)
+
+	instr := Instruction{
+		InstanceID: NewInstanceID(d2.GetBaseID()),
+		Spawn: &Spawn{
+			ContractID: "dummy",
+			Args:       Arguments{{Name: "data", Value: []byte("nothing in particular")}},
+		},
+		Nonce:  GenNonce(),
+		Index:  0,
+		Length: 1,
+	}
+	instr.Signatures = []darc.Signature{{Signer: id}}
+
+	// Make the message in the same way the Auth Proxies eventually will: H(len(data)|data|H(darc.Request))
+	dr, err := instr.ToDarcRequest(d2.GetBaseID())
+	require.NoError(t, err)
+	dr.Identities = []darc.Identity{id}
+
+	ga := func(msg []byte) ([]byte, error) {
+		h := sha256.New()
+		b := make([]byte, 4)
+		binary.LittleEndian.PutUint32(b, uint32(len(email)))
+		h.Write(b)
+		h.Write([]byte(email))
+		h.Write(msg)
+		msg2 := h.Sum(nil)
+
+		// In this simulation, we can make a signature the simple way: eddsa.Sign
+		// With auth proxies which are using DSS, the client will contact proxies
+		// to get signatures, then interpolate them into the final signature.
+		return ed.Sign(msg2)
+	}
+
+	// now set the signer with the correct callback
+	signer = darc.NewSignerProxy(email, ed.Public, ga)
+
+	err = instr.SignBy(d2.GetBaseID(), signer)
+	require.Nil(t, err)
+
+	_, err = s.service().AddTransaction(&AddTxRequest{
+		Version:     CurrentVersion,
+		SkipchainID: s.sb.SkipChainID(),
+		Transaction: ClientTransaction{
+			Instructions: []Instruction{instr},
+		},
+		InclusionWait: 10,
+	})
+	require.Nil(t, err)
+
 }
 
 // Test that inter-instruction dependencies are correctly handled.

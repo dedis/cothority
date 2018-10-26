@@ -6,6 +6,7 @@ stable branch.
 */
 
 import (
+	_ "github.com/dedis/cothority/authprox"
 	_ "github.com/dedis/cothority/byzcoin"
 	_ "github.com/dedis/cothority/byzcoin/contracts"
 	_ "github.com/dedis/cothority/calypso"

@@ -75,24 +75,24 @@ public final class Personhood {
             case 0:
               done = true;
               break;
-            case 10: {
-              ch.epfl.dedis.lib.proto.Personhood.Party.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                subBuilder = party_.toBuilder();
-              }
-              party_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Party.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(party_);
-                party_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000001;
-              break;
-            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
+              break;
+            }
+            case 10: {
+              ch.epfl.dedis.lib.proto.Personhood.Party.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = party_.toBuilder();
+              }
+              party_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Party.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(party_);
+                party_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
               break;
             }
           }
@@ -112,7 +112,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_LinkPoP_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_LinkPoP_fieldAccessorTable
@@ -143,7 +142,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -161,7 +159,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -170,7 +167,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -291,7 +287,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -299,7 +294,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.LinkPoP prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -328,7 +322,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_LinkPoP_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_LinkPoP_fieldAccessorTable
@@ -352,7 +345,6 @@ public final class Personhood {
           getPartyFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (partyBuilder_ == null) {
@@ -364,18 +356,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_LinkPoP_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.LinkPoP getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.LinkPoP.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.LinkPoP build() {
         ch.epfl.dedis.lib.proto.Personhood.LinkPoP result = buildPartial();
         if (!result.isInitialized()) {
@@ -384,7 +373,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.LinkPoP buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.LinkPoP result = new ch.epfl.dedis.lib.proto.Personhood.LinkPoP(this);
         int from_bitField0_ = bitField0_;
@@ -402,39 +390,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.LinkPoP) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.LinkPoP)other);
@@ -454,7 +435,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasParty()) {
           return false;
@@ -465,7 +445,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -602,13 +581,11 @@ public final class Personhood {
         }
         return partyBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -630,7 +607,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<LinkPoP>
         PARSER = new com.google.protobuf.AbstractParser<LinkPoP>() {
-      @java.lang.Override
       public LinkPoP parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -648,7 +624,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.LinkPoP getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -813,6 +788,13 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               byzcoinid_ = input.readBytes();
@@ -828,7 +810,7 @@ public final class Personhood {
               if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = finalstatement_.toBuilder();
               }
-              finalstatement_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.parser(), extensionRegistry);
+              finalstatement_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(finalstatement_);
                 finalstatement_ = subBuilder.buildPartial();
@@ -841,7 +823,7 @@ public final class Personhood {
               if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 subBuilder = darc_.toBuilder();
               }
-              darc_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Darc.parser(), extensionRegistry);
+              darc_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Darc.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(darc_);
                 darc_ = subBuilder.buildPartial();
@@ -854,19 +836,12 @@ public final class Personhood {
               if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 subBuilder = signer_.toBuilder();
               }
-              signer_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signer.parser(), extensionRegistry);
+              signer_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signer.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(signer_);
                 signer_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000010;
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -886,7 +861,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Party_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Party_fieldAccessorTable
@@ -1041,7 +1015,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1083,7 +1056,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -1104,7 +1076,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -1277,7 +1248,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -1285,7 +1255,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.Party prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -1313,7 +1282,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Party_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Party_fieldAccessorTable
@@ -1339,7 +1307,6 @@ public final class Personhood {
           getSignerFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         byzcoinid_ = com.google.protobuf.ByteString.EMPTY;
@@ -1367,18 +1334,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Party_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.Party getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.Party.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.Party build() {
         ch.epfl.dedis.lib.proto.Personhood.Party result = buildPartial();
         if (!result.isInitialized()) {
@@ -1387,7 +1351,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.Party buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.Party result = new ch.epfl.dedis.lib.proto.Personhood.Party(this);
         int from_bitField0_ = bitField0_;
@@ -1429,39 +1392,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.Party) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.Party)other);
@@ -1493,7 +1449,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasByzcoinid()) {
           return false;
@@ -1522,7 +1477,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2105,13 +2059,11 @@ public final class Personhood {
         }
         return signerBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -2133,7 +2085,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Party>
         PARSER = new com.google.protobuf.AbstractParser<Party>() {
-      @java.lang.Override
       public Party parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2151,7 +2102,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.Party getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -2221,17 +2171,17 @@ public final class Personhood {
             case 0:
               done = true;
               break;
-            case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
-              bitField0_ |= 0x00000001;
-              reply_ = bs;
-              break;
-            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
+              break;
+            }
+            case 10: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000001;
+              reply_ = bs;
               break;
             }
           }
@@ -2251,7 +2201,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_StringReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_StringReply_fieldAccessorTable
@@ -2303,7 +2252,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -2317,7 +2265,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2326,7 +2273,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -2446,7 +2392,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -2454,7 +2399,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.StringReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -2483,7 +2427,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_StringReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_StringReply_fieldAccessorTable
@@ -2506,7 +2449,6 @@ public final class Personhood {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         reply_ = "";
@@ -2514,18 +2456,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_StringReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.StringReply getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.StringReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.StringReply build() {
         ch.epfl.dedis.lib.proto.Personhood.StringReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -2534,7 +2473,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.StringReply buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.StringReply result = new ch.epfl.dedis.lib.proto.Personhood.StringReply(this);
         int from_bitField0_ = bitField0_;
@@ -2548,39 +2486,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.StringReply) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.StringReply)other);
@@ -2602,7 +2533,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasReply()) {
           return false;
@@ -2610,7 +2540,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2705,13 +2634,11 @@ public final class Personhood {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -2733,7 +2660,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<StringReply>
         PARSER = new com.google.protobuf.AbstractParser<StringReply>() {
-      @java.lang.Override
       public StringReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2751,7 +2677,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.StringReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -2940,6 +2865,13 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -2975,13 +2907,6 @@ public final class Personhood {
               id_ = input.readBytes();
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -3002,7 +2927,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Questionnaire_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Questionnaire_fieldAccessorTable
@@ -3203,7 +3127,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -3233,7 +3156,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3257,7 +3179,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -3445,7 +3366,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -3453,7 +3373,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.Questionnaire prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -3481,7 +3400,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Questionnaire_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Questionnaire_fieldAccessorTable
@@ -3504,7 +3422,6 @@ public final class Personhood {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         title_ = "";
@@ -3522,18 +3439,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Questionnaire_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.Questionnaire getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.Questionnaire.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.Questionnaire build() {
         ch.epfl.dedis.lib.proto.Personhood.Questionnaire result = buildPartial();
         if (!result.isInitialized()) {
@@ -3542,7 +3456,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.Questionnaire buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.Questionnaire result = new ch.epfl.dedis.lib.proto.Personhood.Questionnaire(this);
         int from_bitField0_ = bitField0_;
@@ -3577,39 +3490,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.Questionnaire) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.Questionnaire)other);
@@ -3653,7 +3559,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasTitle()) {
           return false;
@@ -3673,7 +3578,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4116,13 +4020,11 @@ public final class Personhood {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4144,7 +4046,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Questionnaire>
         PARSER = new com.google.protobuf.AbstractParser<Questionnaire>() {
-      @java.lang.Override
       public Questionnaire parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4162,7 +4063,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.Questionnaire getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -4269,6 +4169,13 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 8: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 sum_ = new java.util.ArrayList<java.lang.Integer>();
@@ -4298,13 +4205,6 @@ public final class Personhood {
               users_.add(input.readBytes());
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -4328,7 +4228,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Reply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Reply_fieldAccessorTable
@@ -4405,7 +4304,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4415,7 +4313,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < sum_.size(); i++) {
@@ -4427,7 +4324,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4565,7 +4461,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4573,7 +4468,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.Reply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4602,7 +4496,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Reply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Reply_fieldAccessorTable
@@ -4625,7 +4518,6 @@ public final class Personhood {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         sum_ = java.util.Collections.emptyList();
@@ -4635,18 +4527,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Reply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.Reply getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.Reply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.Reply build() {
         ch.epfl.dedis.lib.proto.Personhood.Reply result = buildPartial();
         if (!result.isInitialized()) {
@@ -4655,7 +4544,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.Reply buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.Reply result = new ch.epfl.dedis.lib.proto.Personhood.Reply(this);
         int from_bitField0_ = bitField0_;
@@ -4673,39 +4561,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.Reply) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.Reply)other);
@@ -4742,12 +4623,10 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4960,13 +4839,11 @@ public final class Personhood {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4988,7 +4865,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Reply>
         PARSER = new com.google.protobuf.AbstractParser<Reply>() {
-      @java.lang.Override
       public Reply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5006,7 +4882,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.Reply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -5086,24 +4961,24 @@ public final class Personhood {
             case 0:
               done = true;
               break;
-            case 10: {
-              ch.epfl.dedis.lib.proto.Personhood.Questionnaire.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                subBuilder = questionnaire_.toBuilder();
-              }
-              questionnaire_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Questionnaire.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(questionnaire_);
-                questionnaire_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000001;
-              break;
-            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
+              break;
+            }
+            case 10: {
+              ch.epfl.dedis.lib.proto.Personhood.Questionnaire.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = questionnaire_.toBuilder();
+              }
+              questionnaire_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Questionnaire.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(questionnaire_);
+                questionnaire_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
               break;
             }
           }
@@ -5123,7 +4998,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_RegisterQuestionnaire_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_RegisterQuestionnaire_fieldAccessorTable
@@ -5166,7 +5040,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5184,7 +5057,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5193,7 +5065,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5314,7 +5185,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5322,7 +5192,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.RegisterQuestionnaire prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5351,7 +5220,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_RegisterQuestionnaire_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_RegisterQuestionnaire_fieldAccessorTable
@@ -5375,7 +5243,6 @@ public final class Personhood {
           getQuestionnaireFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (questionnaireBuilder_ == null) {
@@ -5387,18 +5254,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_RegisterQuestionnaire_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.RegisterQuestionnaire getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.RegisterQuestionnaire.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.RegisterQuestionnaire build() {
         ch.epfl.dedis.lib.proto.Personhood.RegisterQuestionnaire result = buildPartial();
         if (!result.isInitialized()) {
@@ -5407,7 +5271,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.RegisterQuestionnaire buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.RegisterQuestionnaire result = new ch.epfl.dedis.lib.proto.Personhood.RegisterQuestionnaire(this);
         int from_bitField0_ = bitField0_;
@@ -5425,39 +5288,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.RegisterQuestionnaire) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.RegisterQuestionnaire)other);
@@ -5477,7 +5333,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasQuestionnaire()) {
           return false;
@@ -5488,7 +5343,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5661,13 +5515,11 @@ public final class Personhood {
         }
         return questionnaireBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5689,7 +5541,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<RegisterQuestionnaire>
         PARSER = new com.google.protobuf.AbstractParser<RegisterQuestionnaire>() {
-      @java.lang.Override
       public RegisterQuestionnaire parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5707,7 +5558,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.RegisterQuestionnaire getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -5798,6 +5648,13 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 8: {
               bitField0_ |= 0x00000001;
               start_ = input.readSInt32();
@@ -5806,13 +5663,6 @@ public final class Personhood {
             case 16: {
               bitField0_ |= 0x00000002;
               number_ = input.readSInt32();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -5832,7 +5682,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListQuestionnaires_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListQuestionnaires_fieldAccessorTable
@@ -5888,7 +5737,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5906,7 +5754,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5918,7 +5765,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -6052,7 +5898,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6060,7 +5905,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.ListQuestionnaires prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6089,7 +5933,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListQuestionnaires_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListQuestionnaires_fieldAccessorTable
@@ -6112,7 +5955,6 @@ public final class Personhood {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         start_ = 0;
@@ -6122,18 +5964,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListQuestionnaires_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ListQuestionnaires getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.ListQuestionnaires.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ListQuestionnaires build() {
         ch.epfl.dedis.lib.proto.Personhood.ListQuestionnaires result = buildPartial();
         if (!result.isInitialized()) {
@@ -6142,7 +5981,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ListQuestionnaires buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.ListQuestionnaires result = new ch.epfl.dedis.lib.proto.Personhood.ListQuestionnaires(this);
         int from_bitField0_ = bitField0_;
@@ -6160,39 +5998,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.ListQuestionnaires) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.ListQuestionnaires)other);
@@ -6215,7 +6046,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasStart()) {
           return false;
@@ -6226,7 +6056,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6341,13 +6170,11 @@ public final class Personhood {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6369,7 +6196,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ListQuestionnaires>
         PARSER = new com.google.protobuf.AbstractParser<ListQuestionnaires>() {
-      @java.lang.Override
       public ListQuestionnaires parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6387,7 +6213,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.ListQuestionnaires getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6487,20 +6312,20 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 questionnaires_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.Personhood.Questionnaire>();
                 mutable_bitField0_ |= 0x00000001;
               }
               questionnaires_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Questionnaire.parser(), extensionRegistry));
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
+                  input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Questionnaire.PARSER, extensionRegistry));
               break;
             }
           }
@@ -6523,7 +6348,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListQuestionnairesReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListQuestionnairesReply_fieldAccessorTable
@@ -6587,7 +6411,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -6603,7 +6426,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < questionnaires_.size(); i++) {
@@ -6612,7 +6434,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -6730,7 +6551,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6738,7 +6558,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.ListQuestionnairesReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6767,7 +6586,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListQuestionnairesReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListQuestionnairesReply_fieldAccessorTable
@@ -6791,7 +6609,6 @@ public final class Personhood {
           getQuestionnairesFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (questionnairesBuilder_ == null) {
@@ -6803,18 +6620,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListQuestionnairesReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ListQuestionnairesReply getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.ListQuestionnairesReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ListQuestionnairesReply build() {
         ch.epfl.dedis.lib.proto.Personhood.ListQuestionnairesReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -6823,7 +6637,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ListQuestionnairesReply buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.ListQuestionnairesReply result = new ch.epfl.dedis.lib.proto.Personhood.ListQuestionnairesReply(this);
         int from_bitField0_ = bitField0_;
@@ -6840,39 +6653,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.ListQuestionnairesReply) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.ListQuestionnairesReply)other);
@@ -6915,7 +6721,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getQuestionnairesCount(); i++) {
           if (!getQuestionnaires(i).isInitialized()) {
@@ -6925,7 +6730,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7256,13 +7060,11 @@ public final class Personhood {
         }
         return questionnairesBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -7284,7 +7086,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ListQuestionnairesReply>
         PARSER = new com.google.protobuf.AbstractParser<ListQuestionnairesReply>() {
-      @java.lang.Override
       public ListQuestionnairesReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7302,7 +7103,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.ListQuestionnairesReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -7418,6 +7218,13 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               questid_ = input.readBytes();
@@ -7449,13 +7256,6 @@ public final class Personhood {
               account_ = input.readBytes();
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -7476,7 +7276,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_AnswerQuestionnaire_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_AnswerQuestionnaire_fieldAccessorTable
@@ -7566,7 +7365,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7584,7 +7382,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7599,7 +7396,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -7748,7 +7544,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -7756,7 +7551,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.AnswerQuestionnaire prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -7784,7 +7578,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_AnswerQuestionnaire_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_AnswerQuestionnaire_fieldAccessorTable
@@ -7807,7 +7600,6 @@ public final class Personhood {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         questid_ = com.google.protobuf.ByteString.EMPTY;
@@ -7819,18 +7611,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_AnswerQuestionnaire_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.AnswerQuestionnaire getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.AnswerQuestionnaire.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.AnswerQuestionnaire build() {
         ch.epfl.dedis.lib.proto.Personhood.AnswerQuestionnaire result = buildPartial();
         if (!result.isInitialized()) {
@@ -7839,7 +7628,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.AnswerQuestionnaire buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.AnswerQuestionnaire result = new ch.epfl.dedis.lib.proto.Personhood.AnswerQuestionnaire(this);
         int from_bitField0_ = bitField0_;
@@ -7862,39 +7650,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.AnswerQuestionnaire) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.AnswerQuestionnaire)other);
@@ -7927,7 +7708,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasQuestid()) {
           return false;
@@ -7938,7 +7718,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8153,13 +7932,11 @@ public final class Personhood {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -8181,7 +7958,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<AnswerQuestionnaire>
         PARSER = new com.google.protobuf.AbstractParser<AnswerQuestionnaire>() {
-      @java.lang.Override
       public AnswerQuestionnaire parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8199,7 +7975,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.AnswerQuestionnaire getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -8289,6 +8064,13 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               questid_ = input.readBytes();
@@ -8297,13 +8079,6 @@ public final class Personhood {
             case 16: {
               bitField0_ |= 0x00000002;
               topup_ = input.readUInt64();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -8323,7 +8098,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_TopupQuestionnaire_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_TopupQuestionnaire_fieldAccessorTable
@@ -8379,7 +8153,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -8397,7 +8170,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -8409,7 +8181,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -8544,7 +8315,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -8552,7 +8322,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.TopupQuestionnaire prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -8580,7 +8349,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_TopupQuestionnaire_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_TopupQuestionnaire_fieldAccessorTable
@@ -8603,7 +8371,6 @@ public final class Personhood {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         questid_ = com.google.protobuf.ByteString.EMPTY;
@@ -8613,18 +8380,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_TopupQuestionnaire_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.TopupQuestionnaire getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.TopupQuestionnaire.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.TopupQuestionnaire build() {
         ch.epfl.dedis.lib.proto.Personhood.TopupQuestionnaire result = buildPartial();
         if (!result.isInitialized()) {
@@ -8633,7 +8397,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.TopupQuestionnaire buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.TopupQuestionnaire result = new ch.epfl.dedis.lib.proto.Personhood.TopupQuestionnaire(this);
         int from_bitField0_ = bitField0_;
@@ -8651,39 +8414,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.TopupQuestionnaire) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.TopupQuestionnaire)other);
@@ -8706,7 +8462,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasQuestid()) {
           return false;
@@ -8717,7 +8472,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8835,13 +8589,11 @@ public final class Personhood {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -8863,7 +8615,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<TopupQuestionnaire>
         PARSER = new com.google.protobuf.AbstractParser<TopupQuestionnaire>() {
-      @java.lang.Override
       public TopupQuestionnaire parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8881,7 +8632,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.TopupQuestionnaire getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -9100,6 +8850,13 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -9142,13 +8899,6 @@ public final class Personhood {
               partyiid_ = input.readBytes();
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -9166,7 +8916,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Message_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Message_fieldAccessorTable
@@ -9425,7 +9174,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -9467,7 +9215,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9497,7 +9244,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -9710,7 +9456,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -9718,7 +9463,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.Message prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -9746,7 +9490,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Message_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Message_fieldAccessorTable
@@ -9769,7 +9512,6 @@ public final class Personhood {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         subject_ = "";
@@ -9791,18 +9533,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_Message_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.Message getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.Message.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.Message build() {
         ch.epfl.dedis.lib.proto.Personhood.Message result = buildPartial();
         if (!result.isInitialized()) {
@@ -9811,7 +9550,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.Message buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.Message result = new ch.epfl.dedis.lib.proto.Personhood.Message(this);
         int from_bitField0_ = bitField0_;
@@ -9853,39 +9591,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.Message) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.Message)other);
@@ -9930,7 +9661,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasSubject()) {
           return false;
@@ -9959,7 +9689,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10481,13 +10210,11 @@ public final class Personhood {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -10509,7 +10236,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Message>
         PARSER = new com.google.protobuf.AbstractParser<Message>() {
-      @java.lang.Override
       public Message parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10527,7 +10253,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.Message getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -10606,24 +10331,24 @@ public final class Personhood {
             case 0:
               done = true;
               break;
-            case 10: {
-              ch.epfl.dedis.lib.proto.Personhood.Message.Builder subBuilder = null;
-              if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                subBuilder = message_.toBuilder();
-              }
-              message_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Message.parser(), extensionRegistry);
-              if (subBuilder != null) {
-                subBuilder.mergeFrom(message_);
-                message_ = subBuilder.buildPartial();
-              }
-              bitField0_ |= 0x00000001;
-              break;
-            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
+              break;
+            }
+            case 10: {
+              ch.epfl.dedis.lib.proto.Personhood.Message.Builder subBuilder = null;
+              if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                subBuilder = message_.toBuilder();
+              }
+              message_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Message.PARSER, extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom(message_);
+                message_ = subBuilder.buildPartial();
+              }
+              bitField0_ |= 0x00000001;
               break;
             }
           }
@@ -10643,7 +10368,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SendMessage_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SendMessage_fieldAccessorTable
@@ -10686,7 +10410,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -10704,7 +10427,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -10713,7 +10435,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -10834,7 +10555,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -10842,7 +10562,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.SendMessage prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -10870,7 +10589,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SendMessage_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SendMessage_fieldAccessorTable
@@ -10894,7 +10612,6 @@ public final class Personhood {
           getMessageFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (messageBuilder_ == null) {
@@ -10906,18 +10623,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_SendMessage_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.SendMessage getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.SendMessage.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.SendMessage build() {
         ch.epfl.dedis.lib.proto.Personhood.SendMessage result = buildPartial();
         if (!result.isInitialized()) {
@@ -10926,7 +10640,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.SendMessage buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.SendMessage result = new ch.epfl.dedis.lib.proto.Personhood.SendMessage(this);
         int from_bitField0_ = bitField0_;
@@ -10944,39 +10657,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.SendMessage) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.SendMessage)other);
@@ -10996,7 +10702,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasMessage()) {
           return false;
@@ -11007,7 +10712,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11180,13 +10884,11 @@ public final class Personhood {
         }
         return messageBuilder_;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -11208,7 +10910,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SendMessage>
         PARSER = new com.google.protobuf.AbstractParser<SendMessage>() {
-      @java.lang.Override
       public SendMessage parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11226,7 +10927,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.SendMessage getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -11335,6 +11035,13 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 8: {
               bitField0_ |= 0x00000001;
               start_ = input.readSInt32();
@@ -11348,13 +11055,6 @@ public final class Personhood {
             case 26: {
               bitField0_ |= 0x00000004;
               readerid_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -11374,7 +11074,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListMessages_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListMessages_fieldAccessorTable
@@ -11453,7 +11152,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -11475,7 +11173,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -11490,7 +11187,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -11637,7 +11333,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -11645,7 +11340,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.ListMessages prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -11674,7 +11368,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListMessages_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListMessages_fieldAccessorTable
@@ -11697,7 +11390,6 @@ public final class Personhood {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         start_ = 0;
@@ -11709,18 +11401,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListMessages_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ListMessages getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.ListMessages.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ListMessages build() {
         ch.epfl.dedis.lib.proto.Personhood.ListMessages result = buildPartial();
         if (!result.isInitialized()) {
@@ -11729,7 +11418,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ListMessages buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.ListMessages result = new ch.epfl.dedis.lib.proto.Personhood.ListMessages(this);
         int from_bitField0_ = bitField0_;
@@ -11751,39 +11439,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.ListMessages) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.ListMessages)other);
@@ -11809,7 +11490,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasStart()) {
           return false;
@@ -11823,7 +11503,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11989,13 +11668,11 @@ public final class Personhood {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -12017,7 +11694,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ListMessages>
         PARSER = new com.google.protobuf.AbstractParser<ListMessages>() {
-      @java.lang.Override
       public ListMessages parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12035,7 +11711,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.ListMessages getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -12230,6 +11905,13 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -12297,13 +11979,6 @@ public final class Personhood {
               partyiids_.add(input.readBytes());
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -12336,7 +12011,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListMessagesReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListMessagesReply_fieldAccessorTable
@@ -12526,7 +12200,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -12536,7 +12209,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < subjects_.size(); i++) {
@@ -12557,7 +12229,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -12739,7 +12410,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -12747,7 +12417,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.ListMessagesReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -12776,7 +12445,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListMessagesReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListMessagesReply_fieldAccessorTable
@@ -12799,7 +12467,6 @@ public final class Personhood {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         subjects_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -12815,18 +12482,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ListMessagesReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ListMessagesReply getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.ListMessagesReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ListMessagesReply build() {
         ch.epfl.dedis.lib.proto.Personhood.ListMessagesReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -12835,7 +12499,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ListMessagesReply buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.ListMessagesReply result = new ch.epfl.dedis.lib.proto.Personhood.ListMessagesReply(this);
         int from_bitField0_ = bitField0_;
@@ -12868,39 +12531,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.ListMessagesReply) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.ListMessagesReply)other);
@@ -12967,12 +12623,10 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13508,13 +13162,11 @@ public final class Personhood {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -13536,7 +13188,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ListMessagesReply>
         PARSER = new com.google.protobuf.AbstractParser<ListMessagesReply>() {
-      @java.lang.Override
       public ListMessagesReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -13554,7 +13205,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.ListMessagesReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -13662,6 +13312,13 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               msgid_ = input.readBytes();
@@ -13675,13 +13332,6 @@ public final class Personhood {
             case 26: {
               bitField0_ |= 0x00000004;
               reader_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -13701,7 +13351,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ReadMessage_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ReadMessage_fieldAccessorTable
@@ -13780,7 +13429,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -13802,7 +13450,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -13817,7 +13464,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -13964,7 +13610,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -13972,7 +13617,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.ReadMessage prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -14000,7 +13644,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ReadMessage_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ReadMessage_fieldAccessorTable
@@ -14023,7 +13666,6 @@ public final class Personhood {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         msgid_ = com.google.protobuf.ByteString.EMPTY;
@@ -14035,18 +13677,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ReadMessage_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ReadMessage getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.ReadMessage.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ReadMessage build() {
         ch.epfl.dedis.lib.proto.Personhood.ReadMessage result = buildPartial();
         if (!result.isInitialized()) {
@@ -14055,7 +13694,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ReadMessage buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.ReadMessage result = new ch.epfl.dedis.lib.proto.Personhood.ReadMessage(this);
         int from_bitField0_ = bitField0_;
@@ -14077,39 +13715,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.ReadMessage) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.ReadMessage)other);
@@ -14135,7 +13766,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasMsgid()) {
           return false;
@@ -14149,7 +13779,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -14321,13 +13950,11 @@ public final class Personhood {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -14349,7 +13976,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ReadMessage>
         PARSER = new com.google.protobuf.AbstractParser<ReadMessage>() {
-      @java.lang.Override
       public ReadMessage parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -14367,7 +13993,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.ReadMessage getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -14466,12 +14091,19 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               ch.epfl.dedis.lib.proto.Personhood.Message.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = message_.toBuilder();
               }
-              message_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Message.parser(), extensionRegistry);
+              message_ = input.readMessage(ch.epfl.dedis.lib.proto.Personhood.Message.PARSER, extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(message_);
                 message_ = subBuilder.buildPartial();
@@ -14482,13 +14114,6 @@ public final class Personhood {
             case 16: {
               bitField0_ |= 0x00000002;
               rewarded_ = input.readBool();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -14508,7 +14133,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ReadMessageReply_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ReadMessageReply_fieldAccessorTable
@@ -14576,7 +14200,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -14598,7 +14221,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -14610,7 +14232,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -14745,7 +14366,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -14753,7 +14373,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.ReadMessageReply prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -14781,7 +14400,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ReadMessageReply_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ReadMessageReply_fieldAccessorTable
@@ -14805,7 +14423,6 @@ public final class Personhood {
           getMessageFieldBuilder();
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (messageBuilder_ == null) {
@@ -14819,18 +14436,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_ReadMessageReply_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ReadMessageReply getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.ReadMessageReply.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ReadMessageReply build() {
         ch.epfl.dedis.lib.proto.Personhood.ReadMessageReply result = buildPartial();
         if (!result.isInitialized()) {
@@ -14839,7 +14453,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.ReadMessageReply buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.ReadMessageReply result = new ch.epfl.dedis.lib.proto.Personhood.ReadMessageReply(this);
         int from_bitField0_ = bitField0_;
@@ -14861,39 +14474,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.ReadMessageReply) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.ReadMessageReply)other);
@@ -14916,7 +14522,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasMessage()) {
           return false;
@@ -14930,7 +14535,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -15155,13 +14759,11 @@ public final class Personhood {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -15183,7 +14785,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ReadMessageReply>
         PARSER = new com.google.protobuf.AbstractParser<ReadMessageReply>() {
-      @java.lang.Override
       public ReadMessageReply parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -15201,7 +14802,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.ReadMessageReply getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -15291,6 +14891,13 @@ public final class Personhood {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               msgid_ = input.readBytes();
@@ -15299,13 +14906,6 @@ public final class Personhood {
             case 16: {
               bitField0_ |= 0x00000002;
               amount_ = input.readUInt64();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
               break;
             }
           }
@@ -15325,7 +14925,6 @@ public final class Personhood {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_TopupMessage_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_TopupMessage_fieldAccessorTable
@@ -15381,7 +14980,6 @@ public final class Personhood {
     }
 
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -15399,7 +14997,6 @@ public final class Personhood {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -15411,7 +15008,6 @@ public final class Personhood {
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -15546,7 +15142,6 @@ public final class Personhood {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -15554,7 +15149,6 @@ public final class Personhood {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.Personhood.TopupMessage prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -15582,7 +15176,6 @@ public final class Personhood {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_TopupMessage_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_TopupMessage_fieldAccessorTable
@@ -15605,7 +15198,6 @@ public final class Personhood {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         msgid_ = com.google.protobuf.ByteString.EMPTY;
@@ -15615,18 +15207,15 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.Personhood.internal_static_personhood_TopupMessage_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.TopupMessage getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.Personhood.TopupMessage.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.TopupMessage build() {
         ch.epfl.dedis.lib.proto.Personhood.TopupMessage result = buildPartial();
         if (!result.isInitialized()) {
@@ -15635,7 +15224,6 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.Personhood.TopupMessage buildPartial() {
         ch.epfl.dedis.lib.proto.Personhood.TopupMessage result = new ch.epfl.dedis.lib.proto.Personhood.TopupMessage(this);
         int from_bitField0_ = bitField0_;
@@ -15653,39 +15241,32 @@ public final class Personhood {
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.Personhood.TopupMessage) {
           return mergeFrom((ch.epfl.dedis.lib.proto.Personhood.TopupMessage)other);
@@ -15708,7 +15289,6 @@ public final class Personhood {
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasMsgid()) {
           return false;
@@ -15719,7 +15299,6 @@ public final class Personhood {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -15837,13 +15416,11 @@ public final class Personhood {
         onChanged();
         return this;
       }
-      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -15865,7 +15442,6 @@ public final class Personhood {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<TopupMessage>
         PARSER = new com.google.protobuf.AbstractParser<TopupMessage>() {
-      @java.lang.Override
       public TopupMessage parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -15883,7 +15459,6 @@ public final class Personhood {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.Personhood.TopupMessage getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }

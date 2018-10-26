@@ -63,6 +63,20 @@ public final class NetworkProto {
      */
     com.google.protobuf.ByteString
         getDescriptionBytes();
+
+    /**
+     * <code>optional string url = 5;</code>
+     */
+    boolean hasUrl();
+    /**
+     * <code>optional string url = 5;</code>
+     */
+    java.lang.String getUrl();
+    /**
+     * <code>optional string url = 5;</code>
+     */
+    com.google.protobuf.ByteString
+        getUrlBytes();
   }
   /**
    * Protobuf type {@code network.ServerIdentity}
@@ -81,6 +95,7 @@ public final class NetworkProto {
       id_ = com.google.protobuf.ByteString.EMPTY;
       address_ = "";
       description_ = "";
+      url_ = "";
     }
 
     @java.lang.Override
@@ -107,6 +122,13 @@ public final class NetworkProto {
             case 0:
               done = true;
               break;
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
             case 10: {
               bitField0_ |= 0x00000001;
               public_ = input.readBytes();
@@ -129,11 +151,10 @@ public final class NetworkProto {
               description_ = bs;
               break;
             }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
+            case 42: {
+              com.google.protobuf.ByteString bs = input.readBytes();
+              bitField0_ |= 0x00000010;
+              url_ = bs;
               break;
             }
           }
@@ -153,7 +174,6 @@ public final class NetworkProto {
       return ch.epfl.dedis.lib.proto.NetworkProto.internal_static_network_ServerIdentity_descriptor;
     }
 
-    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.NetworkProto.internal_static_network_ServerIdentity_fieldAccessorTable
@@ -276,8 +296,49 @@ public final class NetworkProto {
       }
     }
 
+    public static final int URL_FIELD_NUMBER = 5;
+    private volatile java.lang.Object url_;
+    /**
+     * <code>optional string url = 5;</code>
+     */
+    public boolean hasUrl() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>optional string url = 5;</code>
+     */
+    public java.lang.String getUrl() {
+      java.lang.Object ref = url_;
+      if (ref instanceof java.lang.String) {
+        return (java.lang.String) ref;
+      } else {
+        com.google.protobuf.ByteString bs = 
+            (com.google.protobuf.ByteString) ref;
+        java.lang.String s = bs.toStringUtf8();
+        if (bs.isValidUtf8()) {
+          url_ = s;
+        }
+        return s;
+      }
+    }
+    /**
+     * <code>optional string url = 5;</code>
+     */
+    public com.google.protobuf.ByteString
+        getUrlBytes() {
+      java.lang.Object ref = url_;
+      if (ref instanceof java.lang.String) {
+        com.google.protobuf.ByteString b = 
+            com.google.protobuf.ByteString.copyFromUtf8(
+                (java.lang.String) ref);
+        url_ = b;
+        return b;
+      } else {
+        return (com.google.protobuf.ByteString) ref;
+      }
+    }
+
     private byte memoizedIsInitialized = -1;
-    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -303,7 +364,6 @@ public final class NetworkProto {
       return true;
     }
 
-    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -318,10 +378,12 @@ public final class NetworkProto {
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 4, description_);
       }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, url_);
+      }
       unknownFields.writeTo(output);
     }
 
-    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -340,6 +402,9 @@ public final class NetworkProto {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, description_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, url_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -377,6 +442,11 @@ public final class NetworkProto {
         result = result && getDescription()
             .equals(other.getDescription());
       }
+      result = result && (hasUrl() == other.hasUrl());
+      if (hasUrl()) {
+        result = result && getUrl()
+            .equals(other.getUrl());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -403,6 +473,10 @@ public final class NetworkProto {
       if (hasDescription()) {
         hash = (37 * hash) + DESCRIPTION_FIELD_NUMBER;
         hash = (53 * hash) + getDescription().hashCode();
+      }
+      if (hasUrl()) {
+        hash = (37 * hash) + URL_FIELD_NUMBER;
+        hash = (53 * hash) + getUrl().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -479,7 +553,6 @@ public final class NetworkProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
-    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -487,7 +560,6 @@ public final class NetworkProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
-    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -511,7 +583,6 @@ public final class NetworkProto {
         return ch.epfl.dedis.lib.proto.NetworkProto.internal_static_network_ServerIdentity_descriptor;
       }
 
-      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.NetworkProto.internal_static_network_ServerIdentity_fieldAccessorTable
@@ -534,7 +605,6 @@ public final class NetworkProto {
                 .alwaysUseFieldBuilders) {
         }
       }
-      @java.lang.Override
       public Builder clear() {
         super.clear();
         public_ = com.google.protobuf.ByteString.EMPTY;
@@ -545,21 +615,20 @@ public final class NetworkProto {
         bitField0_ = (bitField0_ & ~0x00000004);
         description_ = "";
         bitField0_ = (bitField0_ & ~0x00000008);
+        url_ = "";
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
-      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.NetworkProto.internal_static_network_ServerIdentity_descriptor;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.getDefaultInstance();
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity build() {
         ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity result = buildPartial();
         if (!result.isInitialized()) {
@@ -568,7 +637,6 @@ public final class NetworkProto {
         return result;
       }
 
-      @java.lang.Override
       public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity buildPartial() {
         ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity result = new ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity(this);
         int from_bitField0_ = bitField0_;
@@ -589,44 +657,41 @@ public final class NetworkProto {
           to_bitField0_ |= 0x00000008;
         }
         result.description_ = description_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
+        }
+        result.url_ = url_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
 
-      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
-      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
-      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
-      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
-      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
-      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
-      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity) {
           return mergeFrom((ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity)other);
@@ -654,12 +719,16 @@ public final class NetworkProto {
           description_ = other.description_;
           onChanged();
         }
+        if (other.hasUrl()) {
+          bitField0_ |= 0x00000010;
+          url_ = other.url_;
+          onChanged();
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
       }
 
-      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPublic()) {
           return false;
@@ -676,7 +745,6 @@ public final class NetworkProto {
         return true;
       }
 
-      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -917,13 +985,87 @@ public final class NetworkProto {
         onChanged();
         return this;
       }
-      @java.lang.Override
+
+      private java.lang.Object url_ = "";
+      /**
+       * <code>optional string url = 5;</code>
+       */
+      public boolean hasUrl() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>optional string url = 5;</code>
+       */
+      public java.lang.String getUrl() {
+        java.lang.Object ref = url_;
+        if (!(ref instanceof java.lang.String)) {
+          com.google.protobuf.ByteString bs =
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            url_ = s;
+          }
+          return s;
+        } else {
+          return (java.lang.String) ref;
+        }
+      }
+      /**
+       * <code>optional string url = 5;</code>
+       */
+      public com.google.protobuf.ByteString
+          getUrlBytes() {
+        java.lang.Object ref = url_;
+        if (ref instanceof String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          url_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+      /**
+       * <code>optional string url = 5;</code>
+       */
+      public Builder setUrl(
+          java.lang.String value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        url_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string url = 5;</code>
+       */
+      public Builder clearUrl() {
+        bitField0_ = (bitField0_ & ~0x00000010);
+        url_ = getDefaultInstance().getUrl();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional string url = 5;</code>
+       */
+      public Builder setUrlBytes(
+          com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000010;
+        url_ = value;
+        onChanged();
+        return this;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
-      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -945,7 +1087,6 @@ public final class NetworkProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<ServerIdentity>
         PARSER = new com.google.protobuf.AbstractParser<ServerIdentity>() {
-      @java.lang.Override
       public ServerIdentity parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -963,7 +1104,6 @@ public final class NetworkProto {
       return PARSER;
     }
 
-    @java.lang.Override
     public ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -984,10 +1124,11 @@ public final class NetworkProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\rnetwork.proto\022\007network\"R\n\016ServerIdenti" +
+      "\n\rnetwork.proto\022\007network\"_\n\016ServerIdenti" +
       "ty\022\016\n\006public\030\001 \002(\014\022\n\n\002id\030\002 \002(\014\022\017\n\007addres" +
-      "s\030\003 \002(\t\022\023\n\013description\030\004 \002(\tB\'\n\027ch.epfl." +
-      "dedis.lib.protoB\014NetworkProto"
+      "s\030\003 \002(\t\022\023\n\013description\030\004 \002(\t\022\013\n\003url\030\005 \001(" +
+      "\tB\'\n\027ch.epfl.dedis.lib.protoB\014NetworkPro" +
+      "to"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -1006,7 +1147,7 @@ public final class NetworkProto {
     internal_static_network_ServerIdentity_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_network_ServerIdentity_descriptor,
-        new java.lang.String[] { "Public", "Id", "Address", "Description", });
+        new java.lang.String[] { "Public", "Id", "Address", "Description", "Url", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

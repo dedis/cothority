@@ -12,4 +12,5 @@ message ServerIdentity{
     required bytes id = 2;
     required string address = 3;
     required string description = 4;
+	optional string url = 5;
 }

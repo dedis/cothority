@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
-DBG_TEST=1
+DBG_TEST=2
 DBG_SRV=0
 
 . "$(go env GOPATH)/src/github.com/dedis/cothority/libtest.sh"
+
+# Use a local config dir.
+el="./el -c ."
 
 main(){
 	build $APPDIR/../../byzcoin/bcadmin
@@ -20,24 +23,24 @@ main(){
 
 testLogging(){
 	runCoBG 1 2 3
-	testOK ./el log -t test -c 'abc'
-	testOK ./el log -c 'def'
-	echo ghi | testOK ./el log 
-	seq 100 | testOK ./el log -t seq100
+	testOK $el log -t test -c 'abc'
+	testOK $el log -c 'def'
+	echo ghi | testOK $el log 
+	seq 100 | testOK $el log -t seq100
 
 	# two block intervals (2 * 0.5s)
 	sleep 1
 
-	testGrep "abc" ./el search -t test
-	testCountLines 103 ./el search
+	testGrep "abc" $el search -t test
+	testCountLines 103 $el search
 
-	testCountLines 0 ./el search -t test -from '0s ago'
-	testCountLines 0 ./el search -t test -from '1h ago' -to `date -v -1d +%Y-%m-%d`
-	testCountLines 1 ./el search -t test -to `date -v +1d +%Y-%m-%d`
+	testCountLines 0 $el search -t test -from '0s ago'
+	testCountLines 0 $el search -t test -from '1h ago' -to `date -v -1d +%Y-%m-%d`
+	testCountLines 1 $el search -t test -to `date -v +1d +%Y-%m-%d`
 }
 
 testCreate(){
-	runGrepSed "export PRIVATE_KEY=" "" ./el create --keys
+	runGrepSed "export PRIVATE_KEY=" "" ./bcadmin keys
 	eval $SED
 	[ -z "$PRIVATE_KEY" ] && exit 1
 	ID=`awk '/^Identity: / { print $2}' < $RUNOUT`
@@ -51,8 +54,8 @@ testCreate(){
 	testOK ./bcadmin add spawn:eventlog -identity $ID
 	testOK ./bcadmin add invoke:eventlog -identity $ID
 	testGrep $ID ./bcadmin show
-	
-	runGrepSed "export EL=" "" ./el create
+
+	runGrepSed "export EL=" "" $el create
 	eval $SED
 	[ -z "$EL" ] && exit 1
 	

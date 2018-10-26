@@ -60,8 +60,10 @@ type Identity struct {
 	Darc *IdentityDarc
 	// Public-key identity
 	Ed25519 *IdentityEd25519
-	// Public-key identity
+	// Public-key identity from an X.509 certificate.
 	X509EC *IdentityX509EC
+	// A claim which has been signed by a proxy or proxies.
+	Proxy *IdentityProxy
 }
 
 // IdentityEd25519 holds a Ed25519 public key (Point)
@@ -72,6 +74,13 @@ type IdentityEd25519 struct {
 // IdentityX509EC holds a public key from a X509EC
 type IdentityX509EC struct {
 	Public []byte
+}
+
+// IdentityProxy holds the info necessary to verify a claim
+// from an external authentication system via an Authentication Proxy.
+type IdentityProxy struct {
+	Data   string
+	Public kyber.Point
 }
 
 // IdentityDarc is a structure that points to a Darc with a given ID on a
@@ -94,6 +103,7 @@ type Signature struct {
 type Signer struct {
 	Ed25519 *SignerEd25519
 	X509EC  *SignerX509EC
+	Proxy   *SignerProxy
 }
 
 // SignerEd25519 holds a public and private keys necessary to sign Darcs
@@ -107,6 +117,14 @@ type SignerEd25519 struct {
 type SignerX509EC struct {
 	Point  []byte
 	secret []byte
+}
+
+// SignerProxy holds the information necessary to verify claims
+// coming from external authentication systems via Authentication Proxies.
+type SignerProxy struct {
+	Data         string
+	Public       kyber.Point
+	getSignature func([]byte) ([]byte, error)
 }
 
 // Request is the structure that the client must provide to be verified
