@@ -5,15 +5,15 @@ Here are some examples of how to use el.
 ## Make a new key pair
 
 ```
-$ el create -keys
+$ bcadmin keys
 ```
 
 The keys are printed on the stdout. You will give the public key to the
-ByzCoin administrator to use with the "ol add" command to give your
+ByzCoin administrator to use with the "bcadmin add" command to give your
 private key the right to make new event logs.
 
 ```
-$ PRIVATE_KEY=$priv el create -ol $file
+$ PRIVATE_KEY=$priv el create -bc $file
 ```
 
 The ByzCoin admin will give you a ByzCoin config file, which you will

@@ -63,10 +63,6 @@ var cmds = cli.Commands{
 		Usage:   "create an event log",
 		Aliases: []string{"c"},
 		Flags: []cli.Flag{
-			cli.BoolFlag{
-				Name:  "keys",
-				Usage: "make a key pair",
-			},
 			cli.StringFlag{
 				Name:   "priv",
 				EnvVar: "PRIVATE_KEY",
@@ -177,6 +173,7 @@ var cmds = cli.Commands{
 }
 
 var cliApp = cli.NewApp()
+var dataDir = ""
 
 func init() {
 	cliApp.Name = "el"
@@ -189,9 +186,15 @@ func init() {
 			Value: 0,
 			Usage: "debug-level: 1 for terse, 5 for maximal",
 		},
+		cli.StringFlag{
+			Name:  "config, c",
+			Value: cfgpath.GetDataPath(cliApp.Name),
+			Usage: "path to configuration-directory",
+		},
 	}
 	cliApp.Before = func(c *cli.Context) error {
 		log.SetDebugVisible(c.Int("debug"))
+		dataDir = c.String("config")
 		return nil
 	}
 
@@ -265,13 +268,6 @@ func getClient(c *cli.Context, priv bool) (*eventlog.Client, error) {
 }
 
 func create(c *cli.Context) error {
-	if c.Bool("keys") {
-		s := darc.NewSignerEd25519(nil, nil)
-		fmt.Println("Identity:", s.Identity())
-		fmt.Printf("export PRIVATE_KEY=%v\n", s.Ed25519.Secret)
-		return nil
-	}
-
 	cl, err := getClient(c, true)
 	if err != nil {
 		return err
@@ -560,7 +556,6 @@ func (o *openidCfg) save() (string, error) {
 		return "", nil
 	}
 
-	dataDir := cfgpath.GetDataPath(cliApp.Name)
 	os.MkdirAll(dataDir, 0755)
 	fn := filepath.Join(dataDir, "openid.cfg")
 
@@ -586,7 +581,6 @@ func (o *openidCfg) save() (string, error) {
 }
 
 func load() (*openidCfg, error) {
-	dataDir := cfgpath.GetDataPath(cliApp.Name)
 	os.MkdirAll(dataDir, 0755)
 	fn := filepath.Join(dataDir, "openid.cfg")
 

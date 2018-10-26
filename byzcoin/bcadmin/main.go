@@ -64,14 +64,13 @@ var cmds = cli.Commands{
 				EnvVar: "BC",
 				Usage:  "the ByzCoin config to use",
 			},
-			cli.StringSliceFlag{
+			cli.StringFlag{
 				Name:  "identity",
-				Usage: "the identity(ies) of the signer(s) who will be allowed to access the contract (e.g. ed25519:a35020c70b8d735...0357))",
+				Usage: "the identity of the signer who will be allowed to access the contract (e.g. ed25519:a35020c70b8d735...0357))",
 			},
 			cli.StringFlag{
-				Name:  "operation",
-				Usage: "will identities by ORed or ANDed?",
-				Value: "OR",
+				Name:  "expression",
+				Usage: "the expression that will be added to this rule",
 			},
 			cli.BoolFlag{
 				Name:  "replace",
@@ -225,22 +224,18 @@ func add(c *cli.Context) error {
 	}
 	action := arg[0]
 
-	ids := c.StringSlice("identity")
-	if len(ids) == 0 {
-		return errors.New("--identity flag is required")
+	expStr := c.String("expression")
+	if expStr == "" {
+		expStr = c.String("identity")
+		if expStr == "" {
+			return errors.New("One of --expression or --identity flag is required.")
+		}
+	} else {
+		if c.String("identity") != "" {
+			return errors.New("Only one of --expression or --identity flags allowed. Choose wisely.")
+		}
 	}
-
-	op := c.String("operation")
-
-	var exp expression.Expr
-	switch op {
-	case "AND":
-		exp = expression.InitAndExpr(ids...)
-	case "OR":
-		exp = expression.InitOrExpr(ids...)
-	default:
-		return errors.New("--operation must be OR or AND")
-	}
+	exp := expression.Expr(expStr)
 
 	d, err := cl.GetGenDarc()
 	if err != nil {
