@@ -106,9 +106,11 @@ func NewController(sendInitReq SendInitReqFunc, sendNewView SendNewViewReqFunc, 
 		sendNewViewReq:   sendNewView,
 		isLeader:         isLeader,
 
-		expireTimerChan: make(chan int),
-		startTimerChan:  make(chan int),
-		stopTimerChan:   make(chan int),
+		// Make non-blocking channels, to remove races between starting/stopping and
+		// the expiration of the viewchange.
+		expireTimerChan: make(chan int, 1),
+		startTimerChan:  make(chan int, 1),
+		stopTimerChan:   make(chan int, 1),
 	}
 }
 
@@ -272,38 +274,6 @@ func (c *Controller) Waiting() bool {
 	ch := make(chan bool, 1)
 	c.waiting <- ch
 	return <-ch
-}
-
-func (c *Controller) diagnoseStartTimer(f func()) chan int {
-	outChan := make(chan int)
-	syncChan := make(chan bool)
-	go func() {
-		syncChan <- true
-		outChan <- <-c.startTimerChan
-	}()
-	<-syncChan
-	f()
-	return outChan
-}
-
-func (c *Controller) diagnoseExpireTimer() chan int {
-	ch := make(chan int)
-	go func() {
-		ch <- <-c.expireTimerChan
-	}()
-	return ch
-}
-
-func (c *Controller) diagnoseStopTimer(f func()) chan int {
-	outChan := make(chan int)
-	syncChan := make(chan bool)
-	go func() {
-		syncChan <- true
-		outChan <- <-c.stopTimerChan
-	}()
-	<-syncChan
-	f()
-	return outChan
 }
 
 // InitReq is the request that is sent by SendInitReqFunc. It is the

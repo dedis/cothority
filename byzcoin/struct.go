@@ -441,7 +441,7 @@ func (bc *bcState) unregisterForBlocks(i int) {
 	bc.blockListeners[i] = nil
 }
 
-func (c ChainConfig) sanityCheck() error {
+func (c ChainConfig) sanityCheck(old *ChainConfig) error {
 	if c.BlockInterval <= 0 {
 		return errors.New("block interval is less or equal to zero")
 	}
@@ -453,6 +453,16 @@ func (c ChainConfig) sanityCheck() error {
 	// onet/network.MaxPacketSize is 10 megs, leave some headroom anyway.
 	if c.MaxBlockSize > 8*1e6 {
 		return errors.New("max block size is greater than 8 megs")
+	}
+	if old != nil {
+		if len(c.Roster.List) != len(old.Roster.List) {
+			return errors.New("cannot add or remove nodes for the moment")
+		}
+		for _, si := range c.Roster.List {
+			if i, _ := old.Roster.Search(si.ID); i < 0 {
+				return errors.New("no change of membership allowed for the moment")
+			}
+		}
 	}
 	return nil
 }

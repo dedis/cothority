@@ -12,22 +12,23 @@ import (
 // another signal will be sent to timeoutChan so that the outside listener can
 // react to it.
 type heartbeat struct {
-	beatChan    chan bool
-	closeChan   chan bool
-	getTimeChan chan chan time.Time
-	timeout     time.Duration
-	timeoutChan chan string
+	beatChan          chan bool
+	closeChan         chan bool
+	getTimeChan       chan chan time.Time
+	timeout           time.Duration
+	timeoutChan       chan string
+	updateTimeoutChan chan time.Duration
 }
 
 type heartbeats struct {
 	sync.Mutex
 	wg           sync.WaitGroup
-	heartbeatMap map[string]heartbeat
+	heartbeatMap map[string]*heartbeat
 }
 
 func newHeartbeats() heartbeats {
 	return heartbeats{
-		heartbeatMap: make(map[string]heartbeat),
+		heartbeatMap: make(map[string]*heartbeat),
 	}
 }
 
@@ -60,7 +61,7 @@ func (r *heartbeats) closeAll() {
 		c.closeChan <- true
 	}
 	r.wg.Wait()
-	r.heartbeatMap = make(map[string]heartbeat)
+	r.heartbeatMap = make(map[string]*heartbeat)
 }
 
 func (r *heartbeats) exists(key string) bool {
@@ -70,6 +71,19 @@ func (r *heartbeats) exists(key string) bool {
 	return ok
 }
 
+// updateTimeout stores the new timeout and resets the timer.
+func (r *heartbeats) updateTimeout(key string, timeout time.Duration) {
+	r.Lock()
+	defer r.Unlock()
+	h, ok := r.heartbeatMap[key]
+	if !ok {
+		return
+	}
+	if h.timeout != timeout {
+		h.updateTimeoutChan <- timeout
+	}
+}
+
 func (r *heartbeats) start(key string, timeout time.Duration, timeoutChan chan string) error {
 	r.Lock()
 	defer r.Unlock()
@@ -77,42 +91,61 @@ func (r *heartbeats) start(key string, timeout time.Duration, timeoutChan chan s
 		return errors.New("key already exists")
 	}
 
-	beatChan := make(chan bool)
-	closeChan := make(chan bool, 1)
-	getTimeChan := make(chan chan time.Time, 1)
+	r.heartbeatMap[key] = &heartbeat{
+		beatChan:          make(chan bool),
+		closeChan:         make(chan bool, 1),
+		getTimeChan:       make(chan chan time.Time, 1),
+		timeout:           timeout,
+		timeoutChan:       timeoutChan,
+		updateTimeoutChan: make(chan time.Duration),
+	}
 
 	r.wg.Add(1)
-	go func() {
+	go func(h *heartbeat) {
 		defer r.wg.Done()
-		currTime := time.Now()
-		to := time.After(timeout)
+		lastHeartbeat := time.Now()
+		timeout := time.NewTimer(h.timeout)
 		for {
+			// The internal state of one heartbeat monitor. It's state can be
+			// changed using channels. The following changes are possible:
+			// - h.beatChan: receive a heartbeat and reset the timeout
+			// - timeout and send a timeout message
+			// - h.getTimeChan: be asked to return the time of the last heartbeat
+			// - h.closeChan: close down and return
+			// - h.updateTimeoutChan: update the timeout interval
 			select {
-			case <-beatChan:
-				currTime = time.Now()
-				to = time.After(timeout)
-			case <-to:
+			case <-h.beatChan:
+				lastHeartbeat = time.Now()
+				h.resetTimeout(timeout)
+			case <-timeout.C:
+				select {
 				// the timeoutChan channel might not be reading
 				// any message when heartbeats are disabled
-				select {
-				case timeoutChan <- key:
+				case h.timeoutChan <- key:
 				default:
 				}
-				to = time.After(timeout)
-			case outChan := <-getTimeChan:
-				outChan <- currTime
-			case <-closeChan:
+
+				// Because we already used the channel, we can directly reset the
+				// timer and don't need to drain it: https://golang.org/pkg/time/#Timer.Reset
+				timeout.Reset(h.timeout)
+			case outChan := <-h.getTimeChan:
+				outChan <- lastHeartbeat
+			case <-h.closeChan:
 				return
+			case h.timeout = <-h.updateTimeoutChan:
+				h.resetTimeout(timeout)
 			}
 		}
-	}()
+	}(r.heartbeatMap[key])
 
-	r.heartbeatMap[key] = heartbeat{
-		beatChan:    beatChan,
-		closeChan:   closeChan,
-		getTimeChan: getTimeChan,
-		timeout:     timeout,
-		timeoutChan: timeoutChan,
-	}
 	return nil
+}
+
+func (h *heartbeat) resetTimeout(to *time.Timer) {
+	// According to https://golang.org/pkg/time/#Timer.Reset we need to make
+	// sure the channel gets drained after stopping.
+	if !to.Stop() {
+		<-to.C
+	}
+	to.Reset(h.timeout)
 }

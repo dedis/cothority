@@ -116,6 +116,8 @@ type Service struct {
 	viewChangeMan viewChangeManager
 
 	streamingMan streamingManager
+
+	updateCollectionLock sync.Mutex
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -478,6 +480,8 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 // Hence, we need to figure out when a new block is added. This can be done by
 // looking at the latest skipblock cache from Service.state.
 func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
+	s.updateCollectionLock.Lock()
+	defer s.updateCollectionLock.Unlock()
 	s.closedMutex.Lock()
 	if s.closed {
 		s.closedMutex.Unlock()
@@ -553,6 +557,8 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 		}
 		log.Lvlf2("%s started heartbeat monitor for %x", s.ServerIdentity(), sb.SkipChainID())
 		s.heartbeats.start(string(sb.SkipChainID()), interval*rotationWindow, s.heartbeatsTimeout)
+	} else {
+		s.heartbeats.updateTimeout(string(sb.SkipChainID()), interval*rotationWindow)
 	}
 
 	// If we are adding a genesis block, then look into it for the darc ID
@@ -582,7 +588,7 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 			if _, ok := s.pollChan[k]; !ok {
 				log.Lvlf2("%s genesis leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
 				s.pollChanWG.Add(1)
-				s.pollChan[k] = s.startPolling(sb.SkipChainID(), interval)
+				s.pollChan[k] = s.startPolling(sb.SkipChainID())
 			}
 		}
 		s.pollChanMut.Unlock()
@@ -603,7 +609,7 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 			if _, ok := s.pollChan[k]; !ok {
 				log.Lvlf2("%s new leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
 				s.pollChanWG.Add(1)
-				s.pollChan[k] = s.startPolling(sb.SkipChainID(), interval)
+				s.pollChan[k] = s.startPolling(sb.SkipChainID())
 			} else {
 				log.Warnf("%s we are a new leader but we were already polling for %x", s.ServerIdentity(), sb.SkipChainID())
 			}
@@ -717,7 +723,7 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 	return config.BlockInterval, config.MaxBlockSize, nil
 }
 
-func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duration) chan bool {
+func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 	closeSignal := make(chan bool)
 	go func() {
 		s.closedMutex.Lock()
@@ -731,6 +737,11 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 		defer s.pollChanWG.Done()
 		var txs []ClientTransaction
 		for {
+			interval, _, err := s.LoadBlockInfo(scID)
+			if err != nil {
+				panic("couldn't get interval from configuration - this is bad and probably" +
+					"a problem with the database! " + err.Error())
+			}
 			select {
 			case <-closeSignal:
 				log.Lvl2(s.ServerIdentity(), "stopping polling")
@@ -1319,6 +1330,9 @@ func (s *Service) registerContract(contractID string, c ContractFn) error {
 // it finds a valid config-file and synchronises skipblocks if it can contact
 // other nodes.
 func (s *Service) startAllChains() error {
+	if !s.closed {
+		return errors.New("Can only call startAllChains if the service has been closed before")
+	}
 	s.SetPropagationTimeout(120 * time.Second)
 	msg, err := s.Load(storageID)
 	if err != nil {
@@ -1335,11 +1349,7 @@ func (s *Service) startAllChains() error {
 	s.state = bcState{
 		waitChannels: make(map[string]chan bool),
 	}
-
-	// NOTE: Usually startAllChains is only called when services start up. but for
-	// testing, we might re-initialise the service. So we need to clean up
-	// the go-routines.
-	s.cleanupGoroutines()
+	s.closed = false
 
 	// Recreate the polling channles.
 	s.pollChanMut.Lock()
@@ -1370,7 +1380,7 @@ func (s *Service) startAllChains() error {
 		if leader.Equal(s.ServerIdentity()) {
 			s.pollChanMut.Lock()
 			s.pollChanWG.Add(1)
-			s.pollChan[string(gen)] = s.startPolling(gen, interval)
+			s.pollChan[string(gen)] = s.startPolling(gen)
 			s.pollChanMut.Unlock()
 		}
 
@@ -1486,6 +1496,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		heartbeats:             newHeartbeats(),
 		viewChangeMan:          newViewChangeManager(),
 		streamingMan:           streamingManager{},
+		closed:                 true,
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
 		s.GetProof, s.CheckAuthorization); err != nil {
