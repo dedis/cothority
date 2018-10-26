@@ -115,6 +115,8 @@ message StateChange {
   required bytes value = 4;
   // DarcID is the Darc controlling access to this key.
   required bytes darcid = 5;
+  // Version is the instance version for this particular state change
+  required int version = 7;
 }
 ```
 
