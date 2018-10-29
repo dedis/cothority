@@ -358,8 +358,15 @@ class CalypsoTest {
     }
 
     @Test
-    void reConnect() throws CothorityException {
+    void reConnect() throws CothorityException, InterruptedException, IOException {
         WriteInstance wr = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher);
+
+        for (int i=0; i<3; i++){
+            testInstanceController.killConode(i);
+        }
+        for (int i=0; i<3; i++){
+            testInstanceController.startConode(i);
+        }
 
         // Dropping connection by re-creating an calypso. The following elements are needed:
         // - roster
