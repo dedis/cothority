@@ -165,6 +165,7 @@ For more information, see [the Darc README](../darc/README.md).
 
 - [Contracts](Contracts.md) gives a short overview how contracts work and
 some examples how to use them.
+<<<<<<< HEAD
 
 # Administration
 
@@ -172,3 +173,5 @@ The tool to create and configure a running ByzCoin ledger is called
 `bcadmin`. More information on how to use it is in the
 [README](bcadmin/README.md), and another example of how to use it is in the
 [Eventlog directory](../eventlog/el/README.md).
+=======
+>>>>>>> Instance versioning documentation
