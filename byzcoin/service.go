@@ -1579,17 +1579,21 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		return
 	}
 
-	// Get the last version in the global state
-	_, _, _, err = st.GetValues(instr.InstanceID.Slice())
-	version := 0 // TODO: use the value from the global state
-	if err != nil {
-		return
-	}
+	version := 0
+	proof, _ := st.GetProof(instr.InstanceID.Slice())
+	if proof.Match(instr.InstanceID.Slice()) {
+		// Get the last version in the global state
+		_, _, _, err = st.GetValues(instr.InstanceID.Slice())
+		version = 0 + 1 // TODO: use the value from the global state
+		if err != nil {
+			return
+		}
+	} // else it means it will be the first sc hence version 0
 
 	// increment the instance ID for each state change
 	for _, sc := range scs {
-		version++
 		sc.Version = version
+		version++
 	}
 
 	return
