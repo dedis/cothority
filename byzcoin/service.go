@@ -72,7 +72,7 @@ type Service struct {
 	*onet.ServiceProcessor
 	// stateTries contains a reference to all the tries that the service is
 	// responsible for, one for each skipchain.
-	stateTries map[string]*StateTrie
+	stateTries map[string]*stateTrie
 	// notifications is used for client transaction and block notification
 	notifications bcNotifications
 
@@ -396,7 +396,7 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx []TxResult) (*skipchain.SkipBlock, error) {
 	var sb *skipchain.SkipBlock
 	var mr []byte
-	var sst *StagingStateTrie
+	var sst *stagingStateTrie
 
 	if scID.IsNull() {
 		// For a genesis block, we create a throwaway staging trie.
@@ -409,10 +409,11 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 		// We have to register the verification functions in the genesis block
 		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, verifyByzCoin}
 
-		// Staging tries are only allowed to be created from concrete
-		// tries.
-		nonce := tx[0].ClientTransaction.Instructions[0].Spawn.Args.Search("trie_nonce")
-		et, err := NewMemStagingStateTrie(nonce)
+		nonce, err := s.loadNonceFromTxs(tx)
+		if err != nil {
+			return nil, err
+		}
+		et, err := newMemStagingStateTrie(nonce)
 		if err != nil {
 			return nil, err
 		}
@@ -514,11 +515,14 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			log.Error(s.ServerIdentity(), "could not unmarshal body for genesis block", err)
 			return errors.New("couldn't unmarshal body for genesis block")
 		}
-		nonce := body.TxResults[0].ClientTransaction.Instructions[0].Spawn.Args.Search("trie_nonce")
-		if len(nonce) == 0 {
-			return errors.New("nonce is empty")
+		nonce, err := s.loadNonceFromTxs(body.TxResults)
+		if err != nil {
+			return err
 		}
-		s.createStateTrie(sb.SkipChainID(), nonce)
+		// We don't care about the state trie that is returned in this
+		// function because we load the trie again in getStateTrie
+		// right afterwards.
+		_ = s.createStateTrie(sb.SkipChainID(), nonce)
 	}
 
 	// Load the trie.
@@ -548,7 +552,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		return errors.New("couldn't unmarshal body")
 	}
 
-	log.Lvlf2("%s Updating transactions for %x on index %d", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
+	log.Lvlf2("%s Updating transactions for %x on index %v", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
 	_, _, scs := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
 
 	log.Lvlf3("%s Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
@@ -683,7 +687,7 @@ func (s *Service) GetReadOnlyStateTrie(scID skipchain.SkipBlockID) ReadOnlyState
 	return s.getStateTrie(scID)
 }
 
-func (s *Service) getStateTrie(id skipchain.SkipBlockID) *StateTrie {
+func (s *Service) getStateTrie(id skipchain.SkipBlockID) *stateTrie {
 	if len(id) == 0 {
 		return nil
 	}
@@ -693,8 +697,7 @@ func (s *Service) getStateTrie(id skipchain.SkipBlockID) *StateTrie {
 	col := s.stateTries[idStr]
 	if col == nil {
 		db, name := s.GetAdditionalBucket([]byte(idStr))
-		_, nameIndex := s.GetAdditionalBucket([]byte(idStr + "_index"))
-		st, err := LoadStateTrie(db, name, nameIndex)
+		st, err := loadStateTrie(db, name)
 		if err != nil {
 			log.Error(s.ServerIdentity(), idStr, err)
 			return nil
@@ -705,7 +708,7 @@ func (s *Service) getStateTrie(id skipchain.SkipBlockID) *StateTrie {
 	return col
 }
 
-func (s *Service) createStateTrie(id skipchain.SkipBlockID, nonce []byte) *StateTrie {
+func (s *Service) createStateTrie(id skipchain.SkipBlockID, nonce []byte) *stateTrie {
 	if len(id) == 0 {
 		return nil
 	}
@@ -718,7 +721,7 @@ func (s *Service) createStateTrie(id skipchain.SkipBlockID, nonce []byte) *State
 		return nil
 	}
 	db, name := s.GetAdditionalBucket([]byte(idStr))
-	st, err := NewStateTrie(db, name, nonce)
+	st, err := newStateTrie(db, name, nonce)
 	if err != nil {
 		log.Error(s.ServerIdentity(), idStr, err)
 		return nil
@@ -880,8 +883,8 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 				// slot. Perhaps we can run this in parallel during the wait-phase?
 				log.Lvl3("Counting how many transactions fit in", interval/2)
 				then := time.Now()
-				cdb := s.getStateTrie(scID)
-				_, txOut, _ := s.createStateChanges(cdb.MakeStagingStateTrie(), scID, txIn, interval/2)
+				st := s.getStateTrie(scID)
+				_, txOut, _ := s.createStateChanges(st.MakeStagingStateTrie(), scID, txIn, interval/2)
 
 				txs = txs[len(txOut):]
 				if len(txs) > 0 {
@@ -948,23 +951,22 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 
 	// Load/create a staging trie to add the state changes to it and
 	// compute the Merkle root.
-	var cdb *StagingStateTrie
+	var sst *stagingStateTrie
 	if newSB.Index == 0 {
-		nonce := body.TxResults[0].ClientTransaction.Instructions[0].Spawn.Args.Search("trie_nonce")
-		if len(nonce) == 0 {
-			log.Error(s.ServerIdentity().String(), "nonce is empty")
+		nonce, err := s.loadNonceFromTxs(body.TxResults)
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
 			return false
 		}
-		var err error
-		cdb, err = NewMemStagingStateTrie(nonce)
+		sst, err = newMemStagingStateTrie(nonce)
 		if err != nil {
 			log.Error(s.ServerIdentity(), err)
 			return false
 		}
 	} else {
-		cdb = s.getStateTrie(newSB.SkipChainID()).MakeStagingStateTrie()
+		sst = s.getStateTrie(newSB.SkipChainID()).MakeStagingStateTrie()
 	}
-	mtr, txOut, scs := s.createStateChanges(cdb.Clone(), newSB.SkipChainID(), body.TxResults, noTimeout)
+	mtr, txOut, scs := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout)
 
 	// Check that the locally generated list of accepted/rejected txs match the list
 	// the leader proposed.
@@ -997,13 +999,12 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 
 	// Compute the new state and check whether the roster in newSB matches
 	// the config.
-	eph := cdb.Clone()
-	if err := eph.StoreAll(scs); err != nil {
+	if err := sst.StoreAll(scs); err != nil {
 		log.Error(s.ServerIdentity(), err)
 		return false
 	}
 
-	config, err := loadConfigFromTrie(eph)
+	config, err := loadConfigFromTrie(sst)
 	if err != nil {
 		log.Error(s.ServerIdentity(), err)
 		return false
@@ -1065,7 +1066,7 @@ func txSize(txr ...TxResult) (out int) {
 // State caching is implemented here, which is critical to performance, because
 // on the leader it reduces the number of contract executions by 1/3 and on
 // followers by 1/2.
-func (s *Service) createStateChanges(sst *StagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges) {
+func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges) {
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
 	var err error
@@ -1084,10 +1085,6 @@ func (s *Service) createStateChanges(sst *StagingStateTrie, scID skipchain.SkipB
 	err = nil
 
 	deadline := time.Now().Add(timeout)
-
-	// TODO: Because we depend on making at least one clone per transaction
-	// we need to find out if this is as expensive as it looks, and if so if
-	// we could use some kind of copy-on-write technique.
 
 	sstTemp := sst.Clone()
 	var cin []Coin
@@ -1155,14 +1152,14 @@ clientTransactions:
 	return
 }
 
-func (s *Service) executeInstruction(cdbI ReadOnlyStateTrie, cin []Coin, instr Instruction) (scs StateChanges, cout []Coin, err error) {
+func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction) (scs StateChanges, cout []Coin, err error) {
 	defer func() {
 		if re := recover(); re != nil {
 			err = errors.New(re.(string))
 		}
 	}()
 
-	_, contractID, _, err := cdbI.GetValues(instr.InstanceID.Slice())
+	_, contractID, _, err := st.GetValues(instr.InstanceID.Slice())
 	if err != errKeyNotSet && err != nil {
 		err = errors.New("Couldn't get contract type of instruction: " + err.Error())
 		return
@@ -1183,7 +1180,7 @@ func (s *Service) executeInstruction(cdbI ReadOnlyStateTrie, cin []Coin, instr I
 	}
 	// Now we call the contract function with the data of the key.
 	log.Lvlf3("%s Calling contract '%s'", s.ServerIdentity(), contractID)
-	return contract(cdbI, instr, cin)
+	return contract(st, instr, cin)
 }
 
 func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity, error) {
@@ -1243,6 +1240,24 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	}
 
 	return s.txBuffer.take(string(scID))
+}
+
+func (s *Service) loadNonceFromTxs(txs TxResults) ([]byte, error) {
+	if len(txs) == 0 {
+		return nil, errors.New("no transactions")
+	}
+	instrs := txs[0].ClientTransaction.Instructions
+	if len(instrs) != 1 {
+		return nil, fmt.Errorf("expected 1 instruction, got %v", len(instrs))
+	}
+	if instrs[0].Spawn == nil {
+		return nil, errors.New("first instruction is not a Spawn")
+	}
+	nonce := instrs[0].Spawn.Args.Search("trie_nonce")
+	if len(nonce) == 0 {
+		return nil, errors.New("nonce is empty")
+	}
+	return nonce, nil
 }
 
 // TestClose closes the go-routines that are polling for transactions. It is
@@ -1353,7 +1368,7 @@ func (s *Service) startAllChains() error {
 			return errors.New("Data of wrong type")
 		}
 	}
-	s.stateTries = make(map[string]*StateTrie)
+	s.stateTries = make(map[string]*stateTrie)
 	s.notifications = bcNotifications{
 		waitChannels: make(map[string]chan bool),
 	}

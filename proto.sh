@@ -1,4 +1,8 @@
-#!/bin/bash -e -u
+#!/usr/bin/env bash
+
+set -e
+set -u
+
 struct_files=(`find . -name proto.go | sort`)
 
 for index in ${!struct_files[@]}; do

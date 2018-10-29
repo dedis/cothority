@@ -1,12 +1,13 @@
 package calypso
 
 import (
+	"time"
+
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/onet"
 	"github.com/dedis/protobuf"
-	"time"
 )
 
 // Client is a class to communicate to the calypso service.

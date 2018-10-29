@@ -55,7 +55,7 @@ func TestVerify(t *testing.T) {
 }
 
 type sc struct {
-	c            *StateTrie             // a usable collectionDB to store key/value pairs
+	c            *stateTrie             // a usable collectionDB to store key/value pairs
 	s            *skipchain.SkipBlockDB // a usable skipchain DB to store blocks
 	genesis      *skipchain.SkipBlock   // the first genesis block, doesn't hold any data
 	genesisPrivs []kyber.Scalar         // private keys of genesis roster
@@ -91,7 +91,7 @@ func createSC(t *testing.T) (s sc) {
 		return err
 	})
 	require.Nil(t, err)
-	s.c, err = NewStateTrie(db, bucketName, []byte("nonce string"))
+	s.c, err = newStateTrie(db, bucketName, []byte("nonce string"))
 	require.NoError(t, err)
 
 	s.key = []byte("key")

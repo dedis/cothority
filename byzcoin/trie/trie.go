@@ -22,7 +22,7 @@ type Trie struct {
 // database. If that is required, called IsValid.
 func LoadTrie(db DB) (*Trie, error) {
 	var nonce []byte
-	err := db.Update(func(b Bucket) error {
+	err := db.View(func(b Bucket) error {
 		// load the nonce
 		nonceBuf := b.Get([]byte(nonceKey))
 		if nonceBuf == nil {

@@ -107,7 +107,6 @@ func makeTx(darcID darc.ID, id byzcoin.InstanceID, msgs []Event, signers []darc.
 
 	keys := make([]LogID, len(msgs))
 
-	instrNonce := byzcoin.GenNonce()
 	tx := byzcoin.ClientTransaction{
 		Instructions: make([]byzcoin.Instruction, len(msgs)),
 	}
@@ -122,7 +121,7 @@ func makeTx(darcID darc.ID, id byzcoin.InstanceID, msgs []Event, signers []darc.
 		}
 		tx.Instructions[i] = byzcoin.Instruction{
 			InstanceID: id,
-			Nonce:      instrNonce,
+			Nonce:      byzcoin.GenNonce(),
 			Index:      i,
 			Length:     len(msgs),
 			Invoke: &byzcoin.Invoke{

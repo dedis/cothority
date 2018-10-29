@@ -301,9 +301,8 @@ func (instr Instruction) GetType() InstrType {
 		return InvokeType
 	} else if instr.Spawn == nil && instr.Invoke == nil && instr.Delete != nil {
 		return DeleteType
-	} else {
-		return InvalidInstrType
 	}
+	return InvalidInstrType
 }
 
 // Instructions is a slice of Instruction
