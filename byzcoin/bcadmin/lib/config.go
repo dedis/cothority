@@ -38,6 +38,14 @@ func LoadKey(id darc.Identity) (*darc.Signer, error) {
 	return LoadSigner(fn)
 }
 
+// LoadKeyFromString returns a signer based on a string representing the public identity of the signer
+func LoadKeyFromString(id string) (*darc.Signer, error) {
+	// Find private key file.
+	fn := fmt.Sprintf("key-%s.cfg", id)
+	fn = filepath.Join(ConfigPath, fn)
+	return LoadSigner(fn)
+}
+
 // LoadSigner loads a signer from a file given by fn.
 func LoadSigner(fn string) (*darc.Signer, error) {
 	buf, err := ioutil.ReadFile(fn)
