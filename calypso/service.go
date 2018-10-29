@@ -100,6 +100,7 @@ func (s *Service) CreateLTS(cl *CreateLTS) (reply *CreateLTSReply, err error) {
 		s.storage.Rosters[string(reply.LTSID)] = &cl.Roster
 		s.storage.OLIDs[string(reply.LTSID)] = cl.BCID
 		s.storage.Unlock()
+		s.save()
 		reply.X = shared.X
 	case <-time.After(propagationTimeout):
 		return nil, errors.New("dkg didn't finish in time")

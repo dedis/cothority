@@ -228,11 +228,11 @@ func add(c *cli.Context) error {
 	if expStr == "" {
 		expStr = c.String("identity")
 		if expStr == "" {
-			return errors.New("One of --expression or --identity flag is required.")
+			return errors.New("one of --expression or --identity flag is required")
 		}
 	} else {
 		if c.String("identity") != "" {
-			return errors.New("Only one of --expression or --identity flags allowed. Choose wisely.")
+			return errors.New("only one of --expression or --identity flags allowed. Choose wisely")
 		}
 	}
 	exp := expression.Expr(expStr)
