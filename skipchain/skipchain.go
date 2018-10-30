@@ -25,6 +25,7 @@ import (
 	"github.com/dedis/cothority/byzcoinx"
 	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/sign/cosi"
 	"github.com/dedis/kyber/sign/schnorr"
 	"github.com/dedis/kyber/util/random"
 	"github.com/dedis/onet"
@@ -920,11 +921,12 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 		return fmt.Errorf("Couldn't marshal block: %s", err.Error())
 	}
 	fwd := NewForwardLink(src, dst)
-	sig, err := s.startBFT(bftNewBlock, roster, fwd.Hash(), data)
+	sig, err := s.startBFT(bftNewBlock, roster, dst.Roster, fwd.Hash(), data)
 	if err != nil {
 		log.Error(s.ServerIdentity().Address, "startBFT failed with", err)
 		return err
 	}
+
 	fwd.Signature = *sig
 
 	fwl := s.db.GetByID(src.Hash).ForwardLink
@@ -960,6 +962,41 @@ func (s *Service) forwardLinkLevel0(src, dst *SkipBlock) error {
 	}
 	s.startPropagation(proof)
 	return nil
+}
+
+func mapMask(origRoster *onet.Roster, newRoster *onet.Roster, sig []byte) ([]byte, error) {
+	// load the mask of the new roster
+	newMask, err := cosi.NewMask(cothority.Suite, newRoster.Publics(), nil)
+	if err != nil {
+		return nil, err
+	}
+	lenRes := cothority.Suite.PointLen() + cothority.Suite.ScalarLen()
+	if len(sig) < lenRes {
+		return nil, fmt.Errorf("signature is too short, got %v but need %v", len(sig), lenRes)
+	}
+	err = newMask.SetMask(sig[lenRes:])
+	if err != nil {
+		return nil, err
+	}
+
+	// initialise a new mask for the original roster
+	origMask, err := cosi.NewMask(cothority.Suite, origRoster.Publics(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// map the mask of the new roster to the original roster
+	for i, pk := range origRoster.Publics() {
+		ok, err := newMask.KeyEnabled(pk)
+		if err != nil {
+			return nil, err
+		}
+		err = origMask.SetBit(i, ok)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return append(sig[:lenRes], origMask.Mask()...), nil
 }
 
 // bftForwardLinkLevel0 makes sure that a signature-request for a forward-link
@@ -1102,7 +1139,7 @@ func (s *Service) forwardLink(req *network.Envelope) {
 			return err
 		}
 		fl := NewForwardLink(from, fs.Newest)
-		sig, err := s.startBFT(bftFollowBlock, from.Roster, fl.Hash(), data)
+		sig, err := s.startBFT(bftFollowBlock, from.Roster, fs.Newest.Roster, fl.Hash(), data)
 		if err != nil {
 			return errors.New("Couldn't get signature: " + err.Error())
 		}
@@ -1210,9 +1247,25 @@ func (s *Service) bftForwardLinkAck(msg, data []byte) bool {
 	return ok
 }
 
-// startBFT starts a BFT-protocol with the given parameters. We can only
-// start the bft protocol if we're the root.
-func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) (*byzcoinx.FinalSignature, error) {
+// startBFT starts a BFT-protocol with the given parameters. We can only start
+// the bft protocol if we're the root. The origRoster is the roster that should
+// be used to used in the normal case. newRoster is an optimisation that will
+// be used if the ID between the two rosters are different but the aggregate is
+// the same. This is an optimisation because the newer roster might have an
+// order that is more likely to give us non-failing subleaders in the byzcoinx
+// protocol.
+func (s *Service) startBFT(proto string, origRoster, newRoster *onet.Roster, msg, data []byte) (*byzcoinx.FinalSignature, error) {
+	roster := origRoster
+	// If the aggregate public key of the two rosters are the same but
+	// their IDs are different, we use the new roster because the byzcoinx
+	// tree that we build from the nodes are more likely to have working
+	// subleaders.
+	var sameAggr bool
+	if newRoster != nil && !roster.ID.Equal(newRoster.ID) && roster.Aggregate.Equal(newRoster.Aggregate) {
+		roster = newRoster
+		sameAggr = true
+	}
+
 	if len(roster.List) == 0 {
 		return nil, errors.New("found empty Roster")
 	}
@@ -1255,6 +1308,16 @@ func (s *Service) startBFT(proto string, roster *onet.Roster, msg, data []byte) 
 			return nil, errors.New("couldn't sign forward-link")
 		}
 		log.Lvl3(s.ServerIdentity(), "bft-cosi done")
+
+		// If a different roster is used for startBFT than the source roster,
+		// then we need to change the mask to match it.
+		if sameAggr {
+			sig.Sig, err = mapMask(origRoster, roster, sig.Sig)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		return &sig, nil
 	case <-time.After(root.Timeout * 2):
 		return nil, errors.New("timed out while waiting for signature")
