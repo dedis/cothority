@@ -234,6 +234,7 @@ func (s *ts) waitInstID(t *testing.T, instID byzcoin.InstanceID) *byzcoin.Proof 
 			require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
 			break
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
 	if err != nil {
 		require.Fail(t, "didn't find proof")
