@@ -10,6 +10,8 @@ Here are some examples of how to use el.
 
 ## Make a new key pair
 
+Using the `bcadmin` tool, you can create a key pair:
+
 ```
 $ bcadmin keys
 ```
