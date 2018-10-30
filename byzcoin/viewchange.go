@@ -330,7 +330,7 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 		return errors.New("roster size is too small, must be >= 4")
 	}
 
-	_, _, genDarcID, err := s.GetCollectionView(req.GetGen()).GetValues(NewInstanceID(nil).Slice())
+	_, _, genDarcID, err := s.GetReadOnlyStateTrie(req.GetGen()).GetValues(NewInstanceID(nil).Slice())
 	if err != nil {
 		return err
 	}

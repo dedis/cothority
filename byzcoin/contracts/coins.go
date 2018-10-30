@@ -32,7 +32,7 @@ var CoinName = iid("olCoin")
 //    parameter for the next instruction to interpret.
 //  - store puts the coins given to the instance back into the account.
 // You can only delete a contractCoin instance if the account is empty.
-func ContractCoin(cdb byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
+func ContractCoin(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
 	cOut = c
 
 	err = inst.VerifyDarcSignature(cdb)

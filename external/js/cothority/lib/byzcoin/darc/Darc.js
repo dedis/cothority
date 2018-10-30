@@ -57,7 +57,7 @@ class Darc {
    */
   static fromByteBuffer(buf) {
     if (!(buf instanceof Uint8Array)) {
-      throw "buf must be of type UInt8Array";
+      throw "buf must be of type Uint8Array in Darc";
     }
     const darcModel = root.lookup("Darc");
     let darcProto = darcModel.decode(buf);

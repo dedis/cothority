@@ -913,19 +913,19 @@ func bcFinalize(c *cli.Context) error {
 	if err != nil {
 		return errors.New("couldn't calculate service coin address: " + err.Error())
 	}
-	_, values, err := p.Proof.KeyValue()
+	_, _, _, dID, err := p.Proof.KeyValue()
 	if err != nil {
 		return errors.New("proof was invalid: " + err.Error())
 	}
-	p, err = ocl.GetProof(values[2])
+	p, err = ocl.GetProof(dID)
 	if err != nil {
 		return errors.New("couldn't get proof for service-darc: " + err.Error())
 	}
-	_, values, err = p.Proof.KeyValue()
+	_, v0, _, _, err := p.Proof.KeyValue()
 	if err != nil {
 		return errors.New("service-darc proof is invalid: " + err.Error())
 	}
-	serviceDarc, err := darc.NewFromProtobuf(values[0])
+	serviceDarc, err := darc.NewFromProtobuf(v0)
 	if err != nil {
 		return errors.New("got invalid service-darc: " + err.Error())
 	}
@@ -973,7 +973,7 @@ func bcCoinShow(c *cli.Context) error {
 	if err != nil {
 		return errors.New("couldn't get proof for account: " + err.Error())
 	}
-	if !accountProof.Proof.InclusionProof.Match() {
+	if !accountProof.Proof.InclusionProof.Match(accountID) {
 		// This account doesn't exist - try with the account, supposing we got a
 		// public key.
 		log.Info("Interpreting argument as public key.")
@@ -985,19 +985,19 @@ func bcCoinShow(c *cli.Context) error {
 		if err != nil {
 			return errors.New("couldn't get proof for account: " + err.Error())
 		}
-		if !accountProof.Proof.InclusionProof.Match() {
+		if !accountProof.Proof.InclusionProof.Match(accountID) {
 			return errors.New("didn't find this account - neither as accountID, nor as public key")
 		}
 	} else {
 		log.Info("Interpreting argument as account ID")
 	}
 
-	_, v, err := accountProof.Proof.KeyValue()
+	_, v0, _, _, err := accountProof.Proof.KeyValue()
 	if err != nil {
 		return errors.New("couldn't get value from proof: " + err.Error())
 	}
 	ci := byzcoin.Coin{}
-	err = protobuf.Decode(v[0], &ci)
+	err = protobuf.Decode(v0, &ci)
 	if err != nil {
 		return errors.New("couldn't unmarshal coin balance: " + err.Error())
 	}
@@ -1060,16 +1060,15 @@ func bcCoinTransfer(c *cli.Context) error {
 	if err != nil {
 		return errors.New("couldn't get source instance: " + err.Error())
 	}
-	if !srcInstanceProof.Proof.InclusionProof.Match() {
+	if !srcInstanceProof.Proof.InclusionProof.Match(srcAddr) {
 		return errors.New("source instance doesn't exist")
-	}
-	_, srcInstanceValues, err := srcInstanceProof.Proof.KeyValue()
-	if err != nil {
-		return errors.New("cannot get proof for source instance: " + err.Error())
 	}
 
 	log.Info("Getting darc for source account")
-	dID := srcInstanceValues[2]
+	_, _, _, dID, err := srcInstanceProof.Proof.KeyValue()
+	if err != nil {
+		return errors.New("cannot get proof for source instance: " + err.Error())
+	}
 
 	log.Info("Transferring coins")
 	amountBuf := make([]byte, 8)

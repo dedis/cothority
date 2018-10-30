@@ -133,13 +133,6 @@ public final class AuthProxProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -181,6 +174,13 @@ public final class AuthProxProto {
               longpubs_.add(input.readBytes());
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -204,6 +204,7 @@ public final class AuthProxProto {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollRequest_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollRequest_fieldAccessorTable
@@ -362,6 +363,7 @@ public final class AuthProxProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -383,6 +385,7 @@ public final class AuthProxProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -403,6 +406,7 @@ public final class AuthProxProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -577,6 +581,7 @@ public final class AuthProxProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -584,6 +589,7 @@ public final class AuthProxProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -612,6 +618,7 @@ public final class AuthProxProto {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollRequest_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollRequest_fieldAccessorTable
@@ -635,6 +642,7 @@ public final class AuthProxProto {
           getLongpriFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         type_ = "";
@@ -654,15 +662,18 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollRequest_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest build() {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -671,6 +682,7 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest buildPartial() {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest result = new ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest(this);
         int from_bitField0_ = bitField0_;
@@ -706,32 +718,39 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest) {
           return mergeFrom((ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest)other);
@@ -781,6 +800,7 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasType()) {
           return false;
@@ -794,6 +814,7 @@ public final class AuthProxProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1226,11 +1247,13 @@ public final class AuthProxProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1252,6 +1275,7 @@ public final class AuthProxProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<EnrollRequest>
         PARSER = new com.google.protobuf.AbstractParser<EnrollRequest>() {
+      @java.lang.Override
       public EnrollRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1269,6 +1293,7 @@ public final class AuthProxProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1345,6 +1370,7 @@ public final class AuthProxProto {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollResponse_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollResponse_fieldAccessorTable
@@ -1353,6 +1379,7 @@ public final class AuthProxProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1362,11 +1389,13 @@ public final class AuthProxProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -1474,6 +1503,7 @@ public final class AuthProxProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -1481,6 +1511,7 @@ public final class AuthProxProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -1508,6 +1539,7 @@ public final class AuthProxProto {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollResponse_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollResponse_fieldAccessorTable
@@ -1530,20 +1562,24 @@ public final class AuthProxProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollResponse_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse build() {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse result = buildPartial();
         if (!result.isInitialized()) {
@@ -1552,38 +1588,46 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse buildPartial() {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse result = new ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse(this);
         onBuilt();
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse) {
           return mergeFrom((ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse)other);
@@ -1600,10 +1644,12 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1621,11 +1667,13 @@ public final class AuthProxProto {
         }
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1647,6 +1695,7 @@ public final class AuthProxProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<EnrollResponse>
         PARSER = new com.google.protobuf.AbstractParser<EnrollResponse>() {
+      @java.lang.Override
       public EnrollResponse parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1664,6 +1713,7 @@ public final class AuthProxProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1797,13 +1847,6 @@ public final class AuthProxProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -1847,6 +1890,13 @@ public final class AuthProxProto {
               message_ = input.readBytes();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -1867,6 +1917,7 @@ public final class AuthProxProto {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_SignatureRequest_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_SignatureRequest_fieldAccessorTable
@@ -2033,6 +2084,7 @@ public final class AuthProxProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -2062,6 +2114,7 @@ public final class AuthProxProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2085,6 +2138,7 @@ public final class AuthProxProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -2270,6 +2324,7 @@ public final class AuthProxProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -2277,6 +2332,7 @@ public final class AuthProxProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -2307,6 +2363,7 @@ public final class AuthProxProto {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_SignatureRequest_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_SignatureRequest_fieldAccessorTable
@@ -2330,6 +2387,7 @@ public final class AuthProxProto {
           getRandpriFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         type_ = "";
@@ -2351,15 +2409,18 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_SignatureRequest_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest build() {
         ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -2368,6 +2429,7 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest buildPartial() {
         ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest result = new ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest(this);
         int from_bitField0_ = bitField0_;
@@ -2406,32 +2468,39 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest) {
           return mergeFrom((ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest)other);
@@ -2477,6 +2546,7 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasType()) {
           return false;
@@ -2496,6 +2566,7 @@ public final class AuthProxProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2926,11 +2997,13 @@ public final class AuthProxProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -2952,6 +3025,7 @@ public final class AuthProxProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SignatureRequest>
         PARSER = new com.google.protobuf.AbstractParser<SignatureRequest>() {
+      @java.lang.Override
       public SignatureRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2969,6 +3043,7 @@ public final class AuthProxProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.SignatureRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -3046,6 +3121,7 @@ public final class AuthProxProto {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_PriShare_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_PriShare_fieldAccessorTable
@@ -3054,6 +3130,7 @@ public final class AuthProxProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -3063,11 +3140,13 @@ public final class AuthProxProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -3175,6 +3254,7 @@ public final class AuthProxProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -3182,6 +3262,7 @@ public final class AuthProxProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -3210,6 +3291,7 @@ public final class AuthProxProto {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_PriShare_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_PriShare_fieldAccessorTable
@@ -3232,20 +3314,24 @@ public final class AuthProxProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_PriShare_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.PriShare getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.PriShare build() {
         ch.epfl.dedis.lib.proto.AuthProxProto.PriShare result = buildPartial();
         if (!result.isInitialized()) {
@@ -3254,38 +3340,46 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.PriShare buildPartial() {
         ch.epfl.dedis.lib.proto.AuthProxProto.PriShare result = new ch.epfl.dedis.lib.proto.AuthProxProto.PriShare(this);
         onBuilt();
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.AuthProxProto.PriShare) {
           return mergeFrom((ch.epfl.dedis.lib.proto.AuthProxProto.PriShare)other);
@@ -3302,10 +3396,12 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3323,11 +3419,13 @@ public final class AuthProxProto {
         }
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -3349,6 +3447,7 @@ public final class AuthProxProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<PriShare>
         PARSER = new com.google.protobuf.AbstractParser<PriShare>() {
+      @java.lang.Override
       public PriShare parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3366,6 +3465,7 @@ public final class AuthProxProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.PriShare getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -3453,13 +3553,6 @@ public final class AuthProxProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3483,6 +3576,13 @@ public final class AuthProxProto {
               signature_ = input.readBytes();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -3500,6 +3600,7 @@ public final class AuthProxProto {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_PartialSig_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_PartialSig_fieldAccessorTable
@@ -3560,6 +3661,7 @@ public final class AuthProxProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -3581,6 +3683,7 @@ public final class AuthProxProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3595,6 +3698,7 @@ public final class AuthProxProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -3741,6 +3845,7 @@ public final class AuthProxProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -3748,6 +3853,7 @@ public final class AuthProxProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -3776,6 +3882,7 @@ public final class AuthProxProto {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_PartialSig_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_PartialSig_fieldAccessorTable
@@ -3799,6 +3906,7 @@ public final class AuthProxProto {
           getPartialFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (partialBuilder_ == null) {
@@ -3814,15 +3922,18 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_PartialSig_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig build() {
         ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig result = buildPartial();
         if (!result.isInitialized()) {
@@ -3831,6 +3942,7 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig buildPartial() {
         ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig result = new ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig(this);
         int from_bitField0_ = bitField0_;
@@ -3856,32 +3968,39 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig) {
           return mergeFrom((ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig)other);
@@ -3907,6 +4026,7 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPartial()) {
           return false;
@@ -3920,6 +4040,7 @@ public final class AuthProxProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4126,11 +4247,13 @@ public final class AuthProxProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4152,6 +4275,7 @@ public final class AuthProxProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<PartialSig>
         PARSER = new com.google.protobuf.AbstractParser<PartialSig>() {
+      @java.lang.Override
       public PartialSig parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4169,6 +4293,7 @@ public final class AuthProxProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -4235,13 +4360,6 @@ public final class AuthProxProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4253,6 +4371,13 @@ public final class AuthProxProto {
                 partialsignature_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000001;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -4272,6 +4397,7 @@ public final class AuthProxProto {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_SignatureResponse_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_SignatureResponse_fieldAccessorTable
@@ -4302,6 +4428,7 @@ public final class AuthProxProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4319,6 +4446,7 @@ public final class AuthProxProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4327,6 +4455,7 @@ public final class AuthProxProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4447,6 +4576,7 @@ public final class AuthProxProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4454,6 +4584,7 @@ public final class AuthProxProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4481,6 +4612,7 @@ public final class AuthProxProto {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_SignatureResponse_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_SignatureResponse_fieldAccessorTable
@@ -4504,6 +4636,7 @@ public final class AuthProxProto {
           getPartialsignatureFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (partialsignatureBuilder_ == null) {
@@ -4515,15 +4648,18 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_SignatureResponse_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse build() {
         ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse result = buildPartial();
         if (!result.isInitialized()) {
@@ -4532,6 +4668,7 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse buildPartial() {
         ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse result = new ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse(this);
         int from_bitField0_ = bitField0_;
@@ -4549,32 +4686,39 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse) {
           return mergeFrom((ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse)other);
@@ -4594,6 +4738,7 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPartialsignature()) {
           return false;
@@ -4604,6 +4749,7 @@ public final class AuthProxProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4740,11 +4886,13 @@ public final class AuthProxProto {
         }
         return partialsignatureBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4766,6 +4914,7 @@ public final class AuthProxProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SignatureResponse>
         PARSER = new com.google.protobuf.AbstractParser<SignatureResponse>() {
+      @java.lang.Override
       public SignatureResponse parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4783,6 +4932,7 @@ public final class AuthProxProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.SignatureResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -4879,13 +5029,6 @@ public final class AuthProxProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4902,6 +5045,13 @@ public final class AuthProxProto {
                 mutable_bitField0_ |= 0x00000002;
               }
               issuers_.add(bs);
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -4927,6 +5077,7 @@ public final class AuthProxProto {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentsRequest_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentsRequest_fieldAccessorTable
@@ -4993,6 +5144,7 @@ public final class AuthProxProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5002,6 +5154,7 @@ public final class AuthProxProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < types_.size(); i++) {
@@ -5013,6 +5166,7 @@ public final class AuthProxProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5148,6 +5302,7 @@ public final class AuthProxProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5155,6 +5310,7 @@ public final class AuthProxProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5185,6 +5341,7 @@ public final class AuthProxProto {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentsRequest_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentsRequest_fieldAccessorTable
@@ -5207,6 +5364,7 @@ public final class AuthProxProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         types_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -5216,15 +5374,18 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentsRequest_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest build() {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -5233,6 +5394,7 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest buildPartial() {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest result = new ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest(this);
         int from_bitField0_ = bitField0_;
@@ -5250,32 +5412,39 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest) {
           return mergeFrom((ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest)other);
@@ -5312,10 +5481,12 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5520,11 +5691,13 @@ public final class AuthProxProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5546,6 +5719,7 @@ public final class AuthProxProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<EnrollmentsRequest>
         PARSER = new com.google.protobuf.AbstractParser<EnrollmentsRequest>() {
+      @java.lang.Override
       public EnrollmentsRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5563,6 +5737,7 @@ public final class AuthProxProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -5641,13 +5816,6 @@ public final class AuthProxProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 enrollments_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo>();
@@ -5655,6 +5823,13 @@ public final class AuthProxProto {
               }
               enrollments_.add(
                   input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo.PARSER, extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -5677,6 +5852,7 @@ public final class AuthProxProto {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentsResponse_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentsResponse_fieldAccessorTable
@@ -5720,6 +5896,7 @@ public final class AuthProxProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5735,6 +5912,7 @@ public final class AuthProxProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < enrollments_.size(); i++) {
@@ -5743,6 +5921,7 @@ public final class AuthProxProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5860,6 +6039,7 @@ public final class AuthProxProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5867,6 +6047,7 @@ public final class AuthProxProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5894,6 +6075,7 @@ public final class AuthProxProto {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentsResponse_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentsResponse_fieldAccessorTable
@@ -5917,6 +6099,7 @@ public final class AuthProxProto {
           getEnrollmentsFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (enrollmentsBuilder_ == null) {
@@ -5928,15 +6111,18 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentsResponse_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse build() {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse result = buildPartial();
         if (!result.isInitialized()) {
@@ -5945,6 +6131,7 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse buildPartial() {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse result = new ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse(this);
         int from_bitField0_ = bitField0_;
@@ -5961,32 +6148,39 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse) {
           return mergeFrom((ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse)other);
@@ -6029,6 +6223,7 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getEnrollmentsCount(); i++) {
           if (!getEnrollments(i).isInitialized()) {
@@ -6038,6 +6233,7 @@ public final class AuthProxProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6296,11 +6492,13 @@ public final class AuthProxProto {
         }
         return enrollmentsBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6322,6 +6520,7 @@ public final class AuthProxProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<EnrollmentsResponse>
         PARSER = new com.google.protobuf.AbstractParser<EnrollmentsResponse>() {
+      @java.lang.Override
       public EnrollmentsResponse parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6339,6 +6538,7 @@ public final class AuthProxProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentsResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6432,13 +6632,6 @@ public final class AuthProxProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -6454,6 +6647,13 @@ public final class AuthProxProto {
             case 26: {
               bitField0_ |= 0x00000004;
               public_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -6473,6 +6673,7 @@ public final class AuthProxProto {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentInfo_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentInfo_fieldAccessorTable
@@ -6581,6 +6782,7 @@ public final class AuthProxProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -6602,6 +6804,7 @@ public final class AuthProxProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6616,6 +6819,7 @@ public final class AuthProxProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -6760,6 +6964,7 @@ public final class AuthProxProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6767,6 +6972,7 @@ public final class AuthProxProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6794,6 +7000,7 @@ public final class AuthProxProto {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentInfo_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentInfo_fieldAccessorTable
@@ -6816,6 +7023,7 @@ public final class AuthProxProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         type_ = "";
@@ -6827,15 +7035,18 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.internal_static_authprox_EnrollmentInfo_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo build() {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo result = buildPartial();
         if (!result.isInitialized()) {
@@ -6844,6 +7055,7 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo buildPartial() {
         ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo result = new ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo(this);
         int from_bitField0_ = bitField0_;
@@ -6865,32 +7077,39 @@ public final class AuthProxProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo) {
           return mergeFrom((ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo)other);
@@ -6920,6 +7139,7 @@ public final class AuthProxProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasType()) {
           return false;
@@ -6933,6 +7153,7 @@ public final class AuthProxProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7138,11 +7359,13 @@ public final class AuthProxProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -7164,6 +7387,7 @@ public final class AuthProxProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<EnrollmentInfo>
         PARSER = new com.google.protobuf.AbstractParser<EnrollmentInfo>() {
+      @java.lang.Override
       public EnrollmentInfo parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7181,6 +7405,7 @@ public final class AuthProxProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }

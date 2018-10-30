@@ -1,9 +1,6 @@
 package ch.epfl.dedis.eventlog;
 
-import ch.epfl.dedis.byzcoin.ByzCoinRPC;
-import ch.epfl.dedis.byzcoin.Instance;
-import ch.epfl.dedis.byzcoin.InstanceId;
-import ch.epfl.dedis.byzcoin.Proof;
+import ch.epfl.dedis.byzcoin.*;
 import ch.epfl.dedis.byzcoin.transaction.*;
 import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.darc.Signer;
@@ -135,11 +132,9 @@ public class EventLogInstance {
         if (!Arrays.equals(p.getKey(), key.getId())) {
             throw new CothorityCryptoException("wrong key");
         }
-        if (p.getValues().size() < 3) {
-            throw new CothorityCryptoException("not enough values");
-        }
+        StateChangeBody body = p.getValues();
         try {
-            EventLogProto.Event event = EventLogProto.Event.parseFrom(p.getValues().get(0));
+            EventLogProto.Event event = EventLogProto.Event.parseFrom(body.getValue());
             return new Event(event);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);

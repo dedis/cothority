@@ -232,7 +232,7 @@ func add(c *cli.Context) error {
 		}
 	} else {
 		if c.String("identity") != "" {
-			return errors.New("only one of --expression or --identity flags allowed. Choose wisely")
+			return errors.New("only one of --expression or --identity flags allowed, choose wisely")
 		}
 	}
 	exp := expression.Expr(expStr)

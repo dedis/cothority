@@ -147,13 +147,6 @@ public final class EventLogProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               instance_ = input.readBytes();
@@ -180,6 +173,13 @@ public final class EventLogProto {
               to_ = input.readSInt64();
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -197,6 +197,7 @@ public final class EventLogProto {
       return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_SearchRequest_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_SearchRequest_fieldAccessorTable
@@ -336,6 +337,7 @@ public final class EventLogProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -365,6 +367,7 @@ public final class EventLogProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -385,6 +388,7 @@ public final class EventLogProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -558,6 +562,7 @@ public final class EventLogProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -565,6 +570,7 @@ public final class EventLogProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -595,6 +601,7 @@ public final class EventLogProto {
         return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_SearchRequest_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_SearchRequest_fieldAccessorTable
@@ -617,6 +624,7 @@ public final class EventLogProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         instance_ = com.google.protobuf.ByteString.EMPTY;
@@ -632,15 +640,18 @@ public final class EventLogProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_SearchRequest_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest build() {
         ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest result = buildPartial();
         if (!result.isInitialized()) {
@@ -649,6 +660,7 @@ public final class EventLogProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest buildPartial() {
         ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest result = new ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest(this);
         int from_bitField0_ = bitField0_;
@@ -678,32 +690,39 @@ public final class EventLogProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest) {
           return mergeFrom((ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest)other);
@@ -737,6 +756,7 @@ public final class EventLogProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasInstance()) {
           return false;
@@ -756,6 +776,7 @@ public final class EventLogProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1040,11 +1061,13 @@ public final class EventLogProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1066,6 +1089,7 @@ public final class EventLogProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SearchRequest>
         PARSER = new com.google.protobuf.AbstractParser<SearchRequest>() {
+      @java.lang.Override
       public SearchRequest parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1083,6 +1107,7 @@ public final class EventLogProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.EventLogProto.SearchRequest getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -1183,13 +1208,6 @@ public final class EventLogProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 events_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.EventLogProto.Event>();
@@ -1202,6 +1220,13 @@ public final class EventLogProto {
             case 16: {
               bitField0_ |= 0x00000001;
               truncated_ = input.readBool();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -1224,6 +1249,7 @@ public final class EventLogProto {
       return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_SearchResponse_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_SearchResponse_fieldAccessorTable
@@ -1295,6 +1321,7 @@ public final class EventLogProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -1314,6 +1341,7 @@ public final class EventLogProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < events_.size(); i++) {
@@ -1325,6 +1353,7 @@ public final class EventLogProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -1456,6 +1485,7 @@ public final class EventLogProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -1463,6 +1493,7 @@ public final class EventLogProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -1490,6 +1521,7 @@ public final class EventLogProto {
         return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_SearchResponse_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_SearchResponse_fieldAccessorTable
@@ -1513,6 +1545,7 @@ public final class EventLogProto {
           getEventsFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (eventsBuilder_ == null) {
@@ -1526,15 +1559,18 @@ public final class EventLogProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_SearchResponse_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse build() {
         ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse result = buildPartial();
         if (!result.isInitialized()) {
@@ -1543,6 +1579,7 @@ public final class EventLogProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse buildPartial() {
         ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse result = new ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse(this);
         int from_bitField0_ = bitField0_;
@@ -1565,32 +1602,39 @@ public final class EventLogProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse) {
           return mergeFrom((ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse)other);
@@ -1636,6 +1680,7 @@ public final class EventLogProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasTruncated()) {
           return false;
@@ -1648,6 +1693,7 @@ public final class EventLogProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1962,11 +2008,13 @@ public final class EventLogProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -1988,6 +2036,7 @@ public final class EventLogProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SearchResponse>
         PARSER = new com.google.protobuf.AbstractParser<SearchResponse>() {
+      @java.lang.Override
       public SearchResponse parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2005,6 +2054,7 @@ public final class EventLogProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.EventLogProto.SearchResponse getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -2099,13 +2149,6 @@ public final class EventLogProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               when_ = input.readSInt64();
@@ -2121,6 +2164,13 @@ public final class EventLogProto {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000004;
               content_ = bs;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -2140,6 +2190,7 @@ public final class EventLogProto {
       return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_Event_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_Event_fieldAccessorTable
@@ -2248,6 +2299,7 @@ public final class EventLogProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -2269,6 +2321,7 @@ public final class EventLogProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2283,6 +2336,7 @@ public final class EventLogProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -2428,6 +2482,7 @@ public final class EventLogProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -2435,6 +2490,7 @@ public final class EventLogProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.EventLogProto.Event prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -2463,6 +2519,7 @@ public final class EventLogProto {
         return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_Event_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_Event_fieldAccessorTable
@@ -2485,6 +2542,7 @@ public final class EventLogProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         when_ = 0L;
@@ -2496,15 +2554,18 @@ public final class EventLogProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.EventLogProto.internal_static_eventlog_Event_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.EventLogProto.Event getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.EventLogProto.Event.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.EventLogProto.Event build() {
         ch.epfl.dedis.lib.proto.EventLogProto.Event result = buildPartial();
         if (!result.isInitialized()) {
@@ -2513,6 +2574,7 @@ public final class EventLogProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.EventLogProto.Event buildPartial() {
         ch.epfl.dedis.lib.proto.EventLogProto.Event result = new ch.epfl.dedis.lib.proto.EventLogProto.Event(this);
         int from_bitField0_ = bitField0_;
@@ -2534,32 +2596,39 @@ public final class EventLogProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.EventLogProto.Event) {
           return mergeFrom((ch.epfl.dedis.lib.proto.EventLogProto.Event)other);
@@ -2589,6 +2658,7 @@ public final class EventLogProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasWhen()) {
           return false;
@@ -2602,6 +2672,7 @@ public final class EventLogProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2804,11 +2875,13 @@ public final class EventLogProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -2830,6 +2903,7 @@ public final class EventLogProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Event>
         PARSER = new com.google.protobuf.AbstractParser<Event>() {
+      @java.lang.Override
       public Event parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2847,6 +2921,7 @@ public final class EventLogProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.EventLogProto.Event getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }

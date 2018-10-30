@@ -87,7 +87,7 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 	})
 	require.Nil(t, err)
 	require.Nil(t, proof.Proof.Verify(resp.Skipblock.SkipChainID()))
-	k, _, err := proof.Proof.KeyValue()
+	k, _, _, _, err := proof.Proof.KeyValue()
 	require.Nil(t, err)
 	require.EqualValues(t, genesisMsg.GenesisDarc.GetID(), k)
 
@@ -95,12 +95,6 @@ func TestService_CreateGenesisBlock(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, interval, genesisMsg.BlockInterval)
 	require.Equal(t, maxsz, genesisMsg.MaxBlockSize)
-}
-
-func padDarc(key []byte) []byte {
-	keyPadded := make([]byte, 32)
-	copy(keyPadded, key)
-	return keyPadded
 }
 
 func TestService_AddTransaction(t *testing.T) {
@@ -202,12 +196,13 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		for _, tx := range txs {
 			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), 0)
 			require.Nil(t, pr.Verify(s.sb.SkipChainID()))
-			_, vs, err := pr.KeyValue()
+			_, v0, _, _, err := pr.KeyValue()
 			require.Nil(t, err)
-			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, vs[0]))
+			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, v0))
 
 			// check that the database has this new block's index recorded
-			require.Equal(t, pr.Latest.Index, s.services[0].getCollection(pr.Latest.SkipChainID()).getIndex())
+			idx := s.services[0].getStateTrie(pr.Latest.SkipChainID()).GetIndex()
+			require.Equal(t, pr.Latest.Index, idx)
 		}
 	}
 
@@ -221,20 +216,21 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 		for _, tx := range txs {
 			pr := s.waitProofWithIdx(t, tx.Instructions[0].Hash(), len(s.hosts)-1)
 			require.Nil(t, pr.Verify(s.sb.SkipChainID()))
-			_, vs, err := pr.KeyValue()
+			_, v0, _, _, err := pr.KeyValue()
 			require.Nil(t, err)
-			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, vs[0]))
+			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, v0))
 			// check that the database has this new block's index recorded
-			require.Equal(t, pr.Latest.Index, s.services[len(s.hosts)-1].getCollection(pr.Latest.SkipChainID()).getIndex())
+			idx := s.services[len(s.hosts)-1].getStateTrie(pr.Latest.SkipChainID()).GetIndex()
+			require.Equal(t, pr.Latest.Index, idx)
 		}
 
 		// Try to add a new transaction to the node that failed (but is
 		// now running) and it should work.
 		log.Lvl1("making a last transaction")
-		pr, err, err2 := sendTransaction(t, s, len(s.hosts)-1, dummyContract, 10)
+		pr, k, err, err2 := sendTransaction(t, s, len(s.hosts)-1, dummyContract, 10)
 		require.NoError(t, err)
 		require.NoError(t, err2)
-		require.True(t, pr.InclusionProof.Match())
+		require.True(t, pr.InclusionProof.Match(k))
 
 		log.Lvl1("done")
 		// Wait for tasks to finish.
@@ -259,27 +255,29 @@ func TestService_GetProof(t *testing.T) {
 			Key:     serKey,
 		})
 		require.Nil(t, err)
-		if rep.Proof.InclusionProof.Match() {
+		if rep.Proof.InclusionProof.Match(serKey) {
 			break
 		}
 	}
 	require.NotEqual(t, 10, i, "didn't get proof in time")
-	key, values, err := rep.Proof.KeyValue()
+	key, v0, _, _, err := rep.Proof.KeyValue()
+	require.Equal(t, key, serKey)
 	require.Nil(t, err)
 	require.Nil(t, rep.Proof.Verify(s.sb.SkipChainID()))
 	require.Equal(t, serKey, key)
-	require.Equal(t, s.value, values[0])
+	require.Equal(t, s.value, v0)
 
 	// Modify the key and we should not be able to get the proof.
+	wrongKey := append(serKey, byte(0))
 	rep, err = s.service().GetProof(&GetProof{
 		Version: CurrentVersion,
 		ID:      s.sb.SkipChainID(),
-		Key:     append(serKey, byte(0)),
+		Key:     wrongKey,
 	})
-	require.Nil(t, err)
-	require.Nil(t, rep.Proof.Verify(s.sb.SkipChainID()))
-	key, values, err = rep.Proof.KeyValue()
-	require.NotNil(t, err)
+	require.NoError(t, err)
+	require.NoError(t, rep.Proof.Verify(s.sb.SkipChainID()))
+	_, _, _, err = rep.Proof.Get(wrongKey)
+	require.Error(t, err)
 }
 
 func TestService_DarcProxy(t *testing.T) {
@@ -389,9 +387,9 @@ func TestService_Depending(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	cdb := s.service().getCollection(s.sb.SkipChainID())
+	cdb := s.service().getStateTrie(s.sb.SkipChainID())
 	_, _, _, err = cdb.GetValues(in1.Hash())
-	require.NotNil(t, err)
+	require.Error(t, err)
 	require.Equal(t, errKeyNotSet, err)
 
 	// We need to wait a bit for the propagation to finish because the
@@ -439,13 +437,13 @@ func TestService_BadDataHeader(t *testing.T) {
 	ser := s.services[0]
 	c := ser.Context
 	skipchain.RegisterVerification(c, verifyByzCoin, func(newID []byte, newSB *skipchain.SkipBlock) bool {
-		// Hack up the DataHeader to make the CollectionRoot the wrong size.
+		// Hack up the DataHeader to make the TrieRoot the wrong size.
 		var header DataHeader
 		err := protobuf.DecodeWithConstructors(newSB.Data, &header, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
 			t.Fatal(err)
 		}
-		header.CollectionRoot = append(header.CollectionRoot, 0xff)
+		header.TrieRoot = append(header.TrieRoot, 0xff)
 		newSB.Data, _ = protobuf.Encode(header)
 
 		return ser.verifySkipBlock(newID, newSB)
@@ -489,16 +487,16 @@ func waitInclusion(t *testing.T, client int) {
 
 	// Create a transaction without waiting
 	log.Lvl1("Create transaction and don't wait")
-	pr, err, err2 := sendTransaction(t, s, client, dummyContract, 0)
+	pr, k, err, err2 := sendTransaction(t, s, client, dummyContract, 0)
 	require.NoError(t, err)
 	require.NoError(t, err2)
-	require.False(t, pr.InclusionProof.Match())
+	require.False(t, pr.InclusionProof.Match(k))
 
 	log.Lvl1("Create correct transaction and wait")
-	pr, err, err2 = sendTransaction(t, s, client, dummyContract, 10)
+	pr, k, err, err2 = sendTransaction(t, s, client, dummyContract, 10)
 	require.NoError(t, err)
 	require.NoError(t, err2)
-	require.True(t, pr.InclusionProof.Match())
+	require.True(t, pr.InclusionProof.Match(k))
 
 	// We expect to see both transactions in the block in pr.
 	txr, err := txResultsFromBlock(&pr.Latest)
@@ -506,7 +504,7 @@ func waitInclusion(t *testing.T, client int) {
 	require.Equal(t, len(txr), 2)
 
 	log.Lvl1("Create wrong transaction and wait")
-	pr, err, err2 = sendTransaction(t, s, client, invalidContract, 10)
+	pr, _, err, err2 = sendTransaction(t, s, client, invalidContract, 10)
 	require.Contains(t, err.Error(), "transaction is in block, but got refused")
 	require.NoError(t, err2)
 
@@ -520,10 +518,10 @@ func waitInclusion(t *testing.T, client int) {
 	log.Lvl1("Create wrong transaction, no wait")
 	sendTransaction(t, s, client, invalidContract, 0)
 	log.Lvl1("Create second correct transaction and wait")
-	pr, err, err2 = sendTransaction(t, s, client, dummyContract, 10)
+	pr, k, err, err2 = sendTransaction(t, s, client, dummyContract, 10)
 	require.NoError(t, err)
 	require.NoError(t, err2)
-	require.True(t, pr.InclusionProof.Match())
+	require.True(t, pr.InclusionProof.Match(k))
 
 	// We expect to see the refused transaction and the good one in the block in pr.
 	txr, err = txResultsFromBlock(&pr.Latest)
@@ -596,7 +594,7 @@ func TestService_BigTx(t *testing.T) {
 
 	// Try to send a value so big it will be refused.
 	s.value = make([]byte, defaultMaxBlockSize+1)
-	_, e1, e2 := sendTransaction(t, s, 0, dummyContract, 0)
+	_, _, e1, e2 := sendTransaction(t, s, 0, dummyContract, 0)
 	require.Error(t, e1)
 	require.Contains(t, "transaction too large", e1.Error())
 	require.NoError(t, e2)
@@ -605,19 +603,19 @@ func TestService_BigTx(t *testing.T) {
 	s.value = make([]byte, defaultMaxBlockSize/4*3)
 
 	log.Lvl1("Create 2 giant transactions and 1 little one, wait for the 3rd one")
-	_, e1, e2 = sendTransaction(t, s, 0, dummyContract, 0)
+	_, _, e1, e2 = sendTransaction(t, s, 0, dummyContract, 0)
 	require.NoError(t, e1)
 	require.NoError(t, e2)
-	_, e1, e2 = sendTransaction(t, s, 0, dummyContract, 0)
+	_, _, e1, e2 = sendTransaction(t, s, 0, dummyContract, 0)
 	require.NoError(t, e1)
 	require.NoError(t, e2)
 
 	// Back to little values again for the last tx.
 	s.value = save
-	p, e1, e2 := sendTransaction(t, s, 0, dummyContract, 10)
+	p, k, e1, e2 := sendTransaction(t, s, 0, dummyContract, 10)
 	require.NoError(t, e1)
 	require.NoError(t, e2)
-	require.True(t, p.InclusionProof.Match())
+	require.True(t, p.InclusionProof.Match(k))
 
 	// expect that the 2 last txns went into block #2.
 	require.Equal(t, 2, p.Latest.Index)
@@ -627,7 +625,7 @@ func TestService_BigTx(t *testing.T) {
 	require.Equal(t, 2, len(txr))
 }
 
-func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (Proof, error, error) {
+func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (Proof, []byte, error, error) {
 	tx, err := createOneClientTx(s.darc.GetBaseID(), kind, s.value, s.signer)
 	require.Nil(t, err)
 	ser := s.services[client]
@@ -643,7 +641,7 @@ func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (P
 		ID:      s.sb.SkipChainID(),
 		Key:     tx.Instructions[0].Hash(),
 	})
-	return rep.Proof, err, err2
+	return rep.Proof, tx.Instructions[0].Hash(), err, err2
 }
 
 func TestService_InvalidVerification(t *testing.T) {
@@ -699,7 +697,7 @@ func TestService_InvalidVerification(t *testing.T) {
 		Key:     tx1.Instructions[0].Hash(),
 	})
 	require.Nil(t, err)
-	match := pr.Proof.InclusionProof.Match()
+	match := pr.Proof.InclusionProof.Match(tx1.Instructions[0].Hash())
 	require.False(t, match)
 
 	// Check that tx2 is stored.
@@ -709,22 +707,12 @@ func TestService_InvalidVerification(t *testing.T) {
 		Key:     tx2.Instructions[0].Hash(),
 	})
 	require.Nil(t, err)
-	match = pr.Proof.InclusionProof.Match()
+	match = pr.Proof.InclusionProof.Match(tx2.Instructions[0].Hash())
 	require.True(t, match)
 
 	// TODO: This sleep is required for the same reason as the problem
 	// documented in TestService_CloseAllDeadlock. How to fix it correctly?
 	time.Sleep(2 * s.interval)
-}
-
-func findTx(tx ClientTransaction, res TxResults) TxResult {
-	h := tx.Instructions.Hash()
-	for i := range res {
-		if bytes.Equal(res[i].ClientTransaction.Instructions.Hash(), h) {
-			return res[i]
-		}
-	}
-	panic("not found")
 }
 
 func TestService_LoadBlockInfo(t *testing.T) {
@@ -743,13 +731,13 @@ func TestService_StateChange(t *testing.T) {
 	defer s.local.CloseAll()
 
 	var latest int64
-	f := func(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
-		cid, _, err := inst.GetContractState(cdb)
+	f := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+		_, cid, _, err := cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, err
 		}
 
-		rec, err := cdb.Get(inst.InstanceID.Slice()).Record()
+		val0, _, _, err := cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -773,11 +761,7 @@ func TestService_StateChange(t *testing.T) {
 
 		case InvokeType:
 			// increment the object value
-			vals, err := rec.Values()
-			if err != nil {
-				return nil, nil, err
-			}
-			v, _ := binary.Varint(vals[0].([]byte))
+			v, _ := binary.Varint(val0)
 			v++
 
 			// we read v back to check later in the test
@@ -798,7 +782,7 @@ func TestService_StateChange(t *testing.T) {
 	}
 	RegisterContract(s.hosts[0], "add", f)
 
-	cdb := s.service().getCollection(s.sb.SkipChainID())
+	cdb := s.service().getStateTrie(s.sb.SkipChainID())
 	require.NotNil(t, cdb)
 
 	// Manually create the add contract
@@ -845,7 +829,7 @@ func TestService_StateChange(t *testing.T) {
 	ct1 := ClientTransaction{Instructions: instrs}
 	ct2 := ClientTransaction{Instructions: instrs2}
 
-	_, txOut, scs := s.service().createStateChanges(cdb.coll, s.sb.SkipChainID(), NewTxResults(ct1, ct2), noTimeout)
+	_, txOut, scs := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.sb.SkipChainID(), NewTxResults(ct1, ct2), noTimeout)
 	require.Equal(t, 2, len(txOut))
 	require.True(t, txOut[0].Accepted)
 	require.False(t, txOut[1].Accepted)
@@ -865,10 +849,10 @@ func TestService_DarcEvolutionFail(t *testing.T) {
 	pr := s.testDarcEvolution(t, *d2, true)
 
 	// parse the darc
-	require.True(t, pr.InclusionProof.Match())
-	_, vs, err := pr.KeyValue()
+	require.True(t, pr.InclusionProof.Match(d2.GetBaseID()))
+	_, v0, _, _, err := pr.KeyValue()
 	require.Nil(t, err)
-	d22, err := darc.NewFromProtobuf(vs[0])
+	d22, err := darc.NewFromProtobuf(v0)
 	require.Nil(t, err)
 	require.False(t, d22.Equal(d2))
 	require.True(t, d22.Equal(s.darc))
@@ -883,10 +867,10 @@ func TestService_DarcEvolution(t *testing.T) {
 	pr := s.testDarcEvolution(t, *d2, false)
 
 	// parse the darc
-	require.True(t, pr.InclusionProof.Match())
-	_, vs, err := pr.KeyValue()
+	require.True(t, pr.InclusionProof.Match(d2.GetBaseID()))
+	_, v0, _, _, err := pr.KeyValue()
 	require.Nil(t, err)
-	d22, err := darc.NewFromProtobuf(vs[0])
+	d22, err := darc.NewFromProtobuf(v0)
 	require.Nil(t, err)
 	require.True(t, d22.Equal(d2))
 }
@@ -924,7 +908,7 @@ func TestService_DarcSpawn(t *testing.T) {
 
 	s.sendTx(t, ctx)
 	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
-	require.True(t, pr.InclusionProof.Match())
+	require.True(t, pr.InclusionProof.Match(darc2.GetBaseID()))
 }
 
 func TestService_DarcDelegation(t *testing.T) {
@@ -961,7 +945,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	require.Nil(t, ctx.Instructions[0].SignBy(s.darc.GetBaseID(), s.signer))
 	s.sendTx(t, ctx)
 	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
-	require.True(t, pr.InclusionProof.Match())
+	require.True(t, pr.InclusionProof.Match(darc2.GetBaseID()))
 
 	// Spawn third darc from the second one, but sign the request with
 	// the signer of the first darc to test delegation
@@ -993,7 +977,7 @@ func TestService_DarcDelegation(t *testing.T) {
 	require.Nil(t, ctx.Instructions[0].SignBy(darc2.GetBaseID(), s.signer))
 	s.sendTx(t, ctx)
 	pr = s.waitProof(t, NewInstanceID(darc3.GetBaseID()))
-	require.True(t, pr.InclusionProof.Match())
+	require.True(t, pr.InclusionProof.Match(darc3.GetBaseID()))
 }
 
 func TestService_CheckAuthorization(t *testing.T) {
@@ -1030,7 +1014,7 @@ func TestService_CheckAuthorization(t *testing.T) {
 	require.Nil(t, ctx.Instructions[0].SignBy(s.darc.GetBaseID(), s.signer))
 	s.sendTx(t, ctx)
 	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
-	require.True(t, pr.InclusionProof.Match())
+	require.True(t, pr.InclusionProof.Match(darc2.GetBaseID()))
 
 	ca := &CheckAuthorization{
 		Version:    CurrentVersion,
@@ -1241,12 +1225,12 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	// wait for the transaction to be stored on the new leader, because it
 	// polls for new transactions
 	pr := s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), nFailures)
-	require.True(t, pr.InclusionProof.Match())
+	require.True(t, pr.InclusionProof.Match(tx1.Instructions[0].InstanceID.Slice()))
 
 	// The transaction should also be stored on followers
 	for i := nFailures + 1; i < nHosts; i++ {
 		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
-		require.True(t, pr.InclusionProof.Match())
+		require.True(t, pr.InclusionProof.Match(tx1.Instructions[0].InstanceID.Slice()))
 	}
 
 	// We need to bring the failed (the first nFailures) nodes back up and
@@ -1258,7 +1242,7 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	}
 	for i := 0; i < nFailures; i++ {
 		pr = s.waitProofWithIdx(t, tx1.Instructions[0].InstanceID.Slice(), i)
-		require.True(t, pr.InclusionProof.Match())
+		require.True(t, pr.InclusionProof.Match(tx1.Instructions[0].InstanceID.Slice()))
 	}
 }
 
@@ -1296,21 +1280,15 @@ func TestService_StateChangeCache(t *testing.T) {
 	// only call it once.
 	contractID := "stateShangeCacheTest"
 	var ctr int
-	contract := func(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		ctr++
 		return []StateChange{}, []Coin{}, nil
 	}
 	s.service().registerContract(contractID, contract)
 
 	scID := s.sb.SkipChainID()
-	collDB := s.service().getCollection(scID)
-	collDB.StoreAll([]StateChange{{
-		StateAction: Create,
-		InstanceID:  NewInstanceID(s.darc.GetBaseID()).Slice(),
-		ContractID:  []byte(contractID),
-		Value:       []byte{},
-	}}, 0)
-	coll := collDB.coll
+	st := s.service().getStateTrie(scID)
+	sst := st.MakeStagingStateTrie()
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), contractID, []byte{}, s.signer)
 	require.Nil(t, err)
 
@@ -1321,7 +1299,7 @@ func TestService_StateChangeCache(t *testing.T) {
 
 	txs := NewTxResults(tx1, tx2)
 	require.NoError(t, err)
-	root, txOut, states := s.service().createStateChanges(coll, scID, txs, noTimeout)
+	root, txOut, states := s.service().createStateChanges(sst, scID, txs, noTimeout)
 	require.Equal(t, 2, len(txOut))
 	require.Equal(t, 0, len(states))
 	require.Equal(t, 1, ctr)
@@ -1331,7 +1309,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	// createStateChanges when making the block), then it should load it from the
 	// cache, which means that ctr is still one (we do not call the
 	// contract twice).
-	root1, txOut1, states1 := s.service().createStateChanges(coll, scID, txOut, noTimeout)
+	root1, txOut1, states1 := s.service().createStateChanges(sst, scID, txOut, noTimeout)
 	require.Equal(t, 1, ctr)
 	require.Equal(t, root, root1)
 	require.Equal(t, txOut, txOut1)
@@ -1341,7 +1319,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	// again, i.e., ctr == 2.
 	s.service().stateChangeCache = newStateChangeCache()
 	require.NoError(t, err)
-	root2, txOut2, states2 := s.service().createStateChanges(coll, scID, txs, noTimeout)
+	root2, txOut2, states2 := s.service().createStateChanges(sst, scID, txs, noTimeout)
 	require.Equal(t, root, root2)
 	require.Equal(t, txOut, txOut2)
 	require.Equal(t, states, states2)
@@ -1447,7 +1425,7 @@ func (s *ser) waitProofWithIdx(t *testing.T, key []byte, idx int) Proof {
 		})
 		require.Nil(t, err)
 		pr = resp.Proof
-		if pr.InclusionProof.Match() {
+		if pr.InclusionProof.Match(key) {
 			ok = true
 			break
 		}
@@ -1496,9 +1474,9 @@ func (s *ser) testDarcEvolution(t *testing.T, d2 darc.Darc, fail bool) (pr *Proo
 		})
 		require.Nil(t, err)
 		pr = &resp.Proof
-		vs, err := pr.InclusionProof.Values()
+		_, v0, _, _, err := pr.KeyValue()
 		require.Nil(t, err)
-		d, err := darc.NewFromProtobuf(vs[0].([]byte))
+		d, err := darc.NewFromProtobuf(v0)
 		require.Nil(t, err)
 		if d.Equal(&d2) {
 			return
@@ -1560,15 +1538,15 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 	return s
 }
 
-func invalidContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func invalidContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	return nil, nil, errors.New("this invalid contract always returns an error")
 }
 
-func panicContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func panicContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	panic("this contract panics")
 }
 
-func dummyContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func dummyContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	err := inst.VerifyDarcSignature(cdb)
 	if err != nil {
 		return nil, nil, err
@@ -1593,7 +1571,7 @@ func dummyContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateC
 	}
 }
 
-func slowContractFunc(cdb CollectionView, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func slowContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 	// This has to sleep for less than testInterval / 2 or else it will
 	// block the system from processing txs. See #1359.
 	time.Sleep(testInterval / 5)

@@ -12,7 +12,7 @@ import (
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 
-	"github.com/dedis/cothority/byzcoin/collection"
+	"github.com/dedis/cothority/byzcoin/trie"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/protobuf"
 )
@@ -110,7 +110,7 @@ func (instr Instruction) Hash() []byte {
 // and the given string.
 //
 // DeriveID is used inside of contracts that need to create additional keys in
-// the collection. By convention newly spawned instances should have their
+// the trie. By convention newly spawned instances should have their
 // InstanceID derived via inst.DeriveID("").
 func (instr Instruction) DeriveID(what string) InstanceID {
 	var b [4]byte
@@ -151,44 +151,6 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 	// be tolerant of mutations, meaning that what seems unrisky today could
 	// be leaving a trap for later. So to be conservative, we are implementing
 	// strict domain separation now.
-}
-
-// GetContractState searches for the contract kind of this instruction and the
-// attached state to it. It needs the collection to do so.
-//
-// TODO: Deprecate/remove this; the state return is almost always ignored.
-func (instr Instruction) GetContractState(coll CollectionView) (contractID string, state []byte, err error) {
-	// Look the kind up in our database to find the kind.
-	kv := coll.Get(instr.InstanceID.Slice())
-	var record collection.Record
-	record, err = kv.Record()
-	if err != nil {
-		return
-	}
-	var cv []interface{}
-	cv, err = record.Values()
-	if err != nil {
-		if ConfigInstanceID.Equal(instr.InstanceID) {
-			// Special case: first time call to genesis-configuration must return
-			// correct contract type.
-			return ContractConfigID, nil, nil
-		}
-		return
-	}
-	var ok bool
-	var contractIDBuf []byte
-	contractIDBuf, ok = cv[1].([]byte)
-	if !ok {
-		err = errors.New("failed to cast value to bytes")
-		return
-	}
-	contractID = string(contractIDBuf)
-	state, ok = cv[0].([]byte)
-	if !ok {
-		err = errors.New("failed to cast value to bytes")
-		return
-	}
-	return
 }
 
 // Action returns the action that the user wants to do with this
@@ -285,8 +247,8 @@ func (instr Instruction) ToDarcRequest(baseID darc.ID) (*darc.Request, error) {
 // the instruction and then verify if the signature on the instruction
 // can satisfy the rules of the darc. It returns an error if it couldn't
 // find the darc or if the signature is wrong.
-func (instr Instruction) VerifyDarcSignature(coll CollectionView) error {
-	d, err := getInstanceDarc(coll, instr.InstanceID)
+func (instr Instruction) VerifyDarcSignature(st ReadOnlyStateTrie) error {
+	d, err := getInstanceDarc(st, instr.InstanceID)
 	if err != nil {
 		return errors.New("darc not found: " + err.Error())
 	}
@@ -305,7 +267,7 @@ func (instr Instruction) VerifyDarcSignature(coll CollectionView) error {
 		if err != nil {
 			return nil
 		}
-		d, err := LoadDarcFromColl(coll, darcID)
+		d, err := LoadDarcFromTrie(st, darcID)
 		if err != nil {
 			return nil
 		}
@@ -339,9 +301,8 @@ func (instr Instruction) GetType() InstrType {
 		return InvokeType
 	} else if instr.Spawn == nil && instr.Invoke == nil && instr.Delete != nil {
 		return DeleteType
-	} else {
-		return InvalidInstrType
 	}
+	return InvalidInstrType
 }
 
 // Instructions is a slice of Instruction
@@ -420,6 +381,45 @@ func (sc StateChange) ShortString() string {
 	return sc.toString(false)
 }
 
+// Key returns the key that should be used in a key/value database.
+func (sc *StateChange) Key() []byte {
+	return sc.InstanceID
+}
+
+// Val returns the value that should be used in a key/value database.
+func (sc *StateChange) Val() []byte {
+	v := StateChangeBody{
+		StateAction: sc.StateAction,
+		ContractID:  sc.ContractID,
+		Value:       sc.Value,
+		DarcID:      sc.DarcID,
+	}
+	buf, err := protobuf.Encode(&v)
+	if err != nil {
+		log.Error("failed to encode statechange value")
+		return nil
+	}
+	return buf
+}
+
+// Op returns the operation type of the state change, which is either a set or
+// a delete.
+func (sc *StateChange) Op() trie.OpType {
+	switch sc.StateAction {
+	case Create, Update:
+		return trie.OpSet
+	case Remove:
+		return trie.OpDel
+	}
+	return 0
+}
+
+func decodeStateChangeBody(buf []byte) (StateChangeBody, error) {
+	var out StateChangeBody
+	err := protobuf.Decode(buf, &out)
+	return out, err
+}
+
 // StateChanges hold a slice of StateChange
 type StateChanges []StateChange
 
@@ -445,7 +445,7 @@ func (scs StateChanges) ShortStrings() []string {
 	return out
 }
 
-// StateAction describes how the collectionDB will be modified.
+// StateAction describes how the trie will be modified.
 type StateAction int
 
 const (

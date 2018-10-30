@@ -7,7 +7,7 @@ import com.google.protobuf.ByteString;
 import java.util.Arrays;
 
 /**
- * Implementation of {@link HashId}. This implementation is immutable and is can be used as key for collections
+ * Implementation of {@link HashId}. This implementation is immutable and is can be used as key for in the trie
  */
 public class InstanceId implements HashId {
     private final byte[] id;

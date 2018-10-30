@@ -78,21 +78,18 @@ func (c *Client) GetEvent(key []byte) (*Event, error) {
 	if err != nil {
 		return nil, err
 	}
-	if !reply.Proof.InclusionProof.Match() {
+	if !reply.Proof.InclusionProof.Match(key) {
 		return nil, errors.New("not an inclusion proof")
 	}
-	k, vs, err := reply.Proof.KeyValue()
+	k, v0, _, _, err := reply.Proof.KeyValue()
 	if err != nil {
 		return nil, err
 	}
 	if !bytes.Equal(k, key) {
 		return nil, errors.New("wrong key")
 	}
-	if len(vs) < 2 {
-		return nil, errors.New("not enough values")
-	}
 	e := Event{}
-	err = protobuf.Decode(vs[0], &e)
+	err = protobuf.Decode(v0, &e)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +107,6 @@ func makeTx(darcID darc.ID, id byzcoin.InstanceID, msgs []Event, signers []darc.
 
 	keys := make([]LogID, len(msgs))
 
-	instrNonce := byzcoin.GenNonce()
 	tx := byzcoin.ClientTransaction{
 		Instructions: make([]byzcoin.Instruction, len(msgs)),
 	}
@@ -125,7 +121,7 @@ func makeTx(darcID darc.ID, id byzcoin.InstanceID, msgs []Event, signers []darc.
 		}
 		tx.Instructions[i] = byzcoin.Instruction{
 			InstanceID: id,
-			Nonce:      instrNonce,
+			Nonce:      byzcoin.GenNonce(),
 			Index:      i,
 			Length:     len(msgs),
 			Invoke: &byzcoin.Invoke{

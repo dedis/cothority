@@ -1,12 +1,13 @@
 package calypso
 
 import (
+	"time"
+
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/onet"
 	"github.com/dedis/protobuf"
-	"time"
 )
 
 // Client is a class to communicate to the calypso service.
@@ -131,7 +132,7 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 	reply *ReadReply, err error) {
 	var readBuf []byte
 	read := &Read{
-		Write: byzcoin.NewInstanceID(proof.InclusionProof.Key),
+		Write: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
 		Xc:    signer.Ed25519.Point,
 	}
 	reply = &ReadReply{}
@@ -145,7 +146,7 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 	}
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{{
-			InstanceID: byzcoin.NewInstanceID(proof.InclusionProof.Key),
+			InstanceID: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
 			Nonce:      byzcoin.Nonce{},
 			Index:      0,
 			Length:     1,

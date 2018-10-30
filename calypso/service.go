@@ -10,7 +10,6 @@
 package calypso
 
 import (
-	"bytes"
 	"errors"
 	"time"
 
@@ -120,14 +119,14 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	log.Lvl2("Re-encrypt the key to the public key of the reader")
 
 	var read Read
-	if err := dkr.Read.ContractValue(cothority.Suite, ContractReadID, &read); err != nil {
+	if err := dkr.Read.VerifyAndDecode(cothority.Suite, ContractReadID, &read); err != nil {
 		return nil, errors.New("didn't get a read instance: " + err.Error())
 	}
 	var write Write
-	if err := dkr.Write.ContractValue(cothority.Suite, ContractWriteID, &write); err != nil {
+	if err := dkr.Write.VerifyAndDecode(cothority.Suite, ContractWriteID, &write); err != nil {
 		return nil, errors.New("didn't get a write instance: " + err.Error())
 	}
-	if !read.Write.Equal(byzcoin.NewInstanceID(dkr.Write.InclusionProof.Key)) {
+	if !read.Write.Equal(byzcoin.NewInstanceID(dkr.Write.InclusionProof.Key())) {
 		return nil, errors.New("read doesn't point to passed write")
 	}
 	s.storage.Lock()
@@ -263,15 +262,15 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 		if err != nil {
 			return err
 		}
-		_, vs, err := verificationData.Proof.KeyValue()
+		_, v0, contractID, _, err := verificationData.Proof.KeyValue()
 		if err != nil {
 			return errors.New("proof cannot return values: " + err.Error())
 		}
-		if bytes.Compare(vs[1], []byte(ContractReadID)) != 0 {
+		if contractID != ContractReadID {
 			return errors.New("proof doesn't point to read instance")
 		}
 		var r Read
-		err = protobuf.DecodeWithConstructors(vs[0], &r, network.DefaultConstructors(cothority.Suite))
+		err = protobuf.DecodeWithConstructors(v0, &r, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
 			return errors.New("couldn't decode read data: " + err.Error())
 		}

@@ -177,13 +177,13 @@ func checkProof(t *testing.T, omni *byzcoin.Service, key []byte, scID skipchain.
 	resp, err := omni.GetProof(req)
 	require.Nil(t, err)
 
-	p := resp.Proof.InclusionProof
-	require.True(t, p.Match(), "proof of exclusion of index")
+	p := resp.Proof
+	require.True(t, p.InclusionProof.Match(key), "proof of exclusion of index")
 
-	v, _ := p.Values()
-	require.Equal(t, 3, len(v), "wrong values length")
+	v0, _, _, err := p.Get(key)
+	require.NoError(t, err)
 
-	return v[0].([]byte)
+	return v0
 }
 
 func TestClient_Search(t *testing.T) {
@@ -285,7 +285,7 @@ func TestClient_Search(t *testing.T) {
 	require.False(t, resp.Truncated)
 }
 
-func waitForKey(t *testing.T, s *byzcoin.Service, scID skipchain.SkipBlockID, key []byte, interval time.Duration) [][]byte {
+func waitForKey(t *testing.T, s *byzcoin.Service, scID skipchain.SkipBlockID, key []byte, interval time.Duration) {
 	if len(key) == 0 {
 		t.Fatal("key len", len(key))
 	}
@@ -301,7 +301,7 @@ func waitForKey(t *testing.T, s *byzcoin.Service, scID skipchain.SkipBlockID, ke
 		resp, err = s.GetProof(req)
 		if err == nil {
 			p := resp.Proof.InclusionProof
-			if p.Match() {
+			if p.Match(key) {
 				found = true
 				break
 			}
@@ -313,9 +313,8 @@ func waitForKey(t *testing.T, s *byzcoin.Service, scID skipchain.SkipBlockID, ke
 	if !found {
 		t.Fatal("timeout")
 	}
-	_, vs, err := resp.Proof.KeyValue()
+	_, _, _, err := resp.Proof.Get(key)
 	require.NoError(t, err)
-	return vs
 }
 
 type ser struct {
@@ -393,7 +392,7 @@ func (s *ser) waitNextBlock(t *testing.T, current skipchain.SkipBlockID) {
 // if an event is in the wrong bucket. This function is useful to check the
 // correctness of buckets.
 func (s *Service) checkBuckets(inst byzcoin.InstanceID, id skipchain.SkipBlockID, ct0 int) error {
-	v := s.omni.GetCollectionView(id)
+	v := s.omni.GetReadOnlyStateTrie(id)
 	el := eventLog{Instance: inst, v: v}
 
 	id, b, err := el.getLatestBucket()

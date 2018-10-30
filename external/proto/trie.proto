@@ -1,0 +1,31 @@
+syntax = "proto2";
+package trie;
+
+// Proof contains nested structs and private fields, which proto.awk does not
+// support, so we write this proto-file manually.
+
+option java_package = "ch.epfl.dedis.lib.proto";
+option java_outer_classname = "TrieProto";
+
+// Proof contains an inclusion/absence proof for a key.
+message Proof {
+  repeated InteriorNode interiors = 1;
+  required LeafNode leaf = 2;
+  required EmptyNode empty = 3;
+  required bytes nonce = 4;
+}
+
+message LeafNode {
+  repeated bool prefix = 1 [packed=true];
+  required bytes key = 2;
+  required bytes value = 3;
+}
+
+message EmptyNode {
+  repeated bool prefix = 1 [packed=true];
+}
+
+message InteriorNode {
+  required bytes left = 1;
+  required bytes right = 2;
+}

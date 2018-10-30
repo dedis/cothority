@@ -20,7 +20,7 @@ var ContractWriteID = "calypsoWrite"
 // Accepted Instructions:
 //  - spawn:calypsoWrite creates a new write-request. TODO: verify the LTS exists
 //  - spawn:calypsoRead creates a new read-request for this write-request.
-func (s *Service) ContractWrite(cdb byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+func (s *Service) ContractWrite(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 	err := inst.VerifyDarcSignature(cdb)
 	if err != nil {
 		return nil, nil, err
@@ -82,7 +82,7 @@ var ContractReadID = "calypsoRead"
 // TODO: correctly handle multi signatures for read requests: to whom should the
 // secret be re-encrypted to? Perhaps for multi signatures we only want to have
 // ephemeral keys.
-func (s *Service) ContractRead(cdb byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+func (s *Service) ContractRead(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 	err := inst.VerifyDarcSignature(cdb)
 	if err != nil {
 		return nil, nil, err

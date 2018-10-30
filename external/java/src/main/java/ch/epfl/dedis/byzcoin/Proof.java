@@ -6,43 +6,35 @@ import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
-import ch.epfl.dedis.skipchain.ForwardLink;
+import ch.epfl.dedis.lib.proto.TrieProto;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
-import ch.epfl.dedis.lib.proto.CollectionProto;
 import ch.epfl.dedis.lib.proto.SkipchainProto;
-import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
- * Proof represents a key/value entry in the collection and the path to the
+ * Proof represents a key/value entry in the trie and the path to the
  * root node.
  */
 public class Proof {
-    private ByzCoinProto.Proof proof;
-    private CollectionProto.Dump leaf;
-    private List<ForwardLink> links;
+    private TrieProto.Proof proof;
+    private List<SkipchainProto.ForwardLink> links;
+    private SkipBlock latest;
+
+    private StateChangeBody finalStateChangeBody;
 
     /**
      * Creates a new proof given a protobuf-representation.
      *
      * @param p the protobuf-representation of the proof
      */
-    public Proof(ByzCoinProto.Proof p) {
-        proof = p;
-        List<CollectionProto.Step> steps = p.getInclusionproof().getStepsList();
-        CollectionProto.Dump left = steps.get(steps.size() - 1).getLeft();
-        CollectionProto.Dump right = steps.get(steps.size() - 1).getRight();
-        if (Arrays.equals(left.getKey().toByteArray(), getKey())) {
-            leaf = left;
-        } else if (Arrays.equals(right.getKey().toByteArray(), getKey())) {
-            leaf = right;
-        }
-        links = new ArrayList<>();
-        for (SkipchainProto.ForwardLink fl: p.getLinksList()){
-            links.add(new ForwardLink(fl));
+    public Proof(ByzCoinProto.Proof p) throws InvalidProtocolBufferException {
+        proof = p.getInclusionproof();
+        latest = new SkipBlock(p.getLatest());
+        links = p.getLinksList();
+        if (!proof.getLeaf().getKey().isEmpty()) {
+            finalStateChangeBody = new StateChangeBody(ByzCoinProto.StateChangeBody.parseFrom(proof.getLeaf().getValue()));
         }
     }
 
@@ -59,7 +51,13 @@ public class Proof {
      * @return the protobuf representation of the proof
      */
     public ByzCoinProto.Proof toProto() {
-        return this.proof;
+        ByzCoinProto.Proof.Builder b = ByzCoinProto.Proof.newBuilder();
+        b.setInclusionproof(proof);
+        b.setLatest(latest.getProto());
+        for (SkipchainProto.ForwardLink link : this.links) {
+            b.addLinks(link);
+        }
+        return b.build();
     }
 
     /**
@@ -67,7 +65,7 @@ public class Proof {
      * @return SkipBlock
      */
     public SkipBlock getLatest() {
-        return new SkipBlock(proof.getLatest());
+        return this.latest;
     }
 
     /**
@@ -93,39 +91,36 @@ public class Proof {
      * is a proof of absence.
      */
     public boolean matches() {
-        return leaf != null;
+        // TODO make more verification
+        return proof.getLeaf().hasKey() && !proof.getLeaf().getKey().isEmpty();
     }
 
     /**
      * @return the key of the leaf node
      */
     public byte[] getKey() {
-        return proof.getInclusionproof().getKey().toByteArray();
+        return proof.getLeaf().getKey().toByteArray();
     }
 
     /**
      * @return the list of values in the leaf node.
      */
-    public List<byte[]> getValues() {
-        List<byte[]> ret = new ArrayList<>();
-        for (ByteString v : leaf.getValuesList()) {
-            ret.add(v.toByteArray());
-        }
-        return ret;
+    public StateChangeBody getValues() {
+        return finalStateChangeBody;
     }
 
     /**
      * @return the value of the proof.
      */
     public byte[] getValue(){
-        return getValues().get(0);
+        return getValues().getValue();
     }
 
     /**
      * @return the string of the contractID.
      */
     public String getContractID(){
-        return new String(getValues().get(1));
+        return new String(getValues().getContractID());
     }
 
     /**
@@ -133,7 +128,7 @@ public class Proof {
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public DarcId getDarcID() throws CothorityCryptoException{
-        return new DarcId(getValues().get(2));
+        return getValues().getDarcId();
     }
 
     /**
@@ -141,9 +136,6 @@ public class Proof {
      */
     public boolean isByzCoinProof(){
         if (!matches()) {
-            return false;
-        }
-        if (getValues().size() != 3) {
             return false;
         }
         return true;
@@ -157,8 +149,7 @@ public class Proof {
         if (!isByzCoinProof()){
             return false;
         }
-        String contract = new String(getValues().get(1));
-        if (!contract.equals(expected)) {
+        if (!getContractID().equals(expected)) {
             return false;
         }
         return true;

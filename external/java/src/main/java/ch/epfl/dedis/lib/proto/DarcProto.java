@@ -278,13 +278,6 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 8: {
               bitField0_ |= 0x00000001;
               version_ = input.readUInt64();
@@ -336,6 +329,13 @@ public final class DarcProto {
                   input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Darc.PARSER, extensionRegistry));
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -359,6 +359,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Darc_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Darc_fieldAccessorTable
@@ -631,6 +632,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -672,6 +674,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -698,6 +701,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -891,6 +895,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -898,6 +903,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.Darc prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -927,6 +933,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Darc_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Darc_fieldAccessorTable
@@ -952,6 +959,7 @@ public final class DarcProto {
           getVerificationdarcsFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         version_ = 0L;
@@ -983,15 +991,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Darc_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Darc getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.Darc.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Darc build() {
         ch.epfl.dedis.lib.proto.DarcProto.Darc result = buildPartial();
         if (!result.isInitialized()) {
@@ -1000,6 +1011,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Darc buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.Darc result = new ch.epfl.dedis.lib.proto.DarcProto.Darc(this);
         int from_bitField0_ = bitField0_;
@@ -1051,32 +1063,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.Darc) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.Darc)other);
@@ -1160,6 +1179,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasVersion()) {
           return false;
@@ -1189,6 +1209,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2274,11 +2295,13 @@ public final class DarcProto {
         }
         return verificationdarcsBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -2300,6 +2323,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Darc>
         PARSER = new com.google.protobuf.AbstractParser<Darc>() {
+      @java.lang.Override
       public Darc parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2317,6 +2341,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Darc getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -2471,13 +2496,6 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2530,6 +2548,13 @@ public final class DarcProto {
               bitField0_ |= 0x00000008;
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -2547,6 +2572,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Identity_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Identity_fieldAccessorTable
@@ -2688,6 +2714,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -2721,6 +2748,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2738,6 +2766,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -2897,6 +2926,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -2904,6 +2934,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.Identity prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -2932,6 +2963,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Identity_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Identity_fieldAccessorTable
@@ -2958,6 +2990,7 @@ public final class DarcProto {
           getProxyFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (darcBuilder_ == null) {
@@ -2987,15 +3020,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Identity_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Identity getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.Identity.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Identity build() {
         ch.epfl.dedis.lib.proto.DarcProto.Identity result = buildPartial();
         if (!result.isInitialized()) {
@@ -3004,6 +3040,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Identity buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.Identity result = new ch.epfl.dedis.lib.proto.DarcProto.Identity(this);
         int from_bitField0_ = bitField0_;
@@ -3045,32 +3082,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.Identity) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.Identity)other);
@@ -3099,6 +3143,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (hasDarc()) {
           if (!getDarc().isInitialized()) {
@@ -3123,6 +3168,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3757,11 +3803,13 @@ public final class DarcProto {
         }
         return proxyBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -3783,6 +3831,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Identity>
         PARSER = new com.google.protobuf.AbstractParser<Identity>() {
+      @java.lang.Override
       public Identity parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3800,6 +3849,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Identity getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -3863,16 +3913,16 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              point_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              point_ = input.readBytes();
               break;
             }
           }
@@ -3892,6 +3942,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityEd25519_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityEd25519_fieldAccessorTable
@@ -3916,6 +3967,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -3929,6 +3981,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -3937,6 +3990,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4057,6 +4111,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4064,6 +4119,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4091,6 +4147,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityEd25519_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityEd25519_fieldAccessorTable
@@ -4113,6 +4170,7 @@ public final class DarcProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         point_ = com.google.protobuf.ByteString.EMPTY;
@@ -4120,15 +4178,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityEd25519_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 build() {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 result = buildPartial();
         if (!result.isInitialized()) {
@@ -4137,6 +4198,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 result = new ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519(this);
         int from_bitField0_ = bitField0_;
@@ -4150,32 +4212,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519)other);
@@ -4195,6 +4264,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPoint()) {
           return false;
@@ -4202,6 +4272,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4255,11 +4326,13 @@ public final class DarcProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4281,6 +4354,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<IdentityEd25519>
         PARSER = new com.google.protobuf.AbstractParser<IdentityEd25519>() {
+      @java.lang.Override
       public IdentityEd25519 parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4298,6 +4372,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519 getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -4361,16 +4436,16 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              public_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              public_ = input.readBytes();
               break;
             }
           }
@@ -4390,6 +4465,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityX509EC_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityX509EC_fieldAccessorTable
@@ -4414,6 +4490,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4427,6 +4504,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -4435,6 +4513,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -4555,6 +4634,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -4562,6 +4642,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -4589,6 +4670,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityX509EC_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityX509EC_fieldAccessorTable
@@ -4611,6 +4693,7 @@ public final class DarcProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         public_ = com.google.protobuf.ByteString.EMPTY;
@@ -4618,15 +4701,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityX509EC_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC build() {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC result = buildPartial();
         if (!result.isInitialized()) {
@@ -4635,6 +4721,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC result = new ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC(this);
         int from_bitField0_ = bitField0_;
@@ -4648,32 +4735,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC)other);
@@ -4693,6 +4787,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPublic()) {
           return false;
@@ -4700,6 +4795,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4753,11 +4849,13 @@ public final class DarcProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -4779,6 +4877,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<IdentityX509EC>
         PARSER = new com.google.protobuf.AbstractParser<IdentityX509EC>() {
+      @java.lang.Override
       public IdentityX509EC parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4796,6 +4895,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -4875,13 +4975,6 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -4891,6 +4984,13 @@ public final class DarcProto {
             case 18: {
               bitField0_ |= 0x00000002;
               public_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -4910,6 +5010,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityProxy_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityProxy_fieldAccessorTable
@@ -4976,6 +5077,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -4993,6 +5095,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5004,6 +5107,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5136,6 +5240,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5143,6 +5248,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5171,6 +5277,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityProxy_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityProxy_fieldAccessorTable
@@ -5193,6 +5300,7 @@ public final class DarcProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         data_ = "";
@@ -5202,15 +5310,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityProxy_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy build() {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy result = buildPartial();
         if (!result.isInitialized()) {
@@ -5219,6 +5330,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy result = new ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy(this);
         int from_bitField0_ = bitField0_;
@@ -5236,32 +5348,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy)other);
@@ -5286,6 +5405,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasData()) {
           return false;
@@ -5296,6 +5416,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5425,11 +5546,13 @@ public final class DarcProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5451,6 +5574,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<IdentityProxy>
         PARSER = new com.google.protobuf.AbstractParser<IdentityProxy>() {
+      @java.lang.Override
       public IdentityProxy parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5468,6 +5592,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -5540,16 +5665,16 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              id_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              id_ = input.readBytes();
               break;
             }
           }
@@ -5569,6 +5694,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityDarc_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityDarc_fieldAccessorTable
@@ -5601,6 +5727,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -5614,6 +5741,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -5622,6 +5750,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -5742,6 +5871,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -5749,6 +5879,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -5777,6 +5908,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityDarc_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityDarc_fieldAccessorTable
@@ -5799,6 +5931,7 @@ public final class DarcProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         id_ = com.google.protobuf.ByteString.EMPTY;
@@ -5806,15 +5939,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_IdentityDarc_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc build() {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc result = buildPartial();
         if (!result.isInitialized()) {
@@ -5823,6 +5959,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc result = new ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc(this);
         int from_bitField0_ = bitField0_;
@@ -5836,32 +5973,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc)other);
@@ -5881,6 +6025,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasId()) {
           return false;
@@ -5888,6 +6033,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -5957,11 +6103,13 @@ public final class DarcProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -5983,6 +6131,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<IdentityDarc>
         PARSER = new com.google.protobuf.AbstractParser<IdentityDarc>() {
+      @java.lang.Override
       public IdentityDarc parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6000,6 +6149,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6097,13 +6247,6 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               signature_ = input.readBytes();
@@ -6120,6 +6263,13 @@ public final class DarcProto {
                 signer_ = subBuilder.buildPartial();
               }
               bitField0_ |= 0x00000002;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -6139,6 +6289,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Signature_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Signature_fieldAccessorTable
@@ -6204,6 +6355,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -6225,6 +6377,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6236,6 +6389,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -6369,6 +6523,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -6376,6 +6531,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.Signature prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -6404,6 +6560,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Signature_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Signature_fieldAccessorTable
@@ -6427,6 +6584,7 @@ public final class DarcProto {
           getSignerFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         signature_ = com.google.protobuf.ByteString.EMPTY;
@@ -6440,15 +6598,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Signature_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Signature getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.Signature.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Signature build() {
         ch.epfl.dedis.lib.proto.DarcProto.Signature result = buildPartial();
         if (!result.isInitialized()) {
@@ -6457,6 +6618,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Signature buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.Signature result = new ch.epfl.dedis.lib.proto.DarcProto.Signature(this);
         int from_bitField0_ = bitField0_;
@@ -6478,32 +6640,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.Signature) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.Signature)other);
@@ -6526,6 +6695,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasSignature()) {
           return false;
@@ -6539,6 +6709,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6762,11 +6933,13 @@ public final class DarcProto {
         }
         return signerBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -6788,6 +6961,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Signature>
         PARSER = new com.google.protobuf.AbstractParser<Signature>() {
+      @java.lang.Override
       public Signature parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6805,6 +6979,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Signature getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -6897,13 +7072,6 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519.Builder subBuilder = null;
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -6943,6 +7111,13 @@ public final class DarcProto {
               bitField0_ |= 0x00000004;
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -6960,6 +7135,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Signer_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Signer_fieldAccessorTable
@@ -7032,6 +7208,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7059,6 +7236,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -7073,6 +7251,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -7219,6 +7398,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -7226,6 +7406,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.Signer prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -7253,6 +7434,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Signer_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Signer_fieldAccessorTable
@@ -7278,6 +7460,7 @@ public final class DarcProto {
           getProxyFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (ed25519Builder_ == null) {
@@ -7301,15 +7484,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Signer_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Signer getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.Signer.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Signer build() {
         ch.epfl.dedis.lib.proto.DarcProto.Signer result = buildPartial();
         if (!result.isInitialized()) {
@@ -7318,6 +7504,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Signer buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.Signer result = new ch.epfl.dedis.lib.proto.DarcProto.Signer(this);
         int from_bitField0_ = bitField0_;
@@ -7351,32 +7538,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.Signer) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.Signer)other);
@@ -7402,6 +7596,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (hasEd25519()) {
           if (!getEd25519().isInitialized()) {
@@ -7421,6 +7616,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7793,11 +7989,13 @@ public final class DarcProto {
         }
         return proxyBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -7819,6 +8017,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Signer>
         PARSER = new com.google.protobuf.AbstractParser<Signer>() {
+      @java.lang.Override
       public Signer parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -7836,6 +8035,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Signer getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -7909,13 +8109,6 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               point_ = input.readBytes();
@@ -7924,6 +8117,13 @@ public final class DarcProto {
             case 18: {
               bitField0_ |= 0x00000002;
               secret_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -7943,6 +8143,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerEd25519_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerEd25519_fieldAccessorTable
@@ -7982,6 +8183,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -7999,6 +8201,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -8010,6 +8213,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -8143,6 +8347,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -8150,6 +8355,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -8177,6 +8383,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerEd25519_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerEd25519_fieldAccessorTable
@@ -8199,6 +8406,7 @@ public final class DarcProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         point_ = com.google.protobuf.ByteString.EMPTY;
@@ -8208,15 +8416,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerEd25519_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 build() {
         ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 result = buildPartial();
         if (!result.isInitialized()) {
@@ -8225,6 +8436,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 result = new ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519(this);
         int from_bitField0_ = bitField0_;
@@ -8242,32 +8454,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519)other);
@@ -8290,6 +8509,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPoint()) {
           return false;
@@ -8300,6 +8520,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8388,11 +8609,13 @@ public final class DarcProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -8414,6 +8637,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SignerEd25519>
         PARSER = new com.google.protobuf.AbstractParser<SignerEd25519>() {
+      @java.lang.Override
       public SignerEd25519 parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8431,6 +8655,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519 getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -8495,16 +8720,16 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              point_ = input.readBytes();
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
                 done = true;
               }
-              break;
-            }
-            case 10: {
-              bitField0_ |= 0x00000001;
-              point_ = input.readBytes();
               break;
             }
           }
@@ -8524,6 +8749,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerX509EC_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerX509EC_fieldAccessorTable
@@ -8548,6 +8774,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -8561,6 +8788,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -8569,6 +8797,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -8689,6 +8918,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -8696,6 +8926,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -8724,6 +8955,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerX509EC_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerX509EC_fieldAccessorTable
@@ -8746,6 +8978,7 @@ public final class DarcProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         point_ = com.google.protobuf.ByteString.EMPTY;
@@ -8753,15 +8986,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerX509EC_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC build() {
         ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC result = buildPartial();
         if (!result.isInitialized()) {
@@ -8770,6 +9006,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC result = new ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC(this);
         int from_bitField0_ = bitField0_;
@@ -8783,32 +9020,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC)other);
@@ -8828,6 +9072,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasPoint()) {
           return false;
@@ -8835,6 +9080,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8888,11 +9134,13 @@ public final class DarcProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -8914,6 +9162,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SignerX509EC>
         PARSER = new com.google.protobuf.AbstractParser<SignerX509EC>() {
+      @java.lang.Override
       public SignerX509EC parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -8931,6 +9180,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -9010,13 +9260,6 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -9026,6 +9269,13 @@ public final class DarcProto {
             case 18: {
               bitField0_ |= 0x00000002;
               public_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -9045,6 +9295,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerProxy_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerProxy_fieldAccessorTable
@@ -9111,6 +9362,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -9128,6 +9380,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9139,6 +9392,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -9271,6 +9525,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -9278,6 +9533,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.SignerProxy prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -9306,6 +9562,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerProxy_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerProxy_fieldAccessorTable
@@ -9328,6 +9585,7 @@ public final class DarcProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         data_ = "";
@@ -9337,15 +9595,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_SignerProxy_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.SignerProxy getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.SignerProxy.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.SignerProxy build() {
         ch.epfl.dedis.lib.proto.DarcProto.SignerProxy result = buildPartial();
         if (!result.isInitialized()) {
@@ -9354,6 +9615,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.SignerProxy buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.SignerProxy result = new ch.epfl.dedis.lib.proto.DarcProto.SignerProxy(this);
         int from_bitField0_ = bitField0_;
@@ -9371,32 +9633,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.SignerProxy) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.SignerProxy)other);
@@ -9421,6 +9690,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasData()) {
           return false;
@@ -9431,6 +9701,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9560,11 +9831,13 @@ public final class DarcProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -9586,6 +9859,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<SignerProxy>
         PARSER = new com.google.protobuf.AbstractParser<SignerProxy>() {
+      @java.lang.Override
       public SignerProxy parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -9603,6 +9877,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.SignerProxy getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -9730,13 +10005,6 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               bitField0_ |= 0x00000001;
               baseid_ = input.readBytes();
@@ -9770,6 +10038,13 @@ public final class DarcProto {
               signatures_.add(input.readBytes());
               break;
             }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
           }
         }
       } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -9793,6 +10068,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Request_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Request_fieldAccessorTable
@@ -9931,6 +10207,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -9958,6 +10235,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -9978,6 +10256,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -10148,6 +10427,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -10155,6 +10435,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.Request prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -10182,6 +10463,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Request_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Request_fieldAccessorTable
@@ -10205,6 +10487,7 @@ public final class DarcProto {
           getIdentitiesFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         baseid_ = com.google.protobuf.ByteString.EMPTY;
@@ -10224,15 +10507,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Request_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Request getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.Request.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Request build() {
         ch.epfl.dedis.lib.proto.DarcProto.Request result = buildPartial();
         if (!result.isInitialized()) {
@@ -10241,6 +10527,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Request buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.Request result = new ch.epfl.dedis.lib.proto.DarcProto.Request(this);
         int from_bitField0_ = bitField0_;
@@ -10276,32 +10563,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.Request) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.Request)other);
@@ -10365,6 +10659,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasBaseid()) {
           return false;
@@ -10383,6 +10678,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10859,11 +11155,13 @@ public final class DarcProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -10885,6 +11183,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Request>
         PARSER = new com.google.protobuf.AbstractParser<Request>() {
+      @java.lang.Override
       public Request parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -10902,6 +11201,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Request getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -10980,13 +11280,6 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 list_ = new java.util.ArrayList<ch.epfl.dedis.lib.proto.DarcProto.Rule>();
@@ -10994,6 +11287,13 @@ public final class DarcProto {
               }
               list_.add(
                   input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Rule.PARSER, extensionRegistry));
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -11016,6 +11316,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Rules_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Rules_fieldAccessorTable
@@ -11059,6 +11360,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -11074,6 +11376,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < list_.size(); i++) {
@@ -11082,6 +11385,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -11199,6 +11503,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -11206,6 +11511,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.Rules prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -11233,6 +11539,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Rules_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Rules_fieldAccessorTable
@@ -11256,6 +11563,7 @@ public final class DarcProto {
           getListFieldBuilder();
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         if (listBuilder_ == null) {
@@ -11267,15 +11575,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Rules_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Rules getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.Rules.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Rules build() {
         ch.epfl.dedis.lib.proto.DarcProto.Rules result = buildPartial();
         if (!result.isInitialized()) {
@@ -11284,6 +11595,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Rules buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.Rules result = new ch.epfl.dedis.lib.proto.DarcProto.Rules(this);
         int from_bitField0_ = bitField0_;
@@ -11300,32 +11612,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.Rules) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.Rules)other);
@@ -11368,6 +11687,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         for (int i = 0; i < getListCount(); i++) {
           if (!getList(i).isInitialized()) {
@@ -11377,6 +11697,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11635,11 +11956,13 @@ public final class DarcProto {
         }
         return listBuilder_;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -11661,6 +11984,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Rules>
         PARSER = new com.google.protobuf.AbstractParser<Rules>() {
+      @java.lang.Override
       public Rules parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -11678,6 +12002,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Rules getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
@@ -11756,13 +12081,6 @@ public final class DarcProto {
             case 0:
               done = true;
               break;
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
             case 10: {
               com.google.protobuf.ByteString bs = input.readBytes();
               bitField0_ |= 0x00000001;
@@ -11772,6 +12090,13 @@ public final class DarcProto {
             case 18: {
               bitField0_ |= 0x00000002;
               expr_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
               break;
             }
           }
@@ -11791,6 +12116,7 @@ public final class DarcProto {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Rule_descriptor;
     }
 
+    @java.lang.Override
     protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
         internalGetFieldAccessorTable() {
       return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Rule_fieldAccessorTable
@@ -11857,6 +12183,7 @@ public final class DarcProto {
     }
 
     private byte memoizedIsInitialized = -1;
+    @java.lang.Override
     public final boolean isInitialized() {
       byte isInitialized = memoizedIsInitialized;
       if (isInitialized == 1) return true;
@@ -11874,6 +12201,7 @@ public final class DarcProto {
       return true;
     }
 
+    @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -11885,6 +12213,7 @@ public final class DarcProto {
       unknownFields.writeTo(output);
     }
 
+    @java.lang.Override
     public int getSerializedSize() {
       int size = memoizedSize;
       if (size != -1) return size;
@@ -12017,6 +12346,7 @@ public final class DarcProto {
           .parseWithIOException(PARSER, input, extensionRegistry);
     }
 
+    @java.lang.Override
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
       return DEFAULT_INSTANCE.toBuilder();
@@ -12024,6 +12354,7 @@ public final class DarcProto {
     public static Builder newBuilder(ch.epfl.dedis.lib.proto.DarcProto.Rule prototype) {
       return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
+    @java.lang.Override
     public Builder toBuilder() {
       return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
@@ -12051,6 +12382,7 @@ public final class DarcProto {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Rule_descriptor;
       }
 
+      @java.lang.Override
       protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
           internalGetFieldAccessorTable() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Rule_fieldAccessorTable
@@ -12073,6 +12405,7 @@ public final class DarcProto {
                 .alwaysUseFieldBuilders) {
         }
       }
+      @java.lang.Override
       public Builder clear() {
         super.clear();
         action_ = "";
@@ -12082,15 +12415,18 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public com.google.protobuf.Descriptors.Descriptor
           getDescriptorForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.internal_static_darc_Rule_descriptor;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Rule getDefaultInstanceForType() {
         return ch.epfl.dedis.lib.proto.DarcProto.Rule.getDefaultInstance();
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Rule build() {
         ch.epfl.dedis.lib.proto.DarcProto.Rule result = buildPartial();
         if (!result.isInitialized()) {
@@ -12099,6 +12435,7 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public ch.epfl.dedis.lib.proto.DarcProto.Rule buildPartial() {
         ch.epfl.dedis.lib.proto.DarcProto.Rule result = new ch.epfl.dedis.lib.proto.DarcProto.Rule(this);
         int from_bitField0_ = bitField0_;
@@ -12116,32 +12453,39 @@ public final class DarcProto {
         return result;
       }
 
+      @java.lang.Override
       public Builder clone() {
         return (Builder) super.clone();
       }
+      @java.lang.Override
       public Builder setField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.setField(field, value);
       }
+      @java.lang.Override
       public Builder clearField(
           com.google.protobuf.Descriptors.FieldDescriptor field) {
         return (Builder) super.clearField(field);
       }
+      @java.lang.Override
       public Builder clearOneof(
           com.google.protobuf.Descriptors.OneofDescriptor oneof) {
         return (Builder) super.clearOneof(oneof);
       }
+      @java.lang.Override
       public Builder setRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           int index, java.lang.Object value) {
         return (Builder) super.setRepeatedField(field, index, value);
       }
+      @java.lang.Override
       public Builder addRepeatedField(
           com.google.protobuf.Descriptors.FieldDescriptor field,
           java.lang.Object value) {
         return (Builder) super.addRepeatedField(field, value);
       }
+      @java.lang.Override
       public Builder mergeFrom(com.google.protobuf.Message other) {
         if (other instanceof ch.epfl.dedis.lib.proto.DarcProto.Rule) {
           return mergeFrom((ch.epfl.dedis.lib.proto.DarcProto.Rule)other);
@@ -12166,6 +12510,7 @@ public final class DarcProto {
         return this;
       }
 
+      @java.lang.Override
       public final boolean isInitialized() {
         if (!hasAction()) {
           return false;
@@ -12176,6 +12521,7 @@ public final class DarcProto {
         return true;
       }
 
+      @java.lang.Override
       public Builder mergeFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12305,11 +12651,13 @@ public final class DarcProto {
         onChanged();
         return this;
       }
+      @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.setUnknownFields(unknownFields);
       }
 
+      @java.lang.Override
       public final Builder mergeUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return super.mergeUnknownFields(unknownFields);
@@ -12331,6 +12679,7 @@ public final class DarcProto {
 
     @java.lang.Deprecated public static final com.google.protobuf.Parser<Rule>
         PARSER = new com.google.protobuf.AbstractParser<Rule>() {
+      @java.lang.Override
       public Rule parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -12348,6 +12697,7 @@ public final class DarcProto {
       return PARSER;
     }
 
+    @java.lang.Override
     public ch.epfl.dedis.lib.proto.DarcProto.Rule getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }

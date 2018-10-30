@@ -37,7 +37,7 @@ class Config {
    */
   static fromByteBuffer(buf) {
     if (!(buf instanceof Uint8Array)) {
-      throw "buf must be of type UInt8Array";
+      throw "buf must be of type Uint8Array in Config";
     }
     const configModel = root.lookup("ChainConfig");
     let config = configModel.decode(buf);

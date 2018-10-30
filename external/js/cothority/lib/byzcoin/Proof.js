@@ -1,4 +1,4 @@
-const misc = require("../misc");
+const StateChangeBody = require("./StateChangeBody");
 
 /**
  * Proof represents a key/value entry in the collection and the path to the
@@ -7,17 +7,15 @@ const misc = require("../misc");
 class Proof {
   /**
    * Creates a new proof from the protobuf representation
-   * @param proof
+   * @param proto
    */
-  constructor(proof) {
-    this._proof = proof;
-    let steps = proof.inclusionproof.steps;
-    let left = steps[steps.length - 1].left;
-    let right = steps[steps.length - 1].right;
-    if (misc.uint8ArrayCompare(left.key, this.key, false)) {
-      this._leaf = left;
-    } else if (misc.uint8ArrayCompare(right.key, this.key, false)) {
-      this._leaf = right;
+  constructor(proto) {
+    this._proof = proto.inclusionproof;
+    this._latest = proto.latest;
+    this._links = proto.links;
+
+    if (this._proof.leaf.key.length !== 0) {
+      this._stateChangeBody = StateChangeBody.fromByteBuffer(this._proof.leaf.value)
     }
   }
 
@@ -26,26 +24,22 @@ class Proof {
    * stored, false if it is a proof of absence.
    */
   matches() {
-    return this._leaf !== undefined;
+    // TODO write a proper way to do match
+    return this._stateChangeBody !== undefined;
   }
 
   /**
    * @return {Uint8Array} key - the key of the leaf node
    */
   get key() {
-    return this._proof.inclusionproof.key.slice(0);
+    return this._proof.leaf.key
   }
 
   /**
-   * @return {Uint8Array[]} values - the list of values in the leaf node
+   * @return {StateChangeBody} stateChangeBody - the content in the leaf node
    */
-  get values() {
-    let ret = [];
-    this._leaf.values.forEach(v => {
-      ret.push(v.slice(0));
-    });
-
-    return ret;
+  get stateChangeBody() {
+    return this._stateChangeBody
   }
 }
 

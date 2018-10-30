@@ -42,10 +42,10 @@ func TestService_LinkPoP(t *testing.T) {
 		ID:      s.olID,
 	})
 	require.Nil(t, err)
-	require.True(t, gpr.Proof.InclusionProof.Match())
-	_, vals, err := gpr.Proof.KeyValue()
+	require.True(t, gpr.Proof.InclusionProof.Match(s.serCoin.Slice()))
+	_, _, cid, _, err := gpr.Proof.KeyValue()
 	require.Nil(t, err)
-	require.Equal(t, "coin", string(vals[1]))
+	require.Equal(t, "coin", cid)
 }
 
 // Stores and loads a personhood data.
@@ -485,19 +485,19 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 		ID:      s.olID,
 	})
 	require.Nil(t, err)
-	require.True(t, gpr.Proof.InclusionProof.Match())
-	_, vals, err := gpr.Proof.KeyValue()
+	require.True(t, gpr.Proof.InclusionProof.Match(s.serCoin.Slice()))
+	_, _, _, dID, err = gpr.Proof.KeyValue()
 	require.Nil(t, err)
 	gpr, err = s.ols.GetProof(&byzcoin.GetProof{
 		Version: byzcoin.CurrentVersion,
-		Key:     vals[2],
+		Key:     dID,
 		ID:      s.olID,
 	})
 	require.Nil(t, err)
-	require.True(t, gpr.Proof.InclusionProof.Match())
-	_, vals, err = gpr.Proof.KeyValue()
+	require.True(t, gpr.Proof.InclusionProof.Match(dID))
+	_, v0, _, _, err := gpr.Proof.KeyValue()
 	require.Nil(t, err)
-	s.serDarc, err = darc.NewFromProtobuf(vals[0])
+	s.serDarc, err = darc.NewFromProtobuf(v0)
 	require.Nil(t, err)
 	s.serSig = darc.NewSignerEd25519(s.service.Public, s.service.Private)
 
@@ -516,20 +516,20 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 			ID:      s.olID,
 		})
 		require.Nil(t, err)
-		require.True(t, gpr.Proof.InclusionProof.Match())
-		_, vals, err := gpr.Proof.KeyValue()
+		require.True(t, gpr.Proof.InclusionProof.Match(s.attCoin[i].Slice()))
+		_, _, _, dID, err := gpr.Proof.KeyValue()
 		require.Nil(t, err)
 		gpr, err = s.ols.GetProof(&byzcoin.GetProof{
 			Version: byzcoin.CurrentVersion,
-			Key:     vals[2],
+			Key:     dID,
 			ID:      s.olID,
 		})
 		require.Nil(t, err)
-		require.True(t, gpr.Proof.InclusionProof.Match())
-		_, vals, err = gpr.Proof.KeyValue()
+		require.True(t, gpr.Proof.InclusionProof.Match(dID))
+		_, v0, _, _, err = gpr.Proof.KeyValue()
 		require.Nil(t, err)
 		var d darc.Darc
-		err = protobuf.DecodeWithConstructors(vals[0], &d, network.DefaultConstructors(cothority.Suite))
+		err = protobuf.DecodeWithConstructors(v0, &d, network.DefaultConstructors(cothority.Suite))
 		require.Nil(t, err)
 		s.attDarc = append(s.attDarc, &d)
 	}
@@ -542,11 +542,11 @@ func (s *sStruct) coinGet(t *testing.T, inst byzcoin.InstanceID) (ci byzcoin.Coi
 		ID:      s.olID,
 	})
 	require.Nil(t, err)
-	require.True(t, gpr.Proof.InclusionProof.Match())
-	_, vals, err := gpr.Proof.KeyValue()
+	require.True(t, gpr.Proof.InclusionProof.Match(inst.Slice()))
+	_, v0, cid, _, err := gpr.Proof.KeyValue()
 	require.Nil(t, err)
-	require.Equal(t, contracts.ContractCoinID, string(vals[1]))
-	err = protobuf.Decode(vals[0], &ci)
+	require.Equal(t, contracts.ContractCoinID, cid)
+	err = protobuf.Decode(v0, &ci)
 	require.Nil(t, err)
 	return
 }

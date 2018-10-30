@@ -23,36 +23,39 @@ func TestNewProof(t *testing.T) {
 	s := createSC(t)
 	p, err := NewProof(s.c, s.s, skipchain.SkipBlockID{}, []byte{})
 	require.NotNil(t, err)
-	p, err = NewProof(s.c, s.s, s.genesis.Hash, []byte{1})
+
+	key := []byte{1}
+	p, err = NewProof(s.c, s.s, s.genesis.Hash, key)
 	require.Nil(t, err)
-	require.False(t, p.InclusionProof.Match())
+	require.False(t, p.InclusionProof.Match(key))
+
 	p, err = NewProof(s.c, s.s, s.genesis.Hash, s.key)
 	require.Nil(t, err)
-	require.True(t, p.InclusionProof.Match())
+	require.True(t, p.InclusionProof.Match(s.key))
 }
 
 func TestVerify(t *testing.T) {
 	s := createSC(t)
 	p, err := NewProof(s.c, s.s, s.genesis.Hash, s.key)
 	require.Nil(t, err)
-	require.True(t, p.InclusionProof.Match())
+	require.True(t, p.InclusionProof.Match(s.key))
 	require.Nil(t, p.Verify(s.genesis.SkipChainID()))
-	key, values, err := p.KeyValue()
+	key, val, _, _, err := p.KeyValue()
 	require.Nil(t, err)
 	require.Equal(t, s.key, key)
-	require.Equal(t, s.value, values[0])
+	require.Equal(t, s.value, val)
 
 	require.Equal(t, ErrorVerifySkipchain, p.Verify(s.genesis2.SkipChainID()))
 
 	p.Latest.Data, err = protobuf.Encode(&DataHeader{
-		CollectionRoot: getSBID("123"),
+		TrieRoot: getSBID("123"),
 	})
 	require.Nil(t, err)
-	require.Equal(t, ErrorVerifyCollectionRoot, p.Verify(s.genesis.SkipChainID()))
+	require.Equal(t, ErrorVerifyTrieRoot, p.Verify(s.genesis.SkipChainID()))
 }
 
 type sc struct {
-	c            *collectionDB          // a usable collectionDB to store key/value pairs
+	c            *stateTrie             // a usable collectionDB to store key/value pairs
 	s            *skipchain.SkipBlockDB // a usable skipchain DB to store blocks
 	genesis      *skipchain.SkipBlock   // the first genesis block, doesn't hold any data
 	genesisPrivs []kyber.Scalar         // private keys of genesis roster
@@ -82,13 +85,14 @@ func createSC(t *testing.T) (s sc) {
 	require.Nil(t, err)
 	s.s = skipchain.NewSkipBlockDB(db, bnsc)
 
-	bnol := []byte("a testing string")
+	bucketName := []byte("a testing string")
 	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucket(bnol)
+		_, err := tx.CreateBucket(bucketName)
 		return err
 	})
 	require.Nil(t, err)
-	s.c = newCollectionDB(db, bnol)
+	s.c, err = newStateTrie(db, bucketName, []byte("nonce string"))
+	require.NoError(t, err)
 
 	s.key = []byte("key")
 	s.value = []byte("value")
@@ -101,7 +105,7 @@ func createSC(t *testing.T) (s sc) {
 	s.sb2 = skipchain.NewSkipBlock()
 	s.sb2.Roster, _ = genRoster(2)
 	s.sb2.Data, err = protobuf.Encode(&DataHeader{
-		CollectionRoot: s.c.RootHash(),
+		TrieRoot: s.c.GetRoot(),
 	})
 	require.Nil(t, err)
 	s.sb2.Hash = s.sb2.CalculateHash()

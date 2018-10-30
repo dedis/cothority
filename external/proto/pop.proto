@@ -165,6 +165,7 @@ message GetFinalStatementsReply {
 message StoreInstanceID {
   required bytes partyid = 1;
   required bytes instanceid = 2;
+  required bytes darcid = 3;
 }
 
 // StoreInstanceIDReply is an empty reply
@@ -179,6 +180,7 @@ message GetInstanceID {
 // GetInstanceIDReply is the InstanceID for the party
 message GetInstanceIDReply {
   required bytes instanceid = 1;
+  required bytes darcid = 2;
 }
 
 // StoreSigner writes an Signer from ByzCoin to a FinalStatement.
