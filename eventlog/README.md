@@ -1,3 +1,8 @@
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
+[Cothority](https://github.com/dedis/cothority/tree/master/README.md) ::
+[Applications](https://github.com/dedis/cothority/blob/master/doc/Applications.md) ::
+EventLog
+
 # EventLog
 
 The EventLog (EL) service is for logging events into
@@ -14,7 +19,7 @@ auditability. Below are some of the main features that sets us apart.
 - Configurable acceptance criteria - we execute a smart-contract on all nodes,
   nodes only accept the event if the smart-contract returns a positive result.
 - Existance proof - once an event is logged, an authorised client can request
-  a cryptographic proof (powered by [collection](../byzcoin/collection/README.md))
+  a cryptographic proof (powered by [trie](../byzcoin/trie/README.md))
   that the event is indeed stored in the blockchain and has not been tampered.
 
 ## Running the service

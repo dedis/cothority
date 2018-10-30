@@ -34,11 +34,11 @@ decrypt or sign. Our blocks can do a publicly verifiable distributed
 key generation as well as use that sharded key to decrypt or reencrypt data
 to a new key without ever having the data available.
 
-- [Distributed Key Generation](../evoting/protocol/DKG.md)
+- [Distributed Key Generation](../dkg/DKG.md)
 uses the protocol presented by Rabin to create a distributed key
 - [Distributed Decryption](../evoting/protocol/Decrypt.md)
 takes an ElGamal encrypted ciphertext and decrypts it using nodes
-- [Re-encryption](../ocs/protocol/Reencrypt.md)
+- [Re-encryption](../calypso/protocol/Reencrypt.md)
 re-encrypts an ElGamal encryption to a new key while never revealing the original
 data
 
@@ -48,7 +48,6 @@ This is our _one size fits all_ collection of blocks that are useful in differen
 places, but not tied to one specific application.
 
 - [Neff](../evoting/protocol/Neff.md)
-- [RandHound](../randhound/README.md)
 
 ## Messaging
 
