@@ -5,7 +5,7 @@ Distributed Decryption
 
 # Distributed Decryption
 
-Once a [Distributed Key](DKG.md) has been setup, the aggregate public key can
+Once a [Distributed Key](../../dkg/DKG.md) has been setup, the aggregate public key can
 be used to encrypt a document. Such a document cannot be decrypted by any
 party alone, but needs the collaboration of a threshold of nodes to decrypt
 it.
