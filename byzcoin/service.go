@@ -581,9 +581,10 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			panic("This is a new genesis block, but we're already running " +
 				"the heartbeat monitor, it should never happen.")
 		}
-		log.Lvlf2("%s started heartbeat monitor for %x", s.ServerIdentity(), sb.SkipChainID())
+		log.Lvlf2("%s started heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
 		s.heartbeats.start(string(sb.SkipChainID()), interval*rotationWindow, s.heartbeatsTimeout)
 	} else {
+		log.Lvlf2("%s updating heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
 		s.heartbeats.updateTimeout(string(sb.SkipChainID()), interval*rotationWindow)
 	}
 

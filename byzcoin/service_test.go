@@ -120,7 +120,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	log.SetShowTime(true)
 	var s *ser
 	if failure {
-		s = newSerN(t, 1, 200*time.Millisecond, 4, false)
+		s = newSerN(t, 1, time.Second, 4, false)
 		for _, service := range s.services {
 			service.SetPropagationTimeout(4 * time.Second)
 		}
