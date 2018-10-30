@@ -1,3 +1,9 @@
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
+[Cothority](https://github.com/dedis/cothority/tree/master/README.md) ::
+[Applications](https://github.com/dedis/cothority/blob/master/doc/Applications.md) ::
+[EventLog](https://github.com/dedis/cothority/blob/master/eventlog/README.md) ::
+el
+
 # el - the CLI to EventLogs
 
 Here are some examples of how to use el.
