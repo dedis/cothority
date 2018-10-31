@@ -21,12 +21,14 @@ func TestStateTrie(t *testing.T) {
 	key := []byte("testInstance")
 	contractID := []byte("testContract")
 	value := []byte("testValue")
+	version := uint64(123)
 	darcID := darc.ID([]byte("123"))
 	sc := StateChange{
 		StateAction: Create,
 		InstanceID:  key,
 		ContractID:  contractID,
 		Value:       value,
+		Version:     version,
 		DarcID:      darcID,
 	}
 	require.NoError(t, st.StoreAll([]StateChange{sc}, 5))
@@ -35,11 +37,12 @@ func TestStateTrie(t *testing.T) {
 	require.NoError(t, st.StoreAll([]StateChange{sc}, 6))
 	require.Equal(t, st.GetIndex(), 6)
 
-	_, _, _, err = st.GetValues(append(key, byte(0)))
+	_, _, _, _, err = st.GetValues(append(key, byte(0)))
 	require.Equal(t, errKeyNotSet, err)
 
-	val, cid, did, err := st.GetValues(key)
+	val, ver, cid, did, err := st.GetValues(key)
 	require.Equal(t, value, val)
+	require.Equal(t, version, ver)
 	require.Equal(t, cid, string(contractID))
 	require.True(t, did.Equal(darcID))
 }

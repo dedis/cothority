@@ -377,7 +377,7 @@ func TestService_Depending(t *testing.T) {
 
 	cdb, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
-	_, _, _, err = cdb.GetValues(in1.Hash())
+	_, _, _, _, err = cdb.GetValues(in1.Hash())
 	require.Error(t, err)
 	require.Equal(t, errKeyNotSet, err)
 
@@ -730,13 +730,18 @@ func TestService_StateChange(t *testing.T) {
 	defer s.local.CloseAll()
 
 	var latest int64
+<<<<<<< HEAD
 	f := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
 		_, cid, _, err := cdb.GetValues(inst.InstanceID.Slice())
+=======
+	f := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+		_, _, cid, _, err := cdb.GetValues(inst.InstanceID.Slice())
+>>>>>>> Version in global state
 		if err != nil {
 			return nil, nil, err
 		}
 
-		val0, _, _, err := cdb.GetValues(inst.InstanceID.Slice())
+		val0, _, _, _, err := cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, err
 		}
@@ -1938,7 +1943,7 @@ func dummyContractFunc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, 
 		return nil, nil, err
 	}
 
-	_, _, darcID, err := cdb.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err := cdb.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
 	}

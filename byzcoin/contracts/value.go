@@ -29,7 +29,7 @@ func ContractValue(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxH
 	}
 
 	var darcID darc.ID
-	_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return
 	}

@@ -46,7 +46,7 @@ func RegisterContract(s skipchain.GetService, kind string, f ContractFn) error {
 
 // LoadDarcFromTrie loads a darc which should be stored in key.
 func LoadDarcFromTrie(st ReadOnlyStateTrie, key []byte) (*darc.Darc, error) {
-	darcBuf, contract, _, err := st.GetValues(key)
+	darcBuf, _, contract, _, err := st.GetValues(key)
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func invokeContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin)
 
 	// Find the darcID for this instance.
 	var darcID darc.ID
-	_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return
 	}
@@ -245,7 +245,7 @@ func (s *Service) ContractDarc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash 
 		switch inst.Invoke.Command {
 		case "evolve":
 			var darcID darc.ID
-			_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+			_, _, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
 			if err != nil {
 				return
 			}
@@ -278,7 +278,7 @@ func (s *Service) ContractDarc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash 
 // loadConfigFromTrie loads the configuration data from the trie.
 func loadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
 	// Find the genesis-darc ID.
-	val, contract, _, err := getValueContract(st, NewInstanceID(nil).Slice())
+	val, _, contract, _, err := getValueContract(st, NewInstanceID(nil).Slice())
 	if err != nil {
 		return nil, err
 	}
@@ -295,8 +295,8 @@ func loadConfigFromTrie(st ReadOnlyStateTrie) (*ChainConfig, error) {
 	return &config, nil
 }
 
-func getValueContract(st ReadOnlyStateTrie, key []byte) (value []byte, contract string, darcID darc.ID, err error) {
-	value, contract, darcID, err = st.GetValues(key)
+func getValueContract(st ReadOnlyStateTrie, key []byte) (value []byte, version uint64, contract string, darcID darc.ID, err error) {
+	value, version, contract, darcID, err = st.GetValues(key)
 	if err != nil {
 		return
 	}
@@ -309,13 +309,13 @@ func getValueContract(st ReadOnlyStateTrie, key []byte) (value []byte, contract 
 
 func getInstanceDarc(c ReadOnlyStateTrie, iid InstanceID) (*darc.Darc, error) {
 	// From instance ID, find the darcID that controls access to it.
-	_, _, dID, err := c.GetValues(iid.Slice())
+	_, _, _, dID, err := c.GetValues(iid.Slice())
 	if err != nil {
 		return nil, err
 	}
 
 	// Fetch the darc itself.
-	value, contract, _, err := c.GetValues(dID)
+	value, _, contract, _, err := c.GetValues(dID)
 	if err != nil {
 		return nil, err
 	}

@@ -308,6 +308,7 @@ type StateChangeBody struct {
 	StateAction StateAction
 	ContractID  []byte
 	Value       []byte
+	Version     uint64
 	DarcID      darc.ID
 }
 

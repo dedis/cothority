@@ -425,7 +425,7 @@ func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersR
 
 	for i := range req.SignerIDs {
 		key := publicVersionKey(req.SignerIDs[i])
-		buf, _, _, err := st.GetValues(key)
+		buf, _, _, _, err := st.GetValues(key)
 		if err == errKeyNotSet {
 			out[i] = 0
 			continue
@@ -1552,7 +1552,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		}
 	}()
 
-	_, contractID, _, err := st.GetValues(instr.InstanceID.Slice())
+	_, _, contractID, _, err := st.GetValues(instr.InstanceID.Slice())
 	if err != errKeyNotSet && err != nil {
 		err = errors.New("Couldn't get contract type of instruction: " + err.Error())
 		return
@@ -1583,11 +1583,12 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	proof, _ := st.GetProof(instr.InstanceID.Slice())
 	if proof.Match(instr.InstanceID.Slice()) {
 		// Get the last version in the global state
-		_, _, _, err = st.GetValues(instr.InstanceID.Slice())
-		version = 0 + 1 // TODO: use the value from the global state
+		_, version, _, _, err = st.GetValues(instr.InstanceID.Slice())
 		if err != nil {
 			return
 		}
+
+		version++
 	} // else it means it will be the first sc hence version 0
 
 	// increment the instance ID for each state change

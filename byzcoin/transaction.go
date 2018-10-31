@@ -381,6 +381,7 @@ func (sc *StateChange) Val() []byte {
 		StateAction: sc.StateAction,
 		ContractID:  sc.ContractID,
 		Value:       sc.Value,
+		Version:     sc.Version,
 		DarcID:      sc.DarcID,
 	}
 	buf, err := protobuf.Encode(&v)

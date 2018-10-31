@@ -27,7 +27,7 @@ func (s *Service) ContractWrite(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 	}
 
 	var darcID darc.ID
-	_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -89,7 +89,7 @@ func (s *Service) ContractRead(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 	}
 
 	var darcID darc.ID
-	_, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
 	}
@@ -108,7 +108,7 @@ func (s *Service) ContractRead(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instr
 		if err != nil {
 			return nil, nil, errors.New("passed read argument is invalid: " + err.Error())
 		}
-		_, cid, _, err := cdb.GetValues(re.Write.Slice())
+		_, _, cid, _, err := cdb.GetValues(re.Write.Slice())
 		if err != nil {
 			return nil, nil, errors.New("referenced write-id is not correct: " + err.Error())
 		}
