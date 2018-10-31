@@ -201,7 +201,9 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, v0))
 
 			// check that the database has this new block's index recorded
-			idx := s.services[0].getStateTrie(pr.Latest.SkipChainID()).GetIndex()
+			st, err := s.services[0].getStateTrie(pr.Latest.SkipChainID())
+			require.NoError(t, err)
+			idx := st.GetIndex()
 			require.Equal(t, pr.Latest.Index, idx)
 		}
 	}
@@ -220,7 +222,9 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 			require.Nil(t, err)
 			require.True(t, bytes.Equal(tx.Instructions[0].Spawn.Args[0].Value, v0))
 			// check that the database has this new block's index recorded
-			idx := s.services[len(s.hosts)-1].getStateTrie(pr.Latest.SkipChainID()).GetIndex()
+			st, err := s.services[len(s.hosts)-1].getStateTrie(pr.Latest.SkipChainID())
+			require.NoError(t, err)
+			idx := st.GetIndex()
 			require.Equal(t, pr.Latest.Index, idx)
 		}
 
@@ -387,7 +391,8 @@ func TestService_Depending(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	cdb := s.service().getStateTrie(s.sb.SkipChainID())
+	cdb, err := s.service().getStateTrie(s.sb.SkipChainID())
+	require.NoError(t, err)
 	_, _, _, err = cdb.GetValues(in1.Hash())
 	require.Error(t, err)
 	require.Equal(t, errKeyNotSet, err)
@@ -782,12 +787,13 @@ func TestService_StateChange(t *testing.T) {
 	}
 	RegisterContract(s.hosts[0], "add", f)
 
-	cdb := s.service().getStateTrie(s.sb.SkipChainID())
+	cdb, err := s.service().getStateTrie(s.sb.SkipChainID())
+	require.NoError(t, err)
 	require.NotNil(t, cdb)
 
 	// Manually create the add contract
 	inst := genID()
-	err := cdb.StoreAll([]StateChange{{
+	err = cdb.StoreAll([]StateChange{{
 		StateAction: Create,
 		InstanceID:  inst.Slice(),
 		ContractID:  []byte("add"),
@@ -1287,7 +1293,8 @@ func TestService_StateChangeCache(t *testing.T) {
 	s.service().registerContract(contractID, contract)
 
 	scID := s.sb.SkipChainID()
-	st := s.service().getStateTrie(scID)
+	st, err := s.service().getStateTrie(scID)
+	require.NoError(t, err)
 	sst := st.MakeStagingStateTrie()
 	tx1, err := createOneClientTx(s.darc.GetBaseID(), contractID, []byte{}, s.signer)
 	require.Nil(t, err)

@@ -13,7 +13,8 @@ func TestStateTrie(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	st := s.service().getStateTrie(s.sb.SkipChainID())
+	st, err := s.service().getStateTrie(s.sb.SkipChainID())
+	require.NoError(t, err)
 	require.NotNil(t, st)
 	require.NotEqual(t, -1, st.GetIndex())
 
@@ -34,7 +35,7 @@ func TestStateTrie(t *testing.T) {
 	require.NoError(t, st.StoreAll([]StateChange{sc}, 6))
 	require.Equal(t, st.GetIndex(), 6)
 
-	_, _, _, err := st.GetValues(append(key, byte(0)))
+	_, _, _, err = st.GetValues(append(key, byte(0)))
 	require.Equal(t, errKeyNotSet, err)
 
 	val, cid, did, err := st.GetValues(key)

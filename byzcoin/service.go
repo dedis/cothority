@@ -72,7 +72,7 @@ type Service struct {
 	*onet.ServiceProcessor
 	// stateTries contains a reference to all the tries that the service is
 	// responsible for, one for each skipchain.
-	stateTries map[string]*StateTrie
+	stateTries map[string]*stateTrie
 	// notifications is used for client transaction and block notification
 	notifications bcNotifications
 
@@ -316,7 +316,11 @@ func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 		err = errors.New("cannot find skipblock while getting proof")
 		return
 	}
-	proof, err := NewProof(s.GetReadOnlyStateTrie(sb.SkipChainID()), s.db(), req.ID, req.Key)
+	st, err := s.GetReadOnlyStateTrie(sb.SkipChainID())
+	if err != nil {
+		return nil, err
+	}
+	proof, err := NewProof(st, s.db(), req.ID, req.Key)
 	if err != nil {
 		return
 	}
@@ -343,8 +347,11 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 	log.Lvlf2("%s getting authorizations of darc %x", s.ServerIdentity(), req.DarcID)
 
 	resp = &CheckAuthorizationResponse{}
-	cv := s.GetReadOnlyStateTrie(req.ByzCoinID)
-	d, err := LoadDarcFromTrie(cv, req.DarcID)
+	st, err := s.GetReadOnlyStateTrie(req.ByzCoinID)
+	if err != nil {
+		return nil, err
+	}
+	d, err := LoadDarcFromTrie(st, req.DarcID)
 	if err != nil {
 		return nil, errors.New("couldn't find darc: " + err.Error())
 	}
@@ -358,7 +365,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 			log.Error("invalid darc id", s, len(id), err)
 			return nil
 		}
-		d, err := LoadDarcFromTrie(cv, id)
+		d, err := LoadDarcFromTrie(st, id)
 		if err != nil {
 			log.Error("didn't find darc")
 			return nil
@@ -396,7 +403,7 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx []TxResult) (*skipchain.SkipBlock, error) {
 	var sb *skipchain.SkipBlock
 	var mr []byte
-	var sst *StagingStateTrie
+	var sst *stagingStateTrie
 
 	if scID.IsNull() {
 		// For a genesis block, we create a throwaway staging trie.
@@ -434,7 +441,11 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 			sb.Roster = r
 		}
 
-		sst = s.getStateTrie(scID).MakeStagingStateTrie()
+		st, err := s.getStateTrie(scID)
+		if err != nil {
+			return nil, err
+		}
+		sst = st.MakeStagingStateTrie()
 	}
 
 	// Create header of skipblock containing only hashes
@@ -522,13 +533,16 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		// We don't care about the state trie that is returned in this
 		// function because we load the trie again in getStateTrie
 		// right afterwards.
-		_ = s.createStateTrie(sb.SkipChainID(), nonce)
+		_, err = s.createStateTrie(sb.SkipChainID(), nonce)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Load the trie.
-	st := s.getStateTrie(sb.SkipChainID())
-	if st == nil {
-		return errors.New("trie does not exist")
+	st, err := s.getStateTrie(sb.SkipChainID())
+	if err != nil {
+		return err
 	}
 
 	// Check if we are updating the right index.
@@ -539,7 +553,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	}
 
 	var header DataHeader
-	err := protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
+	err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		log.Error(s.ServerIdentity(), "could not unmarshal header", err)
 		return errors.New("couldn't unmarshal header")
@@ -684,13 +698,13 @@ func isViewChangeTx(txs TxResults) *viewchange.View {
 
 // GetReadOnlyStateTrie returns a read-only accessor to the trie for the given
 // skipchain.
-func (s *Service) GetReadOnlyStateTrie(scID skipchain.SkipBlockID) *StateTrie {
+func (s *Service) GetReadOnlyStateTrie(scID skipchain.SkipBlockID) (ReadOnlyStateTrie, error) {
 	return s.getStateTrie(scID)
 }
 
-func (s *Service) getStateTrie(id skipchain.SkipBlockID) *StateTrie {
+func (s *Service) getStateTrie(id skipchain.SkipBlockID) (*stateTrie, error) {
 	if len(id) == 0 {
-		return nil
+		return nil, errors.New("no skipchain ID")
 	}
 	s.storage.Mutex.Lock()
 	defer s.storage.Mutex.Unlock()
@@ -700,35 +714,31 @@ func (s *Service) getStateTrie(id skipchain.SkipBlockID) *StateTrie {
 		db, name := s.GetAdditionalBucket([]byte(idStr))
 		st, err := loadStateTrie(db, name)
 		if err != nil {
-			log.Error(s.ServerIdentity(), idStr, err)
-			return nil
+			return nil, err
 		}
 		s.stateTries[idStr] = st
-		return s.stateTries[idStr]
+		return s.stateTries[idStr], nil
 	}
-	return col
+	return col, nil
 }
 
-func (s *Service) createStateTrie(id skipchain.SkipBlockID, nonce []byte) *StateTrie {
+func (s *Service) createStateTrie(id skipchain.SkipBlockID, nonce []byte) (*stateTrie, error) {
 	if len(id) == 0 {
-		return nil
+		return nil, errors.New("no skipchain ID")
 	}
 	s.storage.Mutex.Lock()
 	defer s.storage.Mutex.Unlock()
 	idStr := fmt.Sprintf("%x", id)
 	if s.stateTries[idStr] != nil {
-		// Usually this function shouldn't be called if the trie
-		// already exists, so we return early.
-		return nil
+		return nil, errors.New("state trie already exists")
 	}
 	db, name := s.GetAdditionalBucket([]byte(idStr))
 	st, err := newStateTrie(db, name, nonce)
 	if err != nil {
-		log.Error(s.ServerIdentity(), idStr, err)
-		return nil
+		return nil, err
 	}
 	s.stateTries[idStr] = st
-	return s.stateTries[idStr]
+	return s.stateTries[idStr], nil
 }
 
 // interface to skipchain.Service
@@ -752,16 +762,19 @@ func (s *Service) db() *skipchain.SkipBlockDB {
 
 // LoadConfig loads the configuration from a skipchain ID.
 func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
-	st := s.GetReadOnlyStateTrie(scID)
-	if st == nil {
-		return nil, errors.New("nil RO state trie")
+	st, err := s.GetReadOnlyStateTrie(scID)
+	if err != nil {
+		return nil, err
 	}
 	return loadConfigFromTrie(st)
 }
 
 // LoadGenesisDarc loads the genesis darc of the given skipchain ID.
 func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error) {
-	st := s.GetReadOnlyStateTrie(scID)
+	st, err := s.GetReadOnlyStateTrie(scID)
+	if err != nil {
+		return nil, err
+	}
 	return getInstanceDarc(st, ConfigInstanceID)
 }
 
@@ -772,11 +785,11 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 	if scID == nil {
 		return defaultInterval, defaultMaxBlockSize, nil
 	}
-	cv := s.GetReadOnlyStateTrie(scID)
-	if cv == nil {
+	st, err := s.GetReadOnlyStateTrie(scID)
+	if err != nil {
 		return defaultInterval, defaultMaxBlockSize, nil
 	}
-	config, err := loadConfigFromTrie(cv)
+	config, err := loadConfigFromTrie(st)
 	if err != nil {
 		if err == errKeyNotSet {
 			err = nil
@@ -884,7 +897,10 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 				// slot. Perhaps we can run this in parallel during the wait-phase?
 				log.Lvl3("Counting how many transactions fit in", interval/2)
 				then := time.Now()
-				st := s.getStateTrie(scID)
+				st, err := s.getStateTrie(scID)
+				if err != nil {
+					panic("the state trie must exist because we only start polling after creating/loading the skipchain")
+				}
 				_, txOut, _ := s.createStateChanges(st.MakeStagingStateTrie(), scID, txIn, interval/2)
 
 				txs = txs[len(txOut):]
@@ -952,7 +968,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 
 	// Load/create a staging trie to add the state changes to it and
 	// compute the Merkle root.
-	var sst *StagingStateTrie
+	var sst *stagingStateTrie
 	if newSB.Index == 0 {
 		nonce, err := s.loadNonceFromTxs(body.TxResults)
 		if err != nil {
@@ -965,7 +981,12 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 			return false
 		}
 	} else {
-		sst = s.getStateTrie(newSB.SkipChainID()).MakeStagingStateTrie()
+		st, err := s.getStateTrie(newSB.SkipChainID())
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+			return false
+		}
+		sst = st.MakeStagingStateTrie()
 	}
 	mtr, txOut, scs := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout)
 
@@ -1067,7 +1088,7 @@ func txSize(txr ...TxResult) (out int) {
 // State caching is implemented here, which is critical to performance, because
 // on the leader it reduces the number of contract executions by 1/3 and on
 // followers by 1/2.
-func (s *Service) createStateChanges(sst *StagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges) {
+func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges) {
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
 	var err error
@@ -1369,7 +1390,7 @@ func (s *Service) startAllChains() error {
 			return errors.New("Data of wrong type")
 		}
 	}
-	s.stateTries = make(map[string]*StateTrie)
+	s.stateTries = make(map[string]*stateTrie)
 	s.notifications = bcNotifications{
 		waitChannels: make(map[string]chan bool),
 	}
