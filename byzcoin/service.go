@@ -72,7 +72,7 @@ type Service struct {
 	*onet.ServiceProcessor
 	// stateTries contains a reference to all the tries that the service is
 	// responsible for, one for each skipchain.
-	stateTries map[string]*stateTrie
+	stateTries map[string]*StateTrie
 	// notifications is used for client transaction and block notification
 	notifications bcNotifications
 
@@ -396,7 +396,7 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx []TxResult) (*skipchain.SkipBlock, error) {
 	var sb *skipchain.SkipBlock
 	var mr []byte
-	var sst *stagingStateTrie
+	var sst *StagingStateTrie
 
 	if scID.IsNull() {
 		// For a genesis block, we create a throwaway staging trie.
@@ -684,11 +684,11 @@ func isViewChangeTx(txs TxResults) *viewchange.View {
 
 // GetReadOnlyStateTrie returns a read-only accessor to the trie for the given
 // skipchain.
-func (s *Service) GetReadOnlyStateTrie(scID skipchain.SkipBlockID) ReadOnlyStateTrie {
+func (s *Service) GetReadOnlyStateTrie(scID skipchain.SkipBlockID) *StateTrie {
 	return s.getStateTrie(scID)
 }
 
-func (s *Service) getStateTrie(id skipchain.SkipBlockID) *stateTrie {
+func (s *Service) getStateTrie(id skipchain.SkipBlockID) *StateTrie {
 	if len(id) == 0 {
 		return nil
 	}
@@ -709,7 +709,7 @@ func (s *Service) getStateTrie(id skipchain.SkipBlockID) *stateTrie {
 	return col
 }
 
-func (s *Service) createStateTrie(id skipchain.SkipBlockID, nonce []byte) *stateTrie {
+func (s *Service) createStateTrie(id skipchain.SkipBlockID, nonce []byte) *StateTrie {
 	if len(id) == 0 {
 		return nil
 	}
@@ -952,7 +952,7 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 
 	// Load/create a staging trie to add the state changes to it and
 	// compute the Merkle root.
-	var sst *stagingStateTrie
+	var sst *StagingStateTrie
 	if newSB.Index == 0 {
 		nonce, err := s.loadNonceFromTxs(body.TxResults)
 		if err != nil {
@@ -1067,7 +1067,7 @@ func txSize(txr ...TxResult) (out int) {
 // State caching is implemented here, which is critical to performance, because
 // on the leader it reduces the number of contract executions by 1/3 and on
 // followers by 1/2.
-func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges) {
+func (s *Service) createStateChanges(sst *StagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges) {
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
 	var err error
@@ -1369,7 +1369,7 @@ func (s *Service) startAllChains() error {
 			return errors.New("Data of wrong type")
 		}
 	}
-	s.stateTries = make(map[string]*stateTrie)
+	s.stateTries = make(map[string]*StateTrie)
 	s.notifications = bcNotifications{
 		waitChannels: make(map[string]chan bool),
 	}
