@@ -286,6 +286,7 @@ func TestClient_Search(t *testing.T) {
 }
 
 func waitForKey(t *testing.T, s *byzcoin.Service, scID skipchain.SkipBlockID, key []byte, interval time.Duration) {
+	log.Printf("WAITING %x", key)
 	if len(key) == 0 {
 		t.Fatal("key len", len(key))
 	}
@@ -311,7 +312,7 @@ func waitForKey(t *testing.T, s *byzcoin.Service, scID skipchain.SkipBlockID, ke
 		time.Sleep(interval)
 	}
 	if !found {
-		t.Fatal("timeout")
+		require.Fail(t, "timeout")
 	}
 	_, _, _, err := resp.Proof.Get(key)
 	require.NoError(t, err)

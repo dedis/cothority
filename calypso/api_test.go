@@ -85,8 +85,9 @@ func TestClient_Calypso(t *testing.T) {
 		expression.InitOrExpr(reader1.Identity().String()))
 	require.NotNil(t, darc1)
 	require.Nil(t, err)
-	_, err = calypsoClient.SpawnDarc(admin, gDarc, *darc1, 10)
+	_, err = calypsoClient.SpawnDarc(admin, gDarc, *darc1, 1, 10)
 	require.Nil(t, err)
+
 	//Create a similar darc for provider2, reader2
 	darc2 := darc.NewDarc(darc.InitRules([]darc.Identity{provider2.Identity()},
 		[]darc.Identity{provider2.Identity()}), []byte("Provider2"))
@@ -96,7 +97,7 @@ func TestClient_Calypso(t *testing.T) {
 	darc2.Rules.AddRule(darc.Action("spawn:"+ContractReadID),
 		expression.InitOrExpr(reader2.Identity().String()))
 	//Spawn it
-	_, err = calypsoClient.SpawnDarc(admin, gDarc, *darc2, 10)
+	_, err = calypsoClient.SpawnDarc(admin, gDarc, *darc2, 2, 10)
 	require.Nil(t, err)
 	//Create a secret key
 	key1 := []byte("secret key 1")
@@ -104,7 +105,7 @@ func TestClient_Calypso(t *testing.T) {
 	write1 := NewWrite(cothority.Suite, calypsoClient.ltsReply.LTSID,
 		darc1.GetBaseID(), calypsoClient.ltsReply.X, key1)
 	//Write it to calypso
-	wr1, err := calypsoClient.AddWrite(write1, provider1, *darc1, 10)
+	wr1, err := calypsoClient.AddWrite(write1, provider1, *darc1, 1, 10)
 	require.Nil(t, err)
 	require.NotNil(t, wr1.InstanceID)
 	//Get the write proof
@@ -112,7 +113,7 @@ func TestClient_Calypso(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, prWr1)
 
-	re1, err := calypsoClient.AddRead(prWr1, reader1, *darc1, 10)
+	re1, err := calypsoClient.AddRead(prWr1, reader1, *darc1, 1, 10)
 	require.Nil(t, err)
 	prRe1, err := calypsoClient.WaitProof(re1.InstanceID, time.Second, nil)
 	require.Nil(t, err)
@@ -122,12 +123,12 @@ func TestClient_Calypso(t *testing.T) {
 	//Create a Write instance
 	write2 := NewWrite(cothority.Suite, calypsoClient.ltsReply.LTSID,
 		darc2.GetBaseID(), calypsoClient.ltsReply.X, key2)
-	wr2, err := calypsoClient.AddWrite(write2, provider2, *darc2, 10)
+	wr2, err := calypsoClient.AddWrite(write2, provider2, *darc2, 1, 10)
 	require.Nil(t, err)
 	prWr2, err := calypsoClient.WaitProof(wr2.InstanceID, time.Second, nil)
 	require.Nil(t, err)
 	require.True(t, prWr2.InclusionProof.Match(wr2.InstanceID.Slice()))
-	re2, err := calypsoClient.AddRead(prWr2, reader2, *darc2, 10)
+	re2, err := calypsoClient.AddRead(prWr2, reader2, *darc2, 1, 10)
 	require.Nil(t, err)
 	prRe2, err := calypsoClient.WaitProof(re2.InstanceID, time.Second, nil)
 	require.Nil(t, err)

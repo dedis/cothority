@@ -20,8 +20,8 @@ var ContractWriteID = "calypsoWrite"
 // Accepted Instructions:
 //  - spawn:calypsoWrite creates a new write-request. TODO: verify the LTS exists
 //  - spawn:calypsoRead creates a new read-request for this write-request.
-func (s *Service) ContractWrite(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
-	err := inst.VerifyDarcSignature(cdb)
+func (s *Service) ContractWrite(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+	err := inst.Verify(cdb, ctxHash)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -56,7 +56,7 @@ func (s *Service) ContractWrite(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Inst
 		case ContractReadID:
 			var scs byzcoin.StateChanges
 			var err error
-			scs, nc, err = s.ContractRead(cdb, inst, c)
+			scs, nc, err = s.ContractRead(cdb, inst, ctxHash, c)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -82,8 +82,8 @@ var ContractReadID = "calypsoRead"
 // TODO: correctly handle multi signatures for read requests: to whom should the
 // secret be re-encrypted to? Perhaps for multi signatures we only want to have
 // ephemeral keys.
-func (s *Service) ContractRead(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
-	err := inst.VerifyDarcSignature(cdb)
+func (s *Service) ContractRead(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+	err := inst.Verify(cdb, ctxHash)
 	if err != nil {
 		return nil, nil, err
 	}

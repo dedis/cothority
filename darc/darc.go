@@ -741,6 +741,22 @@ func (id Identity) Type() int {
 	return -1
 }
 
+// PrimaryIdentity returns true if the identity is a primary identity, which is
+// an identity that is associated with a concrete public/key.
+func (id Identity) PrimaryIdentity() bool {
+	switch {
+	case id.Darc != nil:
+		return false
+	case id.Ed25519 != nil:
+		return true
+	case id.X509EC != nil:
+		return true
+	case id.Proxy != nil:
+		return true
+	}
+	return false
+}
+
 // TypeString returns the string of the type of the identity.
 func (id Identity) TypeString() string {
 	switch id.Type() {

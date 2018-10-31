@@ -77,16 +77,23 @@ func (args Arguments) Search(name string) []byte {
 	return nil
 }
 
+// SignWith signs all the instructions in the transaction using the same set of
+// signers. If some instructions need to be signed by different sets of
+// signers, then use the SighWith method of Instruction.
+func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
+	ctx.InstructionsHash = ctx.Instructions.Hash()
+	for i := range ctx.Instructions {
+		if err := ctx.Instructions[i].SignWith(ctx.InstructionsHash, signers...); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Hash computes the digest of the hash function
 func (instr Instruction) Hash() []byte {
 	h := sha256.New()
 	h.Write(instr.InstanceID[:])
-	h.Write(instr.Nonce[:])
-	b := make([]byte, 4)
-	binary.LittleEndian.PutUint32(b, uint32(instr.Index))
-	h.Write(b)
-	binary.LittleEndian.PutUint32(b, uint32(instr.Length))
-	h.Write(b)
 	var args []Argument
 	switch instr.GetType() {
 	case SpawnType:
@@ -102,6 +109,11 @@ func (instr Instruction) Hash() []byte {
 	for _, a := range args {
 		h.Write([]byte(a.Name))
 		h.Write(a.Value)
+	}
+	for _, ver := range instr.SignerCounter {
+		verBuf := make([]byte, 8)
+		binary.LittleEndian.PutUint64(verBuf, ver)
+		h.Write(verBuf)
 	}
 	return h.Sum(nil)
 }
@@ -127,6 +139,8 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 
 	binary.LittleEndian.PutUint32(b[:], uint32(len(instr.Signatures)))
 	h.Write(b[:])
+
+	// TODO: add the counters?
 
 	for _, s := range instr.Signatures {
 		binary.LittleEndian.PutUint32(b[:], uint32(len(s.Signature)))
@@ -173,39 +187,19 @@ func (instr Instruction) String() string {
 	var out string
 	out += fmt.Sprintf("instr: %x\n", instr.Hash())
 	out += fmt.Sprintf("\tinstID: %v\n", instr.InstanceID)
-	out += fmt.Sprintf("\tnonce: %x\n", instr.Nonce)
-	out += fmt.Sprintf("\tindex: %d\n\tlength: %d\n", instr.Index, instr.Length)
 	out += fmt.Sprintf("\taction: %s\n", instr.Action())
 	out += fmt.Sprintf("\tsignatures: %d\n", len(instr.Signatures))
 	return out
 }
 
-// SignBy gets one signature from each of the given signers
-// and adds them into the Instruction.
-func (instr *Instruction) SignBy(darcID darc.ID, signers ...darc.Signer) error {
-	// Create the request and populate it with the right identities.  We
-	// need to do this prior to signing because identities are a part of
-	// the digest of the Instruction.
-	sigs := make([]darc.Signature, len(signers))
-	for i, signer := range signers {
-		sigs[i].Signer = signer.Identity()
-	}
-	instr.Signatures = sigs
-
-	req, err := instr.ToDarcRequest(darcID)
-	if err != nil {
-		return err
-	}
-	req.Identities = make([]darc.Identity, len(signers))
-	for i := range signers {
-		req.Identities[i] = signers[i].Identity()
-	}
-
-	// Sign the instruction and write the signatures to it.
-	digest := req.Hash()
+// SignWith creates a signed version of the instruction. The signature is
+// created on msg, which must be the hash of the ClientTransaction which
+// contains the instruction. Otherwise the verification will fail on the server
+// side.
+func (instr *Instruction) SignWith(msg []byte, signers ...darc.Signer) error {
 	instr.Signatures = make([]darc.Signature, len(signers))
 	for i := range signers {
-		sig, err := signers[i].Sign(digest)
+		sig, err := signers[i].Sign(msg)
 		if err != nil {
 			return err
 		}
@@ -217,49 +211,48 @@ func (instr *Instruction) SignBy(darcID darc.ID, signers ...darc.Signer) error {
 	return nil
 }
 
-// ToDarcRequest converts the Instruction content into a darc.Request.
-func (instr Instruction) ToDarcRequest(baseID darc.ID) (*darc.Request, error) {
-	action := instr.Action()
-	ids := make([]darc.Identity, len(instr.Signatures))
-	sigs := make([][]byte, len(instr.Signatures))
+// GetIdentityStrings gets a slice of identities who are signing the
+// instruction.
+func (instr Instruction) GetIdentityStrings() []string {
+	res := make([]string, len(instr.Signatures))
 	for i, sig := range instr.Signatures {
-		ids[i] = sig.Signer
-		sigs[i] = sig.Signature // TODO shallow copy is ok?
+		res[i] = sig.Signer.String()
 	}
-	var req darc.Request
-	if action == "_evolve" {
-		// We make a special case for darcs evolution because the Msg
-		// part of the request must be the darc ID for verification to
-		// pass.
-		darcBuf := instr.Invoke.Args.Search("darc")
-		d, err := darc.NewFromProtobuf(darcBuf)
-		if err != nil {
-			return nil, err
-		}
-		req = darc.NewRequest(baseID, darc.Action(action), d.GetID(), ids, sigs)
-	} else {
-		req = darc.NewRequest(baseID, darc.Action(action), instr.Hash(), ids, sigs)
-	}
-	return &req, nil
+	return res
 }
 
-// VerifyDarcSignature will look up the darc of the instance pointed to by
-// the instruction and then verify if the signature on the instruction
-// can satisfy the rules of the darc. It returns an error if it couldn't
-// find the darc or if the signature is wrong.
-func (instr Instruction) VerifyDarcSignature(st ReadOnlyStateTrie) error {
+// Verify will look up the darc of the instance pointed to by the instruction
+// and then verify if the signature on the instruction can satisfy the rules of
+// the darc. An error is returned if any of the verification fails.
+func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
+	// check the signature counters
+	if err := verifySignatureCounters(st, instr.SignerCounter, instr.Signatures); err != nil {
+		return err
+	}
+
+	// get the darc
 	d, err := getInstanceDarc(st, instr.InstanceID)
 	if err != nil {
 		return errors.New("darc not found: " + err.Error())
 	}
-	req, err := instr.ToDarcRequest(d.GetBaseID())
-	if err != nil {
-		return errors.New("couldn't create darc request: " + err.Error())
+	if len(instr.Signatures) == 0 {
+		return errors.New("no signatures - nothing to verify")
 	}
-	// Verify the request is signed by appropriate identities.
-	// A callback is required to get any delegated DARC(s) during
-	// expression evaluation.
-	err = req.VerifyWithCB(d, func(str string, latest bool) *darc.Darc {
+
+	// check the action
+	if !d.Rules.Contains(darc.Action(instr.Action())) {
+		return fmt.Errorf("action '%v' does not exist", instr.Action())
+	}
+
+	// check the signature
+	for _, sig := range instr.Signatures {
+		if err := sig.Signer.Verify(msg, sig.Signature); err != nil {
+			return err
+		}
+	}
+
+	// check the expression
+	getDarc := func(str string, latest bool) *darc.Darc {
 		if len(str) < 5 || string(str[0:5]) != "darc:" {
 			return nil
 		}
@@ -272,11 +265,8 @@ func (instr Instruction) VerifyDarcSignature(st ReadOnlyStateTrie) error {
 			return nil
 		}
 		return d
-	})
-	if err != nil {
-		return errors.New("request verification failed: " + err.Error())
 	}
-	return nil
+	return darc.EvalExpr(d.Rules.Get(darc.Action(instr.Action())), getDarc, instr.GetIdentityStrings()...)
 }
 
 // InstrType is the instruction type, which can be spawn, invoke or delete.

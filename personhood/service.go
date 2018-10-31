@@ -205,6 +205,15 @@ func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 	msg.Balance -= msg.Reward
 	read.Readers = append(read.Readers, rm.Reader)
 
+	cl := byzcoin.NewClient(party.ByzCoinID, *party.FinalStatement.Desc.Roster)
+	signerCtrs, err := cl.GetSignerCounters(party.Signer.Identity().String())
+	if err != nil {
+		return nil, err
+	}
+	if len(signerCtrs.Counters) != 1 {
+		return nil, errors.New("incorrect version in signer counter")
+	}
+
 	cBuf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(cBuf, msg.Reward)
 	partyCoin := sha256.New()
@@ -217,8 +226,6 @@ func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 	ctx := byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(partyCoin.Sum(nil)),
-			Index:      0,
-			Length:     1,
 			Invoke: &byzcoin.Invoke{
 				Command: "transfer",
 				Args: []byzcoin.Argument{{
@@ -230,14 +237,14 @@ func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 						Value: rm.Reader.Slice(),
 					}},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
 
-	err = ctx.Instructions[0].SignBy(party.Darc.GetBaseID(), party.Signer)
+	err = ctx.SignWith(party.Signer)
 	if err != nil {
 		return nil, errors.New("couldn't sign: " + err.Error())
 	}
-	cl := byzcoin.NewClient(party.ByzCoinID, *party.FinalStatement.Desc.Roster)
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
 		return nil, errors.New("couldn't send reward: " + err.Error())

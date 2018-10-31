@@ -262,6 +262,14 @@ func add(c *cli.Context) error {
 		return err
 	}
 
+	signatureCtr, err := cl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return err
+	}
+	if len(signatureCtr.Counters) != 1 {
+		return errors.New("invalid result from GetSignerCounters")
+	}
+
 	invoke := byzcoin.Invoke{
 		Command: "evolve",
 		Args: []byzcoin.Argument{
@@ -271,23 +279,24 @@ func add(c *cli.Context) error {
 			},
 		},
 	}
-	instr := byzcoin.Instruction{
-		InstanceID: byzcoin.NewInstanceID(d2.GetBaseID()),
-		Index:      0,
-		Length:     1,
-		Invoke:     &invoke,
-		Signatures: []darc.Signature{
-			darc.Signature{Signer: signer.Identity()},
+	ctx := byzcoin.ClientTransaction{
+		Instructions: []byzcoin.Instruction{
+			{
+				InstanceID: byzcoin.NewInstanceID(d2.GetBaseID()),
+				Invoke:     &invoke,
+				Signatures: []darc.Signature{
+					darc.Signature{Signer: signer.Identity()},
+				},
+				SignerCounter: []uint64{signatureCtr.Counters[0] + 1},
+			},
 		},
 	}
-	err = instr.SignBy(d2.GetBaseID(), *signer)
+	err = ctx.SignWith(*signer)
 	if err != nil {
 		return err
 	}
 
-	_, err = cl.AddTransactionAndWait(byzcoin.ClientTransaction{
-		Instructions: []byzcoin.Instruction{instr},
-	}, 10)
+	_, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
 		return err
 	}

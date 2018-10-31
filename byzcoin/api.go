@@ -248,9 +248,9 @@ func (c *Client) WaitProof(id InstanceID, interval time.Duration, value []byte) 
 // the handler will be called whenever a new response (a new block) is
 // available. This function blocks, the streaming stops if the client or the
 // service stops.
-func (c *Client) StreamTransactions(genesisID skipchain.SkipBlockID, handler func(StreamingResponse, error)) error {
+func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) error {
 	req := StreamingRequest{
-		ID: genesisID,
+		ID: c.ID,
 	}
 	conn, err := c.Stream(c.Roster.List[0], &req)
 	if err != nil {
@@ -264,6 +264,21 @@ func (c *Client) StreamTransactions(genesisID skipchain.SkipBlockID, handler fun
 		}
 		handler(resp, nil)
 	}
+}
+
+// GetSignerCounters gets the signature counters. The counter must be set
+// correctly in the transaction for it to be verified.
+func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, error) {
+	req := GetSignerCounters{
+		SkipchainID: c.ID,
+		SignerIDs:   ids,
+	}
+	var reply GetSignerCountersResponse
+	err := c.SendProtobuf(c.Roster.List[0], &req, &reply)
+	if err != nil {
+		return nil, err
+	}
+	return &reply, nil
 }
 
 // DefaultGenesisMsg creates the message that is used to for creating the
@@ -293,32 +308,4 @@ func DefaultGenesisMsg(v Version, r *onet.Roster, rules []string, ids ...darc.Id
 		BlockInterval: defaultInterval,
 	}
 	return &m, nil
-}
-
-// SignInstruction takes an instruction and one or more signers and adds
-// a Signature to the instruction.
-func SignInstruction(inst *Instruction, darcID darc.ID, signers ...darc.Signer) error {
-	inst.Signatures = make([]darc.Signature, 0)
-	var action string
-	switch inst.GetType() {
-	case SpawnType:
-		action = "spawn:" + inst.Spawn.ContractID
-	case InvokeType:
-		action = "invoke:" + inst.Invoke.Command
-	case DeleteType:
-		action = "delete"
-	}
-	req, err := darc.InitAndSignRequest(darcID, darc.Action(action),
-		inst.Hash(), signers...)
-	if err != nil {
-		return err
-	}
-	inst.Signatures = make([]darc.Signature, len(req.Signatures))
-	for i, sig := range req.Signatures {
-		inst.Signatures[i] = darc.Signature{
-			Signature: sig,
-			Signer:    signers[i].Identity(),
-		}
-	}
-	return nil
 }

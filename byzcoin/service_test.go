@@ -172,7 +172,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	// add the second tx
 	log.Lvl1("adding the second tx")
 	value2 := []byte("value2")
-	tx2, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, value2, s.signer)
+	tx2, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, value2, s.signer, 2)
 	require.Nil(t, err)
 	akvresp, err = s.services[sendToIdx].AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
@@ -302,23 +302,6 @@ func TestService_DarcProxy(t *testing.T) {
 	require.NoError(t, err)
 	s.testDarcEvolution(t, *d2, false)
 
-	instr := Instruction{
-		InstanceID: NewInstanceID(d2.GetBaseID()),
-		Spawn: &Spawn{
-			ContractID: "dummy",
-			Args:       Arguments{{Name: "data", Value: []byte("nothing in particular")}},
-		},
-		Nonce:  GenNonce(),
-		Index:  0,
-		Length: 1,
-	}
-	instr.Signatures = []darc.Signature{{Signer: id}}
-
-	// Make the message in the same way the Auth Proxies eventually will: H(len(data)|data|H(darc.Request))
-	dr, err := instr.ToDarcRequest(d2.GetBaseID())
-	require.NoError(t, err)
-	dr.Identities = []darc.Identity{id}
-
 	ga := func(msg []byte) ([]byte, error) {
 		h := sha256.New()
 		b := make([]byte, 4)
@@ -336,20 +319,29 @@ func TestService_DarcProxy(t *testing.T) {
 
 	// now set the signer with the correct callback
 	signer = darc.NewSignerProxy(email, ed.Public, ga)
+	ctx := ClientTransaction{
+		Instructions: []Instruction{
+			{
+				InstanceID: NewInstanceID(d2.GetBaseID()),
+				Spawn: &Spawn{
+					ContractID: "dummy",
+					Args:       Arguments{{Name: "data", Value: []byte("nothing in particular")}},
+				},
+				SignerCounter: []uint64{1},
+			},
+		},
+	}
 
-	err = instr.SignBy(d2.GetBaseID(), signer)
+	err = ctx.SignWith(signer)
 	require.Nil(t, err)
 
 	_, err = s.service().AddTransaction(&AddTxRequest{
-		Version:     CurrentVersion,
-		SkipchainID: s.sb.SkipChainID(),
-		Transaction: ClientTransaction{
-			Instructions: []Instruction{instr},
-		},
+		Version:       CurrentVersion,
+		SkipchainID:   s.sb.SkipChainID(),
+		Transaction:   ctx,
 		InclusionWait: 10,
 	})
 	require.Nil(t, err)
-
 }
 
 // Test that inter-instruction dependencies are correctly handled.
@@ -361,27 +353,18 @@ func TestService_Depending(t *testing.T) {
 	// the first one having executed.
 
 	// First instruction: spawn a dummy value.
-	in1, err := createInstr(s.darc.GetBaseID(), dummyContract, []byte("something to delete"), s.signer)
-	require.NoError(t, err)
-
-	// Set the length to reflect there are two.
-	// Need to sign it again because we hacked on it.
-	in1.Length = 2
-	in1.SignBy(s.darc.GetBaseID(), s.signer)
+	in1 := createInstr(s.darc.GetBaseID(), dummyContract, []byte("something to delete"))
+	in1.SignerCounter = []uint64{1}
 
 	// Second instruction: delete the value we just spawned.
 	in2 := Instruction{
 		InstanceID: NewInstanceID(in1.Hash()),
 		Delete:     &Delete{},
-		Nonce:      GenNonce(),
-		Index:      1,
-		Length:     2,
 	}
-	in2.SignBy(s.darc.GetBaseID(), s.signer)
+	in2.SignerCounter = []uint64{2}
 
-	tx := ClientTransaction{
-		Instructions: []Instruction{in1, in2},
-	}
+	tx, err := combineInstrsAndSign(s.signer, in1, in2)
+	require.NoError(t, err)
 
 	_, err = s.services[0].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
@@ -567,11 +550,12 @@ func TestService_FloodLedger(t *testing.T) {
 	before := reply.Update[len(reply.Update)-1]
 
 	log.Lvl1("Create 10 transactions and don't wait")
-	for i := 0; i < 10; i++ {
-		sendTransaction(t, s, 0, slowContract, 0)
+	n := 10
+	for i := 0; i < n; i++ {
+		sendTransactionWithCounter(t, s, 0, slowContract, 0, uint64(i)+1)
 	}
 	// Send a last transaction and wait for it to be included
-	sendTransaction(t, s, 0, dummyContract, 100)
+	sendTransactionWithCounter(t, s, 0, dummyContract, 100, uint64(n)+2)
 
 	// Suppose we need at least 2 blocks (slowContract waits 1/5 interval for each execution)
 	reply, err = skipchain.NewClient().GetUpdateChain(s.sb.Roster, s.sb.SkipChainID())
@@ -608,16 +592,16 @@ func TestService_BigTx(t *testing.T) {
 	s.value = make([]byte, defaultMaxBlockSize/4*3)
 
 	log.Lvl1("Create 2 giant transactions and 1 little one, wait for the 3rd one")
-	_, _, e1, e2 = sendTransaction(t, s, 0, dummyContract, 0)
+	_, _, e1, e2 = sendTransactionWithCounter(t, s, 0, dummyContract, 0, 1)
 	require.NoError(t, e1)
 	require.NoError(t, e2)
-	_, _, e1, e2 = sendTransaction(t, s, 0, dummyContract, 0)
+	_, _, e1, e2 = sendTransactionWithCounter(t, s, 0, dummyContract, 0, 2)
 	require.NoError(t, e1)
 	require.NoError(t, e2)
 
 	// Back to little values again for the last tx.
 	s.value = save
-	p, k, e1, e2 := sendTransaction(t, s, 0, dummyContract, 10)
+	p, k, e1, e2 := sendTransactionWithCounter(t, s, 0, dummyContract, 10, 3)
 	require.NoError(t, e1)
 	require.NoError(t, e2)
 	require.True(t, p.InclusionProof.Match(k))
@@ -631,7 +615,16 @@ func TestService_BigTx(t *testing.T) {
 }
 
 func sendTransaction(t *testing.T, s *ser, client int, kind string, wait int) (Proof, []byte, error, error) {
-	tx, err := createOneClientTx(s.darc.GetBaseID(), kind, s.value, s.signer)
+	counterResponse, err := s.service().GetSignerCounters(&GetSignerCounters{
+		SignerIDs:   []string{s.signer.Identity().String()},
+		SkipchainID: s.sb.SkipChainID(),
+	})
+	require.NoError(t, err)
+	return sendTransactionWithCounter(t, s, client, kind, wait, counterResponse.Counters[0]+1)
+}
+
+func sendTransactionWithCounter(t *testing.T, s *ser, client int, kind string, wait int, counter uint64) (Proof, []byte, error, error) {
+	tx, err := createOneClientTxWithCounter(s.darc.GetBaseID(), kind, s.value, s.signer, counter)
 	require.Nil(t, err)
 	ser := s.services[client]
 	_, err = ser.AddTransaction(&AddTxRequest{
@@ -736,7 +729,7 @@ func TestService_StateChange(t *testing.T) {
 	defer s.local.CloseAll()
 
 	var latest int64
-	f := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	f := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
 		_, cid, _, err := cdb.GetValues(inst.InstanceID.Slice())
 		if err != nil {
 			return nil, nil, err
@@ -802,14 +795,10 @@ func TestService_StateChange(t *testing.T) {
 	require.Nil(t, err)
 
 	n := 5
-	nonce := GenNonce()
 	instrs := make([]Instruction, n)
 	for i := range instrs {
 		instrs[i] = Instruction{
 			InstanceID: inst,
-			Nonce:      nonce,
-			Index:      i,
-			Length:     n,
 		}
 		if i == 0 {
 			instrs[i].Spawn = &Spawn{
@@ -824,16 +813,16 @@ func TestService_StateChange(t *testing.T) {
 	instrs2 := make([]Instruction, 1)
 	instrs2[0] = Instruction{
 		InstanceID: inst,
-		Nonce:      nonce,
-		Index:      0,
-		Length:     1,
 		Spawn: &Spawn{
 			ContractID: "not-add",
 		},
 	}
 
 	ct1 := ClientTransaction{Instructions: instrs}
+	ct1.InstructionsHash = ct1.Instructions.Hash()
+
 	ct2 := ClientTransaction{Instructions: instrs2}
+	ct2.InstructionsHash = ct2.Instructions.Hash()
 
 	_, txOut, scs := s.service().createStateChanges(cdb.MakeStagingStateTrie(), s.sb.SkipChainID(), NewTxResults(ct1, ct2), noTimeout)
 	require.Equal(t, 2, len(txOut))
@@ -898,9 +887,6 @@ func TestService_DarcSpawn(t *testing.T) {
 	ctx := ClientTransaction{
 		Instructions: []Instruction{{
 			InstanceID: NewInstanceID(s.darc.GetBaseID()),
-			Nonce:      GenNonce(),
-			Index:      0,
-			Length:     1,
 			Spawn: &Spawn{
 				ContractID: ContractDarcID,
 				Args: []Argument{{
@@ -908,9 +894,11 @@ func TestService_DarcSpawn(t *testing.T) {
 					Value: darc2Buf,
 				}},
 			},
+			SignerCounter: []uint64{1},
 		}},
 	}
-	require.Nil(t, ctx.Instructions[0].SignBy(s.darc.GetBaseID(), s.signer))
+	ctx.InstructionsHash = ctx.Instructions.Hash()
+	require.Nil(t, ctx.Instructions[0].SignWith(ctx.InstructionsHash, s.signer))
 
 	s.sendTx(t, ctx)
 	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
@@ -933,22 +921,18 @@ func TestService_DarcDelegation(t *testing.T) {
 	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
 	require.Nil(t, err)
 	require.True(t, darc2.Equal(darc2Copy))
-	ctx := ClientTransaction{
-		Instructions: []Instruction{{
-			InstanceID: NewInstanceID(s.darc.GetBaseID()),
-			Nonce:      GenNonce(),
-			Index:      0,
-			Length:     1,
-			Spawn: &Spawn{
-				ContractID: ContractDarcID,
-				Args: []Argument{{
-					Name:  "darc",
-					Value: darc2Buf,
-				}},
-			},
-		}},
+	instr := Instruction{
+		InstanceID: NewInstanceID(s.darc.GetBaseID()),
+		Spawn: &Spawn{
+			ContractID: ContractDarcID,
+			Args: []Argument{{
+				Name:  "darc",
+				Value: darc2Buf,
+			}},
+		},
+		SignerCounter: []uint64{1},
 	}
-	require.Nil(t, ctx.Instructions[0].SignBy(s.darc.GetBaseID(), s.signer))
+	ctx, err := combineInstrsAndSign(s.signer, instr)
 	s.sendTx(t, ctx)
 	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
 	require.True(t, pr.InclusionProof.Match(darc2.GetBaseID()))
@@ -964,23 +948,19 @@ func TestService_DarcDelegation(t *testing.T) {
 	darc3Copy, err := darc.NewFromProtobuf(darc3Buf)
 	require.Nil(t, err)
 	require.True(t, darc3.Equal(darc3Copy))
-	ctx = ClientTransaction{
-		Instructions: []Instruction{{
-			InstanceID: NewInstanceID(darc2.GetBaseID()),
-			Nonce:      GenNonce(),
-			Index:      0,
-			Length:     1,
-			Spawn: &Spawn{
-				ContractID: ContractDarcID,
-				Args: []Argument{{
-					Name:  "darc",
-					Value: darc3Buf,
-				}},
-			},
-		}},
+	instr = Instruction{
+		InstanceID: NewInstanceID(darc2.GetBaseID()),
+		Spawn: &Spawn{
+			ContractID: ContractDarcID,
+			Args: []Argument{{
+				Name:  "darc",
+				Value: darc3Buf,
+			}},
+		},
+		SignerCounter: []uint64{2},
 	}
-
-	require.Nil(t, ctx.Instructions[0].SignBy(darc2.GetBaseID(), s.signer))
+	ctx, err = combineInstrsAndSign(s.signer, instr)
+	require.NoError(t, err)
 	s.sendTx(t, ctx)
 	pr = s.waitProof(t, NewInstanceID(darc3.GetBaseID()))
 	require.True(t, pr.InclusionProof.Match(darc3.GetBaseID()))
@@ -1002,22 +982,19 @@ func TestService_CheckAuthorization(t *testing.T) {
 	darc2Copy, err := darc.NewFromProtobuf(darc2Buf)
 	require.Nil(t, err)
 	require.True(t, darc2.Equal(darc2Copy))
-	ctx := ClientTransaction{
-		Instructions: []Instruction{{
-			InstanceID: NewInstanceID(s.darc.GetBaseID()),
-			Nonce:      GenNonce(),
-			Index:      0,
-			Length:     1,
-			Spawn: &Spawn{
-				ContractID: ContractDarcID,
-				Args: []Argument{{
-					Name:  "darc",
-					Value: darc2Buf,
-				}},
-			},
-		}},
+	instr := Instruction{
+		InstanceID: NewInstanceID(s.darc.GetBaseID()),
+		Spawn: &Spawn{
+			ContractID: ContractDarcID,
+			Args: []Argument{{
+				Name:  "darc",
+				Value: darc2Buf,
+			}},
+		},
+		SignerCounter: []uint64{1},
 	}
-	require.Nil(t, ctx.Instructions[0].SignBy(s.darc.GetBaseID(), s.signer))
+	ctx, err := combineInstrsAndSign(s.signer, instr)
+	require.NoError(t, err)
 	s.sendTx(t, ctx)
 	pr := s.waitProof(t, NewInstanceID(darc2.GetBaseID()))
 	require.True(t, pr.InclusionProof.Match(darc2.GetBaseID()))
@@ -1105,12 +1082,14 @@ func TestService_SetConfigInterval(t *testing.T) {
 	}
 
 	lastInterval := testInterval
+	var counter uint64 = 1
 	for i := 0; i < len(intervals); i++ {
 		for _, interval := range intervals {
 			// The next block should now be in the range of testInterval.
 			log.Lvl1("Setting interval to", interval)
 			start := time.Now()
-			ctx, _ := createConfigTx(t, interval, *s.roster, defaultMaxBlockSize, s)
+			ctx, _ := createConfigTxWithCounter(t, interval, *s.roster, defaultMaxBlockSize, s, counter)
+			counter++
 			// The wait argument here is also used in case no block is received, so
 			// it means: at most 10*blockInterval, or after 10 blocks, whichever comes
 			// first. Putting it to 1 doesn't work, because the actual blockInterval
@@ -1286,7 +1265,7 @@ func TestService_StateChangeCache(t *testing.T) {
 	// only call it once.
 	contractID := "stateShangeCacheTest"
 	var ctr int
-	contract := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+	contract := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
 		ctr++
 		return []StateChange{}, []Coin{}, nil
 	}
@@ -1296,20 +1275,23 @@ func TestService_StateChangeCache(t *testing.T) {
 	st, err := s.service().getStateTrie(scID)
 	require.NoError(t, err)
 	sst := st.MakeStagingStateTrie()
-	tx1, err := createOneClientTx(s.darc.GetBaseID(), contractID, []byte{}, s.signer)
+	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), contractID, []byte{}, s.signer, 1)
 	require.Nil(t, err)
 
 	// Add a second tx that is invalid because it is for an unknown contract.
 	log.Lvl1("Calling invalid invoke on contract")
-	tx2, err := createOneClientTx(s.darc.GetBaseID(), contractID+"x", []byte{}, s.signer)
+	tx2, err := createOneClientTxWithCounter(s.darc.GetBaseID(), contractID+"x", []byte{}, s.signer, 2)
 	require.Nil(t, err)
 
 	txs := NewTxResults(tx1, tx2)
 	require.NoError(t, err)
 	root, txOut, states := s.service().createStateChanges(sst, scID, txs, noTimeout)
 	require.Equal(t, 2, len(txOut))
-	require.Equal(t, 0, len(states))
 	require.Equal(t, 1, ctr)
+	// we expect one state change to increment the signature counter
+	require.Equal(t, 1, len(states))
+	require.Equal(t, []byte{}, states[0].ContractID)
+	require.Equal(t, []byte{}, []byte(states[0].DarcID))
 
 	// If we call createStateChanges on the new txOut (as it will happen in production
 	// when the tx set is reduced by the selection step, and then txOut are sent to
@@ -1344,7 +1326,7 @@ func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTra
 	}
 }
 
-func createConfigTx(t *testing.T, interval time.Duration, roster onet.Roster, size int, s *ser) (ClientTransaction, ChainConfig) {
+func createConfigTxWithCounter(t *testing.T, interval time.Duration, roster onet.Roster, size int, s *ser, counter uint64) (ClientTransaction, ChainConfig) {
 	config := ChainConfig{
 		BlockInterval: interval,
 		Roster:        roster,
@@ -1353,23 +1335,25 @@ func createConfigTx(t *testing.T, interval time.Duration, roster onet.Roster, si
 	configBuf, err := protobuf.Encode(&config)
 	require.NoError(t, err)
 
-	ctx := ClientTransaction{
-		Instructions: []Instruction{{
-			InstanceID: NewInstanceID(nil),
-			Nonce:      GenNonce(),
-			Index:      0,
-			Length:     1,
-			Invoke: &Invoke{
-				Command: "update_config",
-				Args: []Argument{{
-					Name:  "config",
-					Value: configBuf,
-				}},
-			},
-		}},
+	instr := Instruction{
+		InstanceID: NewInstanceID(nil),
+		Invoke: &Invoke{
+			Command: "update_config",
+			Args: []Argument{{
+				Name:  "config",
+				Value: configBuf,
+			}},
+		},
+		SignerCounter: []uint64{counter},
 	}
-	require.NoError(t, ctx.Instructions[0].SignBy(s.darc.GetBaseID(), s.signer))
+	ctx, err := combineInstrsAndSign(s.signer, instr)
+
+	require.NoError(t, err)
 	return ctx, config
+}
+
+func createConfigTx(t *testing.T, interval time.Duration, roster onet.Roster, size int, s *ser) (ClientTransaction, ChainConfig) {
+	return createConfigTxWithCounter(t, interval, roster, size, s, 1)
 }
 
 func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction {
@@ -1385,16 +1369,13 @@ func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction 
 		},
 	}
 	instr := Instruction{
-		InstanceID: NewInstanceID(d2.GetBaseID()),
-		Nonce:      GenNonce(),
-		Index:      0,
-		Length:     1,
-		Invoke:     &invoke,
+		InstanceID:    NewInstanceID(d2.GetBaseID()),
+		Invoke:        &invoke,
+		SignerCounter: []uint64{1},
 	}
-	require.Nil(t, instr.SignBy(d2.GetBaseID(), signer))
-	return ClientTransaction{
-		Instructions: []Instruction{instr},
-	}
+	ctx, err := combineInstrsAndSign(signer, instr)
+	require.NoError(t, err)
+	return ctx
 }
 
 type ser struct {
@@ -1545,16 +1526,16 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 	return s
 }
 
-func invalidContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func invalidContractFunc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
 	return nil, nil, errors.New("this invalid contract always returns an error")
 }
 
-func panicContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func panicContractFunc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
 	panic("this contract panics")
 }
 
-func dummyContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
-	err := inst.VerifyDarcSignature(cdb)
+func dummyContractFunc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
+	err := inst.Verify(cdb, ctxHash)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -1578,11 +1559,11 @@ func dummyContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]Sta
 	}
 }
 
-func slowContractFunc(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
+func slowContractFunc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
 	// This has to sleep for less than testInterval / 2 or else it will
 	// block the system from processing txs. See #1359.
 	time.Sleep(testInterval / 5)
-	return dummyContractFunc(cdb, inst, c)
+	return dummyContractFunc(cdb, inst, ctxHash, c)
 }
 
 func registerDummy(servers []*onet.Server) {

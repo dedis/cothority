@@ -1,6 +1,8 @@
 package contracts
 
 import (
+	"crypto/sha256"
+	"encoding/binary"
 	"errors"
 	"testing"
 
@@ -40,17 +42,21 @@ func init() {
 func TestCoin_Spawn(t *testing.T) {
 	// Testing spawning of a new coin and checking it has zero coins in it.
 	ct := newCT("spawn:coin")
+	ct.setSignatureCounter(gsigner.Identity().String(), 0)
+
 	inst := byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(gdarc.GetBaseID()),
 		Spawn: &byzcoin.Spawn{
 			ContractID: ContractCoinID,
 		},
+		SignerCounter: []uint64{1},
 	}
-	err := inst.SignBy(gdarc.GetBaseID(), gsigner)
+	dummyCtxHash := []byte("dummy_ctx_hash")
+	err := inst.SignWith(dummyCtxHash, gsigner)
 	require.Nil(t, err)
 
 	c := []byzcoin.Coin{}
-	sc, co, err := ContractCoin(ct, inst, c)
+	sc, co, err := ContractCoin(ct, inst, dummyCtxHash, c)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(sc))
 	ca := inst.DeriveID("")
@@ -62,6 +68,8 @@ func TestCoin_Spawn(t *testing.T) {
 func TestCoin_InvokeMint(t *testing.T) {
 	// Test that a coin can be minted
 	ct := newCT("invoke:mint")
+	ct.setSignatureCounter(gsigner.Identity().String(), 0)
+
 	coAddr := byzcoin.InstanceID{}
 	ct.Store(coAddr, ciZero, ContractCoinID, gdarc.GetBaseID())
 
@@ -71,11 +79,13 @@ func TestCoin_InvokeMint(t *testing.T) {
 			Command: "mint",
 			Args:    byzcoin.Arguments{{Name: "coins", Value: coinOne}},
 		},
+		SignerCounter: []uint64{1},
 	}
-	err := inst.SignBy(gdarc.GetBaseID(), gsigner)
+	dummyCtxHash := []byte("dummy_ctx_hash")
+	err := inst.SignWith(dummyCtxHash, gsigner)
 	require.Nil(t, err)
 
-	sc, co, err := ContractCoin(ct, inst, []byzcoin.Coin{})
+	sc, co, err := ContractCoin(ct, inst, dummyCtxHash, []byzcoin.Coin{})
 	require.Nil(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 1, len(sc))
@@ -89,7 +99,10 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 	}
 	ciBuf, err := protobuf.Encode(&ci)
 	require.Nil(t, err)
+
 	ct := newCT("invoke:mint")
+	ct.setSignatureCounter(gsigner.Identity().String(), 0)
+
 	coAddr := byzcoin.InstanceID{}
 	ct.Store(coAddr, ciBuf, ContractCoinID, gdarc.GetBaseID())
 
@@ -99,10 +112,12 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 			Command: "mint",
 			Args:    byzcoin.Arguments{{Name: "coins", Value: coinOne}},
 		},
+		SignerCounter: []uint64{1},
 	}
-	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
+	dummyCtxHash := []byte("dummy_ctx_hash")
+	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
 
-	sc, co, err := ContractCoin(ct, inst, []byzcoin.Coin{})
+	sc, co, err := ContractCoin(ct, inst, dummyCtxHash, []byzcoin.Coin{})
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "overflow")
 	require.Equal(t, 0, len(co))
@@ -111,6 +126,8 @@ func TestCoin_InvokeOverflow(t *testing.T) {
 
 func TestCoin_InvokeStoreFetch(t *testing.T) {
 	ct := newCT("invoke:store", "invoke:fetch")
+	ct.setSignatureCounter(gsigner.Identity().String(), 0)
+
 	coAddr := byzcoin.InstanceID{}
 	ct.Store(coAddr, ciZero, ContractCoinID, gdarc.GetBaseID())
 
@@ -120,14 +137,16 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 			Command: "store",
 			Args:    nil,
 		},
+		SignerCounter: []uint64{1},
 	}
-	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
+	dummyCtxHash := []byte("dummy_ctx_hash")
+	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
 
 	c1 := byzcoin.Coin{Name: CoinName, Value: 1}
 	notOlCoin := iid("notOlCoin")
 	c2 := byzcoin.Coin{Name: notOlCoin, Value: 1}
 
-	sc, co, err := ContractCoin(ct, inst, []byzcoin.Coin{c1, c2})
+	sc, co, err := ContractCoin(ct, inst, dummyCtxHash, []byzcoin.Coin{c1, c2})
 	require.Nil(t, err)
 	require.Equal(t, 1, len(co))
 	require.Equal(t, co[0].Name, notOlCoin)
@@ -141,17 +160,18 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 			Command: "fetch",
 			Args:    byzcoin.Arguments{{Name: "coins", Value: coinOne}},
 		},
+		SignerCounter: []uint64{1},
 	}
-	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
+	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
 
 	// Try once with not enough coins available.
-	sc, co, err = ContractCoin(ct, inst, nil)
+	sc, co, err = ContractCoin(ct, inst, dummyCtxHash, nil)
 	require.Error(t, err)
 
 	// Apply the changes to the mock trie.
 	ct.Store(coAddr, ciOne, ContractCoinID, gdarc.GetBaseID())
 
-	sc, co, err = ContractCoin(ct, inst, nil)
+	sc, co, err = ContractCoin(ct, inst, dummyCtxHash, nil)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(co))
 	require.Equal(t, co[0].Name, CoinName)
@@ -164,6 +184,8 @@ func TestCoin_InvokeStoreFetch(t *testing.T) {
 func TestCoin_InvokeTransfer(t *testing.T) {
 	// Test that a coin can be transferred
 	ct := newCT("invoke:transfer")
+	ct.setSignatureCounter(gsigner.Identity().String(), 0)
+
 	coAddr1 := byzcoin.InstanceID{}
 	one := make([]byte, 32)
 	one[31] = 1
@@ -182,9 +204,11 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 				{Name: "destination", Value: coAddr1.Slice()},
 			},
 		},
+		SignerCounter: []uint64{1},
 	}
-	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
-	sc, co, err := ContractCoin(ct, inst, []byzcoin.Coin{})
+	dummyCtxHash := []byte("dummy_ctx_hash")
+	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
+	sc, co, err := ContractCoin(ct, inst, dummyCtxHash, []byzcoin.Coin{})
 	require.Error(t, err)
 
 	inst = byzcoin.Instruction{
@@ -196,9 +220,10 @@ func TestCoin_InvokeTransfer(t *testing.T) {
 				{Name: "destination", Value: coAddr2.Slice()},
 			},
 		},
+		SignerCounter: []uint64{1},
 	}
-	require.Nil(t, inst.SignBy(gdarc.GetBaseID(), gsigner))
-	sc, co, err = ContractCoin(ct, inst, []byzcoin.Coin{})
+	require.Nil(t, inst.SignWith(dummyCtxHash, gsigner))
+	sc, co, err = ContractCoin(ct, inst, dummyCtxHash, []byzcoin.Coin{})
 	require.Nil(t, err)
 	require.Equal(t, 0, len(co))
 	require.Equal(t, 2, len(sc))
@@ -251,4 +276,13 @@ func (ct cvTest) GetContractID(key []byte) (string, error) {
 }
 func (ct cvTest) GetProof(key []byte) (*trie.Proof, error) {
 	return nil, errors.New("not implemented")
+}
+
+func (ct cvTest) setSignatureCounter(id string, v uint64) {
+	key := sha256.Sum256([]byte("version_" + id))
+	verBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(verBuf, v)
+	ct.values[string(key[:])] = verBuf
+	ct.contractIDs[string(key[:])] = ""
+	ct.darcIDs[string(key[:])] = darc.ID([]byte{})
 }

@@ -409,14 +409,19 @@ func (s *sStruct) createParty(t *testing.T, orgs, attendees int) {
 func (s *sStruct) createPoPSpawn(t *testing.T) {
 	log.Lvl2("Publishing the party to the ledger")
 
+	signerCtrs, err := s.ols.GetSignerCounters(&byzcoin.GetSignerCounters{
+		SignerIDs:   []string{s.signer.Identity().String()},
+		SkipchainID: s.olID,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(signerCtrs.Counters))
+
 	fsBuf, err := protobuf.Encode(&s.party)
 	require.Nil(t, err)
 	dID := s.gMsg.GenesisDarc.GetBaseID()
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(dID),
-			Index:      0,
-			Length:     1,
 			Spawn: &byzcoin.Spawn{
 				ContractID: pop.ContractPopParty,
 				Args: byzcoin.Arguments{{
@@ -424,9 +429,10 @@ func (s *sStruct) createPoPSpawn(t *testing.T) {
 					Value: fsBuf,
 				}},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	err = ctx.Instructions[0].SignBy(dID, s.signer)
+	err = ctx.SignWith(s.signer)
 	require.Nil(t, err)
 	_, err = s.ols.AddTransaction(&byzcoin.AddTxRequest{
 		Version:       byzcoin.CurrentVersion,
@@ -440,6 +446,14 @@ func (s *sStruct) createPoPSpawn(t *testing.T) {
 
 func (s *sStruct) invokePoPFinalize(t *testing.T) {
 	log.Lvl2("finalizing the party in the ledger")
+
+	signerCtrs, err := s.ols.GetSignerCounters(&byzcoin.GetSignerCounters{
+		SignerIDs:   []string{s.signer.Identity().String()},
+		SkipchainID: s.olID,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(signerCtrs.Counters))
+
 	fsBuf, err := protobuf.Encode(&s.party)
 	require.Nil(t, err)
 	s.service = key.NewKeyPair(tSuite)
@@ -448,8 +462,6 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: s.popI,
-			Index:      0,
-			Length:     1,
 			Invoke: &byzcoin.Invoke{
 				Command: "Finalize",
 				Args: byzcoin.Arguments{
@@ -463,10 +475,11 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 					},
 				},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
 	dID := s.gMsg.GenesisDarc.GetBaseID()
-	err = ctx.Instructions[0].SignBy(dID, s.signer)
+	err = ctx.SignWith(s.signer)
 	require.Nil(t, err)
 	_, err = s.ols.AddTransaction(&byzcoin.AddTxRequest{
 		Version:       byzcoin.CurrentVersion,
@@ -552,13 +565,18 @@ func (s *sStruct) coinGet(t *testing.T, inst byzcoin.InstanceID) (ci byzcoin.Coi
 }
 
 func (s *sStruct) coinTransfer(t *testing.T, from, to byzcoin.InstanceID, coins uint64, d *darc.Darc, sig darc.Signer) {
+	signerCtrs, err := s.ols.GetSignerCounters(&byzcoin.GetSignerCounters{
+		SignerIDs:   []string{sig.Identity().String()},
+		SkipchainID: s.olID,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(signerCtrs.Counters))
+
 	var cBuf = make([]byte, 8)
 	binary.LittleEndian.PutUint64(cBuf, coins)
 	ctx := byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: from,
-			Index:      0,
-			Length:     1,
 			Invoke: &byzcoin.Invoke{
 				Command: "transfer",
 				Args: []byzcoin.Argument{{
@@ -570,10 +588,11 @@ func (s *sStruct) coinTransfer(t *testing.T, from, to byzcoin.InstanceID, coins 
 						Value: to.Slice(),
 					}},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	require.Nil(t, ctx.Instructions[0].SignBy(d.GetBaseID(), sig))
-	_, err := s.ols.AddTransaction(&byzcoin.AddTxRequest{
+	require.Nil(t, ctx.SignWith(sig))
+	_, err = s.ols.AddTransaction(&byzcoin.AddTxRequest{
 		Version:       byzcoin.CurrentVersion,
 		SkipchainID:   s.olID,
 		Transaction:   ctx,

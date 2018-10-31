@@ -722,6 +722,16 @@ func bcStore(c *cli.Context) error {
 	}
 	identities = append(identities, signer.Identity())
 
+	log.Info("Creating byzcoin client and getting signer counters")
+	bccl := byzcoin.NewClient(cfg.ByzCoinID, cfg.Roster)
+	signerCtrs, err := bccl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return err
+	}
+	if len(signerCtrs.Counters) != 1 {
+		return errors.New("incorrect signer counter length")
+	}
+
 	log.Info("Creating darc for the organizers")
 	rules := darc.InitRules(identities, identities)
 	var exprSlice []string
@@ -740,9 +750,6 @@ func bcStore(c *cli.Context) error {
 	}
 	inst := byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(cfg.GenesisDarc.GetBaseID()),
-		Nonce:      byzcoin.Nonce{},
-		Index:      0,
-		Length:     1,
 		Spawn: &byzcoin.Spawn{
 			ContractID: byzcoin.ContractDarcID,
 			Args: byzcoin.Arguments{{
@@ -750,16 +757,16 @@ func bcStore(c *cli.Context) error {
 				Value: orgDarcBuf,
 			}},
 		},
-	}
-	err = inst.SignBy(cfg.GenesisDarc.GetBaseID(), *signer)
-	if err != nil {
-		return err
+		SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 	}
 	ct := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{inst},
 	}
-	log.Info("Contacting ByzCoin to store the new darc")
-	bccl := byzcoin.NewClient(cfg.ByzCoinID, cfg.Roster)
+	err = ct.SignWith(*signer)
+	if err != nil {
+		return err
+	}
+	log.Info("Storing the new darc on byzcoin")
 	_, err = bccl.AddTransactionAndWait(ct, 10)
 	if err != nil {
 		return err
@@ -771,9 +778,6 @@ func bcStore(c *cli.Context) error {
 	}
 	inst = byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(orgDarc.GetBaseID()),
-		Nonce:      byzcoin.Nonce{},
-		Index:      0,
-		Length:     1,
 		Spawn: &byzcoin.Spawn{
 			ContractID: service.ContractPopParty,
 			Args: byzcoin.Arguments{{
@@ -781,13 +785,14 @@ func bcStore(c *cli.Context) error {
 				Value: partyConfigBuf,
 			}},
 		},
-	}
-	err = inst.SignBy(orgDarc.GetBaseID(), *signer)
-	if err != nil {
-		return err
+		SignerCounter: []uint64{signerCtrs.Counters[0] + 2},
 	}
 	ct = byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{inst},
+	}
+	err = ct.SignWith(*signer)
+	if err != nil {
+		return err
 	}
 	fsID, err := finalStatement.Hash()
 	if err != nil {
@@ -830,6 +835,12 @@ func bcFinalize(c *cli.Context) error {
 		return err
 	}
 
+	// Load signer counter
+	signerCtrs, err := ocl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return err
+	}
+
 	// Get the party-id
 	partyID, err := hex.DecodeString(c.Args().Get(2))
 	if err != nil {
@@ -858,7 +869,7 @@ func bcFinalize(c *cli.Context) error {
 		return errors.New("couldn't encode final statement: " + err.Error())
 	}
 
-	partyInstance, darcID, err := cl.GetInstanceID(cfg.Roster.List[0].Address, partyID)
+	partyInstance, _, err := cl.GetInstanceID(cfg.Roster.List[0].Address, partyID)
 	if err != nil {
 		return errors.New("couldn't get instanceID: " + err.Error())
 	}
@@ -875,9 +886,6 @@ func bcFinalize(c *cli.Context) error {
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: partyInstance,
-			Nonce:      byzcoin.Nonce{},
-			Index:      0,
-			Length:     1,
 			Invoke: &byzcoin.Invoke{
 				Command: "Finalize",
 				Args: byzcoin.Arguments{
@@ -890,9 +898,10 @@ func bcFinalize(c *cli.Context) error {
 						Value: sigBuf,
 					}},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	err = ctx.Instructions[0].SignBy(darcID, *signer)
+	err = ctx.SignWith(*signer)
 	if err != nil {
 		return errors.New("couldn't sign instruction: " + err.Error())
 	}
@@ -1065,9 +1074,18 @@ func bcCoinTransfer(c *cli.Context) error {
 	}
 
 	log.Info("Getting darc for source account")
-	_, _, _, dID, err := srcInstanceProof.Proof.KeyValue()
+	_, _, _, _, err = srcInstanceProof.Proof.KeyValue()
 	if err != nil {
 		return errors.New("cannot get proof for source instance: " + err.Error())
+	}
+
+	log.Info("Getting signer counters")
+	signerCtrs, err := ocl.GetSignerCounters(srcSigner.Identity().String())
+	if err != nil {
+		return errors.New("couldn't get signer counter: " + err.Error())
+	}
+	if len(signerCtrs.Counters) != 1 {
+		return errors.New("incorrect signer counter length")
 	}
 
 	log.Info("Transferring coins")
@@ -1076,8 +1094,6 @@ func bcCoinTransfer(c *cli.Context) error {
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(srcAddr),
-			Index:      0,
-			Length:     1,
 			Invoke: &byzcoin.Invoke{
 				Command: "transfer",
 				Args: byzcoin.Arguments{{
@@ -1089,9 +1105,10 @@ func bcCoinTransfer(c *cli.Context) error {
 						Value: dstAddr,
 					}},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	err = ctx.Instructions[0].SignBy(dID, srcSigner)
+	err = ctx.SignWith(srcSigner)
 	if err != nil {
 		return errors.New("couldn't sign transaction: " + err.Error())
 	}

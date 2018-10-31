@@ -13,6 +13,7 @@ func init() {
 	network.RegisterMessages(
 		&CreateGenesisBlock{}, &CreateGenesisBlockResponse{},
 		&AddTxRequest{}, &AddTxResponse{},
+		&GetSignerCounters{}, &GetSignerCountersResponse{},
 	)
 }
 

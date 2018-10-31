@@ -289,6 +289,7 @@ func (s *Service) spawn(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c
 
 	// Store zeros as the pointer to the first bucket because there are not yet
 	// any events in this event log.
+	log.Printf("zzzzzzzz %x", [32]byte(inst.DeriveID("")))
 	return []byzcoin.StateChange{
 		byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), cid, make([]byte, 32), darcID),
 	}, nil, nil
@@ -296,9 +297,9 @@ func (s *Service) spawn(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c
 
 // contractFunction is the function that runs to process a transaction of
 // type "eventlog"
-func (s *Service) contractFunction(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+func (s *Service) contractFunction(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 
-	err := inst.VerifyDarcSignature(v)
+	err := inst.Verify(v, ctxHash)
 	if err != nil {
 		return nil, nil, err
 	}
