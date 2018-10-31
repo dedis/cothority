@@ -9,10 +9,12 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"regexp"
 	"strings"
 	"sync"
 	"time"
 
+	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin/viewchange"
 	"github.com/dedis/cothority/darc"
@@ -1524,6 +1526,8 @@ func (s *Service) trySyncAll() {
 	}
 }
 
+var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+$`)
+
 // newService receives the context that holds information about the node it's
 // running on. Saving and loading can be done using the context. The data will
 // be stored in memory for tests and simulations, and on disk for real
@@ -1573,6 +1577,43 @@ func newService(c *onet.Context) (onet.Service, error) {
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	ver, err := s.LoadVersion()
+	if err != nil {
+		return nil, err
+	}
+	switch ver {
+	case 0:
+		// Version 0 means it hasn't been set yet. If there are any ByzCoin_[0-9af]+
+		// buckets, then they must be old format.
+		db, _ := s.GetAdditionalBucket([]byte("check-db-version"))
+
+		// Look for a bucket that has a byzcoin database in it.
+		err := db.View(func(tx *bolt.Tx) error {
+			c := tx.Cursor()
+			for k, _ := c.First(); k != nil; k, _ = c.Next() {
+				log.Lvlf4("looking for old ByzCoin data in bucket %v", string(k))
+				if existingDB.Match(k) {
+					return fmt.Errorf("database format is too old; rm '%v' to lose all data and make a new database", db.Path())
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		// Otherwise set the db version to 1, because we've confirmed there are
+		// no old-style ones.
+		err = s.SaveVersion(1)
+		if err != nil {
+			return nil, err
+		}
+	case 1:
+		// This is where any necessary future migration fron version 1 -> 2 will happen.
+	default:
+		return nil, fmt.Errorf("unknown db version number %v", ver)
 	}
 
 	if err := s.startAllChains(); err != nil {
