@@ -614,7 +614,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	}
 
 	// State changes are cached only when the block is confirmed
-	s.stateChangeStorage.append(scs)
+	s.stateChangeStorage.append(scs, ssbReply.Latest)
 
 	return ssbReply.Latest, nil
 }
@@ -902,7 +902,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		panic(s.ServerIdentity().String() + ": hash of collection doesn't correspond to root hash")
 	}
 
-	s.stateChangeStorage.append(scs)
+	s.stateChangeStorage.append(scs, sb)
 
 	// Notify all waiting channels for processed ClientTransactions.
 	for _, t := range body.TxResults {

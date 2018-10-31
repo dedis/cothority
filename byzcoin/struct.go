@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"math"
 	"sort"
 	"sync"
 	"time"
@@ -16,7 +17,6 @@ import (
 
 const bucketStateChangeStorage = "statechangestorage"
 const defaultMaxSize = 2 * 1024 * 1024 * 1024
-const minMaxSize = 1024
 const versionLength = 64 / 8
 
 // StateChangeEntry is the object stored to keep track of instance history. It
@@ -71,38 +71,18 @@ func newStateChangeStorage(c *onet.Context) *stateChangeStorage {
 }
 
 func (s *stateChangeStorage) setMaxSize(size int) {
-	if size < minMaxSize {
-		s.maxSize = minMaxSize
-	} else {
-		s.maxSize = size
-	}
-	s.maxNbrBlock = 0
+	s.maxSize = size
 }
 
 func (s *stateChangeStorage) setMaxNbrBlock(nbr int) {
-	s.maxSize = 0
-	if nbr <= 0 {
-		s.maxNbrBlock = 1
-	} else {
-		s.maxNbrBlock = nbr
-	}
-}
-
-func (s *stateChangeStorage) clean() error {
-	if s.maxSize > 0 {
-		return s.cleanBySize()
-	} else if s.maxNbrBlock > 0 {
-		return s.cleanByBlock()
-	}
-
-	return nil
+	s.maxNbrBlock = nbr
 }
 
 // This will clean the oldest state changes when the total size
 // is above the maximum. It will remove elements until 20% of
 // the space is available.
 func (s *stateChangeStorage) cleanBySize() error {
-	if s.size < s.maxSize {
+	if s.size < s.maxSize || s.maxSize == 0 {
 		// nothing to clean
 		return nil
 	}
@@ -152,8 +132,47 @@ func (s *stateChangeStorage) cleanBySize() error {
 	return err
 }
 
-func (s *stateChangeStorage) cleanByBlock() error {
-	return nil
+func (s *stateChangeStorage) cleanByBlock(scs StateChanges) error {
+	if s.maxNbrBlock == 0 {
+		return nil
+	}
+
+	return s.db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte(bucketStateChangeStorage))
+		if err != nil {
+			return err
+		}
+
+		done := map[string]bool{}
+
+		for _, sc := range scs {
+			_, ok := done[string(sc.InstanceID)]
+			if !ok {
+				done[string(sc.InstanceID)] = true
+
+				var sce StateChangeEntry
+				blocks := map[int]bool{}
+				c := b.Cursor()
+				c.Seek(s.key(sc.InstanceID, math.MaxUint64))
+
+				for k, v := c.Prev(); k != nil && bytes.HasPrefix(k, sc.InstanceID); k, v = c.Prev() {
+					var err error
+					if len(blocks) >= s.maxNbrBlock {
+						err = c.Delete()
+					} else {
+						err = protobuf.Decode(v, &sce)
+						blocks[sce.BlockIndex] = true
+					}
+
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+
+		return nil
+	})
 }
 
 // this generates a storage key using the instance ID and the version
@@ -167,14 +186,14 @@ func (s *stateChangeStorage) key(iid []byte, ver uint64) []byte {
 
 // this will clean the oldest state changes until there is enough
 // space left and append the new ones
-func (s *stateChangeStorage) append(scs StateChanges) error {
+func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) error {
 	// Run a clean procedure first to insure we're not above the limit
-	err := s.clean()
+	err := s.cleanBySize()
 	if err != nil {
 		return err
 	}
 
-	return s.db.Update(func(tx *bolt.Tx) error {
+	err = s.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte(bucketStateChangeStorage))
 		if err != nil {
 			return err
@@ -187,7 +206,7 @@ func (s *stateChangeStorage) append(scs StateChanges) error {
 			now := time.Now()
 			buf, err := protobuf.Encode(&StateChangeEntry{
 				StateChange: sc,
-				BlockIndex:  0,
+				BlockIndex:  sb.Index,
 				Timestamp:   now,
 			})
 			if err != nil {
@@ -217,6 +236,11 @@ func (s *stateChangeStorage) append(scs StateChanges) error {
 
 		return nil
 	})
+	if err != nil {
+		return err
+	}
+
+	return s.cleanByBlock(scs)
 }
 
 // This will return the list of state changes for the given instance

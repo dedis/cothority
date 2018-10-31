@@ -45,6 +45,8 @@ the history will be as old as the snapshot.
 
 This feature needs a size control as the space taken will grow with the skipchain and
 that's why you can specify the size of the cache or the maximum number of blocks that
-need to be kept. When a size is specified, the storage will delete all state changes
-of the last block stored until there is enough space left and only the last N block's
-state changes are kept for the second option.
+need to be kept. When a size is specified, the storage will look for the oldest 
+elements and delete them until 20% of the space is available. Note that if state
+changes has been added unsorted, it will remove the oldest version of the instance
+that contains the oldest element to prevent holes. When a maximum number of blocks
+is specified, it will keep N blocks for each instance and remove the others.

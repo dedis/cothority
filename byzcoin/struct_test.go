@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	bolt "github.com/coreos/bbolt"
+	"github.com/dedis/cothority/skipchain"
 	"github.com/stretchr/testify/require"
 )
 
@@ -42,7 +43,7 @@ func TestStateChangeStorage_SimpleCase(t *testing.T) {
 		ss[i], ss[j] = ss[j], ss[i]
 	}
 
-	err = scs.append(ss)
+	err = scs.append(ss, skipchain.NewSkipBlock())
 	require.Nil(t, err)
 
 	entries, err := scs.getAll([]byte{1})
@@ -84,11 +85,42 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 			InstanceID: []byte{1, 2, 3},
 			Version:    uint64(i),
 			Value:      make([]byte, 1000),
-		}})
+		}}, skipchain.NewSkipBlock())
 	}
 
 	entries, err := scs.getAll([]byte{1, 2, 3})
 	require.Nil(t, err)
 	require.Equal(t, 10, len(entries))
 	require.Equal(t, uint64(99), entries[9].StateChange.Version)
+}
+
+func TestStateChangeStorage_MaxNbrBlock(t *testing.T) {
+	tmpDB, err := ioutil.TempFile("", "tmpDB")
+	require.Nil(t, err)
+	tmpDB.Close()
+	defer os.Remove(tmpDB.Name())
+
+	db, err := bolt.Open(tmpDB.Name(), 0600, nil)
+	require.Nil(t, err)
+
+	scs := stateChangeStorage{
+		db:          db,
+		maxNbrBlock: 5,
+	}
+
+	sb := skipchain.NewSkipBlock()
+	for i := 0; i < 100; i++ {
+		sb.Index = i
+
+		scs.append(StateChanges{StateChange{
+			InstanceID: []byte{byte(i % 5)},
+			Version:    uint64(i),
+			Value:      []byte{},
+		}}, sb)
+	}
+
+	entries, err := scs.getAll([]byte{0})
+	require.Nil(t, err)
+	require.Equal(t, 5, len(entries))
+	require.Equal(t, 95, entries[4].BlockIndex)
 }
