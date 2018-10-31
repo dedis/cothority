@@ -18,22 +18,22 @@ type ReadOnlyStateTrie interface {
 	GetProof(key []byte) (*trie.Proof, error)
 }
 
-// StagingStateTrie is a wrapper around trie.StagingTrie that allows for use in
+// stagingStateTrie is a wrapper around trie.StagingTrie that allows for use in
 // byzcoin.
-type StagingStateTrie struct {
+type stagingStateTrie struct {
 	trie.StagingTrie
 }
 
 // Clone makes a copy of the staged data of the structure, the source Trie is
 // not copied.
-func (t *StagingStateTrie) Clone() *StagingStateTrie {
-	return &StagingStateTrie{
+func (t *stagingStateTrie) Clone() *stagingStateTrie {
+	return &stagingStateTrie{
 		StagingTrie: *t.StagingTrie.Clone(),
 	}
 }
 
 // StoreAll puts all the state changes and the index in the staging area.
-func (t *StagingStateTrie) StoreAll(scs StateChanges) error {
+func (t *stagingStateTrie) StoreAll(scs StateChanges) error {
 	pairs := make([]trie.KVPair, len(scs))
 	for i := range pairs {
 		pairs[i] = &scs[i]
@@ -46,7 +46,7 @@ func (t *StagingStateTrie) StoreAll(scs StateChanges) error {
 
 // GetValues returns the associated value, contract ID and darcID. An error is
 // returned if the key does not exist or another issue occurs.
-func (t *StagingStateTrie) GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error) {
+func (t *stagingStateTrie) GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error) {
 	var buf []byte
 	buf, err = t.Get(key)
 	if err != nil {
@@ -70,45 +70,45 @@ func (t *StagingStateTrie) GetValues(key []byte) (value []byte, contractID strin
 }
 
 // Commit commits the staged data to the source trie.
-func (t *StagingStateTrie) Commit() error {
+func (t *stagingStateTrie) Commit() error {
 	// TODO if this is implemented, we can replace the stateChangeCache.
 	return errors.New("not implemented")
 }
 
 const trieIndexKey = "trieIndexKey"
 
-// StateTrie is a wrapper around trie.Trie that support the storage of an
+// stateTrie is a wrapper around trie.Trie that support the storage of an
 // index.
-type StateTrie struct {
+type stateTrie struct {
 	trie.Trie
 }
 
 // loadStateTrie loads an existing StateTrie, an error is returned if no trie
 // exists in db
-func loadStateTrie(db *bolt.DB, bucket []byte) (*StateTrie, error) {
+func loadStateTrie(db *bolt.DB, bucket []byte) (*stateTrie, error) {
 	t, err := trie.LoadTrie(trie.NewDiskDB(db, bucket))
 	if err != nil {
 		return nil, err
 	}
-	return &StateTrie{
+	return &stateTrie{
 		Trie: *t,
 	}, nil
 }
 
 // newStateTrie creates a new, disk-based trie.Trie, an error is returned if
 // the db already contains a trie.
-func newStateTrie(db *bolt.DB, bucket, nonce []byte) (*StateTrie, error) {
+func newStateTrie(db *bolt.DB, bucket, nonce []byte) (*stateTrie, error) {
 	t, err := trie.NewTrie(trie.NewDiskDB(db, bucket), nonce)
 	if err != nil {
 		return nil, err
 	}
-	return &StateTrie{
+	return &stateTrie{
 		Trie: *t,
 	}, nil
 }
 
 // StoreAll stores the state changes in the Trie.
-func (t *StateTrie) StoreAll(scs StateChanges, index int) error {
+func (t *stateTrie) StoreAll(scs StateChanges, index int) error {
 	pairs := make([]trie.KVPair, len(scs))
 	for i := range pairs {
 		pairs[i] = &scs[i]
@@ -125,7 +125,7 @@ func (t *StateTrie) StoreAll(scs StateChanges, index int) error {
 
 // GetValues returns the associated value, contractID and darcID. An error is
 // returned if the key does not exist.
-func (t *StateTrie) GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error) {
+func (t *stateTrie) GetValues(key []byte) (value []byte, contractID string, darcID darc.ID, err error) {
 	var buf []byte
 	buf, err = t.Get(key)
 	if err != nil {
@@ -149,7 +149,7 @@ func (t *StateTrie) GetValues(key []byte) (value []byte, contractID string, darc
 }
 
 // GetIndex gets the latest index.
-func (t *StateTrie) GetIndex() int {
+func (t *stateTrie) GetIndex() int {
 	indexBuf := t.GetMetadata([]byte(trieIndexKey))
 	if indexBuf == nil {
 		return -1
@@ -158,19 +158,19 @@ func (t *StateTrie) GetIndex() int {
 }
 
 // MakeStagingStateTrie creates a StagingStateTrie from the StateTrie.
-func (t *StateTrie) MakeStagingStateTrie() *StagingStateTrie {
-	return &StagingStateTrie{
+func (t *stateTrie) MakeStagingStateTrie() *stagingStateTrie {
+	return &stagingStateTrie{
 		StagingTrie: *t.MakeStagingTrie(),
 	}
 }
 
 // newMemStagingStateTrie creates an in-memory StagingStateTrie.
-func newMemStagingStateTrie(nonce []byte) (*StagingStateTrie, error) {
+func newMemStagingStateTrie(nonce []byte) (*stagingStateTrie, error) {
 	memTrie, err := trie.NewTrie(trie.NewMemDB(), nonce)
 	if err != nil {
 		return nil, err
 	}
-	et := StagingStateTrie{
+	et := stagingStateTrie{
 		StagingTrie: *memTrie.MakeStagingTrie(),
 	}
 	return &et, nil
