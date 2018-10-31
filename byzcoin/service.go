@@ -1504,7 +1504,7 @@ func (s *Service) trySyncAll() {
 	}
 }
 
-var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+`)
+var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+$`)
 
 // newService receives the context that holds information about the node it's
 // running on. Saving and loading can be done using the context. The data will
