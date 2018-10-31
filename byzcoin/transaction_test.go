@@ -95,6 +95,23 @@ func createOneClientTxWithCounter(dID darc.ID, kind string, value []byte, signer
 	return t, nil
 }
 
+func createClientTxWithTwoInstrWithCounter(dID darc.ID, kind string, value []byte, signer darc.Signer, counter uint64) (ClientTransaction, error) {
+	instr1 := createInstr(dID, kind, "", value)
+	instr1.SignerCounter = []uint64{counter}
+	instr2 := createInstr(dID, kind, "", value)
+	instr2.SignerCounter = []uint64{counter + 1}
+	t := ClientTransaction{
+		Instructions: []Instruction{instr1, instr2},
+	}
+	t.InstructionsHash = t.Instructions.Hash()
+	for i := range t.Instructions {
+		if err := t.Instructions[i].SignWith(t.InstructionsHash, signer); err != nil {
+			return t, err
+		}
+	}
+	return t, nil
+}
+
 func createInstr(dID darc.ID, contractID string, argName string, value []byte) Instruction {
 	return Instruction{
 		InstanceID: NewInstanceID(dID),

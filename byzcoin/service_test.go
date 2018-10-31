@@ -730,13 +730,8 @@ func TestService_StateChange(t *testing.T) {
 	defer s.local.CloseAll()
 
 	var latest int64
-<<<<<<< HEAD
 	f := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
-		_, cid, _, err := cdb.GetValues(inst.InstanceID.Slice())
-=======
-	f := func(cdb ReadOnlyStateTrie, inst Instruction, c []Coin) ([]StateChange, []Coin, error) {
 		_, _, cid, _, err := cdb.GetValues(inst.InstanceID.Slice())
->>>>>>> Version in global state
 		if err != nil {
 			return nil, nil, err
 		}
@@ -1448,7 +1443,7 @@ func TestService_DownloadState(t *testing.T) {
 		require.Nil(t, err)
 		st, err := service.getStateTrie(s.genesis.Hash)
 		require.Nil(t, err)
-		val, _, _, err := st.GetValues(make([]byte, 32))
+		val, _, _, _, err := st.GetValues(make([]byte, 32))
 		require.Nil(t, err)
 		require.True(t, len(val) > 0)
 		configCopy := ChainConfig{}
@@ -1697,28 +1692,57 @@ func TestService_StateChangeStorage(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, []byte{}, s.signer)
-	require.Nil(t, err)
-	_, err = s.service().AddTransaction(&AddTxRequest{
-		Version:     CurrentVersion,
-		SkipchainID: s.genesis.SkipChainID(),
-		Transaction: tx1,
-	})
-	require.Nil(t, err)
+	n := 10
+	iid := genID()
 
-	s.waitProofWithIdx(t, tx1.Instructions[0].Hash(), 0)
+	contractID := "stateShangeCacheTest"
+	contract := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
+		// Check the version is correctly increased for multiple state changes
+		sc1 := StateChange{
+			InstanceID:  iid[:],
+			StateAction: Create,
+		}
+		sc2 := StateChange{
+			InstanceID:  iid[:],
+			StateAction: Update,
+		}
+		sc3 := StateChange{ // this one should not increase the version of the previous two
+			InstanceID:  []byte{0},
+			StateAction: Create,
+		}
+		return []StateChange{sc1, sc2, sc3}, []Coin{}, nil
+	}
+	for _, s := range s.hosts {
+		RegisterContract(s, contractID, contract)
+	}
+
+	for i := 0; i < n; i++ {
+		tx, err := createClientTxWithTwoInstrWithCounter(s.darc.GetBaseID(), contractID, []byte{}, s.signer, uint64(i*2+1))
+		require.Nil(t, err)
+
+		_, err = s.service().AddTransaction(&AddTxRequest{
+			Version:     CurrentVersion,
+			SkipchainID: s.genesis.SkipChainID(),
+			Transaction: tx,
+		})
+		require.Nil(t, err)
+	}
+
+	s.waitProofWithIdx(t, iid[:], 0)
 
 	for _, service := range s.services {
-		key := NewInstanceID(tx1.Instructions[0].Hash())
-		scs, err := service.stateChangeStorage.getAll(key[:])
+		scs, err := service.stateChangeStorage.getAll(iid[:])
 
 		require.Nil(t, err)
-		require.Equal(t, 1, len(scs))
+		require.Equal(t, n*4, len(scs))
 
-		sc, ok, err := service.stateChangeStorage.getByVersion(key[:], 0)
-		require.Nil(t, err)
-		require.True(t, ok)
-		require.Equal(t, uint64(0), sc.StateChange.Version)
+		for i := 0; i < n*4; i++ {
+			sc, ok, err := service.stateChangeStorage.getByVersion(iid[:], uint64(i))
+			require.Nil(t, err)
+			require.True(t, ok)
+			require.Equal(t, uint64(i), sc.StateChange.Version)
+			require.Equal(t, uint64(i), scs[i].StateChange.Version)
+		}
 	}
 }
 

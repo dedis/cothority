@@ -1579,22 +1579,28 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		return
 	}
 
-	var version uint64
-	proof, _ := st.GetProof(instr.InstanceID.Slice())
-	if proof.Match(instr.InstanceID.Slice()) {
-		// Get the last version in the global state
-		_, version, _, _, err = st.GetValues(instr.InstanceID.Slice())
-		if err != nil {
-			return
+	// As the InstanceID of each sc is not necessarily the same as the
+	// instruction, we need to get the version from the trie
+	vv := make(map[string]uint64)
+	for i, sc := range scs {
+		ver, ok := vv[string(sc.InstanceID)]
+		if !ok {
+			_, ver, _, _, err = st.GetValues(sc.InstanceID)
 		}
 
-		version++
-	} // else it means it will be the first sc hence version 0
+		// this is done in this scope because we must increase
+		// the version only when it's not the first one
+		if err == errKeyNotSet {
+			ver = 0
+			err = nil
+		} else if err != nil {
+			return
+		} else {
+			ver++
+		}
 
-	// increment the instance ID for each state change
-	for _, sc := range scs {
-		sc.Version = version
-		version++
+		scs[i].Version = ver
+		vv[string(sc.InstanceID)] = ver
 	}
 
 	return
