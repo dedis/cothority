@@ -16,14 +16,14 @@ func generateStateChanges(id []byte) StateChanges {
 		scs = append(scs, StateChange{
 			InstanceID: id,
 			Value:      []byte{byte(i)},
-			Version:    int(i),
+			Version:    uint64(i),
 		})
 	}
 
 	return scs
 }
 
-func TestStateChangeStorage(t *testing.T) {
+func TestStateChangeStorage_SimpleCase(t *testing.T) {
 	tmpDB, err := ioutil.TempFile("", "tmpDB")
 	require.Nil(t, err)
 	tmpDB.Close()
@@ -50,8 +50,8 @@ func TestStateChangeStorage(t *testing.T) {
 	require.Equal(t, 10, len(entries))
 
 	for i := 0; i < 10; i++ {
-		require.Equal(t, i, entries[i].StateChange.Version)
-		e, ok, err := scs.getByVersion([]byte{1}, i)
+		require.Equal(t, uint64(i), entries[i].StateChange.Version)
+		e, ok, err := scs.getByVersion([]byte{1}, uint64(i))
 
 		require.Nil(t, err)
 		require.True(t, ok)
@@ -63,4 +63,32 @@ func TestStateChangeStorage(t *testing.T) {
 	require.Nil(t, err)
 
 	db.Close()
+}
+
+func TestStateChangeStorage_MaxSize(t *testing.T) {
+	tmpDB, err := ioutil.TempFile("", "tmpDB")
+	require.Nil(t, err)
+	tmpDB.Close()
+	defer os.Remove(tmpDB.Name())
+
+	db, err := bolt.Open(tmpDB.Name(), 0600, nil)
+	require.Nil(t, err)
+
+	scs := stateChangeStorage{
+		db:      db,
+		maxSize: 1024 * 10,
+	}
+
+	for i := 0; i < 100; i++ {
+		scs.append(StateChanges{StateChange{
+			InstanceID: []byte{1, 2, 3},
+			Version:    uint64(i),
+			Value:      make([]byte, 1000),
+		}})
+	}
+
+	entries, err := scs.getAll([]byte{1, 2, 3})
+	require.Nil(t, err)
+	require.Equal(t, 10, len(entries))
+	require.Equal(t, uint64(99), entries[9].StateChange.Version)
 }

@@ -1579,7 +1579,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		return
 	}
 
-	version := 0
+	var version uint64
 	proof, _ := st.GetProof(instr.InstanceID.Slice())
 	if proof.Match(instr.InstanceID.Slice()) {
 		// Get the last version in the global state

@@ -26,11 +26,9 @@ increase the value for each instruction.
 Each service stores the state changes after a new block has been added and only
 at this moment meaning that until a pending transaction is waiting to be included
 in a block, it will not be part of the instance's history.
-The storage uses BoltDB and a specific bucket that will use the instance ID as
-a key and then stores the list of state changes sorted by version. As we expect
-the versions to be monotonically increasing, it will check that the versions
-are consistent when appending new state changes so that the storage is consistent
-any time.
+The storage uses BoltDB and the key is generated using the instance ID and the
+version number so that the pairs are sorted first by instance ID and then by
+version.
 
 ## Backup and new conode
 

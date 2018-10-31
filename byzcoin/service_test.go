@@ -1713,7 +1713,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 		sc, ok, err := service.stateChangeStorage.getByVersion(key[:], 0)
 		require.Nil(t, err)
 		require.True(t, ok)
-		require.Equal(t, 0, sc.StateChange.Version)
+		require.Equal(t, uint64(0), sc.StateChange.Version)
 	}
 }
 
