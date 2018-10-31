@@ -21,6 +21,14 @@ The Byzcoin service takes care of the versioning by modifying the results of a
 contract execution. It will get the current version in the global state and then
 increase the value for each instruction.
 
+### Per state change VS per client transaction
+
+It has been decided to go for a version per state change because we are interested
+in the state change history, the client transaction one which means that we need
+a more fine grain approach where each instruction will create a new state change
+and thus a new version. Using a version per client transaction would have yeld
+state changes without version or several with the same one.
+
 ## Storage
 
 Each service stores the state changes after a new block has been added and only
