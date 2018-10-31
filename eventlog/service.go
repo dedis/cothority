@@ -46,7 +46,10 @@ func (s *Service) Search(req *SearchRequest) (*SearchResponse, error) {
 		req.To = time.Now().UnixNano()
 	}
 
-	v := s.omni.GetReadOnlyStateTrie(req.ID)
+	v, err := s.omni.GetReadOnlyStateTrie(req.ID)
+	if err != nil {
+		return nil, err
+	}
 	el := &eventLog{Instance: req.Instance, v: v}
 
 	id, b, err := el.getLatestBucket()
