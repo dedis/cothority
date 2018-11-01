@@ -18858,6 +18858,23 @@ public final class ByzCoinProto {
      * <code>required bytes darcid = 5;</code>
      */
     com.google.protobuf.ByteString getDarcid();
+
+    /**
+     * <pre>
+     * Version is the monotonically increased version of the instance
+     * </pre>
+     *
+     * <code>required uint64 version = 6;</code>
+     */
+    boolean hasVersion();
+    /**
+     * <pre>
+     * Version is the monotonically increased version of the instance
+     * </pre>
+     *
+     * <code>required uint64 version = 6;</code>
+     */
+    long getVersion();
   }
   /**
    * <pre>
@@ -18881,6 +18898,7 @@ public final class ByzCoinProto {
       contractid_ = com.google.protobuf.ByteString.EMPTY;
       value_ = com.google.protobuf.ByteString.EMPTY;
       darcid_ = com.google.protobuf.ByteString.EMPTY;
+      version_ = 0L;
     }
 
     @java.lang.Override
@@ -18930,6 +18948,11 @@ public final class ByzCoinProto {
             case 42: {
               bitField0_ |= 0x00000010;
               darcid_ = input.readBytes();
+              break;
+            }
+            case 48: {
+              bitField0_ |= 0x00000020;
+              version_ = input.readUInt64();
               break;
             }
             default: {
@@ -19080,6 +19103,29 @@ public final class ByzCoinProto {
       return darcid_;
     }
 
+    public static final int VERSION_FIELD_NUMBER = 6;
+    private long version_;
+    /**
+     * <pre>
+     * Version is the monotonically increased version of the instance
+     * </pre>
+     *
+     * <code>required uint64 version = 6;</code>
+     */
+    public boolean hasVersion() {
+      return ((bitField0_ & 0x00000020) == 0x00000020);
+    }
+    /**
+     * <pre>
+     * Version is the monotonically increased version of the instance
+     * </pre>
+     *
+     * <code>required uint64 version = 6;</code>
+     */
+    public long getVersion() {
+      return version_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -19107,6 +19153,10 @@ public final class ByzCoinProto {
         memoizedIsInitialized = 0;
         return false;
       }
+      if (!hasVersion()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -19128,6 +19178,9 @@ public final class ByzCoinProto {
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeBytes(5, darcid_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        output.writeUInt64(6, version_);
       }
       unknownFields.writeTo(output);
     }
@@ -19157,6 +19210,10 @@ public final class ByzCoinProto {
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(5, darcid_);
+      }
+      if (((bitField0_ & 0x00000020) == 0x00000020)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeUInt64Size(6, version_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -19199,6 +19256,11 @@ public final class ByzCoinProto {
         result = result && getDarcid()
             .equals(other.getDarcid());
       }
+      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion()) {
+        result = result && (getVersion()
+            == other.getVersion());
+      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -19229,6 +19291,11 @@ public final class ByzCoinProto {
       if (hasDarcid()) {
         hash = (37 * hash) + DARCID_FIELD_NUMBER;
         hash = (53 * hash) + getDarcid().hashCode();
+      }
+      if (hasVersion()) {
+        hash = (37 * hash) + VERSION_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getVersion());
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -19377,6 +19444,8 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000008);
         darcid_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000010);
+        version_ = 0L;
+        bitField0_ = (bitField0_ & ~0x00000020);
         return this;
       }
 
@@ -19425,6 +19494,10 @@ public final class ByzCoinProto {
           to_bitField0_ |= 0x00000010;
         }
         result.darcid_ = darcid_;
+        if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
+          to_bitField0_ |= 0x00000020;
+        }
+        result.version_ = version_;
         result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
@@ -19489,6 +19562,9 @@ public final class ByzCoinProto {
         if (other.hasDarcid()) {
           setDarcid(other.getDarcid());
         }
+        if (other.hasVersion()) {
+          setVersion(other.getVersion());
+        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -19509,6 +19585,9 @@ public final class ByzCoinProto {
           return false;
         }
         if (!hasDarcid()) {
+          return false;
+        }
+        if (!hasVersion()) {
           return false;
         }
         return true;
@@ -19782,6 +19861,54 @@ public final class ByzCoinProto {
       public Builder clearDarcid() {
         bitField0_ = (bitField0_ & ~0x00000010);
         darcid_ = getDefaultInstance().getDarcid();
+        onChanged();
+        return this;
+      }
+
+      private long version_ ;
+      /**
+       * <pre>
+       * Version is the monotonically increased version of the instance
+       * </pre>
+       *
+       * <code>required uint64 version = 6;</code>
+       */
+      public boolean hasVersion() {
+        return ((bitField0_ & 0x00000020) == 0x00000020);
+      }
+      /**
+       * <pre>
+       * Version is the monotonically increased version of the instance
+       * </pre>
+       *
+       * <code>required uint64 version = 6;</code>
+       */
+      public long getVersion() {
+        return version_;
+      }
+      /**
+       * <pre>
+       * Version is the monotonically increased version of the instance
+       * </pre>
+       *
+       * <code>required uint64 version = 6;</code>
+       */
+      public Builder setVersion(long value) {
+        bitField0_ |= 0x00000020;
+        version_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <pre>
+       * Version is the monotonically increased version of the instance
+       * </pre>
+       *
+       * <code>required uint64 version = 6;</code>
+       */
+      public Builder clearVersion() {
+        bitField0_ = (bitField0_ & ~0x00000020);
+        version_ = 0L;
         onChanged();
         return this;
       }
@@ -24278,11 +24405,20 @@ public final class ByzCoinProto {
     com.google.protobuf.ByteString getValue();
 
     /**
-     * <code>required bytes darcid = 4;</code>
+     * <code>required uint64 version = 4;</code>
+     */
+    boolean hasVersion();
+    /**
+     * <code>required uint64 version = 4;</code>
+     */
+    long getVersion();
+
+    /**
+     * <code>required bytes darcid = 5;</code>
      */
     boolean hasDarcid();
     /**
-     * <code>required bytes darcid = 4;</code>
+     * <code>required bytes darcid = 5;</code>
      */
     com.google.protobuf.ByteString getDarcid();
   }
@@ -24307,6 +24443,7 @@ public final class ByzCoinProto {
       stateaction_ = 0;
       contractid_ = com.google.protobuf.ByteString.EMPTY;
       value_ = com.google.protobuf.ByteString.EMPTY;
+      version_ = 0L;
       darcid_ = com.google.protobuf.ByteString.EMPTY;
     }
 
@@ -24349,8 +24486,13 @@ public final class ByzCoinProto {
               value_ = input.readBytes();
               break;
             }
-            case 34: {
+            case 32: {
               bitField0_ |= 0x00000008;
+              version_ = input.readUInt64();
+              break;
+            }
+            case 42: {
+              bitField0_ |= 0x00000010;
               darcid_ = input.readBytes();
               break;
             }
@@ -24432,16 +24574,31 @@ public final class ByzCoinProto {
       return value_;
     }
 
-    public static final int DARCID_FIELD_NUMBER = 4;
-    private com.google.protobuf.ByteString darcid_;
+    public static final int VERSION_FIELD_NUMBER = 4;
+    private long version_;
     /**
-     * <code>required bytes darcid = 4;</code>
+     * <code>required uint64 version = 4;</code>
      */
-    public boolean hasDarcid() {
+    public boolean hasVersion() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>required bytes darcid = 4;</code>
+     * <code>required uint64 version = 4;</code>
+     */
+    public long getVersion() {
+      return version_;
+    }
+
+    public static final int DARCID_FIELD_NUMBER = 5;
+    private com.google.protobuf.ByteString darcid_;
+    /**
+     * <code>required bytes darcid = 5;</code>
+     */
+    public boolean hasDarcid() {
+      return ((bitField0_ & 0x00000010) == 0x00000010);
+    }
+    /**
+     * <code>required bytes darcid = 5;</code>
      */
     public com.google.protobuf.ByteString getDarcid() {
       return darcid_;
@@ -24466,6 +24623,10 @@ public final class ByzCoinProto {
         memoizedIsInitialized = 0;
         return false;
       }
+      if (!hasVersion()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
       if (!hasDarcid()) {
         memoizedIsInitialized = 0;
         return false;
@@ -24487,7 +24648,10 @@ public final class ByzCoinProto {
         output.writeBytes(3, value_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeBytes(4, darcid_);
+        output.writeUInt64(4, version_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        output.writeBytes(5, darcid_);
       }
       unknownFields.writeTo(output);
     }
@@ -24512,7 +24676,11 @@ public final class ByzCoinProto {
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, darcid_);
+          .computeUInt64Size(4, version_);
+      }
+      if (((bitField0_ & 0x00000010) == 0x00000010)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(5, darcid_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -24545,6 +24713,11 @@ public final class ByzCoinProto {
         result = result && getValue()
             .equals(other.getValue());
       }
+      result = result && (hasVersion() == other.hasVersion());
+      if (hasVersion()) {
+        result = result && (getVersion()
+            == other.getVersion());
+      }
       result = result && (hasDarcid() == other.hasDarcid());
       if (hasDarcid()) {
         result = result && getDarcid()
@@ -24572,6 +24745,11 @@ public final class ByzCoinProto {
       if (hasValue()) {
         hash = (37 * hash) + VALUE_FIELD_NUMBER;
         hash = (53 * hash) + getValue().hashCode();
+      }
+      if (hasVersion()) {
+        hash = (37 * hash) + VERSION_FIELD_NUMBER;
+        hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+            getVersion());
       }
       if (hasDarcid()) {
         hash = (37 * hash) + DARCID_FIELD_NUMBER;
@@ -24721,8 +24899,10 @@ public final class ByzCoinProto {
         bitField0_ = (bitField0_ & ~0x00000002);
         value_ = com.google.protobuf.ByteString.EMPTY;
         bitField0_ = (bitField0_ & ~0x00000004);
-        darcid_ = com.google.protobuf.ByteString.EMPTY;
+        version_ = 0L;
         bitField0_ = (bitField0_ & ~0x00000008);
+        darcid_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000010);
         return this;
       }
 
@@ -24765,6 +24945,10 @@ public final class ByzCoinProto {
         result.value_ = value_;
         if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
           to_bitField0_ |= 0x00000008;
+        }
+        result.version_ = version_;
+        if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+          to_bitField0_ |= 0x00000010;
         }
         result.darcid_ = darcid_;
         result.bitField0_ = to_bitField0_;
@@ -24825,6 +25009,9 @@ public final class ByzCoinProto {
         if (other.hasValue()) {
           setValue(other.getValue());
         }
+        if (other.hasVersion()) {
+          setVersion(other.getVersion());
+        }
         if (other.hasDarcid()) {
           setDarcid(other.getDarcid());
         }
@@ -24842,6 +25029,9 @@ public final class ByzCoinProto {
           return false;
         }
         if (!hasValue()) {
+          return false;
+        }
+        if (!hasVersion()) {
           return false;
         }
         if (!hasDarcid()) {
@@ -24972,36 +25162,68 @@ public final class ByzCoinProto {
         return this;
       }
 
-      private com.google.protobuf.ByteString darcid_ = com.google.protobuf.ByteString.EMPTY;
+      private long version_ ;
       /**
-       * <code>required bytes darcid = 4;</code>
+       * <code>required uint64 version = 4;</code>
        */
-      public boolean hasDarcid() {
+      public boolean hasVersion() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>required bytes darcid = 4;</code>
+       * <code>required uint64 version = 4;</code>
+       */
+      public long getVersion() {
+        return version_;
+      }
+      /**
+       * <code>required uint64 version = 4;</code>
+       */
+      public Builder setVersion(long value) {
+        bitField0_ |= 0x00000008;
+        version_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required uint64 version = 4;</code>
+       */
+      public Builder clearVersion() {
+        bitField0_ = (bitField0_ & ~0x00000008);
+        version_ = 0L;
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString darcid_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes darcid = 5;</code>
+       */
+      public boolean hasDarcid() {
+        return ((bitField0_ & 0x00000010) == 0x00000010);
+      }
+      /**
+       * <code>required bytes darcid = 5;</code>
        */
       public com.google.protobuf.ByteString getDarcid() {
         return darcid_;
       }
       /**
-       * <code>required bytes darcid = 4;</code>
+       * <code>required bytes darcid = 5;</code>
        */
       public Builder setDarcid(com.google.protobuf.ByteString value) {
         if (value == null) {
     throw new NullPointerException();
   }
-  bitField0_ |= 0x00000008;
+  bitField0_ |= 0x00000010;
         darcid_ = value;
         onChanged();
         return this;
       }
       /**
-       * <code>required bytes darcid = 4;</code>
+       * <code>required bytes darcid = 5;</code>
        */
       public Builder clearDarcid() {
-        bitField0_ = (bitField0_ & ~0x00000008);
+        bitField0_ = (bitField0_ & ~0x00000010);
         darcid_ = getDefaultInstance().getDarcid();
         onChanged();
         return this;
@@ -26564,24 +26786,25 @@ public final class ByzCoinProto {
       "structions\030\001 \003(\0132\024.byzcoin.Instruction\022\030" +
       "\n\020instructionshash\030\002 \002(\014\"S\n\010TxResult\0225\n\021" +
       "clienttransaction\030\001 \002(\0132\032.byzcoin.Client" +
-      "Transaction\022\020\n\010accepted\030\002 \002(\010\"i\n\013StateCh" +
+      "Transaction\022\020\n\010accepted\030\002 \002(\010\"z\n\013StateCh" +
       "ange\022\023\n\013stateaction\030\001 \002(\021\022\022\n\ninstanceid\030" +
       "\002 \002(\014\022\022\n\ncontractid\030\003 \002(\014\022\r\n\005value\030\004 \002(\014" +
-      "\022\016\n\006darcid\030\005 \002(\014\"#\n\004Coin\022\014\n\004name\030\001 \002(\014\022\r" +
-      "\n\005value\030\002 \002(\004\"\036\n\020StreamingRequest\022\n\n\002id\030" +
-      "\001 \002(\014\"8\n\021StreamingResponse\022#\n\005block\030\001 \001(" +
-      "\0132\024.skipchain.SkipBlock\"A\n\rDownloadState" +
-      "\022\021\n\tbyzcoinid\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006le" +
-      "ngth\030\003 \002(\021\"N\n\025DownloadStateResponse\022&\n\tk" +
-      "eyvalues\030\001 \003(\0132\023.byzcoin.DBKeyValue\022\r\n\005n" +
-      "once\030\002 \002(\004\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(\014\022\r\n" +
-      "\005value\030\002 \002(\014\"Y\n\017StateChangeBody\022\023\n\013state" +
-      "action\030\001 \002(\021\022\022\n\ncontractid\030\002 \002(\014\022\r\n\005valu" +
-      "e\030\003 \002(\014\022\016\n\006darcid\030\004 \002(\014\";\n\021GetSignerCoun" +
-      "ters\022\021\n\tsignerids\030\001 \003(\t\022\023\n\013skipchainid\030\002" +
-      " \002(\014\"1\n\031GetSignerCountersResponse\022\024\n\010cou" +
-      "nters\030\001 \003(\004B\002\020\001B\'\n\027ch.epfl.dedis.lib.pro" +
-      "toB\014ByzCoinProto"
+      "\022\016\n\006darcid\030\005 \002(\014\022\017\n\007version\030\006 \002(\004\"#\n\004Coi" +
+      "n\022\014\n\004name\030\001 \002(\014\022\r\n\005value\030\002 \002(\004\"\036\n\020Stream" +
+      "ingRequest\022\n\n\002id\030\001 \002(\014\"8\n\021StreamingRespo" +
+      "nse\022#\n\005block\030\001 \001(\0132\024.skipchain.SkipBlock" +
+      "\"A\n\rDownloadState\022\021\n\tbyzcoinid\030\001 \002(\014\022\r\n\005" +
+      "nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(\021\"N\n\025DownloadS" +
+      "tateResponse\022&\n\tkeyvalues\030\001 \003(\0132\023.byzcoi" +
+      "n.DBKeyValue\022\r\n\005nonce\030\002 \002(\004\"(\n\nDBKeyValu" +
+      "e\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\"j\n\017StateCh" +
+      "angeBody\022\023\n\013stateaction\030\001 \002(\021\022\022\n\ncontrac" +
+      "tid\030\002 \002(\014\022\r\n\005value\030\003 \002(\014\022\017\n\007version\030\004 \002(" +
+      "\004\022\016\n\006darcid\030\005 \002(\014\";\n\021GetSignerCounters\022\021" +
+      "\n\tsignerids\030\001 \003(\t\022\023\n\013skipchainid\030\002 \002(\014\"1" +
+      "\n\031GetSignerCountersResponse\022\024\n\010counters\030" +
+      "\001 \003(\004B\002\020\001B\'\n\027ch.epfl.dedis.lib.protoB\014By" +
+      "zCoinProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -26718,7 +26941,7 @@ public final class ByzCoinProto {
     internal_static_byzcoin_StateChange_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_StateChange_descriptor,
-        new java.lang.String[] { "Stateaction", "Instanceid", "Contractid", "Value", "Darcid", });
+        new java.lang.String[] { "Stateaction", "Instanceid", "Contractid", "Value", "Darcid", "Version", });
     internal_static_byzcoin_Coin_descriptor =
       getDescriptor().getMessageTypes().get(20);
     internal_static_byzcoin_Coin_fieldAccessorTable = new
@@ -26760,7 +26983,7 @@ public final class ByzCoinProto {
     internal_static_byzcoin_StateChangeBody_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_StateChangeBody_descriptor,
-        new java.lang.String[] { "Stateaction", "Contractid", "Value", "Darcid", });
+        new java.lang.String[] { "Stateaction", "Contractid", "Value", "Version", "Darcid", });
     internal_static_byzcoin_GetSignerCounters_descriptor =
       getDescriptor().getMessageTypes().get(27);
     internal_static_byzcoin_GetSignerCounters_fieldAccessorTable = new

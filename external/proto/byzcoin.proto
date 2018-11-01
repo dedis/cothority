@@ -222,6 +222,8 @@ message StateChange {
   required bytes value = 4;
   // DarcID is the Darc controlling access to this key.
   required bytes darcid = 5;
+  // Version is the monotonically increased version of the instance
+  required uint64 version = 6;
 }
 
 // Coin is a generic structure holding any type of coin. Coins are defined
@@ -286,7 +288,8 @@ message StateChangeBody {
   required sint32 stateaction = 1;
   required bytes contractid = 2;
   required bytes value = 3;
-  required bytes darcid = 4;
+  required uint64 version = 4;
+  required bytes darcid = 5;
 }
 
 // GetSignerCounters is a request to get the latest version for the specified
