@@ -2818,7 +2818,7 @@ public final class SkipchainProto {
                 mutable_bitField0_ |= 0x00000001;
               }
               update_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.SkipBlock.parser(), extensionRegistry));
               break;
             }
             default: {
@@ -3926,7 +3926,7 @@ public final class SkipchainProto {
               if (((bitField0_ & 0x00000080) == 0x00000080)) {
                 subBuilder = roster_.toBuilder();
               }
-              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.PARSER, extensionRegistry);
+              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(roster_);
                 roster_ = subBuilder.buildPartial();
@@ -3945,7 +3945,7 @@ public final class SkipchainProto {
                 mutable_bitField0_ |= 0x00000800;
               }
               forward_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.ForwardLink.parser(), extensionRegistry));
               break;
             }
             case 106: {
@@ -6079,7 +6079,7 @@ public final class SkipchainProto {
               if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = newRoster_.toBuilder();
               }
-              newRoster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.PARSER, extensionRegistry);
+              newRoster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(newRoster_);
                 newRoster_ = subBuilder.buildPartial();
@@ -6092,7 +6092,7 @@ public final class SkipchainProto {
               if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 subBuilder = signature_.toBuilder();
               }
-              signature_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig.PARSER, extensionRegistry);
+              signature_ = input.readMessage(ch.epfl.dedis.lib.proto.SkipchainProto.ByzcoinSig.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(signature_);
                 signature_ = subBuilder.buildPartial();

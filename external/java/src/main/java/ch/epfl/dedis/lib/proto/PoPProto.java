@@ -101,7 +101,7 @@ public final class PoPProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = roster_.toBuilder();
               }
-              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.PARSER, extensionRegistry);
+              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(roster_);
                 roster_ = subBuilder.buildPartial();
@@ -1048,7 +1048,7 @@ public final class PoPProto {
               if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 subBuilder = roster_.toBuilder();
               }
-              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.PARSER, extensionRegistry);
+              roster_ = input.readMessage(ch.epfl.dedis.lib.proto.OnetProto.Roster.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(roster_);
                 roster_ = subBuilder.buildPartial();
@@ -1062,7 +1062,7 @@ public final class PoPProto {
                 mutable_bitField0_ |= 0x00000010;
               }
               parties_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.ShortDesc.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.ShortDesc.parser(), extensionRegistry));
               break;
             }
             default: {
@@ -2822,7 +2822,7 @@ public final class PoPProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = desc_.toBuilder();
               }
-              desc_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.PopDesc.PARSER, extensionRegistry);
+              desc_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.PopDesc.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(desc_);
                 desc_ = subBuilder.buildPartial();
@@ -5391,7 +5391,7 @@ public final class PoPProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = final_.toBuilder();
               }
-              final_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.PARSER, extensionRegistry);
+              final_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(final_);
                 final_ = subBuilder.buildPartial();
@@ -6244,7 +6244,7 @@ public final class PoPProto {
               if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = final_.toBuilder();
               }
-              final_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.PARSER, extensionRegistry);
+              final_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(final_);
                 final_ = subBuilder.buildPartial();
@@ -7846,7 +7846,7 @@ public final class PoPProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = desc_.toBuilder();
               }
-              desc_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.PopDesc.PARSER, extensionRegistry);
+              desc_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.PopDesc.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(desc_);
                 desc_ = subBuilder.buildPartial();
@@ -9872,7 +9872,7 @@ public final class PoPProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = final_.toBuilder();
               }
-              final_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.PARSER, extensionRegistry);
+              final_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(final_);
                 final_ = subBuilder.buildPartial();
@@ -12178,7 +12178,7 @@ public final class PoPProto {
                 mutable_bitField0_ |= 0x00000001;
               }
               proposals_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.PopDesc.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.PopDesc.parser(), extensionRegistry));
               break;
             }
             default: {
@@ -18409,7 +18409,7 @@ public final class PoPProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = signer_.toBuilder();
               }
-              signer_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signer.PARSER, extensionRegistry);
+              signer_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signer.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(signer_);
                 signer_ = subBuilder.buildPartial();
@@ -20073,7 +20073,7 @@ public final class PoPProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = signer_.toBuilder();
               }
-              signer_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signer.PARSER, extensionRegistry);
+              signer_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signer.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(signer_);
                 signer_ = subBuilder.buildPartial();
@@ -23326,7 +23326,7 @@ public final class PoPProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = finalstatement_.toBuilder();
               }
-              finalstatement_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.PARSER, extensionRegistry);
+              finalstatement_ = input.readMessage(ch.epfl.dedis.lib.proto.PoPProto.FinalStatement.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(finalstatement_);
                 finalstatement_ = subBuilder.buildPartial();

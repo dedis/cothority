@@ -158,7 +158,7 @@ public final class AuthProxProto {
               if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = longpri_.toBuilder();
               }
-              longpri_ = input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.PARSER, extensionRegistry);
+              longpri_ = input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(longpri_);
                 longpri_ = subBuilder.buildPartial();
@@ -1869,7 +1869,7 @@ public final class AuthProxProto {
               if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 subBuilder = randpri_.toBuilder();
               }
-              randpri_ = input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.PARSER, extensionRegistry);
+              randpri_ = input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(randpri_);
                 randpri_ = subBuilder.buildPartial();
@@ -3558,7 +3558,7 @@ public final class AuthProxProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = partial_.toBuilder();
               }
-              partial_ = input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.PARSER, extensionRegistry);
+              partial_ = input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.PriShare.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(partial_);
                 partial_ = subBuilder.buildPartial();
@@ -4365,7 +4365,7 @@ public final class AuthProxProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = partialsignature_.toBuilder();
               }
-              partialsignature_ = input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig.PARSER, extensionRegistry);
+              partialsignature_ = input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.PartialSig.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(partialsignature_);
                 partialsignature_ = subBuilder.buildPartial();
@@ -5822,7 +5822,7 @@ public final class AuthProxProto {
                 mutable_bitField0_ |= 0x00000001;
               }
               enrollments_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.AuthProxProto.EnrollmentInfo.parser(), extensionRegistry));
               break;
             }
             default: {

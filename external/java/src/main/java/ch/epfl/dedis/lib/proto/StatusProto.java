@@ -546,7 +546,7 @@ public final class StatusProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = serveridentity_.toBuilder();
               }
-              serveridentity_ = input.readMessage(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.PARSER, extensionRegistry);
+              serveridentity_ = input.readMessage(ch.epfl.dedis.lib.proto.NetworkProto.ServerIdentity.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(serveridentity_);
                 serveridentity_ = subBuilder.buildPartial();

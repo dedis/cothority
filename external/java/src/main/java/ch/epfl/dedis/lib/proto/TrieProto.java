@@ -128,7 +128,7 @@ public final class TrieProto {
                 mutable_bitField0_ |= 0x00000001;
               }
               interiors_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.parser(), extensionRegistry));
               break;
             }
             case 18: {
@@ -136,7 +136,7 @@ public final class TrieProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = leaf_.toBuilder();
               }
-              leaf_ = input.readMessage(ch.epfl.dedis.lib.proto.TrieProto.LeafNode.PARSER, extensionRegistry);
+              leaf_ = input.readMessage(ch.epfl.dedis.lib.proto.TrieProto.LeafNode.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(leaf_);
                 leaf_ = subBuilder.buildPartial();
@@ -149,7 +149,7 @@ public final class TrieProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = empty_.toBuilder();
               }
-              empty_ = input.readMessage(ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.PARSER, extensionRegistry);
+              empty_ = input.readMessage(ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(empty_);
                 empty_ = subBuilder.buildPartial();
