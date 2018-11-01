@@ -122,7 +122,7 @@ public final class CollectionProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = children_.toBuilder();
               }
-              children_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Children.PARSER, extensionRegistry);
+              children_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Children.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(children_);
                 children_ = subBuilder.buildPartial();
@@ -1679,7 +1679,7 @@ public final class CollectionProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = left_.toBuilder();
               }
-              left_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Dump.PARSER, extensionRegistry);
+              left_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Dump.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(left_);
                 left_ = subBuilder.buildPartial();
@@ -1692,7 +1692,7 @@ public final class CollectionProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = right_.toBuilder();
               }
-              right_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Dump.PARSER, extensionRegistry);
+              right_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Dump.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(right_);
                 right_ = subBuilder.buildPartial();
@@ -2594,7 +2594,7 @@ public final class CollectionProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = root_.toBuilder();
               }
-              root_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Dump.PARSER, extensionRegistry);
+              root_ = input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Dump.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(root_);
                 root_ = subBuilder.buildPartial();
@@ -2608,7 +2608,7 @@ public final class CollectionProto {
                 mutable_bitField0_ |= 0x00000004;
               }
               steps_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Step.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.CollectionProto.Step.parser(), extensionRegistry));
               break;
             }
             default: {

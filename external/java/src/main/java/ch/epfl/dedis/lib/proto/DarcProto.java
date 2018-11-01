@@ -303,7 +303,7 @@ public final class DarcProto {
               if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 subBuilder = rules_.toBuilder();
               }
-              rules_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Rules.PARSER, extensionRegistry);
+              rules_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Rules.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(rules_);
                 rules_ = subBuilder.buildPartial();
@@ -317,7 +317,7 @@ public final class DarcProto {
                 mutable_bitField0_ |= 0x00000020;
               }
               signatures_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signature.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Signature.parser(), extensionRegistry));
               break;
             }
             case 58: {
@@ -326,7 +326,7 @@ public final class DarcProto {
                 mutable_bitField0_ |= 0x00000040;
               }
               verificationdarcs_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Darc.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Darc.parser(), extensionRegistry));
               break;
             }
             default: {
@@ -2501,7 +2501,7 @@ public final class DarcProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = darc_.toBuilder();
               }
-              darc_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc.PARSER, extensionRegistry);
+              darc_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityDarc.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(darc_);
                 darc_ = subBuilder.buildPartial();
@@ -2514,7 +2514,7 @@ public final class DarcProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = ed25519_.toBuilder();
               }
-              ed25519_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519.PARSER, extensionRegistry);
+              ed25519_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityEd25519.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(ed25519_);
                 ed25519_ = subBuilder.buildPartial();
@@ -2527,7 +2527,7 @@ public final class DarcProto {
               if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = x509Ec_.toBuilder();
               }
-              x509Ec_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC.PARSER, extensionRegistry);
+              x509Ec_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityX509EC.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(x509Ec_);
                 x509Ec_ = subBuilder.buildPartial();
@@ -2540,7 +2540,7 @@ public final class DarcProto {
               if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 subBuilder = proxy_.toBuilder();
               }
-              proxy_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy.PARSER, extensionRegistry);
+              proxy_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.IdentityProxy.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(proxy_);
                 proxy_ = subBuilder.buildPartial();
@@ -6257,7 +6257,7 @@ public final class DarcProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = signer_.toBuilder();
               }
-              signer_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Identity.PARSER, extensionRegistry);
+              signer_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Identity.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(signer_);
                 signer_ = subBuilder.buildPartial();
@@ -7077,7 +7077,7 @@ public final class DarcProto {
               if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 subBuilder = ed25519_.toBuilder();
               }
-              ed25519_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519.PARSER, extensionRegistry);
+              ed25519_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.SignerEd25519.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(ed25519_);
                 ed25519_ = subBuilder.buildPartial();
@@ -7090,7 +7090,7 @@ public final class DarcProto {
               if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 subBuilder = x509Ec_.toBuilder();
               }
-              x509Ec_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC.PARSER, extensionRegistry);
+              x509Ec_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.SignerX509EC.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(x509Ec_);
                 x509Ec_ = subBuilder.buildPartial();
@@ -7103,7 +7103,7 @@ public final class DarcProto {
               if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 subBuilder = proxy_.toBuilder();
               }
-              proxy_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.SignerProxy.PARSER, extensionRegistry);
+              proxy_ = input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.SignerProxy.parser(), extensionRegistry);
               if (subBuilder != null) {
                 subBuilder.mergeFrom(proxy_);
                 proxy_ = subBuilder.buildPartial();
@@ -10027,7 +10027,7 @@ public final class DarcProto {
                 mutable_bitField0_ |= 0x00000008;
               }
               identities_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Identity.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Identity.parser(), extensionRegistry));
               break;
             }
             case 42: {
@@ -11286,7 +11286,7 @@ public final class DarcProto {
                 mutable_bitField0_ |= 0x00000001;
               }
               list_.add(
-                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Rule.PARSER, extensionRegistry));
+                  input.readMessage(ch.epfl.dedis.lib.proto.DarcProto.Rule.parser(), extensionRegistry));
               break;
             }
             default: {
