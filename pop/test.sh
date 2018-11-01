@@ -91,7 +91,7 @@ testPropagateConfig() {
   runDbgCl 0 1 org proposed -quiet ${addr[2]} >proposed.toml
   testGrep "City1" cat proposed.toml
   testOK cmp -s pop_desc1.toml proposed.toml
-  testNGrep "City1" runCl 1 org proposed ${addr[2]}
+  testGrep "City1" runCl 1 org proposed ${addr[2]}
   testNGrep "City1" runCl 1 org proposed ${addr[1]}
 }
 
