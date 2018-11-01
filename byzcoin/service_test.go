@@ -1695,6 +1695,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 	n := 10
 	iid := genID()
 
+	fakeID := genID().Slice()
 	contractID := "stateShangeCacheTest"
 	contract := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
 		// Check the version is correctly increased for multiple state changes
@@ -1707,7 +1708,7 @@ func TestService_StateChangeStorage(t *testing.T) {
 			StateAction: Update,
 		}
 		sc3 := StateChange{ // this one should not increase the version of the previous two
-			InstanceID:  []byte{0},
+			InstanceID:  fakeID,
 			StateAction: Create,
 		}
 		return []StateChange{sc1, sc2, sc3}, []Coin{}, nil
