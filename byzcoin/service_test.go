@@ -1735,18 +1735,23 @@ func TestService_StateChangeStorage(t *testing.T) {
 	s.waitProofWithIdx(t, iid[:], 0)
 
 	for _, service := range s.services {
-		scs, err := service.stateChangeStorage.getAll(iid[:])
+		scs, err := service.GetInstanceVersions(iid[:])
 
 		require.Nil(t, err)
 		require.Equal(t, n*4, len(scs))
 
 		for i := 0; i < n*4; i++ {
-			sc, ok, err := service.stateChangeStorage.getByVersion(iid[:], uint64(i))
+			sc, ok, err := service.GetInstanceVersion(iid[:], uint64(i))
 			require.Nil(t, err)
 			require.True(t, ok)
-			require.Equal(t, uint64(i), sc.StateChange.Version)
-			require.Equal(t, uint64(i), scs[i].StateChange.Version)
+			require.Equal(t, uint64(i), sc.Version)
+			require.Equal(t, uint64(i), scs[i].Version)
 		}
+
+		sc, ok, err := service.GetLastInstanceVersion(iid[:])
+		require.Nil(t, err)
+		require.True(t, ok)
+		require.Equal(t, uint64(n*4-1), sc.Version)
 	}
 }
 
@@ -1758,7 +1763,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 	require.Nil(t, err)
 	_, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
-		SkipchainID: s.sb.SkipChainID(),
+		SkipchainID: s.genesis.SkipChainID(),
 		Transaction: tx1,
 	})
 	require.Nil(t, err)

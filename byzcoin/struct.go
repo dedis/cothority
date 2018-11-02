@@ -40,14 +40,17 @@ type keyTime struct {
 
 type keyTimeArray []keyTime
 
+// Len returns the number of keys
 func (kt keyTimeArray) Len() int {
 	return len(kt)
 }
 
+// Less returns true when i's timestamp is less than j's
 func (kt keyTimeArray) Less(i, j int) bool {
 	return kt[i].time.Before(kt[j].time)
 }
 
+// Swap swaps both elements
 func (kt keyTimeArray) Swap(i, j int) {
 	kt[i], kt[j] = kt[j], kt[i]
 }
@@ -117,6 +120,8 @@ func (s *stateChangeStorage) cleanBySize() error {
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := s.getBucket(tx)
 
+		// We make enough space to not have to do it everytime
+		// we append state changes
 		thres := int(float64(s.maxSize) * 0.8)
 
 		for s.size > thres {
@@ -136,13 +141,16 @@ func (s *stateChangeStorage) cleanBySize() error {
 
 			s.size -= len(v)
 			// Seek for the oldest element of the instance, which is
-			// not necessearily the next one
-			iid := key[:len(key)-versionLength]
+			// not necessarily the next one
+			iid := key[:prefixLength]
 			k, v = c.Seek(iid)
 
 			if bytes.HasPrefix(k, iid) {
 				var sce StateChangeEntry
-				protobuf.Decode(v, &sce)
+				err := protobuf.Decode(v, &sce)
+				if err != nil {
+					return err
+				}
 				s.sortedKeys[0].time = sce.Timestamp
 				copy(s.sortedKeys[0].key, k)
 
@@ -169,6 +177,7 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges) error {
 	return s.db.Update(func(tx *bolt.Tx) error {
 		b := s.getBucket(tx)
 
+		// Prevent from cleaning the same instance twice
 		done := map[string]bool{}
 
 		// Clean only the instances where state changes have been added
