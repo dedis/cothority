@@ -1918,6 +1918,7 @@ func (s *Service) trySyncAll() {
 		log.Error(s.ServerIdentity(), err)
 		return
 	}
+
 	for _, scID := range gasr.IDs {
 		sb, err := s.db().GetLatestByID(scID)
 		if err != nil {
@@ -1928,7 +1929,81 @@ func (s *Service) trySyncAll() {
 		if err != nil {
 			log.Error(s.ServerIdentity(), err)
 		}
+
+		txs, _, err := s.getBlockTx(sb.SkipChainID())
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+		}
+
+		nonce, err := s.loadNonceFromTxs(txs)
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+		}
+
+		sst, err := newMemStagingStateTrie(nonce)
+		_, err = s.buildStateChanges(sb.SkipChainID(), sst, []Coin{})
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+		}
 	}
+}
+
+// getBlockTx fetches the block with the given id and then decode the payload
+// to return the list of transactions
+func (s *Service) getBlockTx(sid skipchain.SkipBlockID) (TxResults, *skipchain.SkipBlock, error) {
+	sb, err := s.skService().GetSingleBlock(&skipchain.GetSingleBlock{ID: sid})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var body DataBody
+	err = protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return body.TxResults, sb, nil
+}
+
+// buildStateChanges recursively gets the TXs of a skipchain's blocks and populate
+// the state changes storage by restoring them from the TXs. We don't need to worry
+// about overriding thanks to the key generation.
+func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *StagingStateTrie, cin []Coin) ([]Coin, error) {
+	log.Lvlf2("Start creating state changes for skipchain %x", sid)
+	txs, sb, err := s.getBlockTx(sid)
+	if err != nil {
+		return nil, err
+	}
+
+	// when an error occured, we stop where we are because those state changes
+	// should be generated without errors then something else went wrong
+	// (e.g. storage issue)
+	for _, tx := range txs {
+		if tx.Accepted {
+			// Only accepted transactions must be used
+			// to create the state changes
+			for _, instr := range tx.ClientTransaction.Instructions {
+				scs, cout, err := s.executeInstruction(sst, cin, instr)
+				cin = cout
+				if err != nil {
+					return nil, err
+				}
+				err = sst.StoreAll(scs)
+				if err != nil {
+					return nil, err
+				}
+
+				s.stateChangeStorage.append(scs, sb)
+			}
+		}
+	}
+
+	if len(sb.ForwardLink) > 0 {
+		// assume the first one is always the FL lvl 0. Is it right ??
+		return s.buildStateChanges(sb.ForwardLink[0].To, sst, cin)
+	}
+
+	return nil, nil
 }
 
 var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+$`)

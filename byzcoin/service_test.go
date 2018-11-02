@@ -5,10 +5,13 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
+	"io/ioutil"
 	"math"
+	"os"
 	"testing"
 	"time"
 
+	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/darc/expression"
@@ -1745,6 +1748,44 @@ func TestService_StateChangeStorage(t *testing.T) {
 			require.Equal(t, uint64(i), scs[i].StateChange.Version)
 		}
 	}
+}
+
+func TestService_StateChangeCatchUp(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	require.Nil(t, err)
+	_, err = s.service().AddTransaction(&AddTxRequest{
+		Version:     CurrentVersion,
+		SkipchainID: s.sb.SkipChainID(),
+		Transaction: tx1,
+	})
+	require.Nil(t, err)
+
+	s.waitProofWithIdx(t, tx1.Instructions[0].Hash(), 0)
+
+	// reset the storage DB
+	tmpDB, err := ioutil.TempFile("", "tmpDB")
+	require.Nil(t, err)
+	tmpDB.Close()
+	defer os.Remove(tmpDB.Name())
+
+	db, err := bolt.Open(tmpDB.Name(), 0600, nil)
+	require.Nil(t, err)
+	s.service().stateChangeStorage.db = db
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucket(s.service().stateChangeStorage.bucket)
+		return err
+	})
+	require.Nil(t, err)
+
+	s.service().trySyncAll()
+
+	scs, err := s.service().stateChangeStorage.getAll(tx1.Instructions[0].Hash())
+	require.Nil(t, err)
+	require.Equal(t, 1, len(scs))
 }
 
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {

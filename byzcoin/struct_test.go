@@ -12,31 +12,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func generateStateChanges() StateChanges {
-	id := genID().Slice()
-
-	scs := StateChanges{}
-	for i := 0; i < 10; i++ {
-		scs = append(scs, StateChange{
-			InstanceID: id,
-			Value:      []byte{byte(i)},
-			Version:    uint64(i),
-		})
-	}
-
-	return scs
-}
-
 func TestStateChangeStorage_SimpleCase(t *testing.T) {
-	tmpDB, err := ioutil.TempFile("", "tmpDB")
-	require.Nil(t, err)
-	tmpDB.Close()
-	defer os.Remove(tmpDB.Name())
-
-	db, err := bolt.Open(tmpDB.Name(), 0600, nil)
-	require.Nil(t, err)
-
-	scs := stateChangeStorage{db: db}
+	scs, name := generateDB(t)
+	defer os.Remove(name)
 
 	ss := append(generateStateChanges(), generateStateChanges()...)
 	perm := rand.Perm(len(ss))
@@ -44,7 +22,7 @@ func TestStateChangeStorage_SimpleCase(t *testing.T) {
 		ss[i], ss[j] = ss[j], ss[i]
 	}
 
-	err = scs.append(ss, skipchain.NewSkipBlock())
+	err := scs.append(ss, skipchain.NewSkipBlock())
 	require.Nil(t, err)
 
 	entries, err := scs.getAll(ss[0].InstanceID)
@@ -69,22 +47,14 @@ func TestStateChangeStorage_SimpleCase(t *testing.T) {
 	require.Nil(t, err)
 	require.True(t, ok)
 	require.Equal(t, uint64(9), sce.StateChange.Version)
-
-	db.Close()
 }
 
 func TestStateChangeStorage_MaxSize(t *testing.T) {
-	tmpDB, err := ioutil.TempFile("", "tmpDB")
-	require.Nil(t, err)
-	tmpDB.Close()
-	defer os.Remove(tmpDB.Name())
-
-	db, err := bolt.Open(tmpDB.Name(), 0600, nil)
-	require.Nil(t, err)
+	scs, name := generateDB(t)
+	defer os.Remove(name)
 
 	n := 20
 	size := 10
-
 	iid1 := genID().Slice()
 	iid2 := genID().Slice()
 
@@ -96,10 +66,7 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 	buf, err := protobuf.Encode(&sc)
 	require.Nil(t, err)
 
-	scs := stateChangeStorage{
-		db:      db,
-		maxSize: len(buf) * size,
-	}
+	scs.maxSize = len(buf) * size
 
 	for i := 0; i < n; i++ {
 		sc.Version = uint64(i)
@@ -127,21 +94,12 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 }
 
 func TestStateChangeStorage_MaxNbrBlock(t *testing.T) {
-	tmpDB, err := ioutil.TempFile("", "tmpDB")
-	require.Nil(t, err)
-	tmpDB.Close()
-	defer os.Remove(tmpDB.Name())
+	scs, name := generateDB(t)
+	scs.maxNbrBlock = 2
+	defer os.Remove(name)
 
 	n := 50
 	k := 5
-
-	db, err := bolt.Open(tmpDB.Name(), 0600, nil)
-	require.Nil(t, err)
-
-	scs := stateChangeStorage{
-		db:          db,
-		maxNbrBlock: 2,
-	}
 
 	iids := make([][]byte, k)
 	for i := range iids {
@@ -163,4 +121,36 @@ func TestStateChangeStorage_MaxNbrBlock(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, 2, len(entries))
 	require.Equal(t, n-1, entries[1].BlockIndex)
+}
+
+func generateStateChanges() StateChanges {
+	id := genID().Slice()
+
+	scs := StateChanges{}
+	for i := 0; i < 10; i++ {
+		scs = append(scs, StateChange{
+			InstanceID: id,
+			Value:      []byte{byte(i)},
+			Version:    uint64(i),
+		})
+	}
+
+	return scs
+}
+
+func generateDB(t *testing.T) (*stateChangeStorage, string) {
+	tmpDB, err := ioutil.TempFile("", "tmpDB")
+	require.Nil(t, err)
+	tmpDB.Close()
+
+	db, err := bolt.Open(tmpDB.Name(), 0600, nil)
+	require.Nil(t, err)
+
+	scs := stateChangeStorage{db: db, bucket: []byte("scstest")}
+	db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucket(scs.bucket)
+		return err
+	})
+
+	return &scs, tmpDB.Name()
 }
