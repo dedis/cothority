@@ -180,7 +180,7 @@ func orgConfig(c *cli.Context) error {
 		// Check that current party is included in merge config
 		found := false
 		for _, party := range desc.Parties {
-			if service.Equal(desc.Roster, party.Roster) {
+			if rosterEqual(desc.Roster, party.Roster) {
 				found = true
 				break
 			}
@@ -212,6 +212,25 @@ func orgConfig(c *cli.Context) error {
 	}
 	log.Infof("Stored new config with hash %x", desc.Hash())
 	return cfg.write()
+}
+
+// rosterEqual checks if the first list contains the second
+func rosterEqual(r1, r2 *onet.Roster) bool {
+	if len(r1.List) != len(r2.List) {
+		return false
+	}
+	for _, p := range r2.List {
+		found := false
+		for _, d := range r1.List {
+			if p.Equal(d) {
+				found = true
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }
 
 // read all newly proposed configs
@@ -547,8 +566,8 @@ func attSign(c *cli.Context) error {
 	Set := anon.Set(party.Final.Attendees)
 	sigtag := anon.Sign(cothority.Suite.(anon.Suite), msg,
 		Set, ctx, party.Index, party.Private)
-	sig := sigtag[:len(sigtag)-service.SIGSIZE/2]
-	tag := sigtag[len(sigtag)-service.SIGSIZE/2:]
+	sig := sigtag[:len(sigtag)-service.SignatureSize/2]
+	tag := sigtag[len(sigtag)-service.SignatureSize/2:]
 	log.Lvlf2("\nSignature: %x\nTag: %x", sig, tag)
 	return nil
 }

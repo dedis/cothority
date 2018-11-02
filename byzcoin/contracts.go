@@ -29,9 +29,23 @@ var ConfigInstanceID = InstanceID{}
 // CmdDarcEvolve is needed to evolve a darc.
 var CmdDarcEvolve = "evolve"
 
-// ContractFn is the type signature of the class functions which can be
+// ContractFn is the type signature of the instance factory functions which can be
 // registered with the ByzCoin service.
-type ContractFn func(st ReadOnlyStateTrie, inst Instruction, ctxHash []byte, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
+type ContractFn func(in []byte) (Contract, error)
+
+// Contract is the interface that an instance needs
+// to implement to be callable as a pre-compiled smart
+// contract.
+type Contract interface {
+	// Verify returns nil if the instruction is valid with regard to the signature.
+	VerifyInstruction(ReadOnlyStateTrie, Instruction, []byte) error
+	// Spawn is used to spawn new instances
+	Spawn(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
+	// Invoke only modifies existing instances
+	Invoke(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
+	// Delete removes the current instance
+	Delete(ReadOnlyStateTrie, Instruction, []Coin) ([]StateChange, []Coin, error)
+}
 
 // RegisterContract stores the contract in a map and will call it whenever a
 // contract needs to be done. GetService makes it possible to give either an
@@ -60,11 +74,25 @@ func LoadDarcFromTrie(st ReadOnlyStateTrie, key []byte) (*darc.Darc, error) {
 	return d, nil
 }
 
-// ContractConfig can only be instantiated once per skipchain, and only for
-// the genesis block.
-func (s *Service) ContractConfig(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, coins []Coin) (sc []StateChange, c []Coin, err error) {
-	// Verify the darc signature if the config instance does not exist yet.
-	pr, err := cdb.GetProof(ConfigInstanceID.Slice())
+type contractConfig struct {
+	BasicContract
+	ChainConfig
+}
+
+var _ Contract = (*contractConfig)(nil)
+
+func contractConfigFromBytes(in []byte) (Contract, error) {
+	c := &contractConfig{}
+	err := protobuf.DecodeWithConstructors(in, &c.ChainConfig, network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+// We need to override BasicContract.Verify because of the genesis config special case.
+func (c *contractConfig) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, msg []byte) (err error) {
+	pr, err := rst.GetProof(ConfigInstanceID.Slice())
 	if err != nil {
 		return
 	}
@@ -72,102 +100,21 @@ func (s *Service) ContractConfig(cdb ReadOnlyStateTrie, inst Instruction, ctxHas
 	if err != nil {
 		return
 	}
-	if ok {
-		err = inst.Verify(cdb, ctxHash)
-		if err != nil {
-			return
-		}
+
+	// The config does not exist yet, so this is a genesis config creation. No need/possiblity of verifying it.
+	if !ok {
+		return nil
 	}
-	switch inst.GetType() {
-	case SpawnType:
-		return spawnContractConfig(cdb, inst, coins)
-	case InvokeType:
-		return invokeContractConfig(cdb, inst, coins)
-	default:
-		return nil, coins, errors.New("unsupported instruction type")
-	}
+
+	return inst.Verify(rst, msg)
 }
 
-func invokeContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
-	cOut = coins
-
-	// Find the darcID for this instance.
-	var darcID darc.ID
-	_, _, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
-	if err != nil {
-		return
-	}
-
-	// There are two situations where we need to change the roster, first
-	// is when it is initiated by the client(s) that holds the genesis
-	// signing key, in this case we trust the client to do the right
-	// thing. The second is during a view-change, so we need to do
-	// additional validation to make sure a malicious node doesn't freely
-	// change the roster.
-	if inst.Invoke.Command == "update_config" {
-		configBuf := inst.Invoke.Args.Search("config")
-		newConfig := ChainConfig{}
-		err = protobuf.DecodeWithConstructors(configBuf, &newConfig, network.DefaultConstructors(cothority.Suite))
-		if err != nil {
-			return
-		}
-
-		var oldConfig *ChainConfig
-		oldConfig, err = loadConfigFromTrie(cdb)
-		if err != nil {
-			return
-		}
-		if err = newConfig.sanityCheck(oldConfig); err != nil {
-			return
-		}
-		sc = []StateChange{
-			NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
-		}
-		return
-	} else if inst.Invoke.Command == "view_change" {
-		var req viewchange.NewViewReq
-		err = protobuf.DecodeWithConstructors(inst.Invoke.Args.Search("newview"), &req, network.DefaultConstructors(cothority.Suite))
-		if err != nil {
-			return
-		}
-		// If everything is correctly signed, then we trust it, no need
-		// to do additional verification.
-		sigBuf := inst.Invoke.Args.Search("multisig")
-		err = cosi.Verify(cothority.Suite, req.Roster.Publics(),
-			req.Hash(), sigBuf, cosi.NewThresholdPolicy(len(req.Roster.List)-len(req.Roster.List)/3))
-		if err != nil {
-			return
-		}
-
-		sc, err = updateRosterScs(cdb, darcID, req.Roster)
-		return
-	}
-	err = errors.New("invalid invoke command: " + inst.Invoke.Command)
-	return
-}
-
-func updateRosterScs(cdb ReadOnlyStateTrie, darcID darc.ID, newRoster onet.Roster) (StateChanges, error) {
-	config, err := loadConfigFromTrie(cdb)
-	if err != nil {
-		return nil, err
-	}
-	config.Roster = newRoster
-	configBuf, err := protobuf.Encode(config)
-	if err != nil {
-		return nil, err
-	}
-
-	return []StateChange{
-		NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
-	}, nil
-}
-
-func spawnContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
-	c = coins
+func (c *contractConfig) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+	cout = coins
 	darcBuf := inst.Spawn.Args.Search("darc")
 	d, err := darc.NewFromProtobuf(darcBuf)
 	if err != nil {
-		log.Error("couldn't decode darc")
+		log.Errorf("couldn't decode darc: %v", err)
 		return
 	}
 	if d.Rules.Count() == 0 {
@@ -191,87 +138,216 @@ func spawnContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin) 
 	}
 
 	// create the config to be stored by state changes
-	config := ChainConfig{
-		BlockInterval: time.Duration(interval),
-		Roster:        roster,
-		MaxBlockSize:  int(maxsz),
-	}
-	if err = config.sanityCheck(nil); err != nil {
+	c.BlockInterval = time.Duration(interval)
+	c.Roster = roster
+	c.MaxBlockSize = int(maxsz)
+	if err = c.sanityCheck(nil); err != nil {
 		return
 	}
 
-	configBuf, err := protobuf.Encode(&config)
+	configBuf, err := protobuf.Encode(c)
 	if err != nil {
 		return
 	}
 
 	id := d.GetBaseID()
-	return []StateChange{
+	sc = []StateChange{
 		NewStateChange(Create, ConfigInstanceID, ContractConfigID, configBuf, id),
 		NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
-	}, c, nil
-
+	}
+	return
 }
 
-// ContractDarc accepts the following instructions:
-//   - Spawn - creates a new darc
-//   - Invoke.Evolve - evolves an existing darc
-func (s *Service) ContractDarc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
-	cOut = coins
-	err = inst.Verify(cdb, ctxHash)
+func (c *contractConfig) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+	cout = coins
+
+	// Find the darcID for this instance.
+	var darcID darc.ID
+	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return
 	}
-	switch inst.GetType() {
-	case SpawnType:
-		if inst.Spawn.ContractID == ContractDarcID {
-			darcBuf := inst.Spawn.Args.Search("darc")
-			d, err := darc.NewFromProtobuf(darcBuf)
-			if err != nil {
-				return nil, nil, errors.New("given darc could not be decoded: " + err.Error())
-			}
-			id := d.GetBaseID()
-			return []StateChange{
-				NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
-			}, coins, nil
+
+	// There are two situations where we need to change the roster, first
+	// is when it is initiated by the client(s) that holds the genesis
+	// signing key, in this case we trust the client to do the right
+	// thing. The second is during a view-change, so we need to do
+	// additional validation to make sure a malicious node doesn't freely
+	// change the roster.
+
+	switch inst.Invoke.Command {
+	case "update_config":
+		configBuf := inst.Invoke.Args.Search("config")
+		newConfig := ChainConfig{}
+		err = protobuf.DecodeWithConstructors(configBuf, &newConfig, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return
 		}
 
-		c, found := s.contracts[inst.Spawn.ContractID]
-		if !found {
-			return nil, nil, errors.New("couldn't find this contract type: " + inst.Spawn.ContractID)
+		var oldConfig *ChainConfig
+		oldConfig, err = loadConfigFromTrie(rst)
+		if err != nil {
+			return
 		}
-		return c(cdb, inst, ctxHash, coins)
-	case InvokeType:
-		switch inst.Invoke.Command {
-		case "evolve":
-			var darcID darc.ID
-			_, _, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
-			if err != nil {
-				return
-			}
+		if err = newConfig.sanityCheck(oldConfig); err != nil {
+			return
+		}
+		sc = []StateChange{
+			NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
+		}
+		return
+	case "view_change":
+		var req viewchange.NewViewReq
+		err = protobuf.DecodeWithConstructors(inst.Invoke.Args.Search("newview"), &req, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			return
+		}
+		// If everything is correctly signed, then we trust it, no need
+		// to do additional verification.
+		sigBuf := inst.Invoke.Args.Search("multisig")
+		err = cosi.Verify(cothority.Suite, req.Roster.Publics(),
+			req.Hash(), sigBuf, cosi.NewThresholdPolicy(len(req.Roster.List)-len(req.Roster.List)/3))
+		if err != nil {
+			return
+		}
 
-			darcBuf := inst.Invoke.Args.Search("darc")
-			newD, err := darc.NewFromProtobuf(darcBuf)
-			if err != nil {
-				return nil, nil, err
-			}
-			oldD, err := LoadDarcFromTrie(cdb, darcID)
-			if err != nil {
-				return nil, nil, err
-			}
-			if err := newD.SanityCheck(oldD); err != nil {
-				return nil, nil, err
-			}
-			return []StateChange{
-				NewStateChange(Update, inst.InstanceID, ContractDarcID, darcBuf, darcID),
-			}, coins, nil
-		default:
-			return nil, nil, errors.New("invalid command: " + inst.Invoke.Command)
-		}
-	case DeleteType:
-		return nil, nil, errors.New("delete on a Darc instance is not supported")
+		sc, err = updateRosterScs(rst, darcID, req.Roster)
+		return
 	default:
-		return nil, nil, errors.New("unknown instruction type")
+		err = errors.New("invalid invoke command: " + inst.Invoke.Command)
+		return
+	}
+}
+
+func updateRosterScs(rst ReadOnlyStateTrie, darcID darc.ID, newRoster onet.Roster) (StateChanges, error) {
+	config, err := loadConfigFromTrie(rst)
+	if err != nil {
+		return nil, err
+	}
+	config.Roster = newRoster
+	configBuf, err := protobuf.Encode(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return []StateChange{
+		NewStateChange(Update, NewInstanceID(nil), ContractConfigID, configBuf, darcID),
+	}, nil
+}
+
+// BasicContract is a type that contracts may choose to embed in order to provide
+// default implementations for the Contract interface.
+type BasicContract struct{}
+
+func notImpl(what string) error { return fmt.Errorf("this contract does not implement %v", what) }
+
+// VerifyInstruction offers the default implementation of verifying an instruction. Types
+// which embed BasicContract may choose to override this implementation.
+func (b BasicContract) VerifyInstruction(rst ReadOnlyStateTrie, inst Instruction, ctxHash []byte) error {
+	if err := inst.Verify(rst, ctxHash); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Spawn is not implmented in a BasicContract. Types which embed BasicContract
+// must override this method if they support spawning.
+func (b BasicContract) Spawn(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
+	err = notImpl("Spawn")
+	return
+}
+
+// Invoke is not implmented in a BasicContract. Types which embed BasicContract
+// must override this method if they support invoking.
+func (b BasicContract) Invoke(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
+	err = notImpl("Invoke")
+	return
+}
+
+// Delete is not implmented in a BasicContract. Types which embed BasicContract
+// must override this method if they support deleting.
+func (b BasicContract) Delete(ReadOnlyStateTrie, Instruction, []Coin) (sc []StateChange, c []Coin, err error) {
+	err = notImpl("Delete")
+	return
+}
+
+type contractDarc struct {
+	BasicContract
+	darc.Darc
+	s *Service
+}
+
+var _ Contract = (*contractDarc)(nil)
+
+func (s *Service) contractDarcFromBytes(in []byte) (Contract, error) {
+	d, err := darc.NewFromProtobuf(in)
+	if err != nil {
+		return nil, err
+	}
+	c := &contractDarc{s: s, Darc: *d}
+	return c, nil
+}
+
+func (c *contractDarc) Spawn(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+	cout = coins
+
+	if inst.Spawn.ContractID == ContractDarcID {
+		darcBuf := inst.Spawn.Args.Search("darc")
+		d, err := darc.NewFromProtobuf(darcBuf)
+		if err != nil {
+			return nil, nil, errors.New("given darc could not be decoded: " + err.Error())
+		}
+		id := d.GetBaseID()
+		return []StateChange{
+			NewStateChange(Create, NewInstanceID(id), ContractDarcID, darcBuf, id),
+		}, coins, nil
+	}
+
+	// If we got here this is a spawn:XXX in order to spawn
+	// a new instance of contract XXX, so do that.
+
+	cfact, found := c.s.contracts[inst.Spawn.ContractID]
+	if !found {
+		return nil, nil, errors.New("couldn't find this contract type: " + inst.Spawn.ContractID)
+	}
+
+	// Pass nil into the contract factory here because this instance does not exist yet.
+	// So the factory will make a zero-value instance, and then calling Spawn on it
+	// will give it a chance to encode it's zero state and emit one or more StateChanges to put itself
+	// into the collection.
+	c2, err := cfact(nil)
+	if err != nil {
+		return nil, nil, fmt.Errorf("coult not spawn new zero instance: %v", err)
+	}
+	return c2.Spawn(rst, inst, coins)
+}
+
+func (c *contractDarc) Invoke(rst ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cout []Coin, err error) {
+	switch inst.Invoke.Command {
+	case "evolve":
+		var darcID darc.ID
+		_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+		if err != nil {
+			return
+		}
+
+		darcBuf := inst.Invoke.Args.Search("darc")
+		newD, err := darc.NewFromProtobuf(darcBuf)
+		if err != nil {
+			return nil, nil, err
+		}
+		oldD, err := LoadDarcFromTrie(rst, darcID)
+		if err != nil {
+			return nil, nil, err
+		}
+		if err := newD.SanityCheck(oldD); err != nil {
+			return nil, nil, err
+		}
+		return []StateChange{
+			NewStateChange(Update, inst.InstanceID, ContractDarcID, darcBuf, darcID),
+		}, coins, nil
+	default:
+		return nil, nil, errors.New("invalid command: " + inst.Invoke.Command)
 	}
 }
 

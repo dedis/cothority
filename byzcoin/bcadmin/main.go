@@ -746,9 +746,9 @@ func combineInstrsAndSign(signer darc.Signer, instrs ...byzcoin.Instruction) (by
 	t := byzcoin.ClientTransaction{
 		Instructions: instrs,
 	}
-	t.InstructionsHash = t.Instructions.Hash()
+	h := t.Instructions.Hash()
 	for i := range t.Instructions {
-		if err := t.Instructions[i].SignWith(t.InstructionsHash, signer); err != nil {
+		if err := t.Instructions[i].SignWith(h, signer); err != nil {
 			return t, err
 		}
 	}

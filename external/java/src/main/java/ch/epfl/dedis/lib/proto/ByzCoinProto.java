@@ -17154,15 +17154,6 @@ public final class ByzCoinProto {
      */
     ch.epfl.dedis.lib.proto.ByzCoinProto.InstructionOrBuilder getInstructionsOrBuilder(
         int index);
-
-    /**
-     * <code>required bytes instructionshash = 2;</code>
-     */
-    boolean hasInstructionshash();
-    /**
-     * <code>required bytes instructionshash = 2;</code>
-     */
-    com.google.protobuf.ByteString getInstructionshash();
   }
   /**
    * <pre>
@@ -17186,7 +17177,6 @@ public final class ByzCoinProto {
     }
     private ClientTransaction() {
       instructions_ = java.util.Collections.emptyList();
-      instructionshash_ = com.google.protobuf.ByteString.EMPTY;
     }
 
     @java.lang.Override
@@ -17220,11 +17210,6 @@ public final class ByzCoinProto {
               }
               instructions_.add(
                   input.readMessage(ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction.parser(), extensionRegistry));
-              break;
-            }
-            case 18: {
-              bitField0_ |= 0x00000001;
-              instructionshash_ = input.readBytes();
               break;
             }
             default: {
@@ -17262,7 +17247,6 @@ public final class ByzCoinProto {
               ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.class, ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction.Builder.class);
     }
 
-    private int bitField0_;
     public static final int INSTRUCTIONS_FIELD_NUMBER = 1;
     private java.util.List<ch.epfl.dedis.lib.proto.ByzCoinProto.Instruction> instructions_;
     /**
@@ -17298,21 +17282,6 @@ public final class ByzCoinProto {
       return instructions_.get(index);
     }
 
-    public static final int INSTRUCTIONSHASH_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString instructionshash_;
-    /**
-     * <code>required bytes instructionshash = 2;</code>
-     */
-    public boolean hasInstructionshash() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>required bytes instructionshash = 2;</code>
-     */
-    public com.google.protobuf.ByteString getInstructionshash() {
-      return instructionshash_;
-    }
-
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -17320,10 +17289,6 @@ public final class ByzCoinProto {
       if (isInitialized == 1) return true;
       if (isInitialized == 0) return false;
 
-      if (!hasInstructionshash()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
       for (int i = 0; i < getInstructionsCount(); i++) {
         if (!getInstructions(i).isInitialized()) {
           memoizedIsInitialized = 0;
@@ -17340,9 +17305,6 @@ public final class ByzCoinProto {
       for (int i = 0; i < instructions_.size(); i++) {
         output.writeMessage(1, instructions_.get(i));
       }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(2, instructionshash_);
-      }
       unknownFields.writeTo(output);
     }
 
@@ -17355,10 +17317,6 @@ public final class ByzCoinProto {
       for (int i = 0; i < instructions_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, instructions_.get(i));
-      }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, instructionshash_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -17378,11 +17336,6 @@ public final class ByzCoinProto {
       boolean result = true;
       result = result && getInstructionsList()
           .equals(other.getInstructionsList());
-      result = result && (hasInstructionshash() == other.hasInstructionshash());
-      if (hasInstructionshash()) {
-        result = result && getInstructionshash()
-            .equals(other.getInstructionshash());
-      }
       result = result && unknownFields.equals(other.unknownFields);
       return result;
     }
@@ -17397,10 +17350,6 @@ public final class ByzCoinProto {
       if (getInstructionsCount() > 0) {
         hash = (37 * hash) + INSTRUCTIONS_FIELD_NUMBER;
         hash = (53 * hash) + getInstructionsList().hashCode();
-      }
-      if (hasInstructionshash()) {
-        hash = (37 * hash) + INSTRUCTIONSHASH_FIELD_NUMBER;
-        hash = (53 * hash) + getInstructionshash().hashCode();
       }
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
@@ -17550,8 +17499,6 @@ public final class ByzCoinProto {
         } else {
           instructionsBuilder_.clear();
         }
-        instructionshash_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
         return this;
       }
 
@@ -17579,7 +17526,6 @@ public final class ByzCoinProto {
       public ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction buildPartial() {
         ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction result = new ch.epfl.dedis.lib.proto.ByzCoinProto.ClientTransaction(this);
         int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
         if (instructionsBuilder_ == null) {
           if (((bitField0_ & 0x00000001) == 0x00000001)) {
             instructions_ = java.util.Collections.unmodifiableList(instructions_);
@@ -17589,11 +17535,6 @@ public final class ByzCoinProto {
         } else {
           result.instructions_ = instructionsBuilder_.build();
         }
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.instructionshash_ = instructionshash_;
-        result.bitField0_ = to_bitField0_;
         onBuilt();
         return result;
       }
@@ -17668,9 +17609,6 @@ public final class ByzCoinProto {
             }
           }
         }
-        if (other.hasInstructionshash()) {
-          setInstructionshash(other.getInstructionshash());
-        }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
         return this;
@@ -17678,9 +17616,6 @@ public final class ByzCoinProto {
 
       @java.lang.Override
       public final boolean isInitialized() {
-        if (!hasInstructionshash()) {
-          return false;
-        }
         for (int i = 0; i < getInstructionsCount(); i++) {
           if (!getInstructions(i).isInitialized()) {
             return false;
@@ -17947,41 +17882,6 @@ public final class ByzCoinProto {
           instructions_ = null;
         }
         return instructionsBuilder_;
-      }
-
-      private com.google.protobuf.ByteString instructionshash_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes instructionshash = 2;</code>
-       */
-      public boolean hasInstructionshash() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required bytes instructionshash = 2;</code>
-       */
-      public com.google.protobuf.ByteString getInstructionshash() {
-        return instructionshash_;
-      }
-      /**
-       * <code>required bytes instructionshash = 2;</code>
-       */
-      public Builder setInstructionshash(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        instructionshash_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes instructionshash = 2;</code>
-       */
-      public Builder clearInstructionshash() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        instructionshash_ = getDefaultInstance().getInstructionshash();
-        onChanged();
-        return this;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -31944,43 +31844,43 @@ public final class ByzCoinProto {
       "\003(\0132\021.byzcoin.Argument\":\n\006Invoke\022\017\n\007comm" +
       "and\030\001 \002(\t\022\037\n\004args\030\002 \003(\0132\021.byzcoin.Argume" +
       "nt\"\010\n\006Delete\"\'\n\010Argument\022\014\n\004name\030\001 \002(\t\022\r" +
-      "\n\005value\030\002 \002(\014\"Y\n\021ClientTransaction\022*\n\014in" +
-      "structions\030\001 \003(\0132\024.byzcoin.Instruction\022\030" +
-      "\n\020instructionshash\030\002 \002(\014\"S\n\010TxResult\0225\n\021" +
-      "clienttransaction\030\001 \002(\0132\032.byzcoin.Client" +
-      "Transaction\022\020\n\010accepted\030\002 \002(\010\"z\n\013StateCh" +
-      "ange\022\023\n\013stateaction\030\001 \002(\021\022\022\n\ninstanceid\030" +
-      "\002 \002(\014\022\022\n\ncontractid\030\003 \002(\014\022\r\n\005value\030\004 \002(\014" +
-      "\022\016\n\006darcid\030\005 \002(\014\022\017\n\007version\030\006 \002(\004\"#\n\004Coi" +
-      "n\022\014\n\004name\030\001 \002(\014\022\r\n\005value\030\002 \002(\004\"\036\n\020Stream" +
-      "ingRequest\022\n\n\002id\030\001 \002(\014\"8\n\021StreamingRespo" +
-      "nse\022#\n\005block\030\001 \001(\0132\024.skipchain.SkipBlock" +
-      "\"A\n\rDownloadState\022\021\n\tbyzcoinid\030\001 \002(\014\022\r\n\005" +
-      "nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(\021\"N\n\025DownloadS" +
-      "tateResponse\022&\n\tkeyvalues\030\001 \003(\0132\023.byzcoi" +
-      "n.DBKeyValue\022\r\n\005nonce\030\002 \002(\004\"(\n\nDBKeyValu" +
-      "e\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 \002(\014\"j\n\017StateCh" +
-      "angeBody\022\023\n\013stateaction\030\001 \002(\021\022\022\n\ncontrac" +
-      "tid\030\002 \002(\014\022\r\n\005value\030\003 \002(\014\022\017\n\007version\030\004 \002(" +
-      "\004\022\016\n\006darcid\030\005 \002(\014\";\n\021GetSignerCounters\022\021" +
-      "\n\tsignerids\030\001 \003(\t\022\023\n\013skipchainid\030\002 \002(\014\"1" +
-      "\n\031GetSignerCountersResponse\022\024\n\010counters\030" +
-      "\001 \003(\004B\002\020\001\"N\n\022GetInstanceVersion\022\023\n\013skipc" +
-      "hainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007vers" +
-      "ion\030\003 \002(\004\"A\n\026GetLastInstanceVersion\022\023\n\013s" +
-      "kipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"[\n\032" +
-      "GetInstanceVersionResponse\022)\n\013statechang" +
-      "e\030\001 \002(\0132\024.byzcoin.StateChange\022\022\n\nblockin" +
-      "dex\030\002 \002(\021\"@\n\025GetAllInstanceVersion\022\023\n\013sk" +
-      "ipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\"Z\n\035G" +
-      "etAllInstanceVersionResponse\0229\n\014statecha" +
-      "nges\030\001 \003(\0132#.byzcoin.GetInstanceVersionR" +
-      "esponse\"T\n\030CheckStateChangeValidity\022\023\n\013s" +
-      "kipchainid\030\001 \002(\014\022\022\n\ninstanceid\030\002 \002(\014\022\017\n\007" +
-      "version\030\003 \002(\004\"_\n CheckStateChangeValidit" +
-      "yResponse\022*\n\014statechanges\030\001 \003(\0132\024.byzcoi" +
-      "n.StateChange\022\017\n\007blockid\030\002 \002(\014B\'\n\027ch.epf" +
-      "l.dedis.lib.protoB\014ByzCoinProto"
+      "\n\005value\030\002 \002(\014\"?\n\021ClientTransaction\022*\n\014in" +
+      "structions\030\001 \003(\0132\024.byzcoin.Instruction\"S" +
+      "\n\010TxResult\0225\n\021clienttransaction\030\001 \002(\0132\032." +
+      "byzcoin.ClientTransaction\022\020\n\010accepted\030\002 " +
+      "\002(\010\"z\n\013StateChange\022\023\n\013stateaction\030\001 \002(\021\022" +
+      "\022\n\ninstanceid\030\002 \002(\014\022\022\n\ncontractid\030\003 \002(\014\022" +
+      "\r\n\005value\030\004 \002(\014\022\016\n\006darcid\030\005 \002(\014\022\017\n\007versio" +
+      "n\030\006 \002(\004\"#\n\004Coin\022\014\n\004name\030\001 \002(\014\022\r\n\005value\030\002" +
+      " \002(\004\"\036\n\020StreamingRequest\022\n\n\002id\030\001 \002(\014\"8\n\021" +
+      "StreamingResponse\022#\n\005block\030\001 \001(\0132\024.skipc" +
+      "hain.SkipBlock\"A\n\rDownloadState\022\021\n\tbyzco" +
+      "inid\030\001 \002(\014\022\r\n\005nonce\030\002 \002(\004\022\016\n\006length\030\003 \002(" +
+      "\021\"N\n\025DownloadStateResponse\022&\n\tkeyvalues\030" +
+      "\001 \003(\0132\023.byzcoin.DBKeyValue\022\r\n\005nonce\030\002 \002(" +
+      "\004\"(\n\nDBKeyValue\022\013\n\003key\030\001 \002(\014\022\r\n\005value\030\002 " +
+      "\002(\014\"j\n\017StateChangeBody\022\023\n\013stateaction\030\001 " +
+      "\002(\021\022\022\n\ncontractid\030\002 \002(\014\022\r\n\005value\030\003 \002(\014\022\017" +
+      "\n\007version\030\004 \002(\004\022\016\n\006darcid\030\005 \002(\014\";\n\021GetSi" +
+      "gnerCounters\022\021\n\tsignerids\030\001 \003(\t\022\023\n\013skipc" +
+      "hainid\030\002 \002(\014\"1\n\031GetSignerCountersRespons" +
+      "e\022\024\n\010counters\030\001 \003(\004B\002\020\001\"N\n\022GetInstanceVe" +
+      "rsion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanceid" +
+      "\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"A\n\026GetLastInstan" +
+      "ceVersion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstan" +
+      "ceid\030\002 \002(\014\"[\n\032GetInstanceVersionResponse" +
+      "\022)\n\013statechange\030\001 \002(\0132\024.byzcoin.StateCha" +
+      "nge\022\022\n\nblockindex\030\002 \002(\021\"@\n\025GetAllInstanc" +
+      "eVersion\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstanc" +
+      "eid\030\002 \002(\014\"Z\n\035GetAllInstanceVersionRespon" +
+      "se\0229\n\014statechanges\030\001 \003(\0132#.byzcoin.GetIn" +
+      "stanceVersionResponse\"T\n\030CheckStateChang" +
+      "eValidity\022\023\n\013skipchainid\030\001 \002(\014\022\022\n\ninstan" +
+      "ceid\030\002 \002(\014\022\017\n\007version\030\003 \002(\004\"_\n CheckStat" +
+      "eChangeValidityResponse\022*\n\014statechanges\030" +
+      "\001 \003(\0132\024.byzcoin.StateChange\022\017\n\007blockid\030\002" +
+      " \002(\014B\'\n\027ch.epfl.dedis.lib.protoB\014ByzCoin" +
+      "Proto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -32105,7 +32005,7 @@ public final class ByzCoinProto {
     internal_static_byzcoin_ClientTransaction_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_byzcoin_ClientTransaction_descriptor,
-        new java.lang.String[] { "Instructions", "Instructionshash", });
+        new java.lang.String[] { "Instructions", });
     internal_static_byzcoin_TxResult_descriptor =
       getDescriptor().getMessageTypes().get(18);
     internal_static_byzcoin_TxResult_fieldAccessorTable = new

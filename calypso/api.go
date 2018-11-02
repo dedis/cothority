@@ -79,7 +79,7 @@ func (c *Client) WaitProof(id byzcoin.InstanceID, interval time.Duration,
 //
 // Output:
 //   - reply - WriteReply containing the transaction response and instance id
-//	 - err - Error if any, nil otherwise.
+//   - err - Error if any, nil otherwise.
 func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
 	darc darc.Darc, wait int) (
 	reply *WriteReply, err error) {
@@ -126,7 +126,7 @@ func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
 //
 // Output:
 //   - reply - ReadReply containing the transaction response and instance id
-//	 - err - Error if any, nil otherwise.
+//   - err - Error if any, nil otherwise.
 func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer, signerCtr uint64,
 	darc darc.Darc, wait int) (
 	reply *ReadReply, err error) {
@@ -171,12 +171,12 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer, signerCtr uin
 //   - signer - The signer authorizing the spawn of this darc (calypso "admin")
 //   - signerCtr - A monotonically increaing counter for every signer
 //   - controlDarc - The darc governing this spawning
-//	 - spawnDarc - The darc to be spawned
+//   - spawnDarc - The darc to be spawned
 //   - wait - The number of blocks to wait -- 0 means no wait
 //
 // Output:
 //   - reply - AddTxResponse containing the transaction response
-//	 - err - Error if any, nil otherwise.
+//   - err - Error if any, nil otherwise.
 func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 	controlDarc darc.Darc, spawnDarc darc.Darc, wait int) (
 	reply *byzcoin.AddTxResponse, err error) {

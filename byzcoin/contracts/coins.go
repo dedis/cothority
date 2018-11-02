@@ -16,7 +16,7 @@ var ContractCoinID = "coin"
 
 // CoinName is a well-known InstanceID that identifies coins as belonging
 // to this contract.
-var CoinName = iid("olCoin")
+var CoinName = iid("byzCoin")
 
 // ContractCoin is a coin implementation that holds one instance per coin.
 // If you spawn a new ContractCoin, it will create an account with a value
@@ -32,154 +32,162 @@ var CoinName = iid("olCoin")
 //    parameter for the next instruction to interpret.
 //  - store puts the coins given to the instance back into the account.
 // You can only delete a contractCoin instance if the account is empty.
-func ContractCoin(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
-	cOut = c
 
-	err = inst.Verify(cdb, ctxHash)
+func contractCoinFromBytes(in []byte) (byzcoin.Contract, error) {
+	c := &contractCoin{}
+	err := protobuf.Decode(in, &c.Coin)
 	if err != nil {
-		return
+		return nil, errors.New("couldn't unmarshal instance data: " + err.Error())
 	}
+	return c, nil
+}
 
-	var value []byte
+type contractCoin struct {
+	byzcoin.BasicContract
+	byzcoin.Coin
+}
+
+func (c *contractCoin) Spawn(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+	cout = coins
+
 	var darcID darc.ID
-	value, _, _, darcID, err = cdb.GetValues(inst.InstanceID.Slice())
+	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return
 	}
-	var ci byzcoin.Coin
-	if inst.Spawn == nil {
-		// Only if its NOT a spawn instruction is there data in the instance
-		if value != nil {
-			err = protobuf.Decode(value, &ci)
-			if err != nil {
-				return nil, nil, errors.New("couldn't unmarshal instance data: " + err.Error())
-			}
+
+	// Spawn creates a new coin account as a separate instance.
+	ca := inst.DeriveID("")
+	log.Lvlf3("Spawning coin to %x", ca.Slice())
+	if t := inst.Spawn.Args.Search("type"); t != nil {
+		if len(t) != len(byzcoin.InstanceID{}) {
+			return nil, nil, errors.New("type needs to be an InstanceID")
 		}
+		c.Name = byzcoin.NewInstanceID(t)
+	} else {
+		c.Name = CoinName
 	}
-
-	switch inst.GetType() {
-	case byzcoin.SpawnType:
-		// Spawn creates a new coin account as a separate instance.
-		ca := inst.DeriveID("")
-		log.Lvlf3("Spawning coin to %x", ca.Slice())
-		if t := inst.Spawn.Args.Search("type"); t != nil {
-			if len(t) != len(byzcoin.InstanceID{}) {
-				return nil, nil, errors.New("type needs to be an InstanceID")
-			}
-			ci.Name = byzcoin.NewInstanceID(t)
-		} else {
-			ci.Name = CoinName
-		}
-		var ciBuf []byte
-		ciBuf, err = protobuf.Encode(&ci)
-		if err != nil {
-			return nil, nil, errors.New("couldn't encode CoinInstance: " + err.Error())
-		}
-		sc = []byzcoin.StateChange{
-			byzcoin.NewStateChange(byzcoin.Create, ca, ContractCoinID, ciBuf, darcID),
-		}
-		return
-	case byzcoin.InvokeType:
-		// Invoke is one of "mint", "transfer", "fetch", or "store".
-		var coinsArg uint64
-
-		if inst.Invoke.Command != "store" {
-			coinsBuf := inst.Invoke.Args.Search("coins")
-			if coinsBuf == nil {
-				err = errors.New("argument \"coins\" is missing")
-				return
-			}
-			coinsArg = binary.LittleEndian.Uint64(coinsBuf)
-		}
-		switch inst.Invoke.Command {
-		case "mint":
-			// mint simply adds this amount of coins to the account.
-			log.Lvl2("minting", coinsArg)
-			err = ci.SafeAdd(coinsArg)
-			if err != nil {
-				return
-			}
-		case "transfer":
-			// transfer sends a given amount of coins to another account.
-			target := inst.Invoke.Args.Search("destination")
-			var (
-				v   []byte
-				cid string
-				did darc.ID
-			)
-			v, _, cid, did, err = cdb.GetValues(target)
-			if err == nil && cid != ContractCoinID {
-				err = errors.New("destination is not a coin contract")
-			}
-			if err != nil {
-				return
-			}
-
-			var targetCI byzcoin.Coin
-			err = protobuf.Decode(v, &targetCI)
-			if err != nil {
-				return nil, nil, errors.New("couldn't unmarshal target account: " + err.Error())
-			}
-			err = ci.SafeSub(coinsArg)
-			if err != nil {
-				return
-			}
-			err = targetCI.SafeAdd(coinsArg)
-			if err != nil {
-				return
-			}
-			targetBuf, err := protobuf.Encode(&targetCI)
-			if err != nil {
-				return nil, nil, errors.New("couldn't marshal target account: " + err.Error())
-			}
-
-			log.Lvlf1("transferring %d to %x", coinsArg, target)
-			sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, byzcoin.NewInstanceID(target),
-				ContractCoinID, targetBuf, did))
-		case "fetch":
-			// fetch removes coins from the account and passes it on to the next
-			// instruction.
-			err = ci.SafeSub(coinsArg)
-			if err != nil {
-				return
-			}
-			cOut = append(cOut, byzcoin.Coin{Name: ci.Name, Value: coinsArg})
-		case "store":
-			// store moves all coins from this instruction into the account.
-			cOut = []byzcoin.Coin{}
-			for _, co := range c {
-				if ci.Name.Equal(co.Name) {
-					err = ci.SafeAdd(co.Value)
-					if err != nil {
-						return
-					}
-				} else {
-					cOut = append(cOut, co)
-				}
-			}
-		default:
-			err = errors.New("Coin contract can only mine and transfer")
-			return
-		}
-		// Finally update the coin value.
-		var ciBuf []byte
-		ciBuf, err = protobuf.Encode(&ci)
-		sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
-			ContractCoinID, ciBuf, darcID))
-		return
-	case byzcoin.DeleteType:
-		// Delete our coin address, but only if the current coin is empty.
-		if ci.Value > 0 {
-			err = errors.New("cannot destroy a coinInstance that still has coins in it")
-			return
-		}
-		sc = byzcoin.StateChanges{
-			byzcoin.NewStateChange(byzcoin.Remove, inst.InstanceID, ContractCoinID, nil, darcID),
-		}
-		return
+	var ciBuf []byte
+	ciBuf, err = protobuf.Encode(&c.Coin)
+	if err != nil {
+		return nil, nil, errors.New("couldn't encode CoinInstance: " + err.Error())
 	}
-	err = errors.New("instruction type not allowed")
+	sc = []byzcoin.StateChange{
+		byzcoin.NewStateChange(byzcoin.Create, ca, ContractCoinID, ciBuf, darcID),
+	}
 	return
+}
+
+func (c *contractCoin) Invoke(rst byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, coins []byzcoin.Coin) (sc []byzcoin.StateChange, cout []byzcoin.Coin, err error) {
+	cout = coins
+
+	var darcID darc.ID
+	_, _, _, darcID, err = rst.GetValues(inst.InstanceID.Slice())
+	if err != nil {
+		return
+	}
+
+	// Invoke is one of "mint", "transfer", "fetch", or "store".
+	var coinsArg uint64
+	if inst.Invoke.Command != "store" {
+		coinsBuf := inst.Invoke.Args.Search("coins")
+		if coinsBuf == nil {
+			err = errors.New("argument \"coins\" is missing")
+			return
+		}
+		coinsArg = binary.LittleEndian.Uint64(coinsBuf)
+	}
+
+	switch inst.Invoke.Command {
+	case "mint":
+		// mint simply adds this amount of coins to the account.
+		log.Lvl2("minting", coinsArg)
+		err = c.SafeAdd(coinsArg)
+		if err != nil {
+			return
+		}
+	case "transfer":
+		// transfer sends a given amount of coins to another account.
+		target := inst.Invoke.Args.Search("destination")
+		var (
+			v   []byte
+			cid string
+			did darc.ID
+		)
+		v, _, cid, did, err = rst.GetValues(target)
+		if err == nil && cid != ContractCoinID {
+			err = errors.New("destination is not a coin contract")
+		}
+		if err != nil {
+			return
+		}
+
+		var targetCI byzcoin.Coin
+		err = protobuf.Decode(v, &targetCI)
+		if err != nil {
+			return nil, nil, errors.New("couldn't unmarshal target account: " + err.Error())
+		}
+		err = c.SafeSub(coinsArg)
+		if err != nil {
+			return
+		}
+		err = targetCI.SafeAdd(coinsArg)
+		if err != nil {
+			return
+		}
+		targetBuf, err := protobuf.Encode(&targetCI)
+		if err != nil {
+			return nil, nil, errors.New("couldn't marshal target account: " + err.Error())
+		}
+		log.Lvlf1("transferring %d to %x", coinsArg, target)
+		sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, byzcoin.NewInstanceID(target),
+			ContractCoinID, targetBuf, did))
+	case "fetch":
+		// fetch removes coins from the account and passes it on to the next
+		// instruction.
+		err = c.SafeSub(coinsArg)
+		if err != nil {
+			return
+		}
+		cout = append(cout, byzcoin.Coin{Name: c.Name, Value: coinsArg})
+	case "store":
+		// store moves all coins from this instruction into the account.
+		cout = []byzcoin.Coin{}
+		for _, co := range coins {
+			if c.Name.Equal(co.Name) {
+				err = c.SafeAdd(co.Value)
+				if err != nil {
+					return
+				}
+			} else {
+				cout = append(cout, co)
+			}
+		}
+	default:
+		err = errors.New("Coin contract can only mine and transfer")
+		return
+	}
+
+	// Finally update the coin value.
+	var ciBuf []byte
+	ciBuf, err = protobuf.Encode(&c.Coin)
+	sc = append(sc, byzcoin.NewStateChange(byzcoin.Update, inst.InstanceID,
+		ContractCoinID, ciBuf, darcID))
+	return
+	/*	case byzcoin.DeleteType:
+			// Delete our coin address, but only if the current coin is empty.
+			if ci.Value > 0 {
+				err = errors.New("cannot destroy a coinInstance that still has coins in it")
+				return
+			}
+			sc = byzcoin.StateChanges{
+				byzcoin.NewStateChange(byzcoin.Remove, inst.InstanceID, ContractCoinID, nil, darcID),
+			}
+			return
+		}
+		err = errors.New("instruction type not allowed")
+		return
+	*/
 }
 
 // iid uses sha256(in) in order to manufacture an InstanceID from in

@@ -29,7 +29,7 @@ func TestTransaction_Signing(t *testing.T) {
 	sst := &stagingStateTrie{*tr.MakeStagingTrie()}
 
 	// verification should fail because trie is empty
-	ctxHash := ctx.InstructionsHash
+	ctxHash := ctx.Instructions.Hash()
 	require.NoError(t, err)
 	require.Error(t, ctx.Instructions[0].Verify(sst, ctxHash))
 	require.Contains(t, ctx.Instructions[0].Verify(sst, ctxHash).Error(), "key not set")
@@ -86,9 +86,9 @@ func createOneClientTxWithCounter(dID darc.ID, kind string, value []byte, signer
 	t := ClientTransaction{
 		Instructions: []Instruction{instr},
 	}
-	t.InstructionsHash = t.Instructions.Hash()
+	h := t.Instructions.Hash()
 	for i := range t.Instructions {
-		if err := t.Instructions[i].SignWith(t.InstructionsHash, signer); err != nil {
+		if err := t.Instructions[i].SignWith(h, signer); err != nil {
 			return t, err
 		}
 	}
@@ -103,9 +103,9 @@ func createClientTxWithTwoInstrWithCounter(dID darc.ID, kind string, value []byt
 	t := ClientTransaction{
 		Instructions: []Instruction{instr1, instr2},
 	}
-	t.InstructionsHash = t.Instructions.Hash()
+	h := t.Instructions.Hash()
 	for i := range t.Instructions {
-		if err := t.Instructions[i].SignWith(t.InstructionsHash, signer); err != nil {
+		if err := t.Instructions[i].SignWith(h, signer); err != nil {
 			return t, err
 		}
 	}
@@ -127,9 +127,9 @@ func combineInstrsAndSign(signer darc.Signer, instrs ...Instruction) (ClientTran
 	t := ClientTransaction{
 		Instructions: instrs,
 	}
-	t.InstructionsHash = t.Instructions.Hash()
+	h := t.Instructions.Hash()
 	for i := range t.Instructions {
-		if err := t.Instructions[i].SignWith(t.InstructionsHash, signer); err != nil {
+		if err := t.Instructions[i].SignWith(h, signer); err != nil {
 			return t, err
 		}
 	}

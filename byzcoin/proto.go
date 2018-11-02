@@ -220,8 +220,7 @@ type Argument struct {
 // instruction hashes (see the Hash method in Instruction), this hash is what
 // every instruction must sign for the transaction to be valid.
 type ClientTransaction struct {
-	Instructions     Instructions
-	InstructionsHash []byte
+	Instructions Instructions
 }
 
 // TxResult holds a transaction and the result of running it.

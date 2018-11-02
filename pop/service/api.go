@@ -506,8 +506,8 @@ func (desc *PopDesc) Hash() []byte {
 	return hash.Sum(nil)
 }
 
-// Equal checks if the first list contains the second
-func Equal(r1, r2 *onet.Roster) bool {
+// rosterEqual checks if the first list contains the second
+func rosterEqual(r1, r2 *onet.Roster) bool {
 	if len(r1.List) != len(r2.List) {
 		return false
 	}

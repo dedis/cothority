@@ -80,9 +80,9 @@ func (args Arguments) Search(name string) []byte {
 // signers. If some instructions need to be signed by different sets of
 // signers, then use the SighWith method of Instruction.
 func (ctx *ClientTransaction) SignWith(signers ...darc.Signer) error {
-	ctx.InstructionsHash = ctx.Instructions.Hash()
+	h := ctx.Instructions.Hash()
 	for i := range ctx.Instructions {
-		if err := ctx.Instructions[i].SignWith(ctx.InstructionsHash, signers...); err != nil {
+		if err := ctx.Instructions[i].SignWith(h, signers...); err != nil {
 			return err
 		}
 	}
