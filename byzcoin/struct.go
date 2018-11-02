@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
-	"math"
 	"math/big"
 	"sort"
 	"sync"
@@ -189,19 +188,29 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges) error {
 				var sce StateChangeEntry
 				blocks := map[int]bool{}
 				c := b.Cursor()
-				c.Seek(s.key(sc.InstanceID, math.MaxUint64))
+				// Seek the next instance ID and take a step back
+				// to reach the newest version
+				key := new(big.Int)
+				key.SetBytes(sc.InstanceID)
+				key.Add(key, new(big.Int).SetInt64(1))
+				c.Seek(key.Bytes())
 
 				for k, v := c.Prev(); k != nil && bytes.HasPrefix(k, sc.InstanceID); k, v = c.Prev() {
-					var err error
-					if len(blocks) >= s.maxNbrBlock {
-						err = c.Delete()
-					} else {
-						err = protobuf.Decode(v, &sce)
+					if len(blocks) <= s.maxNbrBlock {
+						// We don't want to decode if we know we're
+						// going to delete it anyway
+						err := protobuf.Decode(v, &sce)
+						if err != nil {
+							return err
+						}
+
 						blocks[sce.BlockIndex] = true
 					}
-
-					if err != nil {
-						return err
+					if len(blocks) > s.maxNbrBlock {
+						err := c.Delete()
+						if err != nil {
+							return err
+						}
 					}
 				}
 			}

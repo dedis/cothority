@@ -98,8 +98,9 @@ func TestStateChangeStorage_MaxNbrBlock(t *testing.T) {
 	scs.maxNbrBlock = 2
 	defer os.Remove(name)
 
-	n := 50
+	n := 52
 	k := 5
+	l := 4 // n multiple of l
 
 	iids := make([][]byte, k)
 	for i := range iids {
@@ -108,19 +109,21 @@ func TestStateChangeStorage_MaxNbrBlock(t *testing.T) {
 
 	sb := skipchain.NewSkipBlock()
 	for i := 0; i < n; i++ {
-		sb.Index = i
+		for j := 0; j < k; j++ {
+			sb.Index = i / l
 
-		scs.append(StateChanges{StateChange{
-			InstanceID: iids[i%k],
-			Version:    uint64(i),
-			Value:      []byte{},
-		}}, sb)
+			scs.append(StateChanges{StateChange{
+				InstanceID: iids[j],
+				Version:    uint64(i),
+				Value:      []byte{},
+			}}, sb)
+		}
 	}
 
 	entries, err := scs.getAll(iids[k-1])
 	require.Nil(t, err)
-	require.Equal(t, 2, len(entries))
-	require.Equal(t, n-1, entries[1].BlockIndex)
+	require.Equal(t, l*scs.maxNbrBlock, len(entries))
+	require.Equal(t, n/l-scs.maxNbrBlock, entries[0].BlockIndex)
 }
 
 func generateStateChanges() StateChanges {
