@@ -78,8 +78,7 @@ public class SkipBlock {
      * @return the index of the skipblock - the genesis block has index 0.
      */
     public int getIndex(){
-        // Because we're using protobuf's zigzag encoding.
-        return skipBlock.getIndex() / 2;
+        return skipBlock.getIndex();
     }
 
     /**
