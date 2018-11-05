@@ -1550,11 +1550,11 @@ public final class SkipchainProto {
     com.google.protobuf.ByteString getGenesis();
 
     /**
-     * <code>required int32 index = 2;</code>
+     * <code>required sint32 index = 2;</code>
      */
     boolean hasIndex();
     /**
-     * <code>required int32 index = 2;</code>
+     * <code>required sint32 index = 2;</code>
      */
     int getIndex();
   }
@@ -1611,7 +1611,7 @@ public final class SkipchainProto {
             }
             case 16: {
               bitField0_ |= 0x00000002;
-              index_ = input.readInt32();
+              index_ = input.readSInt32();
               break;
             }
             default: {
@@ -1665,13 +1665,13 @@ public final class SkipchainProto {
     public static final int INDEX_FIELD_NUMBER = 2;
     private int index_;
     /**
-     * <code>required int32 index = 2;</code>
+     * <code>required sint32 index = 2;</code>
      */
     public boolean hasIndex() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required int32 index = 2;</code>
+     * <code>required sint32 index = 2;</code>
      */
     public int getIndex() {
       return index_;
@@ -1703,7 +1703,7 @@ public final class SkipchainProto {
         output.writeBytes(1, genesis_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeInt32(2, index_);
+        output.writeSInt32(2, index_);
       }
       unknownFields.writeTo(output);
     }
@@ -1720,7 +1720,7 @@ public final class SkipchainProto {
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, index_);
+          .computeSInt32Size(2, index_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2073,19 +2073,19 @@ public final class SkipchainProto {
 
       private int index_ ;
       /**
-       * <code>required int32 index = 2;</code>
+       * <code>required sint32 index = 2;</code>
        */
       public boolean hasIndex() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required int32 index = 2;</code>
+       * <code>required sint32 index = 2;</code>
        */
       public int getIndex() {
         return index_;
       }
       /**
-       * <code>required int32 index = 2;</code>
+       * <code>required sint32 index = 2;</code>
        */
       public Builder setIndex(int value) {
         bitField0_ |= 0x00000002;
@@ -2094,7 +2094,7 @@ public final class SkipchainProto {
         return this;
       }
       /**
-       * <code>required int32 index = 2;</code>
+       * <code>required sint32 index = 2;</code>
        */
       public Builder clearIndex() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -3662,38 +3662,38 @@ public final class SkipchainProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required int32 index = 1;</code>
+     * <code>required sint32 index = 1;</code>
      */
     boolean hasIndex();
     /**
-     * <code>required int32 index = 1;</code>
+     * <code>required sint32 index = 1;</code>
      */
     int getIndex();
 
     /**
-     * <code>required int32 height = 2;</code>
+     * <code>required sint32 height = 2;</code>
      */
     boolean hasHeight();
     /**
-     * <code>required int32 height = 2;</code>
+     * <code>required sint32 height = 2;</code>
      */
     int getHeight();
 
     /**
-     * <code>required int32 max_height = 3;</code>
+     * <code>required sint32 max_height = 3;</code>
      */
     boolean hasMaxHeight();
     /**
-     * <code>required int32 max_height = 3;</code>
+     * <code>required sint32 max_height = 3;</code>
      */
     int getMaxHeight();
 
     /**
-     * <code>required int32 base_height = 4;</code>
+     * <code>required sint32 base_height = 4;</code>
      */
     boolean hasBaseHeight();
     /**
-     * <code>required int32 base_height = 4;</code>
+     * <code>required sint32 base_height = 4;</code>
      */
     int getBaseHeight();
 
@@ -3872,22 +3872,22 @@ public final class SkipchainProto {
               break;
             case 8: {
               bitField0_ |= 0x00000001;
-              index_ = input.readInt32();
+              index_ = input.readSInt32();
               break;
             }
             case 16: {
               bitField0_ |= 0x00000002;
-              height_ = input.readInt32();
+              height_ = input.readSInt32();
               break;
             }
             case 24: {
               bitField0_ |= 0x00000004;
-              maxHeight_ = input.readInt32();
+              maxHeight_ = input.readSInt32();
               break;
             }
             case 32: {
               bitField0_ |= 0x00000008;
-              baseHeight_ = input.readInt32();
+              baseHeight_ = input.readSInt32();
               break;
             }
             case 42: {
@@ -4009,13 +4009,13 @@ public final class SkipchainProto {
     public static final int INDEX_FIELD_NUMBER = 1;
     private int index_;
     /**
-     * <code>required int32 index = 1;</code>
+     * <code>required sint32 index = 1;</code>
      */
     public boolean hasIndex() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required int32 index = 1;</code>
+     * <code>required sint32 index = 1;</code>
      */
     public int getIndex() {
       return index_;
@@ -4024,13 +4024,13 @@ public final class SkipchainProto {
     public static final int HEIGHT_FIELD_NUMBER = 2;
     private int height_;
     /**
-     * <code>required int32 height = 2;</code>
+     * <code>required sint32 height = 2;</code>
      */
     public boolean hasHeight() {
       return ((bitField0_ & 0x00000002) == 0x00000002);
     }
     /**
-     * <code>required int32 height = 2;</code>
+     * <code>required sint32 height = 2;</code>
      */
     public int getHeight() {
       return height_;
@@ -4039,13 +4039,13 @@ public final class SkipchainProto {
     public static final int MAX_HEIGHT_FIELD_NUMBER = 3;
     private int maxHeight_;
     /**
-     * <code>required int32 max_height = 3;</code>
+     * <code>required sint32 max_height = 3;</code>
      */
     public boolean hasMaxHeight() {
       return ((bitField0_ & 0x00000004) == 0x00000004);
     }
     /**
-     * <code>required int32 max_height = 3;</code>
+     * <code>required sint32 max_height = 3;</code>
      */
     public int getMaxHeight() {
       return maxHeight_;
@@ -4054,13 +4054,13 @@ public final class SkipchainProto {
     public static final int BASE_HEIGHT_FIELD_NUMBER = 4;
     private int baseHeight_;
     /**
-     * <code>required int32 base_height = 4;</code>
+     * <code>required sint32 base_height = 4;</code>
      */
     public boolean hasBaseHeight() {
       return ((bitField0_ & 0x00000008) == 0x00000008);
     }
     /**
-     * <code>required int32 base_height = 4;</code>
+     * <code>required sint32 base_height = 4;</code>
      */
     public int getBaseHeight() {
       return baseHeight_;
@@ -4320,16 +4320,16 @@ public final class SkipchainProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeInt32(1, index_);
+        output.writeSInt32(1, index_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeInt32(2, height_);
+        output.writeSInt32(2, height_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
-        output.writeInt32(3, maxHeight_);
+        output.writeSInt32(3, maxHeight_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
-        output.writeInt32(4, baseHeight_);
+        output.writeSInt32(4, baseHeight_);
       }
       for (int i = 0; i < backlinks_.size(); i++) {
         output.writeBytes(5, backlinks_.get(i));
@@ -4372,19 +4372,19 @@ public final class SkipchainProto {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(1, index_);
+          .computeSInt32Size(1, index_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, height_);
+          .computeSInt32Size(2, height_);
       }
       if (((bitField0_ & 0x00000004) == 0x00000004)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(3, maxHeight_);
+          .computeSInt32Size(3, maxHeight_);
       }
       if (((bitField0_ & 0x00000008) == 0x00000008)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(4, baseHeight_);
+          .computeSInt32Size(4, baseHeight_);
       }
       {
         int dataSize = 0;
@@ -5048,19 +5048,19 @@ public final class SkipchainProto {
 
       private int index_ ;
       /**
-       * <code>required int32 index = 1;</code>
+       * <code>required sint32 index = 1;</code>
        */
       public boolean hasIndex() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required int32 index = 1;</code>
+       * <code>required sint32 index = 1;</code>
        */
       public int getIndex() {
         return index_;
       }
       /**
-       * <code>required int32 index = 1;</code>
+       * <code>required sint32 index = 1;</code>
        */
       public Builder setIndex(int value) {
         bitField0_ |= 0x00000001;
@@ -5069,7 +5069,7 @@ public final class SkipchainProto {
         return this;
       }
       /**
-       * <code>required int32 index = 1;</code>
+       * <code>required sint32 index = 1;</code>
        */
       public Builder clearIndex() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -5080,19 +5080,19 @@ public final class SkipchainProto {
 
       private int height_ ;
       /**
-       * <code>required int32 height = 2;</code>
+       * <code>required sint32 height = 2;</code>
        */
       public boolean hasHeight() {
         return ((bitField0_ & 0x00000002) == 0x00000002);
       }
       /**
-       * <code>required int32 height = 2;</code>
+       * <code>required sint32 height = 2;</code>
        */
       public int getHeight() {
         return height_;
       }
       /**
-       * <code>required int32 height = 2;</code>
+       * <code>required sint32 height = 2;</code>
        */
       public Builder setHeight(int value) {
         bitField0_ |= 0x00000002;
@@ -5101,7 +5101,7 @@ public final class SkipchainProto {
         return this;
       }
       /**
-       * <code>required int32 height = 2;</code>
+       * <code>required sint32 height = 2;</code>
        */
       public Builder clearHeight() {
         bitField0_ = (bitField0_ & ~0x00000002);
@@ -5112,19 +5112,19 @@ public final class SkipchainProto {
 
       private int maxHeight_ ;
       /**
-       * <code>required int32 max_height = 3;</code>
+       * <code>required sint32 max_height = 3;</code>
        */
       public boolean hasMaxHeight() {
         return ((bitField0_ & 0x00000004) == 0x00000004);
       }
       /**
-       * <code>required int32 max_height = 3;</code>
+       * <code>required sint32 max_height = 3;</code>
        */
       public int getMaxHeight() {
         return maxHeight_;
       }
       /**
-       * <code>required int32 max_height = 3;</code>
+       * <code>required sint32 max_height = 3;</code>
        */
       public Builder setMaxHeight(int value) {
         bitField0_ |= 0x00000004;
@@ -5133,7 +5133,7 @@ public final class SkipchainProto {
         return this;
       }
       /**
-       * <code>required int32 max_height = 3;</code>
+       * <code>required sint32 max_height = 3;</code>
        */
       public Builder clearMaxHeight() {
         bitField0_ = (bitField0_ & ~0x00000004);
@@ -5144,19 +5144,19 @@ public final class SkipchainProto {
 
       private int baseHeight_ ;
       /**
-       * <code>required int32 base_height = 4;</code>
+       * <code>required sint32 base_height = 4;</code>
        */
       public boolean hasBaseHeight() {
         return ((bitField0_ & 0x00000008) == 0x00000008);
       }
       /**
-       * <code>required int32 base_height = 4;</code>
+       * <code>required sint32 base_height = 4;</code>
        */
       public int getBaseHeight() {
         return baseHeight_;
       }
       /**
-       * <code>required int32 base_height = 4;</code>
+       * <code>required sint32 base_height = 4;</code>
        */
       public Builder setBaseHeight(int value) {
         bitField0_ |= 0x00000008;
@@ -5165,7 +5165,7 @@ public final class SkipchainProto {
         return this;
       }
       /**
-       * <code>required int32 base_height = 4;</code>
+       * <code>required sint32 base_height = 4;</code>
        */
       public Builder clearBaseHeight() {
         bitField0_ = (bitField0_ & ~0x00000008);
@@ -8239,11 +8239,11 @@ public final class SkipchainProto {
       com.google.protobuf.MessageOrBuilder {
 
     /**
-     * <code>required int32 index = 1;</code>
+     * <code>required sint32 index = 1;</code>
      */
     boolean hasIndex();
     /**
-     * <code>required int32 index = 1;</code>
+     * <code>required sint32 index = 1;</code>
      */
     int getIndex();
 
@@ -8299,7 +8299,7 @@ public final class SkipchainProto {
               break;
             case 8: {
               bitField0_ |= 0x00000001;
-              index_ = input.readInt32();
+              index_ = input.readSInt32();
               break;
             }
             case 18: {
@@ -8343,13 +8343,13 @@ public final class SkipchainProto {
     public static final int INDEX_FIELD_NUMBER = 1;
     private int index_;
     /**
-     * <code>required int32 index = 1;</code>
+     * <code>required sint32 index = 1;</code>
      */
     public boolean hasIndex() {
       return ((bitField0_ & 0x00000001) == 0x00000001);
     }
     /**
-     * <code>required int32 index = 1;</code>
+     * <code>required sint32 index = 1;</code>
      */
     public int getIndex() {
       return index_;
@@ -8393,7 +8393,7 @@ public final class SkipchainProto {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeInt32(1, index_);
+        output.writeSInt32(1, index_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(2, commitment_);
@@ -8409,7 +8409,7 @@ public final class SkipchainProto {
       size = 0;
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(1, index_);
+          .computeSInt32Size(1, index_);
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -8726,19 +8726,19 @@ public final class SkipchainProto {
 
       private int index_ ;
       /**
-       * <code>required int32 index = 1;</code>
+       * <code>required sint32 index = 1;</code>
        */
       public boolean hasIndex() {
         return ((bitField0_ & 0x00000001) == 0x00000001);
       }
       /**
-       * <code>required int32 index = 1;</code>
+       * <code>required sint32 index = 1;</code>
        */
       public int getIndex() {
         return index_;
       }
       /**
-       * <code>required int32 index = 1;</code>
+       * <code>required sint32 index = 1;</code>
        */
       public Builder setIndex(int value) {
         bitField0_ |= 0x00000001;
@@ -8747,7 +8747,7 @@ public final class SkipchainProto {
         return this;
       }
       /**
-       * <code>required int32 index = 1;</code>
+       * <code>required sint32 index = 1;</code>
        */
       public Builder clearIndex() {
         bitField0_ = (bitField0_ & ~0x00000001);
@@ -8911,12 +8911,12 @@ public final class SkipchainProto {
       "\"\024\n\022GetAllSkipChainIDs\"/\n\027GetAllSkipChai" +
       "nIDsReply\022\024\n\014skipChainIDs\030\001 \003(\014\"\034\n\016GetSi" +
       "ngleBlock\022\n\n\002id\030\001 \002(\014\"7\n\025GetSingleBlockB" +
-      "yIndex\022\017\n\007genesis\030\001 \002(\014\022\r\n\005index\030\002 \002(\005\"\"" +
+      "yIndex\022\017\n\007genesis\030\001 \002(\014\022\r\n\005index\030\002 \002(\021\"\"" +
       "\n\016GetUpdateChain\022\020\n\010latestID\030\001 \002(\014\";\n\023Ge" +
       "tUpdateChainReply\022$\n\006update\030\001 \003(\0132\024.skip" +
       "chain.SkipBlock\"\240\002\n\tSkipBlock\022\r\n\005index\030\001" +
-      " \002(\005\022\016\n\006height\030\002 \002(\005\022\022\n\nmax_height\030\003 \002(\005" +
-      "\022\023\n\013base_height\030\004 \002(\005\022\021\n\tbacklinks\030\005 \003(\014" +
+      " \002(\021\022\016\n\006height\030\002 \002(\021\022\022\n\nmax_height\030\003 \002(\021" +
+      "\022\023\n\013base_height\030\004 \002(\021\022\021\n\tbacklinks\030\005 \003(\014" +
       "\022\021\n\tverifiers\030\006 \003(\014\022\016\n\006parent\030\007 \001(\014\022\017\n\007g" +
       "enesis\030\010 \002(\014\022\014\n\004data\030\t \002(\014\022\034\n\006roster\030\n \002" +
       "(\0132\014.onet.Roster\022\014\n\004hash\030\013 \002(\014\022\'\n\007forwar" +
@@ -8927,7 +8927,7 @@ public final class SkipchainProto {
       "\025.skipchain.ByzcoinSig\"&\n\nByzcoinSig\022\013\n\003" +
       "msg\030\001 \002(\014\022\013\n\003sig\030\002 \002(\014\"1\n\nSchnorrSig\022\021\n\t" +
       "challenge\030\001 \002(\014\022\020\n\010response\030\002 \002(\014\".\n\tExc" +
-      "eption\022\r\n\005index\030\001 \002(\005\022\022\n\ncommitment\030\002 \002(" +
+      "eption\022\r\n\005index\030\001 \002(\021\022\022\n\ncommitment\030\002 \002(" +
       "\014B)\n\027ch.epfl.dedis.lib.protoB\016SkipchainP" +
       "roto"
     };

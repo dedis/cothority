@@ -1,4 +1,5 @@
 // This package should come from onet but is manually created here.
+// MANUAL
 
 syntax = "proto2";
 
