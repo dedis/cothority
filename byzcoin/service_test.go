@@ -1732,23 +1732,23 @@ func TestService_StateChangeStorage(t *testing.T) {
 		require.Nil(t, err)
 	}
 
-	s.waitProofWithIdx(t, iid[:], 0)
+	proof := s.waitProofWithIdx(t, iid[:], 0)
 
 	for _, service := range s.services {
-		scs, err := service.GetInstanceVersions(iid[:])
+		scs, err := service.GetInstanceVersions(iid[:], &proof.Latest)
 
 		require.Nil(t, err)
 		require.Equal(t, n*4, len(scs))
 
 		for i := 0; i < n*4; i++ {
-			sc, ok, err := service.GetInstanceVersion(iid[:], uint64(i))
+			sc, ok, err := service.GetInstanceVersion(iid[:], uint64(i), &proof.Latest)
 			require.Nil(t, err)
 			require.True(t, ok)
 			require.Equal(t, uint64(i), sc.Version)
 			require.Equal(t, uint64(i), scs[i].Version)
 		}
 
-		sc, ok, err := service.GetLastInstanceVersion(iid[:])
+		sc, ok, err := service.GetLastInstanceVersion(iid[:], &proof.Latest)
 		require.Nil(t, err)
 		require.True(t, ok)
 		require.Equal(t, uint64(n*4-1), sc.Version)
@@ -1768,7 +1768,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	s.waitProofWithIdx(t, tx1.Instructions[0].Hash(), 0)
+	proof := s.waitProofWithIdx(t, tx1.Instructions[0].Hash(), 0)
 
 	// reset the storage DB
 	tmpDB, err := ioutil.TempFile("", "tmpDB")
@@ -1788,7 +1788,7 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 
 	s.service().trySyncAll()
 
-	scs, err := s.service().stateChangeStorage.getAll(tx1.Instructions[0].Hash())
+	scs, err := s.service().stateChangeStorage.getAll(tx1.Instructions[0].Hash(), &proof.Latest)
 	require.Nil(t, err)
 	require.Equal(t, 1, len(scs))
 }

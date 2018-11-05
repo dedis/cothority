@@ -18,6 +18,7 @@ import (
 const defaultMaxSize = 2 * 1024 * 1024 * 1024 // 2GB
 const versionLength = 64 / 8                  // bytes
 const prefixLength = 32                       // bytes
+const cleanThreshold = 0.8
 
 var bucketStateChangeStorage = []byte("statechangestorage")
 var errLengthInstanceID = errors.New("InstanceID must have 32 bytes")
@@ -34,6 +35,7 @@ type StateChangeEntry struct {
 // oldest version of an instance for cleaning purposes.
 type keyTime struct {
 	key  []byte
+	scid []byte
 	time time.Time
 }
 
@@ -54,9 +56,11 @@ func (kt keyTimeArray) Swap(i, j int) {
 	kt[i], kt[j] = kt[j], kt[i]
 }
 
-// stateChangeStorage stores the state changes using their instance ID and
+// stateChangeStorage stores the state changes using their instance ID, the block index and
 // their version to yeld a key. This key has the property to sort the key-value pairs
 // first by instance ID and then by version so we can use the BoltDB key traversal.
+// The block index is appended only to access more efficiently to the information
+// without having to decode the value.
 // The storage cleans up by itself with respect to the parameters. For the best
 // efficiency, the state changes must be added ordered by version because the
 // cleaning always removes the oldest version but chooses the instance by the
@@ -81,13 +85,23 @@ func newStateChangeStorage(c *onet.Context) *stateChangeStorage {
 	}
 }
 
-func (s *stateChangeStorage) getBucket(tx *bolt.Tx) *bolt.Bucket {
+// getBucket gets the bucket for the given skipchain
+func (s *stateChangeStorage) getBucket(tx *bolt.Tx, sid skipchain.SkipBlockID) *bolt.Bucket {
 	b := tx.Bucket(s.bucket)
 	if b == nil {
 		panic("Bucket has not been created. This is a programmer error.")
 	}
 
-	return b
+	if tx.Writable() {
+		sbb, err := b.CreateBucketIfNotExists(sid)
+		if err != nil {
+			panic(err)
+		}
+
+		return sbb
+	}
+
+	return b.Bucket(sid)
 }
 
 // setMaxSize enables the cleaning of old state changes when the storage
@@ -103,7 +117,7 @@ func (s *stateChangeStorage) setMaxNbrBlock(nbr int) {
 }
 
 // This will clean the oldest state changes when the total size
-// is above the maximum. It will remove elements until 20% of
+// is above the maximum. It will remove elements until cleanThreshold of
 // the space is available.
 func (s *stateChangeStorage) cleanBySize() error {
 	if s.size < s.maxSize || s.maxSize == 0 {
@@ -111,24 +125,25 @@ func (s *stateChangeStorage) cleanBySize() error {
 		return nil
 	}
 
-	if len(s.sortedKeys) == 0 {
-		// This should never happen
-		return errors.New("Nothing can be cleaned, something is wrong with the storage implementation")
-	}
-
 	err := s.db.Update(func(tx *bolt.Tx) error {
-		b := s.getBucket(tx)
-
 		// We make enough space to not have to do it everytime
 		// we append state changes
-		thres := int(float64(s.maxSize) * 0.8)
+		thres := int(float64(s.maxSize) * cleanThreshold)
 
 		for s.size > thres {
+			if len(s.sortedKeys) == 0 {
+				// This should never happen
+				return errors.New("Nothing can be cleaned, something is wrong with the storage implementation")
+			}
+
+			// Get the oldest version with the same instance ID
+			iid := s.sortedKeys[0].key[:prefixLength]
+
+			b := s.getBucket(tx, s.sortedKeys[0].scid)
 			c := b.Cursor()
-			// Get the oldest element
-			key := s.sortedKeys[0].key
-			k, v := c.Seek(key)
-			if !bytes.Equal(key, k) {
+
+			k, v := c.Seek(iid)
+			if !bytes.HasPrefix(k, iid) {
 				// This should never occur
 				return errors.New("Missing key in the storage")
 			}
@@ -139,10 +154,7 @@ func (s *stateChangeStorage) cleanBySize() error {
 			}
 
 			s.size -= len(v)
-			// Seek for the oldest element of the instance, which is
-			// not necessarily the next one
-			iid := key[:prefixLength]
-			k, v = c.Seek(iid)
+			k, v = c.Next()
 
 			if bytes.HasPrefix(k, iid) {
 				var sce StateChangeEntry
@@ -168,13 +180,15 @@ func (s *stateChangeStorage) cleanBySize() error {
 
 // This will clean the state changes per instance where the block
 // index is too low compared to the threshold
-func (s *stateChangeStorage) cleanByBlock(scs StateChanges) error {
+func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBlock) error {
 	if s.maxNbrBlock == 0 {
 		return nil
 	}
 
+	thres := int64(sb.Index - s.maxNbrBlock)
+
 	return s.db.Update(func(tx *bolt.Tx) error {
-		b := s.getBucket(tx)
+		b := s.getBucket(tx, sb.SkipChainID())
 
 		// Prevent from cleaning the same instance twice
 		done := map[string]bool{}
@@ -185,32 +199,18 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges) error {
 			if !ok {
 				done[string(sc.InstanceID)] = true
 
-				var sce StateChangeEntry
-				blocks := map[int]bool{}
+				var buf bytes.Buffer
+				err := binary.Write(&buf, binary.BigEndian, thres)
+				if err != nil {
+					return err
+				}
+				index := buf.Bytes()
+
 				c := b.Cursor()
-				// Seek the next instance ID and take a step back
-				// to reach the newest version
-				key := new(big.Int)
-				key.SetBytes(sc.InstanceID)
-				key.Add(key, new(big.Int).SetInt64(1))
-				c.Seek(key.Bytes())
-
-				for k, v := c.Prev(); k != nil && bytes.HasPrefix(k, sc.InstanceID); k, v = c.Prev() {
-					if len(blocks) <= s.maxNbrBlock {
-						// We don't want to decode if we know we're
-						// going to delete it anyway
-						err := protobuf.Decode(v, &sce)
-						if err != nil {
-							return err
-						}
-
-						blocks[sce.BlockIndex] = true
-					}
-					if len(blocks) > s.maxNbrBlock {
-						err := c.Delete()
-						if err != nil {
-							return err
-						}
+				for k, v := c.Seek(sc.InstanceID); k != nil && bytes.HasPrefix(k, sc.InstanceID); k, v = c.Next() {
+					if bytes.Compare(k[len(k)-len(index):], index) <= 0 {
+						c.Delete()
+						s.size -= len(v)
 					}
 				}
 			}
@@ -221,12 +221,24 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges) error {
 }
 
 // this generates a storage key using the instance ID and the version
-func (s *stateChangeStorage) key(iid []byte, ver uint64) []byte {
+func (s *stateChangeStorage) key(iid []byte, ver uint64, idx int64) ([]byte, error) {
 	b := bytes.Buffer{}
-	b.Write(iid)
-	binary.Write(&b, binary.BigEndian, &ver)
+	_, err := b.Write(iid)
+	if err != nil {
+		return nil, err
+	}
 
-	return b.Bytes()
+	err = binary.Write(&b, binary.BigEndian, ver)
+	if err != nil {
+		return nil, err
+	}
+
+	err = binary.Write(&b, binary.BigEndian, idx)
+	if err != nil {
+		return nil, err
+	}
+
+	return b.Bytes(), nil
 }
 
 // this will clean the oldest state changes until there is enough
@@ -245,7 +257,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 	copy(sortedKeys, s.sortedKeys)
 
 	err = s.db.Update(func(tx *bolt.Tx) error {
-		b := s.getBucket(tx)
+		b := s.getBucket(tx, sb.SkipChainID())
 
 		// append each list of state changes (or create the entry)
 		for _, sc := range scs {
@@ -254,7 +266,10 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 				return errLengthInstanceID
 			}
 
-			key := s.key(sc.InstanceID, sc.Version)
+			key, err := s.key(sc.InstanceID, sc.Version, int64(sb.Index))
+			if err != nil {
+				return err
+			}
 
 			now := time.Now()
 			buf, err := protobuf.Encode(&StateChangeEntry{
@@ -274,6 +289,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 				// no need to sort here as it's necessarily the newest
 				sortedKeys = append(sortedKeys, keyTime{
 					key:  key,
+					scid: sb.SkipChainID(),
 					time: now,
 				})
 			}
@@ -295,17 +311,21 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 
 	s.sortedKeys = sortedKeys
 
-	return s.cleanByBlock(scs)
+	return s.cleanByBlock(scs, sb)
 }
 
 // This will return the list of state changes for the given instance
-func (s *stateChangeStorage) getAll(iid []byte) (entries []StateChangeEntry, err error) {
+func (s *stateChangeStorage) getAll(iid []byte, sb *skipchain.SkipBlock) (entries []StateChangeEntry, err error) {
 	if len(iid) != prefixLength {
 		return nil, errLengthInstanceID
 	}
 
 	err = s.db.View(func(tx *bolt.Tx) error {
-		b := s.getBucket(tx)
+		b := s.getBucket(tx, sb.SkipChainID())
+		if b == nil {
+			// Nothing yet stored for this instance
+			return nil
+		}
 
 		c := b.Cursor()
 		for k, v := c.Seek(iid); bytes.HasPrefix(k, iid); k, v = c.Next() {
@@ -326,19 +346,27 @@ func (s *stateChangeStorage) getAll(iid []byte) (entries []StateChangeEntry, err
 
 // This will return the state change entry for the given instance and version.
 // Use the bool returned value to check if the version exists
-func (s *stateChangeStorage) getByVersion(iid []byte, ver uint64) (sce StateChangeEntry, ok bool, err error) {
+func (s *stateChangeStorage) getByVersion(iid []byte,
+	ver uint64, sb *skipchain.SkipBlock) (sce StateChangeEntry, ok bool, err error) {
 	if len(iid) != prefixLength {
 		err = errLengthInstanceID
 		return
 	}
 
-	key := s.key(iid, ver)
+	key, err := s.key(iid, ver, int64(0))
+	if err != nil {
+		return
+	}
+
+	// Only the instance ID and the version is known
+	prefix := key[:prefixLength+versionLength]
 
 	err = s.db.View(func(tx *bolt.Tx) error {
-		b := s.getBucket(tx)
+		b := s.getBucket(tx, sb.SkipChainID())
 
-		v := b.Get(key)
-		if v != nil {
+		c := b.Cursor()
+		k, v := c.Seek(prefix)
+		if k != nil && bytes.HasPrefix(k, prefix) {
 			err := protobuf.Decode(v, &sce)
 			if err != nil {
 				return err
@@ -353,19 +381,48 @@ func (s *stateChangeStorage) getByVersion(iid []byte, ver uint64) (sce StateChan
 	return
 }
 
+// getByBlock looks for the state changes associated with a given
+// skipblock
+func (s *stateChangeStorage) getByBlock(sb *skipchain.SkipBlock) (entries []StateChangeEntry, err error) {
+	err = s.db.View(func(tx *bolt.Tx) error {
+		b := s.getBucket(tx, sb.SkipChainID())
+
+		var suffix bytes.Buffer
+		binary.Write(&suffix, binary.BigEndian, int64(sb.Index))
+
+		c := b.Cursor()
+		for k, v := c.First(); k != nil; k, v = c.Next() {
+			if bytes.HasSuffix(k, suffix.Bytes()) {
+				var sce StateChangeEntry
+				err = protobuf.Decode(v, &sce)
+				if err != nil {
+					return err
+				}
+
+				entries = append(entries, sce)
+			}
+		}
+
+		return nil
+	})
+
+	return
+}
+
 // getLast looks for the last version of a given instance and return the entry. Use
 // the bool value to know if there is a hit or not.
-func (s *stateChangeStorage) getLast(iid []byte) (sce StateChangeEntry, ok bool, err error) {
+func (s *stateChangeStorage) getLast(iid []byte, sb *skipchain.SkipBlock) (sce StateChangeEntry, ok bool, err error) {
 	if len(iid) != prefixLength {
 		err = errLengthInstanceID
 		return
 	}
 
 	err = s.db.View(func(tx *bolt.Tx) error {
-		b := s.getBucket(tx)
+		b := s.getBucket(tx, sb.SkipChainID())
 		c := b.Cursor()
 
-		// Go for the next pair after the last version and go back from there
+		// Seek the next instance ID and take a step back
+		// to reach the newest version
 		key := new(big.Int)
 		key.SetBytes(iid)
 		key.Add(key, new(big.Int).SetInt64(1))

@@ -1968,6 +1968,7 @@ func (s *Service) getBlockTx(sid skipchain.SkipBlockID) (TxResults, *skipchain.S
 // buildStateChanges recursively gets the TXs of a skipchain's blocks and populate
 // the state changes storage by restoring them from the TXs. We don't need to worry
 // about overriding thanks to the key generation.
+// TODO: optimization: read from the db and sync from the last known state change
 func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingStateTrie, cin []Coin) ([]Coin, error) {
 	log.Lvlf2("Start creating state changes for skipchain %x", sid)
 	txs, sb, err := s.getBlockTx(sid)
@@ -2008,8 +2009,8 @@ func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingState
 
 // GetInstanceVersions gets the list of state changes for the given
 // instance and returns it
-func (s *Service) GetInstanceVersions(iid []byte) (StateChanges, error) {
-	sce, err := s.stateChangeStorage.getAll(iid)
+func (s *Service) GetInstanceVersions(iid []byte, sb *skipchain.SkipBlock) (StateChanges, error) {
+	sce, err := s.stateChangeStorage.getAll(iid, sb)
 	if err != nil {
 		return nil, err
 	}
@@ -2025,8 +2026,8 @@ func (s *Service) GetInstanceVersions(iid []byte) (StateChanges, error) {
 // GetInstanceVersion looks for the specific version of the given
 // instance and returns the state change if it exists. Use the
 // bool return to know if the key hit
-func (s *Service) GetInstanceVersion(iid []byte, ver uint64) (sc StateChange, ok bool, err error) {
-	sce, ok, err := s.stateChangeStorage.getByVersion(iid, ver)
+func (s *Service) GetInstanceVersion(iid []byte, ver uint64, sb *skipchain.SkipBlock) (sc StateChange, ok bool, err error) {
+	sce, ok, err := s.stateChangeStorage.getByVersion(iid, ver, sb)
 	if err != nil || !ok {
 		return
 	}
@@ -2038,8 +2039,8 @@ func (s *Service) GetInstanceVersion(iid []byte, ver uint64) (sc StateChange, ok
 // GetLastInstanceVersion looks for an the last entry for a given
 // instance and returns the state change if it exists. Use the
 // bool return to know if the key hit
-func (s *Service) GetLastInstanceVersion(iid []byte) (sc StateChange, ok bool, err error) {
-	sce, ok, err := s.stateChangeStorage.getLast(iid)
+func (s *Service) GetLastInstanceVersion(iid []byte, sb *skipchain.SkipBlock) (sc StateChange, ok bool, err error) {
+	sce, ok, err := s.stateChangeStorage.getLast(iid, sb)
 	if err != nil || !ok {
 		return
 	}
