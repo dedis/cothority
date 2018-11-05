@@ -11,6 +11,7 @@ import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * A document is an example how to use Calypso to store a document securely on Byzcoin. The document class always
@@ -80,8 +81,8 @@ public class Document {
      * @return a WriteInstance
      * @throws CothorityException if something goes wrong
      */
-    public WriteInstance spawnWrite(CalypsoRPC calypso, DarcId publisherDarcId, Signer publisherSigner) throws CothorityException {
-        return new WriteInstance(calypso, publisherDarcId, Arrays.asList(publisherSigner), getWriteData(calypso.getLTS()));
+    public WriteInstance spawnWrite(CalypsoRPC calypso, DarcId publisherDarcId, Signer publisherSigner, Long signerCtr) throws CothorityException {
+        return new WriteInstance(calypso, publisherDarcId, Arrays.asList(publisherSigner), Collections.singletonList(signerCtr), getWriteData(calypso.getLTS()));
     }
 
     /**

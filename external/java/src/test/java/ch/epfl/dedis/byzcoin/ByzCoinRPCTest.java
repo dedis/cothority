@@ -27,6 +27,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -120,8 +121,11 @@ public class ByzCoinRPCTest {
         Thread.sleep(4 * bc.getConfig().getBlockInterval().toMillis());
         assertEquals(0, receiver.getCtr());
 
+        // Get the counter for the admin
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
         // Update the darc and thus create one block
-        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, 10);
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin,counters.head()+1, 10);
         Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
         assertNotEquals(0, receiver.getCtr());
         bc.unsubscribeBlock(receiver);
@@ -134,8 +138,11 @@ public class ByzCoinRPCTest {
     void subscribeSkipBlockStream() throws Exception {
         Stream<SkipBlock> stream = bc.subscribeSkipBlock();
 
+        // Get the counter for the admin
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
         // create one block
-        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, 0);
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 0);
 
         // no need to wait as it will hang until one block is accepted
         assertEquals(1, stream.limit(1).count());
@@ -160,8 +167,11 @@ public class ByzCoinRPCTest {
             assertEquals(0, receiver.getCtr());
         }
 
+        // Get the counter for the admin
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
         // Update the darc and thus create some blocks
-        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, 10);
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1, 10);
         Thread.sleep(2 * bc.getConfig().getBlockInterval().toMillis());
         for (TestReceiver receiver : receivers) {
             assertNotEquals(0, receiver.getCtr());
@@ -223,8 +233,11 @@ public class ByzCoinRPCTest {
         assertEquals(0, receiver.getCtr());
         assertEquals(0, txReceiver.getAllCtxs().size());
 
+        // Get the counter for the admin
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
         // Update the darc and thus create at least one block with at least the interesting clientTransaction
-        ClientTransactionId ctxid = bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, 10);
+        ClientTransactionId ctxid = bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head() + 1, 10);
 
         Thread.sleep(3 * bc.getConfig().getBlockInterval().toMillis());
         assertNotEquals(0, txReceiver.getAllCtxs().size());
@@ -232,7 +245,7 @@ public class ByzCoinRPCTest {
                 ctx.getId().equals(ctxid)).count());
 
         // Update the darc again - even if it's the same darc
-        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, 10);
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head() + 2, 10);
 
         Thread.sleep(3 * bc.getConfig().getBlockInterval().toMillis());
         assertEquals(2, receiver.getCtr());
@@ -243,8 +256,11 @@ public class ByzCoinRPCTest {
         TestReceiver receiver = new TestReceiver();
         ServerIdentity.StreamingConn conn = bc.streamTransactions(receiver);
 
+        // Get the counter for the admin
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
         // Generate a block by updating the darc.
-        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, 10);
+        bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head() + 1, 10);
         Thread.sleep(bc.getConfig().getBlockInterval().toMillis());
         assertTrue(receiver.isOk());
         assertNotEquals(0, receiver.getCtr());
@@ -254,36 +270,50 @@ public class ByzCoinRPCTest {
 
     @Test
     void updateInterval() throws Exception {
+        // Get the counter for the admin and increment it
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        counters.increment();
+
         List<Signer> admins = Arrays.asList(admin);
-        assertThrows(CothorityPermissionException.class, () -> bc.setBlockInterval(Duration.ofMillis(4999), admins, 10));
+        assertThrows(CothorityPermissionException.class,
+                () -> bc.setBlockInterval(Duration.ofMillis(4999), admins, counters.getCounters(), 10)
+        );
         logger.info("Setting interval to 5 seconds");
-        bc.setBlockInterval(Duration.ofMillis(5000), admins, 10);
+        bc.setBlockInterval(Duration.ofMillis(5000), admins, counters.getCounters(), 10);
         ByzCoinProto.ChainConfig.Builder newCCD = ChainConfigInstance.fromByzcoin(bc).getChainConfig().toProto().toBuilder();
+
         // Need to set the blockInterval manually, else it will complain.
         logger.info("Setting interval back to 500 milliseconds");
         Instant now = Instant.now();
         newCCD.setBlockinterval(500 * 1000 * 1000);
-        ChainConfigInstance.fromByzcoin(bc).evolveConfigAndWait(new ChainConfigData(newCCD.build()), admins, 10);
+
+        counters.increment();
+        ChainConfigInstance.fromByzcoin(bc).evolveConfigAndWait(new ChainConfigData(newCCD.build()), admins, counters.getCounters(), 10);
         assertTrue(Duration.between(now, Instant.now()).toMillis() > 5000);
     }
 
     @Test
     void updateMaxBlockSize() throws Exception {
         List<Signer> admins = Arrays.asList(admin);
-        Arrays.asList(ChainConfigData.blocksizeMin - 1, ChainConfigData.blocksizeMax + 1).forEach(invalidSize ->
-                assertThrows(CothorityException.class, () ->
-                        bc.setMaxBlockSize(invalidSize, admins, 10)
-                )
-        );
-        Arrays.asList(ChainConfigData.blocksizeMin, (ChainConfigData.blocksizeMin + ChainConfigData.blocksizeMax) / 2,
-                ChainConfigData.blocksizeMax).forEach(validSize -> {
-                    try {
-                        bc.setMaxBlockSize(validSize, admins, 10);
-                    } catch (CothorityException e) {
-                        fail("should accept this size");
-                    }
-                }
-        );
+
+        // Get the counter for the admin
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        Long ctr = counters.head();
+
+        for (int invalidSize : Arrays.asList(ChainConfigData.blocksizeMin - 1, ChainConfigData.blocksizeMax + 1)) {
+            final Long c = ctr + 1;
+            assertThrows(CothorityException.class, () ->
+                    bc.setMaxBlockSize(invalidSize, admins, Collections.singletonList(c), 10)
+            );
+        }
+        for (int validSize : Arrays.asList(ChainConfigData.blocksizeMin, (ChainConfigData.blocksizeMin + ChainConfigData.blocksizeMax) / 2, ChainConfigData.blocksizeMax)) {
+            try {
+                ctr++;
+                bc.setMaxBlockSize(validSize, admins, Collections.singletonList(ctr), 10);
+            } catch (CothorityException e) {
+                fail("should accept this size");
+            }
+        }
     }
 
     @Test
@@ -292,20 +322,24 @@ public class ByzCoinRPCTest {
         List<Signer> admins = new ArrayList<>();
         admins.add(admin);
 
+        // Get the counter for the admin
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        counters.increment();
+
         // First make sure we correctly refuse invalid new rosters.
         // Too few nodes
         final Roster newRoster1 = new Roster(Arrays.asList(conode1, conode2));
-        assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster1, admins, 10));
+        assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster1, admins, counters.getCounters(), 10));
 
         // Too many new nodes
         List<ServerIdentity> newList = bc.getRoster().getNodes();
         newList.addAll(newRoster1.getNodes());
         final Roster newRoster2 = new Roster(newList);
-        assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster2, admins, 10));
+        assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster2, admins, counters.getCounters(), 10));
 
         // Too many changes
         final Roster newRoster3 = new Roster(Arrays.asList(conode1, conode2, conode5, conode6));
-        assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster3, admins, 10));
+        assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster3, admins, counters.getCounters(), 10));
 
         // And finally some real update of the roster
         // First start conode 5 (it is a sleeper conode)
@@ -313,13 +347,14 @@ public class ByzCoinRPCTest {
             testInstanceController.startConode(5);
             logger.info("updating real roster");
             Roster newRoster = new Roster(Arrays.asList(conode1, conode2, conode3, conode4, conode5));
-            bc.setRoster(newRoster, admins, 10);
+            bc.setRoster(newRoster, admins, counters.getCounters(), 10);
 
             logger.info("shutting down two nodes and it should still run");
             try {
                 testInstanceController.killConode(3);
                 testInstanceController.killConode(4);
-                bc.setMaxBlockSize(1000 * 1000, admins, 10);
+                counters.increment();
+                bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 10);
             } finally {
                 testInstanceController.startConode(3);
                 testInstanceController.startConode(4);

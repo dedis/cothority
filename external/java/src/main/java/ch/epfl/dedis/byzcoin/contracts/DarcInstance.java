@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,12 +42,13 @@ public class DarcInstance {
      * @param bc            a running ByzCoin service
      * @param spawnerDarcId the darcId of a darc with the rights to spawn new darcs
      * @param spawnerSigner the signer with the rights to spawn new darcs
+     * @param signerCtr
      * @param newDarc       the new darc to spawn
      * @throws CothorityException if something goes wrong
      */
-    public DarcInstance(ByzCoinRPC bc, DarcId spawnerDarcId, Signer spawnerSigner, Darc newDarc) throws CothorityException {
+    public DarcInstance(ByzCoinRPC bc, DarcId spawnerDarcId, Signer spawnerSigner, Long signerCtr, Darc newDarc) throws CothorityException {
         DarcInstance spawner = DarcInstance.fromByzCoin(bc, spawnerDarcId);
-        DarcInstance newDarcInst = spawner.spawnDarcAndWait(newDarc, spawnerSigner, 10);
+        DarcInstance newDarcInst = spawner.spawnDarcAndWait(newDarc, spawnerSigner, signerCtr, 10);
         this.bc = bc;
         darc = newDarc;
         instance = newDarcInst.getInstance();
@@ -95,13 +97,11 @@ public class DarcInstance {
      * TODO: allow for evolution if the expression has more than one identity.
      *
      * @param newDarc the darc to replace the old darc.
-     * @param owner   must have its identity in the "Invoke_Evolve" rule
-     * @param pos     position of the instruction in the ClientTransaction
-     * @param len     total number of instructions in the ClientTransaction
+     * @param ownerCtr is the signer counter for the owner
      * @return Instruction to be sent to byzcoin
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Instruction evolveDarcInstruction(Darc newDarc, Signer owner, int pos, int len) throws CothorityCryptoException {
+    public Instruction evolveDarcInstruction(Darc newDarc, Long ownerCtr) throws CothorityCryptoException {
         newDarc.increaseVersion();
         newDarc.setPrevId(darc);
         newDarc.setBaseId(darc.getBaseId());
@@ -113,17 +113,7 @@ public class DarcInstance {
         }
         Invoke inv = new Invoke("evolve", ContractId, newDarc.toProto().toByteArray());
         byte[] d = newDarc.getBaseId().getId();
-        Instruction inst = new Instruction(new InstanceId(d), Instruction.genNonce(), pos, len, inv);
-        try {
-            Request r = new Request(darc.getBaseId(), "invoke:evolve", inst.hash(),
-                    Arrays.asList(owner.getIdentity()), null);
-            logger.info("Signing: {}", Hex.printHexBinary(r.hash()));
-            Signature sign = new Signature(owner.sign(r.hash()), owner.getIdentity());
-            inst.setSignatures(Arrays.asList(sign));
-        } catch (Signer.SignRequestRejectedException e) {
-            throw new CothorityCryptoException(e.getMessage());
-        }
-        return inst;
+        return new Instruction(new InstanceId(d), Collections.singletonList(ownerCtr), inv);
     }
 
     /**
@@ -134,8 +124,8 @@ public class DarcInstance {
      * @param owner   a signer allowed to evolve the darc
      * @throws CothorityException if something goes wrong
      */
-    public void evolveDarc(Darc newDarc, Signer owner) throws CothorityException {
-        evolveDarcAndWait(newDarc, owner, 0);
+    public void evolveDarc(Darc newDarc, Signer owner, Long ownerCtr) throws CothorityException {
+        evolveDarcAndWait(newDarc, owner, ownerCtr, 0);
     }
 
     /**
@@ -149,9 +139,10 @@ public class DarcInstance {
      * @return ClientTransactionId of the accepted transaction
      * @throws CothorityException if something goes wrong
      */
-    public ClientTransactionId evolveDarcAndWait(Darc newDarc, Signer owner, int wait) throws CothorityException {
-        Instruction inst = evolveDarcInstruction(newDarc, owner, 0, 1);
+    public ClientTransactionId evolveDarcAndWait(Darc newDarc, Signer owner, Long ownerCtr, int wait) throws CothorityException {
+        Instruction inst = evolveDarcInstruction(newDarc, ownerCtr);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ct.signWith(Collections.singletonList(owner));
         return bc.sendTransactionAndWait(ct, wait);
     }
 
@@ -161,27 +152,15 @@ public class DarcInstance {
      * TODO: allow for multi-signatures
      *
      * @param contractID the id of the instance to create
-     * @param s          the signer that is authorized to spawn this instance
+     * @param signerCtr  the next counter which the signer should use
      * @param args       arguments to give to the contract
-     * @param pos        position in the ClientTransaction
-     * @param len        total length of the ClientTransaction
      * @return the instruction to be added to the ClientTransaction
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Instruction spawnInstanceInstruction(String contractID, Signer s, List<Argument> args, int pos, int len)
+    public Instruction spawnInstanceInstruction(String contractID, Long signerCtr, List<Argument> args)
             throws CothorityCryptoException {
         Spawn sp = new Spawn(contractID, args);
-        Instruction inst = new Instruction(new InstanceId(darc.getBaseId().getId()), Instruction.genNonce(), pos, len, sp);
-        try {
-            Request r = new Request(darc.getBaseId(), "spawn:" + contractID, inst.hash(),
-                    Arrays.asList(s.getIdentity()), null);
-            logger.info("Signing: {}", Hex.printHexBinary(r.hash()));
-            Signature sign = new Signature(s.sign(r.hash()), s.getIdentity());
-            inst.setSignatures(Arrays.asList(sign));
-        } catch (Signer.SignRequestRejectedException e) {
-            throw new CothorityCryptoException(e.getMessage());
-        }
-        return inst;
+        return new Instruction(new InstanceId(darc.getBaseId().getId()), Collections.singletonList(signerCtr), sp);
     }
 
     /**
@@ -194,9 +173,10 @@ public class DarcInstance {
      * @throws CothorityException if something goes wrong
      * @return the client transaction ID
      */
-    public ClientTransactionId spawnInstance(String contractID, Signer s, List<Argument> args) throws CothorityException {
-        Instruction inst = spawnInstanceInstruction(contractID, s, args, 0, 1);
+    public ClientTransactionId spawnInstance(String contractID, Signer s, Long signerCtr, List<Argument> args) throws CothorityException {
+        Instruction inst = spawnInstanceInstruction(contractID, signerCtr, args);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ct.signWith(Collections.singletonList(s));
         return bc.sendTransaction(ct);
     }
 
@@ -210,9 +190,11 @@ public class DarcInstance {
      * @return the Proof of inclusion
      * @throws CothorityException if something goes wrong
      */
-    public Proof spawnInstanceAndWait(String contractID, Signer s, List<Argument> args, int wait) throws CothorityException {
-        Instruction inst = spawnInstanceInstruction(contractID, s, args, 0, 1);
+    public Proof spawnInstanceAndWait(String contractID, Signer s, Long signerCtr, List<Argument> args, int wait) throws CothorityException {
+        Instruction inst = spawnInstanceInstruction(contractID, signerCtr, args);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ct.signWith(Collections.singletonList(s));
+
         bc.sendTransactionAndWait(ct, wait);
         InstanceId iid = inst.deriveId("");
         if (contractID.equals(ContractId)) {
@@ -238,14 +220,14 @@ public class DarcInstance {
      * @return a new DarcInstance, might be null if wait == 0
      * @throws CothorityException if something goes wrong if something went wrong
      */
-    public DarcInstance spawnDarcAndWait(Darc d, Signer s, int wait) throws CothorityException {
+    public DarcInstance spawnDarcAndWait(Darc d, Signer s, Long signerCounter, int wait) throws CothorityException {
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("darc", d.toProto().toByteArray()));
         if (wait > 0) {
-            Proof p = spawnInstanceAndWait(ContractId, s, args, wait);
+            Proof p = spawnInstanceAndWait(ContractId, s, signerCounter, args, wait);
             return new DarcInstance(this.bc, p.getInstance());
         } else {
-            spawnInstance(ContractId, s, args);
+            spawnInstance(ContractId, s, signerCounter, args);
             return null;
         }
     }
@@ -259,11 +241,11 @@ public class DarcInstance {
     }
 
     /**
-     * @return a copy of the darc stored in this instance.
+     * @return the darc of this instance.
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
     public Darc getDarc() throws CothorityCryptoException {
-        return darc.copyRulesAndVersion();
+        return darc;
     }
 
     /**

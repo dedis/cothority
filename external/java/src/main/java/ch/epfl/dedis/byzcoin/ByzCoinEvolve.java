@@ -22,6 +22,6 @@ public class ByzCoinEvolve {
         DarcInstance genesis = bc.getGenesisDarcInstance();
         Darc updatedGenesis = genesis.getDarc();
         updatedGenesis.addIdentity("invoke:update_config", admin.getIdentity(), Rules.OR);
-        genesis.evolveDarcAndWait(updatedGenesis, admin, 20);
+        genesis.evolveDarcAndWait(updatedGenesis, admin,1L, 20);
     }
 }

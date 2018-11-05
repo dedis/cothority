@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -114,32 +115,38 @@ public class AuthorizationTest {
     private WriteInstance publishDocumentAndGrantAccessToGroup() throws Exception {
         WriteInstance documentId;
         SignerEd25519 publisherSigner = new SignerEd25519(Hex.parseHexBinary(PUBLISHER_SCALAR));
-        documentId = publishTestDocument(publisherSigner, publisherId, readersGroupId);
+        documentId = publishTestDocument(publisherSigner, 1L, publisherId, readersGroupId);
         return documentId;
     }
 
-    private WriteInstance publishTestDocument(SignerEd25519 publisherSigner, DarcId publisherDarcId, DarcId consumerId) throws Exception {
+    private WriteInstance publishTestDocument(SignerEd25519 publisherSigner, Long publisherSignerCtr, DarcId publisherDarcId, DarcId consumerId) throws Exception {
+        // Get the counter for the admin
+        SignerCounters adminCtrs = calypso.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
         IdentityDarc publisherIdentity = new IdentityDarc(publisherDarcId);
         IdentityDarc consumerIdentity = new IdentityDarc(consumerId);
 
         Darc documentDarc = new Darc(Arrays.asList(publisherIdentity), null, "document darc".getBytes());
         documentDarc.addIdentity("spawn:calypsoWrite", publisherIdentity, Rules.OR);
         documentDarc.addIdentity("spawn:calypsoRead", consumerIdentity, Rules.OR);
-        calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc, admin, 10);
+        calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc, admin, adminCtrs.head()+1, 10);
 
         Document doc = new Document("ala ma kota".getBytes(), 16, "extra data".getBytes(), documentDarc.getBaseId());
-        return doc.spawnWrite(calypso, documentDarc.getBaseId(), publisherSigner);
+        return doc.spawnWrite(calypso, documentDarc.getBaseId(), publisherSigner, publisherSignerCtr);
     }
 
     private DarcId createUserGroup(CalypsoRPC ocs, DarcId... members) throws Exception {
         SignerEd25519 admin = new SignerEd25519(Hex.parseHexBinary(SUPERADMIN_SCALAR));
+
+        // Get the counter for the admin
+        SignerCounters adminCtrs = calypso.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
         Darc groupDarc = new Darc(Arrays.asList(admin.getIdentity()), null, "group".getBytes());
         for (DarcId id : members) {
             groupDarc.addIdentity(Darc.RuleSignature, new IdentityDarc(id), Rules.OR);
         }
 
-        ocs.getGenesisDarcInstance().spawnDarcAndWait(groupDarc, admin, 10);
+        ocs.getGenesisDarcInstance().spawnDarcAndWait(groupDarc, admin, adminCtrs.head()+1, 10);
         return groupDarc.getId();
     }
 
@@ -169,21 +176,23 @@ public class AuthorizationTest {
                         Hex.parseHexBinary(SUPERADMIN_SCALAR)));
     }
 
-    private static DarcInstance createUser(CalypsoRPC ocs, IdentityEd25519 user) throws Exception {
+    private DarcInstance createUser(CalypsoRPC ocs, IdentityEd25519 user) throws Exception {
         SignerEd25519 admin = new SignerEd25519(Hex.parseHexBinary(SUPERADMIN_SCALAR));
+        SignerCounters adminCtrs = calypso.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
         Darc userDarc = new Darc(Arrays.asList(user), Arrays.asList(user), "user".getBytes());
-        return ocs.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, 10);
+        return ocs.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, adminCtrs.head()+1, 10);
     }
 
-    private static void grantSystemWriteAccess(CalypsoRPC ocs, Darc userDarc) throws Exception {
+    private void grantSystemWriteAccess(CalypsoRPC ocs, Darc userDarc) throws Exception {
         SignerEd25519 admin = new SignerEd25519(Hex.parseHexBinary(SUPERADMIN_SCALAR));
+        SignerCounters adminCtrs = calypso.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
 
         Darc newGenesis = ocs.getGenesisDarc().copyRulesAndVersion();
         newGenesis.addIdentity(Darc.RuleSignature, IdentityFactory.New(userDarc), Rules.OR);
         newGenesis.addIdentity(Darc.RuleEvolve, IdentityFactory.New(userDarc), Rules.OR);
 
         DarcInstance di = DarcInstance.fromByzCoin(ocs, ocs.getGenesisDarc().getBaseId());
-        di.evolveDarcAndWait(newGenesis, admin, 10);
+        di.evolveDarcAndWait(newGenesis, admin, adminCtrs.head()+1, 10);
     }
 }

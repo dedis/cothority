@@ -60,9 +60,9 @@ public class EventLogInstance {
      * @param signers a list of signers that has the "spawn:eventlog" permission
      * @throws CothorityException if something goes wrong
      */
-    public EventLogInstance(ByzCoinRPC bc, DarcId darcId, List<Signer> signers) throws CothorityException {
+    public EventLogInstance(ByzCoinRPC bc, DarcId darcId, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         this.bc = bc;
-        InstanceId id = this.initEventlogInstance(darcId, signers);
+        InstanceId id = this.initEventlogInstance(darcId, signers, signerCtrs);
 
         // wait for byzcoin to commit the transaction in block
         try {
@@ -91,13 +91,13 @@ public class EventLogInstance {
      * get function to verify that the event is actually stored.
      *
      * @param events  a list of events to log
-     * @param darcId  the darc ID
      * @param signers a list of signers with the permission "invoke:eventlog"
+     * @param signerCtrs TODO
      * @return a list of keys which can be used to retrieve the logged events
      * @throws CothorityException if something goes wrong
      */
-    public List<InstanceId> log(List<Event> events, DarcId darcId, List<Signer> signers) throws CothorityException {
-        Pair<ClientTransaction, List<InstanceId>> txAndKeys = makeTx(events, darcId, signers);
+    public List<InstanceId> log(List<Event> events, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+        Pair<ClientTransaction, List<InstanceId>> txAndKeys = makeTx(events, signers, signerCtrs);
         bc.sendTransaction(txAndKeys._1);
         return txAndKeys._2;
     }
@@ -108,13 +108,13 @@ public class EventLogInstance {
      * that the event is actually stored.
      *
      * @param event   the event to log
-     * @param darcId  the darc ID
      * @param signers a list of signers that has the "invoke:eventlog" permission
+     * @param signerCtrs TODO
      * @return the key which can be used to retrieve the event later
      * @throws CothorityException if something goes wrong
      */
-    public InstanceId log(Event event, DarcId darcId, List<Signer> signers) throws CothorityException {
-        return this.log(Arrays.asList(event), darcId, signers).get(0);
+    public InstanceId log(Event event, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
+        return this.log(Arrays.asList(event), signers, signerCtrs).get(0);
     }
 
     /**
@@ -193,15 +193,15 @@ public class EventLogInstance {
         return new EventLogInstance(bc, id);
     }
 
-    private InstanceId initEventlogInstance(DarcId darcId, List<Signer> signers) throws CothorityException {
+    private InstanceId initEventlogInstance(DarcId darcId, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         if (this.instance != null) {
             throw new CothorityException("already have a contract");
         }
         Spawn spawn = new Spawn(ContractId, new ArrayList<>());
-        Instruction instr = new Instruction(new InstanceId(darcId.getId()), Instruction.genNonce(), 0, 1, spawn);
-        instr.signBy(darcId, signers);
+        Instruction instr = new Instruction(new InstanceId(darcId.getId()), signerCtrs, spawn);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
+        tx.signWith(signers);
         bc.sendTransaction(tx);
 
         return instr.deriveId("");
@@ -227,21 +227,30 @@ public class EventLogInstance {
         }
     }
 
-    private Pair<ClientTransaction, List<InstanceId>> makeTx(List<Event> events, DarcId darcId, List<Signer> signers) throws CothorityCryptoException {
+    private Pair<ClientTransaction, List<InstanceId>> makeTx(List<Event> events, List<Signer> signers, List<Long> signerCtrs) throws CothorityCryptoException {
         List<Instruction> instrs = new ArrayList<>();
         List<InstanceId> keys = new ArrayList<>();
-        int idx = 0;
         for (Event e : events) {
             List<Argument> args = new ArrayList<>();
             args.add(new Argument("event", e.toProto().toByteArray()));
             Invoke invoke = new Invoke(ContractId, args);
-            Instruction instr = new Instruction(instance.getId(), Instruction.genNonce(), idx, events.size(), invoke);
-            instr.signBy(darcId, signers);
+            Instruction instr = new Instruction(instance.getId(), new ArrayList<>(signerCtrs), invoke);
             instrs.add(instr);
-            keys.add(instr.deriveId(""));
-            idx++;
+            signerCtrs = incrementCtrs(signerCtrs);
         }
         ClientTransaction tx = new ClientTransaction(instrs);
+        tx.signWith(signers);
+        for (Instruction instr : tx.getInstructions()) {
+            keys.add(instr.deriveId(""));
+        }
         return new Pair<>(tx, keys);
+    }
+
+    private static List<Long> incrementCtrs(List<Long> xs) {
+        List<Long> out = new ArrayList<>(xs);
+        for (int i = 0; i < out.size(); i++) {
+            out.set(i, out.get(i)+1);
+        }
+        return out;
     }
 }

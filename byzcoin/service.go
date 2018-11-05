@@ -596,7 +596,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	log.Lvlf2("%s Updating transactions for %x on index %v", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
 	_, _, scs := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
 
-	log.Lvlf3("%s Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
+	log.LLvlf3("%s Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
 	if err = st.StoreAll(scs, sb.Index); err != nil {
 		return err
 	}
@@ -1213,7 +1213,9 @@ clientTransactions:
 
 	// Store the result in the cache before returning.
 	merkleRoot = sstTemp.GetRoot()
-	s.stateChangeCache.update(scID, txOut.Hash(), merkleRoot, txOut, states)
+	if len(states) != 0 && len(txOut) != 0 {
+		s.stateChangeCache.update(scID, txOut.Hash(), merkleRoot, txOut, states)
+	}
 	return
 }
 

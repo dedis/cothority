@@ -266,7 +266,7 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 	}
 }
 
-// GetSignerCounters gets the signature counters. The counter must be set
+// GetSignerCounters gets the signer counters. The counter must be set
 // correctly in the transaction for it to be verified.
 func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, error) {
 	req := GetSignerCounters{

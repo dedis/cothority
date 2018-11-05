@@ -10,8 +10,6 @@ import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.Instruction;
 import ch.epfl.dedis.byzcoin.transaction.Invoke;
 import ch.epfl.dedis.lib.darc.DarcId;
-import ch.epfl.dedis.lib.darc.Request;
-import ch.epfl.dedis.lib.darc.Signature;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
@@ -21,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -44,10 +43,10 @@ public class ValueInstance {
      * @param value         the value to store in the instance
      * @throws CothorityException if something goes wrong
      */
-    public ValueInstance(ByzCoinRPC bc, DarcId spawnerDarcId, Signer spawnerSigner, byte[] value) throws CothorityException {
+    public ValueInstance(ByzCoinRPC bc, DarcId spawnerDarcId, Signer spawnerSigner, Long signerCtr, byte[] value) throws CothorityException {
         DarcInstance spawner = DarcInstance.fromByzCoin(bc, spawnerDarcId);
         List<Argument> args = new ArrayList<>();
-        instance = spawner.spawnInstanceAndWait(ContractId, spawnerSigner, args, 10).getInstance();
+        instance = spawner.spawnInstanceAndWait(ContractId, spawnerSigner, signerCtr, args, 10).getInstance();
         this.bc = bc;
         this.value = value;
     }
@@ -85,30 +84,19 @@ public class ValueInstance {
      * TODO: allow for evolution if the expression has more than one identity.
      *
      * @param newValue the value to replace the old value.
-     * @param owner    must have its identity in the "invoke:update" rule
-     * @param pos      position of the instruction in the ClientTransaction
-     * @param len      total number of instructions in the ClientTransaction
+     * @param signerCtr TODO
      * @return Instruction to be sent to byzcoin
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Instruction evolveValueInstruction(byte[] newValue, Signer owner, int pos, int len) throws CothorityCryptoException {
+    public Instruction evolveValueInstruction(byte[] newValue, Long signerCtr) {
         Invoke inv = new Invoke("update", ContractId, newValue);
-        Instruction inst = new Instruction(instance.getId(), Instruction.genNonce(), pos, len, inv);
-        try {
-            Request r = new Request(instance.getDarcId(), "invoke:update", inst.hash(),
-                    Arrays.asList(owner.getIdentity()), null);
-            logger.info("Signing: {}", Hex.printHexBinary(r.hash()));
-            Signature sign = new Signature(owner.sign(r.hash()), owner.getIdentity());
-            inst.setSignatures(Arrays.asList(sign));
-        } catch (Signer.SignRequestRejectedException e) {
-            throw new CothorityCryptoException(e.getMessage());
-        }
-        return inst;
+        return new Instruction(instance.getId(), Collections.singletonList(signerCtr), inv);
     }
 
-    public void evolveValue(byte[] newValue, Signer owner) throws CothorityException {
-        Instruction inst = evolveValueInstruction(newValue, owner, 0, 1);
+    public void evolveValue(byte[] newValue, Signer owner, Long ownerCtr) throws CothorityException {
+        Instruction inst = evolveValueInstruction(newValue, ownerCtr);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ct.signWith(Collections.singletonList(owner));
         bc.sendTransaction(ct);
     }
 
@@ -122,9 +110,10 @@ public class ValueInstance {
      * @param wait     how many blocks to wait for inclusion of the instruction
      * @throws CothorityException if something goes wrong
      */
-    public void evolveValueAndWait(byte[] newValue, Signer owner, int wait) throws CothorityException {
-        Instruction inst = evolveValueInstruction(newValue, owner, 0, 1);
+    public void evolveValueAndWait(byte[] newValue, Signer owner, Long ownerCtr, int wait) throws CothorityException {
+        Instruction inst = evolveValueInstruction(newValue, ownerCtr);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ct.signWith(Collections.singletonList(owner));
         bc.sendTransactionAndWait(ct, wait);
         value = newValue;
     }

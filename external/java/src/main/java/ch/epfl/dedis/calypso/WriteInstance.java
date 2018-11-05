@@ -38,10 +38,10 @@ public class WriteInstance {
      * @param wr      The WriteData object, to be stored in the instance.
      * @throws CothorityException if something goes wrong
      */
-    public WriteInstance(CalypsoRPC calypso, DarcId darcId, List<Signer> signers, WriteData wr) throws CothorityException {
+    public WriteInstance(CalypsoRPC calypso, DarcId darcId, List<Signer> signers, List<Long> signerCtrs, WriteData wr) throws CothorityException {
         this.calypso = calypso;
         this.lts = calypso.getLTS();
-        InstanceId id = spawnCalypsoWrite(wr, darcId, signers);
+        InstanceId id = spawnCalypsoWrite(wr, darcId, signers, signerCtrs);
         instance = getInstance(id);
     }
 
@@ -94,8 +94,8 @@ public class WriteInstance {
      * @return ReadInstance if successful
      * @throws CothorityException if something goes wrong
      */
-    public ReadInstance spawnCalypsoRead(CalypsoRPC calypso, List<Signer> readers) throws CothorityException {
-        return new ReadInstance(calypso, this, readers);
+    public ReadInstance spawnCalypsoRead(CalypsoRPC calypso, List<Signer> readers, List<Long> readerCtrs) throws CothorityException {
+        return new ReadInstance(calypso, this, readers, readerCtrs);
     }
 
     /**
@@ -113,13 +113,13 @@ public class WriteInstance {
     /**
      * Create a spawn instruction with a spawnCalypsoWrite request and send it to the ledger.
      */
-    private InstanceId spawnCalypsoWrite(WriteData req, DarcId darcID, List<Signer> signers) throws CothorityException {
+    private InstanceId spawnCalypsoWrite(WriteData req, DarcId darcID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         Argument arg = new Argument("write", req.getWrite().toByteArray());
         Spawn spawn = new Spawn(ContractId, Arrays.asList(arg));
-        Instruction instr = new Instruction(new InstanceId(darcID.getId()), Instruction.genNonce(), 0, 1, spawn);
-        instr.signBy(darcID, signers);
+        Instruction instr = new Instruction(new InstanceId(darcID.getId()), signerCtrs, spawn);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
+        tx.signWith(signers);
         calypso.sendTransactionAndWait(tx, 5);
 
         return instr.deriveId("");

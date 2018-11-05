@@ -43,9 +43,10 @@ public class ReadInstance {
      * @param signers Signers who are allowed to spawn a new instance.
      * @throws CothorityException if something goes wrong
      */
-    public ReadInstance(CalypsoRPC calypso, WriteInstance write, List<Signer> signers) throws CothorityException {
+    public ReadInstance(CalypsoRPC calypso, WriteInstance write, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         this.calypso = calypso;
-        ClientTransaction ctx = createCTX(write, signers, signers.get(0).getPublic());
+        ClientTransaction ctx = createCTX(write, signerCtrs, signers.get(0).getPublic());
+        ctx.signWith(signers);
         calypso.sendTransactionAndWait(ctx, 10);
         instance = getInstance(calypso, ctx.getInstructions().get(0).deriveId(""));
     }
@@ -61,9 +62,10 @@ public class ReadInstance {
      * @param Xc      is the key to which the dataEnc will be re-encrypted to
      * @throws CothorityException if something goes wrong
      */
-    public ReadInstance(CalypsoRPC calypso, WriteInstance write, List<Signer> signers, Point Xc) throws CothorityException {
+    public ReadInstance(CalypsoRPC calypso, WriteInstance write, List<Signer> signers, List<Long> signerCtrs, Point Xc) throws CothorityException {
         this.calypso = calypso;
-        ClientTransaction ctx = createCTX(write, signers, Xc);
+        ClientTransaction ctx = createCTX(write, signerCtrs, Xc);
+        ctx.signWith(signers);
         calypso.sendTransactionAndWait(ctx, 10);
         instance = getInstance(calypso, ctx.getInstructions().get(0).deriveId(""));
     }
@@ -127,16 +129,11 @@ public class ReadInstance {
     /**
      * Prepares a new transaction to create a read instance.
      *
-     * @param consumers Array of Signers
+     * @param consumerCtrs TODO
      * @param Xc        is the public key the dataEnc will be re-encrypted to
      * @return the ClientTransaction ready to be sent to ByzCoin.
-     * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    private ClientTransaction createCTX(WriteInstance write, List<Signer> consumers, Point Xc) throws CothorityCryptoException {
-        if (consumers.size() != 1) {
-            throw new CothorityCryptoException("Currently only one signer supported.");
-        }
-        Signer consumer = consumers.get(0);
+    private ClientTransaction createCTX(WriteInstance write, List<Long> consumerCtrs, Point Xc) {
         Instance writeInstance = write.getInstance();
 
         // Create the Calypso.Read structure
@@ -144,30 +141,21 @@ public class ReadInstance {
         List<Argument> args = new ArrayList<>();
         args.add(new Argument("read", read.toProto().toByteArray()));
         Spawn sp = new Spawn(ReadInstance.ContractId, args);
-        Instruction inst = new Instruction(writeInstance.getId(), Instruction.genNonce(), 0, 1, sp);
-        try {
-            Request r = new Request(writeInstance.getDarcId(), "spawn:" + ReadInstance.ContractId, inst.hash(),
-                    Arrays.asList(consumer.getIdentity()), null);
-            logger.info("Signing: {}", Hex.printHexBinary(r.hash()));
-            Signature sign = new Signature(consumer.sign(r.hash()), consumer.getIdentity());
-            inst.setSignatures(Arrays.asList(sign));
-        } catch (Signer.SignRequestRejectedException e) {
-            throw new CothorityCryptoException(e.getMessage());
-        }
+        Instruction inst = new Instruction(writeInstance.getId(), consumerCtrs, sp);
         return new ClientTransaction(Arrays.asList(inst));
     }
 
     /**
      * Create a spawn instruction with a read request and send it to the ledger.
      */
-    private InstanceId read(ReadData rr, DarcId darcID, List<Signer> signers) throws CothorityException {
+    private InstanceId read(ReadData rr, DarcId darcID, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         Argument arg = new Argument("read", rr.toProto().toByteArray());
 
         Spawn spawn = new Spawn(ContractId, Arrays.asList(arg));
-        Instruction instr = new Instruction(new InstanceId(darcID.getId()), Instruction.genNonce(), 0, 1, spawn);
-        instr.signBy(darcID, signers);
+        Instruction instr = new Instruction(new InstanceId(darcID.getId()), signerCtrs, spawn);
 
         ClientTransaction tx = new ClientTransaction(Arrays.asList(instr));
+        // TODO sign
         calypso.sendTransactionAndWait(tx, 5);
 
         return instr.deriveId("");

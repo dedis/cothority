@@ -1,5 +1,6 @@
 package ch.epfl.dedis.byzcoin.contracts;
 
+import ch.epfl.dedis.byzcoin.SignerCounters;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.byzcoin.ByzCoinRPC;
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
@@ -49,27 +51,38 @@ class EventlogTest {
             throw new CothorityCommunicationException("liveness check failed");
         }
 
-        el = new EventLogInstance(bc, genesisDarc.getId(), Arrays.asList(admin));
+        // Get the counter for the admin
+        SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
+        el = new EventLogInstance(bc, genesisDarc.getId(), Arrays.asList(admin), Collections.singletonList(adminCtrs.head()+1));
     }
 
     @Test
     void log() throws Exception {
+        // Get the counter for the admin
+        SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        adminCtrs.increment();
+
         Event e = new Event("hello", "goodbye");
-        InstanceId key = el.log(e, bc.getGenesisDarc().getBaseId(), Arrays.asList(admin));
+        InstanceId key = el.log(e, Arrays.asList(admin), adminCtrs.getCounters());
         Thread.sleep(5 * bc.getConfig().getBlockInterval().toMillis());
         Event loggedEvent = el.get(key);
         assertEquals(loggedEvent, e);
     }
 
     @Test
-    void testLogMore() throws Exception {
+    void logMore() throws Exception {
+        // Get the counter for the admin
+        SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
         int n = 50;
         List<InstanceId> keys = new ArrayList<>(n);
         Event event = new Event("login", "alice");
         for (int i = 0; i < n; i++) {
             // The timestamps in these event are all the same, but doing el.log takes time and it may not be possible to
             // add all the events. So we have to limit the number of events that we add.
-            keys.add(el.log(event, bc.getGenesisDarc().getBaseId(), Arrays.asList(admin)));
+            adminCtrs.increment();
+            keys.add(el.log(event, Arrays.asList(admin), adminCtrs.getCounters()));
         }
         boolean allOK = true;
         for (int i = 0; i < 4; i++) {
@@ -94,10 +107,14 @@ class EventlogTest {
     }
 
     @Test
-    void testSearch() throws Exception {
+    void search() throws Exception {
+        // Get the counter for the admin
+        SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+        adminCtrs.increment();
+
         long now = System.currentTimeMillis() * 1000 * 1000;
         Event event = new Event(now, "login", "alice");
-        el.log(event, bc.getGenesisDarc().getBaseId(), Arrays.asList(admin));
+        el.log(event, Arrays.asList(admin), adminCtrs.getCounters());
 
         Thread.sleep(5 * bc.getConfig().getBlockInterval().toMillis());
 

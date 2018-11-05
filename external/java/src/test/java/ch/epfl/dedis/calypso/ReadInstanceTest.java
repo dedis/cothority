@@ -15,6 +15,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -44,10 +45,12 @@ class ReadInstanceTest {
 
         String secret = "this is a secret";
         Document doc = new Document(secret.getBytes(), 16, null, genesisDarc.getBaseId());
-        w = new WriteInstance(calypso, genesisDarc.getId(), Arrays.asList(admin), doc.getWriteData(calypso.getLTS()));
+        w = new WriteInstance(calypso, genesisDarc.getId(),
+                Arrays.asList(admin), Collections.singletonList(1L),
+                doc.getWriteData(calypso.getLTS()));
         assertTrue(calypso.getProof(w.getInstance().getId()).matches());
 
-        r = new ReadInstance(calypso, w, Arrays.asList(admin));
+        r = new ReadInstance(calypso, w, Arrays.asList(admin), Collections.singletonList(2L));
         assertTrue(calypso.getProof(r.getInstance().getId()).matches());
     }
 
