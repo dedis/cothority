@@ -304,3 +304,55 @@ message GetSignerCounters {
 message GetSignerCountersResponse {
   repeated uint64 counters = 1 [packed=true];
 }
+
+// GetInstanceVersion is a request asking the service to fetch
+// the version of the given instance
+message GetInstanceVersion {
+  required bytes skipchainid = 1;
+  required bytes instanceid = 2;
+  required uint64 version = 3;
+}
+
+// GetLastInstanceVersion is request asking for the last version
+// of a given instance
+message GetLastInstanceVersion {
+  required bytes skipchainid = 1;
+  required bytes instanceid = 2;
+}
+
+// GetInstanceVersionResponse is the response that contains
+// the state change if it exists and the block index where
+// it has been applied
+message GetInstanceVersionResponse {
+  required StateChange statechange = 1;
+  required sint32 blockindex = 2;
+}
+
+// GetAllInstanceVersion is a request asking for the list of
+// state changes of a given instance
+message GetAllInstanceVersion {
+  required bytes skipchainid = 1;
+  required bytes instanceid = 2;
+}
+
+// GetAllInstanceVersionResponse is the response that contains
+// the list of state changes of a instance
+message GetAllInstanceVersionResponse {
+  repeated GetInstanceVersionResponse statechanges = 1;
+}
+
+// CheckStateChangeValidity is a request to get the list
+// of state changes belonging to the same block as the
+// targeted one to compute the hash
+message CheckStateChangeValidity {
+  required bytes skipchainid = 1;
+  required bytes instanceid = 2;
+  required uint64 version = 3;
+}
+
+// CheckStateChangeValidityResponse is the response with
+// the list of state changes so that the hash can be
+// compared against the one in the block
+message CheckStateChangeValidityResponse {
+  repeated StateChange statechanges = 1;
+}

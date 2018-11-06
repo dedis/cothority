@@ -43,6 +43,7 @@ func incrementSignerCounters(st ReadOnlyStateTrie, sigs []darc.Signature) (State
 			InstanceID:  publicVersionKey(id),
 			ContractID:  []byte{},
 			Value:       verBuf,
+			Version:     ver + 1,
 			DarcID:      darc.ID([]byte{}),
 		})
 	}

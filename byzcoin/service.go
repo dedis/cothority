@@ -511,6 +511,81 @@ query:
 	return
 }
 
+// GetInstanceVersion looks for the version of a given instance and responds
+// with the state change and the block index
+func (s *Service) GetInstanceVersion(req *GetInstanceVersion) (*GetInstanceVersionResponse, error) {
+	sce, ok, err := s.stateChangeStorage.getByVersion(req.InstanceID[:], req.Version, req.SkipChainID)
+	if err != nil {
+		return nil, err
+	} else if !ok {
+		return nil, errKeyNotSet
+	}
+
+	return &GetInstanceVersionResponse{
+		StateChange: sce.StateChange,
+		BlockIndex:  sce.BlockIndex,
+	}, nil
+}
+
+// GetLastInstanceVersion looks for the last version of an instance and
+// responds with the state change and the block when it hits
+func (s *Service) GetLastInstanceVersion(req *GetLastInstanceVersion) (*GetInstanceVersionResponse, error) {
+	sce, ok, err := s.stateChangeStorage.getLast(req.InstanceID[:], req.SkipChainID)
+	if err != nil {
+		return nil, err
+	} else if !ok {
+		return nil, errKeyNotSet
+	}
+
+	return &GetInstanceVersionResponse{
+		StateChange: sce.StateChange,
+		BlockIndex:  sce.BlockIndex,
+	}, nil
+}
+
+// GetAllInstanceVersion looks for all the state changes of an instance
+// and responds with both the state change and the block index for
+// each version
+func (s *Service) GetAllInstanceVersion(req *GetAllInstanceVersion) (res *GetAllInstanceVersionResponse, err error) {
+	sces, err := s.stateChangeStorage.getAll(req.InstanceID[:], req.SkipChainID)
+	if err != nil {
+		return nil, err
+	}
+
+	scs := make([]GetInstanceVersionResponse, len(sces))
+	for i, e := range sces {
+		scs[i].StateChange = e.StateChange
+		scs[i].BlockIndex = e.BlockIndex
+	}
+
+	return &GetAllInstanceVersionResponse{StateChanges: scs}, nil
+}
+
+// CheckStateChangeValidity gets the list of state changes belonging to the same
+// block as the targeted one so that a hash can be computed and compared to the
+// one stored in the block
+func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*CheckStateChangeValidityResponse, error) {
+	sce, ok, err := s.stateChangeStorage.getByVersion(req.InstanceID[:], req.Version, req.SkipChainID)
+	if !ok {
+		err = errKeyNotSet
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	sces, err := s.stateChangeStorage.getByBlock(req.SkipChainID, sce.BlockIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	scs := make([]StateChange, len(sces))
+	for i, e := range sces {
+		scs[i] = e.StateChange
+	}
+
+	return &CheckStateChangeValidityResponse{StateChanges: scs}, nil
+}
+
 // SetPropagationTimeout overrides the default propagation timeout that is used
 // when a new block is announced to the nodes as well as the skipchain
 // propagation timeout.
@@ -1588,6 +1663,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	// instruction, we need to get the version from the trie
 	vv := make(map[string]uint64)
 	for i, sc := range scs {
+		log.Lvlf2("%x %v", sc.InstanceID, sc.ContractID)
 		ver, ok := vv[string(sc.InstanceID)]
 		if !ok {
 			_, ver, _, _, err = st.GetValues(sc.InstanceID)
@@ -2008,6 +2084,7 @@ func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingState
 
 				s.stateChangeStorage.append(scs, sb)
 			}
+			// TODO: build counter state changes
 		}
 	}
 
@@ -2017,48 +2094,6 @@ func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingState
 	}
 
 	return nil, nil
-}
-
-// GetInstanceVersions gets the list of state changes for the given
-// instance and returns it
-func (s *Service) GetInstanceVersions(iid []byte, sb *skipchain.SkipBlock) (StateChanges, error) {
-	sce, err := s.stateChangeStorage.getAll(iid, sb)
-	if err != nil {
-		return nil, err
-	}
-
-	scs := make(StateChanges, len(sce))
-	for i, e := range sce {
-		scs[i] = e.StateChange
-	}
-
-	return scs, nil
-}
-
-// GetInstanceVersion looks for the specific version of the given
-// instance and returns the state change if it exists. Use the
-// bool return to know if the key hit
-func (s *Service) GetInstanceVersion(iid []byte, ver uint64, sb *skipchain.SkipBlock) (sc StateChange, ok bool, err error) {
-	sce, ok, err := s.stateChangeStorage.getByVersion(iid, ver, sb)
-	if err != nil || !ok {
-		return
-	}
-
-	sc = sce.StateChange
-	return
-}
-
-// GetLastInstanceVersion looks for an the last entry for a given
-// instance and returns the state change if it exists. Use the
-// bool return to know if the key hit
-func (s *Service) GetLastInstanceVersion(iid []byte, sb *skipchain.SkipBlock) (sc StateChange, ok bool, err error) {
-	sce, ok, err := s.stateChangeStorage.getLast(iid, sb)
-	if err != nil || !ok {
-		return
-	}
-
-	sc = sce.StateChange
-	return
 }
 
 var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+$`)
@@ -2083,13 +2118,21 @@ func newService(c *onet.Context) (onet.Service, error) {
 		streamingMan:           streamingManager{},
 		closed:                 true,
 	}
-	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
-		s.GetProof, s.CheckAuthorization,
+	err := s.RegisterHandlers(
+		s.CreateGenesisBlock,
+		s.AddTransaction,
+		s.GetProof,
+		s.CheckAuthorization,
 		s.GetSignerCounters,
 		s.DownloadState,
-	); err != nil {
+		s.GetInstanceVersion,
+		s.GetLastInstanceVersion,
+		s.GetAllInstanceVersion,
+		s.CheckStateChangeValidity)
+	if err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
+
 	if err := s.RegisterStreamingHandlers(s.StreamTransactions); err != nil {
 		log.ErrFatal(err, "Couldn't register streaming messages")
 	}
@@ -2104,7 +2147,6 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s.skService().RegisterStoreSkipblockCallback(s.updateTrieCallback)
 
 	// Register the view-change cosi protocols.
-	var err error
 	_, err = s.ProtocolRegister(viewChangeSubFtCosi, func(n *onet.TreeNodeInstance) (onet.ProtocolInstance, error) {
 		return cosiprotocol.NewSubFtCosi(n, s.verifyViewChange, cothority.Suite)
 	})

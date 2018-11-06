@@ -1693,9 +1693,8 @@ func TestService_StateChangeStorage(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	n := 10
+	n := 2
 	iid := genID()
-
 	fakeID := genID().Slice()
 	contractID := "stateShangeCacheTest"
 	contract := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
@@ -1733,23 +1732,45 @@ func TestService_StateChangeStorage(t *testing.T) {
 	proof := s.waitProofWithIdx(t, iid[:], 0)
 
 	for _, service := range s.services {
-		scs, err := service.GetInstanceVersions(iid[:], &proof.Latest)
+		res, err := service.GetAllInstanceVersion(&GetAllInstanceVersion{
+			InstanceID:  iid,
+			SkipChainID: proof.Latest.SkipChainID(),
+		})
 
 		require.Nil(t, err)
-		require.Equal(t, n*4, len(scs))
+		require.Equal(t, n*4, len(res.StateChanges))
 
 		for i := 0; i < n*4; i++ {
-			sc, ok, err := service.GetInstanceVersion(iid[:], uint64(i), &proof.Latest)
+			sc, err := service.GetInstanceVersion(&GetInstanceVersion{
+				InstanceID:  iid,
+				Version:     uint64(i),
+				SkipChainID: proof.Latest.SkipChainID(),
+			})
 			require.Nil(t, err)
-			require.True(t, ok)
-			require.Equal(t, uint64(i), sc.Version)
-			require.Equal(t, uint64(i), scs[i].Version)
+			require.Equal(t, uint64(i), sc.StateChange.Version)
+			require.Equal(t, uint64(i), res.StateChanges[i].StateChange.Version)
+
+			res, err := service.CheckStateChangeValidity(&CheckStateChangeValidity{
+				SkipChainID: proof.Latest.SkipChainID(),
+				InstanceID:  iid,
+				Version:     uint64(i),
+			})
+			log.Lvlf2("%d", len(res.StateChanges))
+			require.Nil(t, err)
+
+			var header DataHeader
+			err = protobuf.DecodeWithConstructors(proof.Latest.Data, &header, network.DefaultConstructors(cothority.Suite))
+			require.Nil(t, err)
+
+			require.Equal(t, StateChanges(res.StateChanges).Hash(), header.StateChangesHash)
 		}
 
-		sc, ok, err := service.GetLastInstanceVersion(iid[:], &proof.Latest)
+		sc, err := service.GetLastInstanceVersion(&GetLastInstanceVersion{
+			InstanceID:  iid,
+			SkipChainID: proof.Latest.SkipChainID(),
+		})
 		require.Nil(t, err)
-		require.True(t, ok)
-		require.Equal(t, uint64(n*4-1), sc.Version)
+		require.Equal(t, uint64(n*4-1), sc.StateChange.Version)
 	}
 }
 
@@ -1829,13 +1850,13 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	scs, err := s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis)
+	scs, err := s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis.SkipChainID())
 	require.Nil(t, err)
 	require.Equal(t, 1, len(scs))
 
 	s.service().trySyncAll()
 
-	scs, err = s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis)
+	scs, err = s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis.SkipChainID())
 	require.Nil(t, err)
 	require.Equal(t, n+1, len(scs))
 	require.Equal(t, uint64(n), scs[n].StateChange.Version)

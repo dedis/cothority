@@ -27,8 +27,25 @@ var errLengthInstanceID = errors.New("InstanceID must have 32 bytes")
 // contains the state change and the block index
 type StateChangeEntry struct {
 	StateChange StateChange
+	TxIndex     int
 	BlockIndex  int
 	Timestamp   time.Time
+}
+
+// StateChangeEntries is an array of StateChangeEntry and can be
+// sorted to restore the transaction order
+type StateChangeEntries []StateChangeEntry
+
+func (sces StateChangeEntries) Len() int {
+	return len(sces)
+}
+
+func (sces StateChangeEntries) Less(i, j int) bool {
+	return sces[i].TxIndex < sces[j].TxIndex
+}
+
+func (sces StateChangeEntries) Swap(i, j int) {
+	sces[i], sces[j] = sces[j], sces[i]
 }
 
 // keyTime stores information to keep track of the age of the
@@ -305,7 +322,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 		b := s.getBucket(tx, sb.SkipChainID())
 
 		// append each list of state changes (or create the entry)
-		for _, sc := range scs {
+		for i, sc := range scs {
 			if len(sc.InstanceID) != prefixLength {
 				// as we use it as a prefix, all must have the same length
 				return errLengthInstanceID
@@ -319,6 +336,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 			now := time.Now()
 			buf, err := protobuf.Encode(&StateChangeEntry{
 				StateChange: sc,
+				TxIndex:     i,
 				BlockIndex:  sb.Index,
 				Timestamp:   now,
 			})
@@ -360,13 +378,13 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 }
 
 // This will return the list of state changes for the given instance
-func (s *stateChangeStorage) getAll(iid []byte, sb *skipchain.SkipBlock) (entries []StateChangeEntry, err error) {
+func (s *stateChangeStorage) getAll(iid []byte, sid skipchain.SkipBlockID) (entries []StateChangeEntry, err error) {
 	if len(iid) != prefixLength {
 		return nil, errLengthInstanceID
 	}
 
 	err = s.db.View(func(tx *bolt.Tx) error {
-		b := s.getBucket(tx, sb.SkipChainID())
+		b := s.getBucket(tx, sid)
 		if b == nil {
 			// Nothing yet stored for this instance
 			return nil
@@ -392,7 +410,7 @@ func (s *stateChangeStorage) getAll(iid []byte, sb *skipchain.SkipBlock) (entrie
 // This will return the state change entry for the given instance and version.
 // Use the bool returned value to check if the version exists
 func (s *stateChangeStorage) getByVersion(iid []byte,
-	ver uint64, sb *skipchain.SkipBlock) (sce StateChangeEntry, ok bool, err error) {
+	ver uint64, sid skipchain.SkipBlockID) (sce StateChangeEntry, ok bool, err error) {
 	if len(iid) != prefixLength {
 		err = errLengthInstanceID
 		return
@@ -407,7 +425,7 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 	prefix := key[:prefixLength+versionLength]
 
 	err = s.db.View(func(tx *bolt.Tx) error {
-		b := s.getBucket(tx, sb.SkipChainID())
+		b := s.getBucket(tx, sid)
 
 		c := b.Cursor()
 		k, v := c.Seek(prefix)
@@ -428,12 +446,12 @@ func (s *stateChangeStorage) getByVersion(iid []byte,
 
 // getByBlock looks for the state changes associated with a given
 // skipblock
-func (s *stateChangeStorage) getByBlock(sb *skipchain.SkipBlock) (entries []StateChangeEntry, err error) {
+func (s *stateChangeStorage) getByBlock(sid skipchain.SkipBlockID, idx int) (entries StateChangeEntries, err error) {
 	err = s.db.View(func(tx *bolt.Tx) error {
-		b := s.getBucket(tx, sb.SkipChainID())
+		b := s.getBucket(tx, sid)
 
 		var suffix bytes.Buffer
-		binary.Write(&suffix, binary.BigEndian, int64(sb.Index))
+		binary.Write(&suffix, binary.BigEndian, int64(idx))
 
 		c := b.Cursor()
 		for k, v := c.First(); k != nil; k, v = c.Next() {
@@ -451,19 +469,20 @@ func (s *stateChangeStorage) getByBlock(sb *skipchain.SkipBlock) (entries []Stat
 		return nil
 	})
 
+	sort.Sort(entries)
 	return
 }
 
 // getLast looks for the last version of a given instance and return the entry. Use
 // the bool value to know if there is a hit or not.
-func (s *stateChangeStorage) getLast(iid []byte, sb *skipchain.SkipBlock) (sce StateChangeEntry, ok bool, err error) {
+func (s *stateChangeStorage) getLast(iid []byte, sid skipchain.SkipBlockID) (sce StateChangeEntry, ok bool, err error) {
 	if len(iid) != prefixLength {
 		err = errLengthInstanceID
 		return
 	}
 
 	err = s.db.View(func(tx *bolt.Tx) error {
-		b := s.getBucket(tx, sb.SkipChainID())
+		b := s.getBucket(tx, sid)
 		c := b.Cursor()
 
 		// Seek the next instance ID and take a step back

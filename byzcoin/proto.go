@@ -324,3 +324,55 @@ type GetSignerCounters struct {
 type GetSignerCountersResponse struct {
 	Counters []uint64
 }
+
+// GetInstanceVersion is a request asking the service to fetch
+// the version of the given instance
+type GetInstanceVersion struct {
+	SkipChainID skipchain.SkipBlockID
+	InstanceID  InstanceID
+	Version     uint64
+}
+
+// GetLastInstanceVersion is request asking for the last version
+// of a given instance
+type GetLastInstanceVersion struct {
+	SkipChainID skipchain.SkipBlockID
+	InstanceID  InstanceID
+}
+
+// GetInstanceVersionResponse is the response that contains
+// the state change if it exists and the block index where
+// it has been applied
+type GetInstanceVersionResponse struct {
+	StateChange StateChange
+	BlockIndex  int
+}
+
+// GetAllInstanceVersion is a request asking for the list of
+// state changes of a given instance
+type GetAllInstanceVersion struct {
+	SkipChainID skipchain.SkipBlockID
+	InstanceID  InstanceID
+}
+
+// GetAllInstanceVersionResponse is the response that contains
+// the list of state changes of a instance
+type GetAllInstanceVersionResponse struct {
+	StateChanges []GetInstanceVersionResponse
+}
+
+// CheckStateChangeValidity is a request to get the list
+// of state changes belonging to the same block as the
+// targeted one to compute the hash
+type CheckStateChangeValidity struct {
+	SkipChainID skipchain.SkipBlockID
+	InstanceID  InstanceID
+	Version     uint64
+}
+
+// CheckStateChangeValidityResponse is the response with
+// the list of state changes so that the hash can be
+// compared against the one in the block
+type CheckStateChangeValidityResponse struct {
+	StateChanges []StateChange
+}
