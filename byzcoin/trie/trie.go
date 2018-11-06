@@ -6,18 +6,19 @@ import (
 	"errors"
 )
 
-// Trie implements the merkle prefix tree described in the coniks paper.
+// Trie implements the Merkle prefix tree described in the coniks paper.
 type Trie struct {
 	nonce []byte
 	db    DB
 	// We need to control the traversal during testing, so it's important
 	// to have a way to specify an actual key for traversal instead of the
 	// hash of it which we cannot predict. So we introduce the noHashKey
-	// flag, which should only be used in the unit test.
+	// flag, which should only be used in the unit test. (There is a copy of
+	// it in Proof as well.)
 	noHashKey bool
 }
 
-// LoadTrie loads the trie from a boltDB database, it must exist otherwise an
+// LoadTrie loads the trie from a BoltDB database, it must exist otherwise an
 // error is returned. It does not check the consistency after loading the
 // database. If that is required, called IsValid.
 func LoadTrie(db DB) (*Trie, error) {

@@ -1,6 +1,5 @@
 Some of these are manually managed. Search for "// MANUAL" to see which ones.
 Currently the list of manual ones are:
-* cisc.proto
 * network.proto
 * onet.proto
 * skipchain.proto

@@ -7,20 +7,6 @@ import (
 	"fmt"
 )
 
-// Proof contains an inclusion/absence proof for a key.
-type Proof struct {
-	Interiors []interiorNode
-	Leaf      leafNode
-	Empty     emptyNode
-	Nonce     []byte
-
-	// We need to control the traversal during testing, so it's important
-	// to have a way to specify an actual key for traversal instead of the
-	// hash of it which we cannot predict. So we introduce the noHashKey
-	// flag, which should only be used in the unit test.
-	noHashKey bool
-}
-
 func (p *Proof) String() string {
 	var out string
 	out += fmt.Sprintf("Nonce: %x", p.Nonce)
