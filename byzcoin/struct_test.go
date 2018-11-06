@@ -12,6 +12,50 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestStateChangeStorage_Init(t *testing.T) {
+	scs, name := generateDB(t)
+	defer os.Remove(name)
+
+	n := 3
+	k := 10
+
+	size := 0
+	sbs := make([]*skipchain.SkipBlock, n)
+	for i := range sbs {
+		sbs[i] = skipchain.NewSkipBlock()
+		sbs[i].Data = []byte{byte(i)}
+		sbs[i].Hash = sbs[i].CalculateHash()
+	}
+
+	err := scs.db.Update(func(tx *bolt.Tx) error {
+		for i := 0; i < n; i++ {
+			b := tx.Bucket(scs.bucket)
+
+			scb, err := b.CreateBucketIfNotExists(sbs[i].Hash)
+			if err != nil {
+				return err
+			}
+
+			for j := 0; j < k; j++ {
+				key := make([]byte, 48)
+				key[47] = byte(j)
+
+				d := GenNonce()
+				scb.Put(key, d[:])
+				size += len(d)
+			}
+		}
+
+		return nil
+	})
+	require.Nil(t, err)
+
+	indices, err := scs.init()
+	require.Nil(t, err)
+	require.Equal(t, k, indices[string(sbs[0].Hash)])
+	require.Equal(t, size, scs.size)
+}
+
 func createBlock() *skipchain.SkipBlock {
 	sb := skipchain.NewSkipBlock()
 	nonce := GenNonce()

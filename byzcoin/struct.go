@@ -85,6 +85,51 @@ func newStateChangeStorage(c *onet.Context) *stateChangeStorage {
 	}
 }
 
+// init reads the db to recalculate the size and create a map
+// of the last known block indices for each skipchain
+func (s *stateChangeStorage) init() (map[string]int, error) {
+	s.size = 0
+	indices := make(map[string]int)
+
+	err := s.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(s.bucket)
+		if b == nil {
+			return errors.New("Missing bucket")
+		}
+
+		// Each pair at this level is a bucket assigned to a skipchain
+		return b.ForEach(func(scid, v []byte) error {
+			scb := b.Bucket(scid)
+			if scb == nil {
+				return nil
+			}
+
+			var lastIndex int64
+
+			err := scb.ForEach(func(k, v []byte) error {
+				buf := bytes.NewBuffer(k[prefixLength+versionLength:])
+				var idx int64
+				err := binary.Read(buf, binary.BigEndian, &idx)
+				if err != nil {
+					return err
+				}
+
+				if idx > lastIndex {
+					lastIndex = idx
+				}
+
+				s.size += len(v)
+				return nil
+			})
+
+			indices[string(scid)] = int(lastIndex + 1)
+			return err
+		})
+	})
+
+	return indices, err
+}
+
 // getBucket gets the bucket for the given skipchain
 func (s *stateChangeStorage) getBucket(tx *bolt.Tx, sid skipchain.SkipBlockID) *bolt.Bucket {
 	b := tx.Bucket(s.bucket)
@@ -443,6 +488,42 @@ func (s *stateChangeStorage) getLast(iid []byte, sb *skipchain.SkipBlock) (sce S
 	})
 
 	return
+}
+
+func (s *stateChangeStorage) getStateTrie(scid skipchain.SkipBlockID) (*stagingStateTrie, error) {
+	nonce := GenNonce()
+	sst, err := newMemStagingStateTrie(nonce[:])
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.db.View(func(tx *bolt.Tx) error {
+		b := s.getBucket(tx, scid)
+		if b == nil {
+			// nothing so we return an empty trie
+			return nil
+		}
+
+		c := b.Cursor()
+
+		var sce StateChangeEntry
+		for k, v := c.Last(); k != nil; k, v = c.Prev() {
+			err := protobuf.Decode(v, &sce)
+			if err != nil {
+				return err
+			}
+
+			sst.StoreAll(StateChanges{sce.StateChange})
+
+			// Move to the oldest version of the same instance
+			// (i.e. the first element after the last of the previous instance)
+			c.Seek(k[:prefixLength])
+		}
+
+		return nil
+	})
+
+	return sst, err
 }
 
 // SafeAdd will add a to the value of the coin if there will be no

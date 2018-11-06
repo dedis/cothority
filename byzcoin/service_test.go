@@ -5,9 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/binary"
 	"errors"
-	"io/ioutil"
 	"math"
-	"os"
 	"testing"
 	"time"
 
@@ -1759,38 +1757,88 @@ func TestService_StateChangeCatchUp(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
-	require.Nil(t, err)
-	_, err = s.service().AddTransaction(&AddTxRequest{
-		Version:     CurrentVersion,
-		SkipchainID: s.genesis.SkipChainID(),
-		Transaction: tx1,
+	n := 5
+	contractID := "stateShangeCacheTest"
+	contract := func(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, c []Coin) ([]StateChange, []Coin, error) {
+		// Check the state trie is created from the known global state
+		_, ver, _, _, _ := cdb.GetValues(inst.Hash())
+		iid := inst.Hash()
+		if !bytes.Equal(inst.InstanceID.Slice(), s.darc.GetBaseID()) {
+			iid = inst.InstanceID.Slice()
+		}
+		sc1 := StateChange{
+			InstanceID:  iid,
+			ContractID:  []byte(contractID),
+			StateAction: Create,
+			Version:     ver + 1,
+		}
+		return []StateChange{sc1}, []Coin{}, nil
+	}
+	for _, s := range s.hosts {
+		RegisterContract(s, contractID, contract)
+	}
+
+	createTx := func(iid []byte, counter uint64, wait int) *Instruction {
+		instr := Instruction{
+			InstanceID:    NewInstanceID(iid),
+			Spawn:         &Spawn{ContractID: contractID},
+			SignerCounter: []uint64{counter},
+		}
+		tx := ClientTransaction{Instructions: Instructions{instr}}
+		tx.InstructionsHash = tx.Instructions.Hash()
+		err := tx.Instructions[0].SignWith(tx.InstructionsHash, s.signer)
+		require.Nil(t, err)
+
+		_, err = s.service().AddTransaction(&AddTxRequest{
+			Version:       CurrentVersion,
+			SkipchainID:   s.genesis.SkipChainID(),
+			Transaction:   tx,
+			InclusionWait: wait,
+		})
+		require.Nil(t, err)
+
+		return &instr
+	}
+
+	instr := createTx(s.darc.GetBaseID(), uint64(1), 1)
+
+	for i := 0; i < n-1; i++ {
+		// add transactions that must be recreated
+		createTx(instr.Hash(), uint64(i+1), 0)
+	}
+	createTx(instr.Hash(), uint64(n), 1)
+
+	// Remove some entries to check it will recreate them
+	err := s.service().stateChangeStorage.db.Update(func(tx *bolt.Tx) error {
+		b := s.service().stateChangeStorage.getBucket(tx, s.genesis.SkipChainID())
+		if b == nil {
+			return errors.New("missing bucket")
+		}
+
+		c := b.Cursor()
+		// Remove entries associated with the second block
+		for k, _ := c.First(); k != nil; k, _ = c.Next() {
+			if k[len(k)-1] == byte(2) {
+				err := c.Delete()
+				if err != nil {
+					return err
+				}
+			}
+		}
+		return nil
 	})
 	require.Nil(t, err)
 
-	proof := s.waitProofWithIdx(t, tx1.Instructions[0].Hash(), 0)
-
-	// reset the storage DB
-	tmpDB, err := ioutil.TempFile("", "tmpDB")
+	scs, err := s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis)
 	require.Nil(t, err)
-	tmpDB.Close()
-	defer os.Remove(tmpDB.Name())
-
-	db, err := bolt.Open(tmpDB.Name(), 0600, nil)
-	require.Nil(t, err)
-	s.service().stateChangeStorage.db = db
-
-	err = db.Update(func(tx *bolt.Tx) error {
-		_, err := tx.CreateBucket(s.service().stateChangeStorage.bucket)
-		return err
-	})
-	require.Nil(t, err)
+	require.Equal(t, 1, len(scs))
 
 	s.service().trySyncAll()
 
-	scs, err := s.service().stateChangeStorage.getAll(tx1.Instructions[0].Hash(), &proof.Latest)
+	scs, err = s.service().stateChangeStorage.getAll(instr.Hash(), s.genesis)
 	require.Nil(t, err)
-	require.Equal(t, 1, len(scs))
+	require.Equal(t, n+1, len(scs))
+	require.Equal(t, uint64(n), scs[n].StateChange.Version)
 }
 
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {

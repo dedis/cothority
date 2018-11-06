@@ -1580,8 +1580,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	// Now we call the contract function with the data of the key.
 	log.Lvlf3("%s Calling contract '%s'", s.ServerIdentity(), contractID)
 	scs, cout, err = contract(st, instr, ctxHash, cin)
-	if err != nil || instr.InstanceID == [32]byte{} {
-		// The config contract is ignore for the versioning
+	if err != nil {
 		return
 	}
 
@@ -1919,6 +1918,14 @@ func (s *Service) trySyncAll() {
 		return
 	}
 
+	// Init the state change storage and get the last
+	// block index for each chain
+	indices, err := s.stateChangeStorage.init()
+	if err != nil {
+		log.Error(s.ServerIdentity(), err)
+		return
+	}
+
 	for _, scID := range gasr.IDs {
 		sb, err := s.db().GetLatestByID(scID)
 		if err != nil {
@@ -1930,21 +1937,28 @@ func (s *Service) trySyncAll() {
 			log.Error(s.ServerIdentity(), err)
 		}
 
-		txs, _, err := s.getBlockTx(sb.SkipChainID())
+		// the MT root is not checked so we don't need the correct nonce
+		sst, err := s.stateChangeStorage.getStateTrie(sb.SkipChainID())
 		if err != nil {
 			log.Error(s.ServerIdentity(), err)
 		}
 
-		nonce, err := s.loadNonceFromTxs(txs)
-		if err != nil {
-			log.Error(s.ServerIdentity(), err)
+		index, ok := indices[string(sb.SkipChainID())]
+		if !ok {
+			// from the beginning
+			index = 0
 		}
 
-		sst, err := newMemStagingStateTrie(nonce)
-		_, err = s.buildStateChanges(sb.SkipChainID(), sst, []Coin{})
-		if err != nil {
-			log.Error(s.ServerIdentity(), err)
-		}
+		// start from the last known skipblock
+		req := &skipchain.GetSingleBlockByIndex{Genesis: sb.SkipChainID(), Index: index}
+		lksb, err := s.skService().GetSingleBlockByIndex(req)
+		if lksb != nil {
+			log.Lvlf2("Start creating state changes for skipchain %x", sb.SkipChainID())
+			_, err = s.buildStateChanges(lksb.SkipBlock.Hash, sst, []Coin{})
+			if err != nil {
+				log.Error(s.ServerIdentity(), err)
+			}
+		} // else there is no new block
 	}
 }
 
@@ -1968,9 +1982,7 @@ func (s *Service) getBlockTx(sid skipchain.SkipBlockID) (TxResults, *skipchain.S
 // buildStateChanges recursively gets the TXs of a skipchain's blocks and populate
 // the state changes storage by restoring them from the TXs. We don't need to worry
 // about overriding thanks to the key generation.
-// TODO: optimization: read from the db and sync from the last known state change
 func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingStateTrie, cin []Coin) ([]Coin, error) {
-	log.Lvlf2("Start creating state changes for skipchain %x", sid)
 	txs, sb, err := s.getBlockTx(sid)
 	if err != nil {
 		return nil, err
