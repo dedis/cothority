@@ -57,7 +57,7 @@ message Questionnaire {
 // that participated in it.
 message Reply {
   // Sum is the sum of all replies for a given index of the questions.
-  repeated sint32 sum = 1;
+  repeated sint32 sum = 1 [packed=true];
   // TODO: replace this with a linkable ring signature
   repeated bytes users = 2;
 }
@@ -90,7 +90,7 @@ message AnswerQuestionnaire {
   // QuestID is the ID of the questionnaire to be replied.
   required bytes questid = 1;
   // Replies is a slice of answers, up to Questionnaire.Replies
-  repeated sint32 replies = 2;
+  repeated sint32 replies = 2 [packed=true];
   // Account where to put the reward to.
   required bytes account = 3;
 }
@@ -153,9 +153,9 @@ message ListMessagesReply {
   // MsgIDs of the messages
   repeated bytes msgids = 2;
   // Balances
-  repeated uint64 balances = 3;
+  repeated uint64 balances = 3 [packed=true];
   // Rewards
-  repeated uint64 rewards = 4;
+  repeated uint64 rewards = 4 [packed=true];
   // PartyIIDs
   repeated bytes partyiids = 5;
 }

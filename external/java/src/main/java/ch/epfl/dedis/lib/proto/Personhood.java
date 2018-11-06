@@ -4178,7 +4178,7 @@ public final class Personhood {
      * Sum is the sum of all replies for a given index of the questions.
      * </pre>
      *
-     * <code>repeated sint32 sum = 1;</code>
+     * <code>repeated sint32 sum = 1 [packed = true];</code>
      */
     java.util.List<java.lang.Integer> getSumList();
     /**
@@ -4186,7 +4186,7 @@ public final class Personhood {
      * Sum is the sum of all replies for a given index of the questions.
      * </pre>
      *
-     * <code>repeated sint32 sum = 1;</code>
+     * <code>repeated sint32 sum = 1 [packed = true];</code>
      */
     int getSumCount();
     /**
@@ -4194,7 +4194,7 @@ public final class Personhood {
      * Sum is the sum of all replies for a given index of the questions.
      * </pre>
      *
-     * <code>repeated sint32 sum = 1;</code>
+     * <code>repeated sint32 sum = 1 [packed = true];</code>
      */
     int getSum(int index);
 
@@ -4343,7 +4343,7 @@ public final class Personhood {
      * Sum is the sum of all replies for a given index of the questions.
      * </pre>
      *
-     * <code>repeated sint32 sum = 1;</code>
+     * <code>repeated sint32 sum = 1 [packed = true];</code>
      */
     public java.util.List<java.lang.Integer>
         getSumList() {
@@ -4354,7 +4354,7 @@ public final class Personhood {
      * Sum is the sum of all replies for a given index of the questions.
      * </pre>
      *
-     * <code>repeated sint32 sum = 1;</code>
+     * <code>repeated sint32 sum = 1 [packed = true];</code>
      */
     public int getSumCount() {
       return sum_.size();
@@ -4364,11 +4364,12 @@ public final class Personhood {
      * Sum is the sum of all replies for a given index of the questions.
      * </pre>
      *
-     * <code>repeated sint32 sum = 1;</code>
+     * <code>repeated sint32 sum = 1 [packed = true];</code>
      */
     public int getSum(int index) {
       return sum_.get(index);
     }
+    private int sumMemoizedSerializedSize = -1;
 
     public static final int USERS_FIELD_NUMBER = 2;
     private java.util.List<com.google.protobuf.ByteString> users_;
@@ -4418,8 +4419,13 @@ public final class Personhood {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
+      if (getSumList().size() > 0) {
+        output.writeUInt32NoTag(10);
+        output.writeUInt32NoTag(sumMemoizedSerializedSize);
+      }
       for (int i = 0; i < sum_.size(); i++) {
-        output.writeSInt32(1, sum_.get(i));
+        output.writeSInt32NoTag(sum_.get(i));
       }
       for (int i = 0; i < users_.size(); i++) {
         output.writeBytes(2, users_.get(i));
@@ -4440,7 +4446,12 @@ public final class Personhood {
             .computeSInt32SizeNoTag(sum_.get(i));
         }
         size += dataSize;
-        size += 1 * getSumList().size();
+        if (!getSumList().isEmpty()) {
+          size += 1;
+          size += com.google.protobuf.CodedOutputStream
+              .computeInt32SizeNoTag(dataSize);
+        }
+        sumMemoizedSerializedSize = dataSize;
       }
       {
         int dataSize = 0;
@@ -4779,7 +4790,7 @@ public final class Personhood {
        * Sum is the sum of all replies for a given index of the questions.
        * </pre>
        *
-       * <code>repeated sint32 sum = 1;</code>
+       * <code>repeated sint32 sum = 1 [packed = true];</code>
        */
       public java.util.List<java.lang.Integer>
           getSumList() {
@@ -4790,7 +4801,7 @@ public final class Personhood {
        * Sum is the sum of all replies for a given index of the questions.
        * </pre>
        *
-       * <code>repeated sint32 sum = 1;</code>
+       * <code>repeated sint32 sum = 1 [packed = true];</code>
        */
       public int getSumCount() {
         return sum_.size();
@@ -4800,7 +4811,7 @@ public final class Personhood {
        * Sum is the sum of all replies for a given index of the questions.
        * </pre>
        *
-       * <code>repeated sint32 sum = 1;</code>
+       * <code>repeated sint32 sum = 1 [packed = true];</code>
        */
       public int getSum(int index) {
         return sum_.get(index);
@@ -4810,7 +4821,7 @@ public final class Personhood {
        * Sum is the sum of all replies for a given index of the questions.
        * </pre>
        *
-       * <code>repeated sint32 sum = 1;</code>
+       * <code>repeated sint32 sum = 1 [packed = true];</code>
        */
       public Builder setSum(
           int index, int value) {
@@ -4824,7 +4835,7 @@ public final class Personhood {
        * Sum is the sum of all replies for a given index of the questions.
        * </pre>
        *
-       * <code>repeated sint32 sum = 1;</code>
+       * <code>repeated sint32 sum = 1 [packed = true];</code>
        */
       public Builder addSum(int value) {
         ensureSumIsMutable();
@@ -4837,7 +4848,7 @@ public final class Personhood {
        * Sum is the sum of all replies for a given index of the questions.
        * </pre>
        *
-       * <code>repeated sint32 sum = 1;</code>
+       * <code>repeated sint32 sum = 1 [packed = true];</code>
        */
       public Builder addAllSum(
           java.lang.Iterable<? extends java.lang.Integer> values) {
@@ -4852,7 +4863,7 @@ public final class Personhood {
        * Sum is the sum of all replies for a given index of the questions.
        * </pre>
        *
-       * <code>repeated sint32 sum = 1;</code>
+       * <code>repeated sint32 sum = 1 [packed = true];</code>
        */
       public Builder clearSum() {
         sum_ = java.util.Collections.emptyList();
@@ -7335,7 +7346,7 @@ public final class Personhood {
      * Replies is a slice of answers, up to Questionnaire.Replies
      * </pre>
      *
-     * <code>repeated sint32 replies = 2;</code>
+     * <code>repeated sint32 replies = 2 [packed = true];</code>
      */
     java.util.List<java.lang.Integer> getRepliesList();
     /**
@@ -7343,7 +7354,7 @@ public final class Personhood {
      * Replies is a slice of answers, up to Questionnaire.Replies
      * </pre>
      *
-     * <code>repeated sint32 replies = 2;</code>
+     * <code>repeated sint32 replies = 2 [packed = true];</code>
      */
     int getRepliesCount();
     /**
@@ -7351,7 +7362,7 @@ public final class Personhood {
      * Replies is a slice of answers, up to Questionnaire.Replies
      * </pre>
      *
-     * <code>repeated sint32 replies = 2;</code>
+     * <code>repeated sint32 replies = 2 [packed = true];</code>
      */
     int getReplies(int index);
 
@@ -7515,7 +7526,7 @@ public final class Personhood {
      * Replies is a slice of answers, up to Questionnaire.Replies
      * </pre>
      *
-     * <code>repeated sint32 replies = 2;</code>
+     * <code>repeated sint32 replies = 2 [packed = true];</code>
      */
     public java.util.List<java.lang.Integer>
         getRepliesList() {
@@ -7526,7 +7537,7 @@ public final class Personhood {
      * Replies is a slice of answers, up to Questionnaire.Replies
      * </pre>
      *
-     * <code>repeated sint32 replies = 2;</code>
+     * <code>repeated sint32 replies = 2 [packed = true];</code>
      */
     public int getRepliesCount() {
       return replies_.size();
@@ -7536,11 +7547,12 @@ public final class Personhood {
      * Replies is a slice of answers, up to Questionnaire.Replies
      * </pre>
      *
-     * <code>repeated sint32 replies = 2;</code>
+     * <code>repeated sint32 replies = 2 [packed = true];</code>
      */
     public int getReplies(int index) {
       return replies_.get(index);
     }
+    private int repliesMemoizedSerializedSize = -1;
 
     public static final int ACCOUNT_FIELD_NUMBER = 3;
     private com.google.protobuf.ByteString account_;
@@ -7587,11 +7599,16 @@ public final class Personhood {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       if (((bitField0_ & 0x00000001) == 0x00000001)) {
         output.writeBytes(1, questid_);
       }
+      if (getRepliesList().size() > 0) {
+        output.writeUInt32NoTag(18);
+        output.writeUInt32NoTag(repliesMemoizedSerializedSize);
+      }
       for (int i = 0; i < replies_.size(); i++) {
-        output.writeSInt32(2, replies_.get(i));
+        output.writeSInt32NoTag(replies_.get(i));
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         output.writeBytes(3, account_);
@@ -7616,7 +7633,12 @@ public final class Personhood {
             .computeSInt32SizeNoTag(replies_.get(i));
         }
         size += dataSize;
-        size += 1 * getRepliesList().size();
+        if (!getRepliesList().isEmpty()) {
+          size += 1;
+          size += com.google.protobuf.CodedOutputStream
+              .computeInt32SizeNoTag(dataSize);
+        }
+        repliesMemoizedSerializedSize = dataSize;
       }
       if (((bitField0_ & 0x00000002) == 0x00000002)) {
         size += com.google.protobuf.CodedOutputStream
@@ -8021,7 +8043,7 @@ public final class Personhood {
        * Replies is a slice of answers, up to Questionnaire.Replies
        * </pre>
        *
-       * <code>repeated sint32 replies = 2;</code>
+       * <code>repeated sint32 replies = 2 [packed = true];</code>
        */
       public java.util.List<java.lang.Integer>
           getRepliesList() {
@@ -8032,7 +8054,7 @@ public final class Personhood {
        * Replies is a slice of answers, up to Questionnaire.Replies
        * </pre>
        *
-       * <code>repeated sint32 replies = 2;</code>
+       * <code>repeated sint32 replies = 2 [packed = true];</code>
        */
       public int getRepliesCount() {
         return replies_.size();
@@ -8042,7 +8064,7 @@ public final class Personhood {
        * Replies is a slice of answers, up to Questionnaire.Replies
        * </pre>
        *
-       * <code>repeated sint32 replies = 2;</code>
+       * <code>repeated sint32 replies = 2 [packed = true];</code>
        */
       public int getReplies(int index) {
         return replies_.get(index);
@@ -8052,7 +8074,7 @@ public final class Personhood {
        * Replies is a slice of answers, up to Questionnaire.Replies
        * </pre>
        *
-       * <code>repeated sint32 replies = 2;</code>
+       * <code>repeated sint32 replies = 2 [packed = true];</code>
        */
       public Builder setReplies(
           int index, int value) {
@@ -8066,7 +8088,7 @@ public final class Personhood {
        * Replies is a slice of answers, up to Questionnaire.Replies
        * </pre>
        *
-       * <code>repeated sint32 replies = 2;</code>
+       * <code>repeated sint32 replies = 2 [packed = true];</code>
        */
       public Builder addReplies(int value) {
         ensureRepliesIsMutable();
@@ -8079,7 +8101,7 @@ public final class Personhood {
        * Replies is a slice of answers, up to Questionnaire.Replies
        * </pre>
        *
-       * <code>repeated sint32 replies = 2;</code>
+       * <code>repeated sint32 replies = 2 [packed = true];</code>
        */
       public Builder addAllReplies(
           java.lang.Iterable<? extends java.lang.Integer> values) {
@@ -8094,7 +8116,7 @@ public final class Personhood {
        * Replies is a slice of answers, up to Questionnaire.Replies
        * </pre>
        *
-       * <code>repeated sint32 replies = 2;</code>
+       * <code>repeated sint32 replies = 2 [packed = true];</code>
        */
       public Builder clearReplies() {
         replies_ = java.util.Collections.emptyList();
@@ -12111,7 +12133,7 @@ public final class Personhood {
      * Balances
      * </pre>
      *
-     * <code>repeated uint64 balances = 3;</code>
+     * <code>repeated uint64 balances = 3 [packed = true];</code>
      */
     java.util.List<java.lang.Long> getBalancesList();
     /**
@@ -12119,7 +12141,7 @@ public final class Personhood {
      * Balances
      * </pre>
      *
-     * <code>repeated uint64 balances = 3;</code>
+     * <code>repeated uint64 balances = 3 [packed = true];</code>
      */
     int getBalancesCount();
     /**
@@ -12127,7 +12149,7 @@ public final class Personhood {
      * Balances
      * </pre>
      *
-     * <code>repeated uint64 balances = 3;</code>
+     * <code>repeated uint64 balances = 3 [packed = true];</code>
      */
     long getBalances(int index);
 
@@ -12136,7 +12158,7 @@ public final class Personhood {
      * Rewards
      * </pre>
      *
-     * <code>repeated uint64 rewards = 4;</code>
+     * <code>repeated uint64 rewards = 4 [packed = true];</code>
      */
     java.util.List<java.lang.Long> getRewardsList();
     /**
@@ -12144,7 +12166,7 @@ public final class Personhood {
      * Rewards
      * </pre>
      *
-     * <code>repeated uint64 rewards = 4;</code>
+     * <code>repeated uint64 rewards = 4 [packed = true];</code>
      */
     int getRewardsCount();
     /**
@@ -12152,7 +12174,7 @@ public final class Personhood {
      * Rewards
      * </pre>
      *
-     * <code>repeated uint64 rewards = 4;</code>
+     * <code>repeated uint64 rewards = 4 [packed = true];</code>
      */
     long getRewards(int index);
 
@@ -12430,7 +12452,7 @@ public final class Personhood {
      * Balances
      * </pre>
      *
-     * <code>repeated uint64 balances = 3;</code>
+     * <code>repeated uint64 balances = 3 [packed = true];</code>
      */
     public java.util.List<java.lang.Long>
         getBalancesList() {
@@ -12441,7 +12463,7 @@ public final class Personhood {
      * Balances
      * </pre>
      *
-     * <code>repeated uint64 balances = 3;</code>
+     * <code>repeated uint64 balances = 3 [packed = true];</code>
      */
     public int getBalancesCount() {
       return balances_.size();
@@ -12451,11 +12473,12 @@ public final class Personhood {
      * Balances
      * </pre>
      *
-     * <code>repeated uint64 balances = 3;</code>
+     * <code>repeated uint64 balances = 3 [packed = true];</code>
      */
     public long getBalances(int index) {
       return balances_.get(index);
     }
+    private int balancesMemoizedSerializedSize = -1;
 
     public static final int REWARDS_FIELD_NUMBER = 4;
     private java.util.List<java.lang.Long> rewards_;
@@ -12464,7 +12487,7 @@ public final class Personhood {
      * Rewards
      * </pre>
      *
-     * <code>repeated uint64 rewards = 4;</code>
+     * <code>repeated uint64 rewards = 4 [packed = true];</code>
      */
     public java.util.List<java.lang.Long>
         getRewardsList() {
@@ -12475,7 +12498,7 @@ public final class Personhood {
      * Rewards
      * </pre>
      *
-     * <code>repeated uint64 rewards = 4;</code>
+     * <code>repeated uint64 rewards = 4 [packed = true];</code>
      */
     public int getRewardsCount() {
       return rewards_.size();
@@ -12485,11 +12508,12 @@ public final class Personhood {
      * Rewards
      * </pre>
      *
-     * <code>repeated uint64 rewards = 4;</code>
+     * <code>repeated uint64 rewards = 4 [packed = true];</code>
      */
     public long getRewards(int index) {
       return rewards_.get(index);
     }
+    private int rewardsMemoizedSerializedSize = -1;
 
     public static final int PARTYIIDS_FIELD_NUMBER = 5;
     private java.util.List<com.google.protobuf.ByteString> partyiids_;
@@ -12539,17 +12563,26 @@ public final class Personhood {
     @java.lang.Override
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
+      getSerializedSize();
       for (int i = 0; i < subjects_.size(); i++) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, subjects_.getRaw(i));
       }
       for (int i = 0; i < msgids_.size(); i++) {
         output.writeBytes(2, msgids_.get(i));
       }
+      if (getBalancesList().size() > 0) {
+        output.writeUInt32NoTag(26);
+        output.writeUInt32NoTag(balancesMemoizedSerializedSize);
+      }
       for (int i = 0; i < balances_.size(); i++) {
-        output.writeUInt64(3, balances_.get(i));
+        output.writeUInt64NoTag(balances_.get(i));
+      }
+      if (getRewardsList().size() > 0) {
+        output.writeUInt32NoTag(34);
+        output.writeUInt32NoTag(rewardsMemoizedSerializedSize);
       }
       for (int i = 0; i < rewards_.size(); i++) {
-        output.writeUInt64(4, rewards_.get(i));
+        output.writeUInt64NoTag(rewards_.get(i));
       }
       for (int i = 0; i < partyiids_.size(); i++) {
         output.writeBytes(5, partyiids_.get(i));
@@ -12587,7 +12620,12 @@ public final class Personhood {
             .computeUInt64SizeNoTag(balances_.get(i));
         }
         size += dataSize;
-        size += 1 * getBalancesList().size();
+        if (!getBalancesList().isEmpty()) {
+          size += 1;
+          size += com.google.protobuf.CodedOutputStream
+              .computeInt32SizeNoTag(dataSize);
+        }
+        balancesMemoizedSerializedSize = dataSize;
       }
       {
         int dataSize = 0;
@@ -12596,7 +12634,12 @@ public final class Personhood {
             .computeUInt64SizeNoTag(rewards_.get(i));
         }
         size += dataSize;
-        size += 1 * getRewardsList().size();
+        if (!getRewardsList().isEmpty()) {
+          size += 1;
+          size += com.google.protobuf.CodedOutputStream
+              .computeInt32SizeNoTag(dataSize);
+        }
+        rewardsMemoizedSerializedSize = dataSize;
       }
       {
         int dataSize = 0;
@@ -13233,7 +13276,7 @@ public final class Personhood {
        * Balances
        * </pre>
        *
-       * <code>repeated uint64 balances = 3;</code>
+       * <code>repeated uint64 balances = 3 [packed = true];</code>
        */
       public java.util.List<java.lang.Long>
           getBalancesList() {
@@ -13244,7 +13287,7 @@ public final class Personhood {
        * Balances
        * </pre>
        *
-       * <code>repeated uint64 balances = 3;</code>
+       * <code>repeated uint64 balances = 3 [packed = true];</code>
        */
       public int getBalancesCount() {
         return balances_.size();
@@ -13254,7 +13297,7 @@ public final class Personhood {
        * Balances
        * </pre>
        *
-       * <code>repeated uint64 balances = 3;</code>
+       * <code>repeated uint64 balances = 3 [packed = true];</code>
        */
       public long getBalances(int index) {
         return balances_.get(index);
@@ -13264,7 +13307,7 @@ public final class Personhood {
        * Balances
        * </pre>
        *
-       * <code>repeated uint64 balances = 3;</code>
+       * <code>repeated uint64 balances = 3 [packed = true];</code>
        */
       public Builder setBalances(
           int index, long value) {
@@ -13278,7 +13321,7 @@ public final class Personhood {
        * Balances
        * </pre>
        *
-       * <code>repeated uint64 balances = 3;</code>
+       * <code>repeated uint64 balances = 3 [packed = true];</code>
        */
       public Builder addBalances(long value) {
         ensureBalancesIsMutable();
@@ -13291,7 +13334,7 @@ public final class Personhood {
        * Balances
        * </pre>
        *
-       * <code>repeated uint64 balances = 3;</code>
+       * <code>repeated uint64 balances = 3 [packed = true];</code>
        */
       public Builder addAllBalances(
           java.lang.Iterable<? extends java.lang.Long> values) {
@@ -13306,7 +13349,7 @@ public final class Personhood {
        * Balances
        * </pre>
        *
-       * <code>repeated uint64 balances = 3;</code>
+       * <code>repeated uint64 balances = 3 [packed = true];</code>
        */
       public Builder clearBalances() {
         balances_ = java.util.Collections.emptyList();
@@ -13327,7 +13370,7 @@ public final class Personhood {
        * Rewards
        * </pre>
        *
-       * <code>repeated uint64 rewards = 4;</code>
+       * <code>repeated uint64 rewards = 4 [packed = true];</code>
        */
       public java.util.List<java.lang.Long>
           getRewardsList() {
@@ -13338,7 +13381,7 @@ public final class Personhood {
        * Rewards
        * </pre>
        *
-       * <code>repeated uint64 rewards = 4;</code>
+       * <code>repeated uint64 rewards = 4 [packed = true];</code>
        */
       public int getRewardsCount() {
         return rewards_.size();
@@ -13348,7 +13391,7 @@ public final class Personhood {
        * Rewards
        * </pre>
        *
-       * <code>repeated uint64 rewards = 4;</code>
+       * <code>repeated uint64 rewards = 4 [packed = true];</code>
        */
       public long getRewards(int index) {
         return rewards_.get(index);
@@ -13358,7 +13401,7 @@ public final class Personhood {
        * Rewards
        * </pre>
        *
-       * <code>repeated uint64 rewards = 4;</code>
+       * <code>repeated uint64 rewards = 4 [packed = true];</code>
        */
       public Builder setRewards(
           int index, long value) {
@@ -13372,7 +13415,7 @@ public final class Personhood {
        * Rewards
        * </pre>
        *
-       * <code>repeated uint64 rewards = 4;</code>
+       * <code>repeated uint64 rewards = 4 [packed = true];</code>
        */
       public Builder addRewards(long value) {
         ensureRewardsIsMutable();
@@ -13385,7 +13428,7 @@ public final class Personhood {
        * Rewards
        * </pre>
        *
-       * <code>repeated uint64 rewards = 4;</code>
+       * <code>repeated uint64 rewards = 4 [packed = true];</code>
        */
       public Builder addAllRewards(
           java.lang.Iterable<? extends java.lang.Long> values) {
@@ -13400,7 +13443,7 @@ public final class Personhood {
        * Rewards
        * </pre>
        *
-       * <code>repeated uint64 rewards = 4;</code>
+       * <code>repeated uint64 rewards = 4 [packed = true];</code>
        */
       public Builder clearRewards() {
         rewards_ = java.util.Collections.emptyList();
@@ -15993,31 +16036,32 @@ public final class Personhood {
       "c.Signer\"\034\n\013StringReply\022\r\n\005reply\030\001 \002(\t\"o" +
       "\n\rQuestionnaire\022\r\n\005title\030\001 \002(\t\022\021\n\tquesti" +
       "ons\030\002 \003(\t\022\017\n\007replies\030\003 \002(\021\022\017\n\007balance\030\004 " +
-      "\002(\004\022\016\n\006reward\030\005 \002(\004\022\n\n\002id\030\006 \002(\014\"#\n\005Reply" +
-      "\022\013\n\003sum\030\001 \003(\021\022\r\n\005users\030\002 \003(\014\"I\n\025Register" +
-      "Questionnaire\0220\n\rquestionnaire\030\001 \002(\0132\031.p" +
-      "ersonhood.Questionnaire\"3\n\022ListQuestionn" +
-      "aires\022\r\n\005start\030\001 \002(\021\022\016\n\006number\030\002 \002(\021\"L\n\027" +
-      "ListQuestionnairesReply\0221\n\016questionnaire" +
-      "s\030\001 \003(\0132\031.personhood.Questionnaire\"H\n\023An" +
-      "swerQuestionnaire\022\017\n\007questid\030\001 \002(\014\022\017\n\007re" +
-      "plies\030\002 \003(\021\022\017\n\007account\030\003 \002(\014\"4\n\022TopupQue" +
-      "stionnaire\022\017\n\007questid\030\001 \002(\014\022\r\n\005topup\030\002 \002" +
-      "(\004\"\205\001\n\007Message\022\017\n\007subject\030\001 \002(\t\022\014\n\004date\030" +
-      "\002 \002(\004\022\014\n\004text\030\003 \002(\t\022\016\n\006author\030\004 \002(\014\022\017\n\007b" +
-      "alance\030\005 \002(\004\022\016\n\006reward\030\006 \002(\004\022\n\n\002id\030\007 \002(\014" +
-      "\022\020\n\010partyiid\030\010 \002(\014\"3\n\013SendMessage\022$\n\007mes" +
-      "sage\030\001 \002(\0132\023.personhood.Message\"?\n\014ListM" +
-      "essages\022\r\n\005start\030\001 \002(\021\022\016\n\006number\030\002 \002(\021\022\020" +
-      "\n\010readerid\030\003 \002(\014\"k\n\021ListMessagesReply\022\020\n" +
-      "\010subjects\030\001 \003(\t\022\016\n\006msgids\030\002 \003(\014\022\020\n\010balan" +
-      "ces\030\003 \003(\004\022\017\n\007rewards\030\004 \003(\004\022\021\n\tpartyiids\030" +
-      "\005 \003(\014\">\n\013ReadMessage\022\r\n\005msgid\030\001 \002(\014\022\020\n\010p" +
-      "artyiid\030\002 \002(\014\022\016\n\006reader\030\003 \002(\014\"J\n\020ReadMes" +
-      "sageReply\022$\n\007message\030\001 \002(\0132\023.personhood." +
-      "Message\022\020\n\010rewarded\030\002 \002(\010\"-\n\014TopupMessag" +
-      "e\022\r\n\005msgid\030\001 \002(\014\022\016\n\006amount\030\002 \002(\004B%\n\027ch.e" +
-      "pfl.dedis.lib.protoB\nPersonhood"
+      "\002(\004\022\016\n\006reward\030\005 \002(\004\022\n\n\002id\030\006 \002(\014\"\'\n\005Reply" +
+      "\022\017\n\003sum\030\001 \003(\021B\002\020\001\022\r\n\005users\030\002 \003(\014\"I\n\025Regi" +
+      "sterQuestionnaire\0220\n\rquestionnaire\030\001 \002(\013" +
+      "2\031.personhood.Questionnaire\"3\n\022ListQuest" +
+      "ionnaires\022\r\n\005start\030\001 \002(\021\022\016\n\006number\030\002 \002(\021" +
+      "\"L\n\027ListQuestionnairesReply\0221\n\016questionn" +
+      "aires\030\001 \003(\0132\031.personhood.Questionnaire\"L" +
+      "\n\023AnswerQuestionnaire\022\017\n\007questid\030\001 \002(\014\022\023" +
+      "\n\007replies\030\002 \003(\021B\002\020\001\022\017\n\007account\030\003 \002(\014\"4\n\022" +
+      "TopupQuestionnaire\022\017\n\007questid\030\001 \002(\014\022\r\n\005t" +
+      "opup\030\002 \002(\004\"\205\001\n\007Message\022\017\n\007subject\030\001 \002(\t\022" +
+      "\014\n\004date\030\002 \002(\004\022\014\n\004text\030\003 \002(\t\022\016\n\006author\030\004 " +
+      "\002(\014\022\017\n\007balance\030\005 \002(\004\022\016\n\006reward\030\006 \002(\004\022\n\n\002" +
+      "id\030\007 \002(\014\022\020\n\010partyiid\030\010 \002(\014\"3\n\013SendMessag" +
+      "e\022$\n\007message\030\001 \002(\0132\023.personhood.Message\"" +
+      "?\n\014ListMessages\022\r\n\005start\030\001 \002(\021\022\016\n\006number" +
+      "\030\002 \002(\021\022\020\n\010readerid\030\003 \002(\014\"s\n\021ListMessages" +
+      "Reply\022\020\n\010subjects\030\001 \003(\t\022\016\n\006msgids\030\002 \003(\014\022" +
+      "\024\n\010balances\030\003 \003(\004B\002\020\001\022\023\n\007rewards\030\004 \003(\004B\002" +
+      "\020\001\022\021\n\tpartyiids\030\005 \003(\014\">\n\013ReadMessage\022\r\n\005" +
+      "msgid\030\001 \002(\014\022\020\n\010partyiid\030\002 \002(\014\022\016\n\006reader\030" +
+      "\003 \002(\014\"J\n\020ReadMessageReply\022$\n\007message\030\001 \002" +
+      "(\0132\023.personhood.Message\022\020\n\010rewarded\030\002 \002(" +
+      "\010\"-\n\014TopupMessage\022\r\n\005msgid\030\001 \002(\014\022\016\n\006amou" +
+      "nt\030\002 \002(\004B%\n\027ch.epfl.dedis.lib.protoB\nPer" +
+      "sonhood"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {

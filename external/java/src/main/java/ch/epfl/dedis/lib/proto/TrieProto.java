@@ -14,6 +14,1983 @@ public final class TrieProto {
     registerAllExtensions(
         (com.google.protobuf.ExtensionRegistryLite) registry);
   }
+  public interface InteriorNodeOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:trie.InteriorNode)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>required bytes left = 1;</code>
+     */
+    boolean hasLeft();
+    /**
+     * <code>required bytes left = 1;</code>
+     */
+    com.google.protobuf.ByteString getLeft();
+
+    /**
+     * <code>required bytes right = 2;</code>
+     */
+    boolean hasRight();
+    /**
+     * <code>required bytes right = 2;</code>
+     */
+    com.google.protobuf.ByteString getRight();
+  }
+  /**
+   * Protobuf type {@code trie.InteriorNode}
+   */
+  public  static final class InteriorNode extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:trie.InteriorNode)
+      InteriorNodeOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use InteriorNode.newBuilder() to construct.
+    private InteriorNode(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private InteriorNode() {
+      left_ = com.google.protobuf.ByteString.EMPTY;
+      right_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private InteriorNode(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 10: {
+              bitField0_ |= 0x00000001;
+              left_ = input.readBytes();
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000002;
+              right_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_InteriorNode_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_InteriorNode_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.class, ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int LEFT_FIELD_NUMBER = 1;
+    private com.google.protobuf.ByteString left_;
+    /**
+     * <code>required bytes left = 1;</code>
+     */
+    public boolean hasLeft() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes left = 1;</code>
+     */
+    public com.google.protobuf.ByteString getLeft() {
+      return left_;
+    }
+
+    public static final int RIGHT_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString right_;
+    /**
+     * <code>required bytes right = 2;</code>
+     */
+    public boolean hasRight() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes right = 2;</code>
+     */
+    public com.google.protobuf.ByteString getRight() {
+      return right_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasLeft()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasRight()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(1, left_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(2, right_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(1, left_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, right_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.TrieProto.InteriorNode)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.TrieProto.InteriorNode other = (ch.epfl.dedis.lib.proto.TrieProto.InteriorNode) obj;
+
+      boolean result = true;
+      result = result && (hasLeft() == other.hasLeft());
+      if (hasLeft()) {
+        result = result && getLeft()
+            .equals(other.getLeft());
+      }
+      result = result && (hasRight() == other.hasRight());
+      if (hasRight()) {
+        result = result && getRight()
+            .equals(other.getRight());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (hasLeft()) {
+        hash = (37 * hash) + LEFT_FIELD_NUMBER;
+        hash = (53 * hash) + getLeft().hashCode();
+      }
+      if (hasRight()) {
+        hash = (37 * hash) + RIGHT_FIELD_NUMBER;
+        hash = (53 * hash) + getRight().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.TrieProto.InteriorNode prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code trie.InteriorNode}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:trie.InteriorNode)
+        ch.epfl.dedis.lib.proto.TrieProto.InteriorNodeOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_InteriorNode_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_InteriorNode_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.class, ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        left_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000001);
+        right_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_InteriorNode_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.TrieProto.InteriorNode getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.TrieProto.InteriorNode build() {
+        ch.epfl.dedis.lib.proto.TrieProto.InteriorNode result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.TrieProto.InteriorNode buildPartial() {
+        ch.epfl.dedis.lib.proto.TrieProto.InteriorNode result = new ch.epfl.dedis.lib.proto.TrieProto.InteriorNode(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.left_ = left_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.right_ = right_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.TrieProto.InteriorNode) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.TrieProto.InteriorNode)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.TrieProto.InteriorNode other) {
+        if (other == ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.getDefaultInstance()) return this;
+        if (other.hasLeft()) {
+          setLeft(other.getLeft());
+        }
+        if (other.hasRight()) {
+          setRight(other.getRight());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasLeft()) {
+          return false;
+        }
+        if (!hasRight()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.TrieProto.InteriorNode) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private com.google.protobuf.ByteString left_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes left = 1;</code>
+       */
+      public boolean hasLeft() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required bytes left = 1;</code>
+       */
+      public com.google.protobuf.ByteString getLeft() {
+        return left_;
+      }
+      /**
+       * <code>required bytes left = 1;</code>
+       */
+      public Builder setLeft(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000001;
+        left_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes left = 1;</code>
+       */
+      public Builder clearLeft() {
+        bitField0_ = (bitField0_ & ~0x00000001);
+        left_ = getDefaultInstance().getLeft();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString right_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes right = 2;</code>
+       */
+      public boolean hasRight() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes right = 2;</code>
+       */
+      public com.google.protobuf.ByteString getRight() {
+        return right_;
+      }
+      /**
+       * <code>required bytes right = 2;</code>
+       */
+      public Builder setRight(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        right_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes right = 2;</code>
+       */
+      public Builder clearRight() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        right_ = getDefaultInstance().getRight();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:trie.InteriorNode)
+    }
+
+    // @@protoc_insertion_point(class_scope:trie.InteriorNode)
+    private static final ch.epfl.dedis.lib.proto.TrieProto.InteriorNode DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.TrieProto.InteriorNode();
+    }
+
+    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<InteriorNode>
+        PARSER = new com.google.protobuf.AbstractParser<InteriorNode>() {
+      @java.lang.Override
+      public InteriorNode parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new InteriorNode(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<InteriorNode> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<InteriorNode> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.TrieProto.InteriorNode getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface EmptyNodeOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:trie.EmptyNode)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated bool prefix = 1 [packed = true];</code>
+     */
+    java.util.List<java.lang.Boolean> getPrefixList();
+    /**
+     * <code>repeated bool prefix = 1 [packed = true];</code>
+     */
+    int getPrefixCount();
+    /**
+     * <code>repeated bool prefix = 1 [packed = true];</code>
+     */
+    boolean getPrefix(int index);
+  }
+  /**
+   * Protobuf type {@code trie.EmptyNode}
+   */
+  public  static final class EmptyNode extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:trie.EmptyNode)
+      EmptyNodeOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use EmptyNode.newBuilder() to construct.
+    private EmptyNode(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private EmptyNode() {
+      prefix_ = java.util.Collections.emptyList();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private EmptyNode(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                prefix_ = new java.util.ArrayList<java.lang.Boolean>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              prefix_.add(input.readBool());
+              break;
+            }
+            case 10: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001) && input.getBytesUntilLimit() > 0) {
+                prefix_ = new java.util.ArrayList<java.lang.Boolean>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                prefix_.add(input.readBool());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          prefix_ = java.util.Collections.unmodifiableList(prefix_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_EmptyNode_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_EmptyNode_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.class, ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.Builder.class);
+    }
+
+    public static final int PREFIX_FIELD_NUMBER = 1;
+    private java.util.List<java.lang.Boolean> prefix_;
+    /**
+     * <code>repeated bool prefix = 1 [packed = true];</code>
+     */
+    public java.util.List<java.lang.Boolean>
+        getPrefixList() {
+      return prefix_;
+    }
+    /**
+     * <code>repeated bool prefix = 1 [packed = true];</code>
+     */
+    public int getPrefixCount() {
+      return prefix_.size();
+    }
+    /**
+     * <code>repeated bool prefix = 1 [packed = true];</code>
+     */
+    public boolean getPrefix(int index) {
+      return prefix_.get(index);
+    }
+    private int prefixMemoizedSerializedSize = -1;
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (getPrefixList().size() > 0) {
+        output.writeUInt32NoTag(10);
+        output.writeUInt32NoTag(prefixMemoizedSerializedSize);
+      }
+      for (int i = 0; i < prefix_.size(); i++) {
+        output.writeBoolNoTag(prefix_.get(i));
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      {
+        int dataSize = 0;
+        dataSize = 1 * getPrefixList().size();
+        size += dataSize;
+        if (!getPrefixList().isEmpty()) {
+          size += 1;
+          size += com.google.protobuf.CodedOutputStream
+              .computeInt32SizeNoTag(dataSize);
+        }
+        prefixMemoizedSerializedSize = dataSize;
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.TrieProto.EmptyNode)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.TrieProto.EmptyNode other = (ch.epfl.dedis.lib.proto.TrieProto.EmptyNode) obj;
+
+      boolean result = true;
+      result = result && getPrefixList()
+          .equals(other.getPrefixList());
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getPrefixCount() > 0) {
+        hash = (37 * hash) + PREFIX_FIELD_NUMBER;
+        hash = (53 * hash) + getPrefixList().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.TrieProto.EmptyNode prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code trie.EmptyNode}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:trie.EmptyNode)
+        ch.epfl.dedis.lib.proto.TrieProto.EmptyNodeOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_EmptyNode_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_EmptyNode_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.class, ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        prefix_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_EmptyNode_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.TrieProto.EmptyNode getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.TrieProto.EmptyNode build() {
+        ch.epfl.dedis.lib.proto.TrieProto.EmptyNode result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.TrieProto.EmptyNode buildPartial() {
+        ch.epfl.dedis.lib.proto.TrieProto.EmptyNode result = new ch.epfl.dedis.lib.proto.TrieProto.EmptyNode(this);
+        int from_bitField0_ = bitField0_;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          prefix_ = java.util.Collections.unmodifiableList(prefix_);
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.prefix_ = prefix_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.TrieProto.EmptyNode) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.TrieProto.EmptyNode)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.TrieProto.EmptyNode other) {
+        if (other == ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.getDefaultInstance()) return this;
+        if (!other.prefix_.isEmpty()) {
+          if (prefix_.isEmpty()) {
+            prefix_ = other.prefix_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensurePrefixIsMutable();
+            prefix_.addAll(other.prefix_);
+          }
+          onChanged();
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.TrieProto.EmptyNode) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<java.lang.Boolean> prefix_ = java.util.Collections.emptyList();
+      private void ensurePrefixIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          prefix_ = new java.util.ArrayList<java.lang.Boolean>(prefix_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public java.util.List<java.lang.Boolean>
+          getPrefixList() {
+        return java.util.Collections.unmodifiableList(prefix_);
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public int getPrefixCount() {
+        return prefix_.size();
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public boolean getPrefix(int index) {
+        return prefix_.get(index);
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public Builder setPrefix(
+          int index, boolean value) {
+        ensurePrefixIsMutable();
+        prefix_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public Builder addPrefix(boolean value) {
+        ensurePrefixIsMutable();
+        prefix_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public Builder addAllPrefix(
+          java.lang.Iterable<? extends java.lang.Boolean> values) {
+        ensurePrefixIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, prefix_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public Builder clearPrefix() {
+        prefix_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:trie.EmptyNode)
+    }
+
+    // @@protoc_insertion_point(class_scope:trie.EmptyNode)
+    private static final ch.epfl.dedis.lib.proto.TrieProto.EmptyNode DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.TrieProto.EmptyNode();
+    }
+
+    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<EmptyNode>
+        PARSER = new com.google.protobuf.AbstractParser<EmptyNode>() {
+      @java.lang.Override
+      public EmptyNode parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new EmptyNode(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<EmptyNode> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<EmptyNode> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.TrieProto.EmptyNode getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface LeafNodeOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:trie.LeafNode)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>repeated bool prefix = 1 [packed = true];</code>
+     */
+    java.util.List<java.lang.Boolean> getPrefixList();
+    /**
+     * <code>repeated bool prefix = 1 [packed = true];</code>
+     */
+    int getPrefixCount();
+    /**
+     * <code>repeated bool prefix = 1 [packed = true];</code>
+     */
+    boolean getPrefix(int index);
+
+    /**
+     * <code>required bytes key = 2;</code>
+     */
+    boolean hasKey();
+    /**
+     * <code>required bytes key = 2;</code>
+     */
+    com.google.protobuf.ByteString getKey();
+
+    /**
+     * <code>required bytes value = 3;</code>
+     */
+    boolean hasValue();
+    /**
+     * <code>required bytes value = 3;</code>
+     */
+    com.google.protobuf.ByteString getValue();
+  }
+  /**
+   * Protobuf type {@code trie.LeafNode}
+   */
+  public  static final class LeafNode extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:trie.LeafNode)
+      LeafNodeOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use LeafNode.newBuilder() to construct.
+    private LeafNode(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private LeafNode() {
+      prefix_ = java.util.Collections.emptyList();
+      key_ = com.google.protobuf.ByteString.EMPTY;
+      value_ = com.google.protobuf.ByteString.EMPTY;
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private LeafNode(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      int mutable_bitField0_ = 0;
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+                prefix_ = new java.util.ArrayList<java.lang.Boolean>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              prefix_.add(input.readBool());
+              break;
+            }
+            case 10: {
+              int length = input.readRawVarint32();
+              int limit = input.pushLimit(length);
+              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001) && input.getBytesUntilLimit() > 0) {
+                prefix_ = new java.util.ArrayList<java.lang.Boolean>();
+                mutable_bitField0_ |= 0x00000001;
+              }
+              while (input.getBytesUntilLimit() > 0) {
+                prefix_.add(input.readBool());
+              }
+              input.popLimit(limit);
+              break;
+            }
+            case 18: {
+              bitField0_ |= 0x00000001;
+              key_ = input.readBytes();
+              break;
+            }
+            case 26: {
+              bitField0_ |= 0x00000002;
+              value_ = input.readBytes();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
+          prefix_ = java.util.Collections.unmodifiableList(prefix_);
+        }
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_LeafNode_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_LeafNode_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              ch.epfl.dedis.lib.proto.TrieProto.LeafNode.class, ch.epfl.dedis.lib.proto.TrieProto.LeafNode.Builder.class);
+    }
+
+    private int bitField0_;
+    public static final int PREFIX_FIELD_NUMBER = 1;
+    private java.util.List<java.lang.Boolean> prefix_;
+    /**
+     * <code>repeated bool prefix = 1 [packed = true];</code>
+     */
+    public java.util.List<java.lang.Boolean>
+        getPrefixList() {
+      return prefix_;
+    }
+    /**
+     * <code>repeated bool prefix = 1 [packed = true];</code>
+     */
+    public int getPrefixCount() {
+      return prefix_.size();
+    }
+    /**
+     * <code>repeated bool prefix = 1 [packed = true];</code>
+     */
+    public boolean getPrefix(int index) {
+      return prefix_.get(index);
+    }
+    private int prefixMemoizedSerializedSize = -1;
+
+    public static final int KEY_FIELD_NUMBER = 2;
+    private com.google.protobuf.ByteString key_;
+    /**
+     * <code>required bytes key = 2;</code>
+     */
+    public boolean hasKey() {
+      return ((bitField0_ & 0x00000001) == 0x00000001);
+    }
+    /**
+     * <code>required bytes key = 2;</code>
+     */
+    public com.google.protobuf.ByteString getKey() {
+      return key_;
+    }
+
+    public static final int VALUE_FIELD_NUMBER = 3;
+    private com.google.protobuf.ByteString value_;
+    /**
+     * <code>required bytes value = 3;</code>
+     */
+    public boolean hasValue() {
+      return ((bitField0_ & 0x00000002) == 0x00000002);
+    }
+    /**
+     * <code>required bytes value = 3;</code>
+     */
+    public com.google.protobuf.ByteString getValue() {
+      return value_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      if (!hasKey()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      if (!hasValue()) {
+        memoizedIsInitialized = 0;
+        return false;
+      }
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      getSerializedSize();
+      if (getPrefixList().size() > 0) {
+        output.writeUInt32NoTag(10);
+        output.writeUInt32NoTag(prefixMemoizedSerializedSize);
+      }
+      for (int i = 0; i < prefix_.size(); i++) {
+        output.writeBoolNoTag(prefix_.get(i));
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        output.writeBytes(2, key_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        output.writeBytes(3, value_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      {
+        int dataSize = 0;
+        dataSize = 1 * getPrefixList().size();
+        size += dataSize;
+        if (!getPrefixList().isEmpty()) {
+          size += 1;
+          size += com.google.protobuf.CodedOutputStream
+              .computeInt32SizeNoTag(dataSize);
+        }
+        prefixMemoizedSerializedSize = dataSize;
+      }
+      if (((bitField0_ & 0x00000001) == 0x00000001)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(2, key_);
+      }
+      if (((bitField0_ & 0x00000002) == 0x00000002)) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeBytesSize(3, value_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof ch.epfl.dedis.lib.proto.TrieProto.LeafNode)) {
+        return super.equals(obj);
+      }
+      ch.epfl.dedis.lib.proto.TrieProto.LeafNode other = (ch.epfl.dedis.lib.proto.TrieProto.LeafNode) obj;
+
+      boolean result = true;
+      result = result && getPrefixList()
+          .equals(other.getPrefixList());
+      result = result && (hasKey() == other.hasKey());
+      if (hasKey()) {
+        result = result && getKey()
+            .equals(other.getKey());
+      }
+      result = result && (hasValue() == other.hasValue());
+      if (hasValue()) {
+        result = result && getValue()
+            .equals(other.getValue());
+      }
+      result = result && unknownFields.equals(other.unknownFields);
+      return result;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      if (getPrefixCount() > 0) {
+        hash = (37 * hash) + PREFIX_FIELD_NUMBER;
+        hash = (53 * hash) + getPrefixList().hashCode();
+      }
+      if (hasKey()) {
+        hash = (37 * hash) + KEY_FIELD_NUMBER;
+        hash = (53 * hash) + getKey().hashCode();
+      }
+      if (hasValue()) {
+        hash = (37 * hash) + VALUE_FIELD_NUMBER;
+        hash = (53 * hash) + getValue().hashCode();
+      }
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(ch.epfl.dedis.lib.proto.TrieProto.LeafNode prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code trie.LeafNode}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:trie.LeafNode)
+        ch.epfl.dedis.lib.proto.TrieProto.LeafNodeOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_LeafNode_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_LeafNode_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                ch.epfl.dedis.lib.proto.TrieProto.LeafNode.class, ch.epfl.dedis.lib.proto.TrieProto.LeafNode.Builder.class);
+      }
+
+      // Construct using ch.epfl.dedis.lib.proto.TrieProto.LeafNode.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        prefix_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        key_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000002);
+        value_ = com.google.protobuf.ByteString.EMPTY;
+        bitField0_ = (bitField0_ & ~0x00000004);
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_LeafNode_descriptor;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.TrieProto.LeafNode getDefaultInstanceForType() {
+        return ch.epfl.dedis.lib.proto.TrieProto.LeafNode.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.TrieProto.LeafNode build() {
+        ch.epfl.dedis.lib.proto.TrieProto.LeafNode result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public ch.epfl.dedis.lib.proto.TrieProto.LeafNode buildPartial() {
+        ch.epfl.dedis.lib.proto.TrieProto.LeafNode result = new ch.epfl.dedis.lib.proto.TrieProto.LeafNode(this);
+        int from_bitField0_ = bitField0_;
+        int to_bitField0_ = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          prefix_ = java.util.Collections.unmodifiableList(prefix_);
+          bitField0_ = (bitField0_ & ~0x00000001);
+        }
+        result.prefix_ = prefix_;
+        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+          to_bitField0_ |= 0x00000001;
+        }
+        result.key_ = key_;
+        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+          to_bitField0_ |= 0x00000002;
+        }
+        result.value_ = value_;
+        result.bitField0_ = to_bitField0_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return (Builder) super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return (Builder) super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return (Builder) super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return (Builder) super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return (Builder) super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof ch.epfl.dedis.lib.proto.TrieProto.LeafNode) {
+          return mergeFrom((ch.epfl.dedis.lib.proto.TrieProto.LeafNode)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(ch.epfl.dedis.lib.proto.TrieProto.LeafNode other) {
+        if (other == ch.epfl.dedis.lib.proto.TrieProto.LeafNode.getDefaultInstance()) return this;
+        if (!other.prefix_.isEmpty()) {
+          if (prefix_.isEmpty()) {
+            prefix_ = other.prefix_;
+            bitField0_ = (bitField0_ & ~0x00000001);
+          } else {
+            ensurePrefixIsMutable();
+            prefix_.addAll(other.prefix_);
+          }
+          onChanged();
+        }
+        if (other.hasKey()) {
+          setKey(other.getKey());
+        }
+        if (other.hasValue()) {
+          setValue(other.getValue());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        if (!hasKey()) {
+          return false;
+        }
+        if (!hasValue()) {
+          return false;
+        }
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        ch.epfl.dedis.lib.proto.TrieProto.LeafNode parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (ch.epfl.dedis.lib.proto.TrieProto.LeafNode) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+      private int bitField0_;
+
+      private java.util.List<java.lang.Boolean> prefix_ = java.util.Collections.emptyList();
+      private void ensurePrefixIsMutable() {
+        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
+          prefix_ = new java.util.ArrayList<java.lang.Boolean>(prefix_);
+          bitField0_ |= 0x00000001;
+         }
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public java.util.List<java.lang.Boolean>
+          getPrefixList() {
+        return java.util.Collections.unmodifiableList(prefix_);
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public int getPrefixCount() {
+        return prefix_.size();
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public boolean getPrefix(int index) {
+        return prefix_.get(index);
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public Builder setPrefix(
+          int index, boolean value) {
+        ensurePrefixIsMutable();
+        prefix_.set(index, value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public Builder addPrefix(boolean value) {
+        ensurePrefixIsMutable();
+        prefix_.add(value);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public Builder addAllPrefix(
+          java.lang.Iterable<? extends java.lang.Boolean> values) {
+        ensurePrefixIsMutable();
+        com.google.protobuf.AbstractMessageLite.Builder.addAll(
+            values, prefix_);
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>repeated bool prefix = 1 [packed = true];</code>
+       */
+      public Builder clearPrefix() {
+        prefix_ = java.util.Collections.emptyList();
+        bitField0_ = (bitField0_ & ~0x00000001);
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString key_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes key = 2;</code>
+       */
+      public boolean hasKey() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required bytes key = 2;</code>
+       */
+      public com.google.protobuf.ByteString getKey() {
+        return key_;
+      }
+      /**
+       * <code>required bytes key = 2;</code>
+       */
+      public Builder setKey(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+        key_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes key = 2;</code>
+       */
+      public Builder clearKey() {
+        bitField0_ = (bitField0_ & ~0x00000002);
+        key_ = getDefaultInstance().getKey();
+        onChanged();
+        return this;
+      }
+
+      private com.google.protobuf.ByteString value_ = com.google.protobuf.ByteString.EMPTY;
+      /**
+       * <code>required bytes value = 3;</code>
+       */
+      public boolean hasValue() {
+        return ((bitField0_ & 0x00000004) == 0x00000004);
+      }
+      /**
+       * <code>required bytes value = 3;</code>
+       */
+      public com.google.protobuf.ByteString getValue() {
+        return value_;
+      }
+      /**
+       * <code>required bytes value = 3;</code>
+       */
+      public Builder setValue(com.google.protobuf.ByteString value) {
+        if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000004;
+        value_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>required bytes value = 3;</code>
+       */
+      public Builder clearValue() {
+        bitField0_ = (bitField0_ & ~0x00000004);
+        value_ = getDefaultInstance().getValue();
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:trie.LeafNode)
+    }
+
+    // @@protoc_insertion_point(class_scope:trie.LeafNode)
+    private static final ch.epfl.dedis.lib.proto.TrieProto.LeafNode DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.TrieProto.LeafNode();
+    }
+
+    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    @java.lang.Deprecated public static final com.google.protobuf.Parser<LeafNode>
+        PARSER = new com.google.protobuf.AbstractParser<LeafNode>() {
+      @java.lang.Override
+      public LeafNode parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new LeafNode(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<LeafNode> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<LeafNode> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public ch.epfl.dedis.lib.proto.TrieProto.LeafNode getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface ProofOrBuilder extends
       // @@protoc_insertion_point(interface_extends:trie.Proof)
       com.google.protobuf.MessageOrBuilder {
@@ -1334,2003 +3311,26 @@ public final class TrieProto {
 
   }
 
-  public interface LeafNodeOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:trie.LeafNode)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>repeated bool prefix = 1 [packed = true];</code>
-     */
-    java.util.List<java.lang.Boolean> getPrefixList();
-    /**
-     * <code>repeated bool prefix = 1 [packed = true];</code>
-     */
-    int getPrefixCount();
-    /**
-     * <code>repeated bool prefix = 1 [packed = true];</code>
-     */
-    boolean getPrefix(int index);
-
-    /**
-     * <code>required bytes key = 2;</code>
-     */
-    boolean hasKey();
-    /**
-     * <code>required bytes key = 2;</code>
-     */
-    com.google.protobuf.ByteString getKey();
-
-    /**
-     * <code>required bytes value = 3;</code>
-     */
-    boolean hasValue();
-    /**
-     * <code>required bytes value = 3;</code>
-     */
-    com.google.protobuf.ByteString getValue();
-  }
-  /**
-   * Protobuf type {@code trie.LeafNode}
-   */
-  public  static final class LeafNode extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:trie.LeafNode)
-      LeafNodeOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use LeafNode.newBuilder() to construct.
-    private LeafNode(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private LeafNode() {
-      prefix_ = java.util.Collections.emptyList();
-      key_ = com.google.protobuf.ByteString.EMPTY;
-      value_ = com.google.protobuf.ByteString.EMPTY;
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private LeafNode(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 8: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                prefix_ = new java.util.ArrayList<java.lang.Boolean>();
-                mutable_bitField0_ |= 0x00000001;
-              }
-              prefix_.add(input.readBool());
-              break;
-            }
-            case 10: {
-              int length = input.readRawVarint32();
-              int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001) && input.getBytesUntilLimit() > 0) {
-                prefix_ = new java.util.ArrayList<java.lang.Boolean>();
-                mutable_bitField0_ |= 0x00000001;
-              }
-              while (input.getBytesUntilLimit() > 0) {
-                prefix_.add(input.readBool());
-              }
-              input.popLimit(limit);
-              break;
-            }
-            case 18: {
-              bitField0_ |= 0x00000001;
-              key_ = input.readBytes();
-              break;
-            }
-            case 26: {
-              bitField0_ |= 0x00000002;
-              value_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-          prefix_ = java.util.Collections.unmodifiableList(prefix_);
-        }
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_LeafNode_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_LeafNode_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.TrieProto.LeafNode.class, ch.epfl.dedis.lib.proto.TrieProto.LeafNode.Builder.class);
-    }
-
-    private int bitField0_;
-    public static final int PREFIX_FIELD_NUMBER = 1;
-    private java.util.List<java.lang.Boolean> prefix_;
-    /**
-     * <code>repeated bool prefix = 1 [packed = true];</code>
-     */
-    public java.util.List<java.lang.Boolean>
-        getPrefixList() {
-      return prefix_;
-    }
-    /**
-     * <code>repeated bool prefix = 1 [packed = true];</code>
-     */
-    public int getPrefixCount() {
-      return prefix_.size();
-    }
-    /**
-     * <code>repeated bool prefix = 1 [packed = true];</code>
-     */
-    public boolean getPrefix(int index) {
-      return prefix_.get(index);
-    }
-    private int prefixMemoizedSerializedSize = -1;
-
-    public static final int KEY_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString key_;
-    /**
-     * <code>required bytes key = 2;</code>
-     */
-    public boolean hasKey() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>required bytes key = 2;</code>
-     */
-    public com.google.protobuf.ByteString getKey() {
-      return key_;
-    }
-
-    public static final int VALUE_FIELD_NUMBER = 3;
-    private com.google.protobuf.ByteString value_;
-    /**
-     * <code>required bytes value = 3;</code>
-     */
-    public boolean hasValue() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required bytes value = 3;</code>
-     */
-    public com.google.protobuf.ByteString getValue() {
-      return value_;
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasKey()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasValue()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      getSerializedSize();
-      if (getPrefixList().size() > 0) {
-        output.writeUInt32NoTag(10);
-        output.writeUInt32NoTag(prefixMemoizedSerializedSize);
-      }
-      for (int i = 0; i < prefix_.size(); i++) {
-        output.writeBoolNoTag(prefix_.get(i));
-      }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(2, key_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(3, value_);
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      {
-        int dataSize = 0;
-        dataSize = 1 * getPrefixList().size();
-        size += dataSize;
-        if (!getPrefixList().isEmpty()) {
-          size += 1;
-          size += com.google.protobuf.CodedOutputStream
-              .computeInt32SizeNoTag(dataSize);
-        }
-        prefixMemoizedSerializedSize = dataSize;
-      }
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, key_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, value_);
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.TrieProto.LeafNode)) {
-        return super.equals(obj);
-      }
-      ch.epfl.dedis.lib.proto.TrieProto.LeafNode other = (ch.epfl.dedis.lib.proto.TrieProto.LeafNode) obj;
-
-      boolean result = true;
-      result = result && getPrefixList()
-          .equals(other.getPrefixList());
-      result = result && (hasKey() == other.hasKey());
-      if (hasKey()) {
-        result = result && getKey()
-            .equals(other.getKey());
-      }
-      result = result && (hasValue() == other.hasValue());
-      if (hasValue()) {
-        result = result && getValue()
-            .equals(other.getValue());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (getPrefixCount() > 0) {
-        hash = (37 * hash) + PREFIX_FIELD_NUMBER;
-        hash = (53 * hash) + getPrefixList().hashCode();
-      }
-      if (hasKey()) {
-        hash = (37 * hash) + KEY_FIELD_NUMBER;
-        hash = (53 * hash) + getKey().hashCode();
-      }
-      if (hasValue()) {
-        hash = (37 * hash) + VALUE_FIELD_NUMBER;
-        hash = (53 * hash) + getValue().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.TrieProto.LeafNode prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code trie.LeafNode}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:trie.LeafNode)
-        ch.epfl.dedis.lib.proto.TrieProto.LeafNodeOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_LeafNode_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_LeafNode_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.TrieProto.LeafNode.class, ch.epfl.dedis.lib.proto.TrieProto.LeafNode.Builder.class);
-      }
-
-      // Construct using ch.epfl.dedis.lib.proto.TrieProto.LeafNode.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        prefix_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000001);
-        key_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        value_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000004);
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_LeafNode_descriptor;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.TrieProto.LeafNode getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.TrieProto.LeafNode.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.TrieProto.LeafNode build() {
-        ch.epfl.dedis.lib.proto.TrieProto.LeafNode result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.TrieProto.LeafNode buildPartial() {
-        ch.epfl.dedis.lib.proto.TrieProto.LeafNode result = new ch.epfl.dedis.lib.proto.TrieProto.LeafNode(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          prefix_ = java.util.Collections.unmodifiableList(prefix_);
-          bitField0_ = (bitField0_ & ~0x00000001);
-        }
-        result.prefix_ = prefix_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.key_ = key_;
-        if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.value_ = value_;
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.TrieProto.LeafNode) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.TrieProto.LeafNode)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.TrieProto.LeafNode other) {
-        if (other == ch.epfl.dedis.lib.proto.TrieProto.LeafNode.getDefaultInstance()) return this;
-        if (!other.prefix_.isEmpty()) {
-          if (prefix_.isEmpty()) {
-            prefix_ = other.prefix_;
-            bitField0_ = (bitField0_ & ~0x00000001);
-          } else {
-            ensurePrefixIsMutable();
-            prefix_.addAll(other.prefix_);
-          }
-          onChanged();
-        }
-        if (other.hasKey()) {
-          setKey(other.getKey());
-        }
-        if (other.hasValue()) {
-          setValue(other.getValue());
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        if (!hasKey()) {
-          return false;
-        }
-        if (!hasValue()) {
-          return false;
-        }
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.TrieProto.LeafNode parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.TrieProto.LeafNode) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private java.util.List<java.lang.Boolean> prefix_ = java.util.Collections.emptyList();
-      private void ensurePrefixIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          prefix_ = new java.util.ArrayList<java.lang.Boolean>(prefix_);
-          bitField0_ |= 0x00000001;
-         }
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public java.util.List<java.lang.Boolean>
-          getPrefixList() {
-        return java.util.Collections.unmodifiableList(prefix_);
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public int getPrefixCount() {
-        return prefix_.size();
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public boolean getPrefix(int index) {
-        return prefix_.get(index);
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public Builder setPrefix(
-          int index, boolean value) {
-        ensurePrefixIsMutable();
-        prefix_.set(index, value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public Builder addPrefix(boolean value) {
-        ensurePrefixIsMutable();
-        prefix_.add(value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public Builder addAllPrefix(
-          java.lang.Iterable<? extends java.lang.Boolean> values) {
-        ensurePrefixIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, prefix_);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public Builder clearPrefix() {
-        prefix_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000001);
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString key_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes key = 2;</code>
-       */
-      public boolean hasKey() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required bytes key = 2;</code>
-       */
-      public com.google.protobuf.ByteString getKey() {
-        return key_;
-      }
-      /**
-       * <code>required bytes key = 2;</code>
-       */
-      public Builder setKey(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        key_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes key = 2;</code>
-       */
-      public Builder clearKey() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        key_ = getDefaultInstance().getKey();
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString value_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes value = 3;</code>
-       */
-      public boolean hasValue() {
-        return ((bitField0_ & 0x00000004) == 0x00000004);
-      }
-      /**
-       * <code>required bytes value = 3;</code>
-       */
-      public com.google.protobuf.ByteString getValue() {
-        return value_;
-      }
-      /**
-       * <code>required bytes value = 3;</code>
-       */
-      public Builder setValue(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000004;
-        value_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes value = 3;</code>
-       */
-      public Builder clearValue() {
-        bitField0_ = (bitField0_ & ~0x00000004);
-        value_ = getDefaultInstance().getValue();
-        onChanged();
-        return this;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:trie.LeafNode)
-    }
-
-    // @@protoc_insertion_point(class_scope:trie.LeafNode)
-    private static final ch.epfl.dedis.lib.proto.TrieProto.LeafNode DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.TrieProto.LeafNode();
-    }
-
-    public static ch.epfl.dedis.lib.proto.TrieProto.LeafNode getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<LeafNode>
-        PARSER = new com.google.protobuf.AbstractParser<LeafNode>() {
-      @java.lang.Override
-      public LeafNode parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new LeafNode(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<LeafNode> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<LeafNode> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public ch.epfl.dedis.lib.proto.TrieProto.LeafNode getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface EmptyNodeOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:trie.EmptyNode)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>repeated bool prefix = 1 [packed = true];</code>
-     */
-    java.util.List<java.lang.Boolean> getPrefixList();
-    /**
-     * <code>repeated bool prefix = 1 [packed = true];</code>
-     */
-    int getPrefixCount();
-    /**
-     * <code>repeated bool prefix = 1 [packed = true];</code>
-     */
-    boolean getPrefix(int index);
-  }
-  /**
-   * Protobuf type {@code trie.EmptyNode}
-   */
-  public  static final class EmptyNode extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:trie.EmptyNode)
-      EmptyNodeOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use EmptyNode.newBuilder() to construct.
-    private EmptyNode(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private EmptyNode() {
-      prefix_ = java.util.Collections.emptyList();
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private EmptyNode(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 8: {
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                prefix_ = new java.util.ArrayList<java.lang.Boolean>();
-                mutable_bitField0_ |= 0x00000001;
-              }
-              prefix_.add(input.readBool());
-              break;
-            }
-            case 10: {
-              int length = input.readRawVarint32();
-              int limit = input.pushLimit(length);
-              if (!((mutable_bitField0_ & 0x00000001) == 0x00000001) && input.getBytesUntilLimit() > 0) {
-                prefix_ = new java.util.ArrayList<java.lang.Boolean>();
-                mutable_bitField0_ |= 0x00000001;
-              }
-              while (input.getBytesUntilLimit() > 0) {
-                prefix_.add(input.readBool());
-              }
-              input.popLimit(limit);
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-          prefix_ = java.util.Collections.unmodifiableList(prefix_);
-        }
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_EmptyNode_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_EmptyNode_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.class, ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.Builder.class);
-    }
-
-    public static final int PREFIX_FIELD_NUMBER = 1;
-    private java.util.List<java.lang.Boolean> prefix_;
-    /**
-     * <code>repeated bool prefix = 1 [packed = true];</code>
-     */
-    public java.util.List<java.lang.Boolean>
-        getPrefixList() {
-      return prefix_;
-    }
-    /**
-     * <code>repeated bool prefix = 1 [packed = true];</code>
-     */
-    public int getPrefixCount() {
-      return prefix_.size();
-    }
-    /**
-     * <code>repeated bool prefix = 1 [packed = true];</code>
-     */
-    public boolean getPrefix(int index) {
-      return prefix_.get(index);
-    }
-    private int prefixMemoizedSerializedSize = -1;
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      getSerializedSize();
-      if (getPrefixList().size() > 0) {
-        output.writeUInt32NoTag(10);
-        output.writeUInt32NoTag(prefixMemoizedSerializedSize);
-      }
-      for (int i = 0; i < prefix_.size(); i++) {
-        output.writeBoolNoTag(prefix_.get(i));
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      {
-        int dataSize = 0;
-        dataSize = 1 * getPrefixList().size();
-        size += dataSize;
-        if (!getPrefixList().isEmpty()) {
-          size += 1;
-          size += com.google.protobuf.CodedOutputStream
-              .computeInt32SizeNoTag(dataSize);
-        }
-        prefixMemoizedSerializedSize = dataSize;
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.TrieProto.EmptyNode)) {
-        return super.equals(obj);
-      }
-      ch.epfl.dedis.lib.proto.TrieProto.EmptyNode other = (ch.epfl.dedis.lib.proto.TrieProto.EmptyNode) obj;
-
-      boolean result = true;
-      result = result && getPrefixList()
-          .equals(other.getPrefixList());
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (getPrefixCount() > 0) {
-        hash = (37 * hash) + PREFIX_FIELD_NUMBER;
-        hash = (53 * hash) + getPrefixList().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.TrieProto.EmptyNode prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code trie.EmptyNode}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:trie.EmptyNode)
-        ch.epfl.dedis.lib.proto.TrieProto.EmptyNodeOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_EmptyNode_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_EmptyNode_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.class, ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.Builder.class);
-      }
-
-      // Construct using ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        prefix_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000001);
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_EmptyNode_descriptor;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.TrieProto.EmptyNode getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.TrieProto.EmptyNode build() {
-        ch.epfl.dedis.lib.proto.TrieProto.EmptyNode result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.TrieProto.EmptyNode buildPartial() {
-        ch.epfl.dedis.lib.proto.TrieProto.EmptyNode result = new ch.epfl.dedis.lib.proto.TrieProto.EmptyNode(this);
-        int from_bitField0_ = bitField0_;
-        if (((bitField0_ & 0x00000001) == 0x00000001)) {
-          prefix_ = java.util.Collections.unmodifiableList(prefix_);
-          bitField0_ = (bitField0_ & ~0x00000001);
-        }
-        result.prefix_ = prefix_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.TrieProto.EmptyNode) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.TrieProto.EmptyNode)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.TrieProto.EmptyNode other) {
-        if (other == ch.epfl.dedis.lib.proto.TrieProto.EmptyNode.getDefaultInstance()) return this;
-        if (!other.prefix_.isEmpty()) {
-          if (prefix_.isEmpty()) {
-            prefix_ = other.prefix_;
-            bitField0_ = (bitField0_ & ~0x00000001);
-          } else {
-            ensurePrefixIsMutable();
-            prefix_.addAll(other.prefix_);
-          }
-          onChanged();
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.TrieProto.EmptyNode parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.TrieProto.EmptyNode) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private java.util.List<java.lang.Boolean> prefix_ = java.util.Collections.emptyList();
-      private void ensurePrefixIsMutable() {
-        if (!((bitField0_ & 0x00000001) == 0x00000001)) {
-          prefix_ = new java.util.ArrayList<java.lang.Boolean>(prefix_);
-          bitField0_ |= 0x00000001;
-         }
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public java.util.List<java.lang.Boolean>
-          getPrefixList() {
-        return java.util.Collections.unmodifiableList(prefix_);
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public int getPrefixCount() {
-        return prefix_.size();
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public boolean getPrefix(int index) {
-        return prefix_.get(index);
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public Builder setPrefix(
-          int index, boolean value) {
-        ensurePrefixIsMutable();
-        prefix_.set(index, value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public Builder addPrefix(boolean value) {
-        ensurePrefixIsMutable();
-        prefix_.add(value);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public Builder addAllPrefix(
-          java.lang.Iterable<? extends java.lang.Boolean> values) {
-        ensurePrefixIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, prefix_);
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>repeated bool prefix = 1 [packed = true];</code>
-       */
-      public Builder clearPrefix() {
-        prefix_ = java.util.Collections.emptyList();
-        bitField0_ = (bitField0_ & ~0x00000001);
-        onChanged();
-        return this;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:trie.EmptyNode)
-    }
-
-    // @@protoc_insertion_point(class_scope:trie.EmptyNode)
-    private static final ch.epfl.dedis.lib.proto.TrieProto.EmptyNode DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.TrieProto.EmptyNode();
-    }
-
-    public static ch.epfl.dedis.lib.proto.TrieProto.EmptyNode getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<EmptyNode>
-        PARSER = new com.google.protobuf.AbstractParser<EmptyNode>() {
-      @java.lang.Override
-      public EmptyNode parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new EmptyNode(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<EmptyNode> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<EmptyNode> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public ch.epfl.dedis.lib.proto.TrieProto.EmptyNode getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
-  public interface InteriorNodeOrBuilder extends
-      // @@protoc_insertion_point(interface_extends:trie.InteriorNode)
-      com.google.protobuf.MessageOrBuilder {
-
-    /**
-     * <code>required bytes left = 1;</code>
-     */
-    boolean hasLeft();
-    /**
-     * <code>required bytes left = 1;</code>
-     */
-    com.google.protobuf.ByteString getLeft();
-
-    /**
-     * <code>required bytes right = 2;</code>
-     */
-    boolean hasRight();
-    /**
-     * <code>required bytes right = 2;</code>
-     */
-    com.google.protobuf.ByteString getRight();
-  }
-  /**
-   * Protobuf type {@code trie.InteriorNode}
-   */
-  public  static final class InteriorNode extends
-      com.google.protobuf.GeneratedMessageV3 implements
-      // @@protoc_insertion_point(message_implements:trie.InteriorNode)
-      InteriorNodeOrBuilder {
-  private static final long serialVersionUID = 0L;
-    // Use InteriorNode.newBuilder() to construct.
-    private InteriorNode(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
-      super(builder);
-    }
-    private InteriorNode() {
-      left_ = com.google.protobuf.ByteString.EMPTY;
-      right_ = com.google.protobuf.ByteString.EMPTY;
-    }
-
-    @java.lang.Override
-    public final com.google.protobuf.UnknownFieldSet
-    getUnknownFields() {
-      return this.unknownFields;
-    }
-    private InteriorNode(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      this();
-      if (extensionRegistry == null) {
-        throw new java.lang.NullPointerException();
-      }
-      int mutable_bitField0_ = 0;
-      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
-          com.google.protobuf.UnknownFieldSet.newBuilder();
-      try {
-        boolean done = false;
-        while (!done) {
-          int tag = input.readTag();
-          switch (tag) {
-            case 0:
-              done = true;
-              break;
-            case 10: {
-              bitField0_ |= 0x00000001;
-              left_ = input.readBytes();
-              break;
-            }
-            case 18: {
-              bitField0_ |= 0x00000002;
-              right_ = input.readBytes();
-              break;
-            }
-            default: {
-              if (!parseUnknownField(
-                  input, unknownFields, extensionRegistry, tag)) {
-                done = true;
-              }
-              break;
-            }
-          }
-        }
-      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-        throw e.setUnfinishedMessage(this);
-      } catch (java.io.IOException e) {
-        throw new com.google.protobuf.InvalidProtocolBufferException(
-            e).setUnfinishedMessage(this);
-      } finally {
-        this.unknownFields = unknownFields.build();
-        makeExtensionsImmutable();
-      }
-    }
-    public static final com.google.protobuf.Descriptors.Descriptor
-        getDescriptor() {
-      return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_InteriorNode_descriptor;
-    }
-
-    @java.lang.Override
-    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-        internalGetFieldAccessorTable() {
-      return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_InteriorNode_fieldAccessorTable
-          .ensureFieldAccessorsInitialized(
-              ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.class, ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.Builder.class);
-    }
-
-    private int bitField0_;
-    public static final int LEFT_FIELD_NUMBER = 1;
-    private com.google.protobuf.ByteString left_;
-    /**
-     * <code>required bytes left = 1;</code>
-     */
-    public boolean hasLeft() {
-      return ((bitField0_ & 0x00000001) == 0x00000001);
-    }
-    /**
-     * <code>required bytes left = 1;</code>
-     */
-    public com.google.protobuf.ByteString getLeft() {
-      return left_;
-    }
-
-    public static final int RIGHT_FIELD_NUMBER = 2;
-    private com.google.protobuf.ByteString right_;
-    /**
-     * <code>required bytes right = 2;</code>
-     */
-    public boolean hasRight() {
-      return ((bitField0_ & 0x00000002) == 0x00000002);
-    }
-    /**
-     * <code>required bytes right = 2;</code>
-     */
-    public com.google.protobuf.ByteString getRight() {
-      return right_;
-    }
-
-    private byte memoizedIsInitialized = -1;
-    @java.lang.Override
-    public final boolean isInitialized() {
-      byte isInitialized = memoizedIsInitialized;
-      if (isInitialized == 1) return true;
-      if (isInitialized == 0) return false;
-
-      if (!hasLeft()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      if (!hasRight()) {
-        memoizedIsInitialized = 0;
-        return false;
-      }
-      memoizedIsInitialized = 1;
-      return true;
-    }
-
-    @java.lang.Override
-    public void writeTo(com.google.protobuf.CodedOutputStream output)
-                        throws java.io.IOException {
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        output.writeBytes(1, left_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        output.writeBytes(2, right_);
-      }
-      unknownFields.writeTo(output);
-    }
-
-    @java.lang.Override
-    public int getSerializedSize() {
-      int size = memoizedSize;
-      if (size != -1) return size;
-
-      size = 0;
-      if (((bitField0_ & 0x00000001) == 0x00000001)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, left_);
-      }
-      if (((bitField0_ & 0x00000002) == 0x00000002)) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, right_);
-      }
-      size += unknownFields.getSerializedSize();
-      memoizedSize = size;
-      return size;
-    }
-
-    @java.lang.Override
-    public boolean equals(final java.lang.Object obj) {
-      if (obj == this) {
-       return true;
-      }
-      if (!(obj instanceof ch.epfl.dedis.lib.proto.TrieProto.InteriorNode)) {
-        return super.equals(obj);
-      }
-      ch.epfl.dedis.lib.proto.TrieProto.InteriorNode other = (ch.epfl.dedis.lib.proto.TrieProto.InteriorNode) obj;
-
-      boolean result = true;
-      result = result && (hasLeft() == other.hasLeft());
-      if (hasLeft()) {
-        result = result && getLeft()
-            .equals(other.getLeft());
-      }
-      result = result && (hasRight() == other.hasRight());
-      if (hasRight()) {
-        result = result && getRight()
-            .equals(other.getRight());
-      }
-      result = result && unknownFields.equals(other.unknownFields);
-      return result;
-    }
-
-    @java.lang.Override
-    public int hashCode() {
-      if (memoizedHashCode != 0) {
-        return memoizedHashCode;
-      }
-      int hash = 41;
-      hash = (19 * hash) + getDescriptor().hashCode();
-      if (hasLeft()) {
-        hash = (37 * hash) + LEFT_FIELD_NUMBER;
-        hash = (53 * hash) + getLeft().hashCode();
-      }
-      if (hasRight()) {
-        hash = (37 * hash) + RIGHT_FIELD_NUMBER;
-        hash = (53 * hash) + getRight().hashCode();
-      }
-      hash = (29 * hash) + unknownFields.hashCode();
-      memoizedHashCode = hash;
-      return hash;
-    }
-
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
-        java.nio.ByteBuffer data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
-        java.nio.ByteBuffer data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
-        com.google.protobuf.ByteString data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
-        com.google.protobuf.ByteString data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(byte[] data)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
-        byte[] data,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws com.google.protobuf.InvalidProtocolBufferException {
-      return PARSER.parseFrom(data, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseDelimitedFrom(java.io.InputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseDelimitedFrom(
-        java.io.InputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
-        com.google.protobuf.CodedInputStream input)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input);
-    }
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parseFrom(
-        com.google.protobuf.CodedInputStream input,
-        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-        throws java.io.IOException {
-      return com.google.protobuf.GeneratedMessageV3
-          .parseWithIOException(PARSER, input, extensionRegistry);
-    }
-
-    @java.lang.Override
-    public Builder newBuilderForType() { return newBuilder(); }
-    public static Builder newBuilder() {
-      return DEFAULT_INSTANCE.toBuilder();
-    }
-    public static Builder newBuilder(ch.epfl.dedis.lib.proto.TrieProto.InteriorNode prototype) {
-      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
-    }
-    @java.lang.Override
-    public Builder toBuilder() {
-      return this == DEFAULT_INSTANCE
-          ? new Builder() : new Builder().mergeFrom(this);
-    }
-
-    @java.lang.Override
-    protected Builder newBuilderForType(
-        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-      Builder builder = new Builder(parent);
-      return builder;
-    }
-    /**
-     * Protobuf type {@code trie.InteriorNode}
-     */
-    public static final class Builder extends
-        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
-        // @@protoc_insertion_point(builder_implements:trie.InteriorNode)
-        ch.epfl.dedis.lib.proto.TrieProto.InteriorNodeOrBuilder {
-      public static final com.google.protobuf.Descriptors.Descriptor
-          getDescriptor() {
-        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_InteriorNode_descriptor;
-      }
-
-      @java.lang.Override
-      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-          internalGetFieldAccessorTable() {
-        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_InteriorNode_fieldAccessorTable
-            .ensureFieldAccessorsInitialized(
-                ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.class, ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.Builder.class);
-      }
-
-      // Construct using ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.newBuilder()
-      private Builder() {
-        maybeForceBuilderInitialization();
-      }
-
-      private Builder(
-          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
-        super(parent);
-        maybeForceBuilderInitialization();
-      }
-      private void maybeForceBuilderInitialization() {
-        if (com.google.protobuf.GeneratedMessageV3
-                .alwaysUseFieldBuilders) {
-        }
-      }
-      @java.lang.Override
-      public Builder clear() {
-        super.clear();
-        left_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000001);
-        right_ = com.google.protobuf.ByteString.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000002);
-        return this;
-      }
-
-      @java.lang.Override
-      public com.google.protobuf.Descriptors.Descriptor
-          getDescriptorForType() {
-        return ch.epfl.dedis.lib.proto.TrieProto.internal_static_trie_InteriorNode_descriptor;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.TrieProto.InteriorNode getDefaultInstanceForType() {
-        return ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.getDefaultInstance();
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.TrieProto.InteriorNode build() {
-        ch.epfl.dedis.lib.proto.TrieProto.InteriorNode result = buildPartial();
-        if (!result.isInitialized()) {
-          throw newUninitializedMessageException(result);
-        }
-        return result;
-      }
-
-      @java.lang.Override
-      public ch.epfl.dedis.lib.proto.TrieProto.InteriorNode buildPartial() {
-        ch.epfl.dedis.lib.proto.TrieProto.InteriorNode result = new ch.epfl.dedis.lib.proto.TrieProto.InteriorNode(this);
-        int from_bitField0_ = bitField0_;
-        int to_bitField0_ = 0;
-        if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
-          to_bitField0_ |= 0x00000001;
-        }
-        result.left_ = left_;
-        if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
-          to_bitField0_ |= 0x00000002;
-        }
-        result.right_ = right_;
-        result.bitField0_ = to_bitField0_;
-        onBuilt();
-        return result;
-      }
-
-      @java.lang.Override
-      public Builder clone() {
-        return (Builder) super.clone();
-      }
-      @java.lang.Override
-      public Builder setField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.setField(field, value);
-      }
-      @java.lang.Override
-      public Builder clearField(
-          com.google.protobuf.Descriptors.FieldDescriptor field) {
-        return (Builder) super.clearField(field);
-      }
-      @java.lang.Override
-      public Builder clearOneof(
-          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-        return (Builder) super.clearOneof(oneof);
-      }
-      @java.lang.Override
-      public Builder setRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          int index, java.lang.Object value) {
-        return (Builder) super.setRepeatedField(field, index, value);
-      }
-      @java.lang.Override
-      public Builder addRepeatedField(
-          com.google.protobuf.Descriptors.FieldDescriptor field,
-          java.lang.Object value) {
-        return (Builder) super.addRepeatedField(field, value);
-      }
-      @java.lang.Override
-      public Builder mergeFrom(com.google.protobuf.Message other) {
-        if (other instanceof ch.epfl.dedis.lib.proto.TrieProto.InteriorNode) {
-          return mergeFrom((ch.epfl.dedis.lib.proto.TrieProto.InteriorNode)other);
-        } else {
-          super.mergeFrom(other);
-          return this;
-        }
-      }
-
-      public Builder mergeFrom(ch.epfl.dedis.lib.proto.TrieProto.InteriorNode other) {
-        if (other == ch.epfl.dedis.lib.proto.TrieProto.InteriorNode.getDefaultInstance()) return this;
-        if (other.hasLeft()) {
-          setLeft(other.getLeft());
-        }
-        if (other.hasRight()) {
-          setRight(other.getRight());
-        }
-        this.mergeUnknownFields(other.unknownFields);
-        onChanged();
-        return this;
-      }
-
-      @java.lang.Override
-      public final boolean isInitialized() {
-        if (!hasLeft()) {
-          return false;
-        }
-        if (!hasRight()) {
-          return false;
-        }
-        return true;
-      }
-
-      @java.lang.Override
-      public Builder mergeFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws java.io.IOException {
-        ch.epfl.dedis.lib.proto.TrieProto.InteriorNode parsedMessage = null;
-        try {
-          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-          parsedMessage = (ch.epfl.dedis.lib.proto.TrieProto.InteriorNode) e.getUnfinishedMessage();
-          throw e.unwrapIOException();
-        } finally {
-          if (parsedMessage != null) {
-            mergeFrom(parsedMessage);
-          }
-        }
-        return this;
-      }
-      private int bitField0_;
-
-      private com.google.protobuf.ByteString left_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes left = 1;</code>
-       */
-      public boolean hasLeft() {
-        return ((bitField0_ & 0x00000001) == 0x00000001);
-      }
-      /**
-       * <code>required bytes left = 1;</code>
-       */
-      public com.google.protobuf.ByteString getLeft() {
-        return left_;
-      }
-      /**
-       * <code>required bytes left = 1;</code>
-       */
-      public Builder setLeft(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000001;
-        left_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes left = 1;</code>
-       */
-      public Builder clearLeft() {
-        bitField0_ = (bitField0_ & ~0x00000001);
-        left_ = getDefaultInstance().getLeft();
-        onChanged();
-        return this;
-      }
-
-      private com.google.protobuf.ByteString right_ = com.google.protobuf.ByteString.EMPTY;
-      /**
-       * <code>required bytes right = 2;</code>
-       */
-      public boolean hasRight() {
-        return ((bitField0_ & 0x00000002) == 0x00000002);
-      }
-      /**
-       * <code>required bytes right = 2;</code>
-       */
-      public com.google.protobuf.ByteString getRight() {
-        return right_;
-      }
-      /**
-       * <code>required bytes right = 2;</code>
-       */
-      public Builder setRight(com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  bitField0_ |= 0x00000002;
-        right_ = value;
-        onChanged();
-        return this;
-      }
-      /**
-       * <code>required bytes right = 2;</code>
-       */
-      public Builder clearRight() {
-        bitField0_ = (bitField0_ & ~0x00000002);
-        right_ = getDefaultInstance().getRight();
-        onChanged();
-        return this;
-      }
-      @java.lang.Override
-      public final Builder setUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.setUnknownFields(unknownFields);
-      }
-
-      @java.lang.Override
-      public final Builder mergeUnknownFields(
-          final com.google.protobuf.UnknownFieldSet unknownFields) {
-        return super.mergeUnknownFields(unknownFields);
-      }
-
-
-      // @@protoc_insertion_point(builder_scope:trie.InteriorNode)
-    }
-
-    // @@protoc_insertion_point(class_scope:trie.InteriorNode)
-    private static final ch.epfl.dedis.lib.proto.TrieProto.InteriorNode DEFAULT_INSTANCE;
-    static {
-      DEFAULT_INSTANCE = new ch.epfl.dedis.lib.proto.TrieProto.InteriorNode();
-    }
-
-    public static ch.epfl.dedis.lib.proto.TrieProto.InteriorNode getDefaultInstance() {
-      return DEFAULT_INSTANCE;
-    }
-
-    @java.lang.Deprecated public static final com.google.protobuf.Parser<InteriorNode>
-        PARSER = new com.google.protobuf.AbstractParser<InteriorNode>() {
-      @java.lang.Override
-      public InteriorNode parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        return new InteriorNode(input, extensionRegistry);
-      }
-    };
-
-    public static com.google.protobuf.Parser<InteriorNode> parser() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<InteriorNode> getParserForType() {
-      return PARSER;
-    }
-
-    @java.lang.Override
-    public ch.epfl.dedis.lib.proto.TrieProto.InteriorNode getDefaultInstanceForType() {
-      return DEFAULT_INSTANCE;
-    }
-
-  }
-
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_trie_Proof_descriptor;
+    internal_static_trie_InteriorNode_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_trie_Proof_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_trie_LeafNode_descriptor;
-  private static final 
-    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_trie_LeafNode_fieldAccessorTable;
+      internal_static_trie_InteriorNode_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_trie_EmptyNode_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_trie_EmptyNode_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
-    internal_static_trie_InteriorNode_descriptor;
+    internal_static_trie_LeafNode_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
-      internal_static_trie_InteriorNode_fieldAccessorTable;
+      internal_static_trie_LeafNode_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_trie_Proof_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_trie_Proof_fieldAccessorTable;
 
   public static com.google.protobuf.Descriptors.FileDescriptor
       getDescriptor() {
@@ -3340,13 +3340,13 @@ public final class TrieProto {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\ntrie.proto\022\004trie\"{\n\005Proof\022%\n\tinteriors" +
-      "\030\001 \003(\0132\022.trie.InteriorNode\022\034\n\004leaf\030\002 \002(\013" +
-      "2\016.trie.LeafNode\022\036\n\005empty\030\003 \002(\0132\017.trie.E" +
-      "mptyNode\022\r\n\005nonce\030\004 \002(\014\":\n\010LeafNode\022\022\n\006p" +
-      "refix\030\001 \003(\010B\002\020\001\022\013\n\003key\030\002 \002(\014\022\r\n\005value\030\003 " +
-      "\002(\014\"\037\n\tEmptyNode\022\022\n\006prefix\030\001 \003(\010B\002\020\001\"+\n\014" +
-      "InteriorNode\022\014\n\004left\030\001 \002(\014\022\r\n\005right\030\002 \002(" +
+      "\n\ntrie.proto\022\004trie\"+\n\014InteriorNode\022\014\n\004le" +
+      "ft\030\001 \002(\014\022\r\n\005right\030\002 \002(\014\"\037\n\tEmptyNode\022\022\n\006" +
+      "prefix\030\001 \003(\010B\002\020\001\":\n\010LeafNode\022\022\n\006prefix\030\001" +
+      " \003(\010B\002\020\001\022\013\n\003key\030\002 \002(\014\022\r\n\005value\030\003 \002(\014\"{\n\005" +
+      "Proof\022%\n\tinteriors\030\001 \003(\0132\022.trie.Interior" +
+      "Node\022\034\n\004leaf\030\002 \002(\0132\016.trie.LeafNode\022\036\n\005em" +
+      "pty\030\003 \002(\0132\017.trie.EmptyNode\022\r\n\005nonce\030\004 \002(" +
       "\014B$\n\027ch.epfl.dedis.lib.protoB\tTrieProto"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
@@ -3361,30 +3361,30 @@ public final class TrieProto {
       .internalBuildGeneratedFileFrom(descriptorData,
         new com.google.protobuf.Descriptors.FileDescriptor[] {
         }, assigner);
-    internal_static_trie_Proof_descriptor =
-      getDescriptor().getMessageTypes().get(0);
-    internal_static_trie_Proof_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_trie_Proof_descriptor,
-        new java.lang.String[] { "Interiors", "Leaf", "Empty", "Nonce", });
-    internal_static_trie_LeafNode_descriptor =
-      getDescriptor().getMessageTypes().get(1);
-    internal_static_trie_LeafNode_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_trie_LeafNode_descriptor,
-        new java.lang.String[] { "Prefix", "Key", "Value", });
-    internal_static_trie_EmptyNode_descriptor =
-      getDescriptor().getMessageTypes().get(2);
-    internal_static_trie_EmptyNode_fieldAccessorTable = new
-      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-        internal_static_trie_EmptyNode_descriptor,
-        new java.lang.String[] { "Prefix", });
     internal_static_trie_InteriorNode_descriptor =
-      getDescriptor().getMessageTypes().get(3);
+      getDescriptor().getMessageTypes().get(0);
     internal_static_trie_InteriorNode_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_trie_InteriorNode_descriptor,
         new java.lang.String[] { "Left", "Right", });
+    internal_static_trie_EmptyNode_descriptor =
+      getDescriptor().getMessageTypes().get(1);
+    internal_static_trie_EmptyNode_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_trie_EmptyNode_descriptor,
+        new java.lang.String[] { "Prefix", });
+    internal_static_trie_LeafNode_descriptor =
+      getDescriptor().getMessageTypes().get(2);
+    internal_static_trie_LeafNode_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_trie_LeafNode_descriptor,
+        new java.lang.String[] { "Prefix", "Key", "Value", });
+    internal_static_trie_Proof_descriptor =
+      getDescriptor().getMessageTypes().get(3);
+    internal_static_trie_Proof_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_trie_Proof_descriptor,
+        new java.lang.String[] { "Interiors", "Leaf", "Empty", "Nonce", });
   }
 
   // @@protoc_insertion_point(outer_class_scope)

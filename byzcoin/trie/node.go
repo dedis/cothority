@@ -16,11 +16,6 @@ const (
 	typeLeaf
 )
 
-type interiorNode struct {
-	Left  []byte
-	Right []byte
-}
-
 func (n *interiorNode) hash() []byte {
 	h := sha256.New()
 	h.Write(n.Left)
@@ -56,10 +51,6 @@ func decodeInteriorNode(buf []byte) (node interiorNode, err error) {
 		return
 	}
 	return
-}
-
-type emptyNode struct {
-	Prefix []bool
 }
 
 func newEmptyNode(prefix []bool) emptyNode {
@@ -103,12 +94,6 @@ func decodeEmptyNode(buf []byte) (node emptyNode, err error) {
 	return
 }
 
-type leafNode struct {
-	emptyNode
-	Key   []byte
-	Value []byte
-}
-
 func (n *leafNode) hash(nonce []byte) []byte {
 	h := sha256.New()
 	h.Write([]byte{byte(typeLeaf)})
@@ -126,9 +111,9 @@ func (n *leafNode) hash(nonce []byte) []byte {
 
 func newLeafNode(prefix []bool, key []byte, value []byte) leafNode {
 	return leafNode{
-		emptyNode: newEmptyNode(prefix),
-		Key:       key,
-		Value:     value,
+		Prefix: prefix,
+		Key:    key,
+		Value:  value,
 	}
 }
 

@@ -98,7 +98,7 @@ class ValueTest {
         darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
         dc.evolveDarcAndWait(darc2, admin, 10);
 
-        // Send thru a tx with the wrong signer so it fails.
+        // Send through a tx with the wrong signer so it fails.
         Signer user = new SignerEd25519();
         ClientTransactionId txid = dc.spawnInstance("value", user, Argument.NewList("value", "314159".getBytes()));
 
@@ -107,7 +107,7 @@ class ValueTest {
         assertTrue(p.matches());
 
         // Now that we know the latest block (it was returned to us in the proof p), we check it for the expected
-        // failed tx. If we don't find it, we walk backwards one and look. We need to check back because OL could
+        // failed tx. If we don't find it, we walk backwards one and look. We need to check back because BC could
         // decide to try one block with our failed tx, commit it, and then try another block with the success tx.
 
         Block ob = new Block(p);
@@ -118,7 +118,6 @@ class ValueTest {
 
         // both tx ended up in one block
         if (txr.size() == 2) {
-            // Index: 0: genesis, 1: darc evolution, 2: this block with both failed and succeeded in it.
             assertEquals(2, p.getLatest().getIndex());
 
             ClientTransactionId ref;

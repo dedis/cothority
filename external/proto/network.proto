@@ -3,6 +3,7 @@ syntax = "proto2";
 package network;
 
 // This package should come from onet/network but is manually created here.
+// MANUAL
 
 option java_package = "ch.epfl.dedis.lib.proto";
 option java_outer_classname = "NetworkProto";
