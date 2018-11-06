@@ -115,24 +115,33 @@ func (c ChainConfig) sanityCheck(old *ChainConfig) error {
 		return errors.New("need at least 3 nodes to have a majority")
 	}
 	if old != nil {
-		// Check new leader was in old roster
-		if index, _ := old.Roster.Search(c.Roster.List[0].ID); index < 0 {
-			return errors.New("new leader must be in previous roster")
-		}
+		return old.checkNewRoster(c.Roster)
+	}
+	return nil
+}
 
-		// Check we don't change more than one one
-		added := 0
-		oldList := onet.NewRoster(old.Roster.List)
-		for _, si := range c.Roster.List {
-			if i, _ := oldList.Search(si.ID); i >= 0 {
-				oldList.List = append(oldList.List[:i], oldList.List[i+1:]...)
-			} else {
-				added++
-			}
+// checkNewRoster makes sure that the new roster follows the rules we need
+// in byzcoin:
+//   - no new node can join as leader
+//   - only one node joining or leaving
+func (c ChainConfig) checkNewRoster(newRoster onet.Roster) error {
+	// Check new leader was in old roster
+	if index, _ := c.Roster.Search(newRoster.List[0].ID); index < 0 {
+		return errors.New("new leader must be in previous roster")
+	}
+
+	// Check we don't change more than one one
+	added := 0
+	oldList := onet.NewRoster(c.Roster.List)
+	for _, si := range newRoster.List {
+		if i, _ := oldList.Search(si.ID); i >= 0 {
+			oldList.List = append(oldList.List[:i], oldList.List[i+1:]...)
+		} else {
+			added++
 		}
-		if len(oldList.List)+added > 1 {
-			return errors.New("can only change one node at a time - adding or removing")
-		}
+	}
+	if len(oldList.List)+added > 1 {
+		return errors.New("can only change one node at a time - adding or removing")
 	}
 	return nil
 }

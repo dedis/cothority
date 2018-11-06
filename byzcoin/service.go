@@ -1324,13 +1324,9 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		return false
 	}
 	if newSB.Index > 0 {
-		// TODO: need to check that the current roster is the same as the one
-		// in the configuration of the previous roster. But because we don't have
-		// a versioning system yet, we cannot access the configuration of the previous
-		// version.
-		if !config.Roster.ID.Equal(newSB.Roster.ID) {
-			log.Lvl2(s.ServerIdentity(), "detected new roster in configuration")
-			// TODO: check if more than one node changed
+		if err := config.checkNewRoster(*newSB.Roster); err != nil {
+			log.Error("Didn't accept the new roster:", err)
+			return false
 		}
 	}
 
