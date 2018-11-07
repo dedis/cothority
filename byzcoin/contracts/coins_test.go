@@ -279,7 +279,7 @@ func (ct cvTest) GetProof(key []byte) (*trie.Proof, error) {
 }
 
 func (ct cvTest) setSignatureCounter(id string, v uint64) {
-	key := sha256.Sum256([]byte("version_" + id))
+	key := sha256.Sum256([]byte("signercounter_" + id))
 	verBuf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(verBuf, v)
 	ct.values[string(key[:])] = verBuf

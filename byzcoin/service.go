@@ -385,7 +385,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 	return resp, nil
 }
 
-// GetSignerCounters gets the lateset signer counters for the given identities.
+// GetSignerCounters gets the latest signer counters for the given identities.
 func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersResponse, error) {
 	st, err := s.GetReadOnlyStateTrie(req.SkipchainID)
 	if err != nil {
@@ -1159,15 +1159,15 @@ clientTransactions:
 				txOut = append(txOut, tx)
 				continue clientTransactions
 			}
-			if err = sstTempC.StoreAll(scs); err != nil {
-				log.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
+			var counterScs StateChanges
+			if counterScs, err = incrementSignerCounters(sstTempC, instr.Signatures); err != nil {
+				log.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
 				tx.Accepted = false
 				txOut = append(txOut, tx)
 				continue clientTransactions
 			}
-			var counterScs StateChanges
-			if counterScs, err = incrementSignerCounters(sstTempC, instr.Signatures); err != nil {
-				log.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
+			if err = sstTempC.StoreAll(append(scs, counterScs...)); err != nil {
+				log.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
 				tx.Accepted = false
 				txOut = append(txOut, tx)
 				continue clientTransactions

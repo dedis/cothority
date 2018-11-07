@@ -158,7 +158,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	// the operations below should succeed
 	// add the first tx
 	log.Lvl1("adding the first tx")
-	tx1, err := createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	tx1, err := createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 1)
 	require.Nil(t, err)
 	akvresp, err = s.service().AddTransaction(&AddTxRequest{
 		Version:     CurrentVersion,
@@ -168,6 +168,7 @@ func testAddTransaction(t *testing.T, sendToIdx int, failure bool) {
 	require.Nil(t, err)
 	require.NotNil(t, akvresp)
 	require.Equal(t, CurrentVersion, akvresp.Version)
+	time.Sleep(s.interval)
 
 	// add the second tx
 	log.Lvl1("adding the second tx")

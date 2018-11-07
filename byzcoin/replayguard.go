@@ -25,15 +25,18 @@ func getSignerCounter(st ReadOnlyStateTrie, id string) (uint64, error) {
 
 // incrementSignerCounters loads the existing counters from sigs and then
 // increments all of them by 1.
-func incrementSignerCounters(sst *stagingStateTrie, sigs []darc.Signature) (StateChanges, error) {
+func incrementSignerCounters(st ReadOnlyStateTrie, sigs []darc.Signature) (StateChanges, error) {
 	var scs StateChanges
 	for _, sig := range sigs {
 		id := sig.Signer.String()
-		ver, err := getSignerCounter(sst, id)
+		ver, err := getSignerCounter(st, id)
 		if err != nil {
 			return scs, err
 		}
 		verBuf := make([]byte, 8)
+		// If ver is the highest uint64, then it'll overflow and go
+		// back to 0, this is the intended behaviour, otherwise the
+		// client will not be able to make more transactions.
 		binary.LittleEndian.PutUint64(verBuf, ver+1)
 		scs = append(scs, StateChange{
 			StateAction: Update,
@@ -43,7 +46,7 @@ func incrementSignerCounters(sst *stagingStateTrie, sigs []darc.Signature) (Stat
 			DarcID:      darc.ID([]byte{}),
 		})
 	}
-	return scs, sst.StoreAll(scs)
+	return scs, nil
 }
 
 // verifySignerCounters verifies whether the given counters are valid with
@@ -61,6 +64,9 @@ func verifySignerCounters(st ReadOnlyStateTrie, counters []uint64, sigs []darc.S
 		if err != nil {
 			return err
 		}
+		// If c is the highest uint64, then it'll overflow and go back
+		// to 0, this is the intended behaviour, otherwise the client
+		// will not be able to make more transactions.
 		if counter != c+1 {
 			return fmt.Errorf("for pk %s, got version %v, but need %v", id, counter, c+1)
 		}
@@ -69,6 +75,8 @@ func verifySignerCounters(st ReadOnlyStateTrie, counters []uint64, sigs []darc.S
 }
 
 func publicVersionKey(id string) []byte {
-	key := sha256.Sum256([]byte("version_" + id))
-	return key[:]
+	h := sha256.New()
+	h.Write([]byte("signercounter_"))
+	h.Write([]byte(id))
+	return h.Sum(nil)
 }
