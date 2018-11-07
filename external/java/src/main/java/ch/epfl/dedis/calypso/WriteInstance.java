@@ -32,10 +32,11 @@ public class WriteInstance {
     /**
      * Constructor for creating a new instance.
      *
-     * @param calypso The CalypsoRPC object which should be already running.
-     * @param darcId  The darc ID for which the signers belong.
-     * @param signers The list of signers that are authorised to create the instance.
-     * @param wr      The WriteData object, to be stored in the instance.
+     * @param calypso    The CalypsoRPC object which should be already running.
+     * @param darcId     The darc ID for which the signers belong.
+     * @param signers    The list of signers that are authorised to create the instance.
+     * @param signerCtrs a list of monotonically increasing counter for every signer
+     * @param wr         The WriteData object, to be stored in the instance.
      * @throws CothorityException if something goes wrong
      */
     public WriteInstance(CalypsoRPC calypso, DarcId darcId, List<Signer> signers, List<Long> signerCtrs, WriteData wr) throws CothorityException {
@@ -60,6 +61,7 @@ public class WriteInstance {
 
     /**
      * Get the LTS configuration.
+     *
      * @return the LTS
      */
     public LTS getLts() {
@@ -68,6 +70,7 @@ public class WriteInstance {
 
     /**
      * Get the instance.
+     *
      * @return the Instance
      */
     public Instance getInstance() {
@@ -80,7 +83,7 @@ public class WriteInstance {
 
     /**
      * @return the WriteData stored in that instance
-     * @throws CothorityNotFoundException     if the instance does not hold a CalypsoWrite data
+     * @throws CothorityNotFoundException if the instance does not hold a CalypsoWrite data
      */
     public WriteData getWrite() throws CothorityNotFoundException {
         return WriteData.fromInstance(getInstance());
@@ -89,8 +92,9 @@ public class WriteInstance {
     /**
      * Spawns a new CalypsoRead instance for this Write Instance.
      *
-     * @param calypso an existing calypso object
-     * @param readers one or more readers that can sign the read spawn instruction
+     * @param calypso    an existing calypso object
+     * @param readers    one or more readers that can sign the read spawn instruction
+     * @param readerCtrs a list of monotonically increasing counter for every reader
      * @return ReadInstance if successful
      * @throws CothorityException if something goes wrong
      */

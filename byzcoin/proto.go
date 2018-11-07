@@ -176,7 +176,7 @@ type Instruction struct {
 	Delete *Delete
 	// SignerCounter must be set to a value that is one greater than what
 	// was in the instruction signed by the same signer. Every counter must
-	// map to an identity in Signature. The initial counter is 1.
+	// map to a signer Signature. The initial counter is 1.
 	SignerCounter []uint64
 	// Signatures that are verified using the Darc controlling access to the instance.
 	Signatures []darc.Signature
@@ -214,6 +214,8 @@ type Argument struct {
 
 // ClientTransaction is a slice of Instructions that will be applied in order.
 // If any of the instructions fails, none of them will be applied.
+// InstructionsHash must be the hash of all the instructions, this hash is what
+// every instruction must sign for the transaction to be valid.
 type ClientTransaction struct {
 	Instructions     Instructions
 	InstructionsHash []byte

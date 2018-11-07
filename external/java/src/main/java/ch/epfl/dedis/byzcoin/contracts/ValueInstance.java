@@ -40,6 +40,7 @@ public class ValueInstance {
      * @param bc            a running ByzCoin service
      * @param spawnerDarcId a darc Id with a "spawn:value" rule in it
      * @param spawnerSigner a signer having the right to sign for the "spawn:value" rule
+     * @param signerCtr     the monotonically increasing counters for the spawnSigner
      * @param value         the value to store in the instance
      * @throws CothorityException if something goes wrong
      */
@@ -83,8 +84,9 @@ public class ValueInstance {
      * <p>
      * TODO: allow for evolution if the expression has more than one identity.
      *
-     * @param newValue the value to replace the old value.
-     * @param signerCtr TODO
+     * @param newValue  the value to replace the old value.
+     * @param signerCtr the monotonically increasing counters which must map to the signers who will
+     *                  eventually sign the instruction
      * @return Instruction to be sent to byzcoin
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
@@ -93,6 +95,14 @@ public class ValueInstance {
         return new Instruction(instance.getId(), Collections.singletonList(signerCtr), inv);
     }
 
+    /**
+     * Asks byzcoin to update the value but does not wait for the transaction to be confirmed.
+     *
+     * @param newValue the value to replace the old value.
+     * @param owner    is the owner that can sign to evolve the darc
+     * @param ownerCtr the monotonically increasing counters for the owner
+     * @throws CothorityException if something goes wrong
+     */
     public void evolveValue(byte[] newValue, Signer owner, Long ownerCtr) throws CothorityException {
         Instruction inst = evolveValueInstruction(newValue, ownerCtr);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
@@ -107,6 +117,7 @@ public class ValueInstance {
      *
      * @param newValue the value to replace the old value.
      * @param owner    is the owner that can sign to evolve the darc
+     * @param ownerCtr the monotonically increasing counters for the owner
      * @param wait     how many blocks to wait for inclusion of the instruction
      * @throws CothorityException if something goes wrong
      */
@@ -149,8 +160,8 @@ public class ValueInstance {
      *
      * @param bc is a running ByzCoin service
      * @param id of the value-instance to connect to
-     * @throws CothorityException if something goes wrong
      * @return the new ValueInstance
+     * @throws CothorityException if something goes wrong
      */
     public static ValueInstance fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityException {
         return new ValueInstance(bc, Instance.fromByzcoin(bc, id));
@@ -161,8 +172,8 @@ public class ValueInstance {
      *
      * @param bc a running ByzCoin service
      * @param p  the proof for the valueInstance
-     * @throws CothorityException if something goes wrong
      * @return the new ValueInstance
+     * @throws CothorityException if something goes wrong
      */
     public static ValueInstance fromByzcoin(ByzCoinRPC bc, Proof p) throws CothorityException {
         return fromByzcoin(bc, new InstanceId(p.getKey()));

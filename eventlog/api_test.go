@@ -286,7 +286,6 @@ func TestClient_Search(t *testing.T) {
 }
 
 func waitForKey(t *testing.T, s *byzcoin.Service, scID skipchain.SkipBlockID, key []byte, interval time.Duration) {
-	log.Printf("WAITING %x", key)
 	if len(key) == 0 {
 		t.Fatal("key len", len(key))
 	}

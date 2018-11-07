@@ -20,7 +20,7 @@ import java.util.List;
 
 /**
  * EventLogInstance is for interacting with the eventlog contract on ByzCoin.
- *
+ * <p>
  * Contrary to ordinary event logging services, we offer better security and auditability. Below are some of the main
  * features that sets us apart.
  *
@@ -55,9 +55,10 @@ public class EventLogInstance {
      * Constructor for when do you not know the eventlog contract, use this constructor when constructing for the first
      * time. This constructor expects the byzcoin RPC to be initialised with a darc that contains "spawn:eventlog".
      *
-     * @param bc      the byzcoin RPC
-     * @param darcId  the darc ID that has the "spawn:eventlog" permission
-     * @param signers a list of signers that has the "spawn:eventlog" permission
+     * @param bc         the byzcoin RPC
+     * @param darcId     the darc ID that has the "spawn:eventlog" permission
+     * @param signers    a list of signers that has the "spawn:eventlog" permission
+     * @param signerCtrs a list of monotonically increasing counter for every signer
      * @throws CothorityException if something goes wrong
      */
     public EventLogInstance(ByzCoinRPC bc, DarcId darcId, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
@@ -90,9 +91,9 @@ public class EventLogInstance {
      * later. Note that when the function returns, it does not mean the event is stored successfully in a block, use the
      * get function to verify that the event is actually stored.
      *
-     * @param events  a list of events to log
-     * @param signers a list of signers with the permission "invoke:eventlog"
-     * @param signerCtrs TODO
+     * @param events     a list of events to log
+     * @param signers    a list of signers with the permission "invoke:eventlog"
+     * @param signerCtrs a list of monotonically increasing counter for every signer
      * @return a list of keys which can be used to retrieve the logged events
      * @throws CothorityException if something goes wrong
      */
@@ -107,9 +108,9 @@ public class EventLogInstance {
      * function returns, it does not mean the event is stored successfully in a block, use the get function to verify
      * that the event is actually stored.
      *
-     * @param event   the event to log
-     * @param signers a list of signers that has the "invoke:eventlog" permission
-     * @param signerCtrs TODO
+     * @param event      the event to log
+     * @param signers    a list of signers that has the "invoke:eventlog" permission
+     * @param signerCtrs a list of monotonically increasing counter for every signer
      * @return the key which can be used to retrieve the event later
      * @throws CothorityException if something goes wrong
      */
@@ -186,8 +187,8 @@ public class EventLogInstance {
      *
      * @param bc the byzcoin RPC
      * @param id the contract ID, it must be already initialised and stored on byzcoin
-     * @throws CothorityException if something goes wrong
      * @return a new EventLogInstance
+     * @throws CothorityException if something goes wrong
      */
     public static EventLogInstance fromByzcoin(ByzCoinRPC bc, InstanceId id) throws CothorityException {
         return new EventLogInstance(bc, id);
@@ -249,7 +250,7 @@ public class EventLogInstance {
     private static List<Long> incrementCtrs(List<Long> xs) {
         List<Long> out = new ArrayList<>(xs);
         for (int i = 0; i < out.size(); i++) {
-            out.set(i, out.get(i)+1);
+            out.set(i, out.get(i) + 1);
         }
         return out;
     }

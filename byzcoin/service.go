@@ -385,7 +385,7 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 	return resp, nil
 }
 
-// GetSignerCounters gets the lateset version number of the given identity.
+// GetSignerCounters gets the lateset signer counters for the given identities.
 func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersResponse, error) {
 	st, err := s.GetReadOnlyStateTrie(req.SkipchainID)
 	if err != nil {
@@ -596,7 +596,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	log.Lvlf2("%s Updating transactions for %x on index %v", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
 	_, _, scs := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
 
-	log.LLvlf3("%s Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
+	log.Lvlf3("%s Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
 	if err = st.StoreAll(scs, sb.Index); err != nil {
 		return err
 	}
@@ -694,7 +694,7 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 	// At this point everything should be stored.
 	s.streamingMan.notify(string(sb.SkipChainID()), sb)
 
-	log.LLvlf4("%s updated trie for %x with root %x", s.ServerIdentity(), sb.SkipChainID(), st.GetRoot())
+	log.Lvlf4("%s updated trie for %x with root %x", s.ServerIdentity(), sb.SkipChainID(), st.GetRoot())
 	return nil
 }
 
@@ -1166,7 +1166,7 @@ clientTransactions:
 				continue clientTransactions
 			}
 			var counterScs StateChanges
-			if counterScs, err = incrementSignatureCounters(sstTempC, instr.Signatures); err != nil {
+			if counterScs, err = incrementSignerCounters(sstTempC, instr.Signatures); err != nil {
 				log.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
 				tx.Accepted = false
 				txOut = append(txOut, tx)

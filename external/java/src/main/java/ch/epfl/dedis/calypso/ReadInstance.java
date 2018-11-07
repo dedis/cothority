@@ -38,15 +38,15 @@ public class ReadInstance {
      * will send a transaction to ByzCoin and wait for it to be accepted or rejected.
      * The key to re-encrypt to is taken as the public key of the first signer.
      *
-     * @param calypso The CalypsoRPC object.
-     * @param write   The write instance where a new read instance should be spawned from.
-     * @param signers Signers who are allowed to spawn a new instance.
+     * @param calypso    The CalypsoRPC object.
+     * @param write      The write instance where a new read instance should be spawned from.
+     * @param signers    Signers who are allowed to spawn a new instance.
+     * @param signerCtrs a list of monotonically increasing counter for every signer
      * @throws CothorityException if something goes wrong
      */
     public ReadInstance(CalypsoRPC calypso, WriteInstance write, List<Signer> signers, List<Long> signerCtrs) throws CothorityException {
         this.calypso = calypso;
-        ClientTransaction ctx = createCTX(write, signerCtrs, signers.get(0).getPublic());
-        ctx.signWith(signers);
+        ClientTransaction ctx = createCTX(write, signers, signerCtrs, signers.get(0).getPublic());
         calypso.sendTransactionAndWait(ctx, 10);
         instance = getInstance(calypso, ctx.getInstructions().get(0).deriveId(""));
     }
@@ -56,16 +56,16 @@ public class ReadInstance {
      * will send a transaction to ByzCoin and wait for it to be accepted or rejected.
      * The key to re-encrypt to is taken in an argument
      *
-     * @param calypso The CalypsoRPC object.
-     * @param write   The write instance where a new read instance should be spawned from.
-     * @param signers Signers who are allowed to spawn a new instance.
-     * @param Xc      is the key to which the dataEnc will be re-encrypted to
+     * @param calypso    The CalypsoRPC object.
+     * @param write      The write instance where a new read instance should be spawned from.
+     * @param signers    Signers who are allowed to spawn a new instance.
+     * @param signerCtrs a list of monotonically increasing counter for every signer
+     * @param Xc         is the key to which the dataEnc will be re-encrypted to
      * @throws CothorityException if something goes wrong
      */
     public ReadInstance(CalypsoRPC calypso, WriteInstance write, List<Signer> signers, List<Long> signerCtrs, Point Xc) throws CothorityException {
         this.calypso = calypso;
-        ClientTransaction ctx = createCTX(write, signerCtrs, Xc);
-        ctx.signWith(signers);
+        ClientTransaction ctx = createCTX(write, signers, signerCtrs, Xc);
         calypso.sendTransactionAndWait(ctx, 10);
         instance = getInstance(calypso, ctx.getInstructions().get(0).deriveId(""));
     }
@@ -129,11 +129,12 @@ public class ReadInstance {
     /**
      * Prepares a new transaction to create a read instance.
      *
-     * @param consumerCtrs TODO
-     * @param Xc        is the public key the dataEnc will be re-encrypted to
+     * @param consumers    the list of consumers who will sign the transaction
+     * @param consumerCtrs a monotonically increasing counter for publisherSigner
+     * @param Xc           is the public key the dataEnc will be re-encrypted to
      * @return the ClientTransaction ready to be sent to ByzCoin.
      */
-    private ClientTransaction createCTX(WriteInstance write, List<Long> consumerCtrs, Point Xc) {
+    private ClientTransaction createCTX(WriteInstance write, List<Signer> consumers, List<Long> consumerCtrs, Point Xc) throws CothorityCryptoException {
         Instance writeInstance = write.getInstance();
 
         // Create the Calypso.Read structure
@@ -142,7 +143,9 @@ public class ReadInstance {
         args.add(new Argument("read", read.toProto().toByteArray()));
         Spawn sp = new Spawn(ReadInstance.ContractId, args);
         Instruction inst = new Instruction(writeInstance.getId(), consumerCtrs, sp);
-        return new ClientTransaction(Arrays.asList(inst));
+        ClientTransaction ctx = new ClientTransaction(Arrays.asList(inst));
+        ctx.signWith(consumers);
+        return ctx;
     }
 
     /**

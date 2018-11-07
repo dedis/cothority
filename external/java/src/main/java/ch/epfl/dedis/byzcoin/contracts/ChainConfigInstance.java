@@ -62,7 +62,8 @@ public class ChainConfigInstance {
      * Creates an instruction to evolve the value in byzcoin.
      *
      * @param newConfig the new config to store in the ChainConfig
-     * @param ownerCtrs
+     * @param ownerCtrs is the list of monotonically increasing counters that will go into the instruction,
+     *                  they must match the signers who will eventually sign the instruction
      * @return Instruction to be sent to byzcoin
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
@@ -78,7 +79,7 @@ public class ChainConfigInstance {
      *
      * @param newConfig the new config to store
      * @param owners    a list of owners needed to evolve the configuration
-     * @param ownerCtrs a list of signer counters which should map to the list of owners
+     * @param ownerCtrs a list of counters which must map to the list of owners
      * @throws CothorityException if something goes wrong
      */
     public void evolveChainConfig(ChainConfigData newConfig, List<Signer> owners, List<Long> ownerCtrs) throws CothorityException {
@@ -94,6 +95,7 @@ public class ChainConfigInstance {
      *
      * @param newConfig the new config to sture
      * @param owners    a list of owners needed to evolve the configuration
+     * @param ownerCtrs a list of counters which must map to the list of owners
      * @param wait      how many blocks to wait for inclusion of the instruction
      * @throws CothorityException if something goes wrong
      */
@@ -132,7 +134,7 @@ public class ChainConfigInstance {
      *
      * @param bc is a running ByzCoin service
      * @return the new ValueInstance
-     * @throws CothorityNotFoundException if the configuration is not where it is supposed to be
+     * @throws CothorityNotFoundException      if the configuration is not where it is supposed to be
      * @throws CothorityCommunicationException if the communication throws an error
      */
     public static ChainConfigInstance fromByzcoin(ByzCoinRPC bc) throws CothorityNotFoundException, CothorityCommunicationException {
@@ -145,10 +147,10 @@ public class ChainConfigInstance {
      * @param bc a running ByzCoin service
      * @param p  the proof for the valueInstance
      * @return the new ValueInstance
-     * @throws CothorityNotFoundException if the configuration is not where it is supposed to be
+     * @throws CothorityNotFoundException      if the configuration is not where it is supposed to be
      * @throws CothorityCommunicationException if the communication throws an error
      */
-    public static ChainConfigInstance fromByzcoin(ByzCoinRPC bc, Proof p) throws CothorityNotFoundException, CothorityCommunicationException{
+    public static ChainConfigInstance fromByzcoin(ByzCoinRPC bc, Proof p) throws CothorityNotFoundException, CothorityCommunicationException {
         return new ChainConfigInstance(bc, Instance.fromProof(p));
     }
 }

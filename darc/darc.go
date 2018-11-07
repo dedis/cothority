@@ -742,7 +742,7 @@ func (id Identity) Type() int {
 }
 
 // PrimaryIdentity returns true if the identity is a primary identity, which is
-// an identity that is associated with a concrete public/key.
+// an identity that is associated with a concrete public/private key.
 func (id Identity) PrimaryIdentity() bool {
 	switch {
 	case id.Darc != nil:

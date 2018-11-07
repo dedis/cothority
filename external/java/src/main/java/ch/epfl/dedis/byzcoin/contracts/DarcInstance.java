@@ -42,7 +42,7 @@ public class DarcInstance {
      * @param bc            a running ByzCoin service
      * @param spawnerDarcId the darcId of a darc with the rights to spawn new darcs
      * @param spawnerSigner the signer with the rights to spawn new darcs
-     * @param signerCtr
+     * @param signerCtr     the monotonically increasing counters for the spawnSigner
      * @param newDarc       the new darc to spawn
      * @throws CothorityException if something goes wrong
      */
@@ -96,12 +96,13 @@ public class DarcInstance {
      * <p>
      * TODO: allow for evolution if the expression has more than one identity.
      *
-     * @param newDarc the darc to replace the old darc.
-     * @param ownerCtr is the signer counter for the owner
+     * @param newDarc   the darc to replace the old darc.
+     * @param signerCtr is the monotonically increasing counter which must match the signer who will eventually
+     *                  sign the returned instruction.
      * @return Instruction to be sent to byzcoin
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Instruction evolveDarcInstruction(Darc newDarc, Long ownerCtr) throws CothorityCryptoException {
+    public Instruction evolveDarcInstruction(Darc newDarc, Long signerCtr) throws CothorityCryptoException {
         newDarc.increaseVersion();
         newDarc.setPrevId(darc);
         newDarc.setBaseId(darc.getBaseId());
@@ -113,15 +114,16 @@ public class DarcInstance {
         }
         Invoke inv = new Invoke("evolve", ContractId, newDarc.toProto().toByteArray());
         byte[] d = newDarc.getBaseId().getId();
-        return new Instruction(new InstanceId(d), Collections.singletonList(ownerCtr), inv);
+        return new Instruction(new InstanceId(d), Collections.singletonList(signerCtr), inv);
     }
 
     /**
      * Takes a new darc, increases its version, creates an instruction and sends it to ByzCoin, without
      * waiting an acknowledgement.
      *
-     * @param newDarc the new darc, it should have the same version as the current darc
-     * @param owner   a signer allowed to evolve the darc
+     * @param newDarc  the new darc, it should have the same version as the current darc
+     * @param owner    a signer allowed to evolve the darc
+     * @param ownerCtr a monotonically increasing counter which must map to the owners
      * @throws CothorityException if something goes wrong
      */
     public void evolveDarc(Darc newDarc, Signer owner, Long ownerCtr) throws CothorityException {
@@ -133,9 +135,10 @@ public class DarcInstance {
      * been stored in the global state.
      * TODO: check if there has been an error in the transaction!
      *
-     * @param newDarc is the new darc to replace the old one
-     * @param owner   is the owner that can sign to evolve the darc
-     * @param wait    the maximum number of blocks to wait
+     * @param newDarc  is the new darc to replace the old one
+     * @param owner    is the owner that can sign to evolve the darc
+     * @param ownerCtr a monotonically increasing counter which must map to the owners
+     * @param wait     the maximum number of blocks to wait
      * @return ClientTransactionId of the accepted transaction
      * @throws CothorityException if something goes wrong
      */
@@ -169,9 +172,10 @@ public class DarcInstance {
      *
      * @param contractID the id of the instance to create
      * @param s          the signer that is authorized to spawn this contract-type
+     * @param signerCtr  a monotonically increasing counter which must map to the signer s
      * @param args       arguments to give to the contract
-     * @throws CothorityException if something goes wrong
      * @return the client transaction ID
+     * @throws CothorityException if something goes wrong
      */
     public ClientTransactionId spawnInstance(String contractID, Signer s, Long signerCtr, List<Argument> args) throws CothorityException {
         Instruction inst = spawnInstanceInstruction(contractID, signerCtr, args);
@@ -185,6 +189,7 @@ public class DarcInstance {
      *
      * @param contractID the id of the instance to create
      * @param s          the signer that is authorized to spawn this contract
+     * @param signerCtr  a monotonically increasing counter which must map to the signer s
      * @param args       arguments to give to the contract
      * @param wait       how many blocks to wait for the instance to be stored (0 = do not wait)
      * @return the Proof of inclusion

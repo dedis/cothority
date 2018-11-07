@@ -266,8 +266,11 @@ func (c *Client) StreamTransactions(handler func(StreamingResponse, error)) erro
 	}
 }
 
-// GetSignerCounters gets the signer counters. The counter must be set
-// correctly in the transaction for it to be verified.
+// GetSignerCounters gets the signer counters from ByzCoin. The counter must be
+// set correctly in the instruction for it to be verified. Every counter maps
+// to a signer, if the most recent instruction is signed by the signer at count
+// n, then the next instruction that the same signer signs must be on counter
+// n+1.
 func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, error) {
 	req := GetSignerCounters{
 		SkipchainID: c.ID,

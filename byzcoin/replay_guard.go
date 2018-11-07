@@ -7,11 +7,11 @@ import (
 	"fmt"
 
 	"github.com/dedis/cothority/darc"
-	"github.com/dedis/protobuf"
 )
 
-// getSignatureCounter returns 0 if the key is not set
-func getSignatureCounter(st ReadOnlyStateTrie, id string) (uint64, error) {
+// getSignerCounter returns 0 if the key is not set, otherwise it loads the
+// counter from the Trie.
+func getSignerCounter(st ReadOnlyStateTrie, id string) (uint64, error) {
 	val, _, _, err := st.GetValues(publicVersionKey(id))
 	if err == errKeyNotSet {
 		return 0, nil
@@ -23,29 +23,13 @@ func getSignatureCounter(st ReadOnlyStateTrie, id string) (uint64, error) {
 	return ver, nil
 }
 
-// setSignatureCounter is mostly for testing
-func setSignatureCounter(sst *stagingStateTrie, id string, v uint64) error {
-	key := publicVersionKey(id)
-	verBuf := make([]byte, 8)
-	binary.LittleEndian.PutUint64(verBuf, v)
-	body := StateChangeBody{
-		StateAction: Update,
-		ContractID:  []byte{},
-		Value:       verBuf,
-		DarcID:      darc.ID([]byte{}),
-	}
-	buf, err := protobuf.Encode(&body)
-	if err != nil {
-		return err
-	}
-	return sst.Set(key, buf)
-}
-
-func incrementSignatureCounters(sst *stagingStateTrie, sigs []darc.Signature) (StateChanges, error) {
+// incrementSignerCounters loads the existing counters from sigs and then
+// increments all of them by 1.
+func incrementSignerCounters(sst *stagingStateTrie, sigs []darc.Signature) (StateChanges, error) {
 	var scs StateChanges
 	for _, sig := range sigs {
 		id := sig.Signer.String()
-		ver, err := getSignatureCounter(sst, id)
+		ver, err := getSignerCounter(sst, id)
 		if err != nil {
 			return scs, err
 		}
@@ -62,7 +46,9 @@ func incrementSignatureCounters(sst *stagingStateTrie, sigs []darc.Signature) (S
 	return scs, sst.StoreAll(scs)
 }
 
-func verifySignatureCounters(st ReadOnlyStateTrie, counters []uint64, sigs []darc.Signature) error {
+// verifySignerCounters verifies whether the given counters are valid with
+// respect to the current counters.
+func verifySignerCounters(st ReadOnlyStateTrie, counters []uint64, sigs []darc.Signature) error {
 	if len(counters) != len(sigs) {
 		return errors.New("lengths of the counters and signatures are not the same")
 	}
@@ -71,7 +57,7 @@ func verifySignatureCounters(st ReadOnlyStateTrie, counters []uint64, sigs []dar
 			return errors.New("not a primary identity")
 		}
 		id := sigs[i].Signer.String()
-		c, err := getSignatureCounter(st, id)
+		c, err := getSignerCounter(st, id)
 		if err != nil {
 			return err
 		}

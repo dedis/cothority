@@ -29,6 +29,7 @@ public class Instruction {
      * Use this constructor if it is a spawn instruction, i.e. you want to create a new object.
      *
      * @param instId The instance ID.
+     * @param ctrs   The list of monotonically increasing counter for those that will eventually sign the instruction.
      * @param spawn  The spawn object, which contains the value and the argument.
      */
     public Instruction(InstanceId instId, List<Long> ctrs, Spawn spawn) {
@@ -41,6 +42,7 @@ public class Instruction {
      * Use this constructor if it is an invoke instruction, i.e. you want to mutate an object.
      *
      * @param instId The ID of the object, which must be unique.
+     * @param ctrs   The list of monotonically increasing counter for those that will eventually sign the instruction.
      * @param invoke The invoke object.
      */
     public Instruction(InstanceId instId, List<Long> ctrs, Invoke invoke) {
@@ -53,6 +55,7 @@ public class Instruction {
      * Use this constructor if it is a delete instruction, i.e. you want to delete an object.
      *
      * @param instId The ID of the object, which must be unique.
+     * @param ctrs   The list of monotonically increasing counter for those that will eventually sign the instruction.
      * @param delete The delete object.
      */
     public Instruction(InstanceId instId, List<Long> ctrs, Delete delete) {
@@ -82,6 +85,7 @@ public class Instruction {
 
     /**
      * Getter for the instance ID.
+     *
      * @return the InstanceID
      */
     public InstanceId getInstId() {
@@ -90,6 +94,7 @@ public class Instruction {
 
     /**
      * Setter for the signer counters, they must map to the signers in the signature.
+     *
      * @param signerCounters the list of counters
      */
     public void setSignerCounters(List<Long> signerCounters) {
@@ -98,6 +103,7 @@ public class Instruction {
 
     /**
      * Setter for the signatures.
+     *
      * @param signatures the signatures to set
      */
     public void setSignatures(List<Signature> signatures) {

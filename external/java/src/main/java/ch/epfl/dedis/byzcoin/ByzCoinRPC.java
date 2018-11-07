@@ -136,7 +136,7 @@ public class ByzCoinRPC {
      * @return ClientTransactionID the transaction ID
      * @throws CothorityCommunicationException if the transaction has not been included within 'wait' blocks.
      */
-    public ClientTransactionId sendTransactionAndWait(ClientTransaction t, int wait) throws CothorityCommunicationException{
+    public ClientTransactionId sendTransactionAndWait(ClientTransaction t, int wait) throws CothorityCommunicationException {
         ByzCoinProto.AddTxRequest.Builder request =
                 ByzCoinProto.AddTxRequest.newBuilder();
         request.setVersion(currentVersion);
@@ -184,7 +184,9 @@ public class ByzCoinRPC {
 
     /**
      * Gets the signer counters for the signer IDs. The counters must be set correctly in the instructions for
-     * them to be accepted by byzcoin.
+     * them to be accepted by byzcoin. Every counter maps to a signer, if the most recent instruction is signed by
+     * the signer at count n, then the next instruction that the same signer signs must be on counter n+1.
+     *
      * @param signerIDs the list of signer IDs
      * @return The corresponding coutners for the given IDs
      * @throws CothorityCommunicationException if something goes wrong
@@ -392,6 +394,7 @@ public class ByzCoinRPC {
      *
      * @param newRoster a new roster with one addition, one removal or one change
      * @param admins    a list of admins needed to sign off on the change
+     * @param adminCtrs a list of monotonically increasing counters for every admin
      * @param wait      how many blocks to wait for the new config to go in
      * @throws CothorityException if something went wrong.
      */
@@ -412,6 +415,7 @@ public class ByzCoinRPC {
      *
      * @param newInterval how long to wait before starting to assemble a new block
      * @param admins      a list of admins needed to sign off the new configuration
+     * @param adminCtrs   a list of monotonically increasing counters for every admin
      * @param wait        how many blocks to wait for the new config to go in
      * @throws CothorityException
      */
@@ -431,6 +435,7 @@ public class ByzCoinRPC {
      *
      * @param newMaxSize new maximum size of the assembled blocks.
      * @param admins     a list of admins needed to sign off the new configuration
+     * @param adminCtrs  a list of monotonically increasing counters for every admin
      * @param wait       how many blocks to wait for the new config to go in
      * @throws CothorityException
      */
@@ -438,7 +443,7 @@ public class ByzCoinRPC {
         ChainConfigInstance cci = ChainConfigInstance.fromByzcoin(this);
         ChainConfigData ccd = cci.getChainConfig();
         ccd.setMaxBlockSize(newMaxSize);
-        cci.evolveConfigAndWait(ccd, admins, adminCtrs, 20);
+        cci.evolveConfigAndWait(ccd, admins, adminCtrs, wait);
     }
 
     /**

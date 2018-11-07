@@ -40,7 +40,7 @@ func NewClient(ol *byzcoin.Client) *Client {
 // a timeout). Upon non-error return, c.Instance will be correctly set.
 func (c *Client) Create() error {
 	if c.signerCtrs == nil {
-		c.refreshCtrs()
+		c.RefreshSignerCounters()
 	}
 
 	instr := byzcoin.Instruction{
@@ -63,8 +63,10 @@ func (c *Client) Create() error {
 	return nil
 }
 
-// refreshCtrs talks to the service to get the latest signer counters.
-func (c *Client) refreshCtrs() {
+// RefreshSignerCounters talks to the service to get the latest signer
+// counters, the client should call this function if the internal counters
+// become de-synchronised.
+func (c *Client) RefreshSignerCounters() {
 	signerIDs := make([]string, len(c.Signers))
 	for i := range c.Signers {
 		signerIDs[i] = c.Signers[i].Identity().String()
@@ -103,7 +105,7 @@ type LogID []byte
 // Log asks the service to log events.
 func (c *Client) Log(ev ...Event) ([]LogID, error) {
 	if c.signerCtrs == nil {
-		c.refreshCtrs()
+		c.RefreshSignerCounters()
 	}
 
 	tx, keys, err := c.prepareTx(ev)
@@ -138,14 +140,6 @@ func (c *Client) GetEvent(key []byte) (*Event, error) {
 		return nil, err
 	}
 	return &e, nil
-}
-
-func increment(ctrs []uint64) []uint64 {
-	out := make([]uint64, len(ctrs))
-	for i := range out {
-		out[i] = ctrs[i] + 1
-	}
-	return out
 }
 
 func (c *Client) prepareTx(events []Event) (*byzcoin.ClientTransaction, []LogID, error) {

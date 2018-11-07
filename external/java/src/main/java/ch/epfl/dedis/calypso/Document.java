@@ -78,6 +78,7 @@ public class Document {
      * @param calypso         an instance of the calypsoRPC
      * @param publisherDarcId a darc with a 'spawn:calypsoWrite' rule
      * @param publisherSigner a signer having the right to trigger the 'spawn:calypsoWrite' rule.
+     * @param signerCtr       a monotonically increasing counter for publisherSigner
      * @return a WriteInstance
      * @throws CothorityException if something goes wrong
      */
@@ -172,11 +173,11 @@ public class Document {
     /**
      * Recreate the document once all the material already is fetched from ByzCoin.
      *
-     * @param wi WriteInstance for this document
+     * @param wi          WriteInstance for this document
      * @param keyMaterial the decrypted key material
      * @return a new Document with the decrypted data
      * @throws CothorityNotFoundException if the requested instance cannot be found
-     * @throws CothorityCryptoException if there's a problem with the cryptography
+     * @throws CothorityCryptoException   if there's a problem with the cryptography
      */
     public static Document fromWriteInstance(WriteInstance wi, byte[] keyMaterial) throws CothorityNotFoundException, CothorityCryptoException {
         byte[] data = Encryption.decryptData(wi.getWrite().getDataEnc(), keyMaterial);

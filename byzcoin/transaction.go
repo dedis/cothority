@@ -140,8 +140,6 @@ func (instr Instruction) DeriveID(what string) InstanceID {
 	binary.LittleEndian.PutUint32(b[:], uint32(len(instr.Signatures)))
 	h.Write(b[:])
 
-	// TODO: add the counters?
-
 	for _, s := range instr.Signatures {
 		binary.LittleEndian.PutUint32(b[:], uint32(len(s.Signature)))
 		h.Write(b[:])
@@ -226,7 +224,7 @@ func (instr Instruction) GetIdentityStrings() []string {
 // the darc. An error is returned if any of the verification fails.
 func (instr Instruction) Verify(st ReadOnlyStateTrie, msg []byte) error {
 	// check the signature counters
-	if err := verifySignatureCounters(st, instr.SignerCounter, instr.Signatures); err != nil {
+	if err := verifySignerCounters(st, instr.SignerCounter, instr.Signatures); err != nil {
 		return err
 	}
 

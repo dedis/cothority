@@ -1,10 +1,12 @@
 package byzcoin
 
 import (
+	"encoding/binary"
 	"testing"
 
 	"github.com/dedis/cothority/byzcoin/trie"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/require"
 )
 
@@ -33,12 +35,12 @@ func TestTransaction_Signing(t *testing.T) {
 	require.Contains(t, ctx.Instructions[0].Verify(sst, ctxHash).Error(), "key not set")
 
 	// set the version, but it's too high, verification should fail
-	require.NoError(t, setSignatureCounter(sst, signer.Identity().String(), 10))
+	require.NoError(t, setSignerCounter(sst, signer.Identity().String(), 10))
 	require.Error(t, ctx.Instructions[0].Verify(sst, ctxHash))
 	require.Contains(t, ctx.Instructions[0].Verify(sst, ctxHash).Error(), "got version")
 
 	// set the right version, but darc is missing, verification should fail
-	require.NoError(t, setSignatureCounter(sst, signer.Identity().String(), 0))
+	require.NoError(t, setSignerCounter(sst, signer.Identity().String(), 0))
 	require.Error(t, ctx.Instructions[0].Verify(sst, ctxHash))
 	require.Contains(t, ctx.Instructions[0].Verify(sst, ctxHash).Error(), "darc not found")
 
@@ -55,6 +57,23 @@ func TestTransaction_Signing(t *testing.T) {
 	}
 	require.NoError(t, sst.StoreAll([]StateChange{sc}))
 	require.NoError(t, ctx.Instructions[0].Verify(sst, ctxHash))
+}
+
+func setSignerCounter(sst *stagingStateTrie, id string, v uint64) error {
+	key := publicVersionKey(id)
+	verBuf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(verBuf, v)
+	body := StateChangeBody{
+		StateAction: Update,
+		ContractID:  []byte{},
+		Value:       verBuf,
+		DarcID:      darc.ID([]byte{}),
+	}
+	buf, err := protobuf.Encode(&body)
+	if err != nil {
+		return err
+	}
+	return sst.Set(key, buf)
 }
 
 func createOneClientTx(dID darc.ID, kind string, value []byte, signer darc.Signer) (ClientTransaction, error) {

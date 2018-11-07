@@ -341,7 +341,7 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 	if err != nil {
 		return err
 	}
-	ctr, err := getSignatureCounter(st, signer.Identity().String())
+	ctr, err := getSignerCounter(st, signer.Identity().String())
 	if err != nil {
 		return err
 	}
