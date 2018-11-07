@@ -571,17 +571,28 @@ func (s *Service) CheckStateChangeValidity(req *CheckStateChangeValidity) (*Chec
 		return nil, err
 	}
 
+	sb, err := s.skService().GetSingleBlockByIndex(&skipchain.GetSingleBlockByIndex{
+		Genesis: req.SkipChainID,
+		Index:   sce.BlockIndex,
+	})
+	if err != nil {
+		return nil, err
+	}
+
 	sces, err := s.stateChangeStorage.getByBlock(req.SkipChainID, sce.BlockIndex)
 	if err != nil {
 		return nil, err
 	}
 
-	scs := make([]StateChange, len(sces))
+	scs := make(StateChanges, len(sces))
 	for i, e := range sces {
 		scs[i] = e.StateChange
 	}
 
-	return &CheckStateChangeValidityResponse{StateChanges: scs}, nil
+	return &CheckStateChangeValidityResponse{
+		StateChanges: scs,
+		BlockID:      sb.SkipBlock.Hash,
+	}, nil
 }
 
 // SetPropagationTimeout overrides the default propagation timeout that is used

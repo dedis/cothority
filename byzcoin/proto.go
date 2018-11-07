@@ -375,4 +375,5 @@ type CheckStateChangeValidity struct {
 // compared against the one in the block
 type CheckStateChangeValidityResponse struct {
 	StateChanges []StateChange
+	BlockID      skipchain.SkipBlockID
 }

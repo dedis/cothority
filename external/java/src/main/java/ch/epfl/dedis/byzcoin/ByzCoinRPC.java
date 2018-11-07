@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.time.temporal.ChronoUnit.NANOS;
@@ -327,6 +328,102 @@ public class ByzCoinRPC {
                     ByzCoinProto.CheckAuthorizationResponse.parseFrom(msg);
             logger.info("Got request reply: {}", reply);
             return reply.getActionsList();
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
+    /**
+     * Fetches the state change for the given version and instance
+     * @param id the instance ID
+     * @param version the version of the state change
+     * @return the state change
+     * @throws CothorityCommunicationException if the state change doesn't exist or something went wrong
+     */
+    public StateChange getInstanceVersion(InstanceId id, long version) throws CothorityCommunicationException {
+        ByzCoinProto.GetInstanceVersion.Builder request = ByzCoinProto.GetInstanceVersion.newBuilder();
+        request.setInstanceid(id.toByteString());
+        request.setSkipchainid(genesis.getId().toProto());
+        request.setVersion(version);
+
+        ByteString msg = roster.sendMessage("ByzCoin/GetInstanceVersion", request.build());
+        try {
+            ByzCoinProto.GetInstanceVersionResponse reply = ByzCoinProto.GetInstanceVersionResponse.parseFrom(msg);
+
+            return new StateChange(reply.getStatechange());
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
+    /**
+     * Fetches the most recent state change for the given instance
+     * @param id the instance ID
+     * @return the state change
+     * @throws CothorityCommunicationException if the instance doesn't exist or something went wrong
+     */
+    public StateChange getLastInstanceVersion(InstanceId id) throws CothorityCommunicationException {
+        ByzCoinProto.GetLastInstanceVersion.Builder request = ByzCoinProto.GetLastInstanceVersion.newBuilder();
+        request.setInstanceid(id.toByteString());
+        request.setSkipchainid(genesis.getId().toProto());
+
+        ByteString msg = roster.sendMessage("ByzCoin/GetLastInstanceVersion", request.build());
+        try {
+            ByzCoinProto.GetInstanceVersionResponse reply = ByzCoinProto.GetInstanceVersionResponse.parseFrom(msg);
+
+            return new StateChange(reply.getStatechange());
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
+    /**
+     * Fetches all the state changes of the given instance
+     * @param id the instance ID
+     * @return the list of state changes
+     * @throws CothorityCommunicationException if the instance doesn't exist or something went wrong
+     */
+    public List<StateChange> getAllInstanceVersion(InstanceId id) throws CothorityCommunicationException {
+        ByzCoinProto.GetAllInstanceVersion.Builder request = ByzCoinProto.GetAllInstanceVersion.newBuilder();
+        request.setInstanceid(id.toByteString());
+        request.setSkipchainid(genesis.getId().toProto());
+
+        ByteString msg = roster.sendMessage("ByzCoin/GetAllInstanceVersion", request.build());
+        try {
+            ByzCoinProto.GetAllInstanceVersionResponse reply = ByzCoinProto.GetAllInstanceVersionResponse.parseFrom(msg);
+
+            return reply.getStatechangesList()
+                    .stream()
+                    .map(sc -> new StateChange(sc.getStatechange()))
+                    .collect(Collectors.toList());
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
+    /**
+     * Checks if the state change is valid or has been tempered
+     * @param sc the state change
+     * @return true if the state change is valid
+     * @throws CothorityCommunicationException if something went wrong
+     */
+    public boolean checkStateChangeValidity(StateChange sc) throws CothorityCommunicationException {
+        ByzCoinProto.CheckStateChangeValidity.Builder request = ByzCoinProto.CheckStateChangeValidity.newBuilder();
+        request.setInstanceid(sc.getInstanceId());
+        request.setSkipchainid(genesis.getId().toProto());
+        request.setVersion(sc.getVersion());
+
+        ByteString msg = roster.sendMessage("ByzCoin/CheckStateChangeValidity", request.build());
+        try {
+            ByzCoinProto.CheckStateChangeValidityResponse reply =
+                    ByzCoinProto.CheckStateChangeValidityResponse.parseFrom(msg);
+
+            StateChanges scs = new StateChanges(reply.getStatechangesList());
+
+            SkipBlock skipblock = skipchain.getSkipblock(new SkipblockId(reply.getBlockid()));
+            ByzCoinProto.DataHeader dh = ByzCoinProto.DataHeader.parseFrom(skipblock.getData());
+
+            return scs.getHash().equals(dh.getStatechangeshash());
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }

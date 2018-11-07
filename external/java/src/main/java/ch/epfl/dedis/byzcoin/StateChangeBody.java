@@ -10,6 +10,7 @@ public class StateChangeBody {
     private int stateAction;
     private byte[] contractID;
     private byte[] value;
+    private long version;
     private DarcId darcId;
 
     /**
@@ -19,6 +20,7 @@ public class StateChangeBody {
         stateAction = proto.getStateaction();
         contractID = proto.getContractid().toByteArray();
         value = proto.getValue().toByteArray();
+        version = proto.getVersion();
         darcId = new DarcId(proto.getDarcid());
     }
 
@@ -41,6 +43,13 @@ public class StateChangeBody {
      */
     public byte[] getValue() {
         return value;
+    }
+
+    /**
+     * Getter for the version
+     */
+    public long getVersion() {
+        return version;
     }
 
     /**

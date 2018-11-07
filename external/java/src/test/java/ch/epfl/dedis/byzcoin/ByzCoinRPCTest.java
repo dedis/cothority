@@ -319,6 +319,38 @@ public class ByzCoinRPCTest {
     }
 
     @Test
+<<<<<<< HEAD
+=======
+    void getInstanceVersion() throws Exception {
+        final int n = 5;
+
+        for (int i = 0; i < n-1; i++) {
+            bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, 10);
+        }
+
+        StateChange sc = bc.getInstanceVersion(bc.getGenesisDarcInstance().getInstance().getId(), 1);
+
+        assertNotNull(sc);
+        assertEquals(1, sc.getVersion());
+
+        sc = bc.getLastInstanceVersion(bc.getGenesisDarcInstance().getInstance().getId());
+
+        assertNotNull(sc);
+        assertEquals(n-1, sc.getVersion());
+
+        List<StateChange> scs;
+        scs = bc.getAllInstanceVersion(bc.getGenesisDarcInstance().getInstance().getId());
+
+        assertEquals(n, scs.size());
+        assertEquals(n-1, scs.get(n-1).getVersion());
+
+        boolean isValid = bc.checkStateChangeValidity(sc);
+        assertTrue(isValid);
+    }
+
+    @Test
+    @Disabled("Cannot change members of a roster for the moment.")
+>>>>>>> Instance versioning API
     void updateRoster() throws Exception {
         List<Signer> admins = new ArrayList<>();
         admins.add(admin);
