@@ -17,7 +17,6 @@ import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import ch.epfl.dedis.lib.exception.CothorityPermissionException;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -33,6 +32,7 @@ import java.util.stream.Stream;
 
 import static ch.epfl.dedis.integration.TestServerController.*;
 import static java.time.temporal.ChronoUnit.MILLIS;
+import static java.time.temporal.ChronoUnit.NANOS;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class ByzCoinRPCTest {
@@ -46,20 +46,14 @@ public class ByzCoinRPCTest {
 
     @BeforeEach
     void initAll() throws Exception {
-        logger.info("Starting new test");
         testInstanceController = TestServerInit.getInstance();
         admin = new SignerEd25519();
         genesisDarc = ByzCoinRPC.makeGenesisDarc(admin, testInstanceController.getRoster());
 
-        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(500, MILLIS));
+        bc = new ByzCoinRPC(testInstanceController.getRoster(), genesisDarc, Duration.of(1000, MILLIS));
         if (!bc.checkLiveness()) {
             throw new CothorityCommunicationException("liveness check failed");
         }
-    }
-
-    @AfterEach
-    void endAll(){
-        logger.info("Test stopped");
     }
 
     @Test
@@ -73,13 +67,12 @@ public class ByzCoinRPCTest {
      */
     @Test
     void reconnect() throws Exception {
-        ByzCoinRPC bc = ByzCoinRPC.fromByzCoin(ByzCoinRPCTest.bc.getRoster(), ByzCoinRPCTest.bc.getGenesisBlock().getSkipchainId());
-        assertEquals(ByzCoinRPCTest.bc.getConfig().getBlockInterval(), bc.getConfig().getBlockInterval());
+        ByzCoinRPC bcCopy = ByzCoinRPC.fromByzCoin(bc.getRoster(), bc.getGenesisBlock().getSkipchainId());
+        assertEquals(bc.getConfig().getBlockInterval(), bcCopy.getConfig().getBlockInterval());
         // check that getMaxBlockSize returned what we expect (from defaultMaxBlockSize in Go).
-        assertEquals(4000000, bc.getConfig().getMaxBlockSize());
-        assertEquals(ByzCoinRPCTest.bc.getLatestBlock().getTimestampNano(), bc.getLatestBlock().getTimestampNano());
-        assertEquals(ByzCoinRPCTest.bc.getGenesisDarc().getBaseId(), bc.getGenesisDarc().getBaseId());
-
+        assertEquals(4000000, bcCopy.getConfig().getMaxBlockSize());
+        assertEquals(bc.getLatestBlock().getTimestampNano(), bcCopy.getLatestBlock().getTimestampNano());
+        assertEquals(bc.getGenesisDarc().getBaseId(), bcCopy.getGenesisDarc().getBaseId());
     }
 
     class TestReceiver implements Subscription.SkipBlockReceiver {
@@ -299,7 +292,6 @@ public class ByzCoinRPCTest {
         counters.increment();
         ChainConfigInstance.fromByzcoin(bc).evolveConfigAndWait(new ChainConfigData(newCCD.build()), admins, counters.getCounters(), 10);
         assertTrue(Duration.between(now, Instant.now()).toMillis() > 5000);
-        logger.info("test-end: updateInterval");
     }
 
     @Test
@@ -328,7 +320,6 @@ public class ByzCoinRPCTest {
 
     @Test
     void updateRoster() throws Exception {
-        logger.info("test-start: updateRoster");
         List<Signer> admins = new ArrayList<>();
         admins.add(admin);
 
@@ -396,6 +387,5 @@ public class ByzCoinRPCTest {
             testInstanceController.killConode(6);
             testInstanceController.killConode(7);
         }
-        logger.info("test-end: updateRoster");
     }
 }

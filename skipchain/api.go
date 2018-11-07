@@ -332,8 +332,8 @@ func (c *Client) GetSingleBlock(roster *onet.Roster, id SkipBlockID) (reply *Ski
 
 // GetSingleBlockByIndex searches for a block with the given index following the genesis-block.
 // It returns that block, or an error if that block is not found.
-func (c *Client) GetSingleBlockByIndex(roster *onet.Roster, genesis SkipBlockID, index int) (reply *SkipBlock, err error) {
-	reply = &SkipBlock{}
+func (c *Client) GetSingleBlockByIndex(roster *onet.Roster, genesis SkipBlockID, index int) (reply *GetSingleBlockByIndexReply, err error) {
+	reply = &GetSingleBlockByIndexReply{}
 	err = c.SendProtobuf(roster.RandomServerIdentity(),
 		&GetSingleBlockByIndex{genesis, index}, reply)
 	return

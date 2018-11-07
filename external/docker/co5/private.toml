@@ -3,6 +3,6 @@
 Suite = "Ed25519"
 Public = "9bb51090e716c717a7fba22b42beba4be13f28636c93cdfa52a7e20df2d950a2"
 Private = "8f2df2f9093a16132dcedcfbdd4897745bff479ff6be38b4b51d960da432190d"
-Address = "tcp://localhost:7010"
+Address = "tls://localhost:7010"
 ListenAddress = ""
 Description = "Conode_5"

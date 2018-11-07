@@ -72,7 +72,7 @@ public class ByzCoinRPC {
         request.setVersion(currentVersion);
         request.setRoster(r.toProto());
         request.setGenesisdarc(d.toProto());
-        request.setBlockinterval(blockInterval.get(NANOS));
+        request.setBlockinterval(blockInterval.toNanos());
 
         ByteString msg = r.sendMessage("ByzCoin/CreateGenesisBlock",
                 request.build());

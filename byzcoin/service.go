@@ -131,9 +131,10 @@ type Service struct {
 }
 
 type downloadState struct {
-	id   skipchain.SkipBlockID
-	read chan DBKeyValue
-	stop chan bool
+	id    skipchain.SkipBlockID
+	nonce uint64
+	read  chan DBKeyValue
+	stop  chan bool
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -330,6 +331,9 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
 	s.updateCollectionLock.Lock()
 	defer s.updateCollectionLock.Unlock()
+	if s.catchingUp {
+		return nil, errors.New("currently catching up on our state")
+	}
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
@@ -443,21 +447,26 @@ func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse
 	if req.Length <= 0 {
 		return nil, errors.New("length must be bigger than 0")
 	}
-	if !s.downloadState.id.Equal(req.ByzCoinID) && !req.Reset {
-		return nil, errors.New("need a reset for a new request")
-	}
 
-	if req.Reset {
+	if req.Nonce == 0 {
+		log.Lvl2("Creating new download")
 		if !s.downloadState.id.IsNull() {
+			log.Lvlf2("Aborting download of nonce %x", s.downloadState.nonce)
 			close(s.downloadState.stop)
+		}
+		sb := s.db().GetByID(req.ByzCoinID)
+		if sb == nil || sb.Index > 0 {
+			return nil, errors.New("unknown byzcoinID")
 		}
 		s.downloadState.id = req.ByzCoinID
 		s.downloadState.read = make(chan DBKeyValue)
 		s.downloadState.stop = make(chan bool)
+		nonce := binary.LittleEndian.Uint64(random.Bits(64, true, random.New()))
+		s.downloadState.nonce = nonce
 		go func(ds downloadState) {
 			idStr := fmt.Sprintf("%x", ds.id)
 			db, bucketName := s.GetAdditionalBucket([]byte(idStr))
-			db.View(func(tx *bolt.Tx) error {
+			err := db.View(func(tx *bolt.Tx) error {
 				bucket := tx.Bucket(bucketName)
 				return bucket.ForEach(func(k []byte, v []byte) error {
 					key := make([]byte, len(k))
@@ -468,15 +477,24 @@ func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse
 					case ds.read <- DBKeyValue{key, value}:
 					case <-ds.stop:
 						return errors.New("closed")
+					case <-time.After(time.Minute):
+						return errors.New("timed out while waiting for next read")
 					}
 					return nil
 				})
 			})
+			if err != nil {
+				log.Error("while serving current database:", err)
+			}
 			close(ds.read)
 		}(s.downloadState)
+	} else if !s.downloadState.id.Equal(req.ByzCoinID) || req.Nonce != s.downloadState.nonce {
+		return nil, errors.New("download has been aborted in favor of another download")
 	}
 
-	resp = &DownloadStateResponse{}
+	resp = &DownloadStateResponse{
+		Nonce: s.downloadState.nonce,
+	}
 query:
 	for i := 0; i < req.Length; i++ {
 		select {
@@ -597,64 +615,111 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 // downloadDB downloads the full database over the network from a remote block.
 // It does so by copying the bboltDB database entry by entry over the network,
 // and recreating it on the remote side.
+// sb is a block in the byzcoin instance that we want
+// to download.
 func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 	log.Lvlf2("%s: downloading DB", s.ServerIdentity())
 	idStr := fmt.Sprintf("%x", sb.SkipChainID())
 
-	// First delete an existing stateTrie
-	_, err := s.getStateTrie(sb.SkipChainID())
-	if err == nil {
-		// Suppose we _do_ have a statetrie
-		db, stBucket := s.GetAdditionalBucket(sb.SkipChainID())
-		err := db.Update(func(tx *bolt.Tx) error {
-			return tx.DeleteBucket(stBucket)
-		})
-		if err != nil {
-			log.Fatal("Cannot delete existing trie while trying to download:", err)
-		}
-		s.storage.Lock()
-		delete(s.stateTries, idStr)
-		s.storage.Unlock()
-	}
+	// Loop over all nodes that are not the leader and
+	// not subleaders, to avoid overloading those nodes.
+	nodes := len(sb.Roster.List)
+	subLeaders := int(math.Ceil(math.Pow(float64(nodes), 1./3.)))
+	for ri := 1 + subLeaders; ri < nodes; ri++ {
+		// Create a roster with just the node we want to
+		// download from.
+		roster := onet.NewRoster(sb.Roster.List[ri : ri+1])
 
-	// Then start downloading the stateTrie over the network.
-	cl := NewClient(sb.SkipChainID(), *sb.Roster)
-	var db *bolt.DB
-	var bucketName []byte
-	for {
-		resp, err := cl.DownloadState(sb.SkipChainID(), db == nil, catchupFetchDBEntries)
-		if db == nil {
-			s.storage.Mutex.Lock()
-			db, bucketName = s.GetAdditionalBucket([]byte(idStr))
-			s.storage.Mutex.Unlock()
-		}
-		if err != nil {
-			return errors.New("cannot download trie: " + err.Error())
-		}
-		// And store all entries in our local database.
-		err = db.Update(func(tx *bolt.Tx) error {
-			bucket := tx.Bucket(bucketName)
-			for _, kv := range resp.KeyValues {
-				err := bucket.Put(kv.Key, kv.Value)
+		err := func() error {
+			// First delete an existing stateTrie. There
+			// cannot be another write-access to the
+			// database because s.catchingUp == true.
+			_, err := s.getStateTrie(sb.SkipChainID())
+			if err == nil {
+				// Suppose we _do_ have a statetrie
+				db, stBucket := s.GetAdditionalBucket(sb.SkipChainID())
+				err := db.Update(func(tx *bolt.Tx) error {
+					return tx.DeleteBucket(stBucket)
+				})
 				if err != nil {
-					return err
+					log.Fatal("Cannot delete existing trie while trying to download:", err)
+				}
+				s.storage.Lock()
+				delete(s.stateTries, idStr)
+				s.storage.Unlock()
+			}
+
+			// Then start downloading the stateTrie over the network.
+			cl := NewClient(sb.SkipChainID(), *roster)
+			var db *bolt.DB
+			var bucketName []byte
+			var nonce uint64
+			for {
+				resp, err := cl.DownloadState(sb.SkipChainID(), nonce, catchupFetchDBEntries)
+				if db == nil {
+					s.storage.Mutex.Lock()
+					db, bucketName = s.GetAdditionalBucket([]byte(idStr))
+					s.storage.Mutex.Unlock()
+					nonce = resp.Nonce
+				}
+				if err != nil {
+					return errors.New("cannot download trie: " + err.Error())
+				}
+				// And store all entries in our local database.
+				err = db.Update(func(tx *bolt.Tx) error {
+					bucket := tx.Bucket(bucketName)
+					for _, kv := range resp.KeyValues {
+						err := bucket.Put(kv.Key, kv.Value)
+						if err != nil {
+							return err
+						}
+					}
+					return nil
+				})
+				if err != nil {
+					log.Fatal("Couldn't store entries:", err)
+				}
+				if len(resp.KeyValues) < catchupFetchDBEntries {
+					break
 				}
 			}
-			return nil
-		})
-		if err != nil {
-			log.Fatal("Couldn't store entries:", err)
-		}
-		if len(resp.KeyValues) < catchupFetchDBEntries {
-			break
-		}
-	}
 
-	// Finally initialize the stateTrie using the new database.
-	s.storage.Lock()
-	s.stateTries[idStr], err = loadStateTrie(db, bucketName)
-	s.storage.Unlock()
-	return err
+			// Check the new trie is correct
+			st, err := loadStateTrie(db, bucketName)
+			if err != nil {
+				return errors.New("couldn't load state trie: " + err.Error())
+			}
+			if sb.Index != st.GetIndex() {
+				log.Lvl2("Downloading corresponding block")
+				cl := skipchain.NewClient()
+				// TODO: make sure the downloaded block is correct
+				search, err := cl.GetSingleBlockByIndex(roster, sb.SkipChainID(), st.GetIndex())
+				if err != nil {
+					return errors.New("couldn't get correct block for verification: " + err.Error())
+				}
+				sb = search.SkipBlock
+			}
+			var header DataHeader
+			err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
+			if err != nil {
+				return errors.New("couldn't unmarshal header: " + err.Error())
+			}
+			if !bytes.Equal(st.GetRoot(), header.TrieRoot) {
+				return errors.New("got wrong database, merkle roots don't work out")
+			}
+
+			// Finally initialize the stateTrie using the new database.
+			s.storage.Lock()
+			s.stateTries[idStr] = st
+			s.storage.Unlock()
+			return nil
+		}()
+		if err == nil {
+			return nil
+		}
+		log.Errorf("Couldn't load database from %s - got error %s", roster.List[0], err)
+	}
+	return errors.New("none of the non-leader and non-subleader nodes were able to give us a copy of the state")
 }
 
 // catchUp takes a skipblock as reference for the roster, the current index,
@@ -689,21 +754,18 @@ func (s *Service) catchUp(sb *skipchain.SkipBlock) {
 	cl := skipchain.NewClient()
 
 	// Fetch all missing blocks to fill the hole
-	latest, err := cl.GetSingleBlockByIndex(sb.Roster, sb.SkipChainID(), trieIndex)
+	search, err := cl.GetSingleBlockByIndex(sb.Roster, sb.SkipChainID(), trieIndex)
 	if err != nil {
 		log.Error("Couldn't update blocks: " + err.Error())
 		return
 	}
+	latest := search.SkipBlock
 	for trieIndex < sb.Index {
-		log.Lvlf1("%s: our index: %d - latest know index: %d", s.ServerIdentity(), trieIndex, sb.Index)
+		log.Lvlf1("%s: our index: %d - latest known index: %d", s.ServerIdentity(), trieIndex, sb.Index)
 		updates, err := cl.GetUpdateChainLevel(sb.Roster, latest.Hash, 1, catchupFetchBlocks)
 		if err != nil {
 			log.Error("Couldn't update blocks: " + err.Error())
 			return
-		}
-		var blocks []string
-		for _, sb := range updates {
-			blocks = append(blocks, fmt.Sprintf("%d", sb.Index))
 		}
 
 		// This will call updateCollectionCallback with the next block to add
@@ -755,30 +817,26 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 		var body DataBody
 		err := protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
-			err := protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
-			if err != nil {
-				log.Error(s.ServerIdentity(), "could not unmarshal body for genesis block", err)
-				return errors.New("couldn't unmarshal body for genesis block")
-			}
-			nonce, err := s.loadNonceFromTxs(body.TxResults)
-			if err != nil {
-				return err
-			}
-
-			// We don't care about the state trie that is returned in this
-			// function because we load the trie again in getStateTrie
-			// right afterwards.
-			_, err = s.createStateTrie(sb.SkipChainID(), nonce)
-			if err != nil {
-				return err
-			}
+			log.Error(s.ServerIdentity(), "could not unmarshal body for genesis block", err)
+			return errors.New("couldn't unmarshal body for genesis block")
+		}
+		nonce, err := s.loadNonceFromTxs(body.TxResults)
+		if err != nil {
+			return err
+		}
+		// We don't care about the state trie that is returned in this
+		// function because we load the trie again in getStateTrie
+		// right afterwards.
+		_, err = s.createStateTrie(sb.SkipChainID(), nonce)
+		if err != nil {
+			return fmt.Errorf("could not create trie: %v", err)
 		}
 	}
 
 	// Load the trie.
 	st, err := s.getStateTrie(sb.SkipChainID())
 	if err != nil {
-		return err
+		return fmt.Errorf("could not load trie: %v", err)
 	}
 
 	// Check if we are updating the right index.

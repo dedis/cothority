@@ -1059,7 +1059,7 @@ func TestService_SetConfig(t *testing.T) {
 
 	interval := 42 * time.Millisecond
 	blocksize := 424242
-	ctx, _ := createConfigTx(t, interval, *s.roster, blocksize, s)
+	ctx, _ := createConfigTxWithCounter(t, interval, *s.roster, blocksize, s, 1)
 	s.sendTxAndWait(t, ctx, 10)
 
 	_, err := s.service().LoadConfig(s.genesis.SkipChainID())
@@ -1084,7 +1084,7 @@ func TestService_SetConfigInterval(t *testing.T) {
 	}
 
 	lastInterval := testInterval
-	var counter uint64 = 1
+	counter := 1
 	for i := 0; i < len(intervals); i++ {
 		for _, interval := range intervals {
 			// The next block should now be in the range of testInterval.
@@ -1124,10 +1124,10 @@ func TestService_SetConfigRosterKeepLeader(t *testing.T) {
 		rosterR = onet.NewRoster([]*network.ServerIdentity{
 			rosterR.List[0], rosterR.List[2], rosterR.List[3], rosterR.List[1]})
 		log.Lvl2("Creating block", i)
-		ctx, _ := createConfigTx(t, testInterval, *rosterR, defaultMaxBlockSize, s)
+		ctx, _ := createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, 1+i)
 		s.sendTxAndWait(t, ctx, 10)
 	}
-	time.Sleep(time.Second)
+	// time.Sleep(time.Second)
 }
 
 func TestService_SetConfigRosterNewLeader(t *testing.T) {
@@ -1146,7 +1146,7 @@ func TestService_SetConfigRosterNewLeader(t *testing.T) {
 		rosterR = onet.NewRoster([]*network.ServerIdentity{
 			rosterR.List[1], rosterR.List[2], rosterR.List[3], rosterR.List[0]})
 		log.Lvl2("Creating block", i)
-		ctx, _ := createConfigTx(t, testInterval, *rosterR, defaultMaxBlockSize, s)
+		ctx, _ := createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, 1+i)
 		s.sendTxAndWait(t, ctx, 10)
 	}
 }
@@ -1175,6 +1175,7 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 	leanClient := onet.NewClient(cothority.Suite, ServiceName)
 	rosterR := s.roster
 	rosterLast := rosterR
+	counter := 2
 	for _, newNode := range newRoster.List {
 		log.Lvl2("Verifying the correct roster is in place")
 		latest, err := s.service().db().GetLatestByID(s.genesis.Hash)
@@ -1182,8 +1183,8 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		require.True(t, latest.Roster.ID.Equal(rosterLast.ID), "roster has not been updated")
 
 		var i int
-		for i = 0; i < 10; i++ {
-			time.Sleep(time.Second * time.Duration(i))
+		for i = 1; i < 10; i++ {
+			time.Sleep(testInterval * time.Duration(i))
 			log.Lvlf2("Verifying the last node %s has all the data", rosterLast.List[len(rosterLast.List)-1])
 			reply := &GetProofResponse{}
 			err = leanClient.SendProtobuf(rosterLast.List[len(rosterLast.List)-1], &GetProof{
@@ -1197,27 +1198,41 @@ func TestService_SetConfigRosterNewNodes(t *testing.T) {
 		}
 		require.True(t, i < 10, "didn't get proof in reasonable time")
 
+		log.Lvlf2("Adding new node to the roster")
 		rosterLast = rosterR
 		rosterR = onet.NewRoster(append(rosterR.List, newNode))
-		ctx, _ := createConfigTx(t, testInterval, *rosterR, defaultMaxBlockSize, s)
+		ctx, _ := createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
+		counter++
 		s.sendTxAndWait(t, ctx, 10)
 	}
 
 	// Make sure the latest node is correctly activated.
-	ctx, _ = createConfigTx(t, testInterval, *rosterR, defaultMaxBlockSize, s)
+	ctx, _ = createConfigTxWithCounter(t, testInterval, *rosterR, defaultMaxBlockSize, s, counter)
+	counter++
 	s.sendTxAndWait(t, ctx, 10)
 
 	for _, node := range rosterR.List {
 		log.Lvl2("Checking node", node, "has testDarc stored")
-		reply := &GetProofResponse{}
-		err = leanClient.SendProtobuf(node, &GetProof{
-			Version: CurrentVersion,
-			ID:      s.genesis.Hash,
-			Key:     testDarc.GetBaseID(),
-		}, reply)
-		require.Nil(t, err)
-		require.True(t, reply.Proof.InclusionProof.Match(testDarc.GetBaseID()))
+		for i := 0; i < 2; i++ {
+			// Try at least during two intervals for the one block to catch up
+			reply := &GetProofResponse{}
+			err = leanClient.SendProtobuf(node, &GetProof{
+				Version: CurrentVersion,
+				ID:      s.genesis.Hash,
+				Key:     testDarc.GetBaseID(),
+			}, reply)
+			if err == nil {
+				require.Nil(t, err)
+				require.True(t, reply.Proof.InclusionProof.Match(testDarc.GetBaseID()))
+				break
+			} else if i == 1 {
+				log.Error("Couldn't get proof for darc:", err)
+				t.FailNow()
+			}
+			time.Sleep(testInterval)
+		}
 	}
+	time.Sleep(1 * time.Second)
 }
 
 func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
@@ -1228,7 +1243,7 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 
 	log.Lvl1("Don't allow new nodes as new leader")
 	wrongRoster := onet.NewRoster(append(newRoster.List, s.roster.List...))
-	ctx, _ := createConfigTx(t, testInterval, *wrongRoster, defaultMaxBlockSize, s)
+	ctx, _ := createConfigTxWithCounter(t, testInterval, *wrongRoster, defaultMaxBlockSize, s, 1)
 	_, err := s.services[0].AddTransaction(&AddTxRequest{
 		Version:       CurrentVersion,
 		SkipchainID:   s.genesis.SkipChainID(),
@@ -1239,18 +1254,20 @@ func TestService_SetConfigRosterSwitchNodes(t *testing.T) {
 
 	log.Lvl1("Allow new nodes at the end", newRoster.List)
 	goodRoster := onet.NewRoster(s.roster.List)
+	counter := 1
 	for _, si := range newRoster.List {
 		log.Lvl1("Adding", si)
 		goodRoster = onet.NewRoster(append(goodRoster.List, si))
-		ctx, _ = createConfigTx(t, testInterval, *goodRoster, defaultMaxBlockSize, s)
+		ctx, _ = createConfigTxWithCounter(t, testInterval, *goodRoster, defaultMaxBlockSize, s, counter)
+		counter++
 		s.sendTxAndWait(t, ctx, 10)
 	}
 }
 
-func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int) {
+func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int, count int) int {
 	ids := []darc.Identity{s.signer.Identity()}
 	for i := 0; i < nbr; i++ {
-		var ctx ClientTransaction
+		var instrs Instructions
 		for j := 0; j < perCTx; j++ {
 			desc := random.Bits(256, true, random.New())
 			dummyDarc := darc.NewDarc(darc.InitRules(ids, ids), desc)
@@ -1258,11 +1275,16 @@ func addDummyTxs(t *testing.T, s *ser, nbr int, perCTx int) {
 			require.Nil(t, err)
 			instr := createInstr(s.darc.GetBaseID(), ContractDarcID,
 				"darc", dummyDarcBuf)
-			require.Nil(t, err)
-			ctx.Instructions = append(ctx.Instructions, instr)
+			instr.SignerCounter[0] = uint64(count)
+			count++
+			instrs = append(instrs, instr)
 		}
+		ctx, err := combineInstrsAndSign(s.signer, instrs...)
+		require.Nil(t, err)
+
 		s.sendTxAndWait(t, ctx, 10)
 	}
+	return count
 }
 
 func TestService_SetConfigRosterDownload(t *testing.T) {
@@ -1278,19 +1300,20 @@ func TestService_SetConfigRosterDownload(t *testing.T) {
 	ctx, err := combineInstrsAndSign(s.signer, instr)
 	require.Nil(t, err)
 	s.sendTxAndWait(t, ctx, 10)
-	// Add two other transaction so we're on a new border between forward links
-	addDummyTxs(t, s, 4, 1)
+	// Add other transaction so we're on a new border between forward links
+	ct := addDummyTxs(t, s, 4, 1, 2)
 
 	catchupDownloadAll = 1
 	_, newRoster, _ := s.local.MakeSRS(cothority.Suite, 1, ByzCoinID)
 
 	newRoster = onet.NewRoster(append(s.roster.List, newRoster.List...))
-	ctx, _ = createConfigTx(t, testInterval, *newRoster, defaultMaxBlockSize, s)
+	ctx, _ = createConfigTxWithCounter(t, testInterval, *newRoster, defaultMaxBlockSize, s, ct)
+	ct++
 	s.sendTxAndWait(t, ctx, 10)
 
 	// Create a new block
 	log.Lvl1("Creating two dummy blocks for the new node to catch up")
-	addDummyTxs(t, s, 2, 1)
+	ct = addDummyTxs(t, s, 2, 1, ct)
 
 	log.Lvl1("And getting proof from new node that the testDarc exists")
 	leanClient := onet.NewClient(cothority.Suite, ServiceName)
@@ -1308,8 +1331,8 @@ func TestService_DownloadState(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	addDummyTxs(t, s, 3, 3)
-	addDummyTxs(t, s, 1, 20)
+	ct := addDummyTxs(t, s, 3, 3, 1)
+	ct = addDummyTxs(t, s, 1, 20, ct)
 
 	// Wrong parameters
 	resp, err := s.service().DownloadState(&DownloadState{
@@ -1317,24 +1340,71 @@ func TestService_DownloadState(t *testing.T) {
 	})
 	require.NotNil(t, err)
 	resp, err = s.service().DownloadState(&DownloadState{
+		ByzCoinID: skipchain.SkipBlockID{},
+		Nonce:     0,
+		Length:    1,
+	})
+	require.NotNil(t, err)
+	resp, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
 	})
 	require.NotNil(t, err)
 	resp, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
-		Reset:     false,
+		Nonce:     1,
 	})
 	require.NotNil(t, err)
 	resp, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
-		Reset:     true,
+		Nonce:     0,
 	})
 	require.NotNil(t, err)
+
+	// Start one download and check it is aborted
+	// if we start a second download.
+	log.Lvl1("Check aborting of download")
+	resp, err = s.service().DownloadState(&DownloadState{
+		ByzCoinID: s.genesis.SkipChainID(),
+		Nonce:     0,
+		Length:    1,
+	})
+	require.Nil(t, err)
+	nonce1 := resp.Nonce
+	// Continue 1st download
+	resp, err = s.service().DownloadState(&DownloadState{
+		ByzCoinID: s.genesis.SkipChainID(),
+		Nonce:     nonce1,
+		Length:    1,
+	})
+	require.Nil(t, err)
+	// Start 2nd download
+	resp, err = s.service().DownloadState(&DownloadState{
+		ByzCoinID: s.genesis.SkipChainID(),
+		Nonce:     0,
+		Length:    1,
+	})
+	require.Nil(t, err)
+	nonce2 := resp.Nonce
+	require.NotEqual(t, nonce1, nonce2)
+	// Now 1st download should fail
+	resp, err = s.service().DownloadState(&DownloadState{
+		ByzCoinID: s.genesis.SkipChainID(),
+		Nonce:     nonce1,
+		Length:    1,
+	})
+	require.NotNil(t, err)
+	// And 2nd download should still continue
+	resp, err = s.service().DownloadState(&DownloadState{
+		ByzCoinID: s.genesis.SkipChainID(),
+		Nonce:     nonce2,
+		Length:    1,
+	})
+	require.Nil(t, err)
 
 	// Start downloading
 	resp, err = s.service().DownloadState(&DownloadState{
 		ByzCoinID: s.genesis.SkipChainID(),
-		Reset:     true,
+		Nonce:     0,
 		Length:    10,
 	})
 	require.Nil(t, err)
@@ -1343,10 +1413,11 @@ func TestService_DownloadState(t *testing.T) {
 
 	// Start a new download and go till the end
 	length := 0
+	var nonce uint64
 	for {
 		resp, err = s.service().DownloadState(&DownloadState{
 			ByzCoinID: s.genesis.SkipChainID(),
-			Reset:     length == 0,
+			Nonce:     nonce,
 			Length:    10,
 		})
 		require.Nil(t, err)
@@ -1354,6 +1425,7 @@ func TestService_DownloadState(t *testing.T) {
 			break
 		}
 		length += len(resp.KeyValues)
+		nonce = resp.Nonce
 	}
 	// As we copy the whole db, also the interior nodes
 	// are copied, so we cannot know in advance how many
@@ -1512,11 +1584,11 @@ func testViewChange(t *testing.T, nHosts, nFailures int, interval time.Duration)
 	}
 
 	log.Lvl1("Sending 1st tx")
-	tx1, err = createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 1)
 	require.NoError(t, err)
 	s.sendTxToAndWait(t, tx1, nFailures, 10)
 	log.Lvl1("Sending 2nd tx")
-	tx1, err = createOneClientTx(s.darc.GetBaseID(), dummyContract, s.value, s.signer)
+	tx1, err = createOneClientTxWithCounter(s.darc.GetBaseID(), dummyContract, s.value, s.signer, 2)
 	require.NoError(t, err)
 	s.sendTxToAndWait(t, tx1, nFailures, 10)
 	log.Lvl1("Sent two tx")
@@ -1619,15 +1691,15 @@ func TestService_UpdateTrieCallback(t *testing.T) {
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
 	switch {
 	case intervalBad:
-		return createConfigTx(t, -1, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), defaultMaxBlockSize, s)
+		return createConfigTxWithCounter(t, -1, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), defaultMaxBlockSize, s, 1)
 	case szBad:
-		return createConfigTx(t, 420*time.Millisecond, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), 30*1e6, s)
+		return createConfigTxWithCounter(t, 420*time.Millisecond, *s.roster.RandomSubset(s.services[1].ServerIdentity(), 2), 30*1e6, s, 1)
 	default:
-		return createConfigTx(t, 420*time.Millisecond, *s.roster, 424242, s)
+		return createConfigTxWithCounter(t, 420*time.Millisecond, *s.roster, 424242, s, 1)
 	}
 }
 
-func createConfigTxWithCounter(t *testing.T, interval time.Duration, roster onet.Roster, size int, s *ser, counter uint64) (ClientTransaction, ChainConfig) {
+func createConfigTxWithCounter(t *testing.T, interval time.Duration, roster onet.Roster, size int, s *ser, counter int) (ClientTransaction, ChainConfig) {
 	config := ChainConfig{
 		BlockInterval: interval,
 		Roster:        roster,
@@ -1645,16 +1717,12 @@ func createConfigTxWithCounter(t *testing.T, interval time.Duration, roster onet
 				Value: configBuf,
 			}},
 		},
-		SignerCounter: []uint64{counter},
+		SignerCounter: []uint64{uint64(counter)},
 	}
 	ctx, err := combineInstrsAndSign(s.signer, instr)
 
 	require.NoError(t, err)
 	return ctx, config
-}
-
-func createConfigTx(t *testing.T, interval time.Duration, roster onet.Roster, size int, s *ser) (ClientTransaction, ChainConfig) {
-	return createConfigTxWithCounter(t, interval, roster, size, s, 1)
 }
 
 func darcToTx(t *testing.T, d2 darc.Darc, signer darc.Signer) ClientTransaction {

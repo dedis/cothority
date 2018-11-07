@@ -34,6 +34,13 @@ message GetSingleBlockByIndex {
 	required sint32 index = 2;
 }
 
+// GetSingleBlockByIndexReply returns the block and a set of links that proves
+// this block to be attached to the genesis block.
+message GetSingleBlockByIndexReply {
+	required SkipBlock skipblock = 1;
+	repeated ForwardLink links = 2;
+}
+
 // GetUpdateChain - the client sends the hash of the last known
 // Skipblock and will get back a list of all necessary SkipBlocks
 // to get to the latest.

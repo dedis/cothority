@@ -61,12 +61,13 @@ func GetMaster(s *skipchain.Service, id skipchain.SkipBlockID) (*Master, error) 
 
 // Links returns all the links appended to the master skipchain.
 func (m *Master) Links(s *skipchain.Service) ([]*Link, error) {
-	block, err := s.GetSingleBlockByIndex(
+	search, err := s.GetSingleBlockByIndex(
 		&skipchain.GetSingleBlockByIndex{Genesis: m.ID, Index: 0},
 	)
 	if err != nil {
 		return nil, err
 	}
+	block := search.SkipBlock
 
 	links := make([]*Link, 0)
 	for {

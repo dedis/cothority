@@ -160,6 +160,13 @@ type GetSingleBlockByIndex struct {
 	Index   int
 }
 
+// GetSingleBlockByIndexReply returns the block and the list of forward links
+// to prove this is a valid block.
+type GetSingleBlockByIndexReply struct {
+	SkipBlock *SkipBlock
+	Links     []*ForwardLink
+}
+
 // Internal calls
 
 // GetBlock asks for an updated block, in case for a conode that is not

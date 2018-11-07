@@ -67,9 +67,10 @@ type footer struct {
 func GetElection(s *skipchain.Service, id skipchain.SkipBlockID,
 	checkVoted bool, user uint32) (*Election, error) {
 
-	block, err := s.GetSingleBlockByIndex(
+	search, err := s.GetSingleBlockByIndex(
 		&skipchain.GetSingleBlockByIndex{Genesis: id, Index: 1},
 	)
+	block := search.SkipBlock
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +153,7 @@ func (e *Election) setStage(s *skipchain.Service) error {
 
 // Box accumulates all the ballots while only keeping the last ballot for each user.
 func (e *Election) Box(s *skipchain.Service) (*Box, error) {
-	block, err := s.GetSingleBlockByIndex(
+	search, err := s.GetSingleBlockByIndex(
 		&skipchain.GetSingleBlockByIndex{
 			Genesis: e.ID,
 			Index:   0,
@@ -160,6 +161,7 @@ func (e *Election) Box(s *skipchain.Service) (*Box, error) {
 	if err != nil {
 		return nil, err
 	}
+	block := search.SkipBlock
 
 	// Use map to only included a user's last ballot.
 	ballots := make([]*Ballot, 0)

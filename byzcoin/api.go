@@ -3,8 +3,10 @@ package byzcoin
 import (
 	"bytes"
 	"errors"
+	"math"
 	"time"
 
+	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 
@@ -298,18 +300,35 @@ func (c *Client) GetSignerCounters(ids ...string) (*GetSignerCountersResponse, e
 //
 // The first StateChange with start == 0 holds the metadata of the
 // trie which can be `protobuf.Decode`d into a struct{map[string][]byte}.
-func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, reset bool, length int) (reply *DownloadStateResponse, err error) {
+func (c *Client) DownloadState(byzcoinID skipchain.SkipBlockID, nonce uint64, length int) (reply *DownloadStateResponse, err error) {
 	if length <= 0 {
 		return nil, errors.New("invalid parameter")
 	}
 
 	reply = &DownloadStateResponse{}
-	err = c.SendProtobuf(c.Roster.List[len(c.Roster.List)/2], &DownloadState{
-		ByzCoinID: byzcoinID,
-		Reset:     reset,
-		Length:    length,
-	}, reply)
-	return reply, err
+	l := len(c.Roster.List)
+	index := l - 1
+	if l > 2 {
+		// This is the leader plus the subleaders, don't contact them
+		index = 1 + int(math.Ceil(math.Pow(float64(l), 1./3.)))
+	}
+
+	// Try to download from the nodes, starting with the first non-subleader.
+	// Because the last elements of the roster might be a view-changed,
+	// defective old leader, we start from the first non-subleader.
+	for index < l {
+		err = c.SendProtobuf(c.Roster.List[index], &DownloadState{
+			ByzCoinID: byzcoinID,
+			Nonce:     nonce,
+			Length:    length,
+		}, reply)
+		if err == nil {
+			return reply, nil
+		}
+		log.Error("Couldn't download from", c.Roster.List[index], ":", err)
+		index++
+	}
+	return nil, errors.New("Error while downloading state from nodes")
 }
 
 // DefaultGenesisMsg creates the message that is used to for creating the
