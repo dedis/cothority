@@ -511,14 +511,12 @@ query:
 	return
 }
 
-// GetInstanceVersion looks for the version of a given instance and responds
-// with the state change and the block index
-func (s *Service) GetInstanceVersion(req *GetInstanceVersion) (*GetInstanceVersionResponse, error) {
-	sce, ok, err := s.stateChangeStorage.getByVersion(req.InstanceID[:], req.Version, req.SkipChainID)
+func entryToResponse(sce *StateChangeEntry, ok bool, err error) (*GetInstanceVersionResponse, error) {
+	if !ok {
+		err = errKeyNotSet
+	}
 	if err != nil {
 		return nil, err
-	} else if !ok {
-		return nil, errKeyNotSet
 	}
 
 	return &GetInstanceVersionResponse{
@@ -527,20 +525,20 @@ func (s *Service) GetInstanceVersion(req *GetInstanceVersion) (*GetInstanceVersi
 	}, nil
 }
 
+// GetInstanceVersion looks for the version of a given instance and responds
+// with the state change and the block index
+func (s *Service) GetInstanceVersion(req *GetInstanceVersion) (*GetInstanceVersionResponse, error) {
+	sce, ok, err := s.stateChangeStorage.getByVersion(req.InstanceID[:], req.Version, req.SkipChainID)
+
+	return entryToResponse(&sce, ok, err)
+}
+
 // GetLastInstanceVersion looks for the last version of an instance and
 // responds with the state change and the block when it hits
 func (s *Service) GetLastInstanceVersion(req *GetLastInstanceVersion) (*GetInstanceVersionResponse, error) {
 	sce, ok, err := s.stateChangeStorage.getLast(req.InstanceID[:], req.SkipChainID)
-	if err != nil {
-		return nil, err
-	} else if !ok {
-		return nil, errKeyNotSet
-	}
 
-	return &GetInstanceVersionResponse{
-		StateChange: sce.StateChange,
-		BlockIndex:  sce.BlockIndex,
-	}, nil
+	return entryToResponse(&sce, ok, err)
 }
 
 // GetAllInstanceVersion looks for all the state changes of an instance
@@ -1663,8 +1661,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	// instruction, we need to get the version from the trie
 	vv := make(map[string]uint64)
 	for i, sc := range scs {
-		log.Lvlf2("%x %v", sc.InstanceID, sc.ContractID)
-		ver, ok := vv[string(sc.InstanceID)]
+		ver, ok := vv[hex.EncodeToString(sc.InstanceID)]
 		if !ok {
 			_, ver, _, _, err = st.GetValues(sc.InstanceID)
 		}
@@ -1681,7 +1678,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 		}
 
 		scs[i].Version = ver
-		vv[string(sc.InstanceID)] = ver
+		vv[hex.EncodeToString(sc.InstanceID)] = ver
 	}
 
 	return
@@ -2019,7 +2016,7 @@ func (s *Service) trySyncAll() {
 			log.Error(s.ServerIdentity(), err)
 		}
 
-		index, ok := indices[string(sb.SkipChainID())]
+		index, ok := indices[sb.SkipChainID().String()]
 		if !ok {
 			// from the beginning
 			index = 0
@@ -2089,7 +2086,7 @@ func (s *Service) buildStateChanges(sid skipchain.SkipBlockID, sst *stagingState
 	}
 
 	if len(sb.ForwardLink) > 0 {
-		// assume the first one is always the FL lvl 0. Is it right ??
+		// Follow the FL level 0 to create all the state changes
 		return s.buildStateChanges(sb.ForwardLink[0].To, sst, cin)
 	}
 

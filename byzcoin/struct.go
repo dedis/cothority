@@ -139,7 +139,7 @@ func (s *stateChangeStorage) init() (map[string]int, error) {
 				return nil
 			})
 
-			indices[string(scid)] = int(lastIndex + 1)
+			indices[skipchain.SkipBlockID(scid).String()] = int(lastIndex + 1)
 			return err
 		})
 	})

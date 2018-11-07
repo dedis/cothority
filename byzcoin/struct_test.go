@@ -27,6 +27,8 @@ func TestStateChangeStorage_Init(t *testing.T) {
 		sbs[i].Hash = sbs[i].CalculateHash()
 	}
 
+	// Put random values and increment the block indices to
+	// check the size and indices initialisation
 	err := scs.db.Update(func(tx *bolt.Tx) error {
 		for i := 0; i < n; i++ {
 			b := tx.Bucket(scs.bucket)
@@ -37,8 +39,8 @@ func TestStateChangeStorage_Init(t *testing.T) {
 			}
 
 			for j := 0; j < k; j++ {
-				key := make([]byte, 48)
-				key[47] = byte(j)
+				key := make([]byte, prefixLength+versionLength+8)
+				key[len(key)-1] = byte(j)
 
 				d := GenNonce()
 				scb.Put(key, d[:])
@@ -52,7 +54,7 @@ func TestStateChangeStorage_Init(t *testing.T) {
 
 	indices, err := scs.init()
 	require.Nil(t, err)
-	require.Equal(t, k, indices[string(sbs[0].Hash)])
+	require.Equal(t, k, indices[sbs[0].Hash.String()])
 	require.Equal(t, size, scs.size)
 }
 
@@ -186,7 +188,7 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 	size := 10
 	iid1 := genID().Slice()
 	iid2 := genID().Slice()
-	// test over 2 skipchains as we clean independently from the skipchain
+	// check over 2 skipchains as we clean independently from the skipchain
 	sb1 := createBlock()
 	sb2 := createBlock()
 
