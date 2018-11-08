@@ -1096,9 +1096,11 @@ func TestService_SetConfigInterval(t *testing.T) {
 			// first. Putting it to 1 doesn't work, because the actual blockInterval
 			// is bigger, due to dedis/cothority#1409
 			s.sendTxAndWait(t, ctx, 10)
-			require.True(t, time.Now().Sub(start) > lastInterval)
+			dur := time.Now().Sub(start)
+			durErr := dur / 10 // leave a bit of room for error
+			require.True(t, dur+durErr > lastInterval)
 			if interval > lastInterval {
-				require.True(t, time.Now().Sub(start) < interval)
+				require.True(t, dur-durErr < interval)
 			}
 			lastInterval = interval
 		}
