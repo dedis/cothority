@@ -186,6 +186,7 @@ func (instr Instruction) String() string {
 	out += fmt.Sprintf("instr: %x\n", instr.Hash())
 	out += fmt.Sprintf("\tinstID: %v\n", instr.InstanceID)
 	out += fmt.Sprintf("\taction: %s\n", instr.Action())
+	out += fmt.Sprintf("\tcounters: %v\n", instr.SignerCounter)
 	out += fmt.Sprintf("\tsignatures: %d\n", len(instr.Signatures))
 	return out
 }
