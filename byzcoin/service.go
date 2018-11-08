@@ -198,17 +198,15 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 
 	// Create the genesis-transaction with a special key, it acts as a
 	// reference to the actual genesis transaction.
-	transaction := NewTxResults(ClientTransaction{
+	ctx := ClientTransaction{
 		Instructions: []Instruction{{
 			InstanceID: ConfigInstanceID,
-			Nonce:      Nonce{},
-			Index:      0,
-			Length:     1,
 			Spawn:      spawn,
 		}},
-	})
+	}
+	ctx.InstructionsHash = ctx.Instructions.Hash()
 
-	sb, err := s.createNewBlock(nil, &req.Roster, transaction)
+	sb, err := s.createNewBlock(nil, &req.Roster, NewTxResults(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -385,6 +383,33 @@ func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthor
 		}
 	}
 	return resp, nil
+}
+
+// GetSignerCounters gets the latest signer counters for the given identities.
+func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersResponse, error) {
+	st, err := s.GetReadOnlyStateTrie(req.SkipchainID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]uint64, len(req.SignerIDs))
+
+	for i := range req.SignerIDs {
+		key := publicVersionKey(req.SignerIDs[i])
+		buf, _, _, err := st.GetValues(key)
+		if err == errKeyNotSet {
+			out[i] = 0
+			continue
+		}
+
+		if err != nil {
+			return nil, err
+		}
+		out[i] = binary.LittleEndian.Uint64(buf)
+	}
+	resp := GetSignerCountersResponse{
+		Counters: out,
+	}
+	return &resp, nil
 }
 
 // SetPropagationTimeout overrides the default propagation timeout that is used
@@ -1114,6 +1139,12 @@ func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipB
 	var cin []Coin
 clientTransactions:
 	for _, tx := range txIn {
+		if !bytes.Equal(tx.ClientTransaction.InstructionsHash, tx.ClientTransaction.Instructions.Hash()) {
+			log.Error(s.ServerIdentity(), "invalid instruction hash")
+			tx.Accepted = false
+			txOut = append(txOut, tx)
+			continue clientTransactions
+		}
 		txsz := txSize(tx)
 
 		// Make a new trie for each instruction. If the instruction is
@@ -1121,18 +1152,28 @@ clientTransactions:
 		// (via cdbTemp = cdbI.c), otherwise dump it.
 		sstTempC := sstTemp.Clone()
 		for _, instr := range tx.ClientTransaction.Instructions {
-			scs, cout, err := s.executeInstruction(sstTempC, cin, instr)
+			scs, cout, err := s.executeInstruction(sstTempC, cin, instr, tx.ClientTransaction.InstructionsHash)
 			if err != nil {
 				log.Errorf("%s Call to contract returned error: %s", s.ServerIdentity(), err)
 				tx.Accepted = false
 				txOut = append(txOut, tx)
 				continue clientTransactions
 			}
-			if err = sstTempC.StoreAll(scs); err != nil {
+			var counterScs StateChanges
+			if counterScs, err = incrementSignerCounters(sstTempC, instr.Signatures); err != nil {
+				log.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
 				tx.Accepted = false
+				txOut = append(txOut, tx)
+				continue clientTransactions
+			}
+			if err = sstTempC.StoreAll(append(scs, counterScs...)); err != nil {
+				log.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
+				tx.Accepted = false
+				txOut = append(txOut, tx)
 				continue clientTransactions
 			}
 			states = append(states, scs...)
+			states = append(states, counterScs...)
 			cin = cout
 		}
 
@@ -1172,11 +1213,13 @@ clientTransactions:
 
 	// Store the result in the cache before returning.
 	merkleRoot = sstTemp.GetRoot()
-	s.stateChangeCache.update(scID, txOut.Hash(), merkleRoot, txOut, states)
+	if len(states) != 0 && len(txOut) != 0 {
+		s.stateChangeCache.update(scID, txOut.Hash(), merkleRoot, txOut, states)
+	}
 	return
 }
 
-func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction) (scs StateChanges, cout []Coin, err error) {
+func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction, ctxHash []byte) (scs StateChanges, cout []Coin, err error) {
 	defer func() {
 		if re := recover(); re != nil {
 			err = errors.New(re.(string))
@@ -1204,7 +1247,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	}
 	// Now we call the contract function with the data of the key.
 	log.Lvlf3("%s Calling contract '%s'", s.ServerIdentity(), contractID)
-	return contract(st, instr, cin)
+	return contract(st, instr, ctxHash, cin)
 }
 
 func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity, error) {
@@ -1548,7 +1591,8 @@ func newService(c *onet.Context) (onet.Service, error) {
 		closed:                 true,
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
-		s.GetProof, s.CheckAuthorization); err != nil {
+		s.GetProof, s.CheckAuthorization,
+		s.GetSignerCounters); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
 	}
 	if err := s.RegisterStreamingHandlers(s.StreamTransactions); err != nil {

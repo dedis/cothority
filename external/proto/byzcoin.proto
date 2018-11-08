@@ -148,24 +148,18 @@ message Instruction {
   // InstanceID is either the instance that can spawn a new instance, or the instance
   // that will be invoked or deleted.
   required bytes instanceid = 1;
-  // Nonce is monotonically increasing with regard to the Darc controlling
-  // access to the instance. It is used to prevent replay attacks.
-  // The client has to track what the next nonce should be for a given Darc.
-  required bytes nonce = 2;
-  // Index and length prevent a leader from censoring specific instructions from
-  // a client and still keep the other instructions valid.
-  // Index is relative to the beginning of the clientTransaction.
-  required sint32 index = 3;
-  // Length is the total number of instructions in this clientTransaction
-  required sint32 length = 4;
   // Spawn creates a new instance.
-  optional Spawn spawn = 5;
+  optional Spawn spawn = 2;
   // Invoke calls a method of an existing instance.
-  optional Invoke invoke = 6;
+  optional Invoke invoke = 3;
   // Delete removes the given instance.
-  optional Delete delete = 7;
+  optional Delete delete = 4;
+  // SignerCounter must be set to a value that is one greater than what
+  // was in the instruction signed by the same signer. Every counter must
+  // map to an identity in Signature. The initial counter is 1.
+  repeated uint64 signercounter = 5 [packed=true];
   // Signatures that are verified using the Darc controlling access to the instance.
-  repeated darc.Signature signatures = 8;
+  repeated darc.Signature signatures = 6;
 }
 
 // Spawn is called upon an existing instance that will spawn a new instance.
@@ -202,6 +196,7 @@ message Argument {
 // If any of the instructions fails, none of them will be applied.
 message ClientTransaction {
   repeated Instruction instructions = 1;
+  required bytes instructionshash = 2;
 }
 
 // TxResult holds a transaction and the result of running it.
@@ -251,4 +246,17 @@ message StateChangeBody {
   required bytes contractid = 2;
   required bytes value = 3;
   required bytes darcid = 4;
+}
+
+// GetSignerCounters is a request to get the latest version for the specified
+// identity.
+message GetSignerCounters {
+  repeated string signerids = 1;
+  required bytes skipchainid = 2;
+}
+
+// GetSignerCountersResponse holds the latest version for the identity in the
+// request.
+message GetSignerCountersResponse {
+  repeated uint64 counters = 1 [packed=true];
 }

@@ -73,14 +73,15 @@ func (c *Client) WaitProof(id byzcoin.InstanceID, interval time.Duration,
 // Input:
 //   - write - A Write structure
 //   - signer - The data owner who will sign the transaction
+//   - signerCtr - A monotonically increaing counter for every signer
 //   - darc - The darc governing this instance
 //   - wait - The number of blocks to wait -- 0 means no wait
 //
 // Output:
 //   - reply - WriteReply containing the transaction response and instance id
 //	 - err - Error if any, nil otherwise.
-func (c *Client) AddWrite(write *Write, signer darc.Signer, darc darc.Darc,
-	wait int) (
+func (c *Client) AddWrite(write *Write, signer darc.Signer, signerCtr uint64,
+	darc darc.Darc, wait int) (
 	reply *WriteReply, err error) {
 	reply = &WriteReply{}
 	if err != nil {
@@ -93,18 +94,16 @@ func (c *Client) AddWrite(write *Write, signer darc.Signer, darc darc.Darc,
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{{
 			InstanceID: byzcoin.NewInstanceID(darc.GetBaseID()),
-			Nonce:      byzcoin.Nonce{},
-			Index:      0,
-			Length:     1,
 			Spawn: &byzcoin.Spawn{
 				ContractID: ContractWriteID,
 				Args: byzcoin.Arguments{{
 					Name: "write", Value: writeBuf}},
 			},
+			SignerCounter: []uint64{signerCtr},
 		}},
 	}
 	//Sign the transaction
-	err = ctx.Instructions[0].SignBy(darc.GetID(), signer)
+	err = ctx.SignWith(signer)
 	if err != nil {
 		return nil, err
 	}
@@ -121,13 +120,14 @@ func (c *Client) AddWrite(write *Write, signer darc.Signer, darc darc.Darc,
 // Input:
 //   - proof - A ByzCoin proof of the Write Operation.
 //   - signer - The data owner who will sign the transaction
+//   - signerCtr - A monotonically increaing counter for every signer
 //   - darc - The darc governing this instance
 //   - wait - The number of blocks to wait -- 0 means no wait
 //
 // Output:
 //   - reply - ReadReply containing the transaction response and instance id
 //	 - err - Error if any, nil otherwise.
-func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
+func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer, signerCtr uint64,
 	darc darc.Darc, wait int) (
 	reply *ReadReply, err error) {
 	var readBuf []byte
@@ -147,16 +147,14 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{{
 			InstanceID: byzcoin.NewInstanceID(proof.InclusionProof.Key()),
-			Nonce:      byzcoin.Nonce{},
-			Index:      0,
-			Length:     1,
 			Spawn: &byzcoin.Spawn{
 				ContractID: ContractReadID,
 				Args:       byzcoin.Arguments{{Name: "read", Value: readBuf}},
 			},
+			SignerCounter: []uint64{signerCtr},
 		}},
 	}
-	err = ctx.Instructions[0].SignBy(darc.GetID(), signer)
+	err = ctx.SignWith(signer)
 	reply.InstanceID = ctx.Instructions[0].DeriveID("")
 	if err != nil {
 		return nil, err
@@ -171,6 +169,7 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 // SpawnDarc spawns a Darc Instance by adding a transaction on the byzcoin client.
 // Input:
 //   - signer - The signer authorizing the spawn of this darc (calypso "admin")
+//   - signerCtr - A monotonically increaing counter for every signer
 //   - controlDarc - The darc governing this spawning
 //	 - spawnDarc - The darc to be spawned
 //   - wait - The number of blocks to wait -- 0 means no wait
@@ -178,7 +177,7 @@ func (c *Client) AddRead(proof *byzcoin.Proof, signer darc.Signer,
 // Output:
 //   - reply - AddTxResponse containing the transaction response
 //	 - err - Error if any, nil otherwise.
-func (c *Client) SpawnDarc(signer darc.Signer,
+func (c *Client) SpawnDarc(signer darc.Signer, signerCtr uint64,
 	controlDarc darc.Darc, spawnDarc darc.Darc, wait int) (
 	reply *byzcoin.AddTxResponse, err error) {
 	reply = &byzcoin.AddTxResponse{}
@@ -193,9 +192,6 @@ func (c *Client) SpawnDarc(signer darc.Signer,
 	ctx := byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(controlDarc.GetBaseID()),
-			Nonce:      byzcoin.GenNonce(),
-			Index:      0,
-			Length:     1,
 			Spawn: &byzcoin.Spawn{
 				ContractID: byzcoin.ContractDarcID,
 				Args: []byzcoin.Argument{{
@@ -203,9 +199,10 @@ func (c *Client) SpawnDarc(signer darc.Signer,
 					Value: darcBuf,
 				}},
 			},
+			SignerCounter: []uint64{signerCtr},
 		}},
 	}
-	err = ctx.Instructions[0].SignBy(controlDarc.GetBaseID(), signer)
+	err = ctx.SignWith(signer)
 	if err != nil {
 		return nil, err
 	}

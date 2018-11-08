@@ -31,7 +31,7 @@ var CmdDarcEvolve = "evolve"
 
 // ContractFn is the type signature of the class functions which can be
 // registered with the ByzCoin service.
-type ContractFn func(st ReadOnlyStateTrie, inst Instruction, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
+type ContractFn func(st ReadOnlyStateTrie, inst Instruction, ctxHash []byte, inCoins []Coin) (sc []StateChange, outCoins []Coin, err error)
 
 // RegisterContract stores the contract in a map and will call it whenever a
 // contract needs to be done. GetService makes it possible to give either an
@@ -62,7 +62,7 @@ func LoadDarcFromTrie(st ReadOnlyStateTrie, key []byte) (*darc.Darc, error) {
 
 // ContractConfig can only be instantiated once per skipchain, and only for
 // the genesis block.
-func (s *Service) ContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, c []Coin, err error) {
+func (s *Service) ContractConfig(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, coins []Coin) (sc []StateChange, c []Coin, err error) {
 	// Verify the darc signature if the config instance does not exist yet.
 	pr, err := cdb.GetProof(ConfigInstanceID.Slice())
 	if err != nil {
@@ -73,7 +73,7 @@ func (s *Service) ContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins 
 		return
 	}
 	if ok {
-		err = inst.VerifyDarcSignature(cdb)
+		err = inst.Verify(cdb, ctxHash)
 		if err != nil {
 			return
 		}
@@ -215,9 +215,9 @@ func spawnContractConfig(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin) 
 // ContractDarc accepts the following instructions:
 //   - Spawn - creates a new darc
 //   - Invoke.Evolve - evolves an existing darc
-func (s *Service) ContractDarc(cdb ReadOnlyStateTrie, inst Instruction, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
+func (s *Service) ContractDarc(cdb ReadOnlyStateTrie, inst Instruction, ctxHash []byte, coins []Coin) (sc []StateChange, cOut []Coin, err error) {
 	cOut = coins
-	err = inst.VerifyDarcSignature(cdb)
+	err = inst.Verify(cdb, ctxHash)
 	if err != nil {
 		return
 	}
@@ -239,8 +239,7 @@ func (s *Service) ContractDarc(cdb ReadOnlyStateTrie, inst Instruction, coins []
 		if !found {
 			return nil, nil, errors.New("couldn't find this contract type: " + inst.Spawn.ContractID)
 		}
-		return c(cdb, inst, coins)
-
+		return c(cdb, inst, ctxHash, coins)
 	case InvokeType:
 		switch inst.Invoke.Command {
 		case "evolve":

@@ -1,5 +1,6 @@
 package ch.epfl.dedis.byzcoin.contracts;
 
+import ch.epfl.dedis.byzcoin.SignerCounters;
 import ch.epfl.dedis.byzcoin.transaction.Instruction;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
@@ -23,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.List;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
@@ -53,20 +55,25 @@ class ValueTest {
 
     @Test
     void spawnValue() throws Exception {
+
         DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
+
+        // Get the counter for the admin
+        SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
         Darc darc2 = genesisDarc.copyRulesAndVersion();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
         darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
-        dc.evolveDarcAndWait(darc2, admin, 10);
+        dc.evolveDarcAndWait(darc2, admin, adminCtrs.head()+1, 10);
 
         byte[] myvalue = "314159".getBytes();
-        Proof p = dc.spawnInstanceAndWait("value", admin, Argument.NewList("value", myvalue), 10);
+        Proof p = dc.spawnInstanceAndWait("value", admin, adminCtrs.head()+2, Argument.NewList("value", myvalue), 10);
         assertTrue(p.matches());
 
         ValueInstance vi = ValueInstance.fromByzcoin(bc, p);
         assertArrayEquals(vi.getValue(), myvalue);
         myvalue = "27".getBytes();
-        vi.evolveValueAndWait(myvalue, admin, 10);
+        vi.evolveValueAndWait(myvalue, admin, adminCtrs.head()+3, 10);
         assertArrayEquals(vi.getValue(), myvalue);
 
         // this part is a regression test for
@@ -93,17 +100,21 @@ class ValueTest {
         // going to succeed in order to sync the test to the creation of the new
         // block.
         DarcInstance dc = DarcInstance.fromByzCoin(bc, genesisDarc);
+
+        // Get the counter for the admin
+        SignerCounters adminCtrs = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
         Darc darc2 = genesisDarc.copyRulesAndVersion();
         darc2.setRule("spawn:value", admin.getIdentity().toString().getBytes());
         darc2.setRule("invoke:update", admin.getIdentity().toString().getBytes());
-        dc.evolveDarcAndWait(darc2, admin, 10);
+        dc.evolveDarcAndWait(darc2, admin, adminCtrs.head()+1, 10);
 
         // Send through a tx with the wrong signer so it fails.
         Signer user = new SignerEd25519();
-        ClientTransactionId txid = dc.spawnInstance("value", user, Argument.NewList("value", "314159".getBytes()));
+        ClientTransactionId txid = dc.spawnInstance("value", user, 1L, Argument.NewList("value", "314159".getBytes()));
 
         // And send through a valid tx too, that we can wait for, so we know a block just got processed.
-        Proof p = dc.spawnInstanceAndWait("value", admin, Argument.NewList("value", "314159".getBytes()), 10);
+        Proof p = dc.spawnInstanceAndWait("value", admin, adminCtrs.head()+2, Argument.NewList("value", "314159".getBytes()), 10);
         assertTrue(p.matches());
 
         // Now that we know the latest block (it was returned to us in the proof p), we check it for the expected

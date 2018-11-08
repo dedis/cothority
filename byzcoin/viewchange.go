@@ -330,16 +330,18 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 		return errors.New("roster size is too small, must be >= 4")
 	}
 
-	st, err := s.GetReadOnlyStateTrie(req.GetGen())
-	if err != nil {
-		return err
-	}
-	_, _, genDarcID, err := st.GetValues(NewInstanceID(nil).Slice())
+	reqBuf, err := protobuf.Encode(&req)
 	if err != nil {
 		return err
 	}
 
-	reqBuf, err := protobuf.Encode(&req)
+	signer := darc.NewSignerEd25519(s.ServerIdentity().Public, s.getPrivateKey())
+
+	st, err := s.GetReadOnlyStateTrie(sb.SkipChainID())
+	if err != nil {
+		return err
+	}
+	ctr, err := getSignerCounter(st, signer.Identity().String())
 	if err != nil {
 		return err
 	}
@@ -347,9 +349,6 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 	ctx := ClientTransaction{
 		Instructions: []Instruction{{
 			InstanceID: NewInstanceID(nil),
-			Nonce:      GenNonce(),
-			Index:      0,
-			Length:     1,
 			Invoke: &Invoke{
 				Command: "view_change",
 				Args: []Argument{
@@ -363,10 +362,11 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 					},
 				},
 			},
+			SignerCounter: []uint64{ctr + 1},
 		}},
 	}
-	signer := darc.NewSignerEd25519(s.ServerIdentity().Public, s.getPrivateKey())
-	if err = ctx.Instructions[0].SignBy(genDarcID, signer); err != nil {
+	ctx.InstructionsHash = ctx.Instructions.Hash()
+	if err = ctx.Instructions[0].SignWith(ctx.InstructionsHash, signer); err != nil {
 		return err
 	}
 

@@ -7,10 +7,6 @@ import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.transaction.ClientTransaction;
 import ch.epfl.dedis.byzcoin.transaction.Instruction;
 import ch.epfl.dedis.byzcoin.transaction.Invoke;
-import ch.epfl.dedis.lib.Hex;
-import ch.epfl.dedis.lib.darc.Identity;
-import ch.epfl.dedis.lib.darc.Request;
-import ch.epfl.dedis.lib.darc.Signature;
 import ch.epfl.dedis.lib.darc.Signer;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityCryptoException;
@@ -19,10 +15,8 @@ import ch.epfl.dedis.lib.exception.CothorityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * ChainConfigInstance represents the only Configuration present in a ByzCoin ledger. This should not be used directly,
@@ -65,45 +59,33 @@ public class ChainConfigInstance {
     }
 
     /**
-     * Creates an instruction to evolve the value in byzcoin. The signer must have its identity in the current
-     * darc as "invoke:update" rule.
+     * Creates an instruction to evolve the value in byzcoin.
      *
      * @param newConfig the new config to store in the ChainConfig
-     * @param owners    must have its identity in the "invoke:update" rule
-     * @param pos       position of the instruction in the ClientTransaction
-     * @param len       total number of instructions in the ClientTransaction
+     * @param ownerCtrs is the list of monotonically increasing counters that will go into the instruction,
+     *                  they must match the signers who will eventually sign the instruction
      * @return Instruction to be sent to byzcoin
      * @throws CothorityCryptoException if there's a problem with the cryptography
      */
-    public Instruction evolveChainConfigInstruction(ChainConfigData newConfig, List<Signer> owners, int pos, int len) throws CothorityCryptoException {
+    public Instruction evolveChainConfigInstruction(ChainConfigData newConfig, List<Long> ownerCtrs) {
         Invoke inv = new Invoke("update_config", ContractId, newConfig.toProto().toByteArray());
-        Instruction inst = new Instruction(instance.getId(), Instruction.genNonce(), pos, len, inv);
-        List<Identity> ids = owners.stream().map(Signer::getIdentity).collect(Collectors.toList());
-        Request r = new Request(instance.getDarcId(), "invoke:update_config", inst.hash(),
-                ids, null);
-        logger.info("Signing: {}", Hex.printHexBinary(r.hash()));
-        List<Signature> signs = new ArrayList<>();
-        try {
-            for (Signer o : owners) {
-                signs.add(new Signature(o.sign(r.hash()), o.getIdentity()));
-            }
-        } catch (Signer.SignRequestRejectedException e) {
-            throw new CothorityCryptoException(e.getMessage());
-        }
-        inst.setSignatures(signs);
-        return inst;
+        return new Instruction(instance.getId(), ownerCtrs, inv);
     }
 
     /**
      * Sends the instruction to change the Chain Config and returns immediately.
+     * All the owners must have its identity in the current
+     * darc as "invoke:update" rule.
      *
      * @param newConfig the new config to store
      * @param owners    a list of owners needed to evolve the configuration
+     * @param ownerCtrs a list of counters which must map to the list of owners
      * @throws CothorityException if something goes wrong
      */
-    public void evolveChainConfig(ChainConfigData newConfig, List<Signer> owners) throws CothorityException {
-        Instruction inst = evolveChainConfigInstruction(newConfig, owners, 0, 1);
+    public void evolveChainConfig(ChainConfigData newConfig, List<Signer> owners, List<Long> ownerCtrs) throws CothorityException {
+        Instruction inst = evolveChainConfigInstruction(newConfig, ownerCtrs);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ct.signWith(owners);
         bc.sendTransaction(ct);
     }
 
@@ -113,12 +95,14 @@ public class ChainConfigInstance {
      *
      * @param newConfig the new config to sture
      * @param owners    a list of owners needed to evolve the configuration
+     * @param ownerCtrs a list of counters which must map to the list of owners
      * @param wait      how many blocks to wait for inclusion of the instruction
      * @throws CothorityException if something goes wrong
      */
-    public void evolveConfigAndWait(ChainConfigData newConfig, List<Signer> owners, int wait) throws CothorityException {
-        Instruction inst = evolveChainConfigInstruction(newConfig, owners, 0, 1);
+    public void evolveConfigAndWait(ChainConfigData newConfig, List<Signer> owners, List<Long> ownerCtrs, int wait) throws CothorityException {
+        Instruction inst = evolveChainConfigInstruction(newConfig, ownerCtrs);
         ClientTransaction ct = new ClientTransaction(Arrays.asList(inst));
+        ct.signWith(owners);
         bc.sendTransactionAndWait(ct, wait);
         chainConfig = newConfig;
     }
@@ -150,7 +134,7 @@ public class ChainConfigInstance {
      *
      * @param bc is a running ByzCoin service
      * @return the new ValueInstance
-     * @throws CothorityNotFoundException if the configuration is not where it is supposed to be
+     * @throws CothorityNotFoundException      if the configuration is not where it is supposed to be
      * @throws CothorityCommunicationException if the communication throws an error
      */
     public static ChainConfigInstance fromByzcoin(ByzCoinRPC bc) throws CothorityNotFoundException, CothorityCommunicationException {
@@ -163,10 +147,10 @@ public class ChainConfigInstance {
      * @param bc a running ByzCoin service
      * @param p  the proof for the valueInstance
      * @return the new ValueInstance
-     * @throws CothorityNotFoundException if the configuration is not where it is supposed to be
+     * @throws CothorityNotFoundException      if the configuration is not where it is supposed to be
      * @throws CothorityCommunicationException if the communication throws an error
      */
-    public static ChainConfigInstance fromByzcoin(ByzCoinRPC bc, Proof p) throws CothorityNotFoundException, CothorityCommunicationException{
+    public static ChainConfigInstance fromByzcoin(ByzCoinRPC bc, Proof p) throws CothorityNotFoundException, CothorityCommunicationException {
         return new ChainConfigInstance(bc, Instance.fromProof(p));
     }
 }

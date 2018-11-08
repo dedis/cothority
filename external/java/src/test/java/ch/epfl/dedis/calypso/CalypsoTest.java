@@ -1,5 +1,6 @@
 package ch.epfl.dedis.calypso;
 
+import ch.epfl.dedis.byzcoin.SignerCounters;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Hex;
@@ -22,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Collections;
 
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,14 +68,14 @@ class CalypsoTest {
         }
 
         readerDarc = new Darc(Arrays.asList(publisher.getIdentity()), Arrays.asList(reader.getIdentity()), "readerDarc".getBytes());
-        calypso.getGenesisDarcInstance().spawnDarcAndWait(readerDarc, admin, 10);
+        calypso.getGenesisDarcInstance().spawnDarcAndWait(readerDarc, admin, 1L, 10);
 
         // Spawn a new darc with the calypso read/write rules for a new signer.
         publisherDarc = new Darc(Arrays.asList(publisher.getIdentity()), Arrays.asList(publisher.getIdentity()), "calypso darc".getBytes());
         publisherDarc.setRule("spawn:calypsoWrite", publisher.getIdentity().toString().getBytes());
         publisherDarc.addIdentity("spawn:calypsoRead", publisher.getIdentity(), Rules.OR);
         publisherDarc.addIdentity("spawn:calypsoRead", readerDarc.getIdentity(), Rules.OR);
-        calypso.getGenesisDarcInstance().spawnDarcAndWait(publisherDarc, admin, 10);
+        calypso.getGenesisDarcInstance().spawnDarcAndWait(publisherDarc, admin,  2L,10);
 
         docData = "https://dedis.ch/secret_document.osd";
         extraData = "created on Monday";
@@ -92,13 +94,16 @@ class CalypsoTest {
         WriteData wd = doc.getWriteData(calypso.getLTS());
 
         // Now ask Calypso to store it in Byzcoin by creating a WriteInstance.
-        WriteInstance wi = new WriteInstance(calypso, publisherDarc.getBaseId(), Arrays.asList(publisher), wd);
+        WriteInstance wi = new WriteInstance(calypso, publisherDarc.getBaseId(),
+                Arrays.asList(publisher), Collections.singletonList(1L),
+                wd);
 
         // The document is now stored on ByzCoin with the data encrypted by the symmetric key (keyMaterial) and the
         // symmetric key encrypted by the Long Term Secret.
 
         // To read it, first proof that we have the right to read by creating a ReadInstance:
-        ReadInstance ri = new ReadInstance(calypso, wi, Arrays.asList(reader));
+        ReadInstance ri = new ReadInstance(calypso, wi,
+                Arrays.asList(reader), Collections.singletonList(1L));
         // If successful (no exceptions), Byzcoin holds a proof that we are allowed to read the document.
 
         // Get the re-encrypted symmetric key from Calypso:
@@ -117,10 +122,12 @@ class CalypsoTest {
     void fullCycleDocumentShort() throws CothorityException{
         // Same as above, but shortest possible calls.
         // Create WriteInstance.
-        WriteInstance wi = new WriteInstance(calypso, publisherDarc.getBaseId(), Arrays.asList(publisher), doc.getWriteData(calypso.getLTS()));
+        WriteInstance wi = new WriteInstance(calypso, publisherDarc.getBaseId(),
+                Arrays.asList(publisher), Collections.singletonList(1L),
+                doc.getWriteData(calypso.getLTS()));
 
         // Get ReadInstance with 'reader'
-        ReadInstance ri = new ReadInstance(calypso, wi, Arrays.asList(reader));
+        ReadInstance ri = new ReadInstance(calypso, wi, Arrays.asList(reader), Collections.singletonList(1L));
 
         // Create new Document from wi and ri
         Document doc2 = Document.fromCalypso(calypso, ri.getInstance().getId(), reader.getPrivate());
@@ -135,10 +142,14 @@ class CalypsoTest {
 
         // Same as above, but shortest possible calls.
         // Create WriteInstance.
-        WriteInstance wi = new WriteInstance(calypso, publisherDarc.getBaseId(), Arrays.asList(publisher), doc.getWriteData(calypso.getLTS()));
+        WriteInstance wi = new WriteInstance(calypso, publisherDarc.getBaseId(),
+                Arrays.asList(publisher), Collections.singletonList(1L),
+                doc.getWriteData(calypso.getLTS()));
 
         // Get ReadInstance with 'reader'
-        ReadInstance ri = new ReadInstance(calypso, wi, Arrays.asList(reader), ephemeral.point);
+        ReadInstance ri = new ReadInstance(calypso, wi,
+                Arrays.asList(reader), Collections.singletonList(1L),
+                ephemeral.point);
 
         KeyPair wrong = new KeyPair();
         // Create new Document from wi and ri using the wrong ephemeral key
@@ -155,16 +166,20 @@ class CalypsoTest {
     @Test
     void testDecryptKey() throws Exception {
         Document doc1 = new Document("this is secret 1".getBytes(), 16, null, publisherDarc.getBaseId());
-        WriteInstance w1 = new WriteInstance(calypso, publisherDarc.getBaseId(), Arrays.asList(publisher),
+        WriteInstance w1 = new WriteInstance(calypso, publisherDarc.getBaseId(),
+                Arrays.asList(publisher), Collections.singletonList(1L),
                 doc1.getWriteData(calypso.getLTS()));
-        ReadInstance r1 = new ReadInstance(calypso, WriteInstance.fromCalypso(calypso, w1.getInstance().getId()), Arrays.asList(publisher));
+        ReadInstance r1 = new ReadInstance(calypso, WriteInstance.fromCalypso(calypso, w1.getInstance().getId()),
+                Arrays.asList(publisher), Collections.singletonList(2L));
         Proof pw1 = calypso.getProof(w1.getInstance().getId());
         Proof pr1 = calypso.getProof(r1.getInstance().getId());
 
         Document doc2 = new Document("this is secret 2".getBytes(), 16, null, publisherDarc.getBaseId());
-        WriteInstance w2 = new WriteInstance(calypso, publisherDarc.getBaseId(), Arrays.asList(publisher),
+        WriteInstance w2 = new WriteInstance(calypso, publisherDarc.getBaseId(),
+                Arrays.asList(publisher), Collections.singletonList(3L),
                 doc2.getWriteData(calypso.getLTS()));
-        ReadInstance r2 = new ReadInstance(calypso, WriteInstance.fromCalypso(calypso, w2.getInstance().getId()), Arrays.asList(publisher));
+        ReadInstance r2 = new ReadInstance(calypso, WriteInstance.fromCalypso(calypso, w2.getInstance().getId()),
+                Arrays.asList(publisher), Collections.singletonList(4L));
         Proof pw2 = calypso.getProof(w2.getInstance().getId());
         Proof pr2 = calypso.getProof(r2.getInstance().getId());
 
@@ -201,7 +216,7 @@ class CalypsoTest {
 
     @Test
     void getWrite() throws Exception {
-        WriteInstance writeInstance = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher);
+        WriteInstance writeInstance = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher, 1L);
         WriteInstance writeInstance2 = WriteInstance.fromCalypso(calypso, writeInstance.getInstance().getId());
         assertArrayEquals(doc.getWriteData(calypso.getLTS()).getDataEnc(), writeInstance2.getWrite().getDataEnc());
         assertArrayEquals(doc.getExtraData(), writeInstance2.getWrite().getExtraData());
@@ -211,17 +226,17 @@ class CalypsoTest {
 
     @Test
     void readRequest() throws Exception {
-        WriteInstance writeInstance = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher);
+        WriteInstance writeInstance = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher, 1L);
         Signer reader2 = new SignerEd25519();
         try {
-            readInstance = writeInstance.spawnCalypsoRead(calypso, Arrays.asList(reader2));
+            readInstance = writeInstance.spawnCalypsoRead(calypso, Arrays.asList(reader2), Collections.singletonList(1L));
             fail("a wrong read-signature should not pass");
         } catch (CothorityCommunicationException e) {
             logger.info("correctly failed with wrong signature");
         }
         logger.debug("publisherdarc.ic = " + readerDarc.getBaseId().toString());
         logger.debug("publisherdarc.proto = " + readerDarc.toProto().toString());
-        readInstance = writeInstance.spawnCalypsoRead(calypso, Arrays.asList(reader));
+        readInstance = writeInstance.spawnCalypsoRead(calypso, Arrays.asList(reader), Collections.singletonList(1L));
         assertNotNull(readInstance);
     }
 
@@ -238,7 +253,7 @@ class CalypsoTest {
     void checFailingkWriteAuthorization() throws CothorityException {
         Signer publisher2 = new SignerEd25519();
         try {
-            doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher2);
+            doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher2, 1L);
             fail("accepted unknown writer");
         } catch (CothorityCommunicationException e) {
             logger.info("correctly refused unknown writer");
@@ -247,13 +262,16 @@ class CalypsoTest {
 
     @Test
     void createDarcForTheSameUserInDifferentSkipchain() throws Exception {
+        // Get the counter for the admin
+        SignerCounters adminCtrs = calypso.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
         Darc userDarc = new Darc(Arrays.asList(new SignerEd25519(Hex.parseHexBinary("AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D")).getIdentity()), null, null);
-        calypso.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, 10);
+        calypso.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, adminCtrs.head()+1, 10);
 
         CalypsoRPC calypso2 = new CalypsoRPC(testInstanceController.getRoster(), genesisDarc,
                 Duration.ofMillis(500));
         try {
-            calypso2.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, 10);
+            calypso2.getGenesisDarcInstance().spawnDarcAndWait(userDarc, admin, 1L, 10);
             logger.info("correctly saved same darc in another ByzCoin");
         } catch (CothorityCommunicationException e) {
             fail("incorrectly refused to save again");
@@ -269,7 +287,9 @@ class CalypsoTest {
         assertEquals(3, testInstanceController.countRunningConodes());
 
         try {
-            new WriteInstance(calypso, publisherDarc.getBaseId(), Arrays.asList(publisher), wr);
+            new WriteInstance(calypso, publisherDarc.getBaseId(),
+                    Arrays.asList(publisher), Collections.singletonList(1L),
+                    wr);
             logger.info("correctly created write instance");
         } catch (CothorityException e){
             fail("should not fail to create write instance with one missing node");
@@ -280,16 +300,18 @@ class CalypsoTest {
         }
 
         // Try to write again with 4 nodes
-        new WriteInstance(calypso, publisherDarc.getBaseId(), Arrays.asList(publisher), wr);
+        new WriteInstance(calypso, publisherDarc.getBaseId(),
+                Arrays.asList(publisher), Collections.singletonList(2L),
+                wr);
     }
 
     @Test
     void giveReadAccessToDocument() throws CothorityException {
-        WriteInstance wi = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher);
+        WriteInstance wi = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher, 1L);
 
         Signer reader2 = new SignerEd25519();
         try{
-            new ReadInstance(calypso, wi, Arrays.asList(reader2));
+            new ReadInstance(calypso, wi, Arrays.asList(reader2), Collections.singletonList(1L));
             fail("read-request of unauthorized reader should fail");
         } catch (CothorityException e){
             logger.info("correct refusal of invalid read-request");
@@ -297,17 +319,17 @@ class CalypsoTest {
 
         DarcInstance rd = DarcInstance.fromByzCoin(calypso, readerDarc);
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
-        rd.evolveDarcAndWait(readerDarc, publisher, 10);
+        rd.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
 
-        ReadInstance ri = new ReadInstance(calypso, wi, Arrays.asList(reader2));
+        ReadInstance ri = new ReadInstance(calypso, wi, Arrays.asList(reader2), Collections.singletonList(1L));
         byte[] keyMaterial = ri.decryptKeyMaterial(reader2.getPrivate());
         assertArrayEquals(doc.getKeyMaterial(), keyMaterial);
     }
 
     @Test
     void getDocument() throws CothorityException {
-        WriteInstance wi = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher);
-        ReadInstance ri = wi.spawnCalypsoRead(calypso, Arrays.asList(reader));
+        WriteInstance wi = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher, 1L);
+        ReadInstance ri = wi.spawnCalypsoRead(calypso, Arrays.asList(reader), Collections.singletonList(1L));
         Document doc2 = Document.fromCalypso(calypso, ri.getInstance().getId(), reader.getPrivate());
         assertTrue(doc.equals(doc2));
 
@@ -315,22 +337,22 @@ class CalypsoTest {
         Signer reader2 = new SignerEd25519();
         DarcInstance di = DarcInstance.fromByzCoin(calypso, readerDarc);
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
-        di.evolveDarcAndWait(readerDarc, publisher, 10);
+        di.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
 
-        ReadInstance ri2 = wi.spawnCalypsoRead(calypso, Arrays.asList(reader2));
+        ReadInstance ri2 = wi.spawnCalypsoRead(calypso, Arrays.asList(reader2), Collections.singletonList(1L));
         Document doc3 = Document.fromCalypso(calypso, ri2.getInstance().getId(), reader2.getPrivate());
         assertTrue(doc.equals(doc3));
     }
 
     @Test
     void getDocumentWithFailedNode() throws CothorityException, IOException, InterruptedException {
-        WriteInstance wr = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher);
+        WriteInstance wr = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher, 1L);
 
         DarcInstance di = DarcInstance.fromByzCoin(calypso, readerDarc);
         Signer reader2 = new SignerEd25519();
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
-        di.evolveDarcAndWait(readerDarc, publisher, 10);
-        ReadInstance ri = new ReadInstance(calypso, wr, Arrays.asList(reader2));
+        di.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
+        ReadInstance ri = new ReadInstance(calypso, wr, Arrays.asList(reader2), Collections.singletonList(1L));
         Document doc2 = Document.fromCalypso(calypso, ri.getInstance().getId(), reader2.getPrivate());
         assertTrue(doc.equals(doc2));
 
@@ -338,7 +360,7 @@ class CalypsoTest {
         testInstanceController.killConode(4);
         assertEquals(3, testInstanceController.countRunningConodes());
 
-        ReadInstance ri2 = new ReadInstance(calypso, wr, Arrays.asList(reader2));
+        ReadInstance ri2 = new ReadInstance(calypso, wr, Arrays.asList(reader2), Collections.singletonList(2L));
         Document doc3 = Document.fromCalypso(calypso, ri2.getInstance().getId(), reader2.getPrivate());
         assertTrue(doc.equals(doc3));
 
@@ -346,7 +368,7 @@ class CalypsoTest {
         testInstanceController.startConode(4);
         assertEquals(4, testInstanceController.countRunningConodes());
 
-        ReadInstance ri3 = new ReadInstance(calypso, wr, Arrays.asList(reader2));
+        ReadInstance ri3 = new ReadInstance(calypso, wr, Arrays.asList(reader2), Collections.singletonList(3L));
         Document doc4 = Document.fromCalypso(calypso, ri3.getInstance().getId(), reader2.getPrivate());
         assertTrue(doc.equals(doc4));
     }
@@ -359,7 +381,7 @@ class CalypsoTest {
 
     @Test
     void reConnect() throws CothorityException, InterruptedException, IOException {
-        WriteInstance wr = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher);
+        WriteInstance wr = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher, 1L);
 
         for (int i=0; i<3; i++){
             testInstanceController.killConode(i);
@@ -380,8 +402,8 @@ class CalypsoTest {
         Signer reader2 = new SignerEd25519();
         DarcInstance di = DarcInstance.fromByzCoin(calypso2, readerDarc);
         readerDarc.addIdentity(Darc.RuleSignature, reader2.getIdentity(), Rules.OR);
-        di.evolveDarcAndWait(readerDarc, publisher, 10);
-        ReadInstance ri = new ReadInstance(calypso2, wr, Arrays.asList(reader2));
+        di.evolveDarcAndWait(readerDarc, publisher, 2L, 10);
+        ReadInstance ri = new ReadInstance(calypso2, wr, Arrays.asList(reader2), Collections.singletonList(1L));
         Document doc2 = Document.fromCalypso(calypso2, ri.getInstance().getId(), reader2.getPrivate());
         assertTrue(doc.equals(doc2));
     }

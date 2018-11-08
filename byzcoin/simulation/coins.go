@@ -97,30 +97,24 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		Instructions: []byzcoin.Instruction{
 			{
 				InstanceID: byzcoin.NewInstanceID(gm.GenesisDarc.GetBaseID()),
-				Nonce:      byzcoin.GenNonce(),
-				Index:      0,
-				Length:     2,
 				Spawn: &byzcoin.Spawn{
 					ContractID: contracts.ContractCoinID,
 				},
+				SignerCounter: []uint64{1},
 			},
 			{
 				InstanceID: byzcoin.NewInstanceID(gm.GenesisDarc.GetBaseID()),
-				Nonce:      byzcoin.GenNonce(),
-				Index:      1,
-				Length:     2,
 				Spawn: &byzcoin.Spawn{
 					ContractID: contracts.ContractCoinID,
 				},
+				SignerCounter: []uint64{2},
 			},
 		},
 	}
 
 	// Now sign all the instructions
-	for i := range tx.Instructions {
-		if err = byzcoin.SignInstruction(&tx.Instructions[i], gm.GenesisDarc.GetBaseID(), signer); err != nil {
-			return errors.New("signing of instruction failed: " + err.Error())
-		}
+	if err = tx.SignWith(signer); err != nil {
+		return errors.New("signing of instruction failed: " + err.Error())
 	}
 	coinAddr1 := tx.Instructions[0].DeriveID("")
 	coinAddr2 := tx.Instructions[1].DeriveID("")
@@ -137,19 +131,17 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 		Instructions: []byzcoin.Instruction{
 			{
 				InstanceID: coinAddr1,
-				Nonce:      byzcoin.GenNonce(),
-				Index:      0,
-				Length:     1,
 				Invoke: &byzcoin.Invoke{
 					Command: "mint",
 					Args: byzcoin.Arguments{{
 						Name:  "coins",
 						Value: coins}},
 				},
+				SignerCounter: []uint64{3},
 			},
 		},
 	}
-	if err = byzcoin.SignInstruction(&tx.Instructions[0], gm.GenesisDarc.GetBaseID(), signer); err != nil {
+	if err = tx.SignWith(signer); err != nil {
 		return errors.New("signing of instruction failed: " + err.Error())
 	}
 	_, err = c.AddTransactionAndWait(tx, 2)
@@ -160,6 +152,7 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 	coinOne := make([]byte, 8)
 	coinOne[0] = byte(1)
 
+	var signatureCtr uint64 = 4 // we finished at 3, so start here at 4
 	for round := 0; round < s.Rounds; round++ {
 		log.Lvl1("Starting round", round)
 		roundM := monitor.NewTimeMeasure("round")
@@ -191,9 +184,6 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 			for i := 0; i < insts; i++ {
 				tx.Instructions = append(tx.Instructions, byzcoin.Instruction{
 					InstanceID: coinAddr1,
-					Nonce:      byzcoin.GenNonce(),
-					Index:      i,
-					Length:     insts,
 					Invoke: &byzcoin.Invoke{
 						Command: "transfer",
 						Args: byzcoin.Arguments{
@@ -206,11 +196,14 @@ func (s *SimulationService) Run(config *onet.SimulationConfig) error {
 								Value: coinAddr2.Slice(),
 							}},
 					},
+					SignerCounter: []uint64{signatureCtr},
 				})
-				err = byzcoin.SignInstruction(&tx.Instructions[i], gm.GenesisDarc.GetBaseID(), signer)
+				signatureCtr++
+				err = tx.SignWith(signer)
 				if err != nil {
 					return errors.New("signature error: " + err.Error())
 				}
+
 			}
 			prepare.Record()
 		}

@@ -1,5 +1,6 @@
 package ch.epfl.dedis.byzgen;
 
+import ch.epfl.dedis.byzcoin.SignerCounters;
 import ch.epfl.dedis.integration.TestServerController;
 import ch.epfl.dedis.integration.TestServerInit;
 import ch.epfl.dedis.lib.Hex;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 public class GrantAccessTest {
     static final String SUPERADMIN_SCALAR = "AEE42B6A924BDFBB6DAEF8B252258D2FDF70AFD31852368AF55549E1DF8FC80D";
@@ -41,10 +43,13 @@ public class GrantAccessTest {
         Darc documentDarc = new Darc(Arrays.asList(publisherIdentity), Arrays.asList(publisherIdentity), "document darc".getBytes());
         documentDarc.addIdentity("spawn:calypsoWrite", new IdentityX509EC(publisherSigner), Rules.OR);
         documentDarc.addIdentity("spawn:calypsoRead", new IdentityX509EC(consumerPublicPart), Rules.OR);
-        calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc, superadmin, 10);
+
+        SignerCounters counters = calypso.getSignerCounters(Collections.singletonList(superadmin.getIdentity().toString()));
+        calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc, superadmin, counters.head()+1, 10);
 
         Document doc = new Document("ala ma kota".getBytes(), 16, "extra data".getBytes(), documentDarc.getBaseId());
-        WriteInstance writeInstance = new WriteInstance(calypso, documentDarc.getBaseId(), Arrays.asList(publisherSigner),
+        WriteInstance writeInstance = new WriteInstance(calypso, documentDarc.getBaseId(),
+                Arrays.asList(publisherSigner), Collections.singletonList(1L),
                 doc.getWriteData(calypso.getLTS()));
 
         // then
@@ -64,17 +69,21 @@ public class GrantAccessTest {
         IdentityDarc publisherIdentity = new IdentityDarc(publisherId);
         Darc documentDarc = new Darc(Arrays.asList(publisherIdentity), Arrays.asList(publisherIdentity), "document darc".getBytes());
         documentDarc.addIdentity("spawn:calypsoWrite", new IdentityX509EC(publisherSigner), Rules.OR);
-        DarcInstance documentDarcInstance = calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc, superadmin, 10);
+
+        SignerCounters counters = calypso.getSignerCounters(Collections.singletonList(superadmin.getIdentity().toString()));
+        DarcInstance documentDarcInstance = calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc,
+                superadmin, counters.head()+1, 10);
 
         Document doc = new Document("ala ma kota".getBytes(), 16, "extra data".getBytes(), documentDarc.getBaseId());
-        WriteInstance writeInstance = new WriteInstance(calypso, documentDarc.getBaseId(), Arrays.asList(publisherSigner),
+        WriteInstance writeInstance = new WriteInstance(calypso, documentDarc.getBaseId(),
+                Arrays.asList(publisherSigner), Collections.singletonList(1L),
                 doc.getWriteData(calypso.getLTS()));
 
         //when
         Identity identityX509EC = new IdentityX509EC(consumerPublicPart);
         Darc newDarc = documentDarc.copyRulesAndVersion();
         newDarc.addIdentity("spawn:calypsoRead", identityX509EC, Rules.OR);
-        documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 10);
+        documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 2L, 10);
 
         //then
         // Cannot use ephemeral keys yet.
@@ -94,16 +103,20 @@ public class GrantAccessTest {
         IdentityDarc publisherIdentity = new IdentityDarc(publisherId);
         Darc documentDarc = new Darc(Arrays.asList(publisherIdentity), Arrays.asList(publisherIdentity), "document darc".getBytes());
         documentDarc.addIdentity("spawn:calypsoWrite", new IdentityX509EC(publisherSigner), Rules.OR);
-        DarcInstance documentDarcInstance = calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc, superadmin, 10);
+
+        SignerCounters counters = calypso.getSignerCounters(Collections.singletonList(superadmin.getIdentity().toString()));
+        DarcInstance documentDarcInstance = calypso.getGenesisDarcInstance().spawnDarcAndWait(documentDarc,
+                superadmin, counters.head()+1, 10);
 
         Document doc = new Document("ala ma kota".getBytes(), 16, "extra data".getBytes(), documentDarc.getBaseId());
-        WriteInstance writeInstance = new WriteInstance(calypso, documentDarc.getBaseId(), Arrays.asList(publisherSigner),
+        WriteInstance writeInstance = new WriteInstance(calypso, documentDarc.getBaseId(),
+                Arrays.asList(publisherSigner), Collections.singletonList(1L),
                 doc.getWriteData(calypso.getLTS()));
 
         //when
         Darc newDarc = documentDarc.copyRulesAndVersion();
         newDarc.addIdentity("spawn:calypsoRead", new IdentityDarc(consumerId), Rules.OR);
-        documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 10);
+        documentDarcInstance.evolveDarcAndWait(newDarc, publisherSigner, 2L, 10);
 
         //then
         // Cannot use ephemeral keys yet.
@@ -137,9 +150,10 @@ public class GrantAccessTest {
                         Hex.parseHexBinary(SUPERADMIN_SCALAR)));
     }
 
-    private static DarcInstance createUser(CalypsoRPC ocs, Identity user) throws Exception {
+    private static DarcInstance createUser(CalypsoRPC cls, Identity user) throws Exception {
+        SignerCounters counters = cls.getSignerCounters(Collections.singletonList(superadmin.getIdentity().toString()));
         Darc userDarc = new Darc(Arrays.asList(user), Arrays.asList(user), "user".getBytes());
-        return ocs.getGenesisDarcInstance().spawnDarcAndWait(userDarc, superadmin, 10);
+        return cls.getGenesisDarcInstance().spawnDarcAndWait(userDarc, superadmin, counters.head()+1, 10);
     }
 
     private static void grantSystemWriteAccess(CalypsoRPC ocs, Darc userDarc) throws Exception {
@@ -147,8 +161,9 @@ public class GrantAccessTest {
         newGenesis.addIdentity(Darc.RuleSignature, IdentityFactory.New(userDarc), Rules.OR);
         newGenesis.addIdentity(Darc.RuleEvolve, IdentityFactory.New(userDarc), Rules.OR);
 
+        SignerCounters counters = ocs.getSignerCounters(Collections.singletonList(superadmin.getIdentity().toString()));
         DarcInstance di = DarcInstance.fromByzCoin(ocs, ocs.getGenesisDarc().getBaseId());
-        di.evolveDarcAndWait(newGenesis, superadmin, 10);
+        di.evolveDarcAndWait(newGenesis, superadmin, counters.head()+1, 10);
     }
 
     private class TestLimitedSignerX509EC extends TestSignerX509EC {

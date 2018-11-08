@@ -296,9 +296,9 @@ func (s *Service) spawn(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c
 
 // contractFunction is the function that runs to process a transaction of
 // type "eventlog"
-func (s *Service) contractFunction(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+func (s *Service) contractFunction(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 
-	err := inst.VerifyDarcSignature(v)
+	err := inst.Verify(v, ctxHash)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -6,6 +6,7 @@ import (
 
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/darc"
+	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
 
 	"github.com/dedis/cothority"
@@ -18,17 +19,19 @@ type Client struct {
 	// The DarcID with "invoke:eventlog" permission on it.
 	DarcID darc.ID
 	// Signers are the Darc signers that will sign transactions sent with this client.
-	Signers  []darc.Signer
-	Instance byzcoin.InstanceID
-	c        *onet.Client
+	Signers    []darc.Signer
+	Instance   byzcoin.InstanceID
+	c          *onet.Client
+	signerCtrs []uint64
 }
 
 // NewClient creates a new client to talk to the eventlog service.
 // Fields DarcID, Instance, and Signers must be filled in before use.
 func NewClient(ol *byzcoin.Client) *Client {
 	return &Client{
-		ByzCoin: ol,
-		c:       onet.NewClient(cothority.Suite, ServiceName),
+		ByzCoin:    ol,
+		c:          onet.NewClient(cothority.Suite, ServiceName),
+		signerCtrs: nil,
 	}
 }
 
@@ -36,24 +39,63 @@ func NewClient(ol *byzcoin.Client) *Client {
 // return once the new eventlog has been committed into the ledger (or after
 // a timeout). Upon non-error return, c.Instance will be correctly set.
 func (c *Client) Create() error {
-	instr := byzcoin.Instruction{
-		InstanceID: byzcoin.NewInstanceID(c.DarcID),
-		Index:      0,
-		Length:     1,
-		Spawn:      &byzcoin.Spawn{ContractID: contractName},
+	if c.signerCtrs == nil {
+		c.RefreshSignerCounters()
 	}
-	if err := instr.SignBy(c.DarcID, c.Signers...); err != nil {
-		return err
+
+	instr := byzcoin.Instruction{
+		InstanceID:    byzcoin.NewInstanceID(c.DarcID),
+		Spawn:         &byzcoin.Spawn{ContractID: contractName},
+		SignerCounter: c.nextCtrs(),
 	}
 	tx := byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{instr},
+	}
+	if err := tx.SignWith(c.Signers...); err != nil {
+		return err
 	}
 	if _, err := c.ByzCoin.AddTransactionAndWait(tx, 2); err != nil {
 		return err
 	}
 
-	c.Instance = instr.DeriveID("")
+	c.incrementCtrs()
+	c.Instance = tx.Instructions[0].DeriveID("")
 	return nil
+}
+
+// RefreshSignerCounters talks to the service to get the latest signer
+// counters, the client should call this function if the internal counters
+// become de-synchronised.
+func (c *Client) RefreshSignerCounters() {
+	signerIDs := make([]string, len(c.Signers))
+	for i := range c.Signers {
+		signerIDs[i] = c.Signers[i].Identity().String()
+	}
+	signerCtrs, err := c.ByzCoin.GetSignerCounters(signerIDs...)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+	c.signerCtrs = signerCtrs.Counters
+}
+
+// incrementCtrs will update the client state
+func (c *Client) incrementCtrs() []uint64 {
+	out := make([]uint64, len(c.signerCtrs))
+	for i := range out {
+		c.signerCtrs[i]++
+		out[i] = c.signerCtrs[i]
+	}
+	return out
+}
+
+// nextCtrs will not update client state
+func (c *Client) nextCtrs() []uint64 {
+	out := make([]uint64, len(c.signerCtrs))
+	for i := range out {
+		out[i] = c.signerCtrs[i] + 1
+	}
+	return out
 }
 
 // A LogID is an opaque unique identifier useful to find a given log message later
@@ -62,7 +104,11 @@ type LogID []byte
 
 // Log asks the service to log events.
 func (c *Client) Log(ev ...Event) ([]LogID, error) {
-	tx, keys, err := makeTx(c.DarcID, c.Instance, ev, c.Signers)
+	if c.signerCtrs == nil {
+		c.RefreshSignerCounters()
+	}
+
+	tx, keys, err := c.prepareTx(ev)
 	if err != nil {
 		return nil, err
 	}
@@ -96,21 +142,21 @@ func (c *Client) GetEvent(key []byte) (*Event, error) {
 	return &e, nil
 }
 
-func makeTx(darcID darc.ID, id byzcoin.InstanceID, msgs []Event, signers []darc.Signer) (*byzcoin.ClientTransaction, []LogID, error) {
+func (c *Client) prepareTx(events []Event) (*byzcoin.ClientTransaction, []LogID, error) {
 	// We need the identity part of the signatures before
 	// calling ToDarcRequest() below, because the identities
 	// go into the message digest.
-	sigs := make([]darc.Signature, len(signers))
-	for i, x := range signers {
+	sigs := make([]darc.Signature, len(c.Signers))
+	for i, x := range c.Signers {
 		sigs[i].Signer = x.Identity()
 	}
 
-	keys := make([]LogID, len(msgs))
+	keys := make([]LogID, len(events))
 
 	tx := byzcoin.ClientTransaction{
-		Instructions: make([]byzcoin.Instruction, len(msgs)),
+		Instructions: make([]byzcoin.Instruction, len(events)),
 	}
-	for i, msg := range msgs {
+	for i, msg := range events {
 		eventBuf, err := protobuf.Encode(&msg)
 		if err != nil {
 			return nil, nil, err
@@ -120,35 +166,18 @@ func makeTx(darcID darc.ID, id byzcoin.InstanceID, msgs []Event, signers []darc.
 			Value: eventBuf,
 		}
 		tx.Instructions[i] = byzcoin.Instruction{
-			InstanceID: id,
-			Nonce:      byzcoin.GenNonce(),
-			Index:      i,
-			Length:     len(msgs),
+			InstanceID: c.Instance,
 			Invoke: &byzcoin.Invoke{
 				Command: contractName,
 				Args:    []byzcoin.Argument{argEvent},
 			},
-			Signatures: append([]darc.Signature{}, sigs...),
+			SignerCounter: c.incrementCtrs(),
 		}
 	}
+	if err := tx.SignWith(c.Signers...); err != nil {
+		return nil, nil, err
+	}
 	for i := range tx.Instructions {
-		darcSigs := make([]darc.Signature, len(signers))
-		for j, signer := range signers {
-			dr, err := tx.Instructions[i].ToDarcRequest(darcID)
-			if err != nil {
-				return nil, nil, err
-			}
-
-			sig, err := signer.Sign(dr.Hash())
-			if err != nil {
-				return nil, nil, err
-			}
-			darcSigs[j] = darc.Signature{
-				Signature: sig,
-				Signer:    signer.Identity(),
-			}
-		}
-		tx.Instructions[i].Signatures = darcSigs
 		keys[i] = LogID(tx.Instructions[i].DeriveID("").Slice())
 	}
 	return &tx, keys, nil

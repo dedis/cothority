@@ -168,23 +168,19 @@ type Instruction struct {
 	// InstanceID is either the instance that can spawn a new instance, or the instance
 	// that will be invoked or deleted.
 	InstanceID InstanceID
-	// Nonce is monotonically increasing with regard to the Darc controlling
-	// access to the instance. It is used to prevent replay attacks.
-	// The client has to track what the next nonce should be for a given Darc.
-	Nonce Nonce
-	// Index and length prevent a leader from censoring specific instructions from
-	// a client and still keep the other instructions valid.
-	// Index is relative to the beginning of the clientTransaction.
-	Index int
-	// Length is the total number of instructions in this clientTransaction
-	Length int
 	// Spawn creates a new instance.
 	Spawn *Spawn
 	// Invoke calls a method of an existing instance.
 	Invoke *Invoke
 	// Delete removes the given instance.
 	Delete *Delete
-	// Signatures that are verified using the Darc controlling access to the instance.
+	// SignerCounter must be set to a value that is one greater than what
+	// was in the last instruction signed by the same signer. Every counter
+	// must map to the corresponding element in Signature. The initial
+	// counter is 1. Overflow is allowed.
+	SignerCounter []uint64
+	// Signatures that are verified using the Darc controlling access to
+	// the instance.
 	Signatures []darc.Signature
 }
 
@@ -220,8 +216,12 @@ type Argument struct {
 
 // ClientTransaction is a slice of Instructions that will be applied in order.
 // If any of the instructions fails, none of them will be applied.
+// InstructionsHash must be the hash of the concatenation of all the
+// instruction hashes (see the Hash method in Instruction), this hash is what
+// every instruction must sign for the transaction to be valid.
 type ClientTransaction struct {
-	Instructions Instructions
+	Instructions     Instructions
+	InstructionsHash []byte
 }
 
 // TxResult holds a transaction and the result of running it.
@@ -271,4 +271,17 @@ type StateChangeBody struct {
 	ContractID  []byte
 	Value       []byte
 	DarcID      darc.ID
+}
+
+// GetSignerCounters is a request to get the latest version for the specified
+// identity.
+type GetSignerCounters struct {
+	SignerIDs   []string
+	SkipchainID skipchain.SkipBlockID
+}
+
+// GetSignerCountersResponse holds the latest version for the identity in the
+// request.
+type GetSignerCountersResponse struct {
+	Counters []uint64
 }

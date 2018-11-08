@@ -32,9 +32,6 @@ func TestValue_Spawn(t *testing.T) {
 	ctx := byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(gDarc.GetBaseID()),
-			Nonce:      byzcoin.Nonce{},
-			Index:      0,
-			Length:     1,
 			Spawn: &byzcoin.Spawn{
 				ContractID: ContractValueID,
 				Args: []byzcoin.Argument{{
@@ -42,13 +39,14 @@ func TestValue_Spawn(t *testing.T) {
 					Value: myvalue,
 				}},
 			},
+			SignerCounter: []uint64{1},
 		}},
 	}
-	require.Nil(t, ctx.Instructions[0].SignBy(gDarc.GetBaseID(), signer))
+	require.Nil(t, ctx.SignWith(signer))
 
 	_, err = cl.AddTransaction(ctx)
 	require.Nil(t, err)
-	pr, err := cl.WaitProof(byzcoin.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), genesisMsg.BlockInterval, myvalue)
+	pr, err := cl.WaitProof(byzcoin.NewInstanceID(ctx.Instructions[0].DeriveID("").Slice()), 2*genesisMsg.BlockInterval, myvalue)
 	require.Nil(t, err)
 	require.True(t, pr.InclusionProof.Match(ctx.Instructions[0].DeriveID("").Slice()))
 	v0, _, _, err := pr.Get(ctx.Instructions[0].DeriveID("").Slice())

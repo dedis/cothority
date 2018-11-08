@@ -134,9 +134,9 @@ public class ByzCoinRPC {
      * @param t    is the client transaction holding one or more instructions to be sent to byzcoin.
      * @param wait indicates the number of blocks to wait for the transaction to be included.
      * @return ClientTransactionID the transaction ID
-     * @throws CothorityException if the transaction has not been included within 'wait' blocks.
+     * @throws CothorityCommunicationException if the transaction has not been included within 'wait' blocks.
      */
-    public ClientTransactionId sendTransactionAndWait(ClientTransaction t, int wait) throws CothorityException {
+    public ClientTransactionId sendTransactionAndWait(ClientTransaction t, int wait) throws CothorityCommunicationException {
         ByzCoinProto.AddTxRequest.Builder request =
                 ByzCoinProto.AddTxRequest.newBuilder();
         request.setVersion(currentVersion);
@@ -177,6 +177,30 @@ public class ByzCoinRPC {
                     ByzCoinProto.GetProofResponse.parseFrom(msg);
             logger.info("Successfully received proof");
             return new Proof(reply.getProof());
+        } catch (InvalidProtocolBufferException e) {
+            throw new CothorityCommunicationException(e);
+        }
+    }
+
+    /**
+     * Gets the signer counters for the signer IDs. The counters must be set correctly in the instructions for
+     * them to be accepted by byzcoin. Every counter maps to a signer, if the most recent instruction is signed by
+     * the signer at count n, then the next instruction that the same signer signs must be on counter n+1.
+     *
+     * @param signerIDs the list of signer IDs
+     * @return The corresponding coutners for the given IDs
+     * @throws CothorityCommunicationException if something goes wrong
+     */
+    public SignerCounters getSignerCounters(List<String> signerIDs) throws CothorityCommunicationException {
+        ByzCoinProto.GetSignerCounters.Builder b = ByzCoinProto.GetSignerCounters.newBuilder();
+        b.addAllSignerids(signerIDs);
+        b.setSkipchainid(skipchain.getID().toProto());
+
+        ByteString msg = roster.sendMessage("ByzCoin/GetSignerCounters", b.build());
+        try {
+            ByzCoinProto.GetSignerCountersResponse reply = ByzCoinProto.GetSignerCountersResponse.parseFrom(msg);
+            logger.info("successfully parsed signer counters");
+            return new SignerCounters(reply);
         } catch (InvalidProtocolBufferException e) {
             throw new CothorityCommunicationException(e);
         }
@@ -370,15 +394,16 @@ public class ByzCoinRPC {
      *
      * @param newRoster a new roster with one addition, one removal or one change
      * @param admins    a list of admins needed to sign off on the change
+     * @param adminCtrs a list of monotonically increasing counters for every admin
      * @param wait      how many blocks to wait for the new config to go in
      * @throws CothorityException if something went wrong.
      */
-    public void setRoster(Roster newRoster, List<Signer> admins, int wait) throws CothorityException {
+    public void setRoster(Roster newRoster, List<Signer> admins, List<Long> adminCtrs, int wait) throws CothorityException {
         // Verify the new roster is not too different.
         ChainConfigInstance cci = ChainConfigInstance.fromByzcoin(this);
         ChainConfigData ccd = cci.getChainConfig();
         ccd.setRoster(newRoster);
-        cci.evolveConfigAndWait(ccd, admins, 20);
+        cci.evolveConfigAndWait(ccd, admins, adminCtrs, wait);
     }
 
     /**
@@ -390,14 +415,15 @@ public class ByzCoinRPC {
      *
      * @param newInterval how long to wait before starting to assemble a new block
      * @param admins      a list of admins needed to sign off the new configuration
+     * @param adminCtrs   a list of monotonically increasing counters for every admin
      * @param wait        how many blocks to wait for the new config to go in
      * @throws CothorityException
      */
-    public void setBlockInterval(Duration newInterval, List<Signer> admins, int wait) throws CothorityException {
+    public void setBlockInterval(Duration newInterval, List<Signer> admins, List<Long> adminCtrs, int wait) throws CothorityException {
         ChainConfigInstance cci = ChainConfigInstance.fromByzcoin(this);
         ChainConfigData ccd = cci.getChainConfig();
         ccd.setInterval(newInterval);
-        cci.evolveConfigAndWait(ccd, admins, 20);
+        cci.evolveConfigAndWait(ccd, admins, adminCtrs, wait);
     }
 
     /**
@@ -409,14 +435,15 @@ public class ByzCoinRPC {
      *
      * @param newMaxSize new maximum size of the assembled blocks.
      * @param admins     a list of admins needed to sign off the new configuration
+     * @param adminCtrs  a list of monotonically increasing counters for every admin
      * @param wait       how many blocks to wait for the new config to go in
      * @throws CothorityException
      */
-    public void setMaxBlockSize(int newMaxSize, List<Signer> admins, int wait) throws CothorityException {
+    public void setMaxBlockSize(int newMaxSize, List<Signer> admins, List<Long> adminCtrs, int wait) throws CothorityException {
         ChainConfigInstance cci = ChainConfigInstance.fromByzcoin(this);
         ChainConfigData ccd = cci.getChainConfig();
         ccd.setMaxBlockSize(newMaxSize);
-        cci.evolveConfigAndWait(ccd, admins, 20);
+        cci.evolveConfigAndWait(ccd, admins, adminCtrs, wait);
     }
 
     /**

@@ -311,7 +311,7 @@ func waitForKey(t *testing.T, s *byzcoin.Service, scID skipchain.SkipBlockID, ke
 		time.Sleep(interval)
 	}
 	if !found {
-		t.Fatal("timeout")
+		require.Fail(t, "timeout")
 	}
 	_, _, _, err := resp.Proof.Get(key)
 	require.NoError(t, err)

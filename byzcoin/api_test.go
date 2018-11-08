@@ -90,7 +90,7 @@ func TestClient_Streaming(t *testing.T) {
 		for i := 0; i < n; i++ {
 			value := []byte{5, 6, 7, 8}
 			kind := "dummy"
-			tx, err := createOneClientTx(d.GetBaseID(), kind, value, signer)
+			tx, err := createOneClientTxWithCounter(d.GetBaseID(), kind, value, signer, uint64(i)+1)
 			require.Nil(t, err)
 			_, err = c.AddTransaction(tx)
 			require.Nil(t, err)
@@ -132,7 +132,7 @@ func TestClient_Streaming(t *testing.T) {
 	}
 
 	go func() {
-		err = c1.StreamTransactions(csr.Skipblock.Hash, cb)
+		err = c1.StreamTransactions(cb)
 		require.Nil(t, err)
 	}()
 	select {
@@ -148,7 +148,9 @@ func TestClient_Streaming(t *testing.T) {
 	for i := 0; i < 2; i++ {
 		value := []byte{5, 6, 7, 8}
 		kind := "dummy"
-		tx, err := createOneClientTx(d.GetBaseID(), kind, value, signer)
+		// We added two transactions before, so the latest counter is 2
+		// so we must start the counter here at 3.
+		tx, err := createOneClientTxWithCounter(d.GetBaseID(), kind, value, signer, uint64(i)+3)
 		require.Nil(t, err)
 		_, err = c.AddTransactionAndWait(tx, 4)
 		require.Nil(t, err)
