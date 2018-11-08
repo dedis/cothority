@@ -805,7 +805,7 @@ func bcStore(c *cli.Context) error {
 	}
 
 	log.Info("Storing InstanceID in pop-service")
-	iid := inst.DeriveID("")
+	iid := ct.Instructions[0].DeriveID("")
 	for _, c := range cfg.Roster.List {
 		err = service.NewClient().StoreInstanceID(c.Address, finalID, iid, orgDarc.GetBaseID())
 		if err != nil {

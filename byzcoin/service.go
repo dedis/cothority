@@ -1257,7 +1257,7 @@ func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Ins
 	// If the leader does not have a verifier for this contract, it drops the
 	// transaction.
 	if !exists {
-		err = errors.New("Leader is dropping instruction of unknown contract: " + contractID)
+		err = fmt.Errorf("Leader is dropping instruction of unknown contract \"%s\" on instance \"%x\"", contractID, instr.InstanceID.Slice())
 		return
 	}
 	// Now we call the contract function with the data of the key.
