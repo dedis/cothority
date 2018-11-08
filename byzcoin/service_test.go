@@ -1316,6 +1316,16 @@ func TestService_StateChangeCache(t *testing.T) {
 	require.Equal(t, 2, ctr)
 }
 
+func TestService_UpdateTrieCallback(t *testing.T) {
+	s := newSer(t, 1, testInterval)
+	defer s.local.CloseAll()
+
+	// already announced but it should exit silently
+	// as the trie index is different
+	err := s.service().updateTrieCallback(s.sb.SkipChainID())
+	require.Nil(t, err)
+}
+
 func createBadConfigTx(t *testing.T, s *ser, intervalBad, szBad bool) (ClientTransaction, ChainConfig) {
 	switch {
 	case intervalBad:

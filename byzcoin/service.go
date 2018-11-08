@@ -57,7 +57,7 @@ func init() {
 	var err error
 	ByzCoinID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
-	network.RegisterMessages(&omniStorage{}, &DataHeader{}, &DataBody{})
+	network.RegisterMessages(&bcStorage{}, &DataHeader{}, &DataBody{})
 	viewChangeMsgID = network.RegisterMessage(&viewchange.InitReq{})
 }
 
@@ -74,7 +74,8 @@ type Service struct {
 	*onet.ServiceProcessor
 	// stateTries contains a reference to all the tries that the service is
 	// responsible for, one for each skipchain.
-	stateTries map[string]*stateTrie
+	stateTries     map[string]*stateTrie
+	stateTriesLock sync.Mutex
 	// notifications is used for client transaction and block notification
 	notifications bcNotifications
 
@@ -97,7 +98,7 @@ type Service struct {
 	// contracts map kinds to kind specific verification functions
 	contracts map[string]ContractFn
 
-	storage *omniStorage
+	storage *bcStorage
 
 	createSkipChainMut sync.Mutex
 
@@ -127,8 +128,8 @@ const defaultInterval = 5 * time.Second
 // defaultMaxBlockSize is used when the config cannot be loaded.
 const defaultMaxBlockSize = 4 * 1e6
 
-// omniStorage is used to save our data locally.
-type omniStorage struct {
+// bcStorage is used to save our data locally.
+type bcStorage struct {
 	// PropTimeout is used when sending the request to integrate a new block
 	// to all nodes.
 	PropTimeout time.Duration
@@ -545,8 +546,12 @@ func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
 			"programmer error if you see this message.")
 	}
 
-	// If we are the genesis block, create the trie.
-	if sb.Index == 0 {
+	// Create the trie for the genesis block if it has not been
+	// created yet.
+	// We don't need to wrap the check and create around another
+	// lock because the callback is already locked and we only
+	// create state trie here
+	if sb.Index == 0 && !s.hasStateTrie(sb.SkipChainID()) {
 		var body DataBody
 		err := protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
@@ -729,12 +734,22 @@ func (s *Service) GetReadOnlyStateTrie(scID skipchain.SkipBlockID) (ReadOnlyStat
 	return s.getStateTrie(scID)
 }
 
+func (s *Service) hasStateTrie(id skipchain.SkipBlockID) bool {
+	s.stateTriesLock.Lock()
+	defer s.stateTriesLock.Unlock()
+
+	idStr := fmt.Sprintf("%x", id)
+	_, ok := s.stateTries[idStr]
+
+	return ok
+}
+
 func (s *Service) getStateTrie(id skipchain.SkipBlockID) (*stateTrie, error) {
 	if len(id) == 0 {
 		return nil, errors.New("no skipchain ID")
 	}
-	s.storage.Mutex.Lock()
-	defer s.storage.Mutex.Unlock()
+	s.stateTriesLock.Lock()
+	defer s.stateTriesLock.Unlock()
 	idStr := fmt.Sprintf("%x", id)
 	col := s.stateTries[idStr]
 	if col == nil {
@@ -753,8 +768,8 @@ func (s *Service) createStateTrie(id skipchain.SkipBlockID, nonce []byte) (*stat
 	if len(id) == 0 {
 		return nil, errors.New("no skipchain ID")
 	}
-	s.storage.Mutex.Lock()
-	defer s.storage.Mutex.Unlock()
+	s.stateTriesLock.Lock()
+	defer s.stateTriesLock.Unlock()
 	idStr := fmt.Sprintf("%x", id)
 	if s.stateTries[idStr] != nil {
 		return nil, errors.New("state trie already exists")
@@ -1430,7 +1445,7 @@ func (s *Service) startAllChains() error {
 	}
 	if msg != nil {
 		var ok bool
-		s.storage, ok = msg.(*omniStorage)
+		s.storage, ok = msg.(*bcStorage)
 		if !ok {
 			return errors.New("Data of wrong type")
 		}
@@ -1580,7 +1595,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 		ServiceProcessor:       onet.NewServiceProcessor(c),
 		contracts:              make(map[string]ContractFn),
 		txBuffer:               newTxBuffer(),
-		storage:                &omniStorage{},
+		storage:                &bcStorage{},
 		darcToSc:               make(map[string]skipchain.SkipBlockID),
 		stateChangeCache:       newStateChangeCache(),
 		heartbeatsTimeout:      make(chan string, 1),
