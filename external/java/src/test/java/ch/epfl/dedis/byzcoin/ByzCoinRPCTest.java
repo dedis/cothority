@@ -330,17 +330,17 @@ public class ByzCoinRPCTest {
         // First make sure we correctly refuse invalid new rosters.
         // Too few nodes
         final Roster newRoster1 = new Roster(Arrays.asList(conode1, conode2));
-        assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster1, admins, counters.getCounters(), 10));
+        assertThrows(CothorityCommunicationException.class, () -> bc.setRoster(newRoster1, admins, counters.getCounters(), 10));
 
         // Too many new nodes
         List<ServerIdentity> newList = bc.getRoster().getNodes();
         newList.addAll(Arrays.asList(conode4, conode5));
         final Roster newRoster2 = new Roster(newList);
-        assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster2, admins, counters.getCounters(), 10));
+        assertThrows(CothorityCommunicationException.class, () -> bc.setRoster(newRoster2, admins, counters.getCounters(), 10));
 
         // Too many changes
         final Roster newRoster3 = new Roster(Arrays.asList(conode1, conode2, conode5, conode6));
-        assertThrows(CothorityPermissionException.class, () -> bc.setRoster(newRoster3, admins, counters.getCounters(), 10));
+        assertThrows(CothorityCommunicationException.class, () -> bc.setRoster(newRoster3, admins, counters.getCounters(), 10));
 
         // And finally some real update of the roster
         // First start conode5, conode6, conode7 (these are sleeper conodes)
@@ -353,22 +353,27 @@ public class ByzCoinRPCTest {
             Roster newRoster = new Roster(Arrays.asList(conode1, conode2, conode3, conode4, conode5));
 
             bc.setRoster(newRoster, admins, counters.getCounters(), 10);
+            counters.increment();
             newRoster = new Roster(Arrays.asList(conode1, conode2, conode3, conode4, conode5, conode6));
             bc.setRoster(newRoster, admins, counters.getCounters(), 10);
+            counters.increment();
             newRoster = new Roster(Arrays.asList(conode1, conode2, conode3, conode4, conode5, conode6, conode7));
             bc.setRoster(newRoster, admins, counters.getCounters(), 10);
+            counters.increment();
 
             // Need to send in at least two blocks before the new node is active
             bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 10);
+            counters.increment();
             bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 10);
+            counters.increment();
 
             // This should work - why does it fail?
             logger.info("shutting down two nodes and it should still run");
             try {
                 testInstanceController.killConode(3);
                 testInstanceController.killConode(4);
-                counters.increment();
                 bc.setMaxBlockSize(1000 * 1000, admins, counters.getCounters(), 10);
+                counters.increment();
             } catch (CothorityException e) {
                 throw e;
             } finally {
