@@ -204,14 +204,16 @@ func TestStateChangeStorage_MaxSize(t *testing.T) {
 
 	for i := 0; i < n; i++ {
 		sc.Version = uint64(i)
-		store.append(StateChanges{sc}, sb1)
+		err = store.append(StateChanges{sc}, sb1)
+		require.Nil(t, err)
 	}
 
 	sc.InstanceID = iid2
 
 	for i := 0; i < n; i++ {
 		sc.Version = uint64(i)
-		store.append(StateChanges{sc}, sb2)
+		err = store.append(StateChanges{sc}, sb2)
+		require.Nil(t, err)
 	}
 
 	entries, err := store.getAll(iid2, sb2.SkipChainID())

@@ -244,7 +244,9 @@ func (s *stateChangeStorage) cleanBySize() error {
 		return nil
 	})
 
-	s.sortedKeys = sortedKeys
+	if err == nil {
+		s.sortedKeys = sortedKeys
+	}
 
 	return err
 }
@@ -295,7 +297,10 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 		return nil
 	})
 
-	s.size = size
+	if err == nil {
+		s.size = size
+	}
+
 	return err
 }
 
