@@ -26,12 +26,17 @@ public class StateChange {
         instanceId = new InstanceId(sc.getInstanceid());
         value = sc.getValue();
         version = sc.getVersion();
+
         try {
             contractId = sc.getContractid().toString("utf8");
         } catch (UnsupportedEncodingException e) {
             contractId = "";
         }
-        darcId = new DarcId(sc.getDarcid());
+
+        if (!sc.getDarcid().isEmpty()) {
+            darcId = new DarcId(sc.getDarcid());
+        }
+
         stateAction = StateAction.fromInteger(sc.getStateaction());
     }
 

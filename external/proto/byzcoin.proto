@@ -292,7 +292,6 @@ message StateChangeBody {
   required bytes darcid = 5;
 }
 
-<<<<<<< HEAD
 // GetSignerCounters is a request to get the latest version for the specified
 // identity.
 message GetSignerCounters {
@@ -306,8 +305,6 @@ message GetSignerCountersResponse {
   repeated uint64 counters = 1 [packed=true];
 }
 
-=======
->>>>>>> Instance versioning API
 // GetInstanceVersion is a request asking the service to fetch
 // the version of the given instance
 message GetInstanceVersion {
@@ -323,7 +320,8 @@ message GetLastInstanceVersion {
   required bytes instanceid = 2;
 }
 
-// GetInstanceVersionResponse is the response that contains
+// GetInstanceVersionResponse is the response for both
+// GetInstanceVersion and GetLastInstanceVersion. It contains
 // the state change if it exists and the block index where
 // it has been applied
 message GetInstanceVersionResponse {
@@ -358,8 +356,5 @@ message CheckStateChangeValidity {
 // compared against the one in the block
 message CheckStateChangeValidityResponse {
   repeated StateChange statechanges = 1;
-<<<<<<< HEAD
-=======
   required bytes blockid = 2;
->>>>>>> Instance versioning API
 }

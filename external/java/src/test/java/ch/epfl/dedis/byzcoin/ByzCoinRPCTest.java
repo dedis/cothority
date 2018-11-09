@@ -319,13 +319,14 @@ public class ByzCoinRPCTest {
     }
 
     @Test
-<<<<<<< HEAD
-=======
     void getInstanceVersion() throws Exception {
         final int n = 5;
 
+        // Get the counter for the admin
+        SignerCounters counters = bc.getSignerCounters(Collections.singletonList(admin.getIdentity().toString()));
+
         for (int i = 0; i < n-1; i++) {
-            bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, 10);
+            bc.getGenesisDarcInstance().evolveDarcAndWait(bc.getGenesisDarc(), admin, counters.head()+1+i,10);
         }
 
         StateChange sc = bc.getInstanceVersion(bc.getGenesisDarcInstance().getInstance().getId(), 1);
@@ -352,8 +353,6 @@ public class ByzCoinRPCTest {
     }
 
     @Test
-    @Disabled("Cannot change members of a roster for the moment.")
->>>>>>> Instance versioning API
     void updateRoster() throws Exception {
         List<Signer> admins = new ArrayList<>();
         admins.add(admin);
