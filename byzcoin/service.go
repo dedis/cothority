@@ -644,9 +644,9 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 				if err != nil {
 					log.Fatal("Cannot delete existing trie while trying to download:", err)
 				}
-				s.storage.Lock()
+				s.stateTriesLock.Lock()
 				delete(s.stateTries, idStr)
-				s.storage.Unlock()
+				s.stateTriesLock.Unlock()
 			}
 
 			// Then start downloading the stateTrie over the network.
@@ -657,9 +657,7 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			for {
 				resp, err := cl.DownloadState(sb.SkipChainID(), nonce, catchupFetchDBEntries)
 				if db == nil {
-					s.storage.Mutex.Lock()
 					db, bucketName = s.GetAdditionalBucket([]byte(idStr))
-					s.storage.Mutex.Unlock()
 					nonce = resp.Nonce
 				}
 				if err != nil {
@@ -709,9 +707,9 @@ func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
 			}
 
 			// Finally initialize the stateTrie using the new database.
-			s.storage.Lock()
+			s.stateTriesLock.Lock()
 			s.stateTries[idStr] = st
-			s.storage.Unlock()
+			s.stateTriesLock.Unlock()
 			return nil
 		}()
 		if err == nil {
