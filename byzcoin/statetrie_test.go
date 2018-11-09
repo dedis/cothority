@@ -13,7 +13,7 @@ func TestStateTrie(t *testing.T) {
 	s := newSer(t, 1, testInterval)
 	defer s.local.CloseAll()
 
-	st, err := s.service().getStateTrie(s.sb.SkipChainID())
+	st, err := s.service().getStateTrie(s.genesis.SkipChainID())
 	require.NoError(t, err)
 	require.NotNil(t, st)
 	require.NotEqual(t, -1, st.GetIndex())

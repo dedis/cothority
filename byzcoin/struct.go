@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/dedis/cothority/skipchain"
+	"github.com/dedis/onet"
 )
 
 // SafeAdd will add a to the value of the coin if there will be no
@@ -110,15 +111,37 @@ func (c ChainConfig) sanityCheck(old *ChainConfig) error {
 	if c.MaxBlockSize > 8*1e6 {
 		return errors.New("max block size is greater than 8 megs")
 	}
+	if len(c.Roster.List) < 3 {
+		return errors.New("need at least 3 nodes to have a majority")
+	}
 	if old != nil {
-		if len(c.Roster.List) != len(old.Roster.List) {
-			return errors.New("cannot add or remove nodes for the moment")
+		return old.checkNewRoster(c.Roster)
+	}
+	return nil
+}
+
+// checkNewRoster makes sure that the new roster follows the rules we need
+// in byzcoin:
+//   - no new node can join as leader
+//   - only one node joining or leaving
+func (c ChainConfig) checkNewRoster(newRoster onet.Roster) error {
+	// Check new leader was in old roster
+	if index, _ := c.Roster.Search(newRoster.List[0].ID); index < 0 {
+		return errors.New("new leader must be in previous roster")
+	}
+
+	// Check we don't change more than one one
+	added := 0
+	oldList := onet.NewRoster(c.Roster.List)
+	for _, si := range newRoster.List {
+		if i, _ := oldList.Search(si.ID); i >= 0 {
+			oldList.List = append(oldList.List[:i], oldList.List[i+1:]...)
+		} else {
+			added++
 		}
-		for _, si := range c.Roster.List {
-			if i, _ := old.Roster.Search(si.ID); i < 0 {
-				return errors.New("no change of membership allowed for the moment")
-			}
-		}
+	}
+	if len(oldList.List)+added > 1 {
+		return errors.New("can only change one node at a time - adding or removing")
 	}
 	return nil
 }

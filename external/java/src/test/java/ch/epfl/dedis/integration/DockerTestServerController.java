@@ -35,19 +35,25 @@ public class DockerTestServerController extends TestServerController {
                     new ImageFromDockerfile(TEMPORARY_DOCKER_IMAGE, true)
                             .withDockerfileFromBuilder(builder -> builder
                                     .from(TEST_SERVER_IMAGE_NAME)
-                                    .expose(7002, 7003, 7004, 7005, 7006, 7007, 7008, 7009))
+                                    .expose(7002, 7003, 7004, 7005, 7006, 7007, 7008, 7009, 7010, 7011, 7012, 7013, 7014, 7015))
             );
 
             blockchainContainer.setPortBindings(Arrays.asList(
                     "7002:7002", "7003:7003",
                     "7004:7004", "7005:7005",
                     "7006:7006", "7007:7007",
-                    "7008:7008", "7009:7009"));
+                    "7008:7008", "7009:7009",
+                    "7010:7010", "7011:7011",
+                    "7012:7012", "7013:7013",
+                    "7014:7014", "7015:7015"));
             blockchainContainer.withExposedPorts(7002, 7003, 7004, 7005, 7006, 7007, 7008, 7009);
             blockchainContainer.withExtraHost("conode1", "127.0.0.1");
             blockchainContainer.withExtraHost("conode2", "127.0.0.1");
             blockchainContainer.withExtraHost("conode3", "127.0.0.1");
             blockchainContainer.withExtraHost("conode4", "127.0.0.1");
+            blockchainContainer.withExtraHost("conode5", "127.0.0.1");
+            blockchainContainer.withExtraHost("conode6", "127.0.0.1");
+            blockchainContainer.withExtraHost("conode7", "127.0.0.1");
             blockchainContainer.waitingFor(Wait.forListeningPort());
             blockchainContainer.start();
             Slf4jLogConsumer logConsumer = new Slf4jLogConsumer(logger);
@@ -62,7 +68,10 @@ public class DockerTestServerController extends TestServerController {
 
     @Override
     public void startConode(int nodeNumber) throws InterruptedException {
-        logger.info("Starting container {}", nodeNumber);
+        if (nodeNumber <= 0) {
+            throw new InterruptedException("Node numbering starts at 1!");
+        }
+        logger.info("Starting container co{}/private.toml", nodeNumber);
         runCmdInBackground(blockchainContainer, "conode", "-d", "2", "-c", "co" + nodeNumber + "/private.toml", "server");
         // Wait a bit for the server to actually start.
         Thread.sleep(1000);
@@ -70,9 +79,12 @@ public class DockerTestServerController extends TestServerController {
 
     @Override
     public void killConode(int nodeNumber) throws IOException, InterruptedException {
-        logger.info("Killing container {}", nodeNumber);
+        if (nodeNumber <= 0) {
+            throw new InterruptedException("Node numbering starts at 1!");
+        }
+        logger.info("Killing container co{}/private.toml", nodeNumber);
         Container.ExecResult psResults = blockchainContainer.execInContainer("ps", "-o", "pid=,command=", "-C", "conode");
-        for (String psLine :psResults.getStdout().split("\\n") ) {
+        for (String psLine : psResults.getStdout().split("\\n")) {
             if (psLine.contains("co" + nodeNumber + "/private.toml")) {
                 String pid = psLine.trim().split("\\s")[0];
                 blockchainContainer.execInContainer("kill", pid);
@@ -84,13 +96,13 @@ public class DockerTestServerController extends TestServerController {
     @Override
     public List<CalypsoFactory.ConodeAddress> getConodes() {
         return Arrays.asList(
-                new CalypsoFactory.ConodeAddress(buildURI("tcp://" + blockchainContainer.getContainerIpAddress() + ":7002"), CONODE_PUB_1),
-                new CalypsoFactory.ConodeAddress(buildURI("tcp://localhost:7004"), CONODE_PUB_2),
-                new CalypsoFactory.ConodeAddress(buildURI("tcp://localhost:7006"), CONODE_PUB_3),
-                new CalypsoFactory.ConodeAddress(buildURI("tcp://localhost:7008"), CONODE_PUB_4));
+                new CalypsoFactory.ConodeAddress(buildURI("tls://" + blockchainContainer.getContainerIpAddress() + ":7002"), CONODE_PUB_1),
+                new CalypsoFactory.ConodeAddress(buildURI("tls://localhost:7004"), CONODE_PUB_2),
+                new CalypsoFactory.ConodeAddress(buildURI("tls://localhost:7006"), CONODE_PUB_3),
+                new CalypsoFactory.ConodeAddress(buildURI("tls://localhost:7008"), CONODE_PUB_4));
     }
 
-    private void runCmdInBackground(GenericContainer container, String ... cmd) throws InterruptedException {
+    private void runCmdInBackground(GenericContainer container, String... cmd) throws InterruptedException {
         DockerClient dockerClient = container.getDockerClient();
 
         ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(container.getContainerId())

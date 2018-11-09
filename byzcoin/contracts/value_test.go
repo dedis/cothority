@@ -16,7 +16,7 @@ func TestValue_Spawn(t *testing.T) {
 	defer local.CloseAll()
 
 	signer := darc.NewSignerEd25519(nil, nil)
-	_, roster, _ := local.GenTree(2, true)
+	_, roster, _ := local.GenTree(3, true)
 
 	genesisMsg, err := byzcoin.DefaultGenesisMsg(byzcoin.CurrentVersion, roster,
 		[]string{"spawn:value", "spawn:darc"}, signer.Identity())

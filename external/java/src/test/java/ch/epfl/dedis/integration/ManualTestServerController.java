@@ -35,10 +35,10 @@ public class ManualTestServerController extends TestServerController {
     @Override
     public List<CalypsoFactory.ConodeAddress> getConodes() {
         return Arrays.asList(
-                new CalypsoFactory.ConodeAddress(buildURI("tcp://localhost:7002"), CONODE_PUB_1),
-                new CalypsoFactory.ConodeAddress(buildURI("tcp://localhost:7004"), CONODE_PUB_2),
-                new CalypsoFactory.ConodeAddress(buildURI("tcp://localhost:7006"), CONODE_PUB_3),
-                new CalypsoFactory.ConodeAddress(buildURI("tcp://localhost:7008"), CONODE_PUB_4));
+                new CalypsoFactory.ConodeAddress(buildURI("tls://localhost:7002"), CONODE_PUB_1),
+                new CalypsoFactory.ConodeAddress(buildURI("tls://localhost:7004"), CONODE_PUB_2),
+                new CalypsoFactory.ConodeAddress(buildURI("tls://localhost:7006"), CONODE_PUB_3),
+                new CalypsoFactory.ConodeAddress(buildURI("tls://localhost:7008"), CONODE_PUB_4));
     }
 
     private static int countLines(String str){

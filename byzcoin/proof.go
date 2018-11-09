@@ -32,13 +32,24 @@ func NewProof(c ReadOnlyStateTrie, s *skipchain.SkipBlockDB, id skipchain.SkipBl
 		To:        id,
 		NewRoster: sb.Roster,
 	}}
-	for len(sb.ForwardLink) > 0 {
-		link := sb.ForwardLink[len(sb.ForwardLink)-1]
-		p.Links = append(p.Links, *link)
-		sb = s.GetByID(link.To)
-		if sb == nil {
-			return nil, errors.New("missing block in chain")
+	for len(sb.ForwardLink) > 0 && sb.Index < c.GetIndex() {
+		var link *skipchain.ForwardLink
+		// Corner-case when the database is downloading blocks and a proof is
+		// requested before all blocks are stored - then we need to make sure that
+		// we don't get the latest block, but the block corresponding to the
+		// StateTrie.Index
+		for height := len(sb.ForwardLink) - 1; height >= 0; height-- {
+			link = sb.ForwardLink[height]
+			sbTemp := s.GetByID(link.To)
+			if sbTemp == nil {
+				return nil, errors.New("missing block in chain")
+			}
+			if sbTemp.Index <= c.GetIndex() {
+				sb = sbTemp
+				break
+			}
 		}
+		p.Links = append(p.Links, *link)
 	}
 	p.Latest = *sb
 	return

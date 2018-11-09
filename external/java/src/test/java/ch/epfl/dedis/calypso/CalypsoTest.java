@@ -9,10 +9,8 @@ import ch.epfl.dedis.byzcoin.Proof;
 import ch.epfl.dedis.byzcoin.contracts.DarcInstance;
 import ch.epfl.dedis.lib.crypto.KeyPair;
 import ch.epfl.dedis.lib.crypto.Point;
-import ch.epfl.dedis.lib.darc.Darc;
-import ch.epfl.dedis.lib.darc.Rules;
-import ch.epfl.dedis.lib.darc.Signer;
-import ch.epfl.dedis.lib.darc.SignerEd25519;
+import ch.epfl.dedis.lib.crypto.TestSignerX509EC;
+import ch.epfl.dedis.lib.darc.*;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
 import ch.epfl.dedis.lib.exception.CothorityException;
 import org.junit.jupiter.api.BeforeEach;
@@ -383,10 +381,10 @@ class CalypsoTest {
     void reConnect() throws CothorityException, InterruptedException, IOException {
         WriteInstance wr = doc.spawnWrite(calypso, publisherDarc.getBaseId(), publisher, 1L);
 
-        for (int i=0; i<3; i++){
+        for (int i=1; i<=3; i++){
             testInstanceController.killConode(i);
         }
-        for (int i=0; i<3; i++){
+        for (int i=1; i<=3; i++){
             testInstanceController.startConode(i);
         }
 

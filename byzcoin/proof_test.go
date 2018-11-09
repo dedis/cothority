@@ -96,7 +96,7 @@ func createSC(t *testing.T) (s sc) {
 
 	s.key = []byte("key")
 	s.value = []byte("value")
-	s.c.StoreAll([]StateChange{{StateAction: Create, InstanceID: s.key, Value: s.value}}, 0)
+	s.c.StoreAll([]StateChange{{StateAction: Create, InstanceID: s.key, Value: s.value}}, 1)
 
 	s.genesis = skipchain.NewSkipBlock()
 	s.genesis.Roster, s.genesisPrivs = genRoster(1)
@@ -109,6 +109,7 @@ func createSC(t *testing.T) (s sc) {
 	})
 	require.Nil(t, err)
 	s.sb2.Hash = s.sb2.CalculateHash()
+	s.sb2.Index = 1
 	s.genesis.ForwardLink = genForwardLink(t, s.genesis, s.sb2, s.genesisPrivs)
 
 	_, err = s.s.StoreBlocks([]*skipchain.SkipBlock{s.genesis, s.sb2})

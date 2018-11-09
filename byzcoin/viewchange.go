@@ -242,7 +242,7 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 	cosiProto.Msg = req.Hash()
 	cosiProto.Data = payload
 	cosiProto.CreateProtocol = s.CreateProtocol
-	cosiProto.Timeout = interval / 2
+	cosiProto.Timeout = interval * 2
 	cosiProto.Threshold = n - n/3
 	cosiProto.NSubtrees = int(math.Pow(float64(n), 1.0/3.0))
 	if err := cosiProto.Start(); err != nil {

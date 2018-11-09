@@ -337,7 +337,7 @@ func newSer(t *testing.T) (*ser, *Client) {
 		local: onet.NewTCPTest(tSuite),
 		owner: darc.NewSignerEd25519(nil, nil),
 	}
-	s.hosts, s.roster, _ = s.local.GenTree(2, true)
+	s.hosts, s.roster, _ = s.local.GenTree(3, true)
 
 	for _, sv := range s.local.GetServices(s.hosts, sid) {
 		service := sv.(*Service)

@@ -260,23 +260,44 @@ func TestClient_GetSingleBlockByIndex(t *testing.T) {
 
 	c := newTestClient(l)
 	log.Lvl1("Creating root and control chain")
-	sb1, err := c.CreateGenesis(roster, 1, 1, VerificationNone, nil, nil)
+	nbrBlocks := 10
+	blocks := make([]*SkipBlock, nbrBlocks)
+	var err error
+	blocks[0], err = c.CreateGenesis(roster, 2, 4, VerificationNone, nil, nil)
+	// hand-calculated links table
+	// This should be the number of forward links for every block:
+	//   4, 1, 2, 1, 3, 1, 2, 1, 2, 1, 1
+	// and then do the links in your head ;)
+	links := []int{1, 2, 2, 3, 2, 3, 3, 4, 2, 3}
 	log.ErrFatal(err)
-	reply2, err := c.StoreSkipBlock(sb1, roster, nil)
-	log.ErrFatal(err)
+	for i := 1; i < nbrBlocks; i++ {
+		reply, err := c.StoreSkipBlock(blocks[0], roster, nil)
+		log.ErrFatal(err)
+		blocks[i] = reply.Latest
+	}
 
 	// 0
+	sb1 := blocks[0]
 	search, err := c.GetSingleBlockByIndex(roster, sb1.Hash, 0)
 	log.ErrFatal(err)
-	require.True(t, sb1.Equal(search))
+	require.True(t, sb1.Equal(search.SkipBlock))
+	require.Equal(t, links[0], len(search.Links))
+	require.True(t, sb1.SkipChainID().Equal(search.Links[0].To))
+	require.True(t, sb1.Roster.Aggregate.Equal(search.Links[0].NewRoster.Aggregate))
 
-	// 1
-	search, err = c.GetSingleBlockByIndex(roster, sb1.Hash, 1)
-	log.ErrFatal(err)
-	require.True(t, reply2.Latest.Equal(search))
+	// 1..nbrBlocks
+	for i := 1; i < nbrBlocks; i++ {
+		search, err = c.GetSingleBlockByIndex(roster, sb1.SkipChainID(), i)
+		log.ErrFatal(err)
+		require.True(t, blocks[i].Hash.Equal(search.SkipBlock.Hash))
+		require.Equal(t, links[i], len(search.Links))
+		for _, link := range search.Links[1:] {
+			require.Nil(t, link.Verify(cothority.Suite, sb1.Roster.Publics()))
+		}
+	}
 
 	// non existing
-	_, err = c.GetSingleBlockByIndex(roster, sb1.Hash, 2)
+	_, err = c.GetSingleBlockByIndex(roster, sb1.Hash, nbrBlocks+1)
 	require.NotNil(t, err)
 }
 

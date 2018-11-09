@@ -392,8 +392,22 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 
 	blocks := []*SkipBlock{block.Copy()}
 	log.Lvlf3("Starting to search chain at %s", s.Context.ServerIdentity())
-	for block.GetForwardLen() > 0 {
-		link := block.ForwardLink[block.GetForwardLen()-1]
+	maxHeight := guc.MaxHeight
+	if maxHeight == 0 {
+		maxHeight = block.MaximumHeight
+	}
+	maxBlocks := guc.MaxBlocks
+	// Loop for as long as we have available forward links and that we don't have
+	// more than maxBlocks blocks - except if it is 0, then add as many blocks as
+	// we have.
+	for block.GetForwardLen() > 0 &&
+		(maxBlocks == 0 || len(blocks) < maxBlocks) {
+		var link *ForwardLink
+		if block.GetForwardLen() < maxHeight {
+			link = block.ForwardLink[block.GetForwardLen()-1]
+		} else {
+			link = block.ForwardLink[maxHeight-1]
+		}
 		next := s.db.GetByID(link.To)
 		if next == nil {
 			// Next not found means that maybe the roster
@@ -406,6 +420,8 @@ func (s *Service) GetUpdateChain(guc *GetUpdateChain) (*GetUpdateChainReply, err
 			if i, _ := next.Roster.Search(s.ServerIdentity().ID); i < 0 {
 				// Likewise for the case where we know the block,
 				// but we are no longer in the Roster, stop searching.
+				// Don't add the block, as our node will not be contacted
+				// for new forward-links.
 				break
 			}
 		}
@@ -541,21 +557,39 @@ func (s *Service) GetSingleBlock(id *GetSingleBlock) (*SkipBlock, error) {
 
 // GetSingleBlockByIndex searches for the given block and returns it. If no such block is
 // found, a nil is returned.
-func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*SkipBlock, error) {
+func (s *Service) GetSingleBlockByIndex(id *GetSingleBlockByIndex) (*GetSingleBlockByIndexReply, error) {
 	sb := s.db.GetByID(id.Genesis)
 	if sb == nil {
 		return nil, errors.New("No such genesis-block")
 	}
+	links := []*ForwardLink{{
+		To:        id.Genesis,
+		NewRoster: sb.Roster,
+	}}
 	if sb.Index == id.Index {
-		return sb, nil
+		return &GetSingleBlockByIndexReply{sb, links}, nil
 	}
 	for len(sb.ForwardLink) > 0 {
-		sb = s.db.GetByID(sb.ForwardLink[0].To)
+		// Search for the highest ForwardLink that doesn't shoot over the target
+		sb = func() *SkipBlock {
+			for i := len(sb.ForwardLink) - 1; i >= 0; i-- {
+				to := sb.ForwardLink[i].To
+				// We can have holes in the forward links
+				if to != nil {
+					tmp := s.db.GetByID(to)
+					if tmp != nil && tmp.Index <= id.Index {
+						links = append(links, sb.ForwardLink[i])
+						return tmp
+					}
+				}
+			}
+			return nil
+		}()
 		if sb == nil {
 			return nil, errors.New("didn't find block in forward link")
 		}
 		if sb.Index == id.Index {
-			return sb, nil
+			return &GetSingleBlockByIndexReply{sb, links}, nil
 		}
 	}
 	return nil, errors.New("No block with this index found")

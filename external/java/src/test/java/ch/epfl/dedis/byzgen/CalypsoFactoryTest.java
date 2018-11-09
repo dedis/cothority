@@ -24,7 +24,7 @@ class CalypsoFactoryTest {
     public static final String SAMPLE_GENESIS_ID = "8dd9d04e027040e6815d58b5ccccb1fa13df771198d52f3e035cabdffc34551a";
     public static final String PUBLIC_KEY_WITH_SPACE = "hex with spaces TvMRQrO1PAw2pVjA1hDMQQi7Tss=";
     public static final String CONODE_ADDRESS_INCORRECT = "http://localhost:7002";
-    public static final String SAMPLE_CONODE_URI = "tcp://remote.host.name:7044";
+    public static final String SAMPLE_CONODE_URI = "tls://remote.host.name:7044";
     public static final String SAMPLE_CONODE_PUB = "402552116B5056CC6B989BAE9A8DFD8BF0C1A2714FB820F0472C096AB5D148D8";
 
     private TestServerController testServerController;
@@ -40,7 +40,7 @@ class CalypsoFactoryTest {
         Throwable exception = assertThrows(IllegalArgumentException.class, () -> {
             calypsoFactory.addConode(new URI(CONODE_ADDRESS_INCORRECT), SAMPLE_CONODE_PUB);
         });
-        assertThat(exception.getMessage(), containsString("address must be in tcp format"));
+        assertThat(exception.getMessage(), containsString("address must be in tls:// format"));
     }
 
     @Test

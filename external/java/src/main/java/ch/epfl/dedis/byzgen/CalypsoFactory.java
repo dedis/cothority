@@ -50,14 +50,14 @@ public class CalypsoFactory {
     }
 
     /**
-     * @param conode    cothority server address (base address in tcp://127.0.0.0:7001 form)
+     * @param conode    cothority server address (base address in tls://127.0.0.0:7001 form)
      * @param publicKey server public symmetricKey hex encoded to a string
      * @throws IllegalArgumentException when conode address is incorrect
      * @return the factory
      */
     public CalypsoFactory addConode(final URI conode, final String publicKey) {
-        if (!conode.getScheme().equals("tcp")) {
-            throw new IllegalArgumentException("conode address must be in tcp format like \"tcp://127.0.0.0:7001\"");
+        if (!conode.getScheme().equals("tls")) {
+            throw new IllegalArgumentException("conode address must be in tls:// format like \"tls://127.0.0.0:7001\"");
         }
 
         servers.add(new ServerIdentity(conode, publicKey));
