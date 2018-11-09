@@ -35,14 +35,17 @@ version or several with the same one.
 Each service stores the state changes after a new block has been added and only
 at this moment meaning that until a pending transaction is waiting to be included
 in a block, it will not be part of the instance's history.
-The storage uses BoltDB and the key is generated using the instance ID and the
+The storage uses BoltDB and it is independant from the main storage of the trie.
+As skipchains can have the same instance IDs (e.g. the config instance), there is also a
+second level that uses the skipchain ID as bucket name.
+The key is generated using the instance ID and the
 version number so that the pairs are sorted first by instance ID and then by
 version. The block index is also appended at the end because we need this
 value (e.g. cleaning) and then we want to avoid decoding the value.
 
 ## Backup and new conode
 
-This storage acts more like a cache and it could happen a conode needs to create it
+This storage acts more like a cache. A conode may need to create it
 from scratch to catch up with the others if we change the roster or if the DB fails,
 for instance.
 When a conode starts a Byzcoin service, it will first try to synchronize all the

@@ -52,7 +52,7 @@ func TestStateChangeStorage_Init(t *testing.T) {
 	})
 	require.Nil(t, err)
 
-	indices, err := scs.init()
+	indices, err := scs.loadFromDB()
 	require.Nil(t, err)
 	require.Equal(t, k, indices[sbs[0].Hash.String()])
 	require.Equal(t, size, scs.size)

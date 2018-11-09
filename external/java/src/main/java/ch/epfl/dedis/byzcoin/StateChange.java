@@ -1,7 +1,10 @@
 package ch.epfl.dedis.byzcoin;
 
+import ch.epfl.dedis.lib.darc.DarcId;
 import ch.epfl.dedis.lib.proto.ByzCoinProto;
 import com.google.protobuf.ByteString;
+
+import java.io.UnsupportedEncodingException;
 
 /**
  * Represents the state change of an instance and thus contains all the
@@ -9,9 +12,9 @@ import com.google.protobuf.ByteString;
  */
 public class StateChange {
     private StateAction stateAction;
-    private ByteString instanceId;
-    private ByteString contractId;
-    private ByteString darcId;
+    private InstanceId instanceId;
+    private String contractId;
+    private DarcId darcId;
     private ByteString value;
     private long version;
 
@@ -20,11 +23,15 @@ public class StateChange {
      * @param sc the state change
      */
     public StateChange(ByzCoinProto.StateChange sc) {
-        instanceId = sc.getInstanceid();
+        instanceId = new InstanceId(sc.getInstanceid());
         value = sc.getValue();
         version = sc.getVersion();
-        contractId = sc.getContractid();
-        darcId = sc.getDarcid();
+        try {
+            contractId = sc.getContractid().toString("utf8");
+        } catch (UnsupportedEncodingException e) {
+            contractId = "";
+        }
+        darcId = new DarcId(sc.getDarcid());
         stateAction = StateAction.fromInteger(sc.getStateaction());
     }
 
@@ -40,7 +47,7 @@ public class StateChange {
      * Getter for the instance ID
      * @return the instance ID
      */
-    public ByteString getInstanceId() {
+    public InstanceId getInstanceId() {
         return instanceId;
     }
 
@@ -48,7 +55,7 @@ public class StateChange {
      * Getter for the contract ID
      * @return the contract ID
      */
-    public ByteString getContractId() {
+    public String getContractId() {
         return contractId;
     }
 
@@ -56,7 +63,7 @@ public class StateChange {
      * Getter for the darc ID
      * @return the darc ID
      */
-    public ByteString getDarcId() {
+    public DarcId getDarcId() {
         return darcId;
     }
 

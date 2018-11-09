@@ -2002,9 +2002,9 @@ func (s *Service) trySyncAll() {
 		return
 	}
 
-	// Init the state change storage and get the last
+	// It reads from the state change storage and gets the last
 	// block index for each chain
-	indices, err := s.stateChangeStorage.init()
+	indices, err := s.stateChangeStorage.loadFromDB()
 	if err != nil {
 		log.Error(s.ServerIdentity(), err)
 		return

@@ -409,7 +409,7 @@ public class ByzCoinRPC {
      */
     public boolean checkStateChangeValidity(StateChange sc) throws CothorityCommunicationException {
         ByzCoinProto.CheckStateChangeValidity.Builder request = ByzCoinProto.CheckStateChangeValidity.newBuilder();
-        request.setInstanceid(sc.getInstanceId());
+        request.setInstanceid(sc.getInstanceId().toByteString());
         request.setSkipchainid(genesis.getId().toProto());
         request.setVersion(sc.getVersion());
 

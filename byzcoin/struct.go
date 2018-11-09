@@ -102,9 +102,9 @@ func newStateChangeStorage(c *onet.Context) *stateChangeStorage {
 	}
 }
 
-// init reads the db to recalculate the size and create a map
+// loadFromDB reads the db to recalculate the size and create a map
 // of the last known block indices for each skipchain
-func (s *stateChangeStorage) init() (map[string]int, error) {
+func (s *stateChangeStorage) loadFromDB() (map[string]int, error) {
 	s.size = 0
 	indices := make(map[string]int)
 
@@ -126,6 +126,7 @@ func (s *stateChangeStorage) init() (map[string]int, error) {
 			err := scb.ForEach(func(k, v []byte) error {
 				buf := bytes.NewBuffer(k[prefixLength+versionLength:])
 				var idx int64
+				// The key is built using BigEndian order
 				err := binary.Read(buf, binary.BigEndian, &idx)
 				if err != nil {
 					return err
@@ -187,21 +188,27 @@ func (s *stateChangeStorage) cleanBySize() error {
 		return nil
 	}
 
+	s.sortedKeysLock.Lock()
+	defer s.sortedKeysLock.Unlock()
+
+	sortedKeys := make(keyTimeArray, len(s.sortedKeys))
+	copy(sortedKeys, s.sortedKeys)
+
 	err := s.db.Update(func(tx *bolt.Tx) error {
 		// We make enough space to not have to do it everytime
 		// we append state changes
 		thres := int(float64(s.maxSize) * cleanThreshold)
 
 		for s.size > thres {
-			if len(s.sortedKeys) == 0 {
+			if len(sortedKeys) == 0 {
 				// This should never happen
 				return errors.New("Nothing can be cleaned, something is wrong with the storage implementation")
 			}
 
 			// Get the oldest version with the same instance ID
-			iid := s.sortedKeys[0].key[:prefixLength]
+			iid := sortedKeys[0].key[:prefixLength]
 
-			b := s.getBucket(tx, s.sortedKeys[0].scid)
+			b := s.getBucket(tx, sortedKeys[0].scid)
 			c := b.Cursor()
 
 			k, v := c.Seek(iid)
@@ -224,18 +231,20 @@ func (s *stateChangeStorage) cleanBySize() error {
 				if err != nil {
 					return err
 				}
-				s.sortedKeys[0].time = sce.Timestamp
-				copy(s.sortedKeys[0].key, k)
+				sortedKeys[0].time = sce.Timestamp
+				copy(sortedKeys[0].key, k)
 
-				sort.Sort(s.sortedKeys)
+				sort.Sort(sortedKeys)
 			} else {
 				// if none, that means it was the last
-				s.sortedKeys = s.sortedKeys[1:]
+				sortedKeys = sortedKeys[1:]
 			}
 		}
 
 		return nil
 	})
+
+	s.sortedKeys = sortedKeys
 
 	return err
 }
@@ -248,8 +257,9 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 	}
 
 	thres := int64(sb.Index - s.maxNbrBlock)
+	size := s.size
 
-	return s.db.Update(func(tx *bolt.Tx) error {
+	err := s.db.Update(func(tx *bolt.Tx) error {
 		b := s.getBucket(tx, sb.SkipChainID())
 
 		// Prevent from cleaning the same instance twice
@@ -262,6 +272,7 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 				done[string(sc.InstanceID)] = true
 
 				var buf bytes.Buffer
+				// The key is built using BigEndian order
 				err := binary.Write(&buf, binary.BigEndian, thres)
 				if err != nil {
 					return err
@@ -271,8 +282,11 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 				c := b.Cursor()
 				for k, v := c.Seek(sc.InstanceID); k != nil && bytes.HasPrefix(k, sc.InstanceID); k, v = c.Next() {
 					if bytes.Compare(k[len(k)-len(index):], index) <= 0 {
-						c.Delete()
-						s.size -= len(v)
+						err := c.Delete()
+						if err != nil {
+							return err
+						}
+						size -= len(v)
 					}
 				}
 			}
@@ -280,6 +294,9 @@ func (s *stateChangeStorage) cleanByBlock(scs StateChanges, sb *skipchain.SkipBl
 
 		return nil
 	})
+
+	s.size = size
+	return err
 }
 
 // this generates a storage key using the instance ID and the version
@@ -290,6 +307,8 @@ func (s *stateChangeStorage) key(iid []byte, ver uint64, idx int64) ([]byte, err
 		return nil, err
 	}
 
+	// BigEndian is used here because of the byte-sorted order of
+	// BoltDB when iterating over the keys
 	err = binary.Write(&b, binary.BigEndian, ver)
 	if err != nil {
 		return nil, err
@@ -306,15 +325,17 @@ func (s *stateChangeStorage) key(iid []byte, ver uint64, idx int64) ([]byte, err
 // this will clean the oldest state changes until there is enough
 // space left and append the new ones
 func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) error {
-	s.sortedKeysLock.Lock()
-	defer s.sortedKeysLock.Unlock()
-
 	// Run a cleaning procedure first to insure we're not above the limit
 	err := s.cleanBySize()
 	if err != nil {
 		return err
 	}
 
+	// Careful not to lock before cleaning as it also needs to do it
+	s.sortedKeysLock.Lock()
+	defer s.sortedKeysLock.Unlock()
+
+	size := s.size
 	sortedKeys := make(keyTimeArray, len(s.sortedKeys))
 	copy(sortedKeys, s.sortedKeys)
 
@@ -363,7 +384,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 			}
 
 			// optimization for cleaning to avoir recomputing the size
-			s.size += len(buf)
+			size += len(buf)
 		}
 
 		return nil
@@ -373,6 +394,7 @@ func (s *stateChangeStorage) append(scs StateChanges, sb *skipchain.SkipBlock) e
 	}
 
 	s.sortedKeys = sortedKeys
+	s.size = size
 
 	return s.cleanByBlock(scs, sb)
 }
@@ -451,6 +473,7 @@ func (s *stateChangeStorage) getByBlock(sid skipchain.SkipBlockID, idx int) (ent
 		b := s.getBucket(tx, sid)
 
 		var suffix bytes.Buffer
+		// The key is built using BigEndian order
 		binary.Write(&suffix, binary.BigEndian, int64(idx))
 
 		c := b.Cursor()

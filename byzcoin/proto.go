@@ -340,7 +340,8 @@ type GetLastInstanceVersion struct {
 	InstanceID  InstanceID
 }
 
-// GetInstanceVersionResponse is the response that contains
+// GetInstanceVersionResponse is the response for both
+// GetInstanceVersion and GetLastInstanceVersion. It contains
 // the state change if it exists and the block index where
 // it has been applied
 type GetInstanceVersionResponse struct {
