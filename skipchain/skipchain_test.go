@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"math"
 	"strconv"
 	"sync"
 	"testing"
@@ -161,6 +162,7 @@ func TestService_SetChildrenSkipBlock(t *testing.T) {
 	log.ErrFatal(err)
 	sbInter, err := makeGenesisRosterArgs(service, el, sbRoot.Hash, VerificationNone, 1, 1)
 	log.ErrFatal(err)
+
 	// Verifying other nodes also got the updated chains
 	// Check for the root-chain
 	for i, h := range hosts {
@@ -220,16 +222,17 @@ func TestService_MultiLevel(t *testing.T) {
 	service := genService.(*Service)
 
 	for base := 1; base <= maxlevel; base++ {
-		for height := 1; height <= base; height++ {
-			log.Lvl1("Making genesis for", base, height)
-			if base == 1 && height > 1 {
+		for maxHeight := 1; maxHeight <= base; maxHeight++ {
+			if base == 1 && maxHeight > 1 {
 				break
 			}
+
+			log.Lvl1("Making genesis for", base, maxHeight)
 			sbRoot, err := makeGenesisRosterArgs(service, ro, nil, VerificationNone,
-				base, height)
+				base, maxHeight)
 			log.ErrFatal(err)
 			latest := sbRoot
-			log.Lvl1("Adding blocks for", base, height)
+			log.Lvl1("Adding blocks for", base, maxHeight)
 			for sbi := 1; sbi < 10; sbi++ {
 				log.Lvl3("Adding block", sbi)
 				sb := NewSkipBlock()
@@ -252,8 +255,8 @@ func TestService_MultiLevel(t *testing.T) {
 				}
 			}
 
-			log.ErrFatal(checkMLForwardBackward(service, sbRoot, base, height))
-			log.ErrFatal(checkMLUpdate(service, sbRoot, latest, base, height))
+			log.ErrFatal(checkMLForwardBackward(service, sbRoot, base, maxHeight))
+			log.ErrFatal(checkMLUpdate(service, sbRoot, latest, base, maxHeight))
 		}
 	}
 }
@@ -903,6 +906,31 @@ func TestService_MissingForwardlink(t *testing.T) {
 	require.Nil(t, waitForwardLinks(service1, sbRoot, 3))
 }
 
+func TestService_LeaderChange(t *testing.T) {
+	local := onet.NewLocalTest(cothority.Suite)
+	defer local.CloseAll()
+
+	servers, ro, service := local.MakeSRS(cothority.Suite, 8, skipchainSID)
+	leader := service.(*Service)
+	sbRoot, err := makeGenesisRosterArgs(leader, ro, nil, VerificationNone, 2, 4)
+
+	require.Nil(t, err)
+
+	servers[0].Pause()
+	leader = local.GetServices(servers, skipchainSID)[2].(*Service)
+
+	sb := NewSkipBlock()
+	sb.Roster = onet.NewRoster(append(ro.List[2:], ro.List[0], ro.List[1]))
+	_, err = addBlockToChain(leader, sbRoot.Hash, sb)
+	require.Nil(t, err)
+
+	res, err := leader.getBlocks(sb.Roster, sbRoot.Hash, 2)
+	require.Nil(t, err)
+	require.Equal(t, 1, len(res[0].ForwardLink))
+	// Forward link must be verified with the src block
+	require.Nil(t, res[0].ForwardLink[0].Verify(cothority.Suite, ro.Publics()))
+}
+
 func addBlockToChain(s *Service, scid SkipBlockID, sb *SkipBlock) (latest *SkipBlock, err error) {
 	reply, err := s.StoreSkipBlock(
 		&StoreSkipBlock{TargetSkipChainID: scid,
@@ -961,31 +989,80 @@ func checkMLForwardBackward(service *Service, root *SkipBlock, base, height int)
 	return nil
 }
 
-func checkMLUpdate(service *Service, root, latest *SkipBlock, base, height int) error {
-	log.Lvl3(service, root, latest, base, height)
-	chain, err := service.GetUpdateChain(&GetUpdateChain{LatestID: root.Hash})
-	if err != nil {
-		return err
+func checkMLUpdate(service *Service, root, latest *SkipBlock, base, maxHeight int) error {
+	log.Lvl3("Checking ML update for:", service, root, latest, base, maxHeight)
+	for updateMaxHeight := 0; updateMaxHeight <= maxHeight; updateMaxHeight++ {
+		log.Lvl1("Checking update for maxHeight", maxHeight, "and updateMaxHeight", updateMaxHeight)
+		chain, err := service.GetUpdateChain(&GetUpdateChain{
+			LatestID:  root.Hash,
+			MaxHeight: updateMaxHeight,
+		})
+
+		// Also test the fact that GetUpdateChain.MaxHeight == 0 means to use the
+		// block.MaxHeight.
+		blockMaxHeight := updateMaxHeight
+		if blockMaxHeight == 0 {
+			blockMaxHeight = maxHeight
+		}
+
+		if err != nil {
+			return err
+		}
+		updates := chain.Update
+		genesis := updates[0]
+		if len(genesis.ForwardLink) != maxHeight {
+			return errors.New("genesis-block doesn't have height " + strconv.Itoa(maxHeight))
+		}
+		if len(updates[1].BackLinkIDs) != blockMaxHeight {
+			return errors.New("Second block doesn't have correct number of backlinks")
+		}
+		l := updates[len(updates)-1]
+		if len(l.ForwardLink) != 0 {
+			return errors.New("Last block still has forward-links")
+		}
+		if !l.Equal(latest) {
+			return errors.New("Last block from update is not the same as last block")
+		}
+		log.Lvl2("Checking base, blockMaxHeight, len(udpates):", base, blockMaxHeight, len(updates))
+		if base > 1 && blockMaxHeight > 1 && len(updates) == 10 {
+			return fmt.Errorf("Shouldn't need 10 blocks with base %d and height %d",
+				base, maxHeight)
+		}
 	}
-	updates := chain.Update
-	genesis := updates[0]
-	if len(genesis.ForwardLink) != height {
-		return errors.New("genesis-block doesn't have height " + strconv.Itoa(height))
-	}
-	if len(updates[1].BackLinkIDs) != height {
-		return errors.New("Second block doesn't have correct number of backlinks")
-	}
-	l := updates[len(updates)-1]
-	if len(l.ForwardLink) != 0 {
-		return errors.New("Last block still has forward-links")
-	}
-	if !l.Equal(latest) {
-		return errors.New("Last block from update is not the same as last block")
-	}
-	log.Lvl2(base, height, len(updates))
-	if base > 1 && height > 1 && len(updates) == 10 {
-		return fmt.Errorf("Shouldn't need 10 blocks with base %d and height %d",
-			base, height)
+
+	// Verify we get the correct number of blocks.
+	for maxHe := 0; maxHe <= maxHeight; maxHe++ {
+		for maxBl := 0; maxBl < 12; maxBl++ {
+			updates, err := service.GetUpdateChain(&GetUpdateChain{
+				LatestID:  root.Hash,
+				MaxHeight: maxHe,
+				MaxBlocks: maxBl,
+			})
+			if err != nil {
+				return err
+			}
+
+			// maxHeight == 0 means to use the maximum height available
+			mh := maxHe
+			if mh == 0 {
+				mh = maxHeight
+			}
+
+			// Calculate the number of blocks, which is a bit tricky, as the number
+			// depends on the maximum forward links.
+			blocks := int(math.Ceil(9./math.Pow(float64(base), float64(mh-1)))) + 1
+			if maxBl > 0 && blocks > maxBl {
+				blocks = maxBl
+			}
+			if blocks > 10 {
+				blocks = 10
+			}
+			log.Lvlf3("base(%2d), mh(%2d), maxBl(%2d), blocks(%2d), len(updates.Update)=%2d",
+				base, mh, maxBl, blocks, len(updates.Update))
+			if len(updates.Update) != blocks {
+				return fmt.Errorf("Should have %d blocks, but got %d", blocks, len(updates.Update))
+			}
+		}
 	}
 	return nil
 }
@@ -1014,10 +1091,10 @@ func newServiceVerify(c *onet.Context) (onet.Service, error) {
 
 // makes a genesis Roster-block
 func makeGenesisRosterArgs(s *Service, el *onet.Roster, parent SkipBlockID,
-	vid []VerifierID, base, height int) (*SkipBlock, error) {
+	vid []VerifierID, base, maxHeight int) (*SkipBlock, error) {
 	sb := NewSkipBlock()
 	sb.Roster = el
-	sb.MaximumHeight = height
+	sb.MaximumHeight = maxHeight
 	sb.BaseHeight = base
 	sb.ParentBlockID = parent
 	sb.VerifierIDs = vid

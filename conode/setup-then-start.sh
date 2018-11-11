@@ -4,4 +4,4 @@ if [ ! -f /conode_data/private.toml ]; then
     ./conode setup --non-interactive
 fi
 
-./conode -debug 2 server
+DEBUG_TIME=true ./conode -debug 2 server

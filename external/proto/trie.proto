@@ -1,0 +1,27 @@
+syntax = "proto2";
+package trie;
+option java_package = "ch.epfl.dedis.lib.proto";
+option java_outer_classname = "TrieProto";
+
+message InteriorNode {
+  required bytes left = 1;
+  required bytes right = 2;
+}
+
+message EmptyNode {
+  repeated bool prefix = 1 [packed=true];
+}
+
+message LeafNode {
+  repeated bool prefix = 1 [packed=true];
+  required bytes key = 2;
+  required bytes value = 3;
+}
+
+// Proof contains an inclusion/absence proof for a key.
+message Proof {
+  repeated InteriorNode interiors = 1;
+  required LeafNode leaf = 2;
+  required EmptyNode empty = 3;
+  required bytes nonce = 4;
+}

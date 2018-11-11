@@ -21,7 +21,7 @@ public enum EpflPermission {
     }
 
     public static EnumSet<EpflPermission> setOf(EpflPermission ... permissions) {
-        EnumSet enumSet = EnumSet.noneOf(EpflPermission.class);
+        EnumSet<EpflPermission> enumSet = EnumSet.noneOf(EpflPermission.class);
         Collections.addAll(enumSet, permissions);
         return enumSet;
     }
@@ -35,7 +35,7 @@ public enum EpflPermission {
     }
 
     public static EnumSet<EpflPermission> setOf(int bitmask) {
-        EnumSet enumSet = EnumSet.noneOf(EpflPermission.class);
+        EnumSet<EpflPermission> enumSet = EnumSet.noneOf(EpflPermission.class);
 
         for (EpflPermission permission : EpflPermission.values()) {
             if (0 != (bitmask & permission.getBitRepresentation())) {

@@ -6,7 +6,7 @@ import (
 	"errors"
 	"github.com/dedis/cothority"
 	bc "github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	lib "github.com/dedis/cothority/omniledger/lib"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
@@ -27,8 +27,23 @@ var ContractOmniledgerEpochID = "omniledgerepoch"
 var ConfigInstanceID = bc.InstanceID{}
 
 // ContractOmniledgerEpoch ...
-func (s *Service) ContractOmniledgerEpoch(cdb bc.CollectionView, inst bc.Instruction,
+func (s *Service) ContractOmniledgerEpoch(cdb bc.ReadOnlyStateTrie, inst bc.Instruction, ctxHash []byte,
 	coins []bc.Coin) (sc []bc.StateChange, c []bc.Coin, err error) {
+	// Verify the darc signature if the config instance does not exist yet.
+	pr, err := cdb.GetProof(ConfigInstanceID.Slice())
+	if err != nil {
+		return
+	}
+	ok, err := pr.Exists(ConfigInstanceID.Slice())
+	if err != nil {
+		return
+	}
+	if ok {
+		err = inst.Verify(cdb, ctxHash)
+		if err != nil {
+			return
+		}
+	}
 
 	switch inst.GetType() {
 	case bc.SpawnType:
@@ -40,7 +55,7 @@ func (s *Service) ContractOmniledgerEpoch(cdb bc.CollectionView, inst bc.Instruc
 	}
 }
 
-func spawnOmniledgerEpoch(cdb bc.CollectionView, inst bc.Instruction, coins []bc.Coin) (sc []bc.StateChange, c []bc.Coin, err error) {
+func spawnOmniledgerEpoch(cdb bc.ReadOnlyStateTrie, inst bc.Instruction, coins []bc.Coin) (sc []bc.StateChange, c []bc.Coin, err error) {
 	// Decode darc and verify it
 
 	darcBuf := inst.Spawn.Args.Search("darc")
@@ -76,7 +91,6 @@ func spawnOmniledgerEpoch(cdb bc.CollectionView, inst bc.Instruction, coins []bc
 
 	tsBuf := inst.Spawn.Args.Search("timestamp")
 	ts := time.Unix(int64(binary.BigEndian.Uint64(tsBuf)), 0)
-
 	if !checkValidTime(ts, VALID_TIME_WINDOW) {
 		return nil, coins, errors.New("Client timestamp is too different from node's clock")
 	}
@@ -117,7 +131,7 @@ func spawnOmniledgerEpoch(cdb bc.CollectionView, inst bc.Instruction, coins []bc
 	}, coins, nil
 }
 
-func invokeOmniledgerEpoch(cdb bc.CollectionView, inst bc.Instruction, coins []bc.Coin) (sc []bc.StateChange, c []bc.Coin, err error) {
+func invokeOmniledgerEpoch(cdb bc.ReadOnlyStateTrie, inst bc.Instruction, coins []bc.Coin) (sc []bc.StateChange, c []bc.Coin, err error) {
 
 	if inst.Invoke.Command == "request_new_epoch" {
 		tsBuf := inst.Spawn.Args.Search("timestamp")
@@ -165,7 +179,7 @@ func invokeOmniledgerEpoch(cdb bc.CollectionView, inst bc.Instruction, coins []b
 }
 
 // ContractNewEpoch ...
-func (s *Service) ContractNewEpoch(cdb bc.CollectionView, inst bc.Instruction,
+func (s *Service) ContractNewEpoch(cdb bc.ReadOnlyStateTrie, inst bc.Instruction,
 	coins []bc.Coin) (sc []bc.StateChange, c []bc.Coin, err error) {
 
 	switch inst.GetType() {

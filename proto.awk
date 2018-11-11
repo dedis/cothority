@@ -25,7 +25,15 @@ a == 1 && /^\/\// { sub( "^// *", "" ); print; next }
 a == 1 { a = 2; print; next }
 
 # state 2: looking for a type structure, start it.
-a == 2 && /^type.*struct/ { print "message", toupper(substr($2,1,1)) substr($2,2), "{"; a = 3; i = 1; next }
+a == 2 && /^type.*struct/ {
+	cap=toupper(substr($2,1,1)) substr($2,2)
+	gsub(/[ \t]+$/, "", cap)
+	mn[$2]=cap
+	print "message " mn[$2] " {";
+	a = 3;
+	i = 1;
+	next
+}
 a == 2 { print; next }
 
 # state 3: processing fields of the struct
@@ -34,6 +42,8 @@ a == 2 { print; next }
 a == 3 && /^\}/ { print; a = 2; next }
 #   detect "// optional" tag in Go -> state 4
 a == 3 && / *\/\/ optional/ { a = 4; next }
+#   ignore blank lines
+a == 3 && /^[[:blank:]]*$/ { next }
 #   ignore hidden fields
 a == 3 && /^[[:blank:]]*[[:lower:]]/ { next }
 #   copy comments through
@@ -63,6 +73,8 @@ a == 4 { sub(/\/\/.*/, "", $2)
 		}
 
 function print_field( optional, typ, name, ind ){
+	packed = ""
+	
 	if ( typ in tr )
 		typ = tr[typ]
 	if ( name ~ /bytes/ ){
@@ -80,6 +92,9 @@ function print_field( optional, typ, name, ind ){
 	if ( typ ~ /^\[\]/ ){
 		optional = "repeated"
 		sub(/^\[\]/, "", typ)
+		if (typ ~ /^(int|u?int32|u?int64|bool)$/) {
+			packed = " [packed=true]"
+		}
 	}
 	sub(/^\[.*\]byte$/, "bytes", typ)
 	sub(/^time.Duration$/, "sint64", typ)
@@ -89,5 +104,13 @@ function print_field( optional, typ, name, ind ){
 	sub(/^int64$/, "sint64", typ)
 	sub(/^int$/, "sint32", typ)
 	sub(/^\*/, "", typ)
-	print sprintf("  %s %s %s = %d;", optional, typ, tolower(name), ind )
+
+	# If we remembered a message name like this type, then
+	# use it.
+	if ( mn[typ] ) {
+		typ=mn[typ]
+	}
+	
+	print sprintf("  %s %s %s = %d%s;", optional, typ, tolower(name), ind, packed )
 }
+

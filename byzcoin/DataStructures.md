@@ -94,7 +94,7 @@ track it in order to be able to send in Invoke instructions on it later.
 Once the leader receives the ClientTransactions, it will send the individual
 instructions to the corresponding contracts and/or objects. Each call to a
 contract/object will return 0 or more StateChanges that define how to update the
-state of the collection.
+state of the trie.
 
 ByzCoin will take care that the following instruction/StateChanges are
 respected. *This might be too restrictive*:
@@ -103,7 +103,7 @@ respected. *This might be too restrictive*:
 - Delete: only Delete-Action on the invoked object
 
 ```
-// StateChange is one new state that will be applied to the collection.
+// StateChange is one new state that will be applied to the trie.
 message StateChange {
   // StateAction can be any of Create, Update, Remove
   required sint32 stateaction = 1;
@@ -130,8 +130,8 @@ key is supposed to be stored. The proof has three parts:
 
 1. _InclusionProof_ proofs the presence or absence of the key. In case of
 the key being present, the value is included in the proof.
-2. _Latest_ is used to verify the merkle tree root used in the collection-proof
-is stored in the latest skipblock.
+2. _Latest_ is used to verify the merkle tree root used in the proof is stored
+   in the latest skipblock.
 3. _Links_ proves that the latest skipblock is part of the skipchain.
 
 So the protobuf-definition of a proof is the following:
@@ -139,7 +139,7 @@ So the protobuf-definition of a proof is the following:
 ```
 message Proof {
 	// InclusionProof is the deserialized InclusionProof
-	collection.Proof InclusionProof = 1;
+	trie.Proof InclusionProof = 1;
 	// Providing the latest skipblock to retrieve the Merkle tree root.
 	skipchain.SkipBlock Latest = 2;
 	// Proving the path to the latest skipblock. The first ForwardLink has an
@@ -174,8 +174,8 @@ message skipchain.ForwardLink{
 During verification, the verifier then can do the following to make sure that the
 key/value pair returned is valid:
 
-1. Verify the inclusion proof of the key in the merkle tree root of the collection.
-This is described in the [colleciton](#collection) section.
+1. Verify the inclusion proof of the key in the merkle tree root of the trie
+This is described in the [trie](trie/README.md) package.
 2. Verify the merkle tree root in the InclusionProof is the same as the one
 given in the latest skipblock
 3. Verify the Links are a valid chain from the genesis block to the latest block.

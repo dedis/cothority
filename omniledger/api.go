@@ -2,9 +2,10 @@ package omniledger
 
 import (
 	"encoding/binary"
+	"errors"
 	"github.com/dedis/cothority"
 	bc "github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	lib "github.com/dedis/cothority/omniledger/lib"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
@@ -31,10 +32,10 @@ func NewClient(ID skipchain.SkipBlockID, Roster onet.Roster) *Client {
 	}
 }
 
-func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
+func NewOmniLedger(req *CreateOmniLedger) (*bc.Client, *CreateOmniLedgerResponse,
 	error) {
 	// Create client
-	c := NewClient(nil, req.Roster)
+	c := bc.NewClient(nil, req.Roster)
 
 	// Fill request's missing fields
 	owner := darc.NewSignerEd25519(nil, nil)
@@ -66,11 +67,16 @@ func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 	tsBuf := make([]byte, 8)
 	binary.BigEndian.PutUint64(tsBuf, uint64(req.Timestamp.Unix()))
 
-	instr := &bc.Instruction{
+	signerCtrs, err := c.GetSignerCounters(owner.Identity().String())
+	if err != nil {
+		return nil, nil, err
+	}
+	if len(signerCtrs.Counters) != 1 {
+		return nil, nil, errors.New("incorrect signer counter length")
+	}
+
+	instr := bc.Instruction{
 		InstanceID: bc.NewInstanceID(d.GetBaseID()),
-		Nonce:      bc.GenNonce(),
-		Index:      0,
-		Length:     1,
 		Spawn: &bc.Spawn{
 			ContractID: ContractOmniledgerEpochID,
 			Args: []bc.Argument{
@@ -81,17 +87,19 @@ func NewOmniLedger(req *CreateOmniLedger) (*Client, *CreateOmniLedgerResponse,
 				bc.Argument{Name: "timestamp", Value: tsBuf},
 			},
 		},
+		SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 	}
-	err = instr.SignBy(d.GetBaseID(), owner)
-	if err != nil {
-		return nil, nil, err
+
+	spawnTx := &bc.ClientTransaction{
+		Instructions: bc.Instructions{instr},
 	}
+	spawnTx.SignWith(owner)
 
 	olInstID := instr.DeriveID("")
 
 	// Add genesismsg and instr
 	req.IBGenesisMsg = ibMsg
-	req.SpawnInstruction = instr
+	req.SpawnTx = spawnTx
 
 	// Create reply struct
 	req.Version = bc.CurrentVersion
@@ -111,22 +119,34 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 	// Connect to IB via client
 	ibClient := bc.NewClient(req.IBID, req.IBRoster)
 
+	signerCtrs, err := ibClient.GetSignerCounters(req.Owner.Identity().String())
+	if err != nil {
+		return nil, err
+	}
+	if len(signerCtrs.Counters) != 1 {
+		return nil, errors.New("incorrect signer counter length")
+	}
+
+	tsBuf := make([]byte, 8)
+	binary.BigEndian.PutUint64(tsBuf, uint64(req.Timestamp.Unix()))
+
 	// Prepare and send request_new_epoch instruction to IB
 	reqNewEpoch := bc.Instruction{
-		Nonce:  bc.GenNonce(),
-		Index:  0,
-		Length: 1,
+		InstanceID: req.OLInstanceID,
 		Invoke: &bc.Invoke{
 			Command: "request_new_epoch",
+			Args: []bc.Argument{
+				bc.Argument{Name: "timestamp", Value: tsBuf},
+			},
 		},
+		SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 	}
-	reqNewEpoch.SignBy(req.IBDarcID.GetBaseID(), req.Owner)
-
 	tx := bc.ClientTransaction{
 		Instructions: []bc.Instruction{reqNewEpoch},
 	}
+	tx.SignWith(req.Owner)
 
-	_, err := ibClient.AddTransactionAndWait(tx, 10)
+	_, err = ibClient.AddTransactionAndWait(tx, 10)
 	if err != nil {
 		return nil, err
 	}
@@ -137,8 +157,8 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		return nil, err
 	}
 
-	cc := &lib.ChainConfig{}
-	err = gpr.Proof.ContractValue(cothority.Suite, ContractOmniledgerEpochID, cc)
+	var cc lib.ChainConfig
+	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, cc)
 	if err != nil {
 		return nil, err
 	}
@@ -152,9 +172,7 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 		shardIndBuff := make([]byte, 8)
 		binary.PutVarint(shardIndBuff, int64(i))
 		newEpoch := bc.Instruction{
-			Nonce:  bc.GenNonce(),
-			Index:  0,
-			Length: 1,
+			// TODO: Must give the instance id of the shard -> Save them when creating the shard ledgers
 			Invoke: &bc.Invoke{
 				Command: "new_epoch",
 				Args: []bc.Argument{
@@ -164,8 +182,9 @@ func (c *Client) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 				},
 			},
 		}
-		newEpoch.SignBy(req.ShardDarcIDs[i].GetBaseID(), req.Owner)
+		//newEpoch.SignBy(req.ShardDarcIDs[i].GetBaseID(), req.Owner)
 		tx.Instructions[0] = newEpoch
+		tx.SignWith(req.Owner)
 
 		newRoster := cc.ShardRosters[i]
 		oldRoster := req.ShardRosters[i]

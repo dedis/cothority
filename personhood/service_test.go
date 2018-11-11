@@ -9,7 +9,7 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/contracts"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	pop "github.com/dedis/cothority/pop/service"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
@@ -42,10 +42,10 @@ func TestService_LinkPoP(t *testing.T) {
 		ID:      s.olID,
 	})
 	require.Nil(t, err)
-	require.True(t, gpr.Proof.InclusionProof.Match())
-	_, vals, err := gpr.Proof.KeyValue()
+	require.True(t, gpr.Proof.InclusionProof.Match(s.serCoin.Slice()))
+	_, _, cid, _, err := gpr.Proof.KeyValue()
 	require.Nil(t, err)
-	require.Equal(t, "coin", string(vals[1]))
+	require.Equal(t, "coin", cid)
 }
 
 // Stores and loads a personhood data.
@@ -409,14 +409,19 @@ func (s *sStruct) createParty(t *testing.T, orgs, attendees int) {
 func (s *sStruct) createPoPSpawn(t *testing.T) {
 	log.Lvl2("Publishing the party to the ledger")
 
+	signerCtrs, err := s.ols.GetSignerCounters(&byzcoin.GetSignerCounters{
+		SignerIDs:   []string{s.signer.Identity().String()},
+		SkipchainID: s.olID,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(signerCtrs.Counters))
+
 	fsBuf, err := protobuf.Encode(&s.party)
 	require.Nil(t, err)
 	dID := s.gMsg.GenesisDarc.GetBaseID()
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(dID),
-			Index:      0,
-			Length:     1,
 			Spawn: &byzcoin.Spawn{
 				ContractID: pop.ContractPopParty,
 				Args: byzcoin.Arguments{{
@@ -424,9 +429,10 @@ func (s *sStruct) createPoPSpawn(t *testing.T) {
 					Value: fsBuf,
 				}},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	err = ctx.Instructions[0].SignBy(dID, s.signer)
+	err = ctx.SignWith(s.signer)
 	require.Nil(t, err)
 	_, err = s.ols.AddTransaction(&byzcoin.AddTxRequest{
 		Version:       byzcoin.CurrentVersion,
@@ -440,6 +446,14 @@ func (s *sStruct) createPoPSpawn(t *testing.T) {
 
 func (s *sStruct) invokePoPFinalize(t *testing.T) {
 	log.Lvl2("finalizing the party in the ledger")
+
+	signerCtrs, err := s.ols.GetSignerCounters(&byzcoin.GetSignerCounters{
+		SignerIDs:   []string{s.signer.Identity().String()},
+		SkipchainID: s.olID,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(signerCtrs.Counters))
+
 	fsBuf, err := protobuf.Encode(&s.party)
 	require.Nil(t, err)
 	s.service = key.NewKeyPair(tSuite)
@@ -448,8 +462,6 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: s.popI,
-			Index:      0,
-			Length:     1,
 			Invoke: &byzcoin.Invoke{
 				Command: "Finalize",
 				Args: byzcoin.Arguments{
@@ -463,10 +475,11 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 					},
 				},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
 	dID := s.gMsg.GenesisDarc.GetBaseID()
-	err = ctx.Instructions[0].SignBy(dID, s.signer)
+	err = ctx.SignWith(s.signer)
 	require.Nil(t, err)
 	_, err = s.ols.AddTransaction(&byzcoin.AddTxRequest{
 		Version:       byzcoin.CurrentVersion,
@@ -485,19 +498,19 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 		ID:      s.olID,
 	})
 	require.Nil(t, err)
-	require.True(t, gpr.Proof.InclusionProof.Match())
-	_, vals, err := gpr.Proof.KeyValue()
+	require.True(t, gpr.Proof.InclusionProof.Match(s.serCoin.Slice()))
+	_, _, _, dID, err = gpr.Proof.KeyValue()
 	require.Nil(t, err)
 	gpr, err = s.ols.GetProof(&byzcoin.GetProof{
 		Version: byzcoin.CurrentVersion,
-		Key:     vals[2],
+		Key:     dID,
 		ID:      s.olID,
 	})
 	require.Nil(t, err)
-	require.True(t, gpr.Proof.InclusionProof.Match())
-	_, vals, err = gpr.Proof.KeyValue()
+	require.True(t, gpr.Proof.InclusionProof.Match(dID))
+	_, v0, _, _, err := gpr.Proof.KeyValue()
 	require.Nil(t, err)
-	s.serDarc, err = darc.NewFromProtobuf(vals[0])
+	s.serDarc, err = darc.NewFromProtobuf(v0)
 	require.Nil(t, err)
 	s.serSig = darc.NewSignerEd25519(s.service.Public, s.service.Private)
 
@@ -516,20 +529,20 @@ func (s *sStruct) invokePoPFinalize(t *testing.T) {
 			ID:      s.olID,
 		})
 		require.Nil(t, err)
-		require.True(t, gpr.Proof.InclusionProof.Match())
-		_, vals, err := gpr.Proof.KeyValue()
+		require.True(t, gpr.Proof.InclusionProof.Match(s.attCoin[i].Slice()))
+		_, _, _, dID, err := gpr.Proof.KeyValue()
 		require.Nil(t, err)
 		gpr, err = s.ols.GetProof(&byzcoin.GetProof{
 			Version: byzcoin.CurrentVersion,
-			Key:     vals[2],
+			Key:     dID,
 			ID:      s.olID,
 		})
 		require.Nil(t, err)
-		require.True(t, gpr.Proof.InclusionProof.Match())
-		_, vals, err = gpr.Proof.KeyValue()
+		require.True(t, gpr.Proof.InclusionProof.Match(dID))
+		_, v0, _, _, err = gpr.Proof.KeyValue()
 		require.Nil(t, err)
 		var d darc.Darc
-		err = protobuf.DecodeWithConstructors(vals[0], &d, network.DefaultConstructors(cothority.Suite))
+		err = protobuf.DecodeWithConstructors(v0, &d, network.DefaultConstructors(cothority.Suite))
 		require.Nil(t, err)
 		s.attDarc = append(s.attDarc, &d)
 	}
@@ -542,23 +555,28 @@ func (s *sStruct) coinGet(t *testing.T, inst byzcoin.InstanceID) (ci byzcoin.Coi
 		ID:      s.olID,
 	})
 	require.Nil(t, err)
-	require.True(t, gpr.Proof.InclusionProof.Match())
-	_, vals, err := gpr.Proof.KeyValue()
+	require.True(t, gpr.Proof.InclusionProof.Match(inst.Slice()))
+	_, v0, cid, _, err := gpr.Proof.KeyValue()
 	require.Nil(t, err)
-	require.Equal(t, contracts.ContractCoinID, string(vals[1]))
-	err = protobuf.Decode(vals[0], &ci)
+	require.Equal(t, contracts.ContractCoinID, cid)
+	err = protobuf.Decode(v0, &ci)
 	require.Nil(t, err)
 	return
 }
 
 func (s *sStruct) coinTransfer(t *testing.T, from, to byzcoin.InstanceID, coins uint64, d *darc.Darc, sig darc.Signer) {
+	signerCtrs, err := s.ols.GetSignerCounters(&byzcoin.GetSignerCounters{
+		SignerIDs:   []string{sig.Identity().String()},
+		SkipchainID: s.olID,
+	})
+	require.NoError(t, err)
+	require.Equal(t, 1, len(signerCtrs.Counters))
+
 	var cBuf = make([]byte, 8)
 	binary.LittleEndian.PutUint64(cBuf, coins)
 	ctx := byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: from,
-			Index:      0,
-			Length:     1,
 			Invoke: &byzcoin.Invoke{
 				Command: "transfer",
 				Args: []byzcoin.Argument{{
@@ -570,10 +588,11 @@ func (s *sStruct) coinTransfer(t *testing.T, from, to byzcoin.InstanceID, coins 
 						Value: to.Slice(),
 					}},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	require.Nil(t, ctx.Instructions[0].SignBy(d.GetBaseID(), sig))
-	_, err := s.ols.AddTransaction(&byzcoin.AddTxRequest{
+	require.Nil(t, ctx.SignWith(sig))
+	_, err = s.ols.AddTransaction(&byzcoin.AddTxRequest{
 		Version:       byzcoin.CurrentVersion,
 		SkipchainID:   s.olID,
 		Transaction:   ctx,

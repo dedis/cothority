@@ -14,11 +14,18 @@ main(){
 
 testCreateStoreRead(){
 	runCoBG 1 2 3
-    runGrepSed "export BC=" "" ./"$APP" create --roster public.toml --interval .5s
+    runGrepSed "export BC=" "" ./bcadmin create --roster public.toml --interval .5s
 	eval $SED
 	[ -z "$BC" ] && exit 1
-    testOK ./"$APP" add spawn:xxx -identity ed25519:foo
-	testGrep "ed25519:foo" ./"$APP" show
+    testOK ./bcadmin add spawn:xxx -identity ed25519:foo
+	testGrep "spawn:xxx - \"ed25519:foo\"" ./bcadmin show
+	# Should not allow overwrite on rule without replace.
+    testFail ./bcadmin add spawn:xxx -identity "& ed25519:foo ed25519:bar"
+    testOK ./bcadmin add spawn:xxx -replace -identity "& ed25519:foo ed25519:bar"
+	testGrep "spawn:xxx - \"& ed25519:foo ed25519:bar\"" ./bcadmin show
+	# Do not allow both, neither.
+    testFail ./bcadmin add spawn:xxx -identity id -expression exp
+    testFail ./bcadmin add spawn:xxx
 }
 
 main

@@ -8,7 +8,7 @@ import (
 	"github.com/BurntSushi/toml"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/sign/eddsa"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -188,20 +188,21 @@ func (c *Client) GetKeys(dst network.Address, partyID []byte) ([]kyber.Point, er
 }
 
 // StoreInstanceID asks the service to store an instanceID for a given party.
-func (c *Client) StoreInstanceID(dst network.Address, partyID []byte, instanceID byzcoin.InstanceID) error {
+func (c *Client) StoreInstanceID(dst network.Address, partyID []byte, instanceID byzcoin.InstanceID,
+	darcID darc.ID) error {
 	si := &network.ServerIdentity{Address: dst}
 	ret := &StoreInstanceIDReply{}
 
-	return c.SendProtobuf(si, &StoreInstanceID{partyID, instanceID}, ret)
+	return c.SendProtobuf(si, &StoreInstanceID{partyID, instanceID, darcID}, ret)
 }
 
 // GetInstanceID asks the service for an instanceID for a given party.
-func (c *Client) GetInstanceID(dst network.Address, partyID []byte) (byzcoin.InstanceID, error) {
+func (c *Client) GetInstanceID(dst network.Address, partyID []byte) (byzcoin.InstanceID, darc.ID, error) {
 	si := &network.ServerIdentity{Address: dst}
 	ret := &GetInstanceIDReply{}
 
 	err := c.SendProtobuf(si, &GetInstanceID{partyID}, ret)
-	return ret.InstanceID, err
+	return ret.InstanceID, ret.DarcID, err
 }
 
 // StoreSigner asks the service to store an Signer for a given party.

@@ -6,7 +6,7 @@ This holds the messages used to communicate with the service over the network.
 
 import (
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/network"
@@ -28,10 +28,11 @@ func init() {
 // package pop;
 // type :map\[string\]FinalStatement:map<string, FinalStatement>
 // type :byzcoin.InstanceID:bytes
+// type :darc.ID:bytes
 // import "onet.proto";
 // import "darc.proto";
 //
-// option java_package = "ch.epfl.dedis.proto";
+// option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "PoPProto";
 
 // ShortDesc represents Short Description of Pop party
@@ -193,6 +194,7 @@ type GetFinalStatementsReply struct {
 type StoreInstanceID struct {
 	PartyID    []byte
 	InstanceID byzcoin.InstanceID
+	DarcID     darc.ID
 }
 
 // StoreInstanceIDReply is an empty reply
@@ -207,6 +209,7 @@ type GetInstanceID struct {
 // GetInstanceIDReply is the InstanceID for the party
 type GetInstanceIDReply struct {
 	InstanceID byzcoin.InstanceID
+	DarcID     darc.ID
 }
 
 // StoreSigner writes an Signer from ByzCoin to a FinalStatement.

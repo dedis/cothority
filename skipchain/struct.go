@@ -551,31 +551,14 @@ func (fl *ForwardLink) Copy() *ForwardLink {
 	}
 }
 
-// Verify checks the signature against a list of public keys. This list must
-// be in the same order as the Roster that signed the message.
+// Verify checks the signature against a list of public keys. The list must
+// correspond to the block roster to match the signature.
 // It returns nil if the signature is correct, or an error if not.
 func (fl *ForwardLink) Verify(suite cosi.Suite, pubs []kyber.Point) error {
 	if bytes.Compare(fl.Signature.Msg, fl.Hash()) != 0 {
 		return errors.New("wrong hash of forward link")
 	}
-	// If we allow view-change, then we should try to verify the signature
-	// using all the valid rotations of the given public key slice.
-	if enableViewChange {
-		n := len(pubs)
-		if n == 0 {
-			return errors.New("no public keys")
-		}
-		for i := 0; i < n; i++ {
-			err := cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig,
-				cosi.NewThresholdPolicy(byzcoinx.Threshold(n)))
-			if err == nil {
-				return nil
-			}
-			pubs = append(pubs[1:], pubs[0])
-			continue
-		}
-		return errors.New("no successful view-change verification")
-	}
+
 	// This calculation must match the one in byzcoinx.
 	return cosi.Verify(suite, pubs, fl.Signature.Msg, fl.Signature.Sig,
 		cosi.NewThresholdPolicy(byzcoinx.Threshold(len(pubs))))
@@ -646,12 +629,6 @@ func (db *SkipBlockDB) GetByID(sbID SkipBlockID) *SkipBlock {
 func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 	var result []SkipBlockID
 	err := db.Update(func(tx *bolt.Tx) error {
-		fl := blocks[len(blocks)-1].ForwardLink
-		if len(fl) > 0 {
-			if db.GetByID(fl[len(fl)-1].To) == nil {
-				return errors.New("can't have last block pointing into empty space")
-			}
-		}
 		for i, sb := range blocks {
 			sbOld, err := db.getFromTx(tx, sb.Hash)
 			if err != nil {
@@ -713,7 +690,7 @@ func (db *SkipBlockDB) StoreBlocks(blocks []*SkipBlock) ([]SkipBlockID, error) {
 	if db.callback != nil {
 		for _, r := range result {
 			if err := db.callback(r); err != nil {
-				log.Error(err)
+				log.Errorf("Error while adding block %x: %s", r, err)
 			}
 		}
 	}

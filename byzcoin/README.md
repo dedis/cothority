@@ -119,7 +119,7 @@ transactions onto the ByzCoin. If one conode is creating differing contract outp
 (for example, it is cheating), it's output will not be integrated into the
 global shared state.
 
-## From Client to the Collection
+## From Client to the Trie
 
 In ByzCoin we define the following path from client instructions to
 global state changes:
@@ -141,18 +141,14 @@ Current authentications support darc-signatures, later authentications will also
 support use of coins. It is the contracts' responsibility to verify that enough
 coins are available.
 
-## Collection
+## Trie
 
-The collection is a Merkle-tree based data structure to securely and
-verifiably store key / value associations on untrusted nodes. The library
-in this package focuses on ease of use and flexibility, allowing to easily
-develop applications ranging from simple client-server storage to fully
-distributed and decentralized ledgers with minimal bootstrapping time.
-
-Our collection used is a library that has been
-[developed for a PhD project](collection/README.md) and
-can do much more than simple Merkle-trees. Depending on the future direction
-of the project, it might be replaced by a simpler Merkle-tree implementation.
+Trie (from the `trie` package) is a Merkle-tree based data structure to
+securely and verifiably store key / value associations on untrusted nodes. The
+library in this package focuses on ease of use and flexibility, allowing to
+easily develop applications ranging from simple client-server storage to fully
+distributed and decentralized ledgers with minimal bootstrapping time. You can
+read more about it [here](trie/README.md).
 
 ## Darc
 
@@ -163,9 +159,16 @@ threshold number of keys be delegated. So instead of having a fixed list of
 identities that are allowed to access a resource, the goal is to have an
 evolving description of who is allowed or not to access a certain resource.
 
-For more information, see [darc/README.md](darc/README.md).
+For more information, see [the Darc README](../darc/README.md).
 
 ## Contracts
 
 - [Contracts](Contracts.md) gives a short overview how contracts work and
 some examples how to use them.
+
+# Administration
+
+The tool to create and configure a running ByzCoin ledger is called
+`bcadmin`. More information on how to use it is in the
+[README](bcadmin/README.md), and another example of how to use it is in the
+[Eventlog directory](../eventlog/el/README.md).

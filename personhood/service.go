@@ -40,8 +40,10 @@ type Service struct {
 // LinkPoP stores a link to a pop-party to accept this configuration. It will
 // try to create an account to receive payments from clients.
 func (s *Service) LinkPoP(lp *LinkPoP) (*StringReply, error) {
+	log.Lvlf2("%s: Linking pop: %+v", s.ServerIdentity(), lp)
 	s.storage.Parties[string(lp.Party.InstanceID.Slice())] = &lp.Party
 	s.save()
+	log.Lvlf2("%s: parties: %+v", s.ServerIdentity(), s.storage.Parties)
 	return &StringReply{}, nil
 }
 
@@ -51,7 +53,7 @@ func (s *Service) RegisterQuestionnaire(rq *RegisterQuestionnaire) (*StringReply
 	idStr := string(rq.Questionnaire.ID)
 	s.storage.Questionnaires[idStr] = &rq.Questionnaire
 	s.storage.Replies[idStr] = &Reply{}
-	return &StringReply{}, nil
+	return &StringReply{}, s.save()
 }
 
 // ListQuestionnaires requests all questionnaires from Start, but not more than
@@ -110,9 +112,9 @@ func (s *Service) AnswerQuestionnaire(aq *AnswerQuestionnaire) (*StringReply, er
 	}
 	q.Balance -= q.Reward
 	r.Users = append(r.Users, aq.Account)
-	// TODO: send reard to account
+	// TODO: send reward to account
 
-	return &StringReply{}, nil
+	return &StringReply{}, s.save()
 }
 
 // TopupQuestionnaire can be used to add new balance to a questionnaire.
@@ -133,8 +135,9 @@ func (s *Service) SendMessage(sm *SendMessage) (*StringReply, error) {
 		return nil, errors.New("this message-ID already exists")
 	}
 	s.storage.Messages[idStr] = &sm.Message
-	s.storage.Read[idStr] = &readMsg{}
-	return &StringReply{}, nil
+	s.storage.Read[idStr] = &readMsg{[]byzcoin.InstanceID{sm.Message.Author}}
+
+	return &StringReply{}, s.save()
 }
 
 // ListMessages sorts all messages by balance and sends back the messages from
@@ -143,10 +146,17 @@ func (s *Service) ListMessages(lm *ListMessages) (*ListMessagesReply, error) {
 	log.Lvl2(s.ServerIdentity(), lm)
 	var mreply []Message
 	for _, q := range s.storage.Messages {
-		mreply = append(mreply, *q)
+		for _, r := range s.storage.Read[string(q.ID)].Readers {
+			if r.Equal(lm.ReaderID) {
+				continue
+			}
+		}
+		if q.Balance >= q.Reward {
+			mreply = append(mreply, *q)
+		}
 	}
 	sort.Slice(mreply, func(i, j int) bool {
-		return mreply[i].Balance > mreply[j].Balance
+		return mreply[i].score() > mreply[j].score()
 	})
 	if len(mreply) < lm.Start {
 		return &ListMessagesReply{}, nil
@@ -167,6 +177,7 @@ func (s *Service) ListMessages(lm *ListMessages) (*ListMessagesReply, error) {
 		lmr.Subjects = append(lmr.Subjects, msg.Subject)
 		lmr.Balances = append(lmr.Balances, msg.Balance)
 		lmr.Rewards = append(lmr.Rewards, msg.Reward)
+		lmr.PartyIIDs = append(lmr.PartyIIDs, msg.PartyIID)
 	}
 	return lmr, nil
 }
@@ -175,23 +186,33 @@ func (s *Service) ListMessages(lm *ListMessages) (*ListMessagesReply, error) {
 func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 	msg := s.storage.Messages[string(rm.MsgID)]
 	if msg == nil {
-		return nil, errors.New("no such subject")
+		return nil, errors.New("no such messageID")
 	}
 	party := s.storage.Parties[string(rm.PartyIID)]
 	if party == nil {
-		return nil, errors.New("no such party")
+		return nil, errors.New("no such partyIID")
 	}
-	if msg.Balance < msg.Reward {
-		return &ReadMessageReply{*msg}, nil
+	if msg.Balance < msg.Reward ||
+		msg.Author.Equal(rm.Reader) {
+		return &ReadMessageReply{*msg, false}, nil
 	}
 	read := s.storage.Read[string(msg.ID)]
 	for _, reader := range read.Readers {
 		if reader.Equal(rm.Reader) {
-			return &ReadMessageReply{*msg}, nil
+			return &ReadMessageReply{*msg, false}, nil
 		}
 	}
 	msg.Balance -= msg.Reward
 	read.Readers = append(read.Readers, rm.Reader)
+
+	cl := byzcoin.NewClient(party.ByzCoinID, *party.FinalStatement.Desc.Roster)
+	signerCtrs, err := cl.GetSignerCounters(party.Signer.Identity().String())
+	if err != nil {
+		return nil, err
+	}
+	if len(signerCtrs.Counters) != 1 {
+		return nil, errors.New("incorrect version in signer counter")
+	}
 
 	cBuf := make([]byte, 8)
 	binary.LittleEndian.PutUint64(cBuf, msg.Reward)
@@ -205,8 +226,6 @@ func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 	ctx := byzcoin.ClientTransaction{
 		Instructions: []byzcoin.Instruction{{
 			InstanceID: byzcoin.NewInstanceID(partyCoin.Sum(nil)),
-			Index:      0,
-			Length:     1,
 			Invoke: &byzcoin.Invoke{
 				Command: "transfer",
 				Args: []byzcoin.Argument{{
@@ -218,19 +237,20 @@ func (s *Service) ReadMessage(rm *ReadMessage) (*ReadMessageReply, error) {
 						Value: rm.Reader.Slice(),
 					}},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	err = ctx.Instructions[0].SignBy(party.Darc.GetBaseID(), party.Signer)
+
+	err = ctx.SignWith(party.Signer)
 	if err != nil {
 		return nil, errors.New("couldn't sign: " + err.Error())
 	}
-	cl := byzcoin.NewClient(party.ByzCoinID, *party.FinalStatement.Desc.Roster)
 	_, err = cl.AddTransactionAndWait(ctx, 10)
 	if err != nil {
 		return nil, errors.New("couldn't send reward: " + err.Error())
 	}
 
-	return &ReadMessageReply{*msg}, nil
+	return &ReadMessageReply{*msg, true}, s.save()
 }
 
 // TopupMessage to fill up the balance of a message

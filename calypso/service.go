@@ -10,15 +10,14 @@
 package calypso
 
 import (
-	"bytes"
 	"errors"
 	"time"
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/calypso/protocol"
+	"github.com/dedis/cothority/darc"
 	dkgprotocol "github.com/dedis/cothority/dkg"
-	"github.com/dedis/cothority/ocs/protocol"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/share"
 	"github.com/dedis/kyber/util/random"
@@ -32,7 +31,7 @@ import (
 var calypsoID onet.ServiceID
 
 // ServiceName of the secret-management part of Calypso.
-var ServiceName = "calypso"
+var ServiceName = "Calypso"
 
 // dkgTimeout is how long the system waits for the DKG to finish
 const propagationTimeout = 10 * time.Second
@@ -100,6 +99,7 @@ func (s *Service) CreateLTS(cl *CreateLTS) (reply *CreateLTSReply, err error) {
 		s.storage.Rosters[string(reply.LTSID)] = &cl.Roster
 		s.storage.OLIDs[string(reply.LTSID)] = cl.BCID
 		s.storage.Unlock()
+		s.save()
 		reply.X = shared.X
 	case <-time.After(propagationTimeout):
 		return nil, errors.New("dkg didn't finish in time")
@@ -119,14 +119,14 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	log.Lvl2("Re-encrypt the key to the public key of the reader")
 
 	var read Read
-	if err := dkr.Read.ContractValue(cothority.Suite, ContractReadID, &read); err != nil {
+	if err := dkr.Read.VerifyAndDecode(cothority.Suite, ContractReadID, &read); err != nil {
 		return nil, errors.New("didn't get a read instance: " + err.Error())
 	}
 	var write Write
-	if err := dkr.Write.ContractValue(cothority.Suite, ContractWriteID, &write); err != nil {
+	if err := dkr.Write.VerifyAndDecode(cothority.Suite, ContractWriteID, &write); err != nil {
 		return nil, errors.New("didn't get a write instance: " + err.Error())
 	}
-	if !read.Write.Equal(byzcoin.NewInstanceID(dkr.Write.InclusionProof.Key)) {
+	if !read.Write.Equal(byzcoin.NewInstanceID(dkr.Write.InclusionProof.Key())) {
 		return nil, errors.New("read doesn't point to passed write")
 	}
 	s.storage.Lock()
@@ -163,7 +163,7 @@ func (s *Service) DecryptKey(dkr *DecryptKey) (reply *DecryptKeyReply, err error
 	log.Lvlf2("Public key is: %s", ocsProto.Xc)
 	ocsProto.VerificationData, err = protobuf.Encode(verificationData)
 	if err != nil {
-		return nil, errors.New("couldn't marshal verificationdata: " + err.Error())
+		return nil, errors.New("couldn't marshal verification data: " + err.Error())
 	}
 
 	// Make sure everything used from the s.Storage structure is copied, so
@@ -206,7 +206,7 @@ func (s *Service) SharedPublic(req *SharedPublic) (reply *SharedPublicReply, err
 	shared, ok := s.storage.Shared[string(req.LTSID)]
 	s.storage.Unlock()
 	if !ok {
-		return nil, errors.New("didn't find this skipchain")
+		return nil, errors.New("didn't find this Long Term Secret")
 	}
 	return &SharedPublicReply{X: shared.X}, nil
 }
@@ -262,15 +262,15 @@ func (s *Service) verifyReencryption(rc *protocol.Reencrypt) bool {
 		if err != nil {
 			return err
 		}
-		_, vs, err := verificationData.Proof.KeyValue()
+		_, v0, contractID, _, err := verificationData.Proof.KeyValue()
 		if err != nil {
 			return errors.New("proof cannot return values: " + err.Error())
 		}
-		if bytes.Compare(vs[1], []byte(ContractReadID)) != 0 {
+		if contractID != ContractReadID {
 			return errors.New("proof doesn't point to read instance")
 		}
 		var r Read
-		err = protobuf.DecodeWithConstructors(vs[0], &r, network.DefaultConstructors(cothority.Suite))
+		err = protobuf.DecodeWithConstructors(v0, &r, network.DefaultConstructors(cothority.Suite))
 		if err != nil {
 			return errors.New("couldn't decode read data: " + err.Error())
 		}
@@ -296,7 +296,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	s := &Service{
 		ServiceProcessor: onet.NewServiceProcessor(c),
 	}
-	if err := s.RegisterHandlers(s.CreateLTS, s.DecryptKey); err != nil {
+	if err := s.RegisterHandlers(s.CreateLTS, s.DecryptKey, s.SharedPublic); err != nil {
 		return nil, errors.New("couldn't register messages")
 	}
 	byzcoin.RegisterContract(c, ContractWriteID, s.ContractWrite)

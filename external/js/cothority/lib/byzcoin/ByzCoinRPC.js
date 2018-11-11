@@ -155,10 +155,7 @@ class ByzCoinRPC {
     if (!proof.matches()) {
       throw "could'nt find darc";
     }
-    if (proof.values.length !== 3) {
-      throw "incorrect number of values in proof";
-    }
-    let contract = Array.from(proof.values[1])
+    let contract = Array.from(proof.stateChangeBody.contractID)
       .map(c => String.fromCharCode(c))
       .join("");
     if (!(contract === expectedContract)) {
@@ -188,13 +185,13 @@ class ByzCoinRPC {
     return this.getProof(socket, skipchainId, new Uint8Array(32))
       .then(proof => {
         ByzCoinRPC.checkProof(proof, "config");
-        config = Config.fromByteBuffer(proof.values[0]);
+        config = Config.fromByteBuffer(proof.stateChangeBody.value);
 
-        return ByzCoinRPC.getProof(socket, skipchainId, proof.values[2]);
+        return ByzCoinRPC.getProof(socket, skipchainId, proof.stateChangeBody.darcID);
       })
       .then(proof2 => {
         ByzCoinRPC.checkProof(proof2, "darc");
-        genesisDarc = Darc.fromByteBuffer(proof2.values[0]);
+        genesisDarc = Darc.fromByteBuffer(proof2.stateChangeBody.value);
         let skipchain = new SkipchainClient(
           Kyber.curve.newCurve("edwards25519"),
           config.roster,

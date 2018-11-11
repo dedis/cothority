@@ -1,6 +1,5 @@
 package ch.epfl.dedis.lib;
 
-import ch.epfl.dedis.lib.exception.CothorityCryptoException;
 import com.google.protobuf.ByteString;
 
 /**
@@ -8,11 +7,11 @@ import com.google.protobuf.ByteString;
  * the static fields of the skipblock.
  */
 public class SkipblockId extends Sha256id {
-    public SkipblockId(byte[] id) throws CothorityCryptoException{
+    public SkipblockId(byte[] id) {
         super(id);
     }
 
-    public SkipblockId(ByteString bs) throws CothorityCryptoException{
+    public SkipblockId(ByteString bs) {
         this(bs.toByteArray());
     }
 }

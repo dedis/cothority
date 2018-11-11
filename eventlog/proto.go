@@ -31,7 +31,7 @@ func NewEvent(topic, content string) Event {
 //
 // package eventlog;
 //
-// option java_package = "ch.epfl.dedis.proto";
+// option java_package = "ch.epfl.dedis.lib.proto";
 // option java_outer_classname = "EventLogProto";
 
 // ***

@@ -6,7 +6,9 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
+	"github.com/dedis/kyber"
+	"github.com/dedis/kyber/util/key"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
@@ -56,11 +58,13 @@ func TestContract_Write_Benchmark(t *testing.T) {
 	totalTrans := 10
 	var times []time.Duration
 
+	var ctr uint64 = 1
 	for i := 0; i < 50; i++ {
 		iids := make([]byzcoin.InstanceID, totalTrans)
 		start := time.Now()
 		for i := 0; i < totalTrans; i++ {
-			iids[i] = s.addWrite(t, []byte("secret key"))
+			iids[i] = s.addWrite(t, []byte("secret key"), ctr)
+			ctr++
 		}
 		timeSend := time.Now().Sub(start)
 		log.Lvlf1("Time to send %d writes to the ledger: %s", totalTrans, timeSend)
@@ -85,7 +89,7 @@ func TestContract_Read(t *testing.T) {
 	defer s.closeAll(t)
 
 	prWrite := s.addWriteAndWait(t, []byte("secret key"))
-	pr := s.addReadAndWait(t, prWrite)
+	pr := s.addReadAndWait(t, prWrite, s.signer.Ed25519.Point)
 	require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
 }
 
@@ -97,10 +101,10 @@ func TestService_DecryptKey(t *testing.T) {
 
 	key1 := []byte("secret key 1")
 	prWr1 := s.addWriteAndWait(t, key1)
-	prRe1 := s.addReadAndWait(t, prWr1)
+	prRe1 := s.addReadAndWait(t, prWr1, s.signer.Ed25519.Point)
 	key2 := []byte("secret key 2")
 	prWr2 := s.addWriteAndWait(t, key2)
-	prRe2 := s.addReadAndWait(t, prWr2)
+	prRe2 := s.addReadAndWait(t, prWr2, s.signer.Ed25519.Point)
 
 	_, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr2})
 	require.NotNil(t, err)
@@ -122,6 +126,27 @@ func TestService_DecryptKey(t *testing.T) {
 	require.Equal(t, key2, keyCopy2)
 }
 
+// TestService_DecryptEphemeralKey requests a read to a different key than the
+// readers.
+func TestService_DecryptEphemeralKey(t *testing.T) {
+	s := newTS(t, 5)
+	defer s.closeAll(t)
+
+	ephemeral := key.NewKeyPair(cothority.Suite)
+
+	key1 := []byte("secret key 1")
+	prWr1 := s.addWriteAndWait(t, key1)
+	prRe1 := s.addReadAndWait(t, prWr1, ephemeral.Public)
+
+	dk1, err := s.services[0].DecryptKey(&DecryptKey{Read: *prRe1, Write: *prWr1})
+	require.Nil(t, err)
+	require.True(t, dk1.X.Equal(s.ltsReply.X))
+
+	keyCopy1, err := DecodeKey(cothority.Suite, s.ltsReply.X, dk1.Cs, dk1.XhatEnc, ephemeral.Private)
+	require.Nil(t, err)
+	require.Equal(t, key1, keyCopy1)
+}
+
 type ts struct {
 	local      *onet.LocalTest
 	servers    []*onet.Server
@@ -135,35 +160,35 @@ type ts struct {
 	gDarc      *darc.Darc
 }
 
-func (s *ts) addRead(t *testing.T, write *byzcoin.Proof) byzcoin.InstanceID {
+func (s *ts) addRead(t *testing.T, write *byzcoin.Proof, Xc kyber.Point, ctr uint64) byzcoin.InstanceID {
 	var readBuf []byte
 	read := &Read{
-		Write: byzcoin.NewInstanceID(write.InclusionProof.Key),
-		Xc:    s.signer.Ed25519.Point,
+		Write: byzcoin.NewInstanceID(write.InclusionProof.Key()),
+		Xc:    Xc,
 	}
 	var err error
 	readBuf, err = protobuf.Encode(read)
 	require.Nil(t, err)
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{{
-			InstanceID: byzcoin.NewInstanceID(write.InclusionProof.Key),
-			Nonce:      byzcoin.Nonce{},
-			Index:      0,
-			Length:     1,
+			InstanceID: byzcoin.NewInstanceID(write.InclusionProof.Key()),
 			Spawn: &byzcoin.Spawn{
 				ContractID: ContractReadID,
 				Args:       byzcoin.Arguments{{Name: "read", Value: readBuf}},
 			},
+			SignerCounter: []uint64{ctr},
 		}},
 	}
-	require.Nil(t, ctx.Instructions[0].SignBy(s.gDarc.GetID(), s.signer))
+	require.Nil(t, ctx.SignWith(s.signer))
 	_, err = s.cl.AddTransaction(ctx)
 	require.Nil(t, err)
 	return ctx.Instructions[0].DeriveID("")
 }
 
-func (s *ts) addReadAndWait(t *testing.T, write *byzcoin.Proof) *byzcoin.Proof {
-	instID := s.addRead(t, write)
+func (s *ts) addReadAndWait(t *testing.T, write *byzcoin.Proof, Xc kyber.Point) *byzcoin.Proof {
+	ctr, err := s.cl.GetSignerCounters(s.signer.Identity().String())
+	require.NoError(t, err)
+	instID := s.addRead(t, write, Xc, ctr.Counters[0]+1)
 	return s.waitInstID(t, instID)
 }
 
@@ -211,6 +236,7 @@ func (s *ts) waitInstID(t *testing.T, instID byzcoin.InstanceID) *byzcoin.Proof 
 			require.Nil(t, pr.Verify(s.gbReply.Skipblock.Hash))
 			break
 		}
+		time.Sleep(100 * time.Millisecond)
 	}
 	if err != nil {
 		require.Fail(t, "didn't find proof")
@@ -219,11 +245,14 @@ func (s *ts) waitInstID(t *testing.T, instID byzcoin.InstanceID) *byzcoin.Proof 
 }
 
 func (s *ts) addWriteAndWait(t *testing.T, key []byte) *byzcoin.Proof {
-	instID := s.addWrite(t, key)
+	ctr, err := s.cl.GetSignerCounters(s.signer.Identity().String())
+	require.NoError(t, err)
+
+	instID := s.addWrite(t, key, ctr.Counters[0]+1)
 	return s.waitInstID(t, instID)
 }
 
-func (s *ts) addWrite(t *testing.T, key []byte) byzcoin.InstanceID {
+func (s *ts) addWrite(t *testing.T, key []byte, ctr uint64) byzcoin.InstanceID {
 	write := NewWrite(cothority.Suite, s.ltsReply.LTSID, s.gDarc.GetBaseID(), s.ltsReply.X, key)
 	writeBuf, err := protobuf.Encode(write)
 	require.Nil(t, err)
@@ -231,16 +260,14 @@ func (s *ts) addWrite(t *testing.T, key []byte) byzcoin.InstanceID {
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{{
 			InstanceID: byzcoin.NewInstanceID(s.gDarc.GetBaseID()),
-			Nonce:      byzcoin.Nonce{},
-			Index:      0,
-			Length:     1,
 			Spawn: &byzcoin.Spawn{
 				ContractID: ContractWriteID,
 				Args:       byzcoin.Arguments{{Name: "write", Value: writeBuf}},
 			},
+			SignerCounter: []uint64{ctr},
 		}},
 	}
-	require.Nil(t, ctx.Instructions[0].SignBy(s.gDarc.GetID(), s.signer))
+	require.Nil(t, ctx.SignWith(s.signer))
 	_, err = s.cl.AddTransaction(ctx)
 	require.Nil(t, err)
 	return ctx.Instructions[0].DeriveID("")

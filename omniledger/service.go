@@ -6,7 +6,6 @@ runs on the node.
 */
 
 import (
-	"encoding/binary"
 	"errors"
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
@@ -14,12 +13,11 @@ import (
 	"fmt"
 	lib "github.com/dedis/cothority/omniledger/lib"
 	"github.com/dedis/cothority/skipchain"
-	"github.com/dedis/protobuf"
 	"sync"
 	"time"
 
 	bc "github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/onet"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -61,9 +59,10 @@ type CreateOmniLedger struct {
 	EpochSize    time.Duration
 	IBGenesisMsg *bc.CreateGenesisBlock
 	//ShardGenesisMsg  *bc.CreateGenesisBlock
-	OwnerID          darc.Identity
-	SpawnInstruction *bc.Instruction
-	Timestamp        time.Time
+	OwnerID darc.Identity
+	//SpawnInstruction *bc.Instruction
+	SpawnTx   *bc.ClientTransaction
+	Timestamp time.Time
 }
 
 type CreateOmniLedgerResponse struct {
@@ -84,6 +83,8 @@ type NewEpoch struct {
 	ShardDarcIDs []darc.Darc
 	ShardRosters []onet.Roster
 	Owner        darc.Signer
+	OLInstanceID bc.InstanceID
+	Timestamp    time.Time
 }
 
 type NewEpochResponse struct {
@@ -102,31 +103,26 @@ func (s *Service) CreateOmniLedger(req *CreateOmniLedger) (*CreateOmniLedgerResp
 		return nil, err
 	}
 
-	tx := byzcoin.ClientTransaction{
-		Instructions: make([]byzcoin.Instruction, 1),
-	}
-
 	fmt.Println("-------- PRINT1 ---------")
 
-	tx.Instructions[0] = *(req.SpawnInstruction)
-	if _, err := c.AddTransactionAndWait(tx, 2); err != nil {
+	if _, err := c.AddTransactionAndWait(*req.SpawnTx, 2); err != nil {
 		return nil, err
 	}
 
 	fmt.Println("-------- PRINT2 ---------")
 
-	id := tx.Instructions[0].DeriveID("").Slice()
+	id := req.SpawnTx.Instructions[0].DeriveID("").Slice()
 	gpr, err := c.GetProof(id)
 	if err != nil {
 		return nil, err
 	}
 
-	if !gpr.Proof.InclusionProof.Match() {
+	if !gpr.Proof.InclusionProof.Match(id) {
 		return nil, errors.New("no association found for the proof")
 	}
 
-	cc := &lib.ChainConfig{}
-	err = gpr.Proof.ContractValue(cothority.Suite, ContractOmniledgerEpochID, cc)
+	var cc lib.ChainConfig
+	err = gpr.Proof.VerifyAndDecode(cothority.Suite, ContractOmniledgerEpochID, cc)
 	if err != nil {
 		return nil, err
 	}
@@ -188,11 +184,11 @@ func checkCreateOmniLedger(req *CreateOmniLedger) error {
 		return errors.New("Requires a genesis message")
 	}
 
-	if req.SpawnInstruction == nil || req.SpawnInstruction.Spawn == nil {
+	if len(req.SpawnTx.Instructions) < 1 || req.SpawnTx.Instructions[0].Spawn == nil {
 		return errors.New("Requires a spawn instruction")
 	}
 
-	if len(req.SpawnInstruction.Signatures) < 1 {
+	if len(req.SpawnTx.Instructions[0].Signatures) < 1 {
 		return errors.New("Spawn instruction must be signed")
 	}
 
@@ -200,13 +196,13 @@ func checkCreateOmniLedger(req *CreateOmniLedger) error {
 }
 
 // NewEpoch
+/*
 func (s *Service) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 	// > Connect to the IB via a client, requires a SkipBlockID -> need to store the genesis block of the IB in the service?
 	// Send an invoke:requestNewEpoch
-	/*byzcoin.NewClient()
-	invoke := &bc.Invoke{
-		Command: "request_new_epoch",
-	}*/
+	//byzcoin.NewClient()
+	//invoke := &bc.Invoke{
+	//	Command: "request_new_epoch",
 
 	// Requires skipchain id and roster
 	var ibID skipchain.SkipBlockID
@@ -284,6 +280,7 @@ func (s *Service) NewEpoch(req *NewEpoch) (*NewEpochResponse, error) {
 
 	return nil, nil
 }
+*/
 
 // newService receives the context that holds information about the node it's
 // running on. Saving and loading can be done using the context. The data will

@@ -22,8 +22,8 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/bcadmin/lib"
-	"github.com/dedis/cothority/byzcoin/darc"
-	"github.com/dedis/cothority/byzcoin/darc/expression"
+	"github.com/dedis/cothority/darc"
+	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/cothority/ftcosi/check"
 	ph "github.com/dedis/cothority/personhood"
 	"github.com/dedis/protobuf"
@@ -722,6 +722,16 @@ func bcStore(c *cli.Context) error {
 	}
 	identities = append(identities, signer.Identity())
 
+	log.Info("Creating byzcoin client and getting signer counters")
+	bccl := byzcoin.NewClient(cfg.ByzCoinID, cfg.Roster)
+	signerCtrs, err := bccl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return err
+	}
+	if len(signerCtrs.Counters) != 1 {
+		return errors.New("incorrect signer counter length")
+	}
+
 	log.Info("Creating darc for the organizers")
 	rules := darc.InitRules(identities, identities)
 	var exprSlice []string
@@ -740,9 +750,6 @@ func bcStore(c *cli.Context) error {
 	}
 	inst := byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(cfg.GenesisDarc.GetBaseID()),
-		Nonce:      byzcoin.Nonce{},
-		Index:      0,
-		Length:     1,
 		Spawn: &byzcoin.Spawn{
 			ContractID: byzcoin.ContractDarcID,
 			Args: byzcoin.Arguments{{
@@ -750,17 +757,17 @@ func bcStore(c *cli.Context) error {
 				Value: orgDarcBuf,
 			}},
 		},
-	}
-	err = inst.SignBy(cfg.GenesisDarc.GetBaseID(), *signer)
-	if err != nil {
-		return err
+		SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 	}
 	ct := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{inst},
 	}
-	log.Info("Contacting ByzCoin to store the new darc")
-	olc := byzcoin.NewClient(cfg.ByzCoinID, cfg.Roster)
-	_, err = olc.AddTransactionAndWait(ct, 10)
+	err = ct.SignWith(*signer)
+	if err != nil {
+		return err
+	}
+	log.Info("Storing the new darc on byzcoin")
+	_, err = bccl.AddTransactionAndWait(ct, 10)
 	if err != nil {
 		return err
 	}
@@ -771,9 +778,6 @@ func bcStore(c *cli.Context) error {
 	}
 	inst = byzcoin.Instruction{
 		InstanceID: byzcoin.NewInstanceID(orgDarc.GetBaseID()),
-		Nonce:      byzcoin.Nonce{},
-		Index:      0,
-		Length:     1,
 		Spawn: &byzcoin.Spawn{
 			ContractID: service.ContractPopParty,
 			Args: byzcoin.Arguments{{
@@ -781,24 +785,29 @@ func bcStore(c *cli.Context) error {
 				Value: partyConfigBuf,
 			}},
 		},
-	}
-	err = inst.SignBy(orgDarc.GetBaseID(), *signer)
-	if err != nil {
-		return err
+		SignerCounter: []uint64{signerCtrs.Counters[0] + 2},
 	}
 	ct = byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{inst},
 	}
-	log.Info("Contacting ByzCoin to spawn the new party")
-	_, err = olc.AddTransactionAndWait(ct, 10)
+	err = ct.SignWith(*signer)
+	if err != nil {
+		return err
+	}
+	fsID, err := finalStatement.Hash()
+	if err != nil {
+		return err
+	}
+	log.Infof("Contacting ByzCoin to spawn the new party with id %x", fsID)
+	_, err = bccl.AddTransactionAndWait(ct, 10)
 	if err != nil {
 		return err
 	}
 
 	log.Info("Storing InstanceID in pop-service")
-	iid := inst.DeriveID("")
+	iid := ct.Instructions[0].DeriveID("")
 	for _, c := range cfg.Roster.List {
-		err = service.NewClient().StoreInstanceID(c.Address, finalID, iid)
+		err = service.NewClient().StoreInstanceID(c.Address, finalID, iid, orgDarc.GetBaseID())
 		if err != nil {
 			log.Error("couldn't store instanceID: " + err.Error())
 		}
@@ -826,6 +835,12 @@ func bcFinalize(c *cli.Context) error {
 		return err
 	}
 
+	// Load signer counter
+	signerCtrs, err := ocl.GetSignerCounters(signer.Identity().String())
+	if err != nil {
+		return err
+	}
+
 	// Get the party-id
 	partyID, err := hex.DecodeString(c.Args().Get(2))
 	if err != nil {
@@ -845,7 +860,7 @@ func bcFinalize(c *cli.Context) error {
 		}
 		return errors.New("didn't find final statement")
 	}
-	if fs.Signature == nil || len(fs.Attendees) == 0 {
+	if fs.Signature == nil || len(fs.Signature) == 0 || len(fs.Attendees) == 0 {
 		log.Infof("%+v", fs)
 		return errors.New("proposed configuration not finalized")
 	}
@@ -854,7 +869,7 @@ func bcFinalize(c *cli.Context) error {
 		return errors.New("couldn't encode final statement: " + err.Error())
 	}
 
-	partyInstance, err := cl.GetInstanceID(cfg.Roster.List[0].Address, partyID)
+	partyInstance, _, err := cl.GetInstanceID(cfg.Roster.List[0].Address, partyID)
 	if err != nil {
 		return errors.New("couldn't get instanceID: " + err.Error())
 	}
@@ -871,8 +886,6 @@ func bcFinalize(c *cli.Context) error {
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: partyInstance,
-			Index:      0,
-			Length:     1,
 			Invoke: &byzcoin.Invoke{
 				Command: "Finalize",
 				Args: byzcoin.Arguments{
@@ -885,9 +898,10 @@ func bcFinalize(c *cli.Context) error {
 						Value: sigBuf,
 					}},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	err = ctx.Instructions[0].SignBy(cfg.GenesisDarc.GetBaseID(), *signer)
+	err = ctx.SignWith(*signer)
 	if err != nil {
 		return errors.New("couldn't sign instruction: " + err.Error())
 	}
@@ -897,18 +911,46 @@ func bcFinalize(c *cli.Context) error {
 		return errors.New("error while sending transaction: " + err.Error())
 	}
 
-	log.Print("linkpop", fs.Desc.Roster)
+	iid := sha256.New()
+	iid.Write(ctx.Instructions[0].InstanceID.Slice())
+	pubBuf, err := signer.Ed25519.Point.MarshalBinary()
+	if err != nil {
+		return errors.New("couldn't marshal public key: " + err.Error())
+	}
+	iid.Write(pubBuf)
+	p, err := ocl.GetProof(iid.Sum(nil))
+	if err != nil {
+		return errors.New("couldn't calculate service coin address: " + err.Error())
+	}
+	_, _, _, dID, err := p.Proof.KeyValue()
+	if err != nil {
+		return errors.New("proof was invalid: " + err.Error())
+	}
+	p, err = ocl.GetProof(dID)
+	if err != nil {
+		return errors.New("couldn't get proof for service-darc: " + err.Error())
+	}
+	_, v0, _, _, err := p.Proof.KeyValue()
+	if err != nil {
+		return errors.New("service-darc proof is invalid: " + err.Error())
+	}
+	serviceDarc, err := darc.NewFromProtobuf(v0)
+	if err != nil {
+		return errors.New("got invalid service-darc: " + err.Error())
+	}
+
 	err = ph.NewClient().LinkPoP(fs.Desc.Roster.List[0], ph.Party{
 		ByzCoinID:      cfg.ByzCoinID,
 		FinalStatement: *fs,
 		InstanceID:     partyInstance,
-		Darc:           cfg.GenesisDarc,
+		Darc:           *serviceDarc,
 		Signer:         *signer,
 	})
 	if err != nil {
 		return errors.New("couldn't store in personhood service: " + err.Error())
 	}
 
+	log.Infof("Finalized party %x with instance-id %x", partyID, partyInstance)
 	return nil
 }
 
@@ -940,7 +982,7 @@ func bcCoinShow(c *cli.Context) error {
 	if err != nil {
 		return errors.New("couldn't get proof for account: " + err.Error())
 	}
-	if !accountProof.Proof.InclusionProof.Match() {
+	if !accountProof.Proof.InclusionProof.Match(accountID) {
 		// This account doesn't exist - try with the account, supposing we got a
 		// public key.
 		log.Info("Interpreting argument as public key.")
@@ -952,23 +994,23 @@ func bcCoinShow(c *cli.Context) error {
 		if err != nil {
 			return errors.New("couldn't get proof for account: " + err.Error())
 		}
-		if !accountProof.Proof.InclusionProof.Match() {
+		if !accountProof.Proof.InclusionProof.Match(accountID) {
 			return errors.New("didn't find this account - neither as accountID, nor as public key")
 		}
 	} else {
 		log.Info("Interpreting argument as account ID")
 	}
 
-	_, v, err := accountProof.Proof.KeyValue()
+	_, v0, _, _, err := accountProof.Proof.KeyValue()
 	if err != nil {
 		return errors.New("couldn't get value from proof: " + err.Error())
 	}
 	ci := byzcoin.Coin{}
-	err = protobuf.Decode(v[0], &ci)
+	err = protobuf.Decode(v0, &ci)
 	if err != nil {
 		return errors.New("couldn't unmarshal coin balance: " + err.Error())
 	}
-	log.Info("Coin value is: ", ci.Value)
+	log.Info("Coin balance is: ", ci.Value)
 	return nil
 }
 
@@ -1027,31 +1069,24 @@ func bcCoinTransfer(c *cli.Context) error {
 	if err != nil {
 		return errors.New("couldn't get source instance: " + err.Error())
 	}
-	if !srcInstanceProof.Proof.InclusionProof.Match() {
+	if !srcInstanceProof.Proof.InclusionProof.Match(srcAddr) {
 		return errors.New("source instance doesn't exist")
 	}
-	_, srcInstanceValues, err := srcInstanceProof.Proof.KeyValue()
+
+	log.Info("Getting darc for source account")
+	_, _, _, _, err = srcInstanceProof.Proof.KeyValue()
 	if err != nil {
 		return errors.New("cannot get proof for source instance: " + err.Error())
 	}
 
-	log.Info("Getting darc for source account")
-	dID := srcInstanceValues[2]
-	// dProof, err := olc.GetProof(dID)
-	// if err != nil {
-	// 	return errors.New("couldn't get source darc instance: " + err.Error())
-	// }
-	// if !dProof.Proof.InclusionProof.Match() {
-	// 	return errors.New("source instance darc doesn't exist")
-	// }
-	// _, dValues, err := dProof.Proof.KeyValue()
-	// if err != nil {
-	// 	return errors.New("cannot get proof for source instance darc: " + err.Error())
-	// }
-	// d, err := darc.NewFromProtobuf(dValues[1])
-	// if err != nil {
-	// 	return errors.New("cannot unmarshal source darc: " + err.Error())
-	// }
+	log.Info("Getting signer counters")
+	signerCtrs, err := ocl.GetSignerCounters(srcSigner.Identity().String())
+	if err != nil {
+		return errors.New("couldn't get signer counter: " + err.Error())
+	}
+	if len(signerCtrs.Counters) != 1 {
+		return errors.New("incorrect signer counter length")
+	}
 
 	log.Info("Transferring coins")
 	amountBuf := make([]byte, 8)
@@ -1059,8 +1094,6 @@ func bcCoinTransfer(c *cli.Context) error {
 	ctx := byzcoin.ClientTransaction{
 		Instructions: byzcoin.Instructions{byzcoin.Instruction{
 			InstanceID: byzcoin.NewInstanceID(srcAddr),
-			Index:      0,
-			Length:     1,
 			Invoke: &byzcoin.Invoke{
 				Command: "transfer",
 				Args: byzcoin.Arguments{{
@@ -1072,9 +1105,10 @@ func bcCoinTransfer(c *cli.Context) error {
 						Value: dstAddr,
 					}},
 			},
+			SignerCounter: []uint64{signerCtrs.Counters[0] + 1},
 		}},
 	}
-	err = ctx.Instructions[0].SignBy(dID, srcSigner)
+	err = ctx.SignWith(srcSigner)
 	if err != nil {
 		return errors.New("couldn't sign transaction: " + err.Error())
 	}

@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 )
 
 // The value contract can simply store a value in an instance and serves
@@ -20,10 +20,10 @@ var ContractValueID = "value"
 // It can spawn new value instances and will store the "value" argument in these
 // new instances.
 // Existing value instances can be "update"d and deleted.
-func ContractValue(cdb byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
+func ContractValue(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
 	cOut = c
 
-	err = inst.VerifyDarcSignature(cdb)
+	err = inst.Verify(cdb, ctxHash)
 	if err != nil {
 		return
 	}

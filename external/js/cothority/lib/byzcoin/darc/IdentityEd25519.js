@@ -82,7 +82,9 @@ class IdentityEd25519 extends Identity {
    */
   toProtobufValidMessage() {
     return {
-      point: this._pub.marshalBinary()
+      ed25519: {
+        point: this._pub.marshalBinary()
+      }
     };
   }
 }

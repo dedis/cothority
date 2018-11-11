@@ -1,3 +1,9 @@
+Navigation: [DEDIS](https://github.com/dedis/doc/tree/master/README.md) ::
+[Cothority](https://github.com/dedis/cothority/tree/master/README.md) ::
+[Building Blocks](https://github.com/dedis/cothority/tree/master/doc/BuildingBlocks.md) ::
+[ByzCoin](https://github.com/dedis/cothority/blob/master/byzcoin/README.md) ::
+bcadmin
+
 # bcadmin - the CLI to configure ByzCoin ledgers
 
 ## Create a new ByzCoin, saving the config

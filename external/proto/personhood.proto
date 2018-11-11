@@ -4,7 +4,7 @@ package personhood;
 import "darc.proto";
 import "pop.proto";
 
-option java_package = "ch.epfl.dedis.proto";
+option java_package = "ch.epfl.dedis.lib.proto";
 option java_outer_classname = "Personhood";
 
 // LinkPoP stores a link to a pop-party to accept this configuration. It will
@@ -57,7 +57,7 @@ message Questionnaire {
 // that participated in it.
 message Reply {
   // Sum is the sum of all replies for a given index of the questions.
-  repeated sint32 sum = 1;
+  repeated sint32 sum = 1 [packed=true];
   // TODO: replace this with a linkable ring signature
   repeated bytes users = 2;
 }
@@ -90,7 +90,7 @@ message AnswerQuestionnaire {
   // QuestID is the ID of the questionnaire to be replied.
   required bytes questid = 1;
   // Replies is a slice of answers, up to Questionnaire.Replies
-  repeated sint32 replies = 2;
+  repeated sint32 replies = 2 [packed=true];
   // Account where to put the reward to.
   required bytes account = 3;
 }
@@ -124,6 +124,8 @@ message Message {
   required uint64 reward = 6;
   // ID of the messgae - should be random.
   required bytes id = 7;
+  // PartyIID - the instance ID of the party this message belongs to
+  required bytes partyiid = 8;
 }
 
 // SendMessage stores the message in the system.
@@ -139,6 +141,8 @@ message ListMessages {
   required sint32 start = 1;
   // Number of maximum messages returned
   required sint32 number = 2;
+  // ReaderID of the reading account, to skip messages created by this reader
+  required bytes readerid = 3;
 }
 
 // ListMessagesReply returns the subjects, IDs, balances and rewards of the top
@@ -149,9 +153,11 @@ message ListMessagesReply {
   // MsgIDs of the messages
   repeated bytes msgids = 2;
   // Balances
-  repeated uint64 balances = 3;
+  repeated uint64 balances = 3 [packed=true];
   // Rewards
-  repeated uint64 rewards = 4;
+  repeated uint64 rewards = 4 [packed=true];
+  // PartyIIDs
+  repeated bytes partyiids = 5;
 }
 
 // ReadMessage requests the full message and the reward for that message.
@@ -168,6 +174,9 @@ message ReadMessage {
 message ReadMessageReply {
   // Messsage to read.
   required Message message = 1;
+  // Rewarded is true if this is the first time the message has been read
+  // by this reader.
+  required bool rewarded = 2;
 }
 
 // TopupMessage to fill up the balance of a message

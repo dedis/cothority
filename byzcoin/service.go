@@ -5,18 +5,20 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"math"
+	"regexp"
+	"strings"
 	"sync"
 	"time"
 
+	bolt "github.com/coreos/bbolt"
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoin/collection"
-	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/cothority/byzcoin/viewchange"
+	"github.com/dedis/cothority/darc"
 	cosiprotocol "github.com/dedis/cothority/ftcosi/protocol"
-	"github.com/dedis/cothority/messaging"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber"
 	"github.com/dedis/kyber/util/random"
@@ -33,9 +35,19 @@ import (
 // not trigger, and the acceptable window would be ± 30 sec.
 var minTimestampWindow = 10 * time.Second
 
+// For tests to influence when the whole collection will be downloaded if
+// some blocks are missing.
+var catchupDownloadAll = 100
+
+// How many blocks it should fetch in one go.
+var catchupFetchBlocks = 10
+
+// How many DB-entries to download in one go.
+var catchupFetchDBEntries = 100
+
 const invokeEvolve darc.Action = darc.Action("invoke:evolve")
 
-const rotationWindow time.Duration = 10
+var rotationWindow time.Duration = 10
 
 const noTimeout time.Duration = 0
 
@@ -55,7 +67,7 @@ func init() {
 	var err error
 	ByzCoinID, err = onet.RegisterNewService(ServiceName, newService)
 	log.ErrFatal(err)
-	network.RegisterMessages(&omniStorage{}, &DataHeader{}, &DataBody{})
+	network.RegisterMessages(&bcStorage{}, &DataHeader{}, &DataBody{})
 	viewChangeMsgID = network.RegisterMessage(&viewchange.InitReq{})
 }
 
@@ -70,13 +82,12 @@ type Service struct {
 	// We need to embed the ServiceProcessor, so that incoming messages
 	// are correctly handled.
 	*onet.ServiceProcessor
-	// collections cannot be stored, so they will be re-created whenever the
-	// service reloads.
-	collectionDB map[string]*collectionDB
-	// holds a link for every ByzCoin to the latest block that is included in
-	// the collection.
-	// TODO: merge collectionDB and pollChan into olState structure.
-	state bcState
+	// stateTries contains a reference to all the tries that the service is
+	// responsible for, one for each skipchain.
+	stateTries     map[string]*stateTrie
+	stateTriesLock sync.Mutex
+	// notifications is used for client transaction and block notification
+	notifications bcNotifications
 
 	// pollChan maintains a map of channels that can be used to stop the
 	// polling go-routing.
@@ -96,10 +107,8 @@ type Service struct {
 
 	// contracts map kinds to kind specific verification functions
 	contracts map[string]ContractFn
-	// propagate the new transactions
-	propagateTransactions messaging.PropagationFunc
 
-	storage *omniStorage
+	storage *bcStorage
 
 	createSkipChainMut sync.Mutex
 
@@ -112,6 +121,20 @@ type Service struct {
 	closedMutex   sync.Mutex
 	working       sync.WaitGroup
 	viewChangeMan viewChangeManager
+
+	streamingMan streamingManager
+
+	updateCollectionLock sync.Mutex
+	catchingUp           bool
+
+	downloadState downloadState
+}
+
+type downloadState struct {
+	id    skipchain.SkipBlockID
+	nonce uint64
+	read  chan DBKeyValue
+	stop  chan bool
 }
 
 // storageID reflects the data we're storing - we could store more
@@ -125,8 +148,8 @@ const defaultInterval = 5 * time.Second
 // defaultMaxBlockSize is used when the config cannot be loaded.
 const defaultMaxBlockSize = 4 * 1e6
 
-// omniStorage is used to save our data locally.
-type omniStorage struct {
+// bcStorage is used to save our data locally.
+type bcStorage struct {
 	// PropTimeout is used when sending the request to integrate a new block
 	// to all nodes.
 	PropTimeout time.Duration
@@ -180,6 +203,9 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 		return nil, err
 	}
 
+	// This is the nonce for the trie.
+	nonce := GenNonce()
+
 	spawn := &Spawn{
 		ContractID: ContractConfigID,
 		Args: Arguments{
@@ -187,22 +213,21 @@ func (s *Service) CreateGenesisBlock(req *CreateGenesisBlock) (
 			{Name: "block_interval", Value: intervalBuf},
 			{Name: "max_block_size", Value: bsBuf},
 			{Name: "roster", Value: rosterBuf},
+			{Name: "trie_nonce", Value: nonce[:]},
 		},
 	}
 
 	// Create the genesis-transaction with a special key, it acts as a
 	// reference to the actual genesis transaction.
-	transaction := NewTxResults(ClientTransaction{
+	ctx := ClientTransaction{
 		Instructions: []Instruction{{
 			InstanceID: ConfigInstanceID,
-			Nonce:      Nonce{},
-			Index:      0,
-			Length:     1,
 			Spawn:      spawn,
 		}},
-	})
+	}
+	ctx.InstructionsHash = ctx.Instructions.Hash()
 
-	sb, err := s.createNewBlock(nil, &req.Roster, transaction)
+	sb, err := s.createNewBlock(nil, &req.Roster, NewTxResults(ctx))
 	if err != nil {
 		return nil, err
 	}
@@ -237,6 +262,10 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		return nil, errors.New("transaction too large")
 	}
 
+	for i, instr := range req.Transaction.Instructions {
+		log.Lvlf2("Instruction[%d]: %s", i, instr.Action())
+	}
+
 	// Note to my future self: s.txBuffer.add used to be out here. It used to work
 	// even. But while investigating other race conditions, we realized that
 	// IF there will be a wait channel, THEN it must exist before the call to add().
@@ -249,16 +278,16 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 		// Wait for InclusionWait new blocks and look if our transaction is in it.
 		interval, _, err := s.LoadBlockInfo(req.SkipchainID)
 		if err != nil {
-			return nil, errors.New("couldn't get collectionView: " + err.Error())
+			return nil, errors.New("couldn't get block info: " + err.Error())
 		}
 
 		ctxHash := req.Transaction.Instructions.Hash()
-		ch := s.state.createWaitChannel(ctxHash)
-		defer s.state.deleteWaitChannel(ctxHash)
+		ch := s.notifications.createWaitChannel(ctxHash)
+		defer s.notifications.deleteWaitChannel(ctxHash)
 
 		blockCh := make(chan skipchain.SkipBlockID, 10)
-		z := s.state.registerForBlocks(blockCh)
-		defer s.state.unregisterForBlocks(z)
+		z := s.notifications.registerForBlocks(blockCh)
+		defer s.notifications.unregisterForBlocks(z)
 
 		s.txBuffer.add(string(req.SkipchainID), req.Transaction)
 
@@ -285,7 +314,7 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 					return nil, fmt.Errorf("did not find transaction after %v blocks", req.InclusionWait)
 				}
 			case <-tooLong:
-				return nil, fmt.Errorf("did not observe %v blocks after %v", req.InclusionWait, tooLongDur)
+				return nil, fmt.Errorf("transaction didn't get included after %v (2 * t_block * %d)", tooLongDur, req.InclusionWait)
 			}
 		}
 	} else {
@@ -300,27 +329,181 @@ func (s *Service) AddTransaction(req *AddTxRequest) (*AddTxResponse, error) {
 // GetProof searches for a key and returns a proof of the
 // presence or the absence of this key.
 func (s *Service) GetProof(req *GetProof) (resp *GetProofResponse, err error) {
+	s.updateCollectionLock.Lock()
+	defer s.updateCollectionLock.Unlock()
+	if s.catchingUp {
+		return nil, errors.New("currently catching up on our state")
+	}
 	if req.Version != CurrentVersion {
 		return nil, errors.New("version mismatch")
 	}
-	log.Lvlf2("%s Getting proof for key %x on sc %x", s.ServerIdentity(), req.Key, req.ID)
 	sb := s.db().GetByID(req.ID)
 	if sb == nil {
 		err = errors.New("cannot find skipblock while getting proof")
 		return
 	}
-	proof, err := NewProof(s.GetCollectionView(sb.SkipChainID()), s.db(), req.ID, req.Key)
+	st, err := s.GetReadOnlyStateTrie(sb.SkipChainID())
 	if err != nil {
+		return nil, err
+	}
+	proof, err := NewProof(st, s.db(), req.ID, req.Key)
+	if err != nil {
+		log.Error(s.ServerIdentity(), err)
 		return
 	}
 
 	// Sanity check
-	if err = proof.Verify(req.ID); err != nil {
+	if err = proof.Verify(sb.SkipChainID()); err != nil {
 		return
 	}
+
 	resp = &GetProofResponse{
 		Version: CurrentVersion,
 		Proof:   *proof,
+	}
+	return
+}
+
+// CheckAuthorization verifies whether a given combination of identities can
+// fulfill a given rule of a given darc. Because all darcs are now used in
+// an online fashion, we need to offer this check.
+func (s *Service) CheckAuthorization(req *CheckAuthorization) (resp *CheckAuthorizationResponse, err error) {
+	if req.Version != CurrentVersion {
+		return nil, errors.New("version mismatch")
+	}
+	log.Lvlf2("%s getting authorizations of darc %x", s.ServerIdentity(), req.DarcID)
+
+	resp = &CheckAuthorizationResponse{}
+	st, err := s.GetReadOnlyStateTrie(req.ByzCoinID)
+	if err != nil {
+		return nil, err
+	}
+	d, err := LoadDarcFromTrie(st, req.DarcID)
+	if err != nil {
+		return nil, errors.New("couldn't find darc: " + err.Error())
+	}
+	getDarcs := func(s string, latest bool) *darc.Darc {
+		if !latest {
+			log.Error("cannot handle intermediate darcs")
+			return nil
+		}
+		id, err := hex.DecodeString(strings.Replace(s, "darc:", "", 1))
+		if err != nil || len(id) != 32 {
+			log.Error("invalid darc id", s, len(id), err)
+			return nil
+		}
+		d, err := LoadDarcFromTrie(st, id)
+		if err != nil {
+			log.Error("didn't find darc")
+			return nil
+		}
+		return d
+	}
+	var ids []string
+	for _, i := range req.Identities {
+		ids = append(ids, i.String())
+	}
+	for _, r := range d.Rules.List {
+		err = darc.EvalExprDarc(r.Expr, getDarcs, true, ids...)
+		if err == nil {
+			resp.Actions = append(resp.Actions, r.Action)
+		}
+	}
+	return resp, nil
+}
+
+// GetSignerCounters gets the latest signer counters for the given identities.
+func (s *Service) GetSignerCounters(req *GetSignerCounters) (*GetSignerCountersResponse, error) {
+	st, err := s.GetReadOnlyStateTrie(req.SkipchainID)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]uint64, len(req.SignerIDs))
+
+	for i := range req.SignerIDs {
+		key := publicVersionKey(req.SignerIDs[i])
+		buf, _, _, err := st.GetValues(key)
+		if err == errKeyNotSet {
+			out[i] = 0
+			continue
+		}
+
+		if err != nil {
+			return nil, err
+		}
+		out[i] = binary.LittleEndian.Uint64(buf)
+	}
+	resp := GetSignerCountersResponse{
+		Counters: out,
+	}
+	return &resp, nil
+}
+
+// DownloadState creates a snapshot of the current state and then returns the
+// instances in small chunks.
+func (s *Service) DownloadState(req *DownloadState) (resp *DownloadStateResponse, err error) {
+	s.updateCollectionLock.Lock()
+	defer s.updateCollectionLock.Unlock()
+	if req.Length <= 0 {
+		return nil, errors.New("length must be bigger than 0")
+	}
+
+	if req.Nonce == 0 {
+		log.Lvl2("Creating new download")
+		if !s.downloadState.id.IsNull() {
+			log.Lvlf2("Aborting download of nonce %x", s.downloadState.nonce)
+			close(s.downloadState.stop)
+		}
+		sb := s.db().GetByID(req.ByzCoinID)
+		if sb == nil || sb.Index > 0 {
+			return nil, errors.New("unknown byzcoinID")
+		}
+		s.downloadState.id = req.ByzCoinID
+		s.downloadState.read = make(chan DBKeyValue)
+		s.downloadState.stop = make(chan bool)
+		nonce := binary.LittleEndian.Uint64(random.Bits(64, true, random.New()))
+		s.downloadState.nonce = nonce
+		go func(ds downloadState) {
+			idStr := fmt.Sprintf("%x", ds.id)
+			db, bucketName := s.GetAdditionalBucket([]byte(idStr))
+			err := db.View(func(tx *bolt.Tx) error {
+				bucket := tx.Bucket(bucketName)
+				return bucket.ForEach(func(k []byte, v []byte) error {
+					key := make([]byte, len(k))
+					copy(key, k)
+					value := make([]byte, len(v))
+					copy(value, v)
+					select {
+					case ds.read <- DBKeyValue{key, value}:
+					case <-ds.stop:
+						return errors.New("closed")
+					case <-time.After(time.Minute):
+						return errors.New("timed out while waiting for next read")
+					}
+					return nil
+				})
+			})
+			if err != nil {
+				log.Error("while serving current database:", err)
+			}
+			close(ds.read)
+		}(s.downloadState)
+	} else if !s.downloadState.id.Equal(req.ByzCoinID) || req.Nonce != s.downloadState.nonce {
+		return nil, errors.New("download has been aborted in favor of another download")
+	}
+
+	resp = &DownloadStateResponse{
+		Nonce: s.downloadState.nonce,
+	}
+query:
+	for i := 0; i < req.Length; i++ {
+		select {
+		case kv, ok := <-s.downloadState.read:
+			if !ok {
+				break query
+			}
+			resp.KeyValues = append(resp.KeyValues, kv)
+		}
 	}
 	return
 }
@@ -338,25 +521,33 @@ func (s *Service) SetPropagationTimeout(p time.Duration) {
 
 // createNewBlock creates a new block and proposes it to the
 // skipchain-service. Once the block has been created, we
-// inform all nodes to update their internal collections
+// inform all nodes to update their internal trie
 // to include the new transactions.
 func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx []TxResult) (*skipchain.SkipBlock, error) {
 	var sb *skipchain.SkipBlock
 	var mr []byte
-	var coll *collection.Collection
+	var sst *stagingStateTrie
 
 	if scID.IsNull() {
-		// For a genesis block, we create a throwaway collection.
+		// For a genesis block, we create a throwaway staging trie.
 		// There is no need to verify the darc because the caller does
 		// it.
 		sb = skipchain.NewSkipBlock()
 		sb.Roster = r
-		sb.MaximumHeight = 10
-		sb.BaseHeight = 10
+		sb.MaximumHeight = 32
+		sb.BaseHeight = 4
 		// We have to register the verification functions in the genesis block
 		sb.VerifierIDs = []skipchain.VerifierID{skipchain.VerifyBase, verifyByzCoin}
 
-		coll = collection.New(&collection.Data{}, &collection.Data{}, &collection.Data{})
+		nonce, err := s.loadNonceFromTxs(tx)
+		if err != nil {
+			return nil, err
+		}
+		et, err := newMemStagingStateTrie(nonce)
+		if err != nil {
+			return nil, err
+		}
+		sst = et
 	} else {
 		// For all other blocks, we try to verify the signature using
 		// the darcs and remove those that do not have a valid
@@ -373,7 +564,11 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 			sb.Roster = r
 		}
 
-		coll = s.getCollection(scID).coll
+		st, err := s.getStateTrie(scID)
+		if err != nil {
+			return nil, err
+		}
+		sst = st.MakeStagingStateTrie()
 	}
 
 	// Create header of skipblock containing only hashes
@@ -382,7 +577,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	var txRes TxResults
 
 	log.Lvl3("Creating state changes")
-	mr, txRes, scs = s.createStateChanges(coll, scID, tx, noTimeout)
+	mr, txRes, scs = s.createStateChanges(sst, scID, tx, noTimeout)
 	if len(txRes) == 0 {
 		return nil, errors.New("no transactions")
 	}
@@ -395,7 +590,7 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	}
 
 	header := &DataHeader{
-		CollectionRoot:        mr,
+		TrieRoot:              mr,
 		ClientTransactionHash: txRes.Hash(),
 		StateChangesHash:      scs.Hash(),
 		Timestamp:             time.Now().UnixNano(),
@@ -417,24 +612,190 @@ func (s *Service) createNewBlock(scID skipchain.SkipBlockID, r *onet.Roster, tx 
 	return ssbReply.Latest, nil
 }
 
-// updateCollectionCallback is registered in skipchain and is called after a
+// downloadDB downloads the full database over the network from a remote block.
+// It does so by copying the bboltDB database entry by entry over the network,
+// and recreating it on the remote side.
+// sb is a block in the byzcoin instance that we want
+// to download.
+func (s *Service) downloadDB(sb *skipchain.SkipBlock) error {
+	log.Lvlf2("%s: downloading DB", s.ServerIdentity())
+	idStr := fmt.Sprintf("%x", sb.SkipChainID())
+
+	// Loop over all nodes that are not the leader and
+	// not subleaders, to avoid overloading those nodes.
+	nodes := len(sb.Roster.List)
+	subLeaders := int(math.Ceil(math.Pow(float64(nodes), 1./3.)))
+	for ri := 1 + subLeaders; ri < nodes; ri++ {
+		// Create a roster with just the node we want to
+		// download from.
+		roster := onet.NewRoster(sb.Roster.List[ri : ri+1])
+
+		err := func() error {
+			// First delete an existing stateTrie. There
+			// cannot be another write-access to the
+			// database because s.catchingUp == true.
+			_, err := s.getStateTrie(sb.SkipChainID())
+			if err == nil {
+				// Suppose we _do_ have a statetrie
+				db, stBucket := s.GetAdditionalBucket(sb.SkipChainID())
+				err := db.Update(func(tx *bolt.Tx) error {
+					return tx.DeleteBucket(stBucket)
+				})
+				if err != nil {
+					log.Fatal("Cannot delete existing trie while trying to download:", err)
+				}
+				s.stateTriesLock.Lock()
+				delete(s.stateTries, idStr)
+				s.stateTriesLock.Unlock()
+			}
+
+			// Then start downloading the stateTrie over the network.
+			cl := NewClient(sb.SkipChainID(), *roster)
+			var db *bolt.DB
+			var bucketName []byte
+			var nonce uint64
+			for {
+				resp, err := cl.DownloadState(sb.SkipChainID(), nonce, catchupFetchDBEntries)
+				if db == nil {
+					db, bucketName = s.GetAdditionalBucket([]byte(idStr))
+					nonce = resp.Nonce
+				}
+				if err != nil {
+					return errors.New("cannot download trie: " + err.Error())
+				}
+				// And store all entries in our local database.
+				err = db.Update(func(tx *bolt.Tx) error {
+					bucket := tx.Bucket(bucketName)
+					for _, kv := range resp.KeyValues {
+						err := bucket.Put(kv.Key, kv.Value)
+						if err != nil {
+							return err
+						}
+					}
+					return nil
+				})
+				if err != nil {
+					log.Fatal("Couldn't store entries:", err)
+				}
+				if len(resp.KeyValues) < catchupFetchDBEntries {
+					break
+				}
+			}
+
+			// Check the new trie is correct
+			st, err := loadStateTrie(db, bucketName)
+			if err != nil {
+				return errors.New("couldn't load state trie: " + err.Error())
+			}
+			if sb.Index != st.GetIndex() {
+				log.Lvl2("Downloading corresponding block")
+				cl := skipchain.NewClient()
+				// TODO: make sure the downloaded block is correct
+				search, err := cl.GetSingleBlockByIndex(roster, sb.SkipChainID(), st.GetIndex())
+				if err != nil {
+					return errors.New("couldn't get correct block for verification: " + err.Error())
+				}
+				sb = search.SkipBlock
+			}
+			var header DataHeader
+			err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
+			if err != nil {
+				return errors.New("couldn't unmarshal header: " + err.Error())
+			}
+			if !bytes.Equal(st.GetRoot(), header.TrieRoot) {
+				return errors.New("got wrong database, merkle roots don't work out")
+			}
+
+			// Finally initialize the stateTrie using the new database.
+			s.stateTriesLock.Lock()
+			s.stateTries[idStr] = st
+			s.stateTriesLock.Unlock()
+			return nil
+		}()
+		if err == nil {
+			return nil
+		}
+		log.Errorf("Couldn't load database from %s - got error %s", roster.List[0], err)
+	}
+	return errors.New("none of the non-leader and non-subleader nodes were able to give us a copy of the state")
+}
+
+// catchUp takes a skipblock as reference for the roster, the current index,
+// and the skipchainID to download either new blocks if it's less than
+// `catchupDownloadAll` behind, or calls downloadDB to start the download of
+// the full DB over the network.
+func (s *Service) catchUp(sb *skipchain.SkipBlock) {
+	defer func() {
+		s.updateCollectionLock.Lock()
+		s.catchingUp = false
+		s.updateCollectionLock.Unlock()
+	}()
+
+	// Load the trie.
+	st, err := s.getStateTrie(sb.SkipChainID())
+	if err != nil {
+		log.Error("problem with trie:", err)
+		return
+	}
+
+	// Check if we are updating the right index.
+	trieIndex := st.GetIndex()
+
+	if sb.Index-trieIndex > catchupDownloadAll {
+		err := s.downloadDB(sb)
+		if err != nil {
+			log.Error("Error while downloading trie:", err)
+		}
+		return
+	}
+
+	cl := skipchain.NewClient()
+
+	// Fetch all missing blocks to fill the hole
+	search, err := cl.GetSingleBlockByIndex(sb.Roster, sb.SkipChainID(), trieIndex)
+	if err != nil {
+		log.Error("Couldn't update blocks: " + err.Error())
+		return
+	}
+	latest := search.SkipBlock
+	for trieIndex < sb.Index {
+		log.Lvlf1("%s: our index: %d - latest known index: %d", s.ServerIdentity(), trieIndex, sb.Index)
+		updates, err := cl.GetUpdateChainLevel(sb.Roster, latest.Hash, 1, catchupFetchBlocks)
+		if err != nil {
+			log.Error("Couldn't update blocks: " + err.Error())
+			return
+		}
+
+		// This will call updateCollectionCallback with the next block to add
+		_, err = s.db().StoreBlocks(updates)
+		if err != nil {
+			log.Error("Got an invalid, unlinkable block: " + err.Error())
+			return
+		}
+		trieIndex += len(updates)
+		latest = updates[len(updates)-1]
+	}
+}
+
+// updateTrieCallback is registered in skipchain and is called after a
 // skipblock is updated. When this function is called, it is not always after
 // the addition of a new block, but an updates to forward links, for example.
 // Hence, we need to figure out when a new block is added. This can be done by
 // looking at the latest skipblock cache from Service.state.
-func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
+func (s *Service) updateTrieCallback(sbID skipchain.SkipBlockID) error {
+	s.updateCollectionLock.Lock()
+	defer s.updateCollectionLock.Unlock()
+
 	s.closedMutex.Lock()
+	defer s.closedMutex.Unlock()
 	if s.closed {
-		s.closedMutex.Unlock()
 		return nil
 	}
-	s.working.Add(1)
-	defer s.working.Done()
-	s.closedMutex.Unlock()
 
 	defer log.Lvlf4("%s updated collection for %x", s.ServerIdentity(), sbID)
 
-	if !s.isOurChain(sbID) {
+	// Verification it's really a skipchain for us.
+	if !s.hasByzCoinVerification(sbID) {
 		log.Lvl4("Not our chain...")
 		return nil
 	}
@@ -445,16 +806,58 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 			"programmer error if you see this message.")
 	}
 
-	cdb := s.getCollection(sb.SkipChainID())
-	collectionIndex := cdb.getIndex()
+	// Create the trie for the genesis block if it has not been
+	// created yet.
+	// We don't need to wrap the check and use another
+	// lock because the callback is already locked and we only
+	// create state trie here.
+	if sb.Index == 0 && !s.hasStateTrie(sb.SkipChainID()) {
+		var body DataBody
+		err := protobuf.DecodeWithConstructors(sb.Payload, &body, network.DefaultConstructors(cothority.Suite))
+		if err != nil {
+			log.Error(s.ServerIdentity(), "could not unmarshal body for genesis block", err)
+			return errors.New("couldn't unmarshal body for genesis block")
+		}
+		nonce, err := s.loadNonceFromTxs(body.TxResults)
+		if err != nil {
+			return err
+		}
+		// We don't care about the state trie that is returned in this
+		// function because we load the trie again in getStateTrie
+		// right afterwards.
+		_, err = s.createStateTrie(sb.SkipChainID(), nonce)
+		if err != nil {
+			return fmt.Errorf("could not create trie: %v", err)
+		}
+	}
 
-	if sb.Index != collectionIndex+1 {
-		log.Lvlf4("%v updating collection for block %d refused, current collection block is %d", s.ServerIdentity(), sb.Index, collectionIndex)
+	// Load the trie.
+	st, err := s.getStateTrie(sb.SkipChainID())
+	if err != nil {
+		return fmt.Errorf("could not load trie: %v", err)
+	}
+
+	// Check if we are updating the right index.
+	trieIndex := st.GetIndex()
+	if sb.Index <= trieIndex {
+		// This is because skipchains will inform us about new forwardLinks, but we
+		// don't need to update the collection in that case.
+		log.Lvlf4("%v updating collection for block %d refused, current collection block is %d", s.ServerIdentity(), sb.Index, trieIndex)
+		return nil
+	} else if sb.Index > trieIndex+1 {
+		if s.catchingUp {
+			log.Warn(s.ServerIdentity(), "Got new block while catching up - ignoring block for now")
+			return nil
+		}
+
+		s.catchingUp = true
+		go s.catchUp(sb)
 		return nil
 	}
 
+	// Get the DataHeader and the DataBody of the block.
 	var header DataHeader
-	err := protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
+	err = protobuf.DecodeWithConstructors(sb.Data, &header, network.DefaultConstructors(cothority.Suite))
 	if err != nil {
 		log.Error(s.ServerIdentity(), "could not unmarshal header", err)
 		return errors.New("couldn't unmarshal header")
@@ -467,25 +870,38 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 		return errors.New("couldn't unmarshal body")
 	}
 
-	log.Lvlf2("%s Updating transactions for %x", s.ServerIdentity(), sb.SkipChainID())
-	_, _, scs := s.createStateChanges(cdb.coll, sb.SkipChainID(), body.TxResults, noTimeout)
+	log.Lvlf2("%s Updating transactions for %x on index %v", s.ServerIdentity(), sb.SkipChainID(), sb.Index)
+	_, _, scs := s.createStateChanges(st.MakeStagingStateTrie(), sb.SkipChainID(), body.TxResults, noTimeout)
 
-	log.Lvlf3("%s Storing %d state changes %v", s.ServerIdentity(), len(scs), scs.ShortStrings())
-	if err = cdb.StoreAll(scs, sb.Index); err != nil {
+	// Store old config before the global state gets updated, so that we can compare
+	// with the previous roster to know if something has changed.
+	var oldConfig *ChainConfig
+	if sb.Index > 0 {
+		var err error
+		oldConfig, err = s.LoadConfig(sb.SkipChainID())
+		if err != nil {
+			panic("Couldn't get configuration of the block - this might" +
+				"mean that the db is broken. Error: " + err.Error())
+		}
+	}
+	log.Lvlf3("%s Storing index %d with %d state changes %v", s.ServerIdentity(), sb.Index, len(scs), scs.ShortStrings())
+	// Update our global state using all state changes.
+	if err = st.StoreAll(scs, sb.Index); err != nil {
 		return err
 	}
-	if !bytes.Equal(cdb.RootHash(), header.CollectionRoot) {
+	if !bytes.Equal(st.GetRoot(), header.TrieRoot) {
 		// TODO: if this happens, we've now got a corrupted cdb. See issue #1447.
-		log.Error("hash of collection doesn't correspond to root hash")
+		// This should never happen...
+		panic(s.ServerIdentity().String() + ": hash of collection doesn't correspond to root hash")
 	}
 
-	// Notify all waiting channels
+	// Notify all waiting channels for processed ClientTransactions.
 	for _, t := range body.TxResults {
-		s.state.informWaitChannel(t.ClientTransaction.Instructions.Hash(), t.Accepted)
+		s.notifications.informWaitChannel(t.ClientTransaction.Instructions.Hash(), t.Accepted)
 	}
-	s.state.informBlock(sb.SkipChainID())
+	s.notifications.informBlock(sb.SkipChainID())
 
-	// check whether the heartbeat monitor exists, if it doesn't we start a
+	// Check whether the heartbeat monitor exists, if it doesn't we start a
 	// new one
 	interval, _, err := s.LoadBlockInfo(sb.SkipChainID())
 	if err != nil {
@@ -496,14 +912,17 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 			panic("This is a new genesis block, but we're already running " +
 				"the heartbeat monitor, it should never happen.")
 		}
-		log.Lvlf2("%s started heartbeat monitor for %x", s.ServerIdentity(), sb.SkipChainID())
+		log.Lvlf2("%s started heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
 		s.heartbeats.start(string(sb.SkipChainID()), interval*rotationWindow, s.heartbeatsTimeout)
+	} else {
+		log.Lvlf2("%s updating heartbeat monitor for %x with window %v", s.ServerIdentity(), sb.SkipChainID(), interval*rotationWindow)
+		s.heartbeats.updateTimeout(string(sb.SkipChainID()), interval*rotationWindow)
 	}
 
 	// If we are adding a genesis block, then look into it for the darc ID
-	// and add it to the darcToSc hash map. Start polling if necessary.
+	// and add it to the darcToSc hash map.
 	if sb.Index == 0 {
-		// the information should already be in the collections
+		// the information should already be in the trie
 		d, err := s.LoadGenesisDarc(sb.SkipChainID())
 		if err != nil {
 			return err
@@ -517,17 +936,19 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 			return err
 		}
 
+		// Start viewchange monitor that will fire if we don't get updates in time.
 		s.viewChangeMan.add(s.sendViewChangeReq, s.sendNewView, s.isLeader, string(sb.Hash))
 		s.viewChangeMan.start(s.ServerIdentity().ID, sb.SkipChainID(), initialDur, s.getFaultThreshold(sb.Hash), string(sb.Hash))
 		// TODO fault threshold might change
 
+		// Start polling if we're the leader.
 		s.pollChanMut.Lock()
 		k := string(sb.SkipChainID())
 		if sb.Roster.List[0].Equal(s.ServerIdentity()) {
 			if _, ok := s.pollChan[k]; !ok {
 				log.Lvlf2("%s genesis leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
 				s.pollChanWG.Add(1)
-				s.pollChan[k] = s.startPolling(sb.SkipChainID(), interval)
+				s.pollChan[k] = s.startPolling(sb.SkipChainID())
 			}
 		}
 		s.pollChanMut.Unlock()
@@ -542,13 +963,25 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 	view := isViewChangeTx(body.TxResults)
 	if view != nil {
 		s.viewChangeMan.done(*view)
+	}
+
+	// Get the latest configuration of the global state, which includes the latest
+	// ClientTransactions received.
+	bcConfig, err := s.LoadConfig(sb.SkipChainID())
+	if err != nil {
+		panic("Couldn't get configuration of the block - this might" +
+			"mean that the db is broken. Error: " + err.Error())
+	}
+
+	// Check if the roster changed and if the polling needs to be updated.
+	if !oldConfig.Roster.ID.Equal(bcConfig.Roster.ID) {
 		s.pollChanMut.Lock()
 		k := string(sb.SkipChainID())
-		if sb.Roster.List[0].Equal(s.ServerIdentity()) {
+		if bcConfig.Roster.List[0].Equal(s.ServerIdentity()) {
 			if _, ok := s.pollChan[k]; !ok {
 				log.Lvlf2("%s new leader started polling for %x", s.ServerIdentity(), sb.SkipChainID())
 				s.pollChanWG.Add(1)
-				s.pollChan[k] = s.startPolling(sb.SkipChainID(), interval)
+				s.pollChan[k] = s.startPolling(sb.SkipChainID())
 			} else {
 				log.Warnf("%s we are a new leader but we were already polling for %x", s.ServerIdentity(), sb.SkipChainID())
 			}
@@ -561,6 +994,11 @@ func (s *Service) updateCollectionCallback(sbID skipchain.SkipBlockID) error {
 		}
 		s.pollChanMut.Unlock()
 	}
+
+	// At this point everything should be stored.
+	s.streamingMan.notify(string(sb.SkipChainID()), sb)
+
+	log.Lvlf4("%s updated trie for %x with root %x", s.ServerIdentity(), sb.SkipChainID(), st.GetRoot())
 	return nil
 }
 
@@ -589,24 +1027,59 @@ func isViewChangeTx(txs TxResults) *viewchange.View {
 	return req.GetView()
 }
 
-// GetCollectionView returns a read-only accessor to the collection
-// for the given skipchain.
-func (s *Service) GetCollectionView(scID skipchain.SkipBlockID) CollectionView {
-	cdb := s.getCollection(scID)
-	return &roCollection{cdb.coll}
+// GetReadOnlyStateTrie returns a read-only accessor to the trie for the given
+// skipchain.
+func (s *Service) GetReadOnlyStateTrie(scID skipchain.SkipBlockID) (ReadOnlyStateTrie, error) {
+	return s.getStateTrie(scID)
 }
 
-func (s *Service) getCollection(id skipchain.SkipBlockID) *collectionDB {
-	s.storage.Mutex.Lock()
-	defer s.storage.Mutex.Unlock()
+func (s *Service) hasStateTrie(id skipchain.SkipBlockID) bool {
+	s.stateTriesLock.Lock()
+	defer s.stateTriesLock.Unlock()
+
 	idStr := fmt.Sprintf("%x", id)
-	col := s.collectionDB[idStr]
+	_, ok := s.stateTries[idStr]
+
+	return ok
+}
+
+func (s *Service) getStateTrie(id skipchain.SkipBlockID) (*stateTrie, error) {
+	if len(id) == 0 {
+		return nil, errors.New("no skipchain ID")
+	}
+	s.stateTriesLock.Lock()
+	defer s.stateTriesLock.Unlock()
+	idStr := fmt.Sprintf("%x", id)
+	col := s.stateTries[idStr]
 	if col == nil {
 		db, name := s.GetAdditionalBucket([]byte(idStr))
-		s.collectionDB[idStr] = newCollectionDB(db, name)
-		return s.collectionDB[idStr]
+		st, err := loadStateTrie(db, name)
+		if err != nil {
+			return nil, err
+		}
+		s.stateTries[idStr] = st
+		return s.stateTries[idStr], nil
 	}
-	return col
+	return col, nil
+}
+
+func (s *Service) createStateTrie(id skipchain.SkipBlockID, nonce []byte) (*stateTrie, error) {
+	if len(id) == 0 {
+		return nil, errors.New("no skipchain ID")
+	}
+	s.stateTriesLock.Lock()
+	defer s.stateTriesLock.Unlock()
+	idStr := fmt.Sprintf("%x", id)
+	if s.stateTries[idStr] != nil {
+		return nil, errors.New("state trie already exists")
+	}
+	db, name := s.GetAdditionalBucket([]byte(idStr))
+	st, err := newStateTrie(db, name, nonce)
+	if err != nil {
+		return nil, err
+	}
+	s.stateTries[idStr] = st
+	return s.stateTries[idStr], nil
 }
 
 // interface to skipchain.Service
@@ -630,26 +1103,34 @@ func (s *Service) db() *skipchain.SkipBlockDB {
 
 // LoadConfig loads the configuration from a skipchain ID.
 func (s *Service) LoadConfig(scID skipchain.SkipBlockID) (*ChainConfig, error) {
-	coll := s.GetCollectionView(scID)
-	if coll == nil {
-		return nil, errors.New("nil collection DB")
+	st, err := s.GetReadOnlyStateTrie(scID)
+	if err != nil {
+		return nil, err
 	}
-	return loadConfigFromColl(coll)
+	return loadConfigFromTrie(st)
 }
 
 // LoadGenesisDarc loads the genesis darc of the given skipchain ID.
 func (s *Service) LoadGenesisDarc(scID skipchain.SkipBlockID) (*darc.Darc, error) {
-	coll := s.GetCollectionView(scID)
-	return getInstanceDarc(coll, ConfigInstanceID)
+	st, err := s.GetReadOnlyStateTrie(scID)
+	if err != nil {
+		return nil, err
+	}
+	return getInstanceDarc(st, ConfigInstanceID)
 }
 
-// LoadBlockInfo loads the block interval and the maximum size from the skipchain ID.
+// LoadBlockInfo loads the block interval and the maximum size from the
+// skipchain ID. If the config instance does not exist, it will return the
+// default values without an error.
 func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int, error) {
-	cv := s.GetCollectionView(scID)
-	if cv == nil {
+	if scID == nil {
 		return defaultInterval, defaultMaxBlockSize, nil
 	}
-	config, err := loadConfigFromColl(cv)
+	st, err := s.GetReadOnlyStateTrie(scID)
+	if err != nil {
+		return defaultInterval, defaultMaxBlockSize, nil
+	}
+	config, err := loadConfigFromTrie(st)
 	if err != nil {
 		if err == errKeyNotSet {
 			err = nil
@@ -659,7 +1140,7 @@ func (s *Service) LoadBlockInfo(scID skipchain.SkipBlockID) (time.Duration, int,
 	return config.BlockInterval, config.MaxBlockSize, nil
 }
 
-func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duration) chan bool {
+func (s *Service) startPolling(scID skipchain.SkipBlockID) chan bool {
 	closeSignal := make(chan bool)
 	go func() {
 		s.closedMutex.Lock()
@@ -673,19 +1154,32 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 		defer s.pollChanWG.Done()
 		var txs []ClientTransaction
 		for {
+			bcConfig, err := s.LoadConfig(scID)
+			if err != nil {
+				panic("couldn't get configuration - this is bad and probably" +
+					"a problem with the database! " + err.Error())
+			}
 			select {
 			case <-closeSignal:
-				log.Lvl2(s.ServerIdentity(), "stopping polling")
+				log.Lvl2(s.ServerIdentity(), "abort waiting for next block")
 				return
-			case <-time.After(interval):
-				sb, err := s.db().GetLatestByID(scID)
+			case <-time.After(bcConfig.BlockInterval):
+				// Need to update the config, as in the meantime a new block should have
+				// arrived with a possible new configuration.
+				bcConfig, err = s.LoadConfig(scID)
+				if err != nil {
+					panic("couldn't get configuration - this is bad and probably" +
+						"a problem with the database! " + err.Error())
+				}
+
+				latest, err := s.db().GetLatestByID(scID)
 				if err != nil {
 					panic("DB is in bad state and cannot find skipchain anymore: " + err.Error() +
 						" This function should never be called on a skipchain that does not exist.")
 				}
 
-				log.Lvl3("Starting new block", sb.Index+1)
-				tree := sb.Roster.GenerateNaryTree(len(sb.Roster.List))
+				log.Lvl2(s.ServerIdentity(), "Starting new block", latest.Index+1)
+				tree := bcConfig.Roster.GenerateNaryTree(len(bcConfig.Roster.List))
 
 				proto, err := s.CreateProtocol(collectTxProtocol, tree)
 				if err != nil {
@@ -697,7 +1191,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 				}
 				root := proto.(*CollectTxProtocol)
 				root.SkipchainID = scID
-				root.LatestID = sb.Hash
+				root.LatestID = latest.Hash
 				if err := root.Start(); err != nil {
 					panic("Failed to start the protocol with error: " + err.Error() +
 						" Start() only returns an error when the protocol is not initialised correctly," +
@@ -707,9 +1201,8 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 
 				// When we poll, the child nodes must reply within half of the block interval,
 				// because we'll use the other half to process the transactions.
-				protocolTimeout := time.After(interval / 2)
+				protocolTimeout := time.After(bcConfig.BlockInterval / 2)
 
-				_, maxsz, _ := s.LoadBlockInfo(scID)
 			collectTxLoop:
 				for {
 					select {
@@ -717,7 +1210,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 						if more {
 							for _, ct := range newTxs {
 								txsz := txSize(TxResult{ClientTransaction: ct})
-								if txsz < maxsz {
+								if txsz < bcConfig.MaxBlockSize {
 									txs = append(txs, ct)
 								} else {
 									log.Lvl2(s.ServerIdentity(), "dropping collected transaction with length", txsz)
@@ -731,7 +1224,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 						close(root.Finish)
 						break collectTxLoop
 					case <-closeSignal:
-						log.Lvl2(s.ServerIdentity(), "stopping polling")
+						log.Lvl2(s.ServerIdentity(), "abort collection of transactions")
 						close(root.Finish)
 						return
 					}
@@ -750,10 +1243,13 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 
 				// Pre-run transactions to look how many we can fit in the alloted time
 				// slot. Perhaps we can run this in parallel during the wait-phase?
-				log.Lvl3("Counting how many transactions fit in", interval/2)
-				cdb := s.getCollection(scID)
+				log.Lvl3("Counting how many transactions fit in", bcConfig.BlockInterval/2)
 				then := time.Now()
-				_, txOut, _ := s.createStateChanges(cdb.coll, scID, txIn, interval/2)
+				st, err := s.getStateTrie(scID)
+				if err != nil {
+					panic("the state trie must exist because we only start polling after creating/loading the skipchain")
+				}
+				_, txOut, _ := s.createStateChanges(st.MakeStagingStateTrie(), scID, txIn, bcConfig.BlockInterval/2)
 
 				txs = txs[len(txOut):]
 				if len(txs) > 0 {
@@ -761,9 +1257,9 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 					log.Warnf("%d transactions (%v bytes) included in block in %v, %d transactions left for the next block", len(txOut), sz, time.Now().Sub(then), len(txs))
 				}
 
-				_, err = s.createNewBlock(scID, sb.Roster, txOut)
+				_, err = s.createNewBlock(scID, &bcConfig.Roster, txOut)
 				if err != nil {
-					log.Error("couldn't create new block: " + err.Error())
+					log.Error(s.ServerIdentity(), "couldn't create new block: "+err.Error())
 				}
 			}
 		}
@@ -772,7 +1268,7 @@ func (s *Service) startPolling(scID skipchain.SkipBlockID, interval time.Duratio
 }
 
 // We use the ByzCoin as a receiver (as is done in the identity service),
-// so we can access e.g. the collectionDBs of the service.
+// so we can access e.g. the StateTrie of the service.
 func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool {
 	start := time.Now()
 	defer func() {
@@ -789,8 +1285,8 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 	// Check the contents of the DataHeader before proceeding.
 	// We'll check the timestamp later, once we have the config loaded.
 	err = func() error {
-		if len(header.CollectionRoot) != sha256.Size {
-			return errors.New("collection root is wrong size")
+		if len(header.TrieRoot) != sha256.Size {
+			return errors.New("trie root is wrong size")
 		}
 		if len(header.ClientTransactionHash) != sha256.Size {
 			return errors.New("client transaction hash is wrong size")
@@ -818,8 +1314,29 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		return false
 	}
 
-	cdb := s.getCollection(newSB.SkipChainID())
-	mtr, txOut, scs := s.createStateChanges(cdb.coll, newSB.SkipChainID(), body.TxResults, noTimeout)
+	// Load/create a staging trie to add the state changes to it and
+	// compute the Merkle root.
+	var sst *stagingStateTrie
+	if newSB.Index == 0 {
+		nonce, err := s.loadNonceFromTxs(body.TxResults)
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+			return false
+		}
+		sst, err = newMemStagingStateTrie(nonce)
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+			return false
+		}
+	} else {
+		st, err := s.getStateTrie(newSB.SkipChainID())
+		if err != nil {
+			log.Error(s.ServerIdentity(), err)
+			return false
+		}
+		sst = st.MakeStagingStateTrie()
+	}
+	mtr, txOut, scs := s.createStateChanges(sst, newSB.SkipChainID(), body.TxResults, noTimeout)
 
 	// Check that the locally generated list of accepted/rejected txs match the list
 	// the leader proposed.
@@ -841,8 +1358,8 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 		return false
 	}
 
-	if bytes.Compare(header.CollectionRoot, mtr) != 0 {
-		log.Lvl2(s.ServerIdentity(), "Collection root doesn't verify")
+	if bytes.Compare(header.TrieRoot, mtr) != 0 {
+		log.Lvl2(s.ServerIdentity(), "Trie root doesn't verify")
 		return false
 	}
 	if bytes.Compare(header.StateChangesHash, scs.Hash()) != 0 {
@@ -852,25 +1369,19 @@ func (s *Service) verifySkipBlock(newID []byte, newSB *skipchain.SkipBlock) bool
 
 	// Compute the new state and check whether the roster in newSB matches
 	// the config.
-	collClone := s.getCollection(newSB.SkipChainID()).coll.Clone()
-	for _, sc := range scs {
-		if err := storeInColl(collClone, &sc); err != nil {
-			log.Error(s.ServerIdentity(), err)
-			return false
-		}
+	if err := sst.StoreAll(scs); err != nil {
+		log.Error(s.ServerIdentity(), err)
+		return false
 	}
-	config, err := loadConfigFromColl(&roCollection{collClone})
+
+	config, err := loadConfigFromTrie(sst)
 	if err != nil {
 		log.Error(s.ServerIdentity(), err)
 		return false
 	}
-	if !config.Roster.ID.Equal(newSB.Roster.ID) {
-		log.Error(s.ServerIdentity(), "rosters have unequal IDs")
-		return false
-	}
-	for i := range config.Roster.List {
-		if !newSB.Roster.List[i].Equal(config.Roster.List[i]) {
-			log.Error(s.ServerIdentity(), "roster in config is not equal to the one in skipblock")
+	if newSB.Index > 0 {
+		if err := config.checkNewRoster(*newSB.Roster); err != nil {
+			log.Error("Didn't accept the new roster:", err)
 			return false
 		}
 	}
@@ -921,7 +1432,7 @@ func txSize(txr ...TxResult) (out int) {
 // State caching is implemented here, which is critical to performance, because
 // on the leader it reduces the number of contract executions by 1/3 and on
 // followers by 1/2.
-func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges) {
+func (s *Service) createStateChanges(sst *stagingStateTrie, scID skipchain.SkipBlockID, txIn TxResults, timeout time.Duration) (merkleRoot []byte, txOut TxResults, states StateChanges) {
 	// If what we want is in the cache, then take it from there. Otherwise
 	// ignore the error and compute the state changes.
 	var err error
@@ -935,44 +1446,51 @@ func (s *Service) createStateChanges(coll *collection.Collection, scID skipchain
 
 	var maxsz, blocksz int
 	_, maxsz, err = s.LoadBlockInfo(scID)
-
 	// no error or expected noCollection err, so keep going with the
 	// maxsz we got.
 	err = nil
 
 	deadline := time.Now().Add(timeout)
 
-	// TODO: Because we depend on making at least one clone per transaction
-	// we need to find out if this is as expensive as it looks, and if so if
-	// we could use some kind of copy-on-write technique.
-
-	cdbTemp := coll.Clone()
+	sstTemp := sst.Clone()
 	var cin []Coin
 clientTransactions:
 	for _, tx := range txIn {
+		if !bytes.Equal(tx.ClientTransaction.InstructionsHash, tx.ClientTransaction.Instructions.Hash()) {
+			log.Error(s.ServerIdentity(), "invalid instruction hash")
+			tx.Accepted = false
+			txOut = append(txOut, tx)
+			continue clientTransactions
+		}
 		txsz := txSize(tx)
 
-		// Make a new collection for each instruction. If the instruction is sucessfully
-		// implemented and changes applied, then keep it (via cdbTemp = cdbI.c),
-		// otherwise dump it.
-		cdbI := &roCollection{cdbTemp.Clone()}
+		// Make a new trie for each instruction. If the instruction is
+		// sucessfully implemented and changes applied, then keep it
+		// (via cdbTemp = cdbI.c), otherwise dump it.
+		sstTempC := sstTemp.Clone()
 		for _, instr := range tx.ClientTransaction.Instructions {
-			scs, cout, err := s.executeInstruction(cdbI, cin, instr)
+			scs, cout, err := s.executeInstruction(sstTempC, cin, instr, tx.ClientTransaction.InstructionsHash)
 			if err != nil {
 				log.Errorf("%s Call to contract returned error: %s", s.ServerIdentity(), err)
 				tx.Accepted = false
 				txOut = append(txOut, tx)
 				continue clientTransactions
 			}
-			for _, sc := range scs {
-				if err := storeInColl(cdbI.c, &sc); err != nil {
-					log.Error(s.ServerIdentity(), "failed to add to collections with error: "+err.Error())
-					tx.Accepted = false
-					txOut = append(txOut, tx)
-					continue clientTransactions
-				}
+			var counterScs StateChanges
+			if counterScs, err = incrementSignerCounters(sstTempC, instr.Signatures); err != nil {
+				log.Errorf("%s failed to update signature counters: %s", s.ServerIdentity(), err)
+				tx.Accepted = false
+				txOut = append(txOut, tx)
+				continue clientTransactions
+			}
+			if err = sstTempC.StoreAll(append(scs, counterScs...)); err != nil {
+				log.Errorf("%s StoreAll failed: %s", s.ServerIdentity(), err)
+				tx.Accepted = false
+				txOut = append(txOut, tx)
+				continue clientTransactions
 			}
 			states = append(states, scs...)
+			states = append(states, counterScs...)
 			cin = cout
 		}
 
@@ -1004,52 +1522,60 @@ clientTransactions:
 			}
 		}
 
-		cdbTemp = cdbI.c
+		sstTemp = sstTempC
 		tx.Accepted = true
 		txOut = append(txOut, tx)
 		blocksz += txsz
 	}
 
 	// Store the result in the cache before returning.
-	merkleRoot = cdbTemp.GetRoot()
-	s.stateChangeCache.update(scID, txOut.Hash(), merkleRoot, txOut, states)
+	merkleRoot = sstTemp.GetRoot()
+	if len(states) != 0 && len(txOut) != 0 {
+		s.stateChangeCache.update(scID, txOut.Hash(), merkleRoot, txOut, states)
+	}
 	return
 }
 
-func (s *Service) executeInstruction(cdbI CollectionView, cin []Coin, instr Instruction) (scs StateChanges, cout []Coin, err error) {
+func (s *Service) executeInstruction(st ReadOnlyStateTrie, cin []Coin, instr Instruction, ctxHash []byte) (scs StateChanges, cout []Coin, err error) {
 	defer func() {
 		if re := recover(); re != nil {
 			err = errors.New(re.(string))
 		}
 	}()
 
-	contractID, _, err := instr.GetContractState(cdbI)
-	if err != nil {
+	_, contractID, _, err := st.GetValues(instr.InstanceID.Slice())
+	if err != errKeyNotSet && err != nil {
 		err = errors.New("Couldn't get contract type of instruction: " + err.Error())
 		return
 	}
 
 	contract, exists := s.contracts[contractID]
+	if !exists && ConfigInstanceID.Equal(instr.InstanceID) {
+		// Special case: first time call to genesis-configuration must return
+		// correct contract type.
+		contract, exists = s.contracts[ContractConfigID]
+	}
+
 	// If the leader does not have a verifier for this contract, it drops the
 	// transaction.
 	if !exists {
-		err = errors.New("Leader is dropping instruction of unknown contract: " + contractID)
+		err = fmt.Errorf("Leader is dropping instruction of unknown contract \"%s\" on instance \"%x\"", contractID, instr.InstanceID.Slice())
 		return
 	}
 	// Now we call the contract function with the data of the key.
-	log.Lvlf3("%s Calling contract %s", s.ServerIdentity(), contractID)
-	return contract(cdbI, instr, cin)
+	log.Lvlf3("%s Calling contract '%s'", s.ServerIdentity(), contractID)
+	return contract(st, instr, ctxHash, cin)
 }
 
 func (s *Service) getLeader(scID skipchain.SkipBlockID) (*network.ServerIdentity, error) {
-	sb, err := s.db().GetLatestByID(scID)
+	scConfig, err := s.LoadConfig(scID)
 	if err != nil {
 		return nil, err
 	}
-	if sb.Roster == nil || len(sb.Roster.List) < 1 {
+	if len(scConfig.Roster.List) < 1 {
 		return nil, errors.New("roster is empty")
 	}
-	return sb.Roster.List[0], nil
+	return scConfig.Roster.List[0], nil
 }
 
 // getTxs is primarily used as a callback in the CollectTx protocol to retrieve
@@ -1067,11 +1593,11 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	defer s.working.Done()
 	actualLeader, err := s.getLeader(scID)
 	if err != nil {
-		log.Lvlf1("could not find a leader on %x with error %s", scID, err)
+		log.Lvlf1("%s: could not find a leader on %x with error: %s", s.ServerIdentity(), scID, err)
 		return []ClientTransaction{}
 	}
 	if !leader.Equal(actualLeader) {
-		log.Warn(s.ServerIdentity(), "getTxs came from a wrong leader")
+		log.Warn(s.ServerIdentity(), "getTxs came from a wrong leader", leader)
 		return []ClientTransaction{}
 	}
 	s.heartbeats.beat(string(scID))
@@ -1098,6 +1624,24 @@ func (s *Service) getTxs(leader *network.ServerIdentity, roster *onet.Roster, sc
 	}
 
 	return s.txBuffer.take(string(scID))
+}
+
+func (s *Service) loadNonceFromTxs(txs TxResults) ([]byte, error) {
+	if len(txs) == 0 {
+		return nil, errors.New("no transactions")
+	}
+	instrs := txs[0].ClientTransaction.Instructions
+	if len(instrs) != 1 {
+		return nil, fmt.Errorf("expected 1 instruction, got %v", len(instrs))
+	}
+	if instrs[0].Spawn == nil {
+		return nil, errors.New("first instruction is not a Spawn")
+	}
+	nonce := instrs[0].Spawn.Args.Search("trie_nonce")
+	if len(nonce) == 0 {
+		return nil, errors.New("nonce is empty")
+	}
+	return nonce, nil
 }
 
 // TestClose closes the go-routines that are polling for transactions. It is
@@ -1182,74 +1726,6 @@ func (s *Service) getPrivateKey() kyber.Scalar {
 	return tni.Private()
 }
 
-func (s *Service) scIDFromGenesisDarc(genesisDarcID darc.ID) (skipchain.SkipBlockID, error) {
-	s.darcToScMut.Lock()
-	scID, ok := s.darcToSc[string(genesisDarcID)]
-	s.darcToScMut.Unlock()
-	if !ok {
-		return nil, errors.New("the specified genesis darc ID does not exist")
-	}
-	return scID, nil
-}
-
-// withinInterval checks whether public key targetPk in skipchain that has the
-// genesis darc genesisDarcID has the right to be the new leader at the current
-// time. This function should only be called when view-change is enabled.
-func (s *Service) withinInterval(genesisDarcID darc.ID, targetPk kyber.Point) error {
-	scID, err := s.scIDFromGenesisDarc(genesisDarcID)
-	if err != nil {
-		return err
-	}
-
-	interval, _, err := s.LoadBlockInfo(scID)
-	if err != nil {
-		return err
-	}
-	t, err := s.heartbeats.getLatestHeartbeat(string(scID))
-	if err != nil {
-		return err
-	}
-
-	// After a leader dies, good nodes wait for 2*interval before accepting
-	// new leader proposals. For every time window of 2*interval
-	// afterwards, the "next" node in the roster list has a chance to
-	// propose to be a new leader.
-
-	currTime := time.Now()
-	if t.Add(time.Duration(rotationWindow) * interval).After(currTime) {
-		return errors.New("not ready to accept new leader yet")
-	}
-
-	// find the position in the proposer queue
-	latestConfig, err := s.LoadConfig(scID)
-	if err != nil {
-		return err
-	}
-	pos := func() int {
-		var ctr int
-		for _, pk := range latestConfig.Roster.Publics() {
-			if pk.Equal(targetPk) {
-				return ctr
-			}
-			ctr++
-		}
-		return -1
-	}()
-	if pos == -1 || pos == 0 {
-		return errors.New("invalid targetPk " + targetPk.String() + ", or position " + string(pos))
-	}
-
-	// check that the time window matches with the position using the
-	// equation below, note that t = previous heartbeat
-	// t + pos * 2 * interval < now < t + (pos+1) * 2 * interval
-	tLower := t.Add(time.Duration(pos) * rotationWindow * interval)
-	tUpper := t.Add(time.Duration(pos+1) * rotationWindow * interval)
-	if currTime.After(tLower) && currTime.Before(tUpper) {
-		return nil
-	}
-	return errors.New("not your turn to change leader")
-}
-
 // registerContract stores the contract in a map and will
 // call it whenever a contract needs to be done.
 func (s *Service) registerContract(contractID string, c ContractFn) error {
@@ -1261,6 +1737,9 @@ func (s *Service) registerContract(contractID string, c ContractFn) error {
 // it finds a valid config-file and synchronises skipblocks if it can contact
 // other nodes.
 func (s *Service) startAllChains() error {
+	if !s.closed {
+		return errors.New("Can only call startAllChains if the service has been closed before")
+	}
 	s.SetPropagationTimeout(120 * time.Second)
 	msg, err := s.Load(storageID)
 	if err != nil {
@@ -1268,20 +1747,16 @@ func (s *Service) startAllChains() error {
 	}
 	if msg != nil {
 		var ok bool
-		s.storage, ok = msg.(*omniStorage)
+		s.storage, ok = msg.(*bcStorage)
 		if !ok {
 			return errors.New("Data of wrong type")
 		}
 	}
-	s.collectionDB = map[string]*collectionDB{}
-	s.state = bcState{
+	s.stateTries = make(map[string]*stateTrie)
+	s.notifications = bcNotifications{
 		waitChannels: make(map[string]chan bool),
 	}
-
-	// NOTE: Usually startAllChains is only called when services start up. but for
-	// testing, we might re-initialise the service. So we need to clean up
-	// the go-routines.
-	s.cleanupGoroutines()
+	s.closed = false
 
 	// Recreate the polling channles.
 	s.pollChanMut.Lock()
@@ -1295,7 +1770,7 @@ func (s *Service) startAllChains() error {
 	}
 
 	for _, gen := range gasr.IDs {
-		if !s.isOurChain(gen) {
+		if !s.hasByzCoinVerification(gen) {
 			continue
 		}
 
@@ -1312,7 +1787,7 @@ func (s *Service) startAllChains() error {
 		if leader.Equal(s.ServerIdentity()) {
 			s.pollChanMut.Lock()
 			s.pollChanWG.Add(1)
-			s.pollChan[string(gen)] = s.startPolling(gen, interval)
+			s.pollChan[string(gen)] = s.startPolling(gen)
 			s.pollChanMut.Unlock()
 		}
 
@@ -1358,7 +1833,7 @@ func (s *Service) startAllChains() error {
 }
 
 // checks that a given chain has a verifier we recognize
-func (s *Service) isOurChain(gen skipchain.SkipBlockID) bool {
+func (s *Service) hasByzCoinVerification(gen skipchain.SkipBlockID) bool {
 	sb := s.db().GetByID(gen)
 	if sb == nil {
 		// Not finding this ID should not happen, but
@@ -1411,6 +1886,8 @@ func (s *Service) trySyncAll() {
 	}
 }
 
+var existingDB = regexp.MustCompile(`^ByzCoin_[0-9a-f]+$`)
+
 // newService receives the context that holds information about the node it's
 // running on. Saving and loading can be done using the context. The data will
 // be stored in memory for tests and simulations, and on disk for real
@@ -1420,17 +1897,25 @@ func newService(c *onet.Context) (onet.Service, error) {
 		ServiceProcessor:       onet.NewServiceProcessor(c),
 		contracts:              make(map[string]ContractFn),
 		txBuffer:               newTxBuffer(),
-		storage:                &omniStorage{},
+		storage:                &bcStorage{},
 		darcToSc:               make(map[string]skipchain.SkipBlockID),
 		stateChangeCache:       newStateChangeCache(),
 		heartbeatsTimeout:      make(chan string, 1),
 		closeLeaderMonitorChan: make(chan bool, 1),
 		heartbeats:             newHeartbeats(),
 		viewChangeMan:          newViewChangeManager(),
+		streamingMan:           streamingManager{},
+		closed:                 true,
 	}
 	if err := s.RegisterHandlers(s.CreateGenesisBlock, s.AddTransaction,
-		s.GetProof); err != nil {
+		s.GetProof, s.CheckAuthorization,
+		s.GetSignerCounters,
+		s.DownloadState,
+	); err != nil {
 		log.ErrFatal(err, "Couldn't register messages")
+	}
+	if err := s.RegisterStreamingHandlers(s.StreamTransactions); err != nil {
+		log.ErrFatal(err, "Couldn't register streaming messages")
 	}
 	s.RegisterProcessorFunc(viewChangeMsgID, s.handleViewChangeReq)
 
@@ -1440,8 +1925,7 @@ func newService(c *onet.Context) (onet.Service, error) {
 	if _, err := s.ProtocolRegister(collectTxProtocol, NewCollectTxProtocol(s.getTxs)); err != nil {
 		return nil, err
 	}
-	s.skService().RegisterStoreSkipblockCallback(s.updateCollectionCallback)
-	s.skService().EnableViewChange()
+	s.skService().RegisterStoreSkipblockCallback(s.updateTrieCallback)
 
 	// Register the view-change cosi protocols.
 	var err error
@@ -1456,6 +1940,43 @@ func newService(c *onet.Context) (onet.Service, error) {
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	ver, err := s.LoadVersion()
+	if err != nil {
+		return nil, err
+	}
+	switch ver {
+	case 0:
+		// Version 0 means it hasn't been set yet. If there are any ByzCoin_[0-9af]+
+		// buckets, then they must be old format.
+		db, _ := s.GetAdditionalBucket([]byte("check-db-version"))
+
+		// Look for a bucket that has a byzcoin database in it.
+		err := db.View(func(tx *bolt.Tx) error {
+			c := tx.Cursor()
+			for k, _ := c.First(); k != nil; k, _ = c.Next() {
+				log.Lvlf4("looking for old ByzCoin data in bucket %v", string(k))
+				if existingDB.Match(k) {
+					return fmt.Errorf("database format is too old; rm '%v' to lose all data and make a new database", db.Path())
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+
+		// Otherwise set the db version to 1, because we've confirmed there are
+		// no old-style ones.
+		err = s.SaveVersion(1)
+		if err != nil {
+			return nil, err
+		}
+	case 1:
+		// This is where any necessary future migration fron version 1 -> 2 will happen.
+	default:
+		return nil, fmt.Errorf("unknown db version number %v", ver)
 	}
 
 	if err := s.startAllChains(); err != nil {

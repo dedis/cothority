@@ -748,12 +748,12 @@ func (bft *ProtocolBFTCoSi) waitResponseVerification() (*Response, bool) {
 	// if we didn't get all the responses, add them to the exception
 	// 1, find children that are not in tempPrepareResponsePublics
 	// 2, for the missing ones, find the global index and then add it to the exception
-	publicsMap := make(map[kyber.Point]bool)
+	publicsMap := make(map[string]bool)
 	for _, p := range bft.tempPrepareResponsePublics {
-		publicsMap[p] = true
+		publicsMap[p.String()] = true
 	}
 	for _, tn := range bft.Children() {
-		if !publicsMap[tn.ServerIdentity.Public] {
+		if !publicsMap[tn.ServerIdentity.Public.String()] {
 			// We assume the server was also not available for the commitment
 			// so no need to subtract the commitment.
 			// Conversely, we cannot handle nodes which fail right

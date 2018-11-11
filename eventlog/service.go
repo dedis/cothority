@@ -46,7 +46,10 @@ func (s *Service) Search(req *SearchRequest) (*SearchResponse, error) {
 		req.To = time.Now().UnixNano()
 	}
 
-	v := s.omni.GetCollectionView(req.ID)
+	v, err := s.omni.GetReadOnlyStateTrie(req.ID)
+	if err != nil {
+		return nil, err
+	}
 	el := &eventLog{Instance: req.Instance, v: v}
 
 	id, b, err := el.getLatestBucket()
@@ -128,7 +131,7 @@ filter:
 
 const contractName = "eventlog"
 
-func (s *Service) decodeAndCheckEvent(coll byzcoin.CollectionView, eventBuf []byte) (*Event, error) {
+func (s *Service) decodeAndCheckEvent(coll byzcoin.ReadOnlyStateTrie, eventBuf []byte) (*Event, error) {
 	// Check the timestamp of the event: it should never be in the future,
 	// and it should not be more than 30 seconds in the past. (Why 30 sec
 	// and not something more auto-scaling like blockInterval * 30?
@@ -154,7 +157,7 @@ func (s *Service) decodeAndCheckEvent(coll byzcoin.CollectionView, eventBuf []by
 }
 
 // invoke will add an event and update the corresponding indices.
-func (s *Service) invoke(v byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
+func (s *Service) invoke(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
 	cOut = c
 
 	_, cid, darcID, err := v.GetValues(inst.InstanceID.Slice())
@@ -273,7 +276,7 @@ func (s *Service) invoke(v byzcoin.CollectionView, inst byzcoin.Instruction, c [
 	return
 }
 
-func (s *Service) spawn(v byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+func (s *Service) spawn(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 	_, _, darcID, err := v.GetValues(inst.InstanceID.Slice())
 	if err != nil {
 		return nil, nil, err
@@ -293,9 +296,9 @@ func (s *Service) spawn(v byzcoin.CollectionView, inst byzcoin.Instruction, c []
 
 // contractFunction is the function that runs to process a transaction of
 // type "eventlog"
-func (s *Service) contractFunction(v byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
+func (s *Service) contractFunction(v byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, c []byzcoin.Coin) ([]byzcoin.StateChange, []byzcoin.Coin, error) {
 
-	err := inst.VerifyDarcSignature(v)
+	err := inst.Verify(v, ctxHash)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -332,21 +335,13 @@ func newService(c *onet.Context) (onet.Service, error) {
 	return s, nil
 }
 
-func getEventByID(view byzcoin.CollectionView, eid []byte) (*Event, error) {
-	r, err := view.Get(eid).Record()
+func getEventByID(view byzcoin.ReadOnlyStateTrie, eid []byte) (*Event, error) {
+	v0, _, _, err := view.GetValues(eid)
 	if err != nil {
 		return nil, err
-	}
-	v, err := r.Values()
-	if err != nil {
-		return nil, err
-	}
-	newval, ok := v[0].([]byte)
-	if !ok {
-		return nil, errors.New("invalid value")
 	}
 	var e Event
-	if err := protobuf.Decode(newval, &e); err != nil {
+	if err := protobuf.Decode(v0, &e); err != nil {
 		return nil, err
 	}
 	return &e, nil

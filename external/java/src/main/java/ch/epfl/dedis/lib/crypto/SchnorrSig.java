@@ -1,6 +1,6 @@
 package ch.epfl.dedis.lib.crypto;
 
-import ch.epfl.dedis.proto.SkipchainProto;
+import ch.epfl.dedis.lib.proto.SkipchainProto;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

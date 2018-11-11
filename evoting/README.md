@@ -158,14 +158,14 @@ you have a go environment set up, the following instructions describe how to bui
 the evoting app
 
 ```bash
-$ go get github.com/dedis/cothority/evoting/app
+$ go get github.com/dedis/cothority/evoting/evoting-admin/
 $ cd $GOPATH/src/github.com/dedis/cothority/evoting/app && go build -o $GOPATH/bin/evoting ./...
 ```
 
 If `$GOPATH/bin` is in your `$PATH` then the evoting app should be accessible by
 
 ```bash
-$ evoting --help
+$ evoting-admin --help
 ```
 
 # Links

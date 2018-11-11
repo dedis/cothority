@@ -214,6 +214,8 @@ func newEpoch(c *cli.Context) error {
 		ShardDarcIDs: cfg.ShardDarcs,
 		ShardRosters: cfg.ShardRosters,
 		Owner:        *signer,
+		OLInstanceID: cfg.OLInstanceID,
+		Timestamp:    time.Now(),
 	}
 
 	// Connect to an OL client and request new epoch

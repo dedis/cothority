@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/dedis/cothority"
-	"github.com/dedis/cothority/byzcoin/darc"
 	"github.com/dedis/cothority/byzcoin/viewchange"
+	"github.com/dedis/cothority/darc"
 	cosiprotocol "github.com/dedis/cothority/ftcosi/protocol"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/kyber/sign/schnorr"
@@ -242,7 +242,7 @@ func (s *Service) startViewChangeCosi(req viewchange.NewViewReq) ([]byte, error)
 	cosiProto.Msg = req.Hash()
 	cosiProto.Data = payload
 	cosiProto.CreateProtocol = s.CreateProtocol
-	cosiProto.Timeout = interval / 2
+	cosiProto.Timeout = interval * 2
 	cosiProto.Threshold = n - n/3
 	cosiProto.NSubtrees = int(math.Pow(float64(n), 1.0/3.0))
 	if err := cosiProto.Start(); err != nil {
@@ -330,12 +330,18 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 		return errors.New("roster size is too small, must be >= 4")
 	}
 
-	_, _, genDarcID, err := s.GetCollectionView(req.GetGen()).GetValues(NewInstanceID(nil).Slice())
+	reqBuf, err := protobuf.Encode(&req)
 	if err != nil {
 		return err
 	}
 
-	reqBuf, err := protobuf.Encode(&req)
+	signer := darc.NewSignerEd25519(s.ServerIdentity().Public, s.getPrivateKey())
+
+	st, err := s.GetReadOnlyStateTrie(sb.SkipChainID())
+	if err != nil {
+		return err
+	}
+	ctr, err := getSignerCounter(st, signer.Identity().String())
 	if err != nil {
 		return err
 	}
@@ -343,9 +349,6 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 	ctx := ClientTransaction{
 		Instructions: []Instruction{{
 			InstanceID: NewInstanceID(nil),
-			Nonce:      GenNonce(),
-			Index:      0,
-			Length:     1,
 			Invoke: &Invoke{
 				Command: "view_change",
 				Args: []Argument{
@@ -359,10 +362,11 @@ func (s *Service) createViewChangeBlock(req viewchange.NewViewReq, multisig []by
 					},
 				},
 			},
+			SignerCounter: []uint64{ctr + 1},
 		}},
 	}
-	signer := darc.NewSignerEd25519(s.ServerIdentity().Public, s.getPrivateKey())
-	if err = ctx.Instructions[0].SignBy(genDarcID, signer); err != nil {
+	ctx.InstructionsHash = ctx.Instructions.Hash()
+	if err = ctx.Instructions[0].SignWith(ctx.InstructionsHash, signer); err != nil {
 		return err
 	}
 

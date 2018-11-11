@@ -3,8 +3,8 @@ package ch.epfl.dedis.lib;
 import ch.epfl.dedis.lib.crypto.Ed25519;
 import ch.epfl.dedis.lib.crypto.Point;
 import ch.epfl.dedis.lib.exception.CothorityCommunicationException;
-import ch.epfl.dedis.proto.NetworkProto;
-import ch.epfl.dedis.proto.OnetProto;
+import ch.epfl.dedis.lib.proto.NetworkProto;
+import ch.epfl.dedis.lib.proto.OnetProto;
 import com.google.protobuf.ByteString;
 import com.moandjiezana.toml.Toml;
 
@@ -61,9 +61,31 @@ public class Roster {
         return r.build();
     }
 
+    /**
+     * Synchronously sends a message.
+     *
+     * @param path  The API endpoint.
+     * @param proto The protobuf encoded request.
+     * @return the response
+     * @throws CothorityCommunicationException if something went wrong
+     */
     public ByteString sendMessage(String path, com.google.protobuf.GeneratedMessageV3 proto) throws CothorityCommunicationException {
         // TODO - fetch a random node.
         return ByteString.copyFrom(nodes.get(0).SendMessage(path, proto.toByteArray()));
+    }
+
+    /**
+     * Sends a request to initialise a streaming connection.
+     *
+     * @param path  The API endpoint, note that this endpoint must support streaming (registered using RegisterStreamingRequest in the Go side).
+     * @param proto The protobuf encoded request.
+     * @param h     The handler for handling responses.
+     * @return the streaming connection.
+     * @throws CothorityCommunicationException if something went wrong
+     */
+    public ServerIdentity.StreamingConn makeStreamingConn(String path, com.google.protobuf.GeneratedMessageV3 proto, ServerIdentity.StreamHandler h) throws CothorityCommunicationException {
+        // TODO - fetch a random node.
+        return nodes.get(0).MakeStreamingConnection(path, proto.toByteArray(), h);
     }
 
     public static Roster FromToml(String groupToml) {

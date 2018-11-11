@@ -5,38 +5,63 @@ package skipchain;
 // Skipchain should come from skipchain/proto.go, but the way the SkipBlockFix
 // is embedded in SkipBlock is difficult to handle automatically in proto.awk.
 // For this reason, this file is created manually.
+// MANUAL
 
-option java_package = "ch.epfl.dedis.proto";
+option java_package = "ch.epfl.dedis.lib.proto";
 option java_outer_classname = "SkipchainProto";
 
 import "onet.proto";
 
+// GetAllSkipChainIDs - returns the SkipBlockIDs of the genesis blocks
+// of all of the known skipchains.
+message GetAllSkipChainIDs {
+}
+
+// GetAllSkipChainIDsReply - reply to GetAllSkipchains
+message GetAllSkipChainIDsReply {
+	repeated bytes skipChainIDs = 1;
+}
+
 // GetSingleBlock asks for a single block.
 message GetSingleBlock {
-    required bytes id = 1;
+	required bytes id = 1;
+}
+
+// GetSingleBlockByIndex searches for a block with the given index following
+// the genesis-block
+message GetSingleBlockByIndex {
+	required bytes genesis = 1;
+	required sint32 index = 2;
+}
+
+// GetSingleBlockByIndexReply returns the block and a set of links that proves
+// this block to be attached to the genesis block.
+message GetSingleBlockByIndexReply {
+	required SkipBlock skipblock = 1;
+	repeated ForwardLink links = 2;
 }
 
 // GetUpdateChain - the client sends the hash of the last known
 // Skipblock and will get back a list of all necessary SkipBlocks
 // to get to the latest.
 message GetUpdateChain {
-  // latest known id of a block.
+	// latest known id of a block.
 	required bytes latestID = 1;
 }
 
 // GetUpdateChainReply - returns the shortest chain to the current SkipBlock,
 // starting from the SkipBlock the client sent
 message GetUpdateChainReply {
-  // update is the shortest path from the requested block to the latest
-  // block.
+	// update is the shortest path from the requested block to the latest
+	// block.
 	repeated SkipBlock update = 1;
 }
 
 message SkipBlock {
-    required int32 index = 1;
-    required int32 height = 2;
-    required int32 max_height = 3;
-    required int32 base_height = 4;
+    required sint32 index = 1;
+    required sint32 height = 2;
+    required sint32 max_height = 3;
+    required sint32 base_height = 4;
     repeated bytes backlinks = 5;
     repeated bytes verifiers = 6;
     optional bytes parent = 7;
@@ -67,6 +92,6 @@ message SchnorrSig {
 }
 
 message Exception {
-    required int32 index = 1;
+    required sint32 index = 1;
     required bytes commitment = 2;
 }

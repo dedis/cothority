@@ -8,8 +8,8 @@ import (
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
 	"github.com/dedis/cothority/byzcoin/contracts"
-	"github.com/dedis/cothority/byzcoin/darc"
-	"github.com/dedis/cothority/byzcoin/darc/expression"
+	"github.com/dedis/cothority/darc"
+	"github.com/dedis/cothority/darc/expression"
 	"github.com/dedis/kyber"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/onet/network"
@@ -51,10 +51,10 @@ func init() {
 //         needs to be correctly finalized by the pop-service.
 //       * "Service" - when given, will create a darc and a coin-account for
 //         the service to use.
-func (s *Service) ContractPopParty(cdb byzcoin.CollectionView, inst byzcoin.Instruction, coins []byzcoin.Coin) (scs []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
+func (s *Service) ContractPopParty(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, coins []byzcoin.Coin) (scs []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
 	cOut = coins
 
-	err = inst.VerifyDarcSignature(cdb)
+	err = inst.Verify(cdb, ctxHash)
 	if err != nil {
 		return
 	}
@@ -93,11 +93,6 @@ func (s *Service) ContractPopParty(cdb byzcoin.CollectionView, inst byzcoin.Inst
 		if err != nil {
 			return nil, nil, errors.New("couldn't marshal PopPartyInstance: " + err.Error())
 		}
-		// partyID, err := ppData.FinalStatement.Hash()
-		// if err != nil {
-		// 	return nil, nil, errors.New("couldn't get party id: " + err.Error())
-		// }
-		// log.Printf("New party: %x", partyID)
 		return byzcoin.StateChanges{
 			byzcoin.NewStateChange(byzcoin.Create, inst.DeriveID(""), inst.Spawn.ContractID, ppiBuf, darc.ID(inst.InstanceID[:])),
 		}, cOut, nil
@@ -147,16 +142,24 @@ func (s *Service) ContractPopParty(cdb byzcoin.CollectionView, inst byzcoin.Inst
 				if err != nil {
 					return nil, nil, errors.New("couldn't unmarshal point: " + err.Error())
 				}
-				log.Lvlf3("Appending service-darc and account for %s", ppi.Service)
+
+				log.Lvlf3("Checking if service-darc and account for %s should be appended", ppi.Service)
 				d, sc, err := createDarc(darcID, ppi.Service)
 				if err != nil {
 					return nil, nil, err
 				}
-				scs = append(scs, sc)
+				_, _, _, err = cdb.GetValues(d.GetBaseID())
+				if err != nil {
+					log.Lvl2("Appending service-darc because it doesn't exist yet")
+					scs = append(scs, sc)
+				}
+
+				log.Lvl3("Creating coin account for service")
 				sc, err = createCoin(inst, d, ppi.Service, 0)
 				if err != nil {
 					return nil, nil, err
 				}
+
 				scs = append(scs, sc)
 			}
 

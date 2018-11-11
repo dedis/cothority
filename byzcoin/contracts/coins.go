@@ -6,7 +6,7 @@ import (
 	"errors"
 
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/onet/log"
 	"github.com/dedis/protobuf"
 )
@@ -32,10 +32,10 @@ var CoinName = iid("olCoin")
 //    parameter for the next instruction to interpret.
 //  - store puts the coins given to the instance back into the account.
 // You can only delete a contractCoin instance if the account is empty.
-func ContractCoin(cdb byzcoin.CollectionView, inst byzcoin.Instruction, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
+func ContractCoin(cdb byzcoin.ReadOnlyStateTrie, inst byzcoin.Instruction, ctxHash []byte, c []byzcoin.Coin) (sc []byzcoin.StateChange, cOut []byzcoin.Coin, err error) {
 	cOut = c
 
-	err = inst.VerifyDarcSignature(cdb)
+	err = inst.Verify(cdb, ctxHash)
 	if err != nil {
 		return
 	}

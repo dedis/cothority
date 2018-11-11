@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -8,9 +9,10 @@ import (
 
 	"github.com/dedis/cothority"
 	"github.com/dedis/cothority/byzcoin"
-	"github.com/dedis/cothority/byzcoin/darc"
+	"github.com/dedis/cothority/darc"
 	"github.com/dedis/cothority/skipchain"
 	"github.com/dedis/onet"
+	"github.com/dedis/onet/app"
 	"github.com/dedis/onet/network"
 	"github.com/dedis/protobuf"
 )
@@ -46,6 +48,10 @@ func LoadSigner(fn string) (*darc.Signer, error) {
 	var signer darc.Signer
 	err = protobuf.DecodeWithConstructors(buf, &signer,
 		network.DefaultConstructors(cothority.Suite))
+	if err != nil {
+		return nil, err
+	}
+
 	return &signer, err
 }
 
@@ -108,4 +114,23 @@ func LoadConfig(file string) (cfg Config, cl *byzcoin.Client, err error) {
 	}
 	cl = byzcoin.NewClient(cfg.ByzCoinID, cfg.Roster)
 	return
+}
+
+// ReadRoster reads a roster file from disk.
+func ReadRoster(file string) (r *onet.Roster, err error) {
+	in, err := os.Open(file)
+	if err != nil {
+		return nil, fmt.Errorf("Could not open roster %v: %v", file, err)
+	}
+	defer in.Close()
+
+	group, err := app.ReadGroupDescToml(in)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(group.Roster.List) == 0 {
+		return nil, errors.New("empty roster")
+	}
+	return group.Roster, nil
 }

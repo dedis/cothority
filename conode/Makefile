@@ -31,6 +31,7 @@ docker_dev: clean Dockerfile-dev exe/conode.Linux.x86_64
 docker_push: docker
 	@[ -n "$(GITUNTRACKEDCHANGES)" ] && echo "Pushing dirty images not allowed." && exit 1 || true
 	docker push $(IMAGE_NAME):$(VERSION)
+	docker push $(IMAGE_NAME):$(TAG)
 
 docker_push_latest: docker_push
 	docker tag $(IMAGE_NAME):$(VERSION) $(IMAGE_NAME):latest
