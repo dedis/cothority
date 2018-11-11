@@ -1,8 +1,11 @@
 package omniledger
 
 import (
+	"encoding/binary"
+	"fmt"
 	"github.com/dedis/kyber/suites"
 	"github.com/dedis/onet/network"
+	"github.com/dedis/protobuf"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -67,16 +70,15 @@ func TestService_CreateOmniLedger(t *testing.T) {
 	require.NotNil(t, err)
 
 	// Passing argument check
-	rep, err = s.service().CreateOmniLedger(&CreateOmniLedger{
-		Version:    bc.CurrentVersion,
-		Roster:     *s.roster,
-		ShardCount: shardCount,
-		EpochSize:  1,
-	})
+	rep, err = s.service().CreateOmniLedger(getCorrectRequest(s))
+	if err != nil {
+		fmt.Println("Error: ", err)
+	}
 
 	assert.NotNil(t, rep)
 
 	// Verify number of created shard is correct
+	fmt.Println(len(rep.ShardRoster))
 	assert.True(t, len(rep.ShardRoster) == shardCount)
 
 	// Verify each shard has enough validators, i.e. >= 4
@@ -118,4 +120,68 @@ func newSerN(t *testing.T, step int, interval time.Duration, n int, viewchange b
 
 func (s *ser) service() *Service {
 	return s.services[0]
+}
+
+func getCorrectRequest(s *ser) *CreateOmniLedger {
+	owner := s.signer
+	version := bc.CurrentVersion
+	roster := s.roster
+	//shardCount := 2
+	epochSize := 500 * time.Millisecond
+
+	ibMsg, err := bc.DefaultGenesisMsg(version, roster, []string{"spawn:darc", "spawn:omniledgerepoch"}, owner.Identity())
+	if err != nil {
+		fmt.Println("ERR: ", err)
+	}
+
+	d := ibMsg.GenesisDarc
+
+	darcBuf, err := protobuf.Encode(&d)
+	if err != nil {
+		fmt.Println("ERR: ", err)
+	}
+
+	scBuff := make([]byte, 8)
+	binary.PutVarint(scBuff, int64(shardCount))
+
+	esBuff := make([]byte, 8)
+	binary.PutVarint(esBuff, int64(epochSize))
+
+	rosterBuf, err := protobuf.Encode(roster)
+	if err != nil {
+		fmt.Println("ERR: ", err)
+	}
+
+	ts := time.Now()
+	tsBuf := make([]byte, 8)
+	binary.BigEndian.PutUint64(tsBuf, uint64(ts.Unix()))
+
+	instr := &bc.Instruction{
+		InstanceID: bc.NewInstanceID(d.GetBaseID()),
+		Nonce:      bc.GenNonce(),
+		Index:      0,
+		Length:     1,
+		Spawn: &bc.Spawn{
+			ContractID: ContractOmniledgerEpochID,
+			Args: []bc.Argument{
+				bc.Argument{Name: "darc", Value: darcBuf},
+				bc.Argument{Name: "roster", Value: rosterBuf},
+				bc.Argument{Name: "shardCount", Value: scBuff},
+				bc.Argument{Name: "epochSize", Value: esBuff},
+				bc.Argument{Name: "timestamp", Value: tsBuf},
+			},
+		},
+	}
+	err = instr.SignBy(d.GetBaseID(), owner)
+
+	return &CreateOmniLedger{
+		Version:          version,
+		Roster:           *roster,
+		ShardCount:       shardCount,
+		EpochSize:        epochSize,
+		IBGenesisMsg:     ibMsg,
+		OwnerID:          owner.Identity(),
+		SpawnInstruction: instr,
+		Timestamp:        ts,
+	}
 }
